@@ -1,0 +1,71 @@
+AC_PREREQ([2.65])
+AC_INIT([Eventd],[0.1],[],[])
+
+AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_SRCDIR([src/])
+AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_AUX_DIR([.aux])
+
+AC_SUBST([PACKAGE_NAME], ["$PACKAGE_NAME"])
+AC_SUBST([PACKAGE_VERSION], ["$PACKAGE_VERSION"])
+
+AM_INIT_AUTOMAKE([1.10 dist-xz no-dist-gzip foreign])
+AM_MAINTAINER_MODE
+
+m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
+
+AC_PROG_CC
+
+GETTEXT_PACKAGE=$PACKAGE_NAME
+AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE], ["$GETTEXT_PACKAGE"], [Gettext Package])
+AC_SUBST(GETTEXT_PACKAGE)
+AM_GLIB_GNU_GETTEXT
+IT_PROG_INTLTOOL([0.35.0])
+
+AC_SUBST([localedir], ["$localedir"])
+
+AC_PROG_INSTALL
+
+PKG_CHECK_MODULES(GLIB, [glib-2.0 >= 2.25.0])
+AC_SUBST(GLIB_CFLAGS)
+AC_SUBST(GLIB_LIBS)
+
+PKG_CHECK_MODULES(GIO, [gio-2.0 >= 2.25.0])
+AC_SUBST(GIO_CFLAGS)
+AC_SUBST(GIO_LIBS)
+
+
+AC_ARG_ENABLE(sound, AS_HELP_STRING([--disable-sound], [Disable sound support]), enable_sound=$enableval, enable_sound=yes)
+if test x$enable_sound = xyes; then
+  AC_CHECK_PROG(have_paplay, paplay, yes, no)
+  AC_ARG_ENABLE(pulse, AS_HELP_STRING([--enable-pulse], [Enable PulseAudio]), enable_pulse=$enableval, enable_pulse=no)
+  if test x$enable_pulse = xyes; then
+    PKG_CHECK_MODULES(PULSE, [libpulse-simple >= 0.9.15])
+    AC_DEFINE([HAVE_SOUND], [1], [If we have a sound support])
+    AC_DEFINE([ENABLE_PULSE], [1], [Enable native PulseAudio support])
+  elif test x$have_paplay = xyes; then
+    AC_DEFINE([HAVE_SOUND], [1], [If we have a sound support])
+  fi
+fi
+AC_SUBST(PULSE_CFLAGS)
+AC_SUBST(PULSE_LIBS)
+
+AC_ARG_ENABLE(notify, AS_HELP_STRING([--disable-notify], [Disable libnotify support]), enable_notify=$enableval, enable_notify=yes)
+if test x$enable_notify = xyes; then
+  PKG_CHECK_MODULES(NOTIFY, [libnotify >= 0.6.5])
+  AC_DEFINE([ENABLE_NOTIFY], [1], [Enable libnotify support])
+fi
+AC_SUBST(NOTIFY_CFLAGS)
+AC_SUBST(NOTIFY_LIBS)
+
+AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug], [Enable debug]), enable_debug=$enableval, enable_debug=yes)
+if test x$enable_debug = xyes; then
+  AC_DEFINE([DEBUG], [1], [Activate debug mode])
+fi
+
+AC_CONFIG_FILES([
+  Makefile
+  po/Makefile.in
+])
+AC_OUTPUT
+

@@ -1,0 +1,250 @@
+#define DEFAULT_BIND_PORT 7100
+#define BUFFER_SIZE 1024
+#define CONFIG_DIR ".config/eventd"
+#define SOUNDS_DIR ".local/share/sounds/eventd"
+
+#include <config.h>
+
+#include <stdlib.h>
+#include <string.h>
+#include <gio/gio.h>
+#if ENABLE_NOTIFY
+#include <libnotify/notify.h>
+#endif
+
+static const gchar *home = NULL;
+#if ENABLE_PULSE
+static pa_simple *sound = NULL;
+static const pa_sample_spec sound_spec = {
+	.format = PA_SAMPLE_S16LE,
+	.rate = 44100,
+	.channels = 2
+};
+#endif
+
+#define MAX_ARGS 50
+static int
+do_it(gchar * path, gchar * arg, ...)
+{
+	GError *error = NULL;
+	gint ret;
+	gchar * argv[MAX_ARGS + 2];
+	argv[0] = path;
+	gsize argno = 0;
+	va_list al;
+	va_start(al, arg);
+	while (arg && argno < MAX_ARGS)
+	{
+		argv[++argno] = arg;
+		arg = va_arg(al, gchar *);
+	}
+	argv[++argno] = NULL;
+	va_end(al);
+	g_spawn_sync(home, /* working_dir */
+		argv,
+		NULL, /* env */
+		G_SPAWN_SEARCH_PATH, /* flags */
+		NULL,	/* child setup */
+		NULL,	/* user_data */
+		NULL,	/* stdout */
+		NULL,	/* sterr */
+		&ret,	/* exit_status */
+		&error);	/* error */
+	g_clear_error(&error);
+	return ( ret == 0);
+}
+
+static void
+event_action(gchar *caller, gchar *action, gchar *data)
+{
+	GError *error = NULL;
+	GKeyFile *config = g_key_file_new();
+	gchar *config_file = g_strdup_printf("%s/%s/%s.conf", home, CONFIG_DIR, caller);
+	if ( ! g_key_file_load_from_file(config, config_file, G_KEY_FILE_NONE, &error) )
+	{
+		g_warning("Can't read the configuration file: %s", error->message);
+		goto out;
+	}
+
+	gchar **keys = g_key_file_get_keys(config, action, NULL, &error);
+	if ( ! keys )
+	{
+		g_warning("Can't read the configuration: %s", error->message);
+		goto out;
+	}
+	gchar **key = NULL;
+	for ( key = keys; *key ; ++key )
+	{
+		gchar *argv[MAX_ARGS];
+		if ( 0 ) {}
+		#if HAVE_SOUND
+		else if ( g_ascii_strcasecmp(*key, "sound") == 0 )
+		{
+			gchar *filename = g_key_file_get_value(config, action, *key, NULL);
+			if ( filename[0] != '/')
+				filename = g_strdup_printf("%s/%s/%s", home, SOUNDS_DIR, filename);
+			else
+				filename = g_strdup(filename);
+			#if ENABLE_PULSE
+			guint8 f = g_open(filename, O_RDONLY);
+			if ( ! f )
+				g_warning("Can't open sound file");
+			guint8 buf[BUFFER_SIZE];
+			gssize r = 0;
+			g_printf("Playing song:");
+			while ((r = read(f, buf, BUFFER_SIZE)) > 0)
+			{
+				if ( pa_simple_write(sound, buf, r, NULL) < 0)
+					g_warning("Error while playing sound file");
+			}
+			g_printf(" played\n");
+			g_close(f);
+			#else
+			do_it("paplay", filename, NULL);
+			#endif
+			g_free(filename);
+		}
+		#endif /* HAVE_SOUND */
+		#if ENABLE_NOTIFY
+		else if ( g_ascii_strcasecmp(*key, "notify") == 0 )
+		{
+			gchar *msg = g_key_file_get_value(config, action, *key, NULL);
+			if ( data != NULL )
+				msg = g_strdup_printf(msg, data);
+			else
+				msg = g_strdup(msg);
+			NotifyNotification *notification = notify_notification_new(caller, msg, NULL
+			#if ! NOTIFY_CHECK_VERSION(0,7,0)
+			, NULL
+			#endif
+			);
+			notify_notification_set_urgency(notification, NOTIFY_URGENCY_NORMAL);
+			notify_notification_set_timeout(notification, 1);
+			if ( ! notify_notification_show(notification, &error) )
+				g_warning("Can't show the notification");
+			g_clear_error(&error);
+			g_free(msg);
+		}
+		#endif
+		#if ENABLE_ZENITY
+		else if ( g_ascii_strcasecmp(*key, "zenity") == 0 )
+		{
+			gchar *msg = g_key_file_get_value(config, action, *key, NULL);
+			if ( data != NULL )
+				msg = g_strdup_printf(msg, data);
+			else
+				msg = g_strdup(msg);
+			do_it("zenity", "--info", "--title", caller, "--text", msg, NULL);
+			g_free(msg);
+		}
+		#endif
+	}
+	g_strfreev(keys);
+	g_key_file_free(config);
+out:
+	g_free(config_file);
+}
+
+static gboolean
+connection_handler(
+	GThreadedSocketService *service,
+	GSocketConnection      *connection,
+	GObject                *source_object,
+	gpointer                user_data)
+{
+	GInputStream *stream = g_io_stream_get_input_stream((GIOStream *)connection);
+
+	GError *error = NULL;
+	gssize size = -1;
+	gchar *caller = NULL;
+	char buffer[BUFFER_SIZE];
+	while ( ( size = g_input_stream_read(stream, buffer, BUFFER_SIZE, NULL, &error) ) > -1 )
+	{
+		if ( size == 0 )
+			break;
+		buffer[size] = 0;
+		g_strchomp(buffer);
+		if ( g_ascii_strncasecmp(buffer, "HELLO ", 6) == 0 )
+			caller = g_strdup(g_strstrip(buffer+6));
+		else if ( g_ascii_strcasecmp(buffer, "QUIT") == 0 )
+			break;
+		else if ( g_ascii_strncasecmp(buffer, "EVENT ", 6) == 0 )
+		{
+			gchar **command = g_strsplit(buffer+6, " ", 2);
+			gchar *action = g_strstrip(command[0]);
+			gchar *data = NULL;
+			if ( command[1] != NULL )
+				data = g_strstrip(command[1]);
+			event_action(caller, action, data);
+			g_strfreev(command);
+		}
+	}
+	if ( error )
+		g_warning("Can't read the socket: %s", error->message);
+	g_clear_error(&error);
+
+	g_free(caller);
+
+	if ( ! g_io_stream_close((GIOStream *)connection, NULL, &error) )
+		g_warning("Can't close the stream: %s", error->message);
+	g_clear_error(&error);
+
+	return TRUE;
+}
+
+int
+main()
+{
+	#if ! DEBUG
+	if ( fork() != 0 )
+		return 0;
+	#endif
+	g_type_init();
+	GError *error = NULL;
+
+	#if ENABLE_NOTIFY
+	notify_init("Eventd");
+	#endif
+
+	#if ENABLE_PULSE
+	sound = pa_simple_new(NULL,         // Use the default server.
+			"Eventd",        // Our application's name.
+			PA_STREAM_PLAYBACK,
+			NULL,               // Use the default device.
+			"Sound events",     // Description of our stream.
+			&sound_spec,        // Our sample format.
+			NULL,               // Use default channel map
+			NULL,               // Use default buffering attributes.
+			NULL                // Ignore error code.
+			);
+	if ( ! sound )
+		g_warning("Can't open sound system");
+	#endif
+
+	guint16 bind_port = DEFAULT_BIND_PORT;
+	home = g_getenv("HOME");
+	GMainLoop *loop = g_main_loop_new(NULL, FALSE);
+
+	GSocketService *service = g_threaded_socket_service_new(5);
+	if ( ! g_socket_listener_add_inet_port((GSocketListener *)service, bind_port, NULL, &error) )
+		g_warning("Unable to open socket: %s", error->message);
+	g_clear_error(&error);
+
+	g_signal_connect(G_OBJECT(service), "run", G_CALLBACK(connection_handler), NULL);
+
+	g_main_loop_run(loop);
+
+	g_main_loop_unref(loop);
+
+	#if ENABLE_NOTIFY
+	notify_uninit();
+	#endif
+
+	#if ENABLE_PULSE
+	if ( pa_simple_drain(sound, NULL) < 0)
+		g_warning("bug");
+	pa_simple_free(sound);
+	#endif
+
+	return 0;
+}

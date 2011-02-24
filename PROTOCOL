@@ -1,0 +1,19 @@
+This file describes the EVENTD protocol
+
+HELLO <name>
+	Initiate the connection by giving
+	the client application name
+	this name will be used to search for
+	a configuration file
+
+EVENT <name> [<data>]
+	Inform the server that an event happened
+	The name must contain only the characters
+	A-Za-z0-9- as for keys of the
+	Desktop Entry Specification files
+	http://freedesktop.org/wiki/Specifications/desktop-entry-spec
+	The client may specify data after the name
+	Some type of event actions will ignore data
+
+BYE
+	Close the connection
