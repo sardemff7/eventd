@@ -11,6 +11,10 @@
 #if ENABLE_NOTIFY
 #include <libnotify/notify.h>
 #endif
+#if ENABLE_PULSE
+#include <sys/file.h>
+#include <pulse/simple.h>
+#endif
 
 static const gchar *home = NULL;
 #if ENABLE_PULSE
@@ -98,7 +102,6 @@ event_action(gchar *caller, gchar *action, gchar *data)
 					g_warning("Error while playing sound file");
 			}
 			g_printf(" played\n");
-			g_close(f);
 			#else
 			do_it("paplay", filename, NULL);
 			#endif
@@ -125,19 +128,22 @@ event_action(gchar *caller, gchar *action, gchar *data)
 			g_clear_error(&error);
 			g_free(msg);
 		}
-		#endif
-		#if ENABLE_ZENITY
-		else if ( g_ascii_strcasecmp(*key, "zenity") == 0 )
+		#endif /* ENABLE_NOTIFY */
+		#if HAVE_DIALOGS
+		else if ( g_ascii_strcasecmp(*key, "dialog") == 0 )
 		{
 			gchar *msg = g_key_file_get_value(config, action, *key, NULL);
 			if ( data != NULL )
 				msg = g_strdup_printf(msg, data);
 			else
 				msg = g_strdup(msg);
+			#if ENABLE_GTK
+			#else
 			do_it("zenity", "--info", "--title", caller, "--text", msg, NULL);
+			#endif
 			g_free(msg);
 		}
-		#endif
+		#endif /* HAVE_DIALOGS */
 	}
 	g_strfreev(keys);
 	g_key_file_free(config);

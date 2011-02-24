@@ -58,10 +58,30 @@ fi
 AC_SUBST(NOTIFY_CFLAGS)
 AC_SUBST(NOTIFY_LIBS)
 
+AC_ARG_ENABLE(dialogs, AS_HELP_STRING([--disable-dialogs], [Disable dialog support]), enable_dialogs=$enableval, enable_dialogs=yes)
+if test x$enable_dialogs = xyes; then
+  AC_CHECK_PROG(have_zenity, zenity, yes, no)
+  #AC_ARG_ENABLE(gtk, AS_HELP_STRING([--enable-gtk], [Enable GTK+]), enable_gtk=$enableval, enable_gtk=no)
+  if test x$enable_gtk = xyes; then
+    PKG_CHECK_MODULES(GTK, [gtk+-3.0 >= 3.0])
+    AC_DEFINE([HAVE_DIALOGS], [1], [If we have a dialog support])
+    AC_DEFINE([ENABLE_GTK], [1], [Enable native GTK+ support])
+  elif test x$have_zenity = xyes; then
+    AC_DEFINE([HAVE_DIALOGS], [1], [If we have a dialog support])
+  fi
+fi
+AC_SUBST(GTK_CFLAGS)
+AC_SUBST(GTK_LIBS)
+
+GLOBAL_CFLAGS="-Wall -Wextra"
+GLOBAL_LDFLAGS=""
 AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug], [Enable debug]), enable_debug=$enableval, enable_debug=yes)
 if test x$enable_debug = xyes; then
   AC_DEFINE([DEBUG], [1], [Activate debug mode])
+  GLOBAL_CFLAGS+=" -Werror"
 fi
+AC_SUBST(GLOBAL_CFLAGS)
+AC_SUBST(GLOBAL_LDFLAGS)
 
 AC_CONFIG_FILES([
   Makefile
