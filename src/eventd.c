@@ -20,18 +20,21 @@
 #define DEFAULT_BIND_PORT 7100
 #define BUFFER_SIZE 1024
 #define CONFIG_DIR ".config/eventd"
+#define PID_FILE   ".local/var/eventd.pid"
 #define SOUNDS_DIR ".local/share/sounds/eventd"
 
 #include <config.h>
 
 #include <stdlib.h>
 #include <string.h>
+#include <sys/file.h>
+#include <signal.h>
+#include <errno.h>
 #include <gio/gio.h>
 #if ENABLE_NOTIFY
 #include <libnotify/notify.h>
 #endif
 #if ENABLE_PULSE
-#include <sys/file.h>
 #include <pulse/simple.h>
 #endif
 
@@ -217,15 +220,59 @@ connection_handler(
 	return TRUE;
 }
 
-int
-main()
+static GMainLoop *loop = NULL;
+
+void
+sig_quit_handler(int sig)
 {
-	#if ! DEBUG
-	if ( fork() != 0 )
-		return 0;
-	#endif
+	g_main_loop_quit(loop);
+}
+
+int
+main(int argc, char *argv[])
+{
 	g_type_init();
 	GError *error = NULL;
+	home = g_getenv("HOME");
+	gchar *pid_file = g_strdup_printf("%s/%s",
+					  home,
+					  PID_FILE);
+
+	if ( argc > 1 )
+	{
+		if ( g_ascii_strcasecmp(argv[1], "--kill") == 0)
+		{
+			gchar *contents = NULL;
+			if ( ! g_file_get_contents (pid_file, &contents, NULL, &error) )
+				g_warning("Unable to open pid file: %s", error->message);
+			g_clear_error(&error);
+			guint64 pid = g_ascii_strtoull(contents, NULL, 10);
+			g_free(contents);
+			kill(pid, SIGTERM);
+			return 0;
+		}
+	}
+	#if ! DEBUG
+	pid_t pid = fork();
+	if ( pid == -1 )
+	{
+		perror("fork");
+		exit(1);
+	}
+	else if ( pid != 0 )
+	{
+		FILE *f = g_fopen(pid_file, "w");
+		g_fprintf(f, "%d", pid);
+		g_free(f);
+		return 0;
+	}
+	close(0);
+	close(1);
+	close(2);
+	#endif
+
+	signal(SIGTERM, sig_quit_handler);
+	signal(SIGINT, sig_quit_handler);
 
 	#if ENABLE_NOTIFY
 	notify_init("Eventd");
@@ -247,8 +294,7 @@ main()
 	#endif
 
 	guint16 bind_port = DEFAULT_BIND_PORT;
-	home = g_getenv("HOME");
-	GMainLoop *loop = g_main_loop_new(NULL, FALSE);
+	loop = g_main_loop_new(NULL, FALSE);
 
 	GSocketService *service = g_threaded_socket_service_new(5);
 	if ( ! g_socket_listener_add_inet_port((GSocketListener *)service, bind_port, NULL, &error) )
@@ -269,6 +315,11 @@ main()
 	if ( pa_simple_drain(sound, NULL) < 0)
 		g_warning("bug");
 	pa_simple_free(sound);
+	#endif
+
+	#if ! DEBUG
+	g_unlink(pid_file);
+	g_free(pid_file);
 	#endif
 
 	return 0;
