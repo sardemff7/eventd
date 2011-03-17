@@ -279,6 +279,9 @@ main(int argc, char *argv[])
 	close(0);
 	close(1);
 	close(2);
+	open("/dev/null", O_RDWR);
+	dup2(0,1);
+	dup2(0,2);
 	#endif
 
 	signal(SIGTERM, sig_quit_handler);
