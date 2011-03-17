@@ -134,10 +134,11 @@ event_action(gchar *type, gchar *name, gchar *action, gchar *data)
 		else if ( g_ascii_strcasecmp(*key, "notify") == 0 )
 		{
 			gchar *msg = g_key_file_get_value(config, action, *key, NULL);
+			gchar *es_data = NULL;
 			if ( data != NULL )
-				msg = g_strdup_printf(msg, data);
-			else
-				msg = g_strdup(msg);
+				es_data = g_markup_escape_text(data, -1);
+			msg = g_strdup_printf(msg, es_data ? es_data : "");
+			g_free(es_data);
 			NotifyNotification *notification = notify_notification_new(name, msg, NULL
 			#if ! NOTIFY_CHECK_VERSION(0,7,0)
 			, NULL
