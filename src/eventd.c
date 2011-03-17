@@ -146,9 +146,10 @@ event_action(gchar *type, gchar *name, gchar *action, gchar *data)
 			notify_notification_set_urgency(notification, NOTIFY_URGENCY_NORMAL);
 			notify_notification_set_timeout(notification, 1);
 			if ( ! notify_notification_show(notification, &error) )
-				g_warning("Can't show the notification");
+				g_warning("Can't show the notification: %s", error->message);
 			g_clear_error(&error);
 			g_free(msg);
+			g_object_unref(G_OBJECT(notification));
 		}
 		#endif /* ENABLE_NOTIFY */
 		#if HAVE_DIALOGS
@@ -180,38 +181,44 @@ connection_handler(
 	GObject                *source_object,
 	gpointer                user_data)
 {
-	GInputStream *stream = g_io_stream_get_input_stream((GIOStream *)connection);
+	GDataInputStream *input = g_data_input_stream_new(g_io_stream_get_input_stream((GIOStream *)connection));
 
 	GError *error = NULL;
-	gssize size = -1;
+	gsize size = 0;
 	gchar *type = NULL;
 	gchar *name = NULL;
-	char buffer[BUFFER_SIZE];
-	while ( ( size = g_input_stream_read(stream, buffer, BUFFER_SIZE, NULL, &error) ) > -1 )
+	gchar *line = NULL;
+	while ( ( line = g_data_input_stream_read_line(input, &size, NULL, &error) ) != NULL )
 	{
-		if ( size == 0 )
-			break;
-		buffer[size] = 0;
-		g_strchomp(buffer);
-		if ( g_ascii_strncasecmp(buffer, "HELLO ", 6) == 0 )
+		g_strchomp(line);
+		#if DEBUG
+		g_debug("Input: %s", line);
+		#endif
+		if ( g_ascii_strncasecmp(line, "HELLO ", 6) == 0 )
 		{
-			gchar **hello = g_strsplit(buffer+6, " ", 2);
+			gchar **hello = g_strsplit(line+6, " ", 2);
 			type = g_strdup(g_strstrip(hello[0]));
 			if ( hello[1] != NULL )
 				name = g_strdup(g_strstrip(hello[1]));
 			else
 				name = g_strdup(type);
 			g_strfreev(hello);
+			#if DEBUG
+			g_debug("Hello: type=%s name=%s", type, name);
+			#endif
 		}
-		else if ( g_ascii_strcasecmp(buffer, "BYE") == 0 )
+		else if ( g_ascii_strcasecmp(line, "BYE") == 0 )
 			break;
-		else if ( g_ascii_strncasecmp(buffer, "EVENT ", 6) == 0 )
+		else if ( g_ascii_strncasecmp(line, "EVENT ", 6) == 0 )
 		{
-			gchar **event = g_strsplit(buffer+6, " ", 2);
+			gchar **event = g_strsplit(line+6, " ", 2);
 			gchar *action = g_strstrip(event[0]);
 			gchar *data = NULL;
 			if ( event[1] != NULL )
 				data = g_strstrip(event[1]);
+			#if DEBUG
+			g_debug("Event: action=%s data=%s", action, data);
+			#endif
 			event_action(type, name, action, data);
 			g_strfreev(event);
 		}
