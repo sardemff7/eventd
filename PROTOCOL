@@ -1,10 +1,12 @@
 This file describes the EVENTD protocol
 
-HELLO <name>
+HELLO <type> [<name>]
 	Initiate the connection by giving
-	the client application name
-	this name will be used to search for
+	the client application type
+	this type will be used to search for
 	a configuration file
+	The client may specify a name what
+	will be used to display events
 
 EVENT <name> [<data>]
 	Inform the server that an event happened

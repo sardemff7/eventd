@@ -81,11 +81,11 @@ do_it(gchar * path, gchar * arg, ...)
 }
 
 static void
-event_action(gchar *caller, gchar *action, gchar *data)
+event_action(gchar *type, gchar *name, gchar *action, gchar *data)
 {
 	GError *error = NULL;
 	GKeyFile *config = g_key_file_new();
-	gchar *config_file = g_strdup_printf("%s/%s/%s.conf", home, CONFIG_DIR, caller);
+	gchar *config_file = g_strdup_printf("%s/%s/%s.conf", home, CONFIG_DIR, type);
 	if ( ! g_key_file_load_from_file(config, config_file, G_KEY_FILE_NONE, &error) )
 	{
 		g_warning("Can't read the configuration file: %s", error->message);
@@ -138,7 +138,7 @@ event_action(gchar *caller, gchar *action, gchar *data)
 				msg = g_strdup_printf(msg, data);
 			else
 				msg = g_strdup(msg);
-			NotifyNotification *notification = notify_notification_new(caller, msg, NULL
+			NotifyNotification *notification = notify_notification_new(name, msg, NULL
 			#if ! NOTIFY_CHECK_VERSION(0,7,0)
 			, NULL
 			#endif
@@ -161,7 +161,7 @@ event_action(gchar *caller, gchar *action, gchar *data)
 				msg = g_strdup(msg);
 			#if ENABLE_GTK
 			#else
-			do_it("zenity", "--info", "--title", caller, "--text", msg, NULL);
+			do_it("zenity", "--info", "--title", name, "--text", msg, NULL);
 			#endif
 			g_free(msg);
 		}
@@ -184,7 +184,8 @@ connection_handler(
 
 	GError *error = NULL;
 	gssize size = -1;
-	gchar *caller = NULL;
+	gchar *type = NULL;
+	gchar *name = NULL;
 	char buffer[BUFFER_SIZE];
 	while ( ( size = g_input_stream_read(stream, buffer, BUFFER_SIZE, NULL, &error) ) > -1 )
 	{
@@ -193,25 +194,34 @@ connection_handler(
 		buffer[size] = 0;
 		g_strchomp(buffer);
 		if ( g_ascii_strncasecmp(buffer, "HELLO ", 6) == 0 )
-			caller = g_strdup(g_strstrip(buffer+6));
+		{
+			gchar **hello = g_strsplit(buffer+6, " ", 2);
+			type = g_strdup(g_strstrip(hello[0]));
+			if ( hello[1] != NULL )
+				name = g_strdup(g_strstrip(hello[1]));
+			else
+				name = g_strdup(type);
+			g_strfreev(hello);
+		}
 		else if ( g_ascii_strcasecmp(buffer, "QUIT") == 0 )
 			break;
 		else if ( g_ascii_strncasecmp(buffer, "EVENT ", 6) == 0 )
 		{
-			gchar **command = g_strsplit(buffer+6, " ", 2);
-			gchar *action = g_strstrip(command[0]);
+			gchar **event = g_strsplit(buffer+6, " ", 2);
+			gchar *action = g_strstrip(event[0]);
 			gchar *data = NULL;
-			if ( command[1] != NULL )
-				data = g_strstrip(command[1]);
-			event_action(caller, action, data);
-			g_strfreev(command);
+			if ( event[1] != NULL )
+				data = g_strstrip(event[1]);
+			event_action(type, name, action, data);
+			g_strfreev(event);
 		}
 	}
 	if ( error )
 		g_warning("Can't read the socket: %s", error->message);
 	g_clear_error(&error);
 
-	g_free(caller);
+	g_free(type);
+	g_free(name);
 
 	if ( ! g_io_stream_close((GIOStream *)connection, NULL, &error) )
 		g_warning("Can't close the stream: %s", error->message);
