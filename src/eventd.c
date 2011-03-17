@@ -203,7 +203,7 @@ connection_handler(
 				name = g_strdup(type);
 			g_strfreev(hello);
 		}
-		else if ( g_ascii_strcasecmp(buffer, "QUIT") == 0 )
+		else if ( g_ascii_strcasecmp(buffer, "BYE") == 0 )
 			break;
 		else if ( g_ascii_strncasecmp(buffer, "EVENT ", 6) == 0 )
 		{
