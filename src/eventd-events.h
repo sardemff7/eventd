@@ -34,4 +34,7 @@ static const pa_sample_spec sound_spec = {
 };
 #endif
 
+void eventd_config_parsing();
+void eventd_config_clean();
+
 #endif /* __EVENTD_EVENTS_H__ */

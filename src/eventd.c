@@ -32,11 +32,13 @@
 
 static guint16 bind_port = DEFAULT_BIND_PORT;
 static gboolean action_kill = FALSE;
+static gboolean action_reload = FALSE;
 static gchar *pid_file = NULL;
 static GOptionEntry entries[] =
 {
   { "port", 'p', 0, G_OPTION_ARG_INT, &bind_port, "Port to listen for inbound connections", "P" },
   { "kill", 'k', 0, G_OPTION_ARG_NONE, &action_kill, "Kill the running daemon", NULL },
+  { "reload", 'r', 0, G_OPTION_ARG_NONE, &action_reload, "Reload the configuration", NULL },
   { "pid-file", 'P', 0, G_OPTION_ARG_FILENAME, &pid_file, "Path to the pid file", "filename" },
   { NULL }
 };
@@ -66,7 +68,7 @@ main(int argc, char *argv[])
 	else
 		real_pid_file = g_strdup_printf("%s/%s", home, PID_FILE);
 
-	if ( action_kill )
+	if ( ( action_kill ) || ( action_reload ) )
 	{
 		gchar *contents = NULL;
 		if ( ! g_file_get_contents(real_pid_file, &contents, NULL, &error) )
@@ -74,7 +76,7 @@ main(int argc, char *argv[])
 		g_clear_error(&error);
 		guint64 pid = g_ascii_strtoull(contents, NULL, 10);
 		g_free(contents);
-		kill(pid, SIGTERM);
+		kill(pid, ( action_kill ? SIGTERM : SIGUSR1 ));
 		return 0;
 	}
 	#if ! DEBUG
