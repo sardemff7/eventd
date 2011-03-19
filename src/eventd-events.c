@@ -63,66 +63,73 @@ do_it(gchar * path, gchar * arg, ...)
 	return ( ret == 0);
 }
 
+
+GHashTable *config = NULL;
+
+typedef enum {
+	ACTION_SOUND = 0,
+	ACTION_NOTIFY,
+	ACTION_MESSAGE,
+} EventdActionType;
+
+typedef struct {
+	EventdActionType type;
+	gchar *data;
+} EventdAction;
+
+static EventdAction *
+eventd_action_new(EventdActionType type, gchar *data)
+{
+	EventdAction *action = g_new0(EventdAction, 1);
+	action->type = type;
+	action->data = g_strdup(data);
+	return action;
+}
+static void
+eventd_action_free(EventdAction *action)
+{
+	g_free(action->data);
+	g_free(action);
+}
+
 void
-event_action(gchar *type, gchar *name, gchar *action, gchar *data)
+event_action(gchar *client_type, gchar *client_name, gchar *client_action, gchar *client_data)
 {
 	GError *error = NULL;
-	GKeyFile *config = g_key_file_new();
-	gchar *config_file = g_strdup_printf("%s/%s/%s.conf", home, CONFIG_DIR, type);
-	if ( ! g_key_file_load_from_file(config, config_file, G_KEY_FILE_NONE, &error) )
+	GHashTable *type_config = g_hash_table_lookup(config, client_type);
+	GList *actions = g_hash_table_lookup(type_config, client_action);
+	for ( ; actions ; actions = g_list_next(actions) )
 	{
-		g_warning("Can't read the configuration file: %s", error->message);
-		goto out;
-	}
-
-	gchar **keys = g_key_file_get_keys(config, action, NULL, &error);
-	if ( ! keys )
-	{
-		g_warning("Can't read the configuration: %s", error->message);
-		goto out;
-	}
-	gchar **key = NULL;
-	for ( key = keys; *key ; ++key )
-	{
-		gchar *argv[MAX_ARGS];
-		if ( 0 ) {}
-		#if HAVE_SOUND
-		else if ( g_ascii_strcasecmp(*key, "sound") == 0 )
+		EventdAction *action = actions->data;
+		gchar *msg;
+		gchar *data = client_data;
+		switch ( action->type )
 		{
-			gchar *filename = g_key_file_get_value(config, action, *key, NULL);
-			if ( filename[0] != '/')
-				filename = g_strdup_printf("%s/%s/%s", home, SOUNDS_DIR, filename);
-			else
-				filename = g_strdup(filename);
+		#if HAVE_SOUND
+		case ACTION_SOUND:
 			#if ENABLE_PULSE
-			guint8 f = g_open(filename, O_RDONLY);
+			guint8 f = g_open(action->data, O_RDONLY);
 			if ( ! f )
 				g_warning("Can't open sound file");
 			guint8 buf[BUFFER_SIZE];
 			gssize r = 0;
-			g_printf("Playing song:");
 			while ((r = read(f, buf, BUFFER_SIZE)) > 0)
 			{
 				if ( pa_simple_write(sound, buf, r, NULL) < 0)
 					g_warning("Error while playing sound file");
 			}
-			g_printf(" played\n");
 			#else
-			do_it("paplay", filename, NULL);
+			do_it("paplay", action->data, NULL);
 			#endif
-			g_free(filename);
-		}
+		break;
 		#endif /* HAVE_SOUND */
 		#if ENABLE_NOTIFY
-		else if ( g_ascii_strcasecmp(*key, "notify") == 0 )
-		{
-			gchar *msg = g_key_file_get_value(config, action, *key, NULL);
-			gchar *es_data = NULL;
+		case ACTION_NOTIFY:
 			if ( data != NULL )
-				es_data = g_markup_escape_text(data, -1);
-			msg = g_strdup_printf(msg, es_data ? es_data : "");
-			g_free(es_data);
-			NotifyNotification *notification = notify_notification_new(name, msg, NULL
+				data = g_markup_escape_text(data, -1);
+			msg = g_strdup_printf(action->data, data ? data : "");
+			g_free(data);
+			NotifyNotification *notification = notify_notification_new(client_name, msg, NULL
 			#if ! NOTIFY_CHECK_VERSION(0,7,0)
 			, NULL
 			#endif
@@ -134,27 +141,119 @@ event_action(gchar *type, gchar *name, gchar *action, gchar *data)
 			g_clear_error(&error);
 			g_free(msg);
 			g_object_unref(G_OBJECT(notification));
-		}
+		break;
 		#endif /* ENABLE_NOTIFY */
 		#if HAVE_DIALOGS
-		else if ( g_ascii_strcasecmp(*key, "dialog") == 0 )
-		{
-			gchar *msg = g_key_file_get_value(config, action, *key, NULL);
-			if ( data != NULL )
-				msg = g_strdup_printf(msg, data);
-			else
-				msg = g_strdup(msg);
+		case ACTION_MESSAGE:
 			#if ENABLE_GTK
 			#error Not supported yet
 			#else
-			do_it("zenity", "--info", "--title", name, "--text", msg, NULL);
+			msg = g_strdup_printf(action->data, data ? data : "");
+			do_it("zenity", "--info", "--title", client_name, "--text", msg, NULL);
 			#endif
-			g_free(msg);
-		}
+		break;
 		#endif /* HAVE_DIALOGS */
+		}
 	}
-	g_strfreev(keys);
-	g_key_file_free(config);
+}
+
+void
+eventd_config_parser()
+{
+	GError *error = NULL;
+
+	if ( config )
+		eventd_config_clean();
+	config = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_hash_table_remove_all);
+
+	gchar *config_dir_name = NULL;
+	GDir *config_dir = NULL;
+
+	config_dir_name = g_strdup_printf("%s/%s", home, CONFIG_DIR);
+	config_dir = g_dir_open(config_dir_name, 0, &error);
+	if ( ! config_dir )
+		goto out;
+
+	gchar *type = NULL;
+	while ( ( type = (gchar *)g_dir_read_name(config_dir) ) != NULL )
+	{
+		gchar *config_file_name = g_strdup_printf("%s/%s", config_dir_name, type);
+		GKeyFile *config_file = g_key_file_new();
+		if ( ! g_key_file_load_from_file(config_file, config_file_name, G_KEY_FILE_NONE, &error) )
+		{
+			g_warning("Can't read the configuration file: %s", error->message);
+			goto next;
+		}
+
+		GHashTable *type_config = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)eventd_action_free);
+
+		gchar **groups = g_key_file_get_groups(config_file, NULL);
+		gchar **group = NULL;
+		for ( group = groups ; *group ; ++group )
+		{
+			gchar **keys = g_key_file_get_keys(config_file, *group, NULL, &error);
+			if ( ! keys )
+			{
+				g_warning("Can't read the keys for group %s: %s", *group, error->message);
+				continue;
+			}
+
+			GList *list = NULL;
+
+			gchar **key = NULL;
+			for ( key = keys ; *key ; ++key )
+			{
+				EventdAction *action = NULL;
+				if ( g_ascii_strcasecmp(*key, "sound") == 0 )
+				{
+					gchar *filename = g_key_file_get_value(config_file, *group, *key, NULL);
+					if ( filename[0] != '/')
+						filename = g_strdup_printf("%s/%s/%s", home, SOUNDS_DIR, filename);
+					else
+						filename = g_strdup(filename);
+					action = eventd_action_new(ACTION_SOUND, filename);
+					g_free(filename);
+				}
+				else if ( g_ascii_strcasecmp(*key, "notify") == 0 )
+				{
+					gchar *msg = g_key_file_get_value(config_file, *group, *key, NULL);
+					action = eventd_action_new(ACTION_NOTIFY, msg);
+				}
+				else if ( g_ascii_strcasecmp(*key, "dialog") == 0 )
+				{
+					gchar *msg = g_key_file_get_value(config_file, *group, *key, NULL);
+					action = eventd_action_new(ACTION_MESSAGE, msg);
+				}
+				else
+				{
+					g_warning("action %s not supported", *key);
+					continue;
+				}
+				list = g_list_prepend(list, action);
+			}
+			g_strfreev(keys);
+
+			g_hash_table_insert(type_config, g_strdup(*group), list);
+		}
+		g_strfreev(groups);
+
+		g_hash_table_insert(config, g_strdup(type), type_config);
+	next:
+		g_key_file_free(config_file);
+		g_free(config_file_name);
+		//g_free(type);
+	}
+	if ( error )
+		g_warning("Can't read the configuration directory: %s", error->message);
+	g_clear_error(&error);
+
+	g_dir_close(config_dir);
 out:
-	g_free(config_file);
+	g_free(config_dir_name);
+}
+
+void
+eventd_config_clean()
+{
+	g_hash_table_remove_all(config);
 }

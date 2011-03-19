@@ -100,21 +100,31 @@ sig_quit_handler(int sig)
 	g_main_loop_quit(loop);
 }
 
+
+static void
+sig_reload_handler(int sig)
+{
+	eventd_config_parser();
+}
+
 void
 eventd_service(guint16 bind_port)
 {
 	signal(SIGTERM, sig_quit_handler);
 	signal(SIGINT, sig_quit_handler);
+	signal(SIGUSR1, sig_reload_handler);
+
+	eventd_config_parser();
 
 	GError *error = NULL;
 
 	#if ENABLE_NOTIFY
-	notify_init("Eventd");
+	notify_init(PACKAGE_NAME);
 	#endif
 
 	#if ENABLE_PULSE
 	sound = pa_simple_new(NULL,         // Use the default server.
-			"Eventd",        // Our application's name.
+			PACKAGE_NAME,        // Our application's name.
 			PA_STREAM_PLAYBACK,
 			NULL,               // Use the default device.
 			"Sound events",     // Description of our stream.
@@ -140,6 +150,8 @@ eventd_service(guint16 bind_port)
 	g_main_loop_run(loop);
 
 	g_main_loop_unref(loop);
+
+	eventd_config_clean();
 
 	#if ENABLE_NOTIFY
 	notify_uninit();
