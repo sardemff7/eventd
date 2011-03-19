@@ -1,4 +1,4 @@
-ACLOCAL_AMFLAGS  = -I m4
+ACLOCAL_AMFLAGS = -I m4
 
 AM_CFLAGS = \
 	$(GLOBAL_CFLAGS)
@@ -10,9 +10,15 @@ bin_PROGRAMS = \
 	eventd
 
 eventd_SOURCES = \
+	src/eventd-events.h \
+	src/eventd-events.c \
+	src/eventd-service.h \
+	src/eventd-service.c \
+	src/eventd.h \
 	src/eventd.c
 
 eventd_CFLAGS = \
+	-DLOCALEDIR=\"$(localedir)\" \
 	$(PULSE_CFLAGS) \
 	$(NOTIFY_CFLAGS) \
 	$(GTK_CFLAGS) \
