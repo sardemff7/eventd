@@ -20,14 +20,16 @@ eventd_SOURCES = \
 eventd_CFLAGS = \
 	-DLOCALEDIR=\"$(localedir)\" \
 	$(NOTIFY_CFLAGS) \
-	$(PULSE_CFLAGS) \
 	$(GTK_CFLAGS) \
+	$(PULSE_CFLAGS) \
+	$(SNDFILE_CFLAGS) \
 	$(GIO_CFLAGS) \
 	$(GLIB_CFLAGS)
 
 eventd_LDADD = \
 	$(NOTIFY_LIBS) \
 	$(PULSE_LIBS) \
+	$(SNDFILE_LIBS) \
 	$(GTK_LIBS) \
 	$(GIO_LIBS) \
 	$(GLIB_LIBS)
