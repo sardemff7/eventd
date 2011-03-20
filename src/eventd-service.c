@@ -141,7 +141,7 @@ eventd_service(guint16 bind_port)
 	notify_init(PACKAGE_NAME);
 	#endif /* ENABLE_NOTIFY */
 
-	#if ENABLE_PULSE
+	#if ENABLE_SOUND
 	sound = pa_simple_new(NULL,         // Use the default server.
 			PACKAGE_NAME,        // Our application's name.
 			PA_STREAM_PLAYBACK,
@@ -177,7 +177,7 @@ eventd_service(guint16 bind_port)
 	notify_uninit();
 	#endif /* ENABLE_NOTIFY */
 
-	#if ENABLE_PULSE
+	#if ENABLE_SOUND
 	if ( pa_simple_drain(sound, NULL) < 0)
 		g_warning("bug");
 	pa_simple_free(sound);

@@ -117,9 +117,8 @@ event_action(gchar *client_type, gchar *client_name, gchar *client_action, gchar
 		gchar *data = client_data;
 		switch ( action->type )
 		{
-		#if HAVE_SOUND
+		#if ENABLE_SOUND
 		case ACTION_SOUND:
-			#if ENABLE_PULSE
 			guint8 f = g_open(action->data, O_RDONLY);
 			if ( ! f )
 				g_warning("Can't open sound file");
@@ -130,11 +129,8 @@ event_action(gchar *client_type, gchar *client_name, gchar *client_action, gchar
 				if ( pa_simple_write(sound, buf, r, NULL) < 0)
 					g_warning("Error while playing sound file");
 			}
-			#else /* ! ENABLE_PULSE */
-			do_it("paplay", action->data, NULL);
-			#endif /* ! ENABLE_PULSE */
 		break;
-		#endif /* HAVE_SOUND */
+		#endif /* ENABLE_SOUND */
 		#if ENABLE_NOTIFY
 		case ACTION_NOTIFY:
 			if ( data != NULL )

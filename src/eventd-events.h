@@ -24,7 +24,7 @@
 #include <libnotify/notify.h>
 #endif /* ENABLE_NOTIFY */
 
-#if ENABLE_PULSE
+#if ENABLE_SOUND
 #include <pulse/simple.h>
 static pa_simple *sound = NULL;
 static const pa_sample_spec sound_spec = {

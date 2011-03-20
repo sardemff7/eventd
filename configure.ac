@@ -37,15 +37,8 @@ AC_SUBST(GIO_LIBS)
 
 AC_ARG_ENABLE(sound, AS_HELP_STRING([--disable-sound], [Disable sound support]), enable_sound=$enableval, enable_sound=yes)
 if test x$enable_sound = xyes; then
-  AC_CHECK_PROG(have_paplay, paplay, yes, no)
-  AC_ARG_ENABLE(pulse, AS_HELP_STRING([--enable-pulse], [Enable PulseAudio]), enable_pulse=$enableval, enable_pulse=no)
-  if test x$enable_pulse = xyes; then
-    PKG_CHECK_MODULES(PULSE, [libpulse-simple >= 0.9.15])
-    AC_DEFINE([HAVE_SOUND], [1], [If we have a sound support])
-    AC_DEFINE([ENABLE_PULSE], [1], [Enable native PulseAudio support])
-  elif test x$have_paplay = xyes; then
-    AC_DEFINE([HAVE_SOUND], [1], [If we have a sound support])
-  fi
+  PKG_CHECK_MODULES(PULSE, [libpulse-simple >= 0.9.15 libpulse-mainloop-glib >= 0.9.15])
+  AC_DEFINE([ENABLE_SOUND], [1], [Enable sound support through PulseAudio])
 fi
 AC_SUBST(PULSE_CFLAGS)
 AC_SUBST(PULSE_LIBS)
