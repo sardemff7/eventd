@@ -24,6 +24,9 @@
 #include <sys/file.h>
 #include <signal.h>
 #include <errno.h>
+#if ENABLE_SOUND
+#include <pulse/pulseaudio.h>
+#endif /* ENABLE_SOUND */
 
 #include "eventd-events.h"
 
@@ -73,6 +76,16 @@ notification_closed_cb(NotifyNotification *notification)
 }
 #endif /* ENABLE_NOTIFY */
 
+#if ENABLE_SOUND
+extern pa_threaded_mainloop *pa_loop;
+extern pa_context *sound;
+static const pa_sample_spec sound_spec = {
+	.format = PA_SAMPLE_S16LE,
+	.rate = 44100,
+	.channels = 2
+};
+#endif /* ENABLE_SOUND */
+
 GHashTable *config = NULL;
 
 typedef enum {
@@ -115,20 +128,20 @@ event_action(gchar *client_type, gchar *client_name, gchar *client_action, gchar
 		EventdAction *action = actions->data;
 		gchar *msg;
 		gchar *data = client_data;
+		#if ENABLE_SOUND
+		pa_operation *op;
+		#endif /* ENABLE_SOUND */
 		switch ( action->type )
 		{
 		#if ENABLE_SOUND
 		case ACTION_SOUND:
-			guint8 f = g_open(action->data, O_RDONLY);
-			if ( ! f )
-				g_warning("Can't open sound file");
-			guint8 buf[BUFFER_SIZE];
-			gssize r = 0;
-			while ((r = read(f, buf, BUFFER_SIZE)) > 0)
-			{
-				if ( pa_simple_write(sound, buf, r, NULL) < 0)
-					g_warning("Error while playing sound file");
-			}
+			pa_threaded_mainloop_lock(pa_loop);
+			op = pa_context_play_sample(sound, action->data, NULL, PA_VOLUME_NORM, NULL, NULL);
+			if ( op )
+				pa_operation_unref(op);
+			else
+				g_warning("Can't play sample %s", action->data);
+			pa_threaded_mainloop_unlock(pa_loop);
 		break;
 		#endif /* ENABLE_SOUND */
 		#if ENABLE_NOTIFY
@@ -183,6 +196,10 @@ eventd_config_parser()
 	if ( ! config_dir )
 		goto out;
 
+	#if ENABLE_SOUND
+	size_t sample_length = 0;
+	#endif /* ENABLE_SOUND */
+
 	gchar *type = NULL;
 	while ( ( type = (gchar *)g_dir_read_name(config_dir) ) != NULL )
 	{
@@ -214,7 +231,7 @@ eventd_config_parser()
 			{
 				EventdAction *action = NULL;
 				if ( 0 ) {}
-				#if HAVE_SOUND
+				#if ENABLE_SOUND
 				else if ( g_ascii_strcasecmp(*key, "sound") == 0 )
 				{
 					gchar *filename = g_key_file_get_value(config_file, *group, *key, NULL);
@@ -222,10 +239,24 @@ eventd_config_parser()
 						filename = g_strdup_printf("%s/%s/%s", home, SOUNDS_DIR, filename);
 					else
 						filename = g_strdup(filename);
-					action = eventd_action_new(ACTION_SOUND, filename);
+					gchar *sample_name = g_strdup_printf("%s-%s", type, *group);
+
+					pa_stream *sample = pa_stream_new(sound, sample_name, &sound_spec, NULL);
+					pa_stream_connect_upload(sample, sample_length);
+
+					void *data;
+					size_t nbytes = 0;
+					// TODO: load the file then write it to the PA stream
+					pa_stream_begin_write(sample, &data, &nbytes);
+					pa_stream_write(sample, data, nbytes, NULL, 0, PA_SEEK_RELATIVE);
+
+					pa_stream_finish_upload(sample);
+					pa_stream_unref(sample);
+					action = eventd_action_new(ACTION_SOUND, sample_name);
+					g_free(sample_name);
 					g_free(filename);
 				}
-				#endif /* HAVE_SOUND */
+				#endif /* ENABLE_SOUND */
 				#if ENABLE_NOTIFY
 				else if ( g_ascii_strcasecmp(*key, "notify") == 0 )
 				{

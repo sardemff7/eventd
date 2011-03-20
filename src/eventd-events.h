@@ -24,16 +24,6 @@
 #include <libnotify/notify.h>
 #endif /* ENABLE_NOTIFY */
 
-#if ENABLE_SOUND
-#include <pulse/simple.h>
-static pa_simple *sound = NULL;
-static const pa_sample_spec sound_spec = {
-	.format = PA_SAMPLE_S16LE,
-	.rate = 44100,
-	.channels = 2
-};
-#endif /* ENABLE_PULSE */
-
 void eventd_config_parsing();
 void eventd_config_clean();
 

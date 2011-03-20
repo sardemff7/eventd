@@ -27,6 +27,10 @@
 
 #include <glib.h>
 #include <gio/gio.h>
+#if ENABLE_SOUND
+#include <pulse/pulseaudio.h>
+#include <pulse/thread-mainloop.h>
+#endif /* ENABLE_SOUND */
 
 #include "eventd-events.h"
 #include "eventd-service.h"
@@ -124,6 +128,30 @@ sig_reload_handler(int sig)
 	eventd_config_parser();
 }
 
+#if ENABLE_SOUND
+pa_threaded_mainloop *pa_loop = NULL;
+pa_context *sound = NULL;
+
+void
+pa_context_state_callback(pa_context *c, void *userdata)
+{
+	pa_context_state_t state = pa_context_get_state(c);
+	switch ( state )
+	{
+		case PA_CONTEXT_READY:
+			pa_threaded_mainloop_signal(pa_loop, 0);
+		default:
+		break;
+	}
+}
+
+void
+pa_mainloop_wait_callback(pa_stream *s, int success, void *userdata)
+{
+	pa_threaded_mainloop_signal(pa_loop, 0);
+}
+#endif /* ENABLE_SOUND */
+
 int
 eventd_service(guint16 bind_port)
 {
@@ -133,8 +161,6 @@ eventd_service(guint16 bind_port)
 	signal(SIGINT, sig_quit_handler);
 	signal(SIGUSR1, sig_reload_handler);
 
-	eventd_config_parser();
-
 	GError *error = NULL;
 
 	#if ENABLE_NOTIFY
@@ -142,19 +168,22 @@ eventd_service(guint16 bind_port)
 	#endif /* ENABLE_NOTIFY */
 
 	#if ENABLE_SOUND
-	sound = pa_simple_new(NULL,         // Use the default server.
-			PACKAGE_NAME,        // Our application's name.
-			PA_STREAM_PLAYBACK,
-			NULL,               // Use the default device.
-			"Sound events",     // Description of our stream.
-			&sound_spec,        // Our sample format.
-			NULL,               // Use default channel map
-			NULL,               // Use default buffering attributes.
-			NULL                // Ignore error code.
-			);
+	pa_loop = pa_threaded_mainloop_new();
+	pa_threaded_mainloop_start(pa_loop);
+
+	sound = pa_context_new(pa_threaded_mainloop_get_api(pa_loop), PACKAGE_NAME);
 	if ( ! sound )
-		g_warning("Can't open sound system");
-	#endif /* ENABLE_PULSE */
+		g_error("Can't open sound system");
+	pa_context_state_t state = pa_context_get_state(sound);
+	pa_context_set_state_callback(sound, pa_context_state_callback, NULL);
+
+	pa_threaded_mainloop_lock(pa_loop);
+	pa_context_connect(sound, NULL, 0, NULL);
+	pa_threaded_mainloop_wait(pa_loop);
+	pa_threaded_mainloop_unlock(pa_loop);
+	#endif /* ENABLE_SOUND */
+
+	eventd_config_parser();
 
 	GSocketService *service = g_threaded_socket_service_new(5);
 	if ( ! g_socket_listener_add_inet_port((GSocketListener *)service, bind_port, NULL, &error) )
@@ -169,6 +198,21 @@ eventd_service(guint16 bind_port)
 	loop = g_main_loop_new(NULL, FALSE);
 	g_main_loop_run(loop);
 
+	#if ENABLE_SOUND
+	pa_operation* op = pa_context_drain(sound, (pa_context_notify_cb_t)pa_mainloop_wait_callback, NULL);
+	if ( op )
+	{
+		pa_threaded_mainloop_lock(pa_loop);
+		pa_threaded_mainloop_wait(pa_loop);
+		pa_operation_unref(op);
+		pa_threaded_mainloop_unlock(pa_loop);
+	}
+	pa_context_disconnect(sound);
+	pa_context_unref(sound);
+	pa_threaded_mainloop_stop(pa_loop);
+	pa_threaded_mainloop_free(pa_loop);
+	#endif /* ENABLE_SOUND */
+
 	g_main_loop_unref(loop);
 
 	eventd_config_clean();
@@ -176,12 +220,6 @@ eventd_service(guint16 bind_port)
 	#if ENABLE_NOTIFY
 	notify_uninit();
 	#endif /* ENABLE_NOTIFY */
-
-	#if ENABLE_SOUND
-	if ( pa_simple_drain(sound, NULL) < 0)
-		g_warning("bug");
-	pa_simple_free(sound);
-	#endif /* ENABLE_PULSE */
 
 	return retval;
 }
