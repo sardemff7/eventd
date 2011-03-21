@@ -105,12 +105,12 @@ main(int argc, char *argv[])
 	dup2(0,2);
 	#endif
 
-	eventd_service(bind_port);
+	int retval = eventd_service(bind_port);
 
 	#if ! DEBUG
 	g_unlink(real_pid_file);
 	g_free(real_pid_file);
 	#endif
 
-	return 0;
+	return retval;
 }

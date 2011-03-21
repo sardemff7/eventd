@@ -109,9 +109,11 @@ sig_reload_handler(int sig)
 	eventd_config_parser();
 }
 
-void
+int
 eventd_service(guint16 bind_port)
 {
+	int retval = 0;
+
 	signal(SIGTERM, sig_quit_handler);
 	signal(SIGINT, sig_quit_handler);
 	signal(SIGUSR1, sig_reload_handler);
@@ -167,4 +169,6 @@ eventd_service(guint16 bind_port)
 		g_warning("bug");
 	pa_simple_free(sound);
 	#endif
+
+	return retval;
 }

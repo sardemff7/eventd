@@ -20,6 +20,6 @@
 #ifndef __EVENTD_H__
 #define __EVENTD_H__
 
-void eventd_service();
+int eventd_service();
 
 #endif /* __EVENTD_H__ */
