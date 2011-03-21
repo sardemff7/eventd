@@ -50,7 +50,7 @@ connection_handler(
 		g_strchomp(line);
 		#if DEBUG
 		g_debug("Input: %s", line);
-		#endif
+		#endif /* DEBUG */
 		if ( g_ascii_strncasecmp(line, "HELLO ", 6) == 0 )
 		{
 			gchar **hello = g_strsplit(line+6, " ", 2);
@@ -62,7 +62,7 @@ connection_handler(
 			g_strfreev(hello);
 			#if DEBUG
 			g_debug("Hello: type=%s name=%s", type, name);
-			#endif
+			#endif /* DEBUG */
 		}
 		else if ( g_ascii_strcasecmp(line, "BYE") == 0 )
 			break;
@@ -75,7 +75,7 @@ connection_handler(
 				data = g_strstrip(event[1]);
 			#if DEBUG
 			g_debug("Event: action=%s data=%s", action, data);
-			#endif
+			#endif /* DEBUG */
 			event_action(type, name, action, data);
 			g_strfreev(event);
 		}
@@ -124,7 +124,7 @@ eventd_service(guint16 bind_port)
 
 	#if ENABLE_NOTIFY
 	notify_init(PACKAGE_NAME);
-	#endif
+	#endif /* ENABLE_NOTIFY */
 
 	#if ENABLE_PULSE
 	sound = pa_simple_new(NULL,         // Use the default server.
@@ -139,7 +139,7 @@ eventd_service(guint16 bind_port)
 			);
 	if ( ! sound )
 		g_warning("Can't open sound system");
-	#endif
+	#endif /* ENABLE_PULSE */
 
 	;
 	loop = g_main_loop_new(NULL, FALSE);
@@ -162,13 +162,13 @@ eventd_service(guint16 bind_port)
 
 	#if ENABLE_NOTIFY
 	notify_uninit();
-	#endif
+	#endif /* ENABLE_NOTIFY */
 
 	#if ENABLE_PULSE
 	if ( pa_simple_drain(sound, NULL) < 0)
 		g_warning("bug");
 	pa_simple_free(sound);
-	#endif
+	#endif /* ENABLE_PULSE */
 
 	return retval;
 }

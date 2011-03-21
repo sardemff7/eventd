@@ -52,7 +52,7 @@ main(int argc, char *argv[])
 		setlocale(LC_ALL, "");
 		bindtextdomain(GETTEXT_PACKAGE, LOCALEDIR);
 		bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
-	#endif
+	#endif /* ENABLE_NLS */
 	g_type_init();
 	GError *error = NULL;
 
@@ -103,14 +103,14 @@ main(int argc, char *argv[])
 	open("/dev/null", O_RDWR);
 	dup2(0,1);
 	dup2(0,2);
-	#endif
+	#endif /* ! DEBUG */
 
 	int retval = eventd_service(bind_port);
 
 	#if ! DEBUG
 	g_unlink(real_pid_file);
 	g_free(real_pid_file);
-	#endif
+	#endif /* ! DEBUG */
 
 	return retval;
 }

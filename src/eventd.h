@@ -22,7 +22,7 @@
 
 #ifdef HAVE_CONFIG_H
 	#include <config.h>
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #ifdef ENABLE_NLS
 	#include <locale.h>
@@ -33,12 +33,12 @@
 	#else
 		#define N_(x) (x)
 	#endif
-#else
+#else /* ! ENABLE_NLS */
 	#include <locale.h>
 	#define _(x) (x)
 	#define ngettext(Singular, Plural, Number) ((Number == 1) ? (Singular) : (Plural))
 	#define N_(x) (x)
-#endif
+#endif /* ! ENABLE_NLS */
 
 #include <glib.h>
 

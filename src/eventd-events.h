@@ -22,7 +22,7 @@
 
 #if ENABLE_NOTIFY
 #include <libnotify/notify.h>
-#endif
+#endif /* ENABLE_NOTIFY */
 
 #if ENABLE_PULSE
 #include <pulse/simple.h>
@@ -32,7 +32,7 @@ static const pa_sample_spec sound_spec = {
 	.rate = 44100,
 	.channels = 2
 };
-#endif
+#endif /* ENABLE_PULSE */
 
 void eventd_config_parsing();
 void eventd_config_clean();

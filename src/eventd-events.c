@@ -129,9 +129,9 @@ event_action(gchar *client_type, gchar *client_name, gchar *client_action, gchar
 				if ( pa_simple_write(sound, buf, r, NULL) < 0)
 					g_warning("Error while playing sound file");
 			}
-			#else
+			#else /* ! ENABLE_PULSE */
 			do_it("paplay", action->data, NULL);
-			#endif
+			#endif /* ! ENABLE_PULSE */
 		break;
 		#endif /* HAVE_SOUND */
 		#if ENABLE_NOTIFY
@@ -159,10 +159,10 @@ event_action(gchar *client_type, gchar *client_name, gchar *client_action, gchar
 		case ACTION_MESSAGE:
 			#if ENABLE_GTK
 			#error Not supported yet
-			#else
+			#else /* ! ENABLE_GTK */
 			msg = g_strdup_printf(action->data, data ? data : "");
 			do_it("zenity", "--info", "--title", client_name, "--text", msg, NULL);
-			#endif
+			#endif /* ! ENABLE_GTK */
 		break;
 		#endif /* HAVE_DIALOGS */
 		}
