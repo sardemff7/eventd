@@ -42,4 +42,6 @@
 
 #include <glib.h>
 
+#define VAR_RUN_DIR   ".local/var/run/eventd"
+
 #endif /* __EVENTD_H__ */

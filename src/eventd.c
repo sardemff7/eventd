@@ -18,7 +18,6 @@
  */
 
 #define DEFAULT_BIND_PORT 7100
-#define PID_FILE   ".local/var/eventd.pid"
 
 #include <stdlib.h>
 #include <string.h>
@@ -29,6 +28,8 @@
 
 #include "eventd.h"
 #include "eventd-service.h"
+
+#define PID_FILE   VAR_RUN_DIR"/pid"
 
 static guint16 bind_port = DEFAULT_BIND_PORT;
 static gboolean action_kill = FALSE;
@@ -61,6 +62,9 @@ main(int argc, char *argv[])
 		g_error("Option parsing failed: %s\n", error->message);
 
 	home = g_getenv("HOME");
+	/*
+	 * TODO: Create VAR_RUN_DIR
+	 */
 
 	gchar *real_pid_file = NULL;
 	if ( pid_file )

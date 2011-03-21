@@ -29,6 +29,8 @@
 #include "eventd-service.h"
 
 #define BUFFER_SIZE 1024
+#define UNIX_SOCK VAR_RUN_DIR"/sock"
+
 static gboolean
 connection_handler(
 	GThreadedSocketService *service,
@@ -143,6 +145,9 @@ eventd_service(guint16 bind_port)
 	GSocketService *service = g_threaded_socket_service_new(5);
 	if ( ! g_socket_listener_add_inet_port((GSocketListener *)service, bind_port, NULL, &error) )
 		g_warning("Unable to open socket: %s", error->message);
+	/*
+	 * TODO: Add a UNIX sock file
+	 */
 	g_clear_error(&error);
 
 	g_signal_connect(G_OBJECT(service), "run", G_CALLBACK(connection_handler), NULL);
