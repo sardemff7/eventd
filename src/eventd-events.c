@@ -64,6 +64,14 @@ do_it(gchar * path, gchar * arg, ...)
 }
 
 
+#if ENABLE_NOTIFY
+static gboolean
+notification_closed_cb(NotifyNotification *notification)
+{
+	return FALSE;
+}
+#endif /* ENABLE_NOTIFY */
+
 GHashTable *config = NULL;
 
 typedef enum {
@@ -143,6 +151,7 @@ event_action(gchar *client_type, gchar *client_name, gchar *client_action, gchar
 				g_warning("Can't show the notification: %s", error->message);
 			g_clear_error(&error);
 			g_free(msg);
+			g_signal_connect(notification, "closed", G_CALLBACK(notification_closed_cb), NULL);
 			g_object_unref(G_OBJECT(notification));
 		break;
 		#endif /* ENABLE_NOTIFY */
@@ -207,7 +216,9 @@ eventd_config_parser()
 			for ( key = keys ; *key ; ++key )
 			{
 				EventdAction *action = NULL;
-				if ( g_ascii_strcasecmp(*key, "sound") == 0 )
+				if ( 0 ) {}
+				#if HAVE_SOUND
+				else if ( g_ascii_strcasecmp(*key, "sound") == 0 )
 				{
 					gchar *filename = g_key_file_get_value(config_file, *group, *key, NULL);
 					if ( filename[0] != '/')
@@ -217,16 +228,21 @@ eventd_config_parser()
 					action = eventd_action_new(ACTION_SOUND, filename);
 					g_free(filename);
 				}
+				#endif /* HAVE_SOUND */
+				#if ENABLE_NOTIFY
 				else if ( g_ascii_strcasecmp(*key, "notify") == 0 )
 				{
 					gchar *msg = g_key_file_get_value(config_file, *group, *key, NULL);
 					action = eventd_action_new(ACTION_NOTIFY, msg);
 				}
+				#endif /* ENABLE_NOTIFY */
+				#if HAVE_DIALOGS
 				else if ( g_ascii_strcasecmp(*key, "dialog") == 0 )
 				{
 					gchar *msg = g_key_file_get_value(config_file, *group, *key, NULL);
 					action = eventd_action_new(ACTION_MESSAGE, msg);
 				}
+				#endif /* HAVE_DIALOGS */
 				else
 				{
 					g_warning("action %s not supported", *key);
