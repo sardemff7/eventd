@@ -89,3 +89,9 @@ AC_CONFIG_FILES([
 ])
 AC_OUTPUT
 
+
+echo Libnotify support:    $enable_notify
+echo Sound support:        $enable_sound
+echo  Using PulseAudio:    $enable_pulse
+echo Dialogs support:      $enable_dialogs
+echo  Using GTK+:          $enable_gtk
