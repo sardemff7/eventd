@@ -17,7 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define DEFAULT_BIND_PORT 7100
+#include "eventd.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -26,10 +26,13 @@
 #include <signal.h>
 #include <errno.h>
 
+#include <glib.h>
+
 #include "eventd.h"
 #include "eventd-service.h"
 
-#define PID_FILE   VAR_RUN_DIR"/pid"
+#define DEFAULT_BIND_PORT 7100
+#define PID_FILE VAR_RUN_DIR"/pid"
 
 static guint16 bind_port = DEFAULT_BIND_PORT;
 static gboolean action_kill = FALSE;

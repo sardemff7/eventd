@@ -17,14 +17,17 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "eventd.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include <sys/file.h>
 #include <signal.h>
 #include <errno.h>
+
+#include <glib.h>
 #include <gio/gio.h>
 
-#include "eventd.h"
 #include "eventd-events.h"
 #include "eventd-service.h"
 

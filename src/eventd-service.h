@@ -17,9 +17,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __EVENTD_H__
-#define __EVENTD_H__
+#ifndef __EVENTD_SERVICE_H__
+#define __EVENTD_SERVICE_H__
 
-int eventd_service();
+int eventd_service(guint16 bind_port);
 
-#endif /* __EVENTD_H__ */
+#endif /* __EVENTD_SERVICE_H__ */

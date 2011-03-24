@@ -17,8 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define CONFIG_DIR ".config/eventd"
-#define SOUNDS_DIR ".local/share/sounds/eventd"
+#include "eventd.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -26,8 +25,10 @@
 #include <signal.h>
 #include <errno.h>
 
-#include "eventd.h"
 #include "eventd-events.h"
+
+#define CONFIG_DIR ".config/eventd"
+#define SOUNDS_DIR ".local/share/sounds/eventd"
 
 extern gchar const *home;
 
