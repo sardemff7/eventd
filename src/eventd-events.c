@@ -227,6 +227,18 @@ static void
 eventd_action_free(EventdAction *action)
 {
 	g_return_if_fail(action != NULL);
+	switch ( action->type )
+	{
+		#if ENABLE_SOUND
+		case ACTION_SOUND:
+			pa_threaded_mainloop_lock(pa_loop);
+			pa_context_remove_sample(sound, action->data, pa_context_success_callback, NULL);
+			pa_threaded_mainloop_wait(pa_loop);
+			pa_threaded_mainloop_unlock(pa_loop);
+		#endif /* ENABLE_SOUND */
+		default:
+		break;
+	}
 	g_free(action->data);
 	g_free(action);
 }
