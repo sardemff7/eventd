@@ -74,7 +74,7 @@ GLOBAL_LDFLAGS=""
 AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug], [Enable debug]), enable_debug=$enableval, enable_debug=no)
 if test x$enable_debug = xyes; then
   AC_DEFINE([DEBUG], [1], [Activate debug mode])
-  GLOBAL_CFLAGS+=" -Werror"
+  GLOBAL_CFLAGS+=" -Werror -O0 -ggdb3"
 fi
 AC_SUBST(GLOBAL_CFLAGS)
 AC_SUBST(GLOBAL_LDFLAGS)
