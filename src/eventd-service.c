@@ -51,9 +51,6 @@ connection_handler(
 	while ( ( line = g_data_input_stream_read_line(input, &size, NULL, &error) ) != NULL )
 	{
 		g_strchomp(line);
-		#if DEBUG
-		g_debug("Input: %s", line);
-		#endif /* DEBUG */
 		if ( g_ascii_strncasecmp(line, "HELLO ", 6) == 0 )
 		{
 			gchar **hello = g_strsplit(line+6, " ", 2);
@@ -68,7 +65,12 @@ connection_handler(
 			#endif /* DEBUG */
 		}
 		else if ( g_ascii_strcasecmp(line, "BYE") == 0 )
+		{
+			#if DEBUG
+			g_debug("Bye");
+			#endif /* DEBUG */
 			break;
+		}
 		else if ( g_ascii_strncasecmp(line, "EVENT ", 6) == 0 )
 		{
 			gchar **event = g_strsplit(line+6, " ", 2);
@@ -81,6 +83,13 @@ connection_handler(
 			#endif /* DEBUG */
 			event_action(type, name, action, data);
 			g_strfreev(event);
+		}
+		else
+		{
+			#if DEBUG
+			g_debug("Input: %s", line);
+			#endif /* DEBUG */
+			g_warning("Unknown message");
 		}
 	}
 	if ( error )
