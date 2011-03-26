@@ -245,8 +245,17 @@ static void
 eventd_action_free(EventdAction *action)
 {
 	g_return_if_fail(action != NULL);
-	//g_free(action->data);
-	//g_free(action);
+	g_free(action->data);
+	g_free(action);
+}
+
+static void
+eventd_action_list_free(GList *actions)
+{
+	g_return_if_fail(actions != NULL);
+	GList *action;
+	for ( action = g_list_first(actions) ; action ; action = g_list_next(action) )
+		eventd_action_free(action->data);
 }
 
 void
@@ -318,7 +327,7 @@ eventd_config_parser()
 
 	if ( config )
 		eventd_config_clean();
-	config = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, (GDestroyNotify)g_hash_table_remove_all);
+	config = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_hash_table_remove_all);
 
 	gchar *config_dir_name = NULL;
 	GDir *config_dir = NULL;
@@ -339,7 +348,7 @@ eventd_config_parser()
 			goto next;
 		}
 
-		GHashTable *type_config = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, (GDestroyNotify)eventd_action_free);
+		GHashTable *type_config = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)eventd_action_list_free);
 
 		gchar **groups = g_key_file_get_groups(config_file, NULL);
 		gchar **group = NULL;

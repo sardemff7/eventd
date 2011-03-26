@@ -197,6 +197,9 @@ eventd_service(guint16 bind_port)
 
 	loop = g_main_loop_new(NULL, FALSE);
 	g_main_loop_run(loop);
+	g_main_loop_unref(loop);
+
+	eventd_config_clean();
 
 	#if ENABLE_SOUND
 	pa_operation* op = pa_context_drain(sound, (pa_context_notify_cb_t)pa_mainloop_wait_callback, NULL);
@@ -212,10 +215,6 @@ eventd_service(guint16 bind_port)
 	pa_threaded_mainloop_stop(pa_loop);
 	pa_threaded_mainloop_free(pa_loop);
 	#endif /* ENABLE_SOUND */
-
-	g_main_loop_unref(loop);
-
-	eventd_config_clean();
 
 	#if ENABLE_NOTIFY
 	notify_uninit();
