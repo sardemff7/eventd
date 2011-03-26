@@ -102,7 +102,10 @@ static GMainLoop *loop = NULL;
 static void
 sig_quit_handler(int sig)
 {
-	g_main_loop_quit(loop);
+	if ( loop )
+		g_main_loop_quit(loop);
+	else
+		exit(1);
 }
 
 
@@ -144,9 +147,6 @@ eventd_service(guint16 bind_port)
 		g_warning("Can't open sound system");
 	#endif /* ENABLE_PULSE */
 
-	;
-	loop = g_main_loop_new(NULL, FALSE);
-
 	GSocketService *service = g_threaded_socket_service_new(5);
 	if ( ! g_socket_listener_add_inet_port((GSocketListener *)service, bind_port, NULL, &error) )
 		g_warning("Unable to open socket: %s", error->message);
@@ -157,6 +157,7 @@ eventd_service(guint16 bind_port)
 
 	g_signal_connect(G_OBJECT(service), "run", G_CALLBACK(connection_handler), NULL);
 
+	loop = g_main_loop_new(NULL, FALSE);
 	g_main_loop_run(loop);
 
 	g_main_loop_unref(loop);
