@@ -25,7 +25,7 @@
 #include <signal.h>
 #include <errno.h>
 #if ENABLE_SOUND
-#include <pulse/pulseaudio.h>
+#include "eventd-pulse.h"
 #include <sndfile.h>
 #endif /* ENABLE_SOUND */
 
@@ -78,8 +78,6 @@ notification_closed_cb(NotifyNotification *notification)
 #endif /* ENABLE_NOTIFY */
 
 #if ENABLE_SOUND
-extern pa_threaded_mainloop *pa_loop;
-extern pa_context *sound;
 static const pa_sample_spec sound_spec = {
 	.format = PA_SAMPLE_S16LE,
 	.rate = 44100,
@@ -87,22 +85,6 @@ static const pa_sample_spec sound_spec = {
 };
 
 typedef sf_count_t (*sndfile_readf_t)(SNDFILE *sndfile, void *ptr, sf_count_t frames);
-
-void
-pa_sample_state_cb(pa_stream *sample, void *userdata)
-{
-	pa_stream_state_t state = pa_stream_get_state(sample);
-	switch  ( state )
-	{
-		case PA_STREAM_TERMINATED:
-			pa_stream_unref(sample);
-		break;
-		case PA_STREAM_READY:
-			pa_threaded_mainloop_signal(pa_loop, 0);
-		default:
-		break;
-	}
-}
 
 static gboolean
 eventd_create_sample(const gchar *sample_name, const gchar *filename)
@@ -175,7 +157,7 @@ eventd_create_sample(const gchar *sample_name, const gchar *filename)
 
 	size_t sample_length = (size_t) sfi.frames *pa_frame_size(&sample_spec);
 	pa_stream *sample = pa_stream_new(sound, sample_name, &sample_spec, NULL);
-	pa_stream_set_state_callback(sample, pa_sample_state_cb, NULL);
+	pa_stream_set_state_callback(sample, pa_sample_state_callback, NULL);
 	pa_stream_connect_upload(sample, sample_length);
 
 	pa_threaded_mainloop_lock(pa_loop);

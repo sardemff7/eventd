@@ -28,7 +28,7 @@
 #include <glib.h>
 #include <gio/gio.h>
 #if ENABLE_SOUND
-#include <pulse/pulseaudio.h>
+#include "eventd-pulse.h"
 #include <pulse/thread-mainloop.h>
 #endif /* ENABLE_SOUND */
 
@@ -128,30 +128,6 @@ sig_reload_handler(int sig)
 	eventd_config_parser();
 }
 
-#if ENABLE_SOUND
-pa_threaded_mainloop *pa_loop = NULL;
-pa_context *sound = NULL;
-
-void
-pa_context_state_callback(pa_context *c, void *userdata)
-{
-	pa_context_state_t state = pa_context_get_state(c);
-	switch ( state )
-	{
-		case PA_CONTEXT_READY:
-			pa_threaded_mainloop_signal(pa_loop, 0);
-		default:
-		break;
-	}
-}
-
-void
-pa_mainloop_wait_callback(pa_stream *s, int success, void *userdata)
-{
-	pa_threaded_mainloop_signal(pa_loop, 0);
-}
-#endif /* ENABLE_SOUND */
-
 int
 eventd_service(guint16 bind_port)
 {
@@ -202,7 +178,7 @@ eventd_service(guint16 bind_port)
 	eventd_config_clean();
 
 	#if ENABLE_SOUND
-	pa_operation* op = pa_context_drain(sound, (pa_context_notify_cb_t)pa_mainloop_wait_callback, NULL);
+	pa_operation* op = pa_context_drain(sound, pa_context_notify_callback, NULL);
 	if ( op )
 	{
 		pa_threaded_mainloop_lock(pa_loop);
