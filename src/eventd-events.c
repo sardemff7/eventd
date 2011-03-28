@@ -143,6 +143,7 @@ event_action(gchar *client_type, gchar *client_name, gchar *client_action, gchar
 		{
 		#if ENABLE_SOUND
 		case ACTION_SOUND:
+			eventd_pulse_play_sample(action->data);
 		break;
 		#endif /* ENABLE_SOUND */
 		#if ENABLE_NOTIFY
