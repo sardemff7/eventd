@@ -32,6 +32,10 @@
 #include "eventd-pulse.h"
 #endif /* ENABLE_SOUND */
 
+#if ENABLE_NOTIFY
+#include "eventd-notify.h"
+#endif /* ENABLE_NOTIFY */
+
 #include "eventd-events.h"
 #include "eventd-service.h"
 
@@ -140,7 +144,7 @@ eventd_service(guint16 bind_port)
 	GError *error = NULL;
 
 	#if ENABLE_NOTIFY
-	notify_init(PACKAGE_NAME);
+	eventd_notify_start();
 	#endif /* ENABLE_NOTIFY */
 
 	#if ENABLE_SOUND
@@ -170,7 +174,7 @@ eventd_service(guint16 bind_port)
 	#endif /* ENABLE_SOUND */
 
 	#if ENABLE_NOTIFY
-	notify_uninit();
+	eventd_notify_stop();
 	#endif /* ENABLE_NOTIFY */
 
 	return retval;

@@ -17,10 +17,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __EVENTD_EVENTS_H__
-#define __EVENTD_EVENTS_H__
+#ifndef __EVENTD_NOTIFY_H__
+#define __EVENTD_NOTIFY_H__
 
-void eventd_config_parsing();
-void eventd_config_clean();
+void eventd_notify_start();
+void eventd_notify_stop();
 
-#endif /* __EVENTD_EVENTS_H__ */
+void eventd_notify_display(const char *title, const char *msg);
+
+#endif /* __EVENTD_NOTIFY_H__ */

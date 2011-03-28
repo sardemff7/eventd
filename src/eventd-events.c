@@ -31,6 +31,10 @@
 #include "eventd-pulse.h"
 #endif /* ENABLE_SOUND */
 
+#if ENABLE_NOTIFY
+#include "eventd-notify.h"
+#endif /* ENABLE_NOTIFY */
+
 #include "eventd-events.h"
 
 #define CONFIG_DIR ".config/eventd"
@@ -70,14 +74,6 @@ do_it(gchar * path, gchar * arg, ...)
 	return ( ret == 0);
 }
 
-
-#if ENABLE_NOTIFY
-static gboolean
-notification_closed_cb(NotifyNotification *notification)
-{
-	return FALSE;
-}
-#endif /* ENABLE_NOTIFY */
 
 GHashTable *config = NULL;
 
@@ -152,19 +148,8 @@ event_action(gchar *client_type, gchar *client_name, gchar *client_action, gchar
 				data = g_markup_escape_text(data, -1);
 			msg = g_strdup_printf(action->data, data ? data : "");
 			g_free(data);
-			NotifyNotification *notification = notify_notification_new(client_name, msg, NULL
-			#if ! NOTIFY_CHECK_VERSION(0,7,0)
-			, NULL
-			#endif
-			);
-			notify_notification_set_urgency(notification, NOTIFY_URGENCY_NORMAL);
-			notify_notification_set_timeout(notification, 1);
-			if ( ! notify_notification_show(notification, &error) )
-				g_warning("Can't show the notification: %s", error->message);
-			g_clear_error(&error);
+			eventd_notify_display(client_name, msg);
 			g_free(msg);
-			g_signal_connect(notification, "closed", G_CALLBACK(notification_closed_cb), NULL);
-			g_object_unref(G_OBJECT(notification));
 		break;
 		#endif /* ENABLE_NOTIFY */
 		#if HAVE_DIALOGS
