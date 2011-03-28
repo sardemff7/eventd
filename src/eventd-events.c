@@ -24,9 +24,11 @@
 #include <sys/file.h>
 #include <signal.h>
 #include <errno.h>
+
+#include <glib.h>
+
 #if ENABLE_SOUND
 #include "eventd-pulse.h"
-#include <sndfile.h>
 #endif /* ENABLE_SOUND */
 
 #include "eventd-events.h"
@@ -77,129 +79,6 @@ notification_closed_cb(NotifyNotification *notification)
 }
 #endif /* ENABLE_NOTIFY */
 
-#if ENABLE_SOUND
-static const pa_sample_spec sound_spec = {
-	.format = PA_SAMPLE_S16LE,
-	.rate = 44100,
-	.channels = 2
-};
-
-typedef sf_count_t (*sndfile_readf_t)(SNDFILE *sndfile, void *ptr, sf_count_t frames);
-
-static gboolean
-eventd_create_sample(const gchar *sample_name, const gchar *filename)
-{
-	gboolean retval = FALSE;
-
-	SF_INFO sfi;
-	SNDFILE* f = NULL;
-	if ( ( f = sf_open(filename, SFM_READ, &sfi) ) == NULL )
-	{
-		g_warning("Can't open sound file");
-		goto out;
-	}
-
-	pa_sample_spec sample_spec;
-	switch (sfi.format & SF_FORMAT_SUBMASK)
-	{
-	case SF_FORMAT_PCM_16:
-	case SF_FORMAT_PCM_U8:
-	case SF_FORMAT_PCM_S8:
-		sample_spec.format = PA_SAMPLE_S16NE;
-	break;
-	case SF_FORMAT_PCM_24:
-		sample_spec.format = PA_SAMPLE_S24NE;
-	break;
-	case SF_FORMAT_PCM_32:
-		sample_spec.format = PA_SAMPLE_S32NE;
-	break;
-	case SF_FORMAT_ULAW:
-		sample_spec.format = PA_SAMPLE_ULAW;
-	break;
-	case SF_FORMAT_ALAW:
-		sample_spec.format = PA_SAMPLE_ALAW;
-	break;
-	case SF_FORMAT_FLOAT:
-	case SF_FORMAT_DOUBLE:
-	default:
-		sample_spec.format = PA_SAMPLE_FLOAT32NE;
-	break;
-	}
-
-	sample_spec.rate = (uint32_t)sfi.samplerate;
-	sample_spec.channels = (uint8_t)sfi.channels;
-
-	if ( ! pa_sample_spec_valid(&sample_spec) )
-	{
-		g_warning("Invalid spec");
-		goto out;
-	}
-
-	sndfile_readf_t readf_function = NULL;
-	switch ( sample_spec.format )
-	{
-	case PA_SAMPLE_S16NE:
-		readf_function = (sndfile_readf_t) sf_readf_short;
-	break;
-	case PA_SAMPLE_S32NE:
-	case PA_SAMPLE_S24_32NE:
-		readf_function = (sndfile_readf_t) sf_readf_int;
-	break;
-	case PA_SAMPLE_FLOAT32NE:
-		readf_function = (sndfile_readf_t) sf_readf_float;
-	break;
-	case PA_SAMPLE_ULAW:
-	case PA_SAMPLE_ALAW:
-		g_warning("Can't handle this one");
-		goto out;
-	break;
-	}
-
-	size_t sample_length = (size_t) sfi.frames *pa_frame_size(&sample_spec);
-	pa_stream *sample = pa_stream_new(sound, sample_name, &sample_spec, NULL);
-	pa_stream_set_state_callback(sample, pa_sample_state_callback, NULL);
-	pa_stream_connect_upload(sample, sample_length);
-
-	pa_threaded_mainloop_lock(pa_loop);
-	pa_threaded_mainloop_wait(pa_loop);
-
-	size_t frame_size = pa_frame_size(&sample_spec);
-	void *data = NULL;
-	size_t nbytes = -1;
-	gssize r = 0;
-	while ( pa_stream_begin_write(sample, &data, &nbytes) > -1 )
-	{
-		if ( ( r = readf_function(f, data, (sf_count_t) (nbytes/frame_size)) ) > 0 )
-		{
-			r *= (sf_count_t)frame_size;
-			pa_stream_write(sample, data, r, NULL, 0, PA_SEEK_RELATIVE);
-		}
-		else
-		{
-			pa_stream_cancel_write(sample);
-			break;
-		}
-		r = 0;
-		nbytes = -1;
-	}
-	if ( r  < 0 )
-		g_warning("Error while reading sound file");
-	else
-		retval = TRUE;
-	/*
-	 * TODO: load the file then write it to the PA stream
-	 */
-
-	pa_stream_finish_upload(sample);
-	//pa_stream_unref(sample);
-
-	pa_threaded_mainloop_unlock(pa_loop);
-out:
-	sf_close(f);
-	return retval;
-}
-#endif /* ENABLE_SOUND */
-
 GHashTable *config = NULL;
 
 typedef enum {
@@ -231,10 +110,7 @@ eventd_action_free(EventdAction *action)
 	{
 		#if ENABLE_SOUND
 		case ACTION_SOUND:
-			pa_threaded_mainloop_lock(pa_loop);
-			pa_context_remove_sample(sound, action->data, pa_context_success_callback, NULL);
-			pa_threaded_mainloop_wait(pa_loop);
-			pa_threaded_mainloop_unlock(pa_loop);
+			eventd_pulse_remove_sample(action->data);
 		#endif /* ENABLE_SOUND */
 		default:
 		break;
@@ -263,20 +139,10 @@ event_action(gchar *client_type, gchar *client_name, gchar *client_action, gchar
 		EventdAction *action = actions->data;
 		gchar *msg;
 		gchar *data = client_data;
-		#if ENABLE_SOUND
-		pa_operation *op;
-		#endif /* ENABLE_SOUND */
 		switch ( action->type )
 		{
 		#if ENABLE_SOUND
 		case ACTION_SOUND:
-			pa_threaded_mainloop_lock(pa_loop);
-			op = pa_context_play_sample(sound, action->data, NULL, PA_VOLUME_NORM, NULL, NULL);
-			if ( op )
-				pa_operation_unref(op);
-			else
-				g_warning("Can't play sample %s", action->data);
-			pa_threaded_mainloop_unlock(pa_loop);
 		break;
 		#endif /* ENABLE_SOUND */
 		#if ENABLE_NOTIFY
@@ -371,7 +237,7 @@ eventd_config_parser()
 					else
 						filename = g_strdup(filename);
 					gchar *sample_name = g_strdup_printf("%s-%s", type, *group);
-					if ( eventd_create_sample(sample_name, filename) )
+					if ( eventd_pulse_create_sample(sample_name, filename) )
 						action = eventd_action_new(ACTION_SOUND, sample_name);
 					g_free(sample_name);
 					g_free(filename);

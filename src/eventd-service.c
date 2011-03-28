@@ -27,9 +27,9 @@
 
 #include <glib.h>
 #include <gio/gio.h>
+
 #if ENABLE_SOUND
 #include "eventd-pulse.h"
-#include <pulse/thread-mainloop.h>
 #endif /* ENABLE_SOUND */
 
 #include "eventd-events.h"
@@ -144,19 +144,7 @@ eventd_service(guint16 bind_port)
 	#endif /* ENABLE_NOTIFY */
 
 	#if ENABLE_SOUND
-	pa_loop = pa_threaded_mainloop_new();
-	pa_threaded_mainloop_start(pa_loop);
-
-	sound = pa_context_new(pa_threaded_mainloop_get_api(pa_loop), PACKAGE_NAME);
-	if ( ! sound )
-		g_error("Can't open sound system");
-	pa_context_state_t state = pa_context_get_state(sound);
-	pa_context_set_state_callback(sound, pa_context_state_callback, NULL);
-
-	pa_threaded_mainloop_lock(pa_loop);
-	pa_context_connect(sound, NULL, 0, NULL);
-	pa_threaded_mainloop_wait(pa_loop);
-	pa_threaded_mainloop_unlock(pa_loop);
+	eventd_pulse_start();
 	#endif /* ENABLE_SOUND */
 
 	eventd_config_parser();
@@ -178,18 +166,7 @@ eventd_service(guint16 bind_port)
 	eventd_config_clean();
 
 	#if ENABLE_SOUND
-	pa_operation* op = pa_context_drain(sound, pa_context_notify_callback, NULL);
-	if ( op )
-	{
-		pa_threaded_mainloop_lock(pa_loop);
-		pa_threaded_mainloop_wait(pa_loop);
-		pa_operation_unref(op);
-		pa_threaded_mainloop_unlock(pa_loop);
-	}
-	pa_context_disconnect(sound);
-	pa_context_unref(sound);
-	pa_threaded_mainloop_stop(pa_loop);
-	pa_threaded_mainloop_free(pa_loop);
+	eventd_pulse_stop();
 	#endif /* ENABLE_SOUND */
 
 	#if ENABLE_NOTIFY

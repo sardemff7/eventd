@@ -20,14 +20,11 @@
 #ifndef __EVENTD_PULSE_H__
 #define __EVENTD_PULSE_H__
 
-#include <pulse/pulseaudio.h>
+void eventd_pulse_start();
+void eventd_pulse_stop();
 
-void pa_context_state_callback(pa_context *c, void *userdata);
-void pa_context_notify_callback(pa_context *s, void *userdata);
-void pa_context_success_callback(pa_context *s, int success, void *userdata);
-void pa_sample_state_callback(pa_stream *sample, void *userdata);
-
-extern pa_threaded_mainloop *pa_loop;
-extern pa_context *sound;
+int eventd_pulse_create_sample(const char *name, const char *file);
+void eventd_pulse_play_sample(const char *name);
+void eventd_pulse_remove_sample(const char *name);
 
 #endif /* __EVENTD_PULSE_H__ */
