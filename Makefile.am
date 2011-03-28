@@ -19,17 +19,38 @@ eventd_SOURCES = \
 
 eventd_CFLAGS = \
 	-DLOCALEDIR=\"$(localedir)\" \
-	$(NOTIFY_CFLAGS) \
 	$(GTK_CFLAGS) \
-	$(PULSE_CFLAGS) \
-	$(SNDFILE_CFLAGS) \
 	$(GIO_CFLAGS) \
 	$(GLIB_CFLAGS)
 
 eventd_LDADD = \
-	$(NOTIFY_LIBS) \
-	$(PULSE_LIBS) \
-	$(SNDFILE_LIBS) \
 	$(GTK_LIBS) \
 	$(GIO_LIBS) \
 	$(GLIB_LIBS)
+
+
+if ENABLE_SOUND
+eventd_SOURCES += \
+	src/eventd-pulse.h \
+	src/eventd-pulse.c
+
+eventd_CFLAGS += \
+	$(PULSE_CFLAGS) \
+	$(SNDFILE_CFLAGS)
+
+eventd_LDADD += \
+	$(PULSE_LIBS) \
+	$(SNDFILE_LIBS)
+endif
+
+if ENABLE_NOTIFY
+eventd_SOURCES += \
+	src/eventd-notify.h \
+	src/eventd-notify.c
+
+eventd_CFLAGS += \
+	$(NOTIFY_CFLAGS)
+
+eventd_LDADD += \
+	$(NOTIFY_LIBS)
+endif

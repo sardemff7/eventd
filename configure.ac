@@ -35,21 +35,25 @@ AC_SUBST(GIO_CFLAGS)
 AC_SUBST(GIO_LIBS)
 
 
+  AM_CONDITIONAL(ENABLE_SOUND, false)
 AC_ARG_ENABLE(sound, AS_HELP_STRING([--disable-sound], [Disable sound support]), enable_sound=$enableval, enable_sound=yes)
 if test x$enable_sound = xyes; then
   PKG_CHECK_MODULES(PULSE, [libpulse >= 0.9.15])
   PKG_CHECK_MODULES(SNDFILE, [sndfile])
   AC_DEFINE([ENABLE_SOUND], [1], [Enable sound support through PulseAudio and libsndfile])
+  AM_CONDITIONAL(ENABLE_SOUND, true)
 fi
 AC_SUBST(PULSE_CFLAGS)
 AC_SUBST(PULSE_LIBS)
 AC_SUBST(SNDFILE_CFLAGS)
 AC_SUBST(SNDFILE_LIBS)
 
+  AM_CONDITIONAL(ENABLE_NOTIFY, false)
 AC_ARG_ENABLE(notify, AS_HELP_STRING([--disable-notify], [Disable libnotify support]), enable_notify=$enableval, enable_notify=yes)
 if test x$enable_notify = xyes; then
   PKG_CHECK_MODULES(NOTIFY, [libnotify >= 0.6.5])
   AC_DEFINE([ENABLE_NOTIFY], [1], [Enable libnotify support])
+  AM_CONDITIONAL(ENABLE_NOTIFY, true)
 fi
 AC_SUBST(NOTIFY_CFLAGS)
 AC_SUBST(NOTIFY_LIBS)
