@@ -34,17 +34,20 @@
 #define DEFAULT_BIND_PORT 7100
 #define PID_FILE RUN_DIR"/pid"
 
-static guint16 bind_port = DEFAULT_BIND_PORT;
 static gboolean action_kill = FALSE;
 static gboolean action_reload = FALSE;
+
+static guint16 bind_port = DEFAULT_BIND_PORT;
+
 static gchar *pid_file = NULL;
+
 static GOptionEntry entries[] =
 {
-  { "port", 'p', 0, G_OPTION_ARG_INT, &bind_port, "Port to listen for inbound connections", "P" },
-  { "kill", 'k', 0, G_OPTION_ARG_NONE, &action_kill, "Kill the running daemon", NULL },
-  { "reload", 'r', 0, G_OPTION_ARG_NONE, &action_reload, "Reload the configuration", NULL },
-  { "pid-file", 'P', 0, G_OPTION_ARG_FILENAME, &pid_file, "Path to the pid file", "filename" },
-  { NULL }
+	{ "kill", 'k', 0, G_OPTION_ARG_NONE, &action_kill, "Kill the running daemon", NULL },
+	{ "reload", 'r', 0, G_OPTION_ARG_NONE, &action_reload, "Reload the configuration", NULL },
+	{ "port", 'p', 0, G_OPTION_ARG_INT, &bind_port, "Port to listen for inbound connections", "P" },
+	{ "pid-file", 'P', 0, G_OPTION_ARG_FILENAME, &pid_file, "Path to the pid file", "filename" },
+	{ NULL }
 };
 
 gchar const *home = NULL;
@@ -59,26 +62,32 @@ main(int argc, char *argv[])
 	g_type_init();
 	GError *error = NULL;
 
-	GOptionContext *context = g_option_context_new("- small daemon to act on remote or local events");
-	g_option_context_add_main_entries(context, entries, GETTEXT_PACKAGE);
-	if ( ! g_option_context_parse(context, &argc, &argv, &error) )
-		g_error("Option parsing failed: %s\n", error->message);
-
 	home = g_getenv("HOME");
 	/*
 	 * TODO: Create RUN_DIR
 	 */
 
-	gchar *real_pid_file = NULL;
-	if ( pid_file )
-		real_pid_file = g_strdup(pid_file);
+	GOptionContext *context = g_option_context_new("- small daemon to act on remote or local events");
+	g_option_context_add_main_entries(context, entries, GETTEXT_PACKAGE);
+	if ( ! g_option_context_parse(context, &argc, &argv, &error) )
+		g_error("Option parsing failed: %s\n", error->message);
+
+	if ( pid_file == NULL )
+		pid_file = g_strdup_printf("%s/%s", home, PID_FILE);
 	else
-		real_pid_file = g_strdup_printf("%s/%s", home, PID_FILE);
+	{
+		gchar *t = pid_file;
+		if ( g_ascii_strncasecmp(t, "/", 1) != 0 )
+			pid_file = g_strdup_printf("%s/%s", home, t);
+		else
+			pid_file = g_strdup(t);
+		g_free(t);
+	}
 
 	if ( ( action_kill ) || ( action_reload ) )
 	{
 		gchar *contents = NULL;
-		if ( ! g_file_get_contents(real_pid_file, &contents, NULL, &error) )
+		if ( ! g_file_get_contents(pid_file, &contents, NULL, &error) )
 			g_warning("Unable to open pid file: %s", error->message);
 		g_clear_error(&error);
 		guint64 pid = g_ascii_strtoull(contents, NULL, 10);
