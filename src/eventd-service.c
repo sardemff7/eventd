@@ -72,7 +72,7 @@ connection_handler(
 			g_debug("Hello: type=%s name=%s", type, name);
 			#endif /* DEBUG */
 		}
-		else if ( g_ascii_strcasecmp(line, "BYE") == 0 )
+		else if ( g_ascii_strncasecmp(line, "BYE", 3) == 0 )
 		{
 			#if DEBUG
 			g_debug("Bye");
