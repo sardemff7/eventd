@@ -40,7 +40,7 @@
 #include "eventd-service.h"
 
 #define BUFFER_SIZE 1024
-#define UNIX_SOCK VAR_RUN_DIR"/sock"
+#define UNIX_SOCK RUN_DIR"/sock"
 
 static gboolean
 connection_handler(
