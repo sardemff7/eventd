@@ -30,7 +30,14 @@ PKG_CHECK_MODULES(GLIB, [glib-2.0 >= 2.25.0])
 AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_LIBS)
 
-PKG_CHECK_MODULES(GIO, [gio-2.0 >= 2.25.0])
+gio_unix=
+AC_ARG_ENABLE(gio-unix, AS_HELP_STRING([--disable-gio-unix], [Disable UNIX-specific GIO support]), enable_gio_unix=$enableval, enable_gio_unix=yes)
+if test x$enable_gio_unix = xyes; then
+  gio_unix="gio-unix-2.0"
+  AC_DEFINE([ENABLE_GIO_UNIX], [1], [Enable UNIX-specific GIO support])
+fi
+
+PKG_CHECK_MODULES(GIO, [gio-2.0 >= 2.25.0 $gio_unix])
 AC_SUBST(GIO_CFLAGS)
 AC_SUBST(GIO_LIBS)
 

@@ -40,7 +40,6 @@
 #include "eventd-service.h"
 
 #define BUFFER_SIZE 1024
-#define UNIX_SOCK RUN_DIR"/sock"
 
 static gboolean
 connection_handler(
@@ -133,7 +132,7 @@ sig_reload_handler(int sig)
 }
 
 int
-eventd_service(guint16 bind_port)
+eventd_service(guint16 bind_port, const gchar* unix_socket_path)
 {
 	int retval = 0;
 
@@ -154,12 +153,36 @@ eventd_service(guint16 bind_port)
 	eventd_config_parser();
 
 	GSocketService *service = g_threaded_socket_service_new(5);
-	if ( ! g_socket_listener_add_inet_port((GSocketListener *)service, bind_port, NULL, &error) )
-		g_warning("Unable to open socket: %s", error->message);
-	/*
-	 * TODO: Add a UNIX sock file
-	 */
-	g_clear_error(&error);
+	if ( bind_port != 0 )
+	{
+		if ( ! g_socket_listener_add_inet_port((GSocketListener *)service, bind_port, NULL, &error) )
+			g_warning("Unable to open network socket: %s", error->message);
+		g_clear_error(&error);
+	}
+
+	#ifdef ENABLE_GIO_UNIX
+	if ( unix_socket_path != NULL )
+	{
+		GSocket *unix_socket = NULL;
+
+		if ( ( unix_socket = g_socket_new(G_SOCKET_FAMILY_UNIX, G_SOCKET_TYPE_STREAM, 0, &error)  ) == NULL )
+			g_warning("Unable to create a UNIX socket: %s", error->message);
+		g_clear_error(&error);
+
+		GSocketAddress *address = g_unix_socket_address_new(unix_socket_path);
+		if ( ! g_socket_bind(unix_socket, address, TRUE, &error) )
+			g_warning("Unable to bind the UNIX socket: %s", error->message);
+		g_clear_error(&error);
+
+		if ( ! g_socket_listen(unix_socket, &error) )
+			g_warning("Unable to listen with the UNIX socket: %s", error->message);
+		g_clear_error(&error);
+
+		if ( ! g_socket_listener_add_socket((GSocketListener *)service, unix_socket, NULL, &error) )
+			g_warning("Unable to open UNIX socket: %s", error->message);
+		g_clear_error(&error);
+	}
+	#endif /* ENABLE_GIO_UNIX */
 
 	g_signal_connect(G_OBJECT(service), "run", G_CALLBACK(connection_handler), NULL);
 
@@ -168,6 +191,11 @@ eventd_service(guint16 bind_port)
 	g_main_loop_unref(loop);
 
 	eventd_config_clean();
+
+	#ifdef ENABLE_GIO_UNIX
+	if ( unix_socket_path != NULL )
+		g_unlink(unix_socket_path);
+	#endif /* ENABLE_GIO_UNIX */
 
 	#if ENABLE_SOUND
 	eventd_pulse_stop();

@@ -20,6 +20,6 @@
 #ifndef __EVENTD_SERVICE_H__
 #define __EVENTD_SERVICE_H__
 
-int eventd_service(guint16 bind_port);
+int eventd_service(guint16 bind_port, const gchar* unix_socket);
 
 #endif /* __EVENTD_SERVICE_H__ */

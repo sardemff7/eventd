@@ -32,12 +32,17 @@
 #include "eventd-service.h"
 
 #define DEFAULT_BIND_PORT 7100
+#define UNIX_SOCKET RUN_DIR"/sock"
 #define PID_FILE RUN_DIR"/pid"
 
 static gboolean action_kill = FALSE;
 static gboolean action_reload = FALSE;
 
+static gboolean no_network = FALSE;
 static guint16 bind_port = DEFAULT_BIND_PORT;
+
+static gboolean no_unix = FALSE;
+static gchar *unix_socket = NULL;
 
 static gchar *pid_file = NULL;
 
@@ -45,7 +50,12 @@ static GOptionEntry entries[] =
 {
 	{ "kill", 'k', 0, G_OPTION_ARG_NONE, &action_kill, "Kill the running daemon", NULL },
 	{ "reload", 'r', 0, G_OPTION_ARG_NONE, &action_reload, "Reload the configuration", NULL },
+	{ "no-network", 'N', 0, G_OPTION_ARG_NONE, &no_network, "Disable the network bind", NULL },
 	{ "port", 'p', 0, G_OPTION_ARG_INT, &bind_port, "Port to listen for inbound connections", "P" },
+#ifdef ENABLE_GIO_UNIX
+	{ "no-unix", 'U', 0, G_OPTION_ARG_NONE, &no_network, "Disable the UNIX socket bind", NULL },
+	{ "socket", 'S', 0, G_OPTION_ARG_FILENAME, &unix_socket, "UNIX socket to listen for inbound connections", "S" },
+#endif
 	{ "pid-file", 'P', 0, G_OPTION_ARG_FILENAME, &pid_file, "Path to the pid file", "filename" },
 	{ NULL }
 };
@@ -71,6 +81,26 @@ main(int argc, char *argv[])
 	g_option_context_add_main_entries(context, entries, GETTEXT_PACKAGE);
 	if ( ! g_option_context_parse(context, &argc, &argv, &error) )
 		g_error("Option parsing failed: %s\n", error->message);
+
+	if ( no_network )
+		bind_port = 0;
+
+	if ( no_unix )
+	{
+		g_free(unix_socket);
+		unix_socket = NULL;
+	}
+	else if ( unix_socket == NULL )
+		unix_socket = g_strdup_printf("%s/%s", home, UNIX_SOCKET);
+	else
+	{
+		gchar *t = pid_file;
+		if ( g_ascii_strncasecmp(t, "/", 1) != 0 )
+			unix_socket = g_strdup_printf("%s/%s", home, t);
+		else
+			unix_socket = g_strdup(t);
+		g_free(t);
+	}
 
 	if ( pid_file == NULL )
 		pid_file = g_strdup_printf("%s/%s", home, PID_FILE);
@@ -117,7 +147,7 @@ main(int argc, char *argv[])
 	dup2(0,2);
 	#endif /* ! DEBUG */
 
-	int retval = eventd_service(bind_port);
+	int retval = eventd_service(bind_port, unix_socket);
 
 	#if ! DEBUG
 	g_unlink(real_pid_file);
