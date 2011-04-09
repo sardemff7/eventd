@@ -82,6 +82,9 @@ main(int argc, char *argv[])
 	if ( ! g_option_context_parse(context, &argc, &argv, &error) )
 		g_error("Option parsing failed: %s\n", error->message);
 
+	if ( ( no _network ) && ( no_unix ) )
+		g_error("Nothing to bind to, kind of useless, isn't it?");
+
 	if ( no_network )
 		bind_port = 0;
 
