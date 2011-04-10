@@ -40,6 +40,4 @@
 	#define N_(x) (x)
 #endif /* ! ENABLE_NLS */
 
-#define RUN_DIR ".local/run/eventd"
-
 #endif /* __EVENTD_H__ */

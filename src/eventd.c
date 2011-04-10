@@ -23,6 +23,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <sys/file.h>
+#include <sys/types.h>
+#include <unistd.h>
 #include <signal.h>
 #include <errno.h>
 
@@ -33,6 +35,7 @@
 
 #define DEFAULT_BIND_PORT 7100
 
+#define RUN_DIR "/run/%d/eventd"
 #define UNIX_SOCKET RUN_DIR"/sock"
 #define PID_FILE RUN_DIR"/pid"
 
@@ -76,6 +79,7 @@ main(int argc, char *argv[])
 	GError *error = NULL;
 
 	home = g_getenv("HOME");
+	uid_t uid = getuid();
 	/*
 	 * TODO: Create RUN_DIR
 	 */
@@ -98,7 +102,7 @@ main(int argc, char *argv[])
 		unix_socket = NULL;
 	}
 	else if ( unix_socket == NULL )
-		unix_socket = g_strdup_printf("%s/%s", home, UNIX_SOCKET);
+		unix_socket = g_strdup_printf(UNIX_SOCKET, uid);
 	else
 	{
 		gchar *t = pid_file;
@@ -111,7 +115,7 @@ main(int argc, char *argv[])
 #endif /* ENABLE_GIO_UNIX */
 
 	if ( pid_file == NULL )
-		pid_file = g_strdup_printf("%s/%s", home, PID_FILE);
+		pid_file = g_strdup_printf(PID_FILE, uid);
 	else
 	{
 		gchar *t = pid_file;
