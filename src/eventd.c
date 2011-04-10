@@ -149,7 +149,7 @@ main(int argc, char *argv[])
 	}
 	else if ( pid != 0 )
 	{
-		FILE *f = g_fopen(real_pid_file, "w");
+		FILE *f = g_fopen(pid_file, "w");
 		g_fprintf(f, "%d", pid);
 		g_free(f);
 		return 0;
@@ -165,8 +165,8 @@ main(int argc, char *argv[])
 	int retval = eventd_service(bind_port, unix_socket);
 
 	#if ! DEBUG
-	g_unlink(real_pid_file);
-	g_free(real_pid_file);
+	g_unlink(pid_file);
+	g_free(pid_file);
 	#endif /* ! DEBUG */
 
 	return retval;
