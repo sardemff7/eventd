@@ -80,9 +80,12 @@ main(int argc, char *argv[])
 
 	home = g_getenv("HOME");
 	uid_t uid = getuid();
-	/*
-	 * TODO: Create RUN_DIR
-	 */
+
+	gchar *run_dir = g_strdup_printf(RUN_DIR, uid);
+	if ( g_mkdir_with_parents(run_dir, 0755) < 0 )
+		g_error("Can't create the run dir (%s): %s", run_dir, strerror(errno));
+	g_free(run_dir);
+
 
 	GOptionContext *context = g_option_context_new("- small daemon to act on remote or local events");
 	g_option_context_add_main_entries(context, entries, GETTEXT_PACKAGE);
