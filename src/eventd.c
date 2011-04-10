@@ -32,6 +32,7 @@
 #include "eventd-service.h"
 
 #define DEFAULT_BIND_PORT 7100
+
 #define UNIX_SOCKET RUN_DIR"/sock"
 #define PID_FILE RUN_DIR"/pid"
 
@@ -50,12 +51,14 @@ static GOptionEntry entries[] =
 {
 	{ "kill", 'k', 0, G_OPTION_ARG_NONE, &action_kill, "Kill the running daemon", NULL },
 	{ "reload", 'r', 0, G_OPTION_ARG_NONE, &action_reload, "Reload the configuration", NULL },
+#ifdef ENABLE_GIO_UNIX
 	{ "no-network", 'N', 0, G_OPTION_ARG_NONE, &no_network, "Disable the network bind", NULL },
+#endif /* ENABLE_GIO_UNIX */
 	{ "port", 'p', 0, G_OPTION_ARG_INT, &bind_port, "Port to listen for inbound connections", "P" },
 #ifdef ENABLE_GIO_UNIX
 	{ "no-unix", 'U', 0, G_OPTION_ARG_NONE, &no_network, "Disable the UNIX socket bind", NULL },
 	{ "socket", 'S', 0, G_OPTION_ARG_FILENAME, &unix_socket, "UNIX socket to listen for inbound connections", "S" },
-#endif
+#endif /* ENABLE_GIO_UNIX */
 	{ "pid-file", 'P', 0, G_OPTION_ARG_FILENAME, &pid_file, "Path to the pid file", "filename" },
 	{ NULL }
 };
@@ -82,6 +85,7 @@ main(int argc, char *argv[])
 	if ( ! g_option_context_parse(context, &argc, &argv, &error) )
 		g_error("Option parsing failed: %s\n", error->message);
 
+#ifdef ENABLE_GIO_UNIX
 	if ( ( no _network ) && ( no_unix ) )
 		g_error("Nothing to bind to, kind of useless, isn't it?");
 
@@ -104,6 +108,7 @@ main(int argc, char *argv[])
 			unix_socket = g_strdup(t);
 		g_free(t);
 	}
+#endif /* ENABLE_GIO_UNIX */
 
 	if ( pid_file == NULL )
 		pid_file = g_strdup_printf("%s/%s", home, PID_FILE);
