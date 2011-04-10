@@ -86,7 +86,7 @@ main(int argc, char *argv[])
 		g_error("Option parsing failed: %s\n", error->message);
 
 #ifdef ENABLE_GIO_UNIX
-	if ( ( no _network ) && ( no_unix ) )
+	if ( ( no_network ) && ( no_unix ) )
 		g_error("Nothing to bind to, kind of useless, isn't it?");
 
 	if ( no_network )
