@@ -108,7 +108,7 @@ main(int argc, char *argv[])
 		unix_socket = g_strdup_printf(UNIX_SOCKET, run_dir);
 	else
 	{
-		gchar *t = pid_file;
+		gchar *t = unix_socket;
 		if ( g_ascii_strncasecmp(t, "/", 1) != 0 )
 			unix_socket = g_strdup_printf("%s/%s", home, t);
 		else
