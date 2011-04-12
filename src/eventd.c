@@ -33,13 +33,13 @@
 #include "eventd.h"
 #include "eventd-service.h"
 
-#define DEFAULT_BIND_PORT 7100
+#define PID_FILE "%s/pid"
 
-#define RUN_DIR "/run/%d/eventd"
-#define UNIX_SOCKET RUN_DIR"/sock"
-#define PID_FILE RUN_DIR"/pid"
+#define DEFAULT_BIND_PORT 7100
+#define UNIX_SOCKET "%s/sock"
 
 static gboolean foreground = FALSE;
+static gchar *pid_file = NULL;
 
 static gboolean action_kill = FALSE;
 static gboolean action_reload = FALSE;
@@ -50,11 +50,10 @@ static guint16 bind_port = DEFAULT_BIND_PORT;
 static gboolean no_unix = FALSE;
 static gchar *unix_socket = NULL;
 
-static gchar *pid_file = NULL;
-
 static GOptionEntry entries[] =
 {
 	{ "foreground", 'f', 0, G_OPTION_ARG_NONE, &foreground, "Run the daemon ine the foreground", NULL },
+	{ "pid-file", 'P', 0, G_OPTION_ARG_FILENAME, &pid_file, "Path to the pid file", "filename" },
 	{ "kill", 'k', 0, G_OPTION_ARG_NONE, &action_kill, "Kill the running daemon", NULL },
 	{ "reload", 'r', 0, G_OPTION_ARG_NONE, &action_reload, "Reload the configuration", NULL },
 #ifdef ENABLE_GIO_UNIX
@@ -65,7 +64,6 @@ static GOptionEntry entries[] =
 	{ "no-unix", 'U', 0, G_OPTION_ARG_NONE, &no_network, "Disable the UNIX socket bind", NULL },
 	{ "socket", 'S', 0, G_OPTION_ARG_FILENAME, &unix_socket, "UNIX socket to listen for inbound connections", "S" },
 #endif /* ENABLE_GIO_UNIX */
-	{ "pid-file", 'P', 0, G_OPTION_ARG_FILENAME, &pid_file, "Path to the pid file", "filename" },
 	{ NULL }
 };
 
@@ -82,12 +80,14 @@ main(int argc, char *argv[])
 	GError *error = NULL;
 
 	home = g_getenv("HOME");
+	gchar const *xdg_runtime_dir = g_getenv("XDG_RUNTIME_DIR");
+	if ( xdg_runtime_dir == NULL )
+		g_error(PACKAGE_NAME" needs a full XDG-compliant environment");
 	uid_t uid = getuid();
 
-	gchar *run_dir = g_strdup_printf(RUN_DIR, uid);
+	gchar *run_dir = g_strdup_printf("%s/%s", xdg_runtime_dir, PACKAGE_NAME);
 	if ( g_mkdir_with_parents(run_dir, 0755) < 0 )
 		g_error("Can't create the run dir (%s): %s", run_dir, strerror(errno));
-	g_free(run_dir);
 
 
 	GOptionContext *context = g_option_context_new("- small daemon to act on remote or local events");
@@ -108,7 +108,7 @@ main(int argc, char *argv[])
 		unix_socket = NULL;
 	}
 	else if ( unix_socket == NULL )
-		unix_socket = g_strdup_printf(UNIX_SOCKET, uid);
+		unix_socket = g_strdup_printf(UNIX_SOCKET, run_dir);
 	else
 	{
 		gchar *t = pid_file;
@@ -121,7 +121,7 @@ main(int argc, char *argv[])
 #endif /* ENABLE_GIO_UNIX */
 
 	if ( pid_file == NULL )
-		pid_file = g_strdup_printf(PID_FILE, uid);
+		pid_file = g_strdup_printf(PID_FILE, run_dir);
 	else
 	{
 		gchar *t = pid_file;
@@ -131,6 +131,8 @@ main(int argc, char *argv[])
 			pid_file = g_strdup(t);
 		g_free(t);
 	}
+
+	g_free(run_dir);
 
 	if ( ( action_kill ) || ( action_reload ) )
 	{
