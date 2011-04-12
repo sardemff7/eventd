@@ -80,10 +80,7 @@ main(int argc, char *argv[])
 	GError *error = NULL;
 
 	home = g_getenv("HOME");
-	gchar const *xdg_runtime_dir = g_getenv("XDG_RUNTIME_DIR");
-	if ( xdg_runtime_dir == NULL )
-		g_error(PACKAGE_NAME" needs a full XDG-compliant environment");
-	uid_t uid = getuid();
+	gchar const *xdg_runtime_dir = g_get_user_runtime_dir();
 
 	gchar *run_dir = g_strdup_printf("%s/%s", xdg_runtime_dir, PACKAGE_NAME);
 	if ( g_mkdir_with_parents(run_dir, 0755) < 0 )
