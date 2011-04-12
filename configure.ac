@@ -1,5 +1,5 @@
 AC_PREREQ([2.65])
-AC_INIT([Eventd],[0.1],[],[])
+AC_INIT([eventd],[0.1],[],[])
 
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([src/])
