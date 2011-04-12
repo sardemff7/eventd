@@ -39,6 +39,8 @@
 #define UNIX_SOCKET RUN_DIR"/sock"
 #define PID_FILE RUN_DIR"/pid"
 
+static gboolean foreground = FALSE;
+
 static gboolean action_kill = FALSE;
 static gboolean action_reload = FALSE;
 
@@ -52,6 +54,7 @@ static gchar *pid_file = NULL;
 
 static GOptionEntry entries[] =
 {
+	{ "foreground", 'f', 0, G_OPTION_ARG_NONE, &foreground, "Run the daemon ine the foreground", NULL },
 	{ "kill", 'k', 0, G_OPTION_ARG_NONE, &action_kill, "Kill the running daemon", NULL },
 	{ "reload", 'r', 0, G_OPTION_ARG_NONE, &action_reload, "Reload the configuration", NULL },
 #ifdef ENABLE_GIO_UNIX
@@ -140,34 +143,40 @@ main(int argc, char *argv[])
 		kill(pid, ( action_kill ? SIGTERM : SIGUSR1 ));
 		return 0;
 	}
-	#if ! DEBUG
-	pid_t pid = fork();
-	if ( pid == -1 )
-	{
-		perror("fork");
-		exit(1);
-	}
-	else if ( pid != 0 )
-	{
-		FILE *f = g_fopen(pid_file, "w");
-		g_fprintf(f, "%d", pid);
-		g_free(f);
-		return 0;
-	}
-	close(0);
-	close(1);
-	close(2);
-	open("/dev/null", O_RDWR);
-	dup2(0,1);
-	dup2(0,2);
+
+	#if DEBUG
+	foreground = TRUE;
 	#endif /* ! DEBUG */
+	if ( ! foreground )
+	{
+		pid_t pid = fork();
+		if ( pid == -1 )
+		{
+			perror("fork");
+			exit(1);
+		}
+		else if ( pid != 0 )
+		{
+			FILE *f = g_fopen(pid_file, "w");
+			g_fprintf(f, "%d", pid);
+			g_free(f);
+			return 0;
+		}
+		close(0);
+		close(1);
+		close(2);
+		open("/dev/null", O_RDWR);
+		dup2(0,1);
+		dup2(0,2);
+	}
 
 	int retval = eventd_service(bind_port, unix_socket);
 
-	#if ! DEBUG
-	g_unlink(pid_file);
-	g_free(pid_file);
-	#endif /* ! DEBUG */
+	if ( ! foreground )
+	{
+		g_unlink(pid_file);
+		g_free(pid_file);
+	}
 
 	return retval;
 }
