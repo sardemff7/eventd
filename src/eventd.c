@@ -140,7 +140,7 @@ main(int argc, char *argv[])
 		g_clear_error(&error);
 		guint64 pid = g_ascii_strtoull(contents, NULL, 10);
 		g_free(contents);
-		kill(pid, ( action_kill ? SIGTERM : SIGUSR1 ));
+		kill(pid, ( action_kill ? SIGTERM : SIGHUP ));
 		return 0;
 	}
 

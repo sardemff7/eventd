@@ -138,7 +138,7 @@ eventd_service(guint16 bind_port, const gchar* unix_socket_path)
 
 	signal(SIGTERM, sig_quit_handler);
 	signal(SIGINT, sig_quit_handler);
-	signal(SIGUSR1, sig_reload_handler);
+	signal(SIGHUP, sig_reload_handler);
 
 	GError *error = NULL;
 
