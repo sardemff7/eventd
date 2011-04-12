@@ -38,7 +38,7 @@
 #define DEFAULT_BIND_PORT 7100
 #define UNIX_SOCKET "%s/sock"
 
-static gboolean foreground = FALSE;
+static gboolean daemonize = FALSE;
 static gchar *pid_file = NULL;
 
 static gboolean action_kill = FALSE;
@@ -52,7 +52,7 @@ static gchar *unix_socket = NULL;
 
 static GOptionEntry entries[] =
 {
-	{ "foreground", 'f', 0, G_OPTION_ARG_NONE, &foreground, "Run the daemon ine the foreground", NULL },
+	{ "daemonize", 'd', 0, G_OPTION_ARG_NONE, &daemonize, "Run the daemon in the background", NULL },
 	{ "pid-file", 'P', 0, G_OPTION_ARG_FILENAME, &pid_file, "Path to the pid file", "filename" },
 	{ "kill", 'k', 0, G_OPTION_ARG_NONE, &action_kill, "Kill the running daemon", NULL },
 	{ "reload", 'r', 0, G_OPTION_ARG_NONE, &action_reload, "Reload the configuration", NULL },
@@ -147,9 +147,9 @@ main(int argc, char *argv[])
 	}
 
 	#if DEBUG
-	foreground = TRUE;
+	daemonize = FALSE;
 	#endif /* ! DEBUG */
-	if ( ! foreground )
+	if ( daemonize )
 	{
 		pid_t pid = fork();
 		if ( pid == -1 )
@@ -174,7 +174,7 @@ main(int argc, char *argv[])
 
 	int retval = eventd_service(bind_port, unix_socket);
 
-	if ( ! foreground )
+	if ( daemonize )
 	{
 		g_unlink(pid_file);
 		g_free(pid_file);
