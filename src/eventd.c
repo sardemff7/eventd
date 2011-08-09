@@ -44,11 +44,13 @@ static gchar *pid_file = NULL;
 static gboolean action_kill = FALSE;
 static gboolean action_reload = FALSE;
 
-static gboolean no_network = FALSE;
 static guint16 bind_port = DEFAULT_BIND_PORT;
 
+#ifdef ENABLE_GIO_UNIX
+static gboolean no_network = FALSE;
 static gboolean no_unix = FALSE;
 static gchar *unix_socket = NULL;
+#endif /* ENABLE_GIO_UNIX */
 
 static GOptionEntry entries[] =
 {
@@ -56,13 +58,11 @@ static GOptionEntry entries[] =
 	{ "pid-file", 'P', 0, G_OPTION_ARG_FILENAME, &pid_file, "Path to the pid file", "filename" },
 	{ "kill", 'k', 0, G_OPTION_ARG_NONE, &action_kill, "Kill the running daemon", NULL },
 	{ "reload", 'r', 0, G_OPTION_ARG_NONE, &action_reload, "Reload the configuration", NULL },
-#ifdef ENABLE_GIO_UNIX
-	{ "no-network", 'N', 0, G_OPTION_ARG_NONE, &no_network, "Disable the network bind", NULL },
-#endif /* ENABLE_GIO_UNIX */
 	{ "port", 'p', 0, G_OPTION_ARG_INT, &bind_port, "Port to listen for inbound connections", "P" },
 #ifdef ENABLE_GIO_UNIX
+	{ "no-network", 'N', 0, G_OPTION_ARG_NONE, &no_network, "Disable the network bind", NULL },
 	{ "no-unix", 'U', 0, G_OPTION_ARG_NONE, &no_network, "Disable the UNIX socket bind", NULL },
-	{ "socket", 'S', 0, G_OPTION_ARG_FILENAME, &unix_socket, "UNIX socket to listen for inbound connections", "S" },
+	{ "socket", 's', 0, G_OPTION_ARG_FILENAME, &unix_socket, "UNIX socket to listen for inbound connections", "SOCKET_FILE" },
 #endif /* ENABLE_GIO_UNIX */
 	{ NULL }
 };
