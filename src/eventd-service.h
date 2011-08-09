@@ -20,6 +20,10 @@
 #ifndef __EVENTD_SERVICE_H__
 #define __EVENTD_SERVICE_H__
 
-int eventd_service(guint16 bind_port, const gchar* unix_socket);
+GSocket *eventd_get_inet_socket(guint16 port);
+#if ENABLE_GIO_UNIX
+GSocket *eventd_get_unix_socket(gchar *path);
+#endif /* ENABLE_GIO_UNIX */
+int eventd_service(GList *sockets);
 
 #endif /* __EVENTD_SERVICE_H__ */

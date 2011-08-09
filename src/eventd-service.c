@@ -27,6 +27,9 @@
 
 #include <glib.h>
 #include <gio/gio.h>
+#if ENABLE_GIO_UNIX
+#include <gio/gunixsocketaddress.h>
+#endif /* ENABLE_GIO_UNIX */
 
 #if ENABLE_SOUND
 #include "eventd-pulse.h"
@@ -125,15 +128,95 @@ sig_quit_handler(int sig)
 }
 
 
+GSocket *
+eventd_get_inet_socket(guint16 port)
+{
+	GSocket *socket = NULL;
+	GError *error = NULL;
+	GInetAddress *inet_address = NULL;
+	GSocketAddress *address = NULL;
+
+	if ( port == 0 )
+		goto fail;
+
+	if ( ( socket = g_socket_new(G_SOCKET_FAMILY_IPV6, G_SOCKET_TYPE_STREAM, 0, &error)  ) == NULL )
+	{
+		g_warning("Unable to create an IPv6 socket: %s", error->message);
+		goto fail;
+	}
+
+	inet_address = g_inet_address_new_any(G_SOCKET_FAMILY_IPV6);
+	address = g_inet_socket_address_new(inet_address, port);
+	if ( ! g_socket_bind(socket, address, TRUE, &error) )
+	{
+		g_warning("Unable to bind the IPv6 socket: %s", error->message);
+		goto fail;
+	}
+
+	if ( ! g_socket_listen(socket, &error) )
+	{
+		g_warning("Unable to listen with the IPv6 socket: %s", error->message);
+		goto fail;
+	}
+
+	return socket;
+
+fail:
+	g_free(socket);
+	g_clear_error(&error);
+	return NULL;
+}
+
+#if ENABLE_GIO_UNIX
+GSocket *
+eventd_get_unix_socket(gchar *path)
+{
+	GSocket *socket = NULL;
+	GError *error = NULL;
+	GSocketAddress *address = NULL;
+
+	if ( path == NULL )
+		goto fail;
+
+	if ( ( socket = g_socket_new(G_SOCKET_FAMILY_UNIX, G_SOCKET_TYPE_STREAM, 0, &error)  ) == NULL )
+	{
+		g_warning("Unable to create an UNIX socket: %s", error->message);
+		goto fail;
+	}
+
+	address = g_unix_socket_address_new(path);
+	if ( ! g_socket_bind(socket, address, TRUE, &error) )
+	{
+		g_warning("Unable to bind the UNIX socket: %s", error->message);
+		goto fail;
+	}
+
+	if ( ! g_socket_listen(socket, &error) )
+	{
+		g_warning("Unable to listen with the UNIX socket: %s", error->message);
+		goto fail;
+	}
+
+	return socket;
+
+fail:
+	g_free(socket);
+	g_clear_error(&error);
+	return NULL;
+}
+#endif /* ENABLE_GIO_UNIX */
+
 int
-eventd_service(guint16 bind_port, const gchar* unix_socket_path)
+eventd_service(GList *sockets)
 {
 	int retval = 0;
+	GError *error = NULL;
+	GList *socket = NULL;
+	GSocketService *service = NULL;
 
 	signal(SIGTERM, sig_quit_handler);
 	signal(SIGINT, sig_quit_handler);
 
-	GError *error = NULL;
 
 	#if ENABLE_NOTIFY
 	eventd_notify_start();
@@ -145,37 +228,14 @@ eventd_service(guint16 bind_port, const gchar* unix_socket_path)
 
 	eventd_config_parser();
 
-	GSocketService *service = g_threaded_socket_service_new(5);
-	if ( bind_port != 0 )
+	service = g_threaded_socket_service_new(5);
+
+	for ( socket = g_list_first(sockets) ; socket ; socket = g_list_next(socket) )
 	{
-		if ( ! g_socket_listener_add_inet_port((GSocketListener *)service, bind_port, NULL, &error) )
-			g_warning("Unable to open network socket: %s", error->message);
+		if ( ! g_socket_listener_add_socket((GSocketListener *)service, socket->data, NULL, &error) )
+			g_warning("Unable to add socket: %s", error->message);
 		g_clear_error(&error);
 	}
-
-	#ifdef ENABLE_GIO_UNIX
-	if ( unix_socket_path != NULL )
-	{
-		GSocket *unix_socket = NULL;
-
-		if ( ( unix_socket = g_socket_new(G_SOCKET_FAMILY_UNIX, G_SOCKET_TYPE_STREAM, 0, &error)  ) == NULL )
-			g_warning("Unable to create a UNIX socket: %s", error->message);
-		g_clear_error(&error);
-
-		GSocketAddress *address = g_unix_socket_address_new(unix_socket_path);
-		if ( ! g_socket_bind(unix_socket, address, TRUE, &error) )
-			g_warning("Unable to bind the UNIX socket: %s", error->message);
-		g_clear_error(&error);
-
-		if ( ! g_socket_listen(unix_socket, &error) )
-			g_warning("Unable to listen with the UNIX socket: %s", error->message);
-		g_clear_error(&error);
-
-		if ( ! g_socket_listener_add_socket((GSocketListener *)service, unix_socket, NULL, &error) )
-			g_warning("Unable to open UNIX socket: %s", error->message);
-		g_clear_error(&error);
-	}
-	#endif /* ENABLE_GIO_UNIX */
 
 	g_signal_connect(G_OBJECT(service), "run", G_CALLBACK(connection_handler), NULL);
 
@@ -183,12 +243,10 @@ eventd_service(guint16 bind_port, const gchar* unix_socket_path)
 	g_main_loop_run(loop);
 	g_main_loop_unref(loop);
 
-	eventd_config_clean();
+	g_socket_service_stop(service);
+	g_socket_listener_close((GSocketListener *)service);
 
-	#ifdef ENABLE_GIO_UNIX
-	if ( unix_socket_path != NULL )
-		g_unlink(unix_socket_path);
-	#endif /* ENABLE_GIO_UNIX */
+	eventd_config_clean();
 
 	#if ENABLE_SOUND
 	eventd_pulse_stop();

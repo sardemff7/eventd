@@ -29,6 +29,8 @@
 #include <errno.h>
 
 #include <glib.h>
+#include <glib/gstdio.h>
+#include <gio/gio.h>
 
 #include "eventd.h"
 #include "eventd-service.h"
@@ -57,7 +59,7 @@ static GOptionEntry entries[] =
 	{ "pid-file", 'P', 0, G_OPTION_ARG_FILENAME, &pid_file, "Path to the pid file", "filename" },
 	{ "kill", 'k', 0, G_OPTION_ARG_NONE, &action_kill, "Kill the running daemon", NULL },
 	{ "port", 'p', 0, G_OPTION_ARG_INT, &bind_port, "Port to listen for inbound connections", "P" },
-#ifdef ENABLE_GIO_UNIX
+#if ENABLE_GIO_UNIX
 	{ "no-network", 'N', 0, G_OPTION_ARG_NONE, &no_network, "Disable the network bind", NULL },
 	{ "no-unix", 'U', 0, G_OPTION_ARG_NONE, &no_unix, "Disable the UNIX socket bind", NULL },
 	{ "socket", 's', 0, G_OPTION_ARG_FILENAME, &unix_socket, "UNIX socket to listen for inbound connections", "SOCKET_FILE" },
@@ -74,6 +76,8 @@ main(int argc, char *argv[])
 	gchar const *xdg_runtime_dir = NULL;
 	gchar *run_dir = NULL;
 	GOptionContext *context = NULL;
+	GSocket *socket = NULL;
+	GList *sockets = NULL;
 
 	#ifdef ENABLE_NLS
 		setlocale(LC_ALL, "");
@@ -96,7 +100,7 @@ main(int argc, char *argv[])
 	if ( ! g_option_context_parse(context, &argc, &argv, &error) )
 		g_error("Option parsing failed: %s\n", error->message);
 
-#ifdef ENABLE_GIO_UNIX
+#if ENABLE_GIO_UNIX
 	if ( ( no_network ) && ( no_unix ) )
 		g_error("Nothing to bind to, kind of useless, isn't it?");
 
@@ -108,18 +112,29 @@ main(int argc, char *argv[])
 		g_free(unix_socket);
 		unix_socket = NULL;
 	}
-	else if ( unix_socket == NULL )
-		unix_socket = g_strdup_printf(UNIX_SOCKET, run_dir);
 	else
 	{
-		gchar *t = unix_socket;
-		if ( g_ascii_strncasecmp(t, "/", 1) != 0 )
-			unix_socket = g_strdup_printf("%s/%s", home, t);
+
+		if ( unix_socket == NULL )
+			unix_socket = g_strdup_printf(UNIX_SOCKET, run_dir);
 		else
-			unix_socket = g_strdup(t);
-		g_free(t);
+		{
+			gchar *t = unix_socket;
+			if ( g_ascii_strncasecmp(t, "/", 1) != 0 )
+				unix_socket = g_strdup_printf("%s/%s", home, t);
+			else
+				unix_socket = g_strdup(t);
+			g_free(t);
+		}
+
+		if ( ( socket = eventd_get_unix_socket(unix_socket) ) != NULL )
+			sockets = g_list_prepend(sockets, socket);
+		g_free(unix_socket);
 	}
 #endif /* ENABLE_GIO_UNIX */
+
+	if ( ( bind_port > 0 ) && ( ( socket = eventd_get_inet_socket(bind_port) ) != NULL ) )
+		sockets = g_list_prepend(sockets, socket);
 
 	if ( pid_file == NULL )
 		pid_file = g_strdup_printf(PID_FILE, run_dir);
@@ -178,7 +193,9 @@ main(int argc, char *argv[])
 		dup2(0,2);
 	}
 
-	retval = eventd_service(bind_port, unix_socket);
+	retval = eventd_service(sockets);
+
+	g_list_free_full(sockets, g_object_unref);
 
 	if ( daemonize )
 		g_unlink(pid_file);
