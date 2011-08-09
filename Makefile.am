@@ -35,12 +35,10 @@ eventd_SOURCES += \
 	src/eventd-pulse.c
 
 eventd_CFLAGS += \
-	$(PULSE_CFLAGS) \
-	$(SNDFILE_CFLAGS)
+	$(SOUND_CFLAGS)
 
 eventd_LDADD += \
-	$(PULSE_LIBS) \
-	$(SNDFILE_LIBS)
+	$(SOUND_LIBS)
 endif
 
 if ENABLE_NOTIFY
