@@ -59,7 +59,7 @@ static GOptionEntry entries[] =
 	{ "port", 'p', 0, G_OPTION_ARG_INT, &bind_port, "Port to listen for inbound connections", "P" },
 #ifdef ENABLE_GIO_UNIX
 	{ "no-network", 'N', 0, G_OPTION_ARG_NONE, &no_network, "Disable the network bind", NULL },
-	{ "no-unix", 'U', 0, G_OPTION_ARG_NONE, &no_network, "Disable the UNIX socket bind", NULL },
+	{ "no-unix", 'U', 0, G_OPTION_ARG_NONE, &no_unix, "Disable the UNIX socket bind", NULL },
 	{ "socket", 's', 0, G_OPTION_ARG_FILENAME, &unix_socket, "UNIX socket to listen for inbound connections", "SOCKET_FILE" },
 #endif /* ENABLE_GIO_UNIX */
 	{ NULL }
