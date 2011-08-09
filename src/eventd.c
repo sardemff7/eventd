@@ -69,23 +69,29 @@ gchar const *home = NULL;
 int
 main(int argc, char *argv[])
 {
+	int retval = 0;
+	GError *error = NULL;
+	gchar const *xdg_runtime_dir = NULL;
+	gchar *run_dir = NULL;
+	GOptionContext *context = NULL;
+
 	#ifdef ENABLE_NLS
 		setlocale(LC_ALL, "");
 		bindtextdomain(GETTEXT_PACKAGE, LOCALEDIR);
 		bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
 	#endif /* ENABLE_NLS */
+
 	g_type_init();
-	GError *error = NULL;
 
 	home = g_getenv("HOME");
-	gchar const *xdg_runtime_dir = g_get_user_runtime_dir();
+	xdg_runtime_dir = g_get_user_runtime_dir();
 
-	gchar *run_dir = g_strdup_printf("%s/%s", xdg_runtime_dir, PACKAGE_NAME);
+	run_dir = g_strdup_printf("%s/%s", xdg_runtime_dir, PACKAGE_NAME);
 	if ( g_mkdir_with_parents(run_dir, 0755) < 0 )
 		g_error("Can't create the run dir (%s): %s", run_dir, strerror(errno));
 
 
-	GOptionContext *context = g_option_context_new("- small daemon to act on remote or local events");
+	context = g_option_context_new("- small daemon to act on remote or local events");
 	g_option_context_add_main_entries(context, entries, GETTEXT_PACKAGE);
 	if ( ! g_option_context_parse(context, &argc, &argv, &error) )
 		g_error("Option parsing failed: %s\n", error->message);
@@ -132,10 +138,11 @@ main(int argc, char *argv[])
 	if ( action_kill )
 	{
 		gchar *contents = NULL;
+		guint64 pid = 0;
 		if ( ! g_file_get_contents(pid_file, &contents, NULL, &error) )
 			g_warning("Unable to open pid file: %s", error->message);
 		g_clear_error(&error);
-		guint64 pid = g_ascii_strtoull(contents, NULL, 10);
+		pid = g_ascii_strtoull(contents, NULL, 10);
 		g_free(contents);
 		kill(pid, SIGTERM);
 		return 0;
@@ -146,7 +153,9 @@ main(int argc, char *argv[])
 	#endif /* ! DEBUG */
 	if ( daemonize )
 	{
-		pid_t pid = fork();
+		pid_t pid = -1;
+
+		pid = fork();
 		if ( pid == -1 )
 		{
 			perror("fork");
@@ -154,7 +163,9 @@ main(int argc, char *argv[])
 		}
 		else if ( pid != 0 )
 		{
-			FILE *f = g_fopen(pid_file, "w");
+			FILE *f = NULL;
+
+			f = g_fopen(pid_file, "w");
 			g_fprintf(f, "%d", pid);
 			g_free(f);
 			return 0;
@@ -167,13 +178,11 @@ main(int argc, char *argv[])
 		dup2(0,2);
 	}
 
-	int retval = eventd_service(bind_port, unix_socket);
+	retval = eventd_service(bind_port, unix_socket);
 
 	if ( daemonize )
-	{
 		g_unlink(pid_file);
-		g_free(pid_file);
-	}
+	g_free(pid_file);
 
 	return retval;
 }
