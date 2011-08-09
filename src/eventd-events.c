@@ -26,6 +26,7 @@
 #include <errno.h>
 
 #include <glib.h>
+#include <gio/gio.h>
 
 #if ENABLE_SOUND
 #include "eventd-pulse.h"
@@ -170,15 +171,50 @@ void
 eventd_config_parser()
 {
 	GError *error = NULL;
-
-	if ( config )
-		eventd_config_clean();
-	config = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_hash_table_remove_all);
-
 	gchar *config_dir_name = NULL;
 	GDir *config_dir = NULL;
 
+	#if ENABLE_SOUND
+	gchar *sounds_dir_name = NULL;
+	#endif /* ENABLE_SOUND */
+
+
 	config_dir_name = g_strdup_printf("%s/%s", home, CONFIG_DIR);
+
+	#if ENABLE_SOUND
+	sounds_dir_name = g_strdup_printf("%s/%s", home, SOUNDS_DIR);
+	#endif /* ENABLE_SOUND */
+
+
+	if ( config )
+		eventd_config_clean();
+	else
+	{
+		/*
+		 * We monitor the various dirs we use to
+		 * reload the configuration if the user
+		 * change it
+		 */
+		GFile *dir = NULL;
+		GFileMonitor *monitor = NULL;
+
+		dir = g_file_new_for_path(config_dir_name);
+		if ( ( monitor = g_file_monitor(dir, G_FILE_MONITOR_NONE, NULL, &error) ) == NULL )
+			g_warning("Couldn't monitor the main config directory: %s", error->message);
+		g_clear_error(&error);
+		g_object_unref(dir);
+
+		#if ENABLE_SOUND
+		dir = g_file_new_for_path(sounds_dir_name);
+		if ( ( monitor = g_file_monitor(dir, G_FILE_MONITOR_NONE, NULL, &error) ) == NULL )
+			g_warning("Couldn't monitor the sounds directory: %s", error->message);
+		g_clear_error(&error);
+		g_object_unref(dir);
+		#endif /* ENABLE_SOUND */
+	}
+
+	config = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_hash_table_remove_all);
+
 	config_dir = g_dir_open(config_dir_name, 0, &error);
 	if ( ! config_dir )
 		goto out;
@@ -219,7 +255,7 @@ eventd_config_parser()
 				{
 					gchar *filename = g_key_file_get_value(config_file, *group, *key, NULL);
 					if ( filename[0] != '/')
-						filename = g_strdup_printf("%s/%s/%s", home, SOUNDS_DIR, filename);
+						filename = g_strdup_printf("%s/%s", sounds_dir_name, filename);
 					else
 						filename = g_strdup(filename);
 					gchar *sample_name = g_strdup_printf("%s-%s", type, *group);
@@ -269,6 +305,10 @@ eventd_config_parser()
 
 	g_dir_close(config_dir);
 out:
+	#if ENABLE_SOUND
+	g_free(sounds_dir_name);
+	#endif /* ENABLE_SOUND */
+
 	g_free(config_dir_name);
 }
 

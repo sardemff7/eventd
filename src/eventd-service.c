@@ -125,12 +125,6 @@ sig_quit_handler(int sig)
 }
 
 
-static void
-sig_reload_handler(int sig)
-{
-	eventd_config_parser();
-}
-
 int
 eventd_service(guint16 bind_port, const gchar* unix_socket_path)
 {
@@ -138,7 +132,6 @@ eventd_service(guint16 bind_port, const gchar* unix_socket_path)
 
 	signal(SIGTERM, sig_quit_handler);
 	signal(SIGINT, sig_quit_handler);
-	signal(SIGHUP, sig_reload_handler);
 
 	GError *error = NULL;
 
