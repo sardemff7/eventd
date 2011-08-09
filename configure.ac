@@ -42,6 +42,16 @@ AC_SUBST(GIO_CFLAGS)
 AC_SUBST(GIO_LIBS)
 
 
+AC_ARG_ENABLE(systemd, AS_HELP_STRING([--disable-systemd], [Disable systemd support activation support]), enable_systemd=$enableval, enable_systemd=yes)
+if test x$enable_systemd = xyes; then
+  PKG_CHECK_MODULES(SYSTEMD, [libsystemd-daemon])
+  AC_DEFINE([ENABLE_SYSTEMD], [1], [Enable systemd activation support])
+fi
+AM_CONDITIONAL(ENABLE_SYSTEMD, test x$enable_systemd = xyes)
+AC_SUBST(SYSTEMD_CFLAGS)
+AC_SUBST(SYSTEMD_LIBS)
+
+
 AC_ARG_ENABLE(sound, AS_HELP_STRING([--disable-sound], [Disable sound support]), enable_sound=$enableval, enable_sound=yes)
 if test x$enable_sound = xyes; then
   PKG_CHECK_MODULES(SOUND, [libpulse >= 0.9.15 sndfile])
@@ -96,6 +106,8 @@ AC_CONFIG_FILES([
 AC_OUTPUT
 
 
+echo GIO UNIX support:     $enable_gio_unix
+echo systemd support:      $enable_systemd
 echo Libnotify support:    $enable_notify
 echo Sound support:        $enable_sound
 echo Dialogs support:      $enable_dialogs

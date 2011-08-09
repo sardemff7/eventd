@@ -32,6 +32,11 @@
 #include <glib/gstdio.h>
 #include <gio/gio.h>
 
+#ifdef ENABLE_SYSTEMD
+#include <sys/socket.h>
+#include <systemd/sd-daemon.h>
+#endif /* ENABLE_SYSTEMD */
+
 #include "eventd.h"
 #include "eventd-service.h"
 
@@ -53,6 +58,10 @@ static gboolean no_unix = FALSE;
 static gchar *unix_socket = NULL;
 #endif /* ENABLE_GIO_UNIX */
 
+#ifdef ENABLE_SYSTEMD
+static gboolean no_systemd = FALSE;
+#endif /* ENABLE_SYSTEMD */
+
 static GOptionEntry entries[] =
 {
 	{ "daemonize", 'd', 0, G_OPTION_ARG_NONE, &daemonize, "Run the daemon in the background", NULL },
@@ -64,6 +73,9 @@ static GOptionEntry entries[] =
 	{ "no-unix", 'U', 0, G_OPTION_ARG_NONE, &no_unix, "Disable the UNIX socket bind", NULL },
 	{ "socket", 's', 0, G_OPTION_ARG_FILENAME, &unix_socket, "UNIX socket to listen for inbound connections", "SOCKET_FILE" },
 #endif /* ENABLE_GIO_UNIX */
+#ifdef ENABLE_SYSTEMD
+	{ "no-systemd", 'S', 0, G_OPTION_ARG_NONE, &no_systemd, "Disable systemd socket activation", NULL },
+#endif /* ENABLE_SYSTEMD */
 	{ NULL }
 };
 
@@ -99,6 +111,55 @@ main(int argc, char *argv[])
 	g_option_context_add_main_entries(context, entries, GETTEXT_PACKAGE);
 	if ( ! g_option_context_parse(context, &argc, &argv, &error) )
 		g_error("Option parsing failed: %s\n", error->message);
+
+#if ENABLE_SYSTEMD
+	if ( ! no_systemd )
+	{
+		gint r, n;
+		guint fd;
+
+		n = sd_listen_fds(TRUE);
+		if ( n < 0 )
+		{
+			g_error("Failed to acquire systemd socket: %s", strerror(-n));
+			return 2;
+		}
+
+		if ( n <= 0 )
+		{
+			g_error("No socket received.");
+			return 2;
+		}
+
+		for ( fd = SD_LISTEN_FDS_START ; fd < SD_LISTEN_FDS_START + n ; ++fd )
+		{
+			r = sd_is_socket(fd, AF_UNSPEC, SOCK_STREAM, 1);
+			if ( r < 0 )
+			{
+				g_error("Failed to verify systemd socket type: %s", strerror(-r));
+				return 2;
+			}
+
+			if ( r <= 0 )
+			{
+				g_error("Passed socket has wrong type.");
+				return 2;
+			}
+		}
+
+		for ( fd = SD_LISTEN_FDS_START ; fd < SD_LISTEN_FDS_START + n ; ++fd )
+		{
+			if ( ( socket = g_socket_new_from_fd(fd, &error) ) == NULL )
+			{
+				g_error("Failed to take a socket from systemd: %s", error->message);
+				continue;
+			}
+			sockets = g_list_prepend(sockets, socket);
+		}
+
+		goto start;
+	}
+#endif /* ENABLE_SYSTEMD */
 
 #if ENABLE_GIO_UNIX
 	if ( ( no_network ) && ( no_unix ) )
@@ -174,7 +235,7 @@ main(int argc, char *argv[])
 		if ( pid == -1 )
 		{
 			perror("fork");
-			exit(1);
+			return 1;
 		}
 		else if ( pid != 0 )
 		{
@@ -193,6 +254,7 @@ main(int argc, char *argv[])
 		dup2(0,2);
 	}
 
+start:
 	retval = eventd_service(sockets);
 
 	g_list_free_full(sockets, g_object_unref);

@@ -29,6 +29,14 @@ eventd_LDADD = \
 	$(GLIB_LIBS)
 
 
+if ENABLE_SYSTEMD
+eventd_CFLAGS += \
+	$(SYSTEMD_CFLAGS)
+
+eventd_LDADD += \
+	$(SYSTEMD_LIBS)
+endif
+
 if ENABLE_SOUND
 eventd_SOURCES += \
 	src/eventd-pulse.h \
