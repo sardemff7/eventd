@@ -271,8 +271,6 @@ eventd_parse_client(gchar *type, GKeyFile *config_file)
 	g_hash_table_insert(clients_config, g_strdup(type), type_config);
 }
 
-static gint64 last_load = - ( CONFIG_RELOAD_DELAY * 1e6 );
-
 void
 eventd_config_parser()
 {
@@ -280,15 +278,11 @@ eventd_config_parser()
 	gchar *config_dir_name = NULL;
 	GDir *config_dir = NULL;
 	gchar *file = NULL;
-	gint64 load_time = 0;
 
 	#if ENABLE_SOUND
 	gchar *sounds_dir_name = NULL;
 	#endif /* ENABLE_SOUND */
 
-	load_time = g_get_monotonic_time();
-	if ( load_time < ( last_load + ( CONFIG_RELOAD_DELAY * 1e6 ) ) )
-		return;
 
 	config_dir_name = g_strdup_printf("%s/"PACKAGE_NAME, g_get_user_config_dir());
 
@@ -379,8 +373,6 @@ out:
 	g_free(sounds_dir_name);
 	#endif /* ENABLE_SOUND */
 	g_free(config_dir_name);
-
-	last_load = load_time;
 }
 
 void
