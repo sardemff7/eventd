@@ -328,7 +328,6 @@ eventd_config_parser()
 		g_signal_connect(monitor, "changed", eventd_config_parser, NULL);
 		g_clear_error(&error);
 		g_object_unref(dir);
-		g_free(sounds_dir_name);
 		#endif /* ENABLE_SOUND */
 	}
 
@@ -376,6 +375,9 @@ eventd_config_parser()
 
 	g_dir_close(config_dir);
 out:
+	#if ENABLE_SOUND
+	g_free(sounds_dir_name);
+	#endif /* ENABLE_SOUND */
 	g_free(config_dir_name);
 
 	last_load = load_time;
