@@ -57,52 +57,75 @@ connection_handler(
 	gchar *type = NULL;
 	gchar *name = NULL;
 	gchar *line = NULL;
+	gchar *action_name = NULL;
+	gchar *action = NULL;
+	gchar *data = NULL;
 
 	input = g_data_input_stream_new(g_io_stream_get_input_stream((GIOStream *)connection));
 
-	while ( ( line = g_data_input_stream_read_line(input, &size, NULL, &error) ) != NULL )
+	while ( ( line = g_data_input_stream_read_upto(input, "\n", -1, &size, NULL, &error) ) != NULL )
 	{
-		g_strchomp(line);
+		g_data_input_stream_read_byte(input, NULL, &error);
+		if ( error )
+			break;
+		#if DEBUG
+		g_debug("Line received: %s", line);
+		#endif /* DEBUG */
 		if ( g_ascii_strncasecmp(line, "EVENT", 5) == 0 )
 		{
-			gchar **event = g_strsplit(line+6, " ", 2);
-			gchar *action = g_strstrip(event[0]);
-			gchar *data = NULL;
+			gchar **event = NULL;
+
+			event = g_strsplit(line+6, " ", 2);
+			action = g_strdup(g_strstrip(event[0]));
 			if ( event[1] != NULL )
-				data = g_strstrip(event[1]);
-			#if DEBUG
-			g_debug("Event: action=%s data=%s", action, data);
-			#endif /* DEBUG */
-			event_action(type, name, action, data);
+				action_name = g_strdup(g_strstrip(event[1]));
+			else
+				action_name = g_strdup(name);
+
 			g_strfreev(event);
 		}
 		else if ( g_ascii_strncasecmp(line, "BYE", 3) == 0 )
-		{
-			#if DEBUG
-			g_debug("Bye");
-			#endif /* DEBUG */
 			break;
-		}
 		else if ( g_ascii_strncasecmp(line, "HELLO", 5) == 0 )
 		{
-			gchar **hello = g_strsplit(line+6, " ", 2);
+			gchar **hello = NULL;
+
+			hello = g_strsplit(line+6, " ", 2);
 			type = g_strdup(g_strstrip(hello[0]));
 			if ( hello[1] != NULL )
 				name = g_strdup(g_strstrip(hello[1]));
 			else
 				name = g_strdup(type);
 			g_strfreev(hello);
-			#if DEBUG
-			g_debug("Hello: type=%s name=%s", type, name);
-			#endif /* DEBUG */
+		}
+		else if ( action )
+		{
+			if ( g_ascii_strcasecmp(line, ".") == 0 )
+			{
+				event_action(type, action_name, action, data);
+				g_free(action_name);
+				g_free(action);
+				g_free(data);
+				action_name = NULL;
+				action = NULL;
+				data = NULL;
+			}
+			else if ( data )
+			{
+				gchar *old = NULL;
+
+				old = data;
+				data = g_strjoin("\n", old, ( line[0] == '.' ) ? line+1 : line, NULL);
+
+				g_free(old);
+			}
+			else
+				data = g_strdup(( line[0] == '.' ) ? line+1 : line);
 		}
 		else
-		{
-			#if DEBUG
-			g_debug("Input: %s", line);
-			#endif /* DEBUG */
 			g_warning("Unknown message");
-		}
+
+		g_free(line);
 	}
 	if ( error )
 		g_warning("Can't read the socket: %s", error->message);
