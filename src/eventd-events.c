@@ -28,6 +28,8 @@
 #include <glib.h>
 #include <gio/gio.h>
 
+#define CONFIG_RELOAD_DELAY 10
+
 #define DEFAULT_DELAY 5
 #define DEFAULT_DELAY_STR "5"
 
@@ -269,17 +271,24 @@ eventd_parse_client(gchar *type, GKeyFile *config_file)
 	g_hash_table_insert(clients_config, g_strdup(type), type_config);
 }
 
+static gint64 last_load = - ( CONFIG_RELOAD_DELAY * 1e6 );
+
 void
 eventd_config_parser()
 {
 	GError *error = NULL;
 	gchar *config_dir_name = NULL;
 	GDir *config_dir = NULL;
+	gchar *file = NULL;
+	gint64 load_time = 0;
 
 	#if ENABLE_SOUND
 	gchar *sounds_dir_name = NULL;
 	#endif /* ENABLE_SOUND */
 
+	load_time = g_get_monotonic_time();
+	if ( load_time < ( last_load + ( CONFIG_RELOAD_DELAY * 1e6 ) ) )
+		return;
 
 	config_dir_name = g_strdup_printf("%s/"PACKAGE_NAME, g_get_user_config_dir());
 
@@ -289,7 +298,10 @@ eventd_config_parser()
 
 
 	if ( config )
+	{
+		g_message("Reloading configuration");
 		eventd_config_clean();
+	}
 	else
 	{
 		/*
@@ -300,9 +312,12 @@ eventd_config_parser()
 		GFile *dir = NULL;
 		GFileMonitor *monitor = NULL;
 
+		g_message("First configuration load");
+
 		dir = g_file_new_for_path(config_dir_name);
 		if ( ( monitor = g_file_monitor(dir, G_FILE_MONITOR_NONE, NULL, &error) ) == NULL )
 			g_warning("Couldn't monitor the main config directory: %s", error->message);
+		g_signal_connect(monitor, "changed", eventd_config_parser, NULL);
 		g_clear_error(&error);
 		g_object_unref(dir);
 
@@ -310,6 +325,7 @@ eventd_config_parser()
 		dir = g_file_new_for_path(sounds_dir_name);
 		if ( ( monitor = g_file_monitor(dir, G_FILE_MONITOR_NONE, NULL, &error) ) == NULL )
 			g_warning("Couldn't monitor the sounds directory: %s", error->message);
+		g_signal_connect(monitor, "changed", eventd_config_parser, NULL);
 		g_clear_error(&error);
 		g_object_unref(dir);
 		g_free(sounds_dir_name);
@@ -322,11 +338,18 @@ eventd_config_parser()
 	if ( ! config_dir )
 		goto out;
 
-	gchar *type = NULL;
-	while ( ( type = (gchar *)g_dir_read_name(config_dir) ) != NULL )
+	while ( ( file = (gchar *)g_dir_read_name(config_dir) ) != NULL )
 	{
-		gchar *config_file_name = g_strdup_printf("%s/%s", config_dir_name, type);
-		GKeyFile *config_file = g_key_file_new();
+		gchar *type = NULL;
+		gchar *config_file_name = NULL;
+		GKeyFile *config_file = NULL;
+
+		if ( g_str_has_prefix(file, ".") || ( ! g_str_has_suffix(file, ".conf") ) )
+			continue;
+
+		type = g_strndup(file, strlen(file) - 5);
+		config_file_name = g_strdup_printf("%s/%s", config_dir_name, file);
+		config_file = g_key_file_new();
 		if ( ! g_key_file_load_from_file(config_file, config_file_name, G_KEY_FILE_NONE, &error) )
 		{
 			g_warning("Can't read the configuration file: %s", error->message);
@@ -340,7 +363,7 @@ eventd_config_parser()
 	next:
 		g_key_file_free(config_file);
 		g_free(config_file_name);
-		//g_free(type);
+		g_free(type);
 	}
 	if ( error )
 		g_warning("Can't read the configuration directory: %s", error->message);
@@ -354,6 +377,8 @@ eventd_config_parser()
 	g_dir_close(config_dir);
 out:
 	g_free(config_dir_name);
+
+	last_load = load_time;
 }
 
 void
