@@ -38,9 +38,6 @@
 
 #include "eventd-events.h"
 
-#define CONFIG_DIR ".config/eventd"
-#define SOUNDS_DIR ".local/share/sounds/eventd"
-
 extern gchar const *home;
 
 #define MAX_ARGS 50
@@ -179,10 +176,10 @@ eventd_config_parser()
 	#endif /* ENABLE_SOUND */
 
 
-	config_dir_name = g_strdup_printf("%s/%s", home, CONFIG_DIR);
+	config_dir_name = g_strdup_printf("%s/"PACKAGE_NAME, g_get_user_config_dir());
 
 	#if ENABLE_SOUND
-	sounds_dir_name = g_strdup_printf("%s/%s", home, SOUNDS_DIR);
+	sounds_dir_name = g_strdup_printf("%s/"PACKAGE_NAME"/sounds", g_get_user_data_dir());
 	#endif /* ENABLE_SOUND */
 
 
