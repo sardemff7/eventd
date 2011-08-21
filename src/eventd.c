@@ -190,7 +190,6 @@ main(int argc, char *argv[])
 
 		if ( ( socket = eventd_get_unix_socket(unix_socket) ) != NULL )
 			sockets = g_list_prepend(sockets, socket);
-		g_free(unix_socket);
 	}
 #endif /* ENABLE_GIO_UNIX */
 
@@ -258,6 +257,19 @@ start:
 	retval = eventd_service(sockets);
 
 	g_list_free_full(sockets, g_object_unref);
+
+#if ENABLE_SYSTEMD
+	if ( no_systemd )
+	{
+#if ENABLE_GIO_UNIX
+		if ( unix_socket )
+		{
+			g_unlink(unix_socket);
+			g_free(unix_socket);
+		}
+#endif /* ENABLE_GIO_UNIX */
+	}
+#endif /* ENABLE_SYSTEMD */
 
 	if ( daemonize )
 		g_unlink(pid_file);
