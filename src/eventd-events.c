@@ -74,6 +74,7 @@ do_it(gchar * path, gchar * arg, ...)
 
 
 GHashTable *config = NULL;
+GHashTable *clients_config = NULL;
 
 typedef enum {
 	ACTION_SOUND = 0,
@@ -126,7 +127,7 @@ void
 event_action(gchar *client_type, gchar *client_name, gchar *client_action, gchar *client_data)
 {
 	GError *error = NULL;
-	GHashTable *type_config = g_hash_table_lookup(config, client_type);
+	GHashTable *type_config = g_hash_table_lookup(clients_config, client_type);
 	GList *actions = g_hash_table_lookup(type_config, client_action);
 	for ( ; actions ; actions = g_list_next(actions) )
 	{
@@ -162,6 +163,104 @@ event_action(gchar *client_type, gchar *client_name, gchar *client_action, gchar
 		#endif /* HAVE_DIALOGS */
 		}
 	}
+}
+
+static void
+eventd_parse_server(GKeyFile *config_file)
+{
+	GError *error = NULL;
+	gchar **keys = NULL;
+	gchar **key = NULL;
+
+	config = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+
+	if ( g_key_file_has_group(config_file, "server") )
+	{
+		keys = g_key_file_get_keys(config_file, "server", NULL, &error);
+		for ( key = keys ; *key ; ++key )
+			g_hash_table_insert(config, g_strdup(*key), g_key_file_get_value(config_file, "server", *key, NULL));
+		g_strfreev(keys);
+	}
+}
+
+static void
+eventd_init_default_server_config()
+{
+	if ( ! config )
+		config = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+}
+
+static void
+eventd_parse_client(gchar *type, GKeyFile *config_file)
+{
+	GError *error = NULL;
+	GHashTable *type_config = NULL;
+	gchar **groups = NULL;
+	gchar **group = NULL;
+
+	type_config = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)eventd_action_list_free);
+	groups = g_key_file_get_groups(config_file, NULL);
+
+	for ( group = groups ; *group ; ++group )
+	{
+		gchar **keys = g_key_file_get_keys(config_file, *group, NULL, &error);
+		if ( ! keys )
+		{
+			g_warning("Can't read the keys for group %s: %s", *group, error->message);
+			continue;
+		}
+
+		GList *list = NULL;
+
+		gchar **key = NULL;
+		for ( key = keys ; *key ; ++key )
+		{
+			EventdAction *action = NULL;
+			if ( 0 ) {}
+			#if ENABLE_SOUND
+			else if ( g_ascii_strcasecmp(*key, "sound") == 0 )
+			{
+				gchar *filename = g_key_file_get_value(config_file, *group, *key, NULL);
+				if ( filename[0] != '/')
+					filename = g_strdup_printf("%s/"PACKAGE_NAME"/sounds/%s", g_get_user_data_dir(), filename);
+				else
+					filename = g_strdup(filename);
+				gchar *sample_name = g_strdup_printf("%s-%s", type, *group);
+				if ( eventd_pulse_create_sample(sample_name, filename) )
+					action = eventd_action_new(ACTION_SOUND, sample_name);
+				g_free(sample_name);
+				g_free(filename);
+			}
+			#endif /* ENABLE_SOUND */
+			#if ENABLE_NOTIFY
+			else if ( g_ascii_strcasecmp(*key, "notify") == 0 )
+			{
+				gchar *msg = g_key_file_get_value(config_file, *group, *key, NULL);
+				action = eventd_action_new(ACTION_NOTIFY, msg);
+			}
+			#endif /* ENABLE_NOTIFY */
+			#if HAVE_DIALOGS
+			else if ( g_ascii_strcasecmp(*key, "dialog") == 0 )
+			{
+				gchar *msg = g_key_file_get_value(config_file, *group, *key, NULL);
+				action = eventd_action_new(ACTION_MESSAGE, msg);
+			}
+			#endif /* HAVE_DIALOGS */
+			else
+			{
+				g_warning("action %s not supported", *key);
+				continue;
+			}
+			if ( action )
+				list = g_list_prepend(list, action);
+		}
+		g_strfreev(keys);
+
+		g_hash_table_insert(type_config, g_strdup(*group), list);
+	}
+	g_strfreev(groups);
+
+	g_hash_table_insert(clients_config, g_strdup(type), type_config);
 }
 
 void
@@ -207,10 +306,11 @@ eventd_config_parser()
 			g_warning("Couldn't monitor the sounds directory: %s", error->message);
 		g_clear_error(&error);
 		g_object_unref(dir);
+		g_free(sounds_dir_name);
 		#endif /* ENABLE_SOUND */
 	}
 
-	config = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_hash_table_remove_all);
+	clients_config = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_hash_table_remove_all);
 
 	config_dir = g_dir_open(config_dir_name, 0, &error);
 	if ( ! config_dir )
@@ -227,70 +327,10 @@ eventd_config_parser()
 			goto next;
 		}
 
-		GHashTable *type_config = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)eventd_action_list_free);
-
-		gchar **groups = g_key_file_get_groups(config_file, NULL);
-		gchar **group = NULL;
-		for ( group = groups ; *group ; ++group )
-		{
-			gchar **keys = g_key_file_get_keys(config_file, *group, NULL, &error);
-			if ( ! keys )
-			{
-				g_warning("Can't read the keys for group %s: %s", *group, error->message);
-				continue;
-			}
-
-			GList *list = NULL;
-
-			gchar **key = NULL;
-			for ( key = keys ; *key ; ++key )
-			{
-				EventdAction *action = NULL;
-				if ( 0 ) {}
-				#if ENABLE_SOUND
-				else if ( g_ascii_strcasecmp(*key, "sound") == 0 )
-				{
-					gchar *filename = g_key_file_get_value(config_file, *group, *key, NULL);
-					if ( filename[0] != '/')
-						filename = g_strdup_printf("%s/%s", sounds_dir_name, filename);
-					else
-						filename = g_strdup(filename);
-					gchar *sample_name = g_strdup_printf("%s-%s", type, *group);
-					if ( eventd_pulse_create_sample(sample_name, filename) )
-						action = eventd_action_new(ACTION_SOUND, sample_name);
-					g_free(sample_name);
-					g_free(filename);
-				}
-				#endif /* ENABLE_SOUND */
-				#if ENABLE_NOTIFY
-				else if ( g_ascii_strcasecmp(*key, "notify") == 0 )
-				{
-					gchar *msg = g_key_file_get_value(config_file, *group, *key, NULL);
-					action = eventd_action_new(ACTION_NOTIFY, msg);
-				}
-				#endif /* ENABLE_NOTIFY */
-				#if HAVE_DIALOGS
-				else if ( g_ascii_strcasecmp(*key, "dialog") == 0 )
-				{
-					gchar *msg = g_key_file_get_value(config_file, *group, *key, NULL);
-					action = eventd_action_new(ACTION_MESSAGE, msg);
-				}
-				#endif /* HAVE_DIALOGS */
-				else
-				{
-					g_warning("action %s not supported", *key);
-					continue;
-				}
-				if ( action )
-					list = g_list_prepend(list, action);
-			}
-			g_strfreev(keys);
-
-			g_hash_table_insert(type_config, g_strdup(*group), list);
-		}
-		g_strfreev(groups);
-
-		g_hash_table_insert(config, g_strdup(type), type_config);
+		if ( g_ascii_strcasecmp(PACKAGE_NAME, type) == 0 )
+			eventd_parse_server(config_file);
+		else
+			eventd_parse_client(type, config_file);
 	next:
 		g_key_file_free(config_file);
 		g_free(config_file_name);
@@ -300,12 +340,13 @@ eventd_config_parser()
 		g_warning("Can't read the configuration directory: %s", error->message);
 	g_clear_error(&error);
 
+	if ( ! config )
+	{
+		eventd_init_default_server_config();
+	}
+
 	g_dir_close(config_dir);
 out:
-	#if ENABLE_SOUND
-	g_free(sounds_dir_name);
-	#endif /* ENABLE_SOUND */
-
 	g_free(config_dir_name);
 }
 
@@ -313,4 +354,16 @@ void
 eventd_config_clean()
 {
 	g_hash_table_remove_all(config);
+	g_hash_table_remove_all(clients_config);
+}
+
+
+guint64
+eventd_config_get_guint64(gchar *name)
+{
+	gchar *value = NULL;
+
+	value = g_hash_table_lookup(config, name);
+
+	return g_ascii_strtoull(value, NULL, 10);
 }

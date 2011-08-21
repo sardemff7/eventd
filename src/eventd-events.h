@@ -23,4 +23,6 @@
 void eventd_config_parsing();
 void eventd_config_clean();
 
+guint64 eventd_config_get_guint64(gchar *name);
+
 #endif /* __EVENTD_EVENTS_H__ */
