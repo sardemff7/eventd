@@ -60,8 +60,11 @@ connection_handler(
 	gchar *action_name = NULL;
 	gchar *action = NULL;
 	gchar *data = NULL;
+	guint64 delay = 0;
+	gint64 last_action = 0;
 
 	input = g_data_input_stream_new(g_io_stream_get_input_stream((GIOStream *)connection));
+	delay = eventd_config_get_guint64("delay") * 10e6;
 
 	while ( ( line = g_data_input_stream_read_upto(input, "\n", -1, &size, NULL, &error) ) != NULL )
 	{
@@ -102,7 +105,14 @@ connection_handler(
 		{
 			if ( g_ascii_strcasecmp(line, ".") == 0 )
 			{
-				event_action(type, action_name, action, data);
+				gint64 action_time = 0;
+
+				action_time = g_get_monotonic_time();
+				if ( action_time > ( last_action + delay ) )
+				{
+					last_action = action_time;
+					event_action(type, action_name, action, data);
+				}
 				g_free(action_name);
 				g_free(action);
 				g_free(data);

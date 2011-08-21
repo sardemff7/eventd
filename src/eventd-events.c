@@ -28,6 +28,9 @@
 #include <glib.h>
 #include <gio/gio.h>
 
+#define DEFAULT_DELAY 5
+#define DEFAULT_DELAY_STR "5"
+
 #if ENABLE_SOUND
 #include "eventd-pulse.h"
 #endif /* ENABLE_SOUND */
@@ -188,6 +191,9 @@ eventd_init_default_server_config()
 {
 	if ( ! config )
 		config = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+
+	if ( g_hash_table_lookup(config, "delay") == NULL )
+		g_hash_table_insert(config, g_strdup("delay"), g_strdup(DEFAULT_DELAY_STR));
 }
 
 static void
