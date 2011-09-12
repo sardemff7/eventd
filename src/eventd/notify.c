@@ -23,7 +23,7 @@
 
 #include <glib.h>
 
-#include "eventd-notify.h"
+#include "notify.h"
 
 
 void

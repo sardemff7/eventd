@@ -38,7 +38,7 @@
 #endif /* ENABLE_SYSTEMD */
 
 #include "eventd.h"
-#include "eventd-service.h"
+#include "service.h"
 
 #define PID_FILE "%s/pid"
 

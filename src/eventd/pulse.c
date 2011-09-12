@@ -24,7 +24,7 @@
 
 #include <glib.h>
 
-#include "eventd-pulse.h"
+#include "pulse.h"
 
 static pa_threaded_mainloop *pa_loop = NULL;
 static pa_context *sound = NULL;

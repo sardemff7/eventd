@@ -32,15 +32,15 @@
 #endif /* ENABLE_GIO_UNIX */
 
 #if ENABLE_SOUND
-#include "eventd-pulse.h"
+#include "pulse.h"
 #endif /* ENABLE_SOUND */
 
 #if ENABLE_NOTIFY
-#include "eventd-notify.h"
+#include "notify.h"
 #endif /* ENABLE_NOTIFY */
 
-#include "eventd-events.h"
-#include "eventd-service.h"
+#include "events.h"
+#include "service.h"
 
 #define BUFFER_SIZE 1024
 

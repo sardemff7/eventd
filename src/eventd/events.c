@@ -34,14 +34,14 @@
 #define DEFAULT_DELAY_STR "5"
 
 #if ENABLE_SOUND
-#include "eventd-pulse.h"
+#include "pulse.h"
 #endif /* ENABLE_SOUND */
 
 #if ENABLE_NOTIFY
-#include "eventd-notify.h"
+#include "notify.h"
 #endif /* ENABLE_NOTIFY */
 
-#include "eventd-events.h"
+#include "events.h"
 
 extern gchar const *home;
 

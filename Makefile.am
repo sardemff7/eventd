@@ -10,12 +10,12 @@ bin_PROGRAMS = \
 	eventd
 
 eventd_SOURCES = \
-	src/eventd-events.h \
-	src/eventd-events.c \
-	src/eventd-service.h \
-	src/eventd-service.c \
-	src/eventd.h \
-	src/eventd.c
+	src/eventd/events.h \
+	src/eventd/events.c \
+	src/eventd/service.h \
+	src/eventd/service.c \
+	src/eventd/eventd.h \
+	src/eventd/eventd.c
 
 eventd_CFLAGS = \
 	-DLOCALEDIR=\"$(localedir)\" \
@@ -39,8 +39,8 @@ endif
 
 if ENABLE_SOUND
 eventd_SOURCES += \
-	src/eventd-pulse.h \
-	src/eventd-pulse.c
+	src/eventd/pulse.h \
+	src/eventd/pulse.c
 
 eventd_CFLAGS += \
 	$(SOUND_CFLAGS)
@@ -51,8 +51,8 @@ endif
 
 if ENABLE_NOTIFY
 eventd_SOURCES += \
-	src/eventd-notify.h \
-	src/eventd-notify.c
+	src/eventd/notify.h \
+	src/eventd/notify.c
 
 eventd_CFLAGS += \
 	$(NOTIFY_CFLAGS)
