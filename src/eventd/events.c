@@ -1,5 +1,5 @@
 /*
- * Eventd - Small daemon to act on remote or local events
+ * eventd - Small daemon to act on remote or local events
  *
  * Copyright © 2011 Sardem FF7
  *
