@@ -1,6 +1,8 @@
 ACLOCAL_AMFLAGS = -I m4
 
 AM_CFLAGS = \
+	-I $(top_srcdir)/include/ \
+	-I $(top_builddir)/include/ \
 	$(GLOBAL_CFLAGS)
 
 AM_LDFLAGS = \

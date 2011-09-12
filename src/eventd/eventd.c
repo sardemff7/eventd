@@ -17,7 +17,6 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "eventd.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -32,18 +31,16 @@
 #include <glib/gstdio.h>
 #include <gio/gio.h>
 
-#ifdef ENABLE_SYSTEMD
-#include <sys/socket.h>
-#include <systemd/sd-daemon.h>
-#endif /* ENABLE_SYSTEMD */
+#include <eventd-common.h>
 
 #include "eventd.h"
 #include "service.h"
 
-#define PID_FILE "%s/pid"
+#if ENABLE_SYSTEMD
+#include <sys/socket.h>
+#include <systemd/sd-daemon.h>
+#endif /* ENABLE_SYSTEMD */
 
-#define DEFAULT_BIND_PORT 7100
-#define UNIX_SOCKET "%s/sock"
 
 static gboolean daemonize = FALSE;
 static gchar *pid_file = NULL;
