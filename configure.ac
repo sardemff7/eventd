@@ -88,7 +88,7 @@ fi
 AC_SUBST(GTK_CFLAGS)
 AC_SUBST(GTK_LIBS)
 
-GLOBAL_CFLAGS="-Wall -Wextra"
+GLOBAL_CFLAGS="-Wall -Wextra -Wno-unused-parameter"
 GLOBAL_LDFLAGS=""
 AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug], [Enable debug]), enable_debug=$enableval, enable_debug=no)
 if test x$enable_debug = xyes; then

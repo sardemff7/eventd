@@ -82,9 +82,16 @@ GHashTable *config = NULL;
 GHashTable *clients_config = NULL;
 
 typedef enum {
-	ACTION_SOUND = 0,
+	ACTION_NONE = 0,
+#if ENABLE_SOUND
+	ACTION_SOUND ,
+#endif /* ENABLE_SOUND */
+#if ENABLE_NOTIFY
 	ACTION_NOTIFY,
+#endif /* ENABLE_NOTIFY */
+#if HAVE_DIALOGS
 	ACTION_MESSAGE,
+#endif /* HAVE_DIALOGS */
 } EventdActionType;
 
 typedef struct {
@@ -131,7 +138,6 @@ eventd_action_list_free(GList *actions)
 void
 event_action(gchar *client_type, gchar *client_name, gchar *client_action, gchar *client_data)
 {
-	GError *error = NULL;
 	GHashTable *type_config = g_hash_table_lookup(clients_config, client_type);
 	GList *actions = g_hash_table_lookup(type_config, client_action);
 	for ( ; actions ; actions = g_list_next(actions) )
@@ -166,6 +172,8 @@ event_action(gchar *client_type, gchar *client_name, gchar *client_action, gchar
 			#endif /* ! ENABLE_GTK */
 		break;
 		#endif /* HAVE_DIALOGS */
+		default:
+		break;
 		}
 	}
 }

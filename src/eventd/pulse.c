@@ -79,7 +79,7 @@ eventd_pulse_start()
 	sound = pa_context_new(pa_threaded_mainloop_get_api(pa_loop), PACKAGE_NAME);
 	if ( ! sound )
 		g_error("Can't open sound system");
-	pa_context_state_t state = pa_context_get_state(sound);
+	pa_context_get_state(sound);
 	pa_context_set_state_callback(sound, pa_context_state_callback, NULL);
 
 	pa_threaded_mainloop_lock(pa_loop);
@@ -178,6 +178,7 @@ eventd_pulse_create_sample(const char *sample_name, const char *filename)
 	break;
 	case PA_SAMPLE_ULAW:
 	case PA_SAMPLE_ALAW:
+	default:
 		g_warning("Can't handle this one");
 		goto out;
 	break;

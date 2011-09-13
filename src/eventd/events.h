@@ -20,7 +20,9 @@
 #ifndef __EVENTD_EVENTS_H__
 #define __EVENTD_EVENTS_H__
 
-void eventd_config_parsing();
+void event_action(gchar *client_type, gchar *client_name, gchar *client_action, gchar *client_data);
+
+void eventd_config_parser();
 void eventd_config_clean();
 
 guint64 eventd_config_get_guint64(gchar *name);

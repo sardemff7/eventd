@@ -113,7 +113,7 @@ main(int argc, char *argv[])
 	if ( ! no_systemd )
 	{
 		gint r, n;
-		guint fd;
+		gint fd;
 
 		n = sd_listen_fds(TRUE);
 		if ( n < 0 )

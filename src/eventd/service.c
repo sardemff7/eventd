@@ -60,7 +60,7 @@ connection_handler(
 	gchar *action_name = NULL;
 	gchar *action = NULL;
 	gchar *data = NULL;
-	guint64 delay = 0;
+	gint64 delay = 0;
 	gint64 last_action = 0;
 
 	input = g_data_input_stream_new(g_io_stream_get_input_stream((GIOStream *)connection));

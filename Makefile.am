@@ -1,5 +1,7 @@
 ACLOCAL_AMFLAGS = -I m4
 
+bin_PROGRAMS =
+
 AM_CFLAGS = \
 	-I $(top_srcdir)/include/ \
 	-I $(top_builddir)/include/ \
@@ -8,7 +10,8 @@ AM_CFLAGS = \
 AM_LDFLAGS = \
 	$(GLOBAL_LDFLAGS)
 
-bin_PROGRAMS = \
+
+bin_PROGRAMS += \
 	eventd
 
 eventd_SOURCES = \
@@ -20,6 +23,7 @@ eventd_SOURCES = \
 	src/eventd/eventd.c
 
 eventd_CFLAGS = \
+	$(AM_CFLAGS) \
 	-DLOCALEDIR=\"$(localedir)\" \
 	$(GTK_CFLAGS) \
 	$(GIO_CFLAGS) \
