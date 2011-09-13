@@ -69,7 +69,7 @@ AM_CONDITIONAL(ENABLE_NOTIFY, [test x$enable_notify = xyes])
 AC_SUBST(NOTIFY_CFLAGS)
 AC_SUBST(NOTIFY_LIBS)
 
-AC_ARG_ENABLE(dialogs, AS_HELP_STRING([--disable-dialogs], [Disable dialog support]), enable_dialogs=$enableval, enable_dialogs=yes)
+AC_ARG_ENABLE(dialogs, AS_HELP_STRING([--disable-dialogs], [Disable dialog support]), enable_dialogs=$enableval, enable_dialogs=no)
 #AC_ARG_ENABLE(gtk, AS_HELP_STRING([--enable-gtk], [Enable GTK+]), enable_gtk=$enableval, enable_gtk=no)
 if test x$enable_dialogs = xyes; then
   AC_CHECK_PROG(have_zenity, zenity, yes, no)
