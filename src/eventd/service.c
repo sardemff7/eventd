@@ -52,6 +52,7 @@ connection_handler(
 	gpointer                user_data)
 {
 	GDataInputStream *input = NULL;
+	GDataOutputStream *output = NULL;
 	GError *error = NULL;
 	gsize size = 0;
 	gchar *type = NULL;
@@ -64,6 +65,7 @@ connection_handler(
 	gint64 last_action = 0;
 
 	input = g_data_input_stream_new(g_io_stream_get_input_stream((GIOStream *)connection));
+	output = g_data_output_stream_new(g_io_stream_get_output_stream((GIOStream *)connection));
 	delay = eventd_config_get_guint64("delay") * 1e6;
 
 	while ( ( line = g_data_input_stream_read_upto(input, "\n", -1, &size, NULL, &error) ) != NULL )
@@ -88,10 +90,16 @@ connection_handler(
 			g_strfreev(event);
 		}
 		else if ( g_ascii_strncasecmp(line, "BYE", 3) == 0 )
+		{
+			g_data_output_stream_put_string(output, "BYE\n", NULL, &error);
 			break;
+		}
 		else if ( g_ascii_strncasecmp(line, "HELLO", 5) == 0 )
 		{
 			gchar **hello = NULL;
+
+			if ( ! g_data_output_stream_put_string(output, "HELLO\n", NULL, &error) )
+				break;
 
 			hello = g_strsplit(line+6, " ", 2);
 			type = g_strdup(g_strstrip(hello[0]));
