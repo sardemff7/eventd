@@ -2,7 +2,7 @@ ACLOCAL_AMFLAGS = -I m4
 
 bin_PROGRAMS =
 lib_LTLIBRARIES =
-nobase_pkginclude_HEADERS =
+pkginclude_HEADERS =
 
 CLEANFILES =
 
@@ -60,11 +60,11 @@ libeventc_la_LIBADD = \
 	$(GIO_LIBS) \
 	$(GLIB_LIBS)
 
-nobase_pkginclude_HEADERS += \
+pkginclude_HEADERS += \
 	$(top_builddir)/include/libeventc.h
 
 vapidir = $(datadir)/vala/vapi
-nobase_dist_vapi_DATA = $(top_builddir)/vapi/libeventc.vapi
+dist_vapi_DATA = $(top_builddir)/vapi/libeventc.vapi
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = $(top_builddir)/data/libeventc.pc
