@@ -1,0 +1,9 @@
+LIBEVENTC {
+global:
+    eventd_eventc_new;
+    eventd_eventc_connect;
+    eventd_eventc_event;
+    eventd_eventc_close;
+local:
+    *;
+};

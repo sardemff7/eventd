@@ -14,31 +14,42 @@ AM_INIT_AUTOMAKE([1.11 subdir-objects dist-xz no-dist-gzip tar-ustar foreign])
 AM_SILENT_RULES([yes])
 
 AC_PROG_CC
+LT_INIT
 
 GETTEXT_PACKAGE=$PACKAGE_NAME
 AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE], ["$GETTEXT_PACKAGE"], [Gettext Package])
 AC_SUBST(GETTEXT_PACKAGE)
-AM_GLIB_GNU_GETTEXT
 IT_PROG_INTLTOOL([0.35.0])
 
 AC_SUBST([localedir], ["$localedir"])
 
 AC_PROG_INSTALL
 
+AM_PROG_VALAC([0.13])
+
+
 PKG_CHECK_MODULES(GLIB, [glib-2.0 >= 2.25.0])
+GLIB_VALAFLAGS="--pkg glib-2.0 --pkg glib-local-2.0"
 AC_SUBST(GLIB_CFLAGS)
 AC_SUBST(GLIB_LIBS)
+AC_SUBST(GLIB_VALAFLAGS)
 
 gio_unix=
+gio_unix_vala=
 AC_ARG_ENABLE(gio-unix, AS_HELP_STRING([--disable-gio-unix], [Disable UNIX-specific GIO support]), enable_gio_unix=$enableval, enable_gio_unix=yes)
 if test x$enable_gio_unix = xyes; then
   gio_unix="gio-unix-2.0"
+  gio_unix_vala="--pkg gio-unix-2.0"
   AC_DEFINE([ENABLE_GIO_UNIX], [1], [Enable UNIX-specific GIO support])
 fi
+AM_CONDITIONAL(ENABLE_GIO_UNIX, test x$enable_gio_unix = xyes)
 
 PKG_CHECK_MODULES(GIO, [gio-2.0 >= 2.25.0 $gio_unix])
+GIO_VALAFLAGS="--pkg gio-2.0 $gio_unix_vala"
+AC_SUBST(gio_unix)
 AC_SUBST(GIO_CFLAGS)
 AC_SUBST(GIO_LIBS)
+AC_SUBST(GIO_VALAFLAGS)
 
 
 AC_ARG_ENABLE(systemd, AS_HELP_STRING([--disable-systemd], [Disable systemd support activation support]), enable_systemd=$enableval, enable_systemd=yes)
@@ -90,15 +101,19 @@ AC_SUBST(GTK_LIBS)
 
 GLOBAL_CFLAGS="-Wall -Wextra -Wno-unused-parameter"
 GLOBAL_LDFLAGS=""
+GLOBAL_VALAFLAGS=""
 AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug], [Enable debug]), enable_debug=$enableval, enable_debug=no)
 if test x$enable_debug = xyes; then
   AC_DEFINE([DEBUG], [1], [Activate debug mode])
-  GLOBAL_CFLAGS+=" -Werror -O0 -ggdb3"
+  GLOBAL_CFLAGS+=" -O0 -ggdb3"
+  GLOBAL_VALALAGS+=" --debug"
 fi
 AC_SUBST(GLOBAL_CFLAGS)
 AC_SUBST(GLOBAL_LDFLAGS)
+AC_SUBST(GLOBAL_VALAFLAGS)
 
 AC_CONFIG_FILES([
+  data/libeventc.pc
   Makefile
   po/Makefile.in
 ])
