@@ -71,12 +71,12 @@ AM_CONDITIONAL(ENABLE_SOUND, test x$enable_sound = xyes)
 AC_SUBST(SOUND_CFLAGS)
 AC_SUBST(SOUND_LIBS)
 
-AC_ARG_ENABLE(notify, AS_HELP_STRING([--disable-notify], [Disable libnotify support]), enable_notify=$enableval, enable_notify=yes)
-if test x$enable_notify = xyes; then
+AC_ARG_ENABLE(libnotify, AS_HELP_STRING([--disable-libnotify], [Disable libnotify support]), enable_libnotify=$enableval, enable_libnotify=yes)
+if test x$enable_libnotify = xyes; then
   PKG_CHECK_MODULES(NOTIFY, [libnotify >= 0.6.5])
   AC_DEFINE([ENABLE_NOTIFY], [1], [Enable libnotify support])
 fi
-AM_CONDITIONAL(ENABLE_NOTIFY, [test x$enable_notify = xyes])
+AM_CONDITIONAL(ENABLE_NOTIFY, [test x$enable_libnotify = xyes])
 AC_SUBST(NOTIFY_CFLAGS)
 AC_SUBST(NOTIFY_LIBS)
 
