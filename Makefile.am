@@ -71,15 +71,17 @@ pkgconfig_DATA = $(top_builddir)/data/libeventc.pc
 
 CLEANFILES += \
 	$(top_builddir)/include/libeventc.h \
+	$(top_builddir)/vapi/libeventc.vapi \
 	$(libeventc_la_SOURCES:.vala=.c)
 
-vapi/libeventc.vapi: libeventc.la
+$(top_builddir)/vapi/libeventc.vapi: libeventc.la
 
 
 bin_PROGRAMS += \
 	eventc
 
 eventc_SOURCES = \
+	$(top_builddir)/vapi/libeventc.vapi \
 	src/eventc/eventc.vala
 
 eventc_VALAFLAGS = \
