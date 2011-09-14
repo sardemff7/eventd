@@ -86,7 +86,6 @@ eventc_SOURCES = \
 
 eventc_VALAFLAGS = \
 	$(AM_VALAFLAGS) \
-	--pkg libeventc \
 	$(GLIB_VALAFLAGS)
 
 if ENABLE_GIO_UNIX
