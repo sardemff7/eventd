@@ -101,7 +101,15 @@ namespace Eventd
             else
                 send("EVENT %s %s".printf(type, name));
             if ( data != null )
-                this.send(data);
+            {
+                var datas = data.split("\n");
+                foreach ( var line in datas )
+                {
+                    if ( line[0] == '.' )
+                        line = "." + line;
+                    this.send(line);
+                }
+            }
             this.send(".");
         }
 
