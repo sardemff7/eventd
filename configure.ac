@@ -6,9 +6,6 @@ AC_CONFIG_SRCDIR([src/])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([.aux])
 
-AC_SUBST([PACKAGE_NAME], ["$PACKAGE_NAME"])
-AC_SUBST([PACKAGE_VERSION], ["$PACKAGE_VERSION"])
-
 AM_INIT_AUTOMAKE([1.11 subdir-objects dist-xz no-dist-gzip tar-ustar foreign])
 
 AM_SILENT_RULES([yes])
@@ -16,12 +13,9 @@ AM_SILENT_RULES([yes])
 AC_PROG_CC
 LT_INIT
 
-GETTEXT_PACKAGE=$PACKAGE_NAME
-AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE], ["$GETTEXT_PACKAGE"], [Gettext Package])
-AC_SUBST(GETTEXT_PACKAGE)
+AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE], ["$PACKAGE_NAME"], [Gettext Package])
+AC_DEFINE_UNQUOTED([LOCALEDIR], ["$localedir"], [Locale directory])
 IT_PROG_INTLTOOL([0.35.0])
-
-AC_SUBST([localedir], ["$localedir"])
 
 AC_PROG_INSTALL
 
@@ -99,18 +93,18 @@ fi
 AC_SUBST(GTK_CFLAGS)
 AC_SUBST(GTK_LIBS)
 
-GLOBAL_CFLAGS="-Wall -Wextra -Wno-unused-parameter"
-GLOBAL_LDFLAGS=""
-GLOBAL_VALAFLAGS=""
+AM_CFLAGS="-Wall -Wextra -Wno-unused-parameter"
+AM_LDFLAGS=""
+AM_VALAFLAGS=""
 AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug], [Enable debug]), enable_debug=$enableval, enable_debug=no)
 if test x$enable_debug = xyes; then
   AC_DEFINE([DEBUG], [1], [Activate debug mode])
-  GLOBAL_CFLAGS+=" -O0 -ggdb3"
-  GLOBAL_VALALAGS+=" --debug"
+  AM_CFLAGS="${AM_CFLAGS} -O0 -ggdb3"
+  AM_VALAFLAGS="${AM_VALAFLAGS} --debug"
 fi
-AC_SUBST(GLOBAL_CFLAGS)
-AC_SUBST(GLOBAL_LDFLAGS)
-AC_SUBST(GLOBAL_VALAFLAGS)
+AC_SUBST(AM_CFLAGS)
+AC_SUBST(AM_LDFLAGS)
+AC_SUBST(AM_VALAFLAGS)
 
 AC_CONFIG_FILES([
   data/libeventc.pc
@@ -125,4 +119,4 @@ echo systemd support:      $enable_systemd
 echo Libnotify support:    $enable_notify
 echo Sound support:        $enable_sound
 echo Dialogs support:      $enable_dialogs
-echo  Using GTK+:          $enable_gtk
+#echo  Using GTK+:          $enable_gtk

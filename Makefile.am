@@ -6,19 +6,14 @@ pkginclude_HEADERS =
 
 CLEANFILES =
 
-AM_CFLAGS = \
+AM_CFLAGS += \
 	-I $(top_srcdir)/include/ \
-	-I $(top_builddir)/include/ \
-	$(GLOBAL_CFLAGS)
+	-I $(top_builddir)/include/
 
-AM_LDFLAGS = \
-	$(GLOBAL_LDFLAGS)
-
-AM_VALAFLAGS = \
+AM_VALAFLAGS += \
 	--vapidir $(top_srcdir)/vapi/ \
 	--vapidir $(top_builddir)/vapi/ \
-	--pkg config \
-	$(GLOBAL_VALAFLAGS)
+	--pkg config
 
 
 
@@ -118,7 +113,6 @@ eventd_SOURCES = \
 
 eventd_CFLAGS = \
 	$(AM_CFLAGS) \
-	-DLOCALEDIR=\"$(localedir)\" \
 	$(GTK_CFLAGS) \
 	$(GIO_CFLAGS) \
 	$(GLIB_CFLAGS)
