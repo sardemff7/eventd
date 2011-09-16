@@ -48,6 +48,7 @@
 
 extern gchar const *home;
 
+#if HAVE_DIALOGS
 #define MAX_ARGS 50
 static int
 do_it(gchar * path, gchar * arg, ...)
@@ -79,6 +80,7 @@ do_it(gchar * path, gchar * arg, ...)
 	g_clear_error(&error);
 	return ( ret == 0);
 }
+#endif /* HAVE_DIALOGS */
 
 
 GHashTable *config = NULL;
