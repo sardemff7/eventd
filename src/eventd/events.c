@@ -377,7 +377,8 @@ eventd_config_parser()
 		dir = g_file_new_for_path(config_dir_name);
 		if ( ( monitor = g_file_monitor(dir, G_FILE_MONITOR_NONE, NULL, &error) ) == NULL )
 			g_warning("Couldn't monitor the main config directory: %s", error->message);
-		g_signal_connect(monitor, "changed", eventd_config_parser, NULL);
+		else
+			g_signal_connect(monitor, "changed", eventd_config_parser, NULL);
 		g_clear_error(&error);
 		g_object_unref(dir);
 
@@ -385,7 +386,8 @@ eventd_config_parser()
 		dir = g_file_new_for_path(sounds_dir_name);
 		if ( ( monitor = g_file_monitor(dir, G_FILE_MONITOR_NONE, NULL, &error) ) == NULL )
 			g_warning("Couldn't monitor the sounds directory: %s", error->message);
-		g_signal_connect(monitor, "changed", eventd_config_parser, NULL);
+		else
+			g_signal_connect(monitor, "changed", eventd_config_parser, NULL);
 		g_clear_error(&error);
 		g_object_unref(dir);
 		#endif /* ENABLE_SOUND */
