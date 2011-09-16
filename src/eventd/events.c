@@ -220,7 +220,11 @@ eventd_parse_client(gchar *type, gchar *config_dir_name)
 
 	config_dir = g_dir_open(config_dir_name, 0, &error);
 	if ( ! config_dir )
-		goto out;
+	{
+		g_warning("Can't read the configuration directory '%s': %s", config_dir_name, error->message);
+		g_clear_error(&error);
+		return;
+	}
 
 	type_config = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)eventd_action_list_free);
 
@@ -252,15 +256,17 @@ eventd_parse_client(gchar *type, gchar *config_dir_name)
 			gchar *sample = NULL;
 
 			filename = g_key_file_get_string(config_file, "sound", "file", &error);
-			if ( ( ! filename ) && ( error->code == G_KEY_FILE_ERROR_KEY_NOT_FOUND ) )
-				goto next;
+			if ( ( ! filename ) && ( error->code != G_KEY_FILE_ERROR_KEY_NOT_FOUND ) )
+				goto skip_sound;
+			g_clear_error(&error);
 
 			sample = g_key_file_get_string(config_file, "sound", "sample", &error);
-			if ( ( ! sample ) && ( error->code == G_KEY_FILE_ERROR_KEY_NOT_FOUND ) )
-				goto next;
+			if ( ( ! sample ) && ( error->code != G_KEY_FILE_ERROR_KEY_NOT_FOUND ) )
+				goto skip_sound;
+			g_clear_error(&error);
 
 			if ( ( ! filename ) && ( ! sample ) )
-				goto next;
+				goto skip_sound;
 
 			if ( sample )
 				sample = g_strdup(sample);
@@ -275,15 +281,20 @@ eventd_parse_client(gchar *type, gchar *config_dir_name)
 					filename = g_strdup_printf("%s/"PACKAGE_NAME"/sounds/%s", g_get_user_data_dir(), filename);
 				else
 					filename = g_strdup(filename);
-				if ( ! eventd_pulse_create_sample(sample, filename) )
-				{
-					g_free(action);
-					action = NULL;
-				}
+
+				if ( eventd_pulse_create_sample(sample, filename) )
+					list = g_list_prepend(list, action);
 			}
+			else
+				list = g_list_prepend(list, action);
 
 			g_free(sample);
 			g_free(filename);
+
+		skip_sound:
+			if ( error )
+				g_warning("Can't set the sound action of event '%s' for client type '%s': %s", event, type, error->message);
+			g_clear_error(&error);
 		}
 		#endif /* ENABLE_SOUND */
 
@@ -292,12 +303,21 @@ eventd_parse_client(gchar *type, gchar *config_dir_name)
 		{
 			gchar *msg = NULL;
 
-			msg = g_key_file_get_value(config_file, "notify", "message", &error);
+			msg = g_key_file_get_string(config_file, "notify", "message", &error);
+			if ( ( ! msg ) && ( error->code != G_KEY_FILE_ERROR_KEY_NOT_FOUND ) )
+				goto skip_notify;
+			g_clear_error(&error);
+
 			if ( ! msg )
-				goto next;
+				msg = "%s";
 
 			list = g_list_prepend(list,
 				eventd_action_new(ACTION_NOTIFY, msg));
+
+		skip_notify:
+			if ( error )
+				g_warning("Can't set the notify action of event '%s' for client type '%s': %s", event, type, error->message);
+			g_clear_error(&error);
 		}
 		#endif /* ENABLE_NOTIFY */
 
@@ -306,12 +326,18 @@ eventd_parse_client(gchar *type, gchar *config_dir_name)
 		{
 			gchar *msg = NULL;
 
-			msg = g_key_file_get_value(config_file, "dialog", "message", &error);
-			if ( ! msg )
-				goto next;
+			msg = g_key_file_get_string(config_file, "dialog", "message", &error);
+			if ( ( ! msg ) && ( error->code != G_KEY_FILE_ERROR_KEY_NOT_FOUND ) )
+				goto skip_dialog;
+			g_clear_error(&error);
 
 			list = g_list_prepend(list,
 				eventd_action_new(ACTION_MESSAGE, msg));
+
+		skip_dialog:
+			if ( error )
+				g_warning("Can't set the dialog action of event '%s' for client type '%s': %s", event, type, error->message);
+			g_clear_error(&error);
 		}
 		#endif /* HAVE_DIALOGS */
 
@@ -328,10 +354,6 @@ eventd_parse_client(gchar *type, gchar *config_dir_name)
 	g_hash_table_insert(clients_config, g_strdup(type), type_config);
 
 	g_dir_close(config_dir);
-out:
-	if ( error )
-		g_warning("Can't read the configuration directory '%s': %s", config_dir_name, error->message);
-	g_clear_error(&error);
 }
 
 void
