@@ -416,7 +416,23 @@ eventd_config_parser()
 		client_config_dir_name = g_strdup_printf("%s/%s", config_dir_name, file);
 
 		if ( g_file_test(client_config_dir_name, G_FILE_TEST_IS_DIR) )
+		{
+			if ( g_hash_table_lookup(config, file) == NULL )
+			{
+				GFile *dir = NULL;
+				GFileMonitor *monitor = NULL;
+
+				dir = g_file_new_for_path(client_config_dir_name);
+				if ( ( monitor = g_file_monitor(dir, G_FILE_MONITOR_NONE, NULL, &error) ) == NULL )
+					g_warning("Couldn't monitor the config directory '%s': %s", client_config_dir_name, error->message);
+				else
+					g_signal_connect(monitor, "changed", eventd_config_parser, NULL);
+				g_clear_error(&error);
+				g_object_unref(dir);
+			}
+
 			eventd_parse_client(file, client_config_dir_name);
+		}
 
 		g_free(client_config_dir_name);
 	}
