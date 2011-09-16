@@ -2,7 +2,7 @@
  * eventd - Small daemon to act on remote or local events
  *
  * Copyright © 2011 Quentin "Sardem FF7" Glidic
-
+ *
  * This file is part of eventd.
  *
  * eventd is free software: you can redistribute it and/or modify
@@ -99,16 +99,16 @@ typedef enum {
 
 typedef struct {
 	EventdActionType type;
-	gchar *data;
+	void *data;
 } EventdAction;
 
 static EventdAction *
-eventd_action_new(EventdActionType type, gchar *data)
+eventd_action_new(EventdActionType type, void *data)
 {
 	EventdAction *action = g_new0(EventdAction, 1);
 	action->type = type;
 	if ( data )
-		action->data = g_strdup(data);
+		action->data = data;
 	return action;
 }
 
@@ -273,7 +273,7 @@ eventd_parse_client(gchar *type, gchar *config_dir_name)
 			else
 				sample = g_strdup_printf("%s-%s", type, file);
 
-			action = eventd_action_new(ACTION_SOUND, sample);
+			action = eventd_action_new(ACTION_SOUND, g_strdup(sample));
 
 			if ( filename )
 			{
@@ -284,6 +284,8 @@ eventd_parse_client(gchar *type, gchar *config_dir_name)
 
 				if ( eventd_pulse_create_sample(sample, filename) )
 					list = g_list_prepend(list, action);
+				else
+					eventd_action_free(action);
 			}
 			else
 				list = g_list_prepend(list, action);
@@ -312,7 +314,7 @@ eventd_parse_client(gchar *type, gchar *config_dir_name)
 				msg = "%s";
 
 			list = g_list_prepend(list,
-				eventd_action_new(ACTION_NOTIFY, msg));
+				eventd_action_new(ACTION_NOTIFY, g_strdup(msg)));
 
 		skip_notify:
 			if ( error )
@@ -332,7 +334,7 @@ eventd_parse_client(gchar *type, gchar *config_dir_name)
 			g_clear_error(&error);
 
 			list = g_list_prepend(list,
-				eventd_action_new(ACTION_MESSAGE, msg));
+				eventd_action_new(ACTION_MESSAGE, g_strdup(msg)));
 
 		skip_dialog:
 			if ( error )
