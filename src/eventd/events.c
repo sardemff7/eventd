@@ -120,7 +120,8 @@ eventd_action_free(EventdAction *action)
 	{
 		#if ENABLE_SOUND
 		case ACTION_SOUND:
-			eventd_pulse_remove_sample(action->data);
+			eventd_pulse_event_free(action->data);
+		break;
 		#endif /* ENABLE_SOUND */
 		default:
 		break;
@@ -152,7 +153,7 @@ event_action(gchar *client_type, gchar *client_name, gchar *client_action, gchar
 		{
 		#if ENABLE_SOUND
 		case ACTION_SOUND:
-			eventd_pulse_play_sample(action->data);
+			eventd_pulse_event_perform(action->data);
 		break;
 		#endif /* ENABLE_SOUND */
 		#if ENABLE_NOTIFY
@@ -234,7 +235,6 @@ eventd_parse_client(gchar *type, gchar *config_dir_name)
 		gchar *config_file_name = NULL;
 		GKeyFile *config_file = NULL;
 		GList *list = NULL;
-		EventdAction *action = NULL;
 
 		if ( g_str_has_prefix(file, ".") || ( ! g_str_has_suffix(file, ".conf") ) )
 			continue;
@@ -254,6 +254,7 @@ eventd_parse_client(gchar *type, gchar *config_dir_name)
 		{
 			gchar *filename = NULL;
 			gchar *sample = NULL;
+			EventdPulseEvent *pulse_event = NULL;
 
 			filename = g_key_file_get_string(config_file, "sound", "file", &error);
 			if ( ( ! filename ) && ( error->code != G_KEY_FILE_ERROR_KEY_NOT_FOUND ) )
@@ -271,24 +272,12 @@ eventd_parse_client(gchar *type, gchar *config_dir_name)
 			if ( sample )
 				sample = g_strdup(sample);
 			else
-				sample = g_strdup_printf("%s-%s", type, file);
+				sample = g_strdup_printf("%s-%s", type, event);
 
-			action = eventd_action_new(ACTION_SOUND, g_strdup(sample));
-
-			if ( filename )
-			{
-				if ( filename[0] != '/')
-					filename = g_strdup_printf("%s/"PACKAGE_NAME"/sounds/%s", g_get_user_data_dir(), filename);
-				else
-					filename = g_strdup(filename);
-
-				if ( eventd_pulse_create_sample(sample, filename) )
-					list = g_list_prepend(list, action);
-				else
-					eventd_action_free(action);
-			}
-			else
-				list = g_list_prepend(list, action);
+			pulse_event = eventd_pulse_event_new(sample, filename);
+			if ( pulse_event )
+				list = g_list_prepend(list,
+					eventd_action_new(ACTION_SOUND, pulse_event));
 
 			g_free(sample);
 			g_free(filename);

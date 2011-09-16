@@ -117,8 +117,8 @@ static const pa_sample_spec sound_spec = {
 
 typedef sf_count_t (*sndfile_readf_t)(SNDFILE *sndfile, void *ptr, sf_count_t frames);
 
-int
-eventd_pulse_create_sample(const char *sample_name, const char *filename)
+static gboolean
+eventd_pulse_create_sample(const gchar *sample_name, const gchar *filename)
 {
 	int retval = 0;
 
@@ -231,7 +231,7 @@ out:
 	return retval;
 }
 
-void
+static void
 eventd_pulse_play_sample(const char *name)
 {
 	pa_threaded_mainloop_lock(pa_loop);
@@ -243,11 +243,54 @@ eventd_pulse_play_sample(const char *name)
 	pa_threaded_mainloop_unlock(pa_loop);
 }
 
-void
+static void
 eventd_pulse_remove_sample(const char *name)
 {
 	pa_threaded_mainloop_lock(pa_loop);
 	pa_context_remove_sample(sound, name, pa_context_success_callback, NULL);
 	pa_threaded_mainloop_wait(pa_loop);
 	pa_threaded_mainloop_unlock(pa_loop);
+}
+
+EventdPulseEvent *
+eventd_pulse_event_new(const gchar *sample, const gchar *filename)
+{
+	EventdPulseEvent *event = NULL;
+	gchar *real_filename = NULL;
+
+	if ( filename )
+	{
+		if ( filename[0] != '/')
+			real_filename = g_strdup_printf("%s/"PACKAGE_NAME"/sounds/%s", g_get_user_data_dir(), filename);
+		else
+			real_filename = g_strdup(filename);
+
+		if ( ! eventd_pulse_create_sample(sample, real_filename) )
+			goto fail;
+	}
+
+	event = g_new0(EventdPulseEvent, 1);
+
+	event->sample = g_strdup(sample);
+	event->created = (filename != NULL);
+
+fail:
+	g_free(real_filename);
+	return event;
+}
+
+void
+eventd_pulse_event_perform(EventdPulseEvent *event)
+{
+	eventd_pulse_play_sample(event->sample);
+}
+
+void
+eventd_pulse_event_free(EventdPulseEvent *event)
+{
+	if ( event->created )
+		eventd_pulse_remove_sample(event->sample);
+
+	g_free(event->sample);
+	g_free(event);
 }

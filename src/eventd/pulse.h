@@ -26,8 +26,13 @@
 void eventd_pulse_start();
 void eventd_pulse_stop();
 
-int eventd_pulse_create_sample(const char *name, const char *file);
-void eventd_pulse_play_sample(const char *name);
-void eventd_pulse_remove_sample(const char *name);
+typedef struct {
+    gchar *sample;
+    gboolean created;
+} EventdPulseEvent;
+
+EventdPulseEvent *eventd_pulse_event_new(const gchar *sample, const gchar *filename);
+void eventd_pulse_event_perform(EventdPulseEvent *event);
+void eventd_pulse_event_free(EventdPulseEvent *event);
 
 #endif /* __EVENTD_PULSE_H__ */
