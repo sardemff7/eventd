@@ -155,6 +155,18 @@ eventd_LDADD += \
 	$(NOTIFY_LIBS)
 endif
 
+if ENABLE_DIALOGS
+eventd_SOURCES += \
+	src/eventd/dialogs.h \
+	src/eventd/dialogs.c
+
+eventd_CFLAGS += \
+	$(GTK_CFLAGS)
+
+eventd_LDADD += \
+	$(GTK_LIBS)
+endif
+
 install-exec-hook: la-files-removal
 
 la-files-removal:

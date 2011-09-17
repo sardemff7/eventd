@@ -44,43 +44,13 @@
 #include "notify.h"
 #endif /* ENABLE_NOTIFY */
 
+#if HAVE_DIALOGS
+#include "dialogs.h"
+#endif /* HAVE_DIALOGS */
+
 #include "events.h"
 
 extern gchar const *home;
-
-#if HAVE_DIALOGS
-#define MAX_ARGS 50
-static int
-do_it(gchar * path, gchar * arg, ...)
-{
-	GError *error = NULL;
-	gint ret;
-	gchar * argv[MAX_ARGS + 2];
-	argv[0] = path;
-	gsize argno = 0;
-	va_list al;
-	va_start(al, arg);
-	while (arg && argno < MAX_ARGS)
-	{
-		argv[++argno] = arg;
-		arg = va_arg(al, gchar *);
-	}
-	argv[++argno] = NULL;
-	va_end(al);
-	g_spawn_sync(home, /* working_dir */
-		argv,
-		NULL, /* env */
-		G_SPAWN_SEARCH_PATH, /* flags */
-		NULL,	/* child setup */
-		NULL,	/* user_data */
-		NULL,	/* stdout */
-		NULL,	/* sterr */
-		&ret,	/* exit_status */
-		&error);	/* error */
-	g_clear_error(&error);
-	return ( ret == 0);
-}
-#endif /* HAVE_DIALOGS */
 
 
 GHashTable *config = NULL;
@@ -125,6 +95,11 @@ eventd_action_free(EventdAction *action)
 			eventd_pulse_event_free(action->data);
 		break;
 		#endif /* ENABLE_SOUND */
+		#if ENABLE_NOTIFY
+		case ACTION_NOTIFY:
+			eventd_notify_event_free(action->data);
+		break;
+		#endif /* ENABLE_NOTIFY */
 		default:
 		break;
 	}
@@ -166,8 +141,7 @@ event_action(const gchar *client_type, const gchar *client_name, const gchar *ac
 			#if ENABLE_GTK
 			#error Not supported yet
 			#else /* ! ENABLE_GTK */
-			gchar *msg = g_strdup_printf(action->data, action_data ? action_data : "");
-			do_it("zenity", "--info", "--title", client_name, "--text", msg, NULL);
+			create_dialog(action->data, client_name, action_data);
 			#endif /* ! ENABLE_GTK */
 		break;
 		#endif /* HAVE_DIALOGS */
@@ -322,6 +296,9 @@ eventd_parse_client(gchar *type, gchar *config_dir_name)
 			if ( ( ! msg ) && ( error->code != G_KEY_FILE_ERROR_KEY_NOT_FOUND ) )
 				goto skip_dialog;
 			g_clear_error(&error);
+
+			if ( ! msg )
+				msg = "%s";
 
 			list = g_list_prepend(list,
 				eventd_action_new(ACTION_MESSAGE, g_strdup(msg)));

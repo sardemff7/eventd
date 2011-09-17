@@ -90,6 +90,7 @@ if test x$enable_dialogs = xyes; then
 elif test x$enable_gtk = xyes; then
   AC_MSG_ERROR([*** GTK+ support requested but not dialog support])
 fi
+AM_CONDITIONAL(ENABLE_DIALOGS, [test x$enable_dialogs = xyes])
 AC_SUBST(GTK_CFLAGS)
 AC_SUBST(GTK_LIBS)
 
