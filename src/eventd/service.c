@@ -57,13 +57,17 @@ connection_handler(
 	GDataInputStream *input = NULL;
 	GDataOutputStream *output = NULL;
 	GError *error = NULL;
-	gsize size = 0;
+
 	gchar *type = NULL;
 	gchar *name = NULL;
-	gchar *line = NULL;
+
+	gchar *action_type = NULL;
 	gchar *action_name = NULL;
-	gchar *action = NULL;
-	gchar *data = NULL;
+	gchar *action_data = NULL;
+
+	gsize size = 0;
+	gchar *line = NULL;
+
 	gint64 delay = 0;
 	gint64 last_action = 0;
 
@@ -84,11 +88,9 @@ connection_handler(
 			gchar **event = NULL;
 
 			event = g_strsplit(line+6, " ", 2);
-			action = g_strdup(g_strstrip(event[0]));
+			action_type = g_strdup(g_strstrip(event[0]));
 			if ( event[1] != NULL )
 				action_name = g_strdup(g_strstrip(event[1]));
-			else
-				action_name = g_strdup(name);
 
 			g_strfreev(event);
 		}
@@ -108,11 +110,9 @@ connection_handler(
 			type = g_strdup(g_strstrip(hello[0]));
 			if ( hello[1] != NULL )
 				name = g_strdup(g_strstrip(hello[1]));
-			else
-				name = g_strdup(type);
 			g_strfreev(hello);
 		}
-		else if ( action )
+		else if ( action_type )
 		{
 			if ( g_ascii_strcasecmp(line, ".") == 0 )
 			{
@@ -122,26 +122,26 @@ connection_handler(
 				if ( action_time > ( last_action + delay ) )
 				{
 					last_action = action_time;
-					event_action(type, action_name, action, data);
+					event_action(type, name, action_type, action_name, action_data);
 				}
+				g_free(action_data);
 				g_free(action_name);
-				g_free(action);
-				g_free(data);
+				g_free(action_type);
+				action_data = NULL;
 				action_name = NULL;
-				action = NULL;
-				data = NULL;
+				action_type = NULL;
 			}
-			else if ( data )
+			else if ( action_data )
 			{
 				gchar *old = NULL;
 
-				old = data;
-				data = g_strjoin("\n", old, ( line[0] == '.' ) ? line+1 : line, NULL);
+				old = action_data;
+				action_data = g_strjoin("\n", old, ( line[0] == '.' ) ? line+1 : line, NULL);
 
 				g_free(old);
 			}
 			else
-				data = g_strdup(( line[0] == '.' ) ? line+1 : line);
+				action_data = g_strdup(( line[0] == '.' ) ? line+1 : line);
 		}
 		else
 			g_warning("Unknown message");

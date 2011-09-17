@@ -140,15 +140,15 @@ eventd_action_list_free(GList *actions)
 }
 
 void
-event_action(gchar *client_type, gchar *client_name, gchar *client_action, gchar *client_data)
+event_action(const gchar *client_type, const gchar *client_name, const gchar *action_type, const gchar *action_name, const gchar *action_data)
 {
 	GHashTable *type_config = g_hash_table_lookup(clients_config, client_type);
-	GList *actions = g_hash_table_lookup(type_config, client_action);
+	GList *actions = g_hash_table_lookup(type_config, action_type);
 	for ( ; actions ; actions = g_list_next(actions) )
 	{
 		EventdAction *action = actions->data;
 		gchar *msg;
-		gchar *data = client_data;
+		gchar *data = NULL;
 		switch ( action->type )
 		{
 		#if ENABLE_SOUND
@@ -158,8 +158,8 @@ event_action(gchar *client_type, gchar *client_name, gchar *client_action, gchar
 		#endif /* ENABLE_SOUND */
 		#if ENABLE_NOTIFY
 		case ACTION_NOTIFY:
-			if ( data != NULL )
-				data = g_markup_escape_text(data, -1);
+			if ( action_data != NULL )
+				data = g_markup_escape_text(action_data, -1);
 			msg = g_strdup_printf(action->data, data ? data : "");
 			g_free(data);
 			eventd_notify_display(client_name, msg);
@@ -171,7 +171,7 @@ event_action(gchar *client_type, gchar *client_name, gchar *client_action, gchar
 			#if ENABLE_GTK
 			#error Not supported yet
 			#else /* ! ENABLE_GTK */
-			msg = g_strdup_printf(action->data, data ? data : "");
+			msg = g_strdup_printf(action->data, action_data ? action_data : "");
 			do_it("zenity", "--info", "--title", client_name, "--text", msg, NULL);
 			#endif /* ! ENABLE_GTK */
 		break;
@@ -472,7 +472,7 @@ eventd_config_clean()
 
 
 guint64
-eventd_config_get_guint64(gchar *name)
+eventd_config_get_guint64(const gchar *name)
 {
 	gchar *value = NULL;
 
