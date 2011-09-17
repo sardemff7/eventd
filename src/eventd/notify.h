@@ -26,6 +26,15 @@
 void eventd_notify_start();
 void eventd_notify_stop();
 
+typedef struct {
+    gchar *title;
+    gchar *message;
+} EventdNotifyEvent;
+
+EventdNotifyEvent *eventd_notify_event_new(const char *title, const char *message);
+void eventd_notify_event_perform(EventdNotifyEvent *event, const gchar *client_name, const gchar *event_name, const gchar *event_data);
+void eventd_notify_event_free(EventdNotifyEvent *event);
+
 void eventd_notify_display(const char *title, const char *msg);
 
 #endif /* __EVENTD_NOTIFY_H__ */

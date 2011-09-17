@@ -149,8 +149,6 @@ event_action(const gchar *client_type, const gchar *client_name, const gchar *ac
 	for ( ; actions ; actions = g_list_next(actions) )
 	{
 		EventdAction *action = actions->data;
-		gchar *msg;
-		gchar *data = NULL;
 		switch ( action->type )
 		{
 		#if ENABLE_SOUND
@@ -160,12 +158,7 @@ event_action(const gchar *client_type, const gchar *client_name, const gchar *ac
 		#endif /* ENABLE_SOUND */
 		#if ENABLE_NOTIFY
 		case ACTION_NOTIFY:
-			if ( action_data != NULL )
-				data = g_markup_escape_text(action_data, -1);
-			msg = g_strdup_printf(action->data, data ? data : "");
-			g_free(data);
-			eventd_notify_display(client_name, msg);
-			g_free(msg);
+			eventd_notify_event_perform(action->data, client_name, action_name, action_data);
 		break;
 		#endif /* ENABLE_NOTIFY */
 		#if HAVE_DIALOGS
@@ -173,7 +166,7 @@ event_action(const gchar *client_type, const gchar *client_name, const gchar *ac
 			#if ENABLE_GTK
 			#error Not supported yet
 			#else /* ! ENABLE_GTK */
-			msg = g_strdup_printf(action->data, action_data ? action_data : "");
+			gchar *msg = g_strdup_printf(action->data, action_data ? action_data : "");
 			do_it("zenity", "--info", "--title", client_name, "--text", msg, NULL);
 			#endif /* ! ENABLE_GTK */
 		break;
@@ -294,18 +287,24 @@ eventd_parse_client(gchar *type, gchar *config_dir_name)
 		#if ENABLE_NOTIFY
 		if ( g_key_file_has_group(config_file, "notify") )
 		{
-			gchar *msg = NULL;
+			gchar *title = NULL;
+			gchar *message = NULL;
+			EventdNotifyEvent *notify_event = NULL;
 
-			msg = g_key_file_get_string(config_file, "notify", "message", &error);
-			if ( ( ! msg ) && ( error->code != G_KEY_FILE_ERROR_KEY_NOT_FOUND ) )
+			title = g_key_file_get_string(config_file, "notify", "title", &error);
+			if ( ( ! title ) && ( error->code != G_KEY_FILE_ERROR_KEY_NOT_FOUND ) )
 				goto skip_notify;
 			g_clear_error(&error);
 
-			if ( ! msg )
-				msg = "%s";
+			message = g_key_file_get_string(config_file, "notify", "message", &error);
+			if ( ( ! message ) && ( error->code != G_KEY_FILE_ERROR_KEY_NOT_FOUND ) )
+				goto skip_notify;
+			g_clear_error(&error);
+
+			notify_event = eventd_notify_event_new(title, message);
 
 			list = g_list_prepend(list,
-				eventd_action_new(ACTION_NOTIFY, g_strdup(msg)));
+				eventd_action_new(ACTION_NOTIFY, notify_event));
 
 		skip_notify:
 			if ( error )
