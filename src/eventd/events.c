@@ -101,9 +101,9 @@ eventd_action_free(EventdAction *action)
 		break;
 		#endif /* ENABLE_NOTIFY */
 		default:
+			g_free(action->data);
 		break;
 	}
-	g_free(action->data);
 	g_free(action);
 }
 
