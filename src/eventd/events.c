@@ -179,6 +179,31 @@ eventd_init_default_server_config()
 		g_hash_table_insert(config, g_strdup("delay"), g_strdup(DEFAULT_DELAY_STR));
 }
 
+static gint8
+eventd_config_key_file_get_string(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *event, const gchar *type, gchar **value)
+{
+	GError *error = NULL;
+	gint8 ret = 0;
+	gchar *ret_value = NULL;
+
+	ret_value = g_key_file_get_string(config_file, group, key, &error);
+	if ( ( ! ret_value ) && ( error->code != G_KEY_FILE_ERROR_KEY_NOT_FOUND ) )
+	{
+		ret = -1;
+		g_warning("Can't set the %s action of event '%s' for client type '%s': %s", group, event, type, error->message);
+	}
+	else if ( ! ret_value )
+	{
+		ret = 1;
+		*value = NULL;
+	}
+	else
+		*value = ret_value;
+	g_clear_error(&error);
+
+	return ret;
+}
+
 static void
 eventd_parse_client(gchar *type, gchar *config_dir_name)
 {
@@ -186,7 +211,22 @@ eventd_parse_client(gchar *type, gchar *config_dir_name)
 	GDir *config_dir = NULL;
 	GHashTable *type_config = NULL;
 	gchar *file = NULL;
+	gchar *defaults_config_file_name = NULL;
+	GKeyFile *defaults_config_file = NULL;
 
+	defaults_config_file_name = g_strdup_printf("%s.conf", config_dir_name);
+	if ( g_file_test(defaults_config_file_name, G_FILE_TEST_IS_REGULAR) )
+	{
+		defaults_config_file = g_key_file_new();
+		if ( ! g_key_file_load_from_file(defaults_config_file, defaults_config_file_name, G_KEY_FILE_NONE, &error) )
+		{
+			g_warning("Can't read the defaults file '%s': %s", defaults_config_file_name, error->message);
+			g_clear_error(&error);
+			g_key_file_free(defaults_config_file);
+			defaults_config_file = NULL;
+		}
+	}
+	g_free(defaults_config_file_name);
 
 	config_dir = g_dir_open(config_dir_name, 0, &error);
 	if ( ! config_dir )
@@ -210,7 +250,9 @@ eventd_parse_client(gchar *type, gchar *config_dir_name)
 
 		event = g_strndup(file, strlen(file) - 5);
 
+		#if DEBUG
 		g_debug("Parsing event '%s' of client type '%s'", event, type);
+		#endif /* DEBUG */
 
 		config_file_name = g_strdup_printf("%s/%s", config_dir_name, file);
 		config_file = g_key_file_new();
@@ -221,40 +263,36 @@ eventd_parse_client(gchar *type, gchar *config_dir_name)
 		#if ENABLE_SOUND
 		if ( g_key_file_has_group(config_file, "sound") )
 		{
-			gchar *filename = NULL;
 			gchar *sample = NULL;
+			gchar *filename = NULL;
 			EventdPulseEvent *pulse_event = NULL;
 
-			filename = g_key_file_get_string(config_file, "sound", "file", &error);
-			if ( ( ! filename ) && ( error->code != G_KEY_FILE_ERROR_KEY_NOT_FOUND ) )
+			if ( eventd_config_key_file_get_string(config_file, "sound", "sample", event, type, &sample) < 0 )
 				goto skip_sound;
-			g_clear_error(&error);
-
-			sample = g_key_file_get_string(config_file, "sound", "sample", &error);
-			if ( ( ! sample ) && ( error->code != G_KEY_FILE_ERROR_KEY_NOT_FOUND ) )
-				goto skip_sound;
-			g_clear_error(&error);
-
-			if ( ( ! filename ) && ( ! sample ) )
+			if ( eventd_config_key_file_get_string(config_file, "sound", "file", event, type, &filename) < 0 )
 				goto skip_sound;
 
-			if ( sample )
-				sample = g_strdup(sample);
-			else
-				sample = g_strdup_printf("%s-%s", type, event);
+			/* Check defaults */
+			if ( ( defaults_config_file ) && ( ! sample ) && ( ! filename ) && g_key_file_has_group(defaults_config_file, "sound") )
+			{
+				eventd_config_key_file_get_string(config_file, "sound", "sample", "defaults", type, &sample);
+				eventd_config_key_file_get_string(config_file, "sound", "file", "defaults", type, &filename);
+			}
 
-			pulse_event = eventd_pulse_event_new(sample, filename);
-			if ( pulse_event )
-				list = g_list_prepend(list,
-					eventd_action_new(ACTION_SOUND, pulse_event));
+			if ( ( filename ) || ( sample ) )
+			{
+				if ( ! sample )
+					sample = g_strdup_printf("%s-%s", type, event);
 
-			g_free(sample);
-			g_free(filename);
+				pulse_event = eventd_pulse_event_new(sample, filename);
+				if ( pulse_event )
+					list = g_list_prepend(list,
+						eventd_action_new(ACTION_SOUND, pulse_event));
+			}
 
 		skip_sound:
-			if ( error )
-				g_warning("Can't set the sound action of event '%s' for client type '%s': %s", event, type, error->message);
-			g_clear_error(&error);
+			g_free(filename);
+			g_free(sample);
 		}
 		#endif /* ENABLE_SOUND */
 
@@ -263,50 +301,50 @@ eventd_parse_client(gchar *type, gchar *config_dir_name)
 		{
 			gchar *title = NULL;
 			gchar *message = NULL;
-			EventdNotifyEvent *notify_event = NULL;
 
-			title = g_key_file_get_string(config_file, "notify", "title", &error);
-			if ( ( ! title ) && ( error->code != G_KEY_FILE_ERROR_KEY_NOT_FOUND ) )
+			if ( eventd_config_key_file_get_string(config_file, "notify", "title", event, type, &title) < 0 )
 				goto skip_notify;
-			g_clear_error(&error);
-
-			message = g_key_file_get_string(config_file, "notify", "message", &error);
-			if ( ( ! message ) && ( error->code != G_KEY_FILE_ERROR_KEY_NOT_FOUND ) )
+			if ( eventd_config_key_file_get_string(config_file, "notify", "message", event, type, &message) < 0 )
 				goto skip_notify;
-			g_clear_error(&error);
 
-			notify_event = eventd_notify_event_new(title, message);
+			/* Check defaults */
+			if ( ( defaults_config_file ) && g_key_file_has_group(defaults_config_file, "notify") )
+			{
+				if ( ! title )
+					eventd_config_key_file_get_string(defaults_config_file, "notify", "title", "defaults", type, &title);
+
+				if ( ! message )
+					eventd_config_key_file_get_string(defaults_config_file, "notify", "message", "defaults", type, &message);
+			}
 
 			list = g_list_prepend(list,
-				eventd_action_new(ACTION_NOTIFY, notify_event));
+				eventd_action_new(ACTION_NOTIFY, eventd_notify_event_new(title, message)));
 
 		skip_notify:
-			if ( error )
-				g_warning("Can't set the notify action of event '%s' for client type '%s': %s", event, type, error->message);
-			g_clear_error(&error);
+			g_free(message);
+			g_free(title);
 		}
 		#endif /* ENABLE_NOTIFY */
 
 		#if HAVE_DIALOGS
 		if ( g_key_file_has_group(config_file, "dialog") )
 		{
-			gchar *msg = NULL;
+			gchar *message = NULL;
 
-			msg = g_key_file_get_string(config_file, "dialog", "message", &error);
-			if ( ( ! msg ) && ( error->code != G_KEY_FILE_ERROR_KEY_NOT_FOUND ) )
+			if ( eventd_config_key_file_get_string(config_file, "dialog", "message", event, type, &message) < 0 )
 				goto skip_dialog;
-			g_clear_error(&error);
 
-			if ( ! msg )
-				msg = "%s";
+			if ( ( ! message ) && ( defaults_config_file ) && g_key_file_has_group(defaults_config_file, "dialog") )
+					eventd_config_key_file_get_string(defaults_config_file, "dialog", "message", "defaults", type, &message);
+
+			if ( ! message )
+				message = g_strdup("%s");
 
 			list = g_list_prepend(list,
-				eventd_action_new(ACTION_MESSAGE, g_strdup(msg)));
+				eventd_action_new(ACTION_MESSAGE, message));
 
 		skip_dialog:
-			if ( error )
-				g_warning("Can't set the dialog action of event '%s' for client type '%s': %s", event, type, error->message);
-			g_clear_error(&error);
+			g_free(message);
 		}
 		#endif /* HAVE_DIALOGS */
 
@@ -323,6 +361,8 @@ eventd_parse_client(gchar *type, gchar *config_dir_name)
 	g_hash_table_insert(clients_config, g_strdup(type), type_config);
 
 	g_dir_close(config_dir);
+	if ( defaults_config_file )
+		g_key_file_free(defaults_config_file);
 }
 
 void
