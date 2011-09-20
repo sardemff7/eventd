@@ -24,8 +24,9 @@ namespace Eventd
 {
     static string type;
     static string name;
-    static string event;
-    static string data;
+    static string event_type;
+    static string event_name;
+    static string event_data;
     static string host;
     static uint16 port = 0;
     #if ENABLE_GIO_UNIX
@@ -34,10 +35,9 @@ namespace Eventd
 
     static const GLib.OptionEntry[] entries =
     {
-        { "type", 't', 0, GLib.OptionArg.STRING, out type, N_("Type of the client"), "type" },
-        { "name", 'n', 0, GLib.OptionArg.STRING, out name, N_("Name of the client"), "name" },
-        { "event", 'e', 0, GLib.OptionArg.STRING, out event, N_("Event to send"), "event" },
-        { "data", 'd', 0, GLib.OptionArg.STRING, out data, N_("Data to send"), "data" },
+        { "type", 't', 0, GLib.OptionArg.STRING, out event_type, N_("Event type to send"), "type" },
+        { "name", 'n', 0, GLib.OptionArg.STRING, out event_name, N_("Event name to send"), "name" },
+        { "data", 'd', 0, GLib.OptionArg.STRING, out event_data, N_("Event data to send"), "data" },
         { "host", 'h', 0, GLib.OptionArg.STRING, out host, N_("Host to connect to"), "host" },
         { "port", 'p', 0, GLib.OptionArg.INT, ref port, N_("Port to connect to"), "port" },
         #if ENABLE_GIO_UNIX
@@ -61,11 +61,17 @@ namespace Eventd
             GLib.error("Couldn’t parse the arguments: %s", e.message);
         }
 
-        if ( type == null )
+        if ( args.length < 2 )
         {
             GLib.print(_("You must define the type of the client.\n"));
             return 1;
         }
+        type = args[1];
+
+        if ( args.length > 2 )
+            name = string.joinv(" ", args[2:args.length-1]);
+        else
+            name = null;
 
         if ( host == null )
             host = "localhost";
@@ -73,9 +79,9 @@ namespace Eventd
         var client = new Eventc(host, port, type, name);
 
         client.connect();
-        if ( event != null )
+        if ( event_type != null )
         {
-            client.event(event, null, data);
+            client.event(event_type, event_name, event_data);
         }
         else
         {
@@ -83,9 +89,9 @@ namespace Eventd
             while ( ( line = stdin.read_line() ) != null )
             {
                 var elements = line.split(" ", 2);
-                event = elements[0];
-                data = elements[1];
-                client.event(event, null, data);
+                event_type = elements[0];
+                event_name = elements[1];
+                client.event(event_type, event_name, null);
             }
         }
         client.close();
