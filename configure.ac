@@ -11,6 +11,8 @@ AM_INIT_AUTOMAKE([1.11 subdir-objects dist-xz no-dist-gzip tar-ustar foreign])
 AM_SILENT_RULES([yes])
 
 AC_PROG_CC
+AM_PROG_CC_C_O
+AC_DISABLE_STATIC
 LT_INIT
 
 AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE], ["$PACKAGE_NAME"], [Gettext Package])
@@ -24,8 +26,6 @@ AM_PROG_VALAC([0.13])
 
 PKG_CHECK_MODULES(GLIB, [glib-2.0 >= 2.25.0])
 GLIB_VALAFLAGS="--pkg glib-2.0 --pkg glib-local-2.0"
-AC_SUBST(GLIB_CFLAGS)
-AC_SUBST(GLIB_LIBS)
 AC_SUBST(GLIB_VALAFLAGS)
 
 gio_unix=
@@ -41,8 +41,6 @@ AM_CONDITIONAL(ENABLE_GIO_UNIX, test x$enable_gio_unix = xyes)
 PKG_CHECK_MODULES(GIO, [gio-2.0 >= 2.25.0 $gio_unix])
 GIO_VALAFLAGS="--pkg gio-2.0 $gio_unix_vala"
 AC_SUBST(gio_unix)
-AC_SUBST(GIO_CFLAGS)
-AC_SUBST(GIO_LIBS)
 AC_SUBST(GIO_VALAFLAGS)
 
 
@@ -52,8 +50,6 @@ if test x$enable_systemd = xyes; then
   AC_DEFINE([ENABLE_SYSTEMD], [1], [Enable systemd activation support])
 fi
 AM_CONDITIONAL(ENABLE_SYSTEMD, test x$enable_systemd = xyes)
-AC_SUBST(SYSTEMD_CFLAGS)
-AC_SUBST(SYSTEMD_LIBS)
 
 
 AC_ARG_ENABLE(sound, AS_HELP_STRING([--disable-sound], [Disable sound support]), enable_sound=$enableval, enable_sound=yes)
@@ -62,8 +58,6 @@ if test x$enable_sound = xyes; then
   AC_DEFINE([ENABLE_SOUND], [1], [Enable sound support through PulseAudio and libsndfile])
 fi
 AM_CONDITIONAL(ENABLE_SOUND, test x$enable_sound = xyes)
-AC_SUBST(SOUND_CFLAGS)
-AC_SUBST(SOUND_LIBS)
 
 AC_ARG_ENABLE(libnotify, AS_HELP_STRING([--disable-libnotify], [Disable libnotify support]), enable_libnotify=$enableval, enable_libnotify=yes)
 if test x$enable_libnotify = xyes; then
@@ -71,8 +65,6 @@ if test x$enable_libnotify = xyes; then
   AC_DEFINE([ENABLE_NOTIFY], [1], [Enable libnotify support])
 fi
 AM_CONDITIONAL(ENABLE_NOTIFY, [test x$enable_libnotify = xyes])
-AC_SUBST(NOTIFY_CFLAGS)
-AC_SUBST(NOTIFY_LIBS)
 
 AC_ARG_ENABLE(dialogs, AS_HELP_STRING([--disable-dialogs], [Disable dialog support]), enable_dialogs=$enableval, enable_dialogs=no)
 #AC_ARG_ENABLE(gtk, AS_HELP_STRING([--enable-gtk], [Enable GTK+]), enable_gtk=$enableval, enable_gtk=no)
@@ -91,8 +83,6 @@ elif test x$enable_gtk = xyes; then
   AC_MSG_ERROR([*** GTK+ support requested but not dialog support])
 fi
 AM_CONDITIONAL(ENABLE_DIALOGS, [test x$enable_dialogs = xyes])
-AC_SUBST(GTK_CFLAGS)
-AC_SUBST(GTK_LIBS)
 
 AM_CFLAGS="-Wall -Wextra -Wno-unused-parameter"
 AM_LDFLAGS=""
@@ -101,7 +91,7 @@ AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug], [Enable debug]), enable_de
 if test x$enable_debug = xyes; then
   AC_DEFINE([DEBUG], [1], [Activate debug mode])
   AM_CFLAGS="${AM_CFLAGS} -O0 -ggdb3"
-  AM_VALAFLAGS="${AM_VALAFLAGS} --debug"
+  AM_VALAFLAGS="${AM_VALAFLAGS} --debug -D DEBUG"
 fi
 AC_SUBST(AM_CFLAGS)
 AC_SUBST(AM_LDFLAGS)
