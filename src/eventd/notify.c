@@ -92,7 +92,7 @@ eventd_notify_event_perform(EventdNotifyEvent *event, const gchar *client_name, 
 	gchar *tmp = NULL;
 	NotifyNotification *notification = NULL;
 
-	tmp = g_regex_replace_literal(client_name_regex, event->title, -1, 0, client_name , 0, &error);
+	tmp = g_regex_replace_literal(client_name_regex, event->title, -1, 0, client_name ?: "" , 0, &error);
 	if ( ! tmp )
 		g_warning("Can’t replace client name: %s", error->message);
 	g_clear_error(&error);
