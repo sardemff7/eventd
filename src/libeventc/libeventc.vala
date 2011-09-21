@@ -127,10 +127,9 @@ namespace Eventd
             #endif
             if ( address == null )
             {
-                var inet_address = new GLib.InetAddress.from_string(this._host);
-                if ( inet_address == null )
-                    throw new EventcError.HOSTNAME("Couldn’t parse the hostname");
-                address = new GLib.InetSocketAddress(inet_address, ( this._port > 0 ) ? ( this._port ) : ( Common.DEFAULT_BIND_PORT ));
+                address = new GLib.NetworkAddress(this._host, ( this._port > 0 ) ? ( this._port ) : ( Common.DEFAULT_BIND_PORT ));
+                if ( address == null )
+                    throw new EventcError.HOSTNAME("Couldn’t resolve the hostname");
             }
             this.client = new GLib.SocketClient();
 
