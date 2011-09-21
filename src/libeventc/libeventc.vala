@@ -164,7 +164,7 @@ namespace Eventd
             return Error.NONE;
         }
 
-        public Error
+        private Error
         rename()
         {
             if ( this._name == null )
