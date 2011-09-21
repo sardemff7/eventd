@@ -78,12 +78,16 @@ namespace Eventd
 
         var client = new Eventc(host, port, type, name);
 
-        var error = client.connect();
-        if ( error != Eventc.Error.NONE )
+        try
         {
-            GLib.warning("Couldn’t connect to host '%s', error %d", host, error);
+            client.connect();
+        }
+        catch ( GLib.Error e )
+        {
+            GLib.warning("Couldn’t connect to host '%s': %s", host, e.message);
             return 1;
         }
+
         if ( event_type != null )
         {
             client.event(event_type, event_name, event_data);
@@ -99,7 +103,16 @@ namespace Eventd
                 client.event(event_type, event_name, null);
             }
         }
-        client.close();
+
+        try
+        {
+            client.close();
+        }
+        catch ( GLib.Error e )
+        {
+            GLib.warning("Couldn’t close connection to host '%s': %s", host, e.message);
+            return 1;
+        }
 
         return 0;
     }

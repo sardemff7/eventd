@@ -22,16 +22,19 @@
 
 namespace Eventd
 {
+    public errordomain EventcError
+    {
+        HOSTNAME,
+        CONNECTION_REFUSED,
+        CONNECTION_OTHER,
+        HELLO,
+        BYE,
+        RENAMED,
+        CLOSE
+    }
+
     public class Eventc : GLib.Object
     {
-        public enum Error
-        {
-            NONE = 0,
-            HOSTNAME,
-            CONNECTION,
-            HELLO,
-            RENAMED
-        }
 
         private string _host;
         private uint16 _port;
@@ -104,12 +107,12 @@ namespace Eventd
             this.tries = 0;
         }
 
-        public new Error
-        connect()
+        public new void
+        connect() throws EventcError
         {
-            if ( this.client != null )
+            if ( this.connection != null )
                 this.close();
-            GLib.SocketAddress address = null;
+            GLib.SocketConnectable address = null;
             #if ENABLE_GIO_UNIX
             string path = null;
             if ( this._host[0] == '/' )
@@ -126,10 +129,7 @@ namespace Eventd
             {
                 var inet_address = new GLib.InetAddress.from_string(this._host);
                 if ( inet_address == null )
-                {
-                    GLib.warning("Couldn’t parse the hostname");
-                    return Error.HOSTNAME;
-                }
+                    throw new EventcError.HOSTNAME("Couldn’t parse the hostname");
                 address = new GLib.InetSocketAddress(inet_address, ( this._port > 0 ) ? ( this._port ) : ( Common.DEFAULT_BIND_PORT ));
             }
             this.client = new GLib.SocketClient();
@@ -140,11 +140,15 @@ namespace Eventd
             }
             catch ( GLib.Error e )
             {
-                GLib.warning("Failed to connect: %s", e.message);
-                if ( ++this.tries >= this.max_tries )
-                    GLib.error("Failed %llu times, aborting", this.tries);
+                if ( e is GLib.IOError.CONNECTION_REFUSED )
+                    throw new EventcError.CONNECTION_REFUSED("Host is not an eventd");
+                else
+                {
+                    GLib.warning("Failed to connect: %s", e.message);
+                    if ( ++this.tries >= this.max_tries )
+                        throw new EventcError.CONNECTION_OTHER("Failed %llu times, aborting", this.tries);
+                }
                 this.connect();
-                return Error.CONNECTION;
             }
 
             this.input = new GLib.DataInputStream((this.connection as GLib.IOStream).get_input_stream());
@@ -158,14 +162,12 @@ namespace Eventd
             var r = this.receive(null);
             if ( r != "HELLO" )
             {
-                GLib.warning("Got a wrong hello message: %s", r);
-                return Error.HELLO;
+                throw new EventcError.HELLO("Got a wrong hello message: %s", r);
             }
-            return Error.NONE;
         }
 
-        private Error
-        rename()
+        private void
+        rename() throws EventcError
         {
             if ( this._name == null )
                 this.send("RENAME %s".printf(this._type));
@@ -174,10 +176,8 @@ namespace Eventd
             var r = this.receive(null);
             if ( r != "RENAMED" )
             {
-                GLib.warning("Got a wrong renamed message: %s", r);
-                return Error.RENAMED;
+                throw new EventcError.RENAMED("Got a wrong renamed message: %s", r);
             }
-            return Error.NONE;
         }
 
         public void event(string type, string? name, string? data)
@@ -230,14 +230,14 @@ namespace Eventd
             }
         }
 
-        public void close()
+        public void close() throws EventcError
         {
             if ( ! this.connection.is_closed() )
             {
                 this.send("BYE");
                 var r = this.receive(null);
                 if ( r != "BYE" )
-                    GLib.warning("Got a wrong bye message: %s", r);
+                    throw new EventcError.BYE("Got a wrong bye message: %s", r);
             }
             try
             {
@@ -245,11 +245,12 @@ namespace Eventd
             }
             catch ( GLib.Error e )
             {
-                GLib.warning("Failed to close socket: %s", e.message);
+                throw new EventcError.CLOSE("Failed to close socket: %s", e.message);
             }
             this.output = null;
             this.input = null;
             this.connection = null;
+            this.client = null;
         }
     }
 }
