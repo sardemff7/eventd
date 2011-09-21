@@ -112,6 +112,19 @@ connection_handler(
 				name = g_strdup(g_strstrip(hello[1]));
 			g_strfreev(hello);
 		}
+		else if ( g_ascii_strncasecmp(line, "RENAME ", 7) == 0 )
+		{
+			gchar **rename = NULL;
+
+			if ( ! g_data_output_stream_put_string(output, "RENAMED\n", NULL, &error) )
+				break;
+
+			rename = g_strsplit(line+6, " ", 2);
+			type = g_strdup(g_strstrip(rename[0]));
+			if ( rename[1] != NULL )
+				name = g_strdup(g_strstrip(rename[1]));
+			g_strfreev(rename);
+		}
 		else if ( action_type )
 		{
 			if ( g_ascii_strcasecmp(line, ".") == 0 )
