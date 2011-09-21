@@ -78,7 +78,12 @@ namespace Eventd
 
         var client = new Eventc(host, port, type, name);
 
-        client.connect();
+        var error = client.connect();
+        if ( error != Eventc.Error.NONE )
+        {
+            GLib.warning("Couldn’t connect to host '%s', error %d", host, error);
+            return 1;
+        }
         if ( event_type != null )
         {
             client.event(event_type, event_name, event_data);

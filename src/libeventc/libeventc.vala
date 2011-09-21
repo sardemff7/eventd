@@ -24,10 +24,19 @@ namespace Eventd
 {
     public class Eventc : GLib.Object
     {
+        public enum Error
+        {
+            NONE = 0,
+            HOSTNAME,
+            CONNECTION,
+            HELLO
+        }
+
         private string host;
         private uint16 port;
         private string type;
         private string name;
+
         private uint64 tries;
         public uint64 max_tries { get; set; default = 3; }
 
@@ -46,8 +55,11 @@ namespace Eventd
             this.tries = 0;
         }
 
-        public new void connect()
+        public new Error
+        connect()
         {
+            if ( this.client != null )
+                this.close();
             GLib.SocketAddress address = null;
             #if ENABLE_GIO_UNIX
             string path = null;
@@ -64,6 +76,11 @@ namespace Eventd
             if ( address == null )
             {
                 var inet_address = new GLib.InetAddress.from_string(this.host);
+                if ( inet_address == null )
+                {
+                    GLib.warning("Couldn’t parse the hostname");
+                    return Error.HOSTNAME;
+                }
                 address = new GLib.InetSocketAddress(inet_address, ( this.port > 0 ) ? ( this.port ) : ( Common.DEFAULT_BIND_PORT ));
             }
             this.client = new GLib.SocketClient();
@@ -78,7 +95,7 @@ namespace Eventd
                 if ( ++this.tries >= this.max_tries )
                     GLib.error("Failed %llu times, aborting", this.tries);
                 this.connect();
-                return;
+                return Error.CONNECTION;
             }
 
             this.input = new GLib.DataInputStream((this.connection as GLib.IOStream).get_input_stream());
@@ -91,7 +108,11 @@ namespace Eventd
                 this.send("HELLO %s %s".printf(this.type, this.name));
             var r = this.receive(null);
             if ( r != "HELLO" )
+            {
                 GLib.warning("Got a wrong hello message: %s", r);
+                return Error.HELLO;
+            }
+            return Error.NONE;
         }
 
         public void event(string type, string? name, string? data)
@@ -161,6 +182,8 @@ namespace Eventd
             {
                 GLib.warning("Failed to close socket: %s", e.message);
             }
+            this.output = null;
+            this.input = null;
             this.connection = null;
         }
     }
