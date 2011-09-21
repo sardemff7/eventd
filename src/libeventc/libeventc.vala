@@ -29,13 +29,62 @@ namespace Eventd
             NONE = 0,
             HOSTNAME,
             CONNECTION,
-            HELLO
+            HELLO,
+            RENAMED
         }
 
-        private string host;
-        private uint16 port;
-        private string type;
-        private string name;
+        private string _host;
+        private uint16 _port;
+        private string _type;
+        private string _name;
+
+        public string host
+        {
+            set
+            {
+                if ( this._host != value )
+                {
+                    this._host = value;
+                    this.connect();
+                }
+            }
+        }
+
+        public uint16 port
+        {
+            set
+            {
+                if ( this._port != value )
+                {
+                    this._port = value;
+                    this.connect();
+                }
+            }
+        }
+
+        public string client_type
+        {
+            set
+            {
+                if ( this._type != value )
+                {
+                    this._type = value;
+                    this.rename();
+                }
+            }
+        }
+
+        public string client_name
+        {
+            set
+            {
+                if ( this._name != value )
+                {
+                    this._name = value;
+                    this.rename();
+                }
+            }
+        }
 
         private uint64 tries;
         public uint64 max_tries { get; set; default = 3; }
@@ -48,10 +97,10 @@ namespace Eventd
 
         public Eventc(string host, uint16 port, string type, string? name)
         {
-            this.host = host;
-            this.port = port;
-            this.type = type;
-            this.name = name;
+            this._host = host;
+            this._port = port;
+            this._type = type;
+            this._name = name;
             this.tries = 0;
         }
 
@@ -63,25 +112,25 @@ namespace Eventd
             GLib.SocketAddress address = null;
             #if ENABLE_GIO_UNIX
             string path = null;
-            if ( this.host[0] == '/' )
-                path = this.host;
+            if ( this._host[0] == '/' )
+                path = this._host;
             string runtime_dir = "%s/%s".printf(GLib.Environment.get_user_runtime_dir(), Config.PACKAGE);
-            if ( ( this.host[0] == '%' ) && ( this.host[1] == 's' ) && ( this.host[2] == '/' ) )
-                path = this.host.printf(runtime_dir);
-            else if ( this.host == "localhost" )
+            if ( ( this._host[0] == '%' ) && ( this._host[1] == 's' ) && ( this._host[2] == '/' ) )
+                path = this._host.printf(runtime_dir);
+            else if ( this._host == "localhost" )
                 path = Common.UNIX_SOCKET.printf(runtime_dir);
             if ( ( path != null ) && ( GLib.FileUtils.test(path, GLib.FileTest.EXISTS|GLib.FileTest.IS_REGULAR) ) )
                 address = new GLib.UnixSocketAddress(path);
             #endif
             if ( address == null )
             {
-                var inet_address = new GLib.InetAddress.from_string(this.host);
+                var inet_address = new GLib.InetAddress.from_string(this._host);
                 if ( inet_address == null )
                 {
                     GLib.warning("Couldn’t parse the hostname");
                     return Error.HOSTNAME;
                 }
-                address = new GLib.InetSocketAddress(inet_address, ( this.port > 0 ) ? ( this.port ) : ( Common.DEFAULT_BIND_PORT ));
+                address = new GLib.InetSocketAddress(inet_address, ( this._port > 0 ) ? ( this._port ) : ( Common.DEFAULT_BIND_PORT ));
             }
             this.client = new GLib.SocketClient();
 
@@ -102,15 +151,31 @@ namespace Eventd
             this.output = new GLib.DataOutputStream((this.connection as GLib.IOStream).get_output_stream());
 
             this.tries = 0;
-            if ( this.name == null )
-                this.send("HELLO %s".printf(this.type));
+            if ( this._name == null )
+                this.send("HELLO %s".printf(this._type));
             else
-                this.send("HELLO %s %s".printf(this.type, this.name));
+                this.send("HELLO %s %s".printf(this._type, this._name));
             var r = this.receive(null);
             if ( r != "HELLO" )
             {
                 GLib.warning("Got a wrong hello message: %s", r);
                 return Error.HELLO;
+            }
+            return Error.NONE;
+        }
+
+        public Error
+        rename()
+        {
+            if ( this._name == null )
+                this.send("RENAME %s".printf(this._type));
+            else
+                this.send("RENAME %s %s".printf(this._type, this._name));
+            var r = this.receive(null);
+            if ( r != "RENAMED" )
+            {
+                GLib.warning("Got a wrong renamed message: %s", r);
+                return Error.RENAMED;
             }
             return Error.NONE;
         }
