@@ -83,7 +83,7 @@ connection_handler(
 		#if DEBUG
 		g_debug("Line received: %s", line);
 		#endif /* DEBUG */
-		if ( g_ascii_strncasecmp(line, "EVENT", 5) == 0 )
+		if ( g_ascii_strncasecmp(line, "EVENT ", 6) == 0 )
 		{
 			gchar **event = NULL;
 
@@ -94,12 +94,12 @@ connection_handler(
 
 			g_strfreev(event);
 		}
-		else if ( g_ascii_strncasecmp(line, "BYE", 3) == 0 )
+		else if ( g_ascii_strncasecmp(line, "BYE\n", 4) == 0 )
 		{
 			g_data_output_stream_put_string(output, "BYE\n", NULL, &error);
 			break;
 		}
-		else if ( g_ascii_strncasecmp(line, "HELLO", 5) == 0 )
+		else if ( g_ascii_strncasecmp(line, "HELLO ", 6) == 0 )
 		{
 			gchar **hello = NULL;
 
