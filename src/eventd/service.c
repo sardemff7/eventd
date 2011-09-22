@@ -94,7 +94,7 @@ connection_handler(
 
 			g_strfreev(event);
 		}
-		else if ( g_ascii_strncasecmp(line, "BYE\n", 4) == 0 )
+		else if ( g_ascii_strcasecmp(line, "BYE") == 0 )
 		{
 			g_data_output_stream_put_string(output, "BYE\n", NULL, &error);
 			break;
