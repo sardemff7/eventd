@@ -79,7 +79,6 @@ static GOptionEntry entries[] =
 	{ NULL }
 };
 
-gchar const *home = NULL;
 int
 main(int argc, char *argv[])
 {
@@ -99,7 +98,6 @@ main(int argc, char *argv[])
 
 	g_type_init();
 
-	home = g_getenv("HOME");
 	xdg_runtime_dir = g_get_user_runtime_dir();
 
 	run_dir = g_strdup_printf("%s/%s", xdg_runtime_dir, PACKAGE_NAME);
@@ -181,8 +179,8 @@ main(int argc, char *argv[])
 		else
 		{
 			gchar *t = unix_socket;
-			if ( g_ascii_strncasecmp(t, "/", 1) != 0 )
-				unix_socket = g_strdup_printf("%s/%s", home, t);
+			if ( t[0] == '/' )
+				unix_socket = g_strdup_printf("%s/%s", run_dir, t);
 			else
 				unix_socket = g_strdup(t);
 			g_free(t);
@@ -201,8 +199,8 @@ main(int argc, char *argv[])
 	else
 	{
 		gchar *t = pid_file;
-		if ( g_ascii_strncasecmp(t, "/", 1) != 0 )
-			pid_file = g_strdup_printf("%s/%s", home, t);
+		if ( t[0] == '/' )
+			pid_file = g_strdup_printf("%s/%s", run_dir, t);
 		else
 			pid_file = g_strdup(t);
 		g_free(t);

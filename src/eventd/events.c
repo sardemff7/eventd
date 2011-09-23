@@ -50,8 +50,6 @@
 
 #include "events.h"
 
-extern gchar const *home;
-
 
 GHashTable *config = NULL;
 GHashTable *clients_config = NULL;

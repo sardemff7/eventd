@@ -32,8 +32,6 @@
 #include <gio/gio.h>
 
 
-extern gchar const *home;
-
 #define MAX_ARGS 50
 static int
 do_it(gchar * path, gchar * arg, ...)
@@ -52,7 +50,7 @@ do_it(gchar * path, gchar * arg, ...)
 	}
 	argv[++argno] = NULL;
 	va_end(al);
-	g_spawn_sync(home, /* working_dir */
+	g_spawn_sync(g_getenv("HOME"), /* working_dir */
 		argv,
 		NULL, /* env */
 		G_SPAWN_SEARCH_PATH, /* flags */
