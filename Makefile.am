@@ -33,6 +33,7 @@ libeventc_la_VALAFLAGS = \
 	-H $(top_builddir)/include/libeventc.h \
 	--pkg eventd-common \
 	$(GIO_VALAFLAGS) \
+	$(GOBJECT_VALAFLAGS) \
 	$(GLIB_VALAFLAGS)
 
 if ENABLE_GIO_UNIX
@@ -43,6 +44,7 @@ endif
 libeventc_la_CFLAGS = \
 	$(AM_CFLAGS) \
 	$(GIO_CFLAGS) \
+	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS)
 
 libeventc_la_LDFLAGS = \
@@ -53,6 +55,7 @@ libeventc_la_LDFLAGS = \
 
 libeventc_la_LIBADD = \
 	$(GIO_LIBS) \
+	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS)
 
 pkginclude_HEADERS += \
@@ -81,6 +84,7 @@ eventc_SOURCES = \
 
 eventc_VALAFLAGS = \
 	$(AM_VALAFLAGS) \
+	$(GOBJECT_VALAFLAGS) \
 	$(GLIB_VALAFLAGS)
 
 if ENABLE_GIO_UNIX
@@ -90,10 +94,12 @@ endif
 
 eventc_CFLAGS = \
 	$(AM_CFLAGS) \
+	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS)
 
 eventc_LDADD = \
 	libeventc.la \
+	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS)
 
 CLEANFILES += \

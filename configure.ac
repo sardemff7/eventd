@@ -28,6 +28,10 @@ PKG_CHECK_MODULES(GLIB, [glib-2.0 >= 2.25.0])
 GLIB_VALAFLAGS="--pkg glib-2.0 --pkg glib-local-2.0"
 AC_SUBST(GLIB_VALAFLAGS)
 
+PKG_CHECK_MODULES(GOBJECT, [gobject-2.0])
+GOBJECT_VALAFLAGS="--pkg gobject-2.0"
+AC_SUBST(GOBJECT_VALAFLAGS)
+
 gio_unix=
 gio_unix_vala=
 AC_ARG_ENABLE(gio-unix, AS_HELP_STRING([--disable-gio-unix], [Disable UNIX-specific GIO support]), enable_gio_unix=$enableval, enable_gio_unix=yes)
