@@ -30,6 +30,7 @@ namespace Eventd
         HELLO,
         BYE,
         RENAMED,
+        SEND,
         CLOSE
     }
 
@@ -215,7 +216,7 @@ namespace Eventd
             return r;
         }
 
-        private void send(string msg)
+        private void send(string msg) throws EventcError
         {
             try
             {
@@ -223,8 +224,14 @@ namespace Eventd
             }
             catch ( GLib.Error e )
             {
-                GLib.warning("Failed to send message \"%s\": %s", msg, e.message);
-                this.connect();
+                try
+                {
+                    this.connect();
+                }
+                catch ( GLib.Error e2 )
+                {
+                    throw new EventcError.SEND("Couldn’t send message \"%s\": %s", msg, e2.message);
+                }
                 this.send(msg);
             }
         }
