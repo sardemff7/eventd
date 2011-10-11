@@ -49,6 +49,7 @@ namespace Eventd
                 if ( this._host != value )
                 {
                     this._host = value;
+                    this.address = null;
                     this.connect();
                 }
             }
@@ -62,6 +63,7 @@ namespace Eventd
                 {
                     this._port = value;
                     this.connect();
+                    this.address = null;
                 }
             }
         }
@@ -94,6 +96,7 @@ namespace Eventd
         public uint64 max_tries { get; set; default = 3; }
 
 
+        private GLib.SocketConnectable address;
         private GLib.SocketClient client;
         private GLib.SocketConnection connection;
         private GLib.DataInputStream input;
@@ -108,12 +111,12 @@ namespace Eventd
             this.tries = 0;
         }
 
-        public new void
-        connect() throws EventcError
+        private void
+        proccess_address() throws EventcError
         {
-            if ( this.connection != null )
-                this.close();
-            GLib.SocketConnectable address = null;
+            if ( this.address != null )
+                return;
+
             #if ENABLE_GIO_UNIX
             string path = null;
             if ( this._host[0] == '/' )
@@ -124,19 +127,36 @@ namespace Eventd
             else if ( this._host == "localhost" )
                 path = Common.UNIX_SOCKET.printf(runtime_dir);
             if ( ( path != null ) && ( GLib.FileUtils.test(path, GLib.FileTest.EXISTS|GLib.FileTest.IS_REGULAR) ) )
-                address = new GLib.UnixSocketAddress(path);
+                this.address = new GLib.UnixSocketAddress(path);
             #endif
-            if ( address == null )
+            if ( this.address == null )
             {
-                address = new GLib.NetworkAddress(this._host, ( this._port > 0 ) ? ( this._port ) : ( Common.DEFAULT_BIND_PORT ));
+                this.address = new GLib.NetworkAddress(this._host, ( this._port > 0 ) ? ( this._port ) : ( Common.DEFAULT_BIND_PORT ));
                 if ( address == null )
                     throw new EventcError.HOSTNAME("Couldn’t resolve the hostname");
             }
+        }
+
+        public new void
+        connect() throws EventcError
+        {
+            if ( this.connection != null )
+                this.close();
+
+            try
+            {
+                this.proccess_address();
+            }
+            catch ( EventcError e )
+            {
+                throw e;
+            }
+
             this.client = new GLib.SocketClient();
 
             try
             {
-                this.connection = this.client.connect(address);
+                this.connection = this.client.connect(this.address);
             }
             catch ( GLib.Error e )
             {
