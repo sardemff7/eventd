@@ -23,7 +23,7 @@ AC_PROG_INSTALL
 
 
 # Common dependencies
-glib_min_version="2.25.0"
+glib_min_version="2.28.0"
 gio_min_version="$glib_min_version"
 
 # Server dependencies
