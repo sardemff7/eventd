@@ -88,6 +88,7 @@ endif
 # Client
 
 # Client library
+if ENABLE_CLIENT
 lib_LTLIBRARIES += \
 	libeventc.la
 
@@ -140,8 +141,10 @@ CLEANFILES += \
 	$(libeventc_la_SOURCES:.vala=.c)
 
 $(top_builddir)/vapi/libeventc.vapi: libeventc.la
+endif
 
 # Basic CLI client
+if ENABLE_CLIENT
 bin_PROGRAMS += \
 	eventc
 
@@ -166,6 +169,7 @@ eventc_LDADD = \
 
 CLEANFILES += \
 	$(eventc_SOURCES:.vala=.c)
+endif
 
 
 # Hooks
