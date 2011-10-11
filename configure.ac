@@ -32,7 +32,7 @@ libnotify_min_version="0.6.5"
 gtk_min_version="3.0"
 
 # Client dependencies
-vala_min_version="0.13"
+vala_min_version="0.12"
 
 
 AM_CFLAGS="-Wall -Wextra -Wno-unused-but-set-variable -Wno-unused-parameter"
