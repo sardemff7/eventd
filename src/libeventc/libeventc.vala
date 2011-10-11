@@ -85,6 +85,8 @@ namespace Eventd
             }
         }
 
+        public uint timeout { get; set; default = 0; }
+
         private GLib.SocketConnectable address;
         private GLib.SocketClient client;
         private GLib.SocketConnection connection;
@@ -141,6 +143,7 @@ namespace Eventd
             }
 
             this.client = new GLib.SocketClient();
+            this.client.set_timeout(this.timeout);
 
             try
             {
