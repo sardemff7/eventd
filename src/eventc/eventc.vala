@@ -52,7 +52,7 @@ namespace Eventd
 
     public static int main(string[] args)
     {
-        var opt_context = new GLib.OptionContext("- Basic CLI client for eventd");
+        var opt_context = new GLib.OptionContext("<client type> [<client name>] - Basic CLI client for eventd");
 
         opt_context.add_main_entries(entries, Config.GETTEXT_PACKAGE);
 
