@@ -82,7 +82,7 @@ namespace Eventd
         {
             client.connect();
         }
-        catch ( GLib.Error e )
+        catch ( EventcError e )
         {
             GLib.warning("Couldn’t connect to host '%s': %s", host, e.message);
             return 1;
@@ -96,7 +96,7 @@ namespace Eventd
             }
             catch ( EventcError e )
             {
-                GLib.warning("Couldn’t send event %s / %s: %s", event_type, event_name, e.message);
+                GLib.warning("Couldn’t send event '%s' / '%s': %s", event_type, event_name, e.message);
             }
         }
         else
@@ -122,7 +122,7 @@ namespace Eventd
         {
             client.close();
         }
-        catch ( GLib.Error e )
+        catch ( EventcError e )
         {
             GLib.warning("Couldn’t close connection to host '%s': %s", host, e.message);
             return 1;
