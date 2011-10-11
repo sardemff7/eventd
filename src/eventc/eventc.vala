@@ -90,7 +90,14 @@ namespace Eventd
 
         if ( event_type != null )
         {
-            client.event(event_type, event_name, event_data);
+            try
+            {
+                client.event(event_type, event_name, event_data);
+            }
+            catch ( EventcError e )
+            {
+                GLib.warning("Couldn’t send event %s / %s: %s", event_type, event_name, e.message);
+            }
         }
         else
         {
@@ -100,7 +107,14 @@ namespace Eventd
                 var elements = line.split(" ", 2);
                 event_type = elements[0];
                 event_name = elements[1];
-                client.event(event_type, event_name, null);
+                try
+                {
+                    client.event(event_type, event_name, null);
+                }
+                catch ( EventcError e )
+                {
+                    GLib.warning("Couldn’t send event %s / %s: %s", event_type, event_name, e.message);
+                }
             }
         }
 
