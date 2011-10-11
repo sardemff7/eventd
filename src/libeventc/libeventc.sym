@@ -5,6 +5,7 @@ global:
     eventd_eventc_error_quark;
     eventd_eventc_event;
     eventd_eventc_new;
+    eventd_eventc_rename;
     eventd_eventc_set_host;
     eventd_eventc_set_port;
     eventd_eventc_set_client_type;

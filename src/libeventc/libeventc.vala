@@ -51,7 +51,6 @@ namespace Eventd
                 {
                     this._host = value;
                     this.address = null;
-                    this.connect();
                 }
             }
         }
@@ -63,7 +62,6 @@ namespace Eventd
                 if ( this._port != value )
                 {
                     this._port = value;
-                    this.connect();
                     this.address = null;
                 }
             }
@@ -74,10 +72,7 @@ namespace Eventd
             set
             {
                 if ( this._type != value )
-                {
                     this._type = value;
-                    this.rename();
-                }
             }
         }
 
@@ -86,10 +81,7 @@ namespace Eventd
             set
             {
                 if ( this._name != value )
-                {
                     this._name = value;
-                    this.rename();
-                }
             }
         }
 
@@ -187,7 +179,7 @@ namespace Eventd
             }
         }
 
-        private void
+        public void
         rename() throws EventcError
         {
             if ( this._name == null )
