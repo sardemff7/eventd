@@ -31,6 +31,7 @@ namespace Eventd
         BYE,
         RENAMED,
         SEND,
+        RECEIVE,
         CLOSE
     }
 
@@ -200,12 +201,22 @@ namespace Eventd
             }
         }
 
-        public void event(string type, string? name, string? data)
+        public void
+        event(string type, string? name, string? data) throws EventcError
         {
+            string ev = null;
             if ( name == null )
-                send("EVENT %s".printf(type));
+                ev = @"EVENT $type";
             else
-                send("EVENT %s %s".printf(type, name));
+                ev = @"EVENT $type $name";
+            try
+            {
+                send(ev);
+            }
+            catch ( EventcError e )
+            {
+                throw e;
+            }
             if ( data != null )
             {
                 var datas = data.split("\n");
@@ -219,7 +230,8 @@ namespace Eventd
             this.send(".");
         }
 
-        private string? receive(out size_t? length)
+        private string?
+        receive(out size_t? length) throws EventcError
         {
             string r = null;
             try
@@ -229,9 +241,8 @@ namespace Eventd
             }
             catch ( GLib.Error e )
             {
-                GLib.warning("Failed to receive message: %s", e.message);
-                this.connect();
                 length = 0;
+                throw new EventcError.RECEIVE("Failed to receive message: %s", e.message);
             }
             return r;
         }
