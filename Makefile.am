@@ -16,87 +16,7 @@ AM_VALAFLAGS += \
 	--pkg config
 
 
-
-lib_LTLIBRARIES += \
-	libeventc.la
-
-LIBEVENTC_CURRENT=0
-LIBEVENTC_REVISION=0
-LIBEVENTC_AGE=0
-
-libeventc_la_SOURCES = \
-	src/libeventc/libeventc.vala
-
-libeventc_la_VALAFLAGS = \
-	$(AM_VALAFLAGS) \
-	--library $(top_builddir)/vapi/libeventc \
-	-H $(top_builddir)/include/libeventc.h \
-	--pkg eventd-common \
-	$(GIO_VALAFLAGS) \
-	$(GOBJECT_VALAFLAGS) \
-	$(GLIB_VALAFLAGS)
-
-libeventc_la_CFLAGS = \
-	$(AM_CFLAGS) \
-	$(GIO_CFLAGS) \
-	$(GOBJECT_CFLAGS) \
-	$(GLIB_CFLAGS)
-
-libeventc_la_LDFLAGS = \
-	$(AM_LDFLAGS) \
-	-shared \
-	-version-info $(LIBEVENTC_CURRENT):$(LIBEVENTC_REVISION):$(LIBEVENTC_AGE) \
-	-Wl,--version-script=$(top_srcdir)/src/libeventc/libeventc.sym
-
-libeventc_la_LIBADD = \
-	$(GIO_LIBS) \
-	$(GOBJECT_LIBS) \
-	$(GLIB_LIBS)
-
-pkginclude_HEADERS += \
-	$(top_builddir)/include/libeventc.h
-
-vapidir = $(datadir)/vala/vapi
-dist_vapi_DATA = $(top_builddir)/vapi/libeventc.vapi
-
-pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = $(top_builddir)/data/libeventc.pc
-
-CLEANFILES += \
-	$(top_builddir)/include/libeventc.h \
-	$(top_builddir)/vapi/libeventc.vapi \
-	$(top_builddir)/vapi/libeventc.deps \
-	$(libeventc_la_SOURCES:.vala=.c)
-
-$(top_builddir)/vapi/libeventc.vapi: libeventc.la
-
-
-bin_PROGRAMS += \
-	eventc
-
-eventc_SOURCES = \
-	src/eventc/eventc.vala
-
-eventc_VALAFLAGS = \
-	$(AM_VALAFLAGS) \
-	--pkg libeventc \
-	$(GOBJECT_VALAFLAGS) \
-	$(GLIB_VALAFLAGS)
-
-eventc_CFLAGS = \
-	$(AM_CFLAGS) \
-	$(GOBJECT_CFLAGS) \
-	$(GLIB_CFLAGS)
-
-eventc_LDADD = \
-	libeventc.la \
-	$(GOBJECT_LIBS) \
-	$(GLIB_LIBS)
-
-CLEANFILES += \
-	$(eventc_SOURCES:.vala=.c)
-
-
+# Server
 bin_PROGRAMS += \
 	eventd
 
@@ -164,8 +84,94 @@ eventd_LDADD += \
 	$(GTK_LIBS)
 endif
 
+
+# Client
+
+# Client library
+lib_LTLIBRARIES += \
+	libeventc.la
+
+LIBEVENTC_CURRENT=0
+LIBEVENTC_REVISION=0
+LIBEVENTC_AGE=0
+
+libeventc_la_SOURCES = \
+	src/libeventc/libeventc.vala
+
+libeventc_la_VALAFLAGS = \
+	$(AM_VALAFLAGS) \
+	--library $(top_builddir)/vapi/libeventc \
+	-H $(top_builddir)/include/libeventc.h \
+	--pkg eventd-common \
+	$(GIO_VALAFLAGS) \
+	$(GOBJECT_VALAFLAGS) \
+	$(GLIB_VALAFLAGS)
+
+libeventc_la_CFLAGS = \
+	$(AM_CFLAGS) \
+	$(GIO_CFLAGS) \
+	$(GOBJECT_CFLAGS) \
+	$(GLIB_CFLAGS)
+
+libeventc_la_LDFLAGS = \
+	$(AM_LDFLAGS) \
+	-shared \
+	-version-info $(LIBEVENTC_CURRENT):$(LIBEVENTC_REVISION):$(LIBEVENTC_AGE) \
+	-Wl,--version-script=$(top_srcdir)/src/libeventc/libeventc.sym
+
+libeventc_la_LIBADD = \
+	$(GIO_LIBS) \
+	$(GOBJECT_LIBS) \
+	$(GLIB_LIBS)
+
+pkginclude_HEADERS += \
+	$(top_builddir)/include/libeventc.h
+
+vapidir = $(datadir)/vala/vapi
+dist_vapi_DATA = $(top_builddir)/vapi/libeventc.vapi
+
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = $(top_builddir)/data/libeventc.pc
+
+CLEANFILES += \
+	$(top_builddir)/include/libeventc.h \
+	$(top_builddir)/vapi/libeventc.vapi \
+	$(top_builddir)/vapi/libeventc.deps \
+	$(libeventc_la_SOURCES:.vala=.c)
+
+$(top_builddir)/vapi/libeventc.vapi: libeventc.la
+
+# Basic CLI client
+bin_PROGRAMS += \
+	eventc
+
+eventc_SOURCES = \
+	src/eventc/eventc.vala
+
+eventc_VALAFLAGS = \
+	$(AM_VALAFLAGS) \
+	--pkg libeventc \
+	$(GOBJECT_VALAFLAGS) \
+	$(GLIB_VALAFLAGS)
+
+eventc_CFLAGS = \
+	$(AM_CFLAGS) \
+	$(GOBJECT_CFLAGS) \
+	$(GLIB_CFLAGS)
+
+eventc_LDADD = \
+	libeventc.la \
+	$(GOBJECT_LIBS) \
+	$(GLIB_LIBS)
+
+CLEANFILES += \
+	$(eventc_SOURCES:.vala=.c)
+
+
+# Hooks
 install-exec-hook: la-files-removal
 
+# *.la files cleanup
 la-files-removal:
 	cd $(DESTDIR)/$(libdir) && \
 		rm $(lib_LTLIBRARIES)
