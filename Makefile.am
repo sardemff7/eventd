@@ -167,6 +167,8 @@ eventc_LDADD = \
 
 CLEANFILES += \
 	$(eventc_SOURCES:.vala=.c)
+
+eventc_vala.stamp: $(top_builddir)/vapi/libeventc.vapi
 endif
 
 
