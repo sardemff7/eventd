@@ -259,6 +259,7 @@ start:
 #if ENABLE_SYSTEMD
 	if ( no_systemd )
 	{
+#endif /* ENABLE_SYSTEMD */
 #if ENABLE_GIO_UNIX
 		if ( unix_socket )
 		{
@@ -266,6 +267,7 @@ start:
 			g_free(unix_socket);
 		}
 #endif /* ENABLE_GIO_UNIX */
+#if ENABLE_SYSTEMD
 	}
 #endif /* ENABLE_SYSTEMD */
 
