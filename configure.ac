@@ -23,6 +23,9 @@ AC_PROG_INSTALL
 
 AM_PROG_VALAC([0.13])
 
+AM_CFLAGS="-Wall -Wextra -Wno-unused-but-set-variable -Wno-unused-parameter"
+AM_LDFLAGS=""
+AM_VALAFLAGS=""
 
 PKG_CHECK_MODULES(GLIB, [glib-2.0 >= 2.25.0])
 GLIB_VALAFLAGS="--pkg glib-2.0 --pkg glib-local-2.0"
@@ -38,6 +41,7 @@ AC_ARG_ENABLE(gio-unix, AS_HELP_STRING([--disable-gio-unix], [Disable UNIX-speci
 if test x$enable_gio_unix = xyes; then
   gio_unix="gio-unix-2.0"
   gio_unix_vala="--pkg gio-unix-2.0"
+  AM_VALAFLAGS="${AM_VALAFLAGS} -D ENABLE_GIO_UNIX"
   AC_DEFINE([ENABLE_GIO_UNIX], [1], [Enable UNIX-specific GIO support])
 fi
 AM_CONDITIONAL(ENABLE_GIO_UNIX, test x$enable_gio_unix = xyes)
@@ -88,9 +92,6 @@ elif test x$enable_gtk = xyes; then
 fi
 AM_CONDITIONAL(ENABLE_DIALOGS, [test x$enable_dialogs = xyes])
 
-AM_CFLAGS="-Wall -Wextra -Wno-unused-parameter"
-AM_LDFLAGS=""
-AM_VALAFLAGS=""
 AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug], [Enable debug]), enable_debug=$enableval, enable_debug=no)
 if test x$enable_debug = xyes; then
   AC_DEFINE([DEBUG], [1], [Activate debug mode])
@@ -105,6 +106,7 @@ AC_CONFIG_FILES([
   data/libeventc.pc
   Makefile
   po/Makefile.in
+  vapi/libeventc.deps
 ])
 AC_OUTPUT
 

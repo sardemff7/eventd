@@ -3,6 +3,7 @@
 /include/config.h
 /include/libeventc.h
 /vapi/libeventc.vapi
+/vapi/libeventc.deps
 
 /src/libeventc/*.c
 /src/eventc/*.c

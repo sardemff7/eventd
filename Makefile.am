@@ -36,11 +36,6 @@ libeventc_la_VALAFLAGS = \
 	$(GOBJECT_VALAFLAGS) \
 	$(GLIB_VALAFLAGS)
 
-if ENABLE_GIO_UNIX
-libeventc_la_VALAFLAGS += \
-	-D ENABLE_GIO_UNIX
-endif
-
 libeventc_la_CFLAGS = \
 	$(AM_CFLAGS) \
 	$(GIO_CFLAGS) \
@@ -70,6 +65,7 @@ pkgconfig_DATA = $(top_builddir)/data/libeventc.pc
 CLEANFILES += \
 	$(top_builddir)/include/libeventc.h \
 	$(top_builddir)/vapi/libeventc.vapi \
+	$(top_builddir)/vapi/libeventc.deps \
 	$(libeventc_la_SOURCES:.vala=.c)
 
 $(top_builddir)/vapi/libeventc.vapi: libeventc.la
@@ -79,18 +75,13 @@ bin_PROGRAMS += \
 	eventc
 
 eventc_SOURCES = \
-	$(top_builddir)/vapi/libeventc.vapi \
 	src/eventc/eventc.vala
 
 eventc_VALAFLAGS = \
 	$(AM_VALAFLAGS) \
+	--pkg libeventc \
 	$(GOBJECT_VALAFLAGS) \
 	$(GLIB_VALAFLAGS)
-
-if ENABLE_GIO_UNIX
-eventc_VALAFLAGS += \
-	-D ENABLE_GIO_UNIX
-endif
 
 eventc_CFLAGS = \
 	$(AM_CFLAGS) \
