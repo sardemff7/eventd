@@ -127,6 +127,12 @@ namespace Eventd
             }
         }
 
+        public bool
+        is_connected()
+        {
+            return ( ( this.connection != null ) && ( ! this.connection.is_closed() ) );
+        }
+
         public new void
         connect() throws EventcError
         {
