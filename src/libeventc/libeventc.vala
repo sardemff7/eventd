@@ -264,7 +264,15 @@ namespace Eventd
             if ( ! this.connection.is_closed() )
             {
                 this.send("BYE");
-                var r = this.receive(null);
+                string r = null;
+                try
+                {
+                    r = this.receive(null);
+                }
+                catch ( EventcError e )
+                {
+                    throw e;
+                }
                 if ( r != "BYE" )
                     throw new EventcError.BYE("Got a wrong bye message: %s", r);
             }
