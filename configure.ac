@@ -21,19 +21,29 @@ IT_PROG_INTLTOOL([0.35.0])
 
 AC_PROG_INSTALL
 
-AM_PROG_VALAC([0.13])
+
+# Common dependencies
+glib_min_version="2.25.0"
+gio_min_version="$glib_min_version"
+
+# Server dependencies
+libpulse_min_version="0.9.15"
+libnotify_min_version="0.6.5"
+gtk_min_version="3.0"
+
+# Client dependencies
+vala_min_version="0.13"
+
 
 AM_CFLAGS="-Wall -Wextra -Wno-unused-but-set-variable -Wno-unused-parameter"
 AM_LDFLAGS=""
 AM_VALAFLAGS=""
 
-PKG_CHECK_MODULES(GLIB, [glib-2.0 >= 2.25.0])
+
+# Common dependencies
+PKG_CHECK_MODULES(GLIB, [glib-2.0 >= $glib_min_version])
 GLIB_VALAFLAGS="--pkg glib-2.0 --pkg glib-local-2.0"
 AC_SUBST(GLIB_VALAFLAGS)
-
-PKG_CHECK_MODULES(GOBJECT, [gobject-2.0])
-GOBJECT_VALAFLAGS="--pkg gobject-2.0"
-AC_SUBST(GOBJECT_VALAFLAGS)
 
 gio_unix=
 gio_unix_vala=
@@ -46,12 +56,13 @@ if test x$enable_gio_unix = xyes; then
 fi
 AM_CONDITIONAL(ENABLE_GIO_UNIX, test x$enable_gio_unix = xyes)
 
-PKG_CHECK_MODULES(GIO, [gio-2.0 >= 2.25.0 $gio_unix])
+PKG_CHECK_MODULES(GIO, [gio-2.0 >= $gio_min_version $gio_unix])
 GIO_VALAFLAGS="--pkg gio-2.0 $gio_unix_vala"
 AC_SUBST(gio_unix)
 AC_SUBST(GIO_VALAFLAGS)
 
 
+# Server dependencies
 AC_ARG_ENABLE(systemd, AS_HELP_STRING([--disable-systemd], [Disable systemd support activation support]), enable_systemd=$enableval, enable_systemd=yes)
 if test x$enable_systemd = xyes; then
   PKG_CHECK_MODULES(SYSTEMD, [libsystemd-daemon])
@@ -62,14 +73,14 @@ AM_CONDITIONAL(ENABLE_SYSTEMD, test x$enable_systemd = xyes)
 
 AC_ARG_ENABLE(sound, AS_HELP_STRING([--disable-sound], [Disable sound support]), enable_sound=$enableval, enable_sound=yes)
 if test x$enable_sound = xyes; then
-  PKG_CHECK_MODULES(SOUND, [libpulse >= 0.9.15 sndfile])
+  PKG_CHECK_MODULES(SOUND, [libpulse >= $libpulse_min_version sndfile])
   AC_DEFINE([ENABLE_SOUND], [1], [Enable sound support through PulseAudio and libsndfile])
 fi
 AM_CONDITIONAL(ENABLE_SOUND, test x$enable_sound = xyes)
 
 AC_ARG_ENABLE(libnotify, AS_HELP_STRING([--disable-libnotify], [Disable libnotify support]), enable_libnotify=$enableval, enable_libnotify=yes)
 if test x$enable_libnotify = xyes; then
-  PKG_CHECK_MODULES(NOTIFY, [libnotify >= 0.6.5])
+  PKG_CHECK_MODULES(NOTIFY, [libnotify >= $libnotify_min_version])
   AC_DEFINE([ENABLE_NOTIFY], [1], [Enable libnotify support])
 fi
 AM_CONDITIONAL(ENABLE_NOTIFY, [test x$enable_libnotify = xyes])
@@ -79,7 +90,7 @@ AC_ARG_ENABLE(dialogs, AS_HELP_STRING([--disable-dialogs], [Disable dialog suppo
 if test x$enable_dialogs = xyes; then
   AC_CHECK_PROG(have_zenity, zenity, yes, no)
   if test x$enable_gtk = xyes; then
-    PKG_CHECK_MODULES(GTK, [gtk+-3.0 >= 3.0])
+    PKG_CHECK_MODULES(GTK, [gtk+-3.0 >= $gtk_min_version])
     AC_DEFINE([HAVE_DIALOGS], [1], [If we have a dialog support])
     AC_DEFINE([ENABLE_GTK], [1], [Enable native GTK+ support])
   elif test x$have_zenity = xyes; then
@@ -92,6 +103,16 @@ elif test x$enable_gtk = xyes; then
 fi
 AM_CONDITIONAL(ENABLE_DIALOGS, [test x$enable_dialogs = xyes])
 
+
+# Client dependencies
+PKG_CHECK_MODULES(GOBJECT, [gobject-2.0])
+GOBJECT_VALAFLAGS="--pkg gobject-2.0"
+AC_SUBST(GOBJECT_VALAFLAGS)
+
+AM_PROG_VALAC([$vala_min_version])
+
+
+# Debug flags
 AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug], [Enable debug]), enable_debug=$enableval, enable_debug=no)
 if test x$enable_debug = xyes; then
   AC_DEFINE([DEBUG], [1], [Activate debug mode])
@@ -112,6 +133,7 @@ AC_OUTPUT
 
 
 echo GIO UNIX support:     $enable_gio_unix
+
 echo systemd support:      $enable_systemd
 echo Libnotify support:    $enable_notify
 echo Sound support:        $enable_sound
