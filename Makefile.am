@@ -141,10 +141,8 @@ CLEANFILES += \
 	$(libeventc_la_SOURCES:.vala=.c)
 
 $(top_builddir)/vapi/libeventc.vapi: libeventc.la
-endif
 
 # Basic CLI client
-if ENABLE_CLIENT
 bin_PROGRAMS += \
 	eventc
 
