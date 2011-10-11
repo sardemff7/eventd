@@ -32,6 +32,7 @@ namespace Eventd
     #if ENABLE_GIO_UNIX
     static string unix_socket;
     #endif
+    static int timeout = 0;
 
     static const GLib.OptionEntry[] entries =
     {
@@ -43,6 +44,7 @@ namespace Eventd
         #if ENABLE_GIO_UNIX
         { "socket", 's', 0, GLib.OptionArg.FILENAME, out unix_socket, N_("UNIX socket to connect to"), "socket_file" },
         #endif
+        { "timeout", 'o', 0, GLib.OptionArg.INT, ref timeout, N_("Connection timeout"), "time" },
         { null }
     };
 
@@ -77,6 +79,7 @@ namespace Eventd
             host = "localhost";
 
         var client = new Eventc(host, port, type, name);
+        client.timeout = timeout;
 
         try
         {
