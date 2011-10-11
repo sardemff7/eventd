@@ -85,10 +85,6 @@ namespace Eventd
             }
         }
 
-        private uint64 tries;
-        public uint64 max_tries { get; set; default = 3; }
-
-
         private GLib.SocketConnectable address;
         private GLib.SocketClient client;
         private GLib.SocketConnection connection;
@@ -101,7 +97,6 @@ namespace Eventd
             this._port = port;
             this._type = type;
             this._name = name;
-            this.tries = 0;
         }
 
         private void
@@ -156,18 +151,12 @@ namespace Eventd
                 if ( e is GLib.IOError.CONNECTION_REFUSED )
                     throw new EventcError.CONNECTION_REFUSED("Host is not an eventd");
                 else
-                {
-                    GLib.warning("Failed to connect: %s", e.message);
-                    if ( ++this.tries >= this.max_tries )
-                        throw new EventcError.CONNECTION_OTHER("Failed %llu times, aborting", this.tries);
-                }
-                this.connect();
+                    throw new EventcError.CONNECTION_OTHER("Failed to connect: %s", e.message);
             }
 
             this.input = new GLib.DataInputStream((this.connection as GLib.IOStream).get_input_stream());
             this.output = new GLib.DataOutputStream((this.connection as GLib.IOStream).get_output_stream());
 
-            this.tries = 0;
             if ( this._name == null )
                 this.send("HELLO %s".printf(this._type));
             else
