@@ -32,6 +32,7 @@ namespace Eventd
     #if ENABLE_GIO_UNIX
     static string unix_socket;
     #endif
+    static int max_tries = 3;
     static int timeout = 0;
 
     static const GLib.OptionEntry[] entries =
@@ -44,6 +45,7 @@ namespace Eventd
         #if ENABLE_GIO_UNIX
         { "socket", 's', 0, GLib.OptionArg.FILENAME, out unix_socket, N_("UNIX socket to connect to"), "socket_file" },
         #endif
+        { "max-tries", 'm', 0, GLib.OptionArg.INT, ref max_tries, N_("Maximum connection attemps"), "times" },
         { "timeout", 'o', 0, GLib.OptionArg.INT, ref timeout, N_("Connection timeout"), "time" },
         { null }
     };
@@ -81,14 +83,22 @@ namespace Eventd
         var client = new Eventc(host, port, type, name);
         client.timeout = timeout;
 
-        try
+        var tries = 0;
+        while ( ! client.is_connected() )
         {
-            client.connect();
-        }
-        catch ( EventcError e )
-        {
-            GLib.warning("Couldn’t connect to host '%s': %s", host, e.message);
-            return 1;
+            try
+            {
+                client.connect();
+            }
+            catch ( EventcError e )
+            {
+                GLib.warning("Couldn’t connect to host '%s': %s", host, e.message);
+                if ( ++tries >= max_tries )
+                {
+                    GLib.warning("Too many attemps, aborting");
+                    return 1;
+                }
+            }
         }
 
         if ( event_type != null )
