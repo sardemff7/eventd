@@ -45,7 +45,7 @@ namespace Eventd
         #if ENABLE_GIO_UNIX
         { "socket", 's', 0, GLib.OptionArg.FILENAME, out unix_socket, N_("UNIX socket to connect to"), "socket_file" },
         #endif
-        { "max-tries", 'm', 0, GLib.OptionArg.INT, ref max_tries, N_("Maximum connection attemps"), "times" },
+        { "max-tries", 'm', 0, GLib.OptionArg.INT, ref max_tries, N_("Maximum connection attempts"), "times" },
         { "timeout", 'o', 0, GLib.OptionArg.INT, ref timeout, N_("Connection timeout"), "time" },
         { null }
     };
@@ -95,7 +95,7 @@ namespace Eventd
                 GLib.warning("Couldn’t connect to host '%s': %s", host, e.message);
                 if ( ++tries >= max_tries )
                 {
-                    GLib.warning("Too many attemps, aborting");
+                    GLib.warning("Too many attempts, aborting");
                     return 1;
                 }
             }
