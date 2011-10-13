@@ -152,16 +152,19 @@ eventc_SOURCES = \
 eventc_VALAFLAGS = \
 	$(AM_VALAFLAGS) \
 	--pkg libeventc \
+	$(GIO_VALAFLAGS) \
 	$(GOBJECT_VALAFLAGS) \
 	$(GLIB_VALAFLAGS)
 
 eventc_CFLAGS = \
 	$(AM_CFLAGS) \
+	$(GIO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS)
 
 eventc_LDADD = \
 	libeventc.la \
+	$(GIO_LIBS) \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS)
 
