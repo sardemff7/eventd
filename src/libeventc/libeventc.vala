@@ -134,8 +134,8 @@ namespace Eventd
             return ( ( this.connection != null ) && ( ! this.connection.is_closed() ) );
         }
 
-        public new void
-        connect() throws EventcError
+        private void
+        set_client() throws EventcError
         {
             if ( this.connection != null )
                 this.close();
@@ -144,7 +144,12 @@ namespace Eventd
 
             this.client = new GLib.SocketClient();
             this.client.set_timeout(this.timeout);
+        }
 
+        public new void
+        connect() throws EventcError
+        {
+            this.set_client();
             try
             {
                 this.connection = this.client.connect(this.address);
