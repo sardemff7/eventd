@@ -50,8 +50,7 @@ gio_unix_vala=
 AC_ARG_ENABLE(gio-unix, AS_HELP_STRING([--disable-gio-unix], [Disable UNIX-specific GIO support]), enable_gio_unix=$enableval, enable_gio_unix=yes)
 if test x$enable_gio_unix = xyes; then
   gio_unix="gio-unix-2.0"
-  gio_unix_vala="--pkg gio-unix-2.0"
-  AM_VALAFLAGS="${AM_VALAFLAGS} -D ENABLE_GIO_UNIX"
+  gio_unix_vala="--pkg gio-unix-2.0 -D ENABLE_GIO_UNIX"
   AC_DEFINE([ENABLE_GIO_UNIX], [1], [Enable UNIX-specific GIO support])
 fi
 AM_CONDITIONAL(ENABLE_GIO_UNIX, test x$enable_gio_unix = xyes)
