@@ -232,15 +232,7 @@ namespace Eventd
             }
             catch ( GLib.Error e )
             {
-                try
-                {
-                    this.connect();
-                }
-                catch ( GLib.Error e2 )
-                {
-                    throw new EventcError.SEND("Couldn’t send message \"%s\": %s", msg, e2.message);
-                }
-                this.send(msg);
+                throw new EventcError.SEND("Couldn’t send message \"%s\": %s", msg, e.message);
             }
         }
 
