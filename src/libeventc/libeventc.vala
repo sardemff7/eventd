@@ -164,6 +164,24 @@ namespace Eventd
             this.hello();
         }
 
+        public async void
+        connect_async() throws EventcError
+        {
+            this.set_client();
+            try
+            {
+                this.connection = yield this.client.connect_async(this.address);
+            }
+            catch ( GLib.Error e )
+            {
+                if ( e is GLib.IOError.CONNECTION_REFUSED )
+                    throw new EventcError.CONNECTION_REFUSED("Host is not an eventd");
+                else
+                    throw new EventcError.CONNECTION_OTHER("Failed to connect: %s", e.message);
+            }
+            this.hello();
+        }
+
         private void
         hello() throws EventcError
         {
