@@ -161,7 +161,12 @@ namespace Eventd
                 else
                     throw new EventcError.CONNECTION_OTHER("Failed to connect: %s", e.message);
             }
+            this.hello();
+        }
 
+        private void
+        hello() throws EventcError
+        {
             this.input = new GLib.DataInputStream((this.connection as GLib.IOStream).get_input_stream());
             this.output = new GLib.DataOutputStream((this.connection as GLib.IOStream).get_output_stream());
 
