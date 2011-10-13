@@ -93,7 +93,8 @@ namespace Eventd
         private GLib.DataInputStream input;
         private GLib.DataOutputStream output;
 
-        public Eventc(string host, uint16 port, string type, string? name)
+        public
+        Eventc(string host, uint16 port, string type, string? name)
         {
             this._host = host;
             this._port = port;
@@ -179,9 +180,7 @@ namespace Eventd
                 this.send("RENAME %s %s".printf(this._type, this._name));
             var r = this.receive(null);
             if ( r != "RENAMED" )
-            {
                 throw new EventcError.RENAMED("Got a wrong renamed message: %s", r);
-            }
         }
 
         public void
@@ -224,7 +223,8 @@ namespace Eventd
             return r;
         }
 
-        private void send(string msg) throws EventcError
+        private void
+        send(string msg) throws EventcError
         {
             try
             {
@@ -236,7 +236,8 @@ namespace Eventd
             }
         }
 
-        public void close() throws EventcError
+        public void
+        close() throws EventcError
         {
             if ( ! this.connection.is_closed() )
             {
