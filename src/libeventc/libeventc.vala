@@ -139,14 +139,7 @@ namespace Eventd
             if ( this.connection != null )
                 this.close();
 
-            try
-            {
-                this.proccess_address();
-            }
-            catch ( EventcError e )
-            {
-                throw e;
-            }
+            this.proccess_address();
 
             this.client = new GLib.SocketClient();
             this.client.set_timeout(this.timeout);
@@ -199,14 +192,8 @@ namespace Eventd
                 ev = @"EVENT $type";
             else
                 ev = @"EVENT $type $name";
-            try
-            {
-                send(ev);
-            }
-            catch ( EventcError e )
-            {
-                throw e;
-            }
+            this.send(ev);
+
             if ( data != null )
             {
                 var datas = data.split("\n");
@@ -262,15 +249,7 @@ namespace Eventd
             if ( ! this.connection.is_closed() )
             {
                 this.send("BYE");
-                string r = null;
-                try
-                {
-                    r = this.receive(null);
-                }
-                catch ( EventcError e )
-                {
-                    throw e;
-                }
+                var r = this.receive(null);
                 if ( r != "BYE" )
                     throw new EventcError.BYE("Got a wrong bye message: %s", r);
             }
