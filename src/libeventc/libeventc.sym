@@ -3,6 +3,7 @@ global:
     eventd_eventc_close;
     eventd_eventc_connect;
     eventd_eventc_connect_async;
+    eventd_eventc_connect_finish;
     eventd_eventc_error_quark;
     eventd_eventc_event;
     eventd_eventc_get_timeout;
