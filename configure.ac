@@ -104,7 +104,7 @@ AM_CONDITIONAL(ENABLE_DIALOGS, [test x$enable_dialogs = xyes])
 
 
 # Client dependencies
-AC_ARG_ENABLE(client, AS_HELP_STRING([--disable-client], [Disable client (lib and ]), enable_client=$enableval, enable_client=yes)
+AC_ARG_ENABLE(client, AS_HELP_STRING([--disable-client], [Disable client (libeventc and eventc)]), enable_client=$enableval, enable_client=yes)
 if test x$enable_client = xyes; then
     PKG_CHECK_MODULES(GOBJECT, [gobject-2.0])
     GOBJECT_VALAFLAGS="--pkg gobject-2.0"
