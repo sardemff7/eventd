@@ -259,7 +259,8 @@ eventd_get_unix_socket(gchar *path)
 	return socket;
 
 fail:
-	g_free(socket);
+	if ( socket )
+		g_object_unref(socket);
 	g_clear_error(&error);
 	return NULL;
 }
