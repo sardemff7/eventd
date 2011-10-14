@@ -117,8 +117,13 @@ eventd_action_list_free(GList *actions)
 void
 event_action(const gchar *client_type, const gchar *client_name, const gchar *action_type, const gchar *action_name, const gchar *action_data)
 {
-	GHashTable *type_config = g_hash_table_lookup(clients_config, client_type);
-	GList *actions = g_hash_table_lookup(type_config, action_type);
+	GHashTable *type_config;
+	GList *actions;
+	if ( clients_config == NULL )
+		return;
+
+	type_config = g_hash_table_lookup(clients_config, client_type);
+	actions = g_hash_table_lookup(type_config, action_type);
 	for ( ; actions ; actions = g_list_next(actions) )
 	{
 		EventdAction *action = actions->data;
