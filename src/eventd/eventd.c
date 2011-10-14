@@ -188,11 +188,22 @@ main(int argc, char *argv[])
 
 		if ( ( socket = eventd_get_unix_socket(unix_socket) ) != NULL )
 			sockets = g_list_prepend(sockets, socket);
+		else if ( no_network )
+			g_error("Nothing to bind to, kind of useless, isn't it?");
+		else
+		{
+			g_free(unix_socket);
+			unix_socket = NULL;
+		}
 	}
 #endif /* ENABLE_GIO_UNIX */
 
 	if ( ( bind_port > 0 ) && ( ( socket = eventd_get_inet_socket(bind_port) ) != NULL ) )
 		sockets = g_list_prepend(sockets, socket);
+#if ENABLE_GIO_UNIX
+	else if ( no_unix )
+		g_error("Nothing to bind to, kind of useless, isn't it?");
+#endif /* ENABLE_GIO_UNIX */
 
 	if ( pid_file == NULL )
 		pid_file = g_strdup_printf(PID_FILE, run_dir);
