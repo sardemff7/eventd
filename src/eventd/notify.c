@@ -20,8 +20,6 @@
  *
  */
 
-#include "eventd.h"
-
 #include <libnotify/notify.h>
 
 #include <glib.h>

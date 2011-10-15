@@ -36,7 +36,6 @@
 
 #include <eventd-common.h>
 
-#include "eventd.h"
 #include "service.h"
 
 #if ENABLE_SYSTEMD

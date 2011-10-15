@@ -20,8 +20,6 @@
  *
  */
 
-#include "eventd.h"
-
 #include <pulse/pulseaudio.h>
 #include <sndfile.h>
 

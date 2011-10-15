@@ -7,6 +7,7 @@ pkginclude_HEADERS =
 CLEANFILES =
 
 AM_CFLAGS += \
+	--include config.h \
 	-I $(top_srcdir)/include/ \
 	-I $(top_builddir)/include/
 
