@@ -139,11 +139,7 @@ event_action(const gchar *client_type, const gchar *client_name, const gchar *ac
 		#endif /* ENABLE_NOTIFY */
 		#if HAVE_DIALOGS
 		case ACTION_MESSAGE:
-			#if ENABLE_GTK
-			#error Not supported yet
-			#else /* ! ENABLE_GTK */
 			create_dialog(action->data, client_name, action_data);
-			#endif /* ! ENABLE_GTK */
 		break;
 		#endif /* HAVE_DIALOGS */
 		default:
