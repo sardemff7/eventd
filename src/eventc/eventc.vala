@@ -77,6 +77,16 @@ namespace Eventd
         else
             name = null;
 
+        #if ENABLE_GIO_UNIX
+        if ( unix_socket != null )
+        {
+            if ( ( unix_socket[0] == '/' )
+                 || ( ( unix_socket[0] == '%' ) && ( unix_socket[1] == 's' ) && ( unix_socket[2] == '/' ) ) )
+                host = unix_socket;
+            else
+                host = GLib.Path.build_filename(GLib.Environment.get_current_dir(), unix_socket);
+        }
+        #endif
         if ( host == null )
             host = "localhost";
 
