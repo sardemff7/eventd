@@ -50,55 +50,10 @@
 
 
 GHashTable *config = NULL;
-GHashTable *clients_config = NULL;
-
-typedef enum {
-	ACTION_NONE = 0,
-} EventdActionType;
-
-typedef struct {
-	EventdActionType type;
-	void *data;
-} EventdAction;
-
-static EventdAction *
-eventd_action_new(EventdActionType type, void *data)
-{
-	EventdAction *action = g_new0(EventdAction, 1);
-	action->type = type;
-	if ( data )
-		action->data = data;
-	return action;
-}
-
-static void
-eventd_action_free(EventdAction *action)
-{
-	g_return_if_fail(action != NULL);
-	switch ( action->type )
-	{
-		default:
-			g_free(action->data);
-		break;
-	}
-	g_free(action);
-}
-
-static void
-eventd_action_list_free(GList *actions)
-{
-	g_return_if_fail(actions != NULL);
-	GList *action;
-	for ( action = g_list_first(actions) ; action ; action = g_list_next(action) )
-		eventd_action_free(action->data);
-}
 
 void
 event_action(const gchar *client_type, const gchar *client_name, const gchar *action_type, const gchar *action_name, const gchar *action_data)
 {
-	GHashTable *type_config;
-	GList *actions;
-
 	#if ENABLE_SOUND
 	eventd_pulse_event_action(client_type, client_name, action_type, action_name, action_data);
 	#endif /* ENABLE_SOUND */
@@ -110,21 +65,6 @@ event_action(const gchar *client_type, const gchar *client_name, const gchar *ac
 	#if HAVE_DIALOGS
 	eventd_dialogs_event_action(client_type, client_name, action_type, action_name, action_data);
 	#endif /* HAVE_DIALOGS */
-
-	if ( clients_config == NULL )
-		return;
-
-	type_config = g_hash_table_lookup(clients_config, client_type);
-	actions = g_hash_table_lookup(type_config, action_type);
-	for ( ; actions ; actions = g_list_next(actions) )
-	{
-		EventdAction *action = actions->data;
-		switch ( action->type )
-		{
-		default:
-		break;
-		}
-	}
 }
 
 static void
@@ -185,7 +125,6 @@ eventd_parse_client(gchar *type, gchar *config_dir_name)
 {
 	GError *error = NULL;
 	GDir *config_dir = NULL;
-	GHashTable *type_config = NULL;
 	gchar *file = NULL;
 	gchar *defaults_config_file_name = NULL;
 	GKeyFile *defaults_config_file = NULL;
@@ -212,14 +151,11 @@ eventd_parse_client(gchar *type, gchar *config_dir_name)
 		return;
 	}
 
-	type_config = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)eventd_action_list_free);
-
 	while ( ( file = (gchar *)g_dir_read_name(config_dir) ) != NULL )
 	{
 		gchar *event = NULL;
 		gchar *config_file_name = NULL;
 		GKeyFile *config_file = NULL;
-		GList *list = NULL;
 
 		if ( g_str_has_prefix(file, ".") || ( ! g_str_has_suffix(file, ".conf") ) )
 			continue;
@@ -248,8 +184,6 @@ eventd_parse_client(gchar *type, gchar *config_dir_name)
 		eventd_dialogs_event_parse(type, event, config_file, defaults_config_file);
 		#endif /* HAVE_DIALOGS */
 
-		g_hash_table_insert(type_config, g_strdup(event), list);
-
 	next:
 		if ( error )
 			g_warning("Can't read the configuration file '%s': %s", config_file_name, error->message);
@@ -257,8 +191,6 @@ eventd_parse_client(gchar *type, gchar *config_dir_name)
 		g_key_file_free(config_file);
 		g_free(config_file_name);
 	}
-
-	g_hash_table_insert(clients_config, g_strdup(type), type_config);
 
 	g_dir_close(config_dir);
 	if ( defaults_config_file )
@@ -328,7 +260,6 @@ eventd_config_parser()
 	eventd_dialogs_config_init();
 	#endif /* HAVE_DIALOGS */
 
-	clients_config = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_hash_table_remove_all);
 	config_dir = g_dir_open(config_dir_name, 0, &error);
 	if ( ! config_dir )
 		goto out;
@@ -388,7 +319,6 @@ eventd_config_clean()
 	#endif /* ENABLE_SOUND */
 
 	g_hash_table_remove_all(config);
-	g_hash_table_remove_all(clients_config);
 }
 
 
