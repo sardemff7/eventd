@@ -29,6 +29,9 @@
 #include <glib.h>
 #include <gio/gio.h>
 
+#include "events.h"
+
+static GHashTable *events = NULL;
 
 #define MAX_ARGS 50
 static int
@@ -63,8 +66,60 @@ do_it(gchar * path, gchar * arg, ...)
 }
 
 void
-create_dialog(const gchar *message, const gchar *client_name, const gchar *action_data)
+eventd_dialogs_event_parse(const gchar *type, const gchar *event, GKeyFile *config_file, GKeyFile *defaults_config_file)
 {
-	gchar *msg = g_strdup_printf(message, action_data ? action_data : "");
-	do_it("zenity", "--info", "--title", client_name, "--text", msg, NULL);
+	gchar *message = NULL;
+	gchar *name = NULL;
+
+	if ( ! g_key_file_has_group(config_file, "dialog") )
+		return;
+
+	if ( eventd_config_key_file_get_string(config_file, "dialog", "message", event, type, &message) < 0 )
+		goto skip;
+
+	if ( ( ! message ) && ( defaults_config_file ) && g_key_file_has_group(defaults_config_file, "dialog") )
+			eventd_config_key_file_get_string(defaults_config_file, "dialog", "message", "defaults", type, &message);
+
+	if ( ! message )
+		message = g_strdup("%s");
+
+	name = g_strdup_printf("%s-%s", type, event);
+	g_hash_table_insert(events, name, message);
+
+skip:
+	g_free(message);
 }
+
+void
+eventd_dialogs_event_action(const gchar *client_type, const gchar *client_name, const gchar *event_type, const gchar *event_name, const gchar *event_data)
+{
+	gchar *name;
+	gchar *message;
+	gchar *msg;
+
+	name = g_strdup_printf("%s-%s", client_type, event_type);
+
+	message = g_hash_table_lookup(events, name);
+	if ( message == NULL )
+		goto fail;
+
+	msg = g_strdup_printf(message, event_data ? event_data : "");
+	do_it("zenity", "--info", "--title", client_name, "--text", msg, NULL);
+	g_free(msg);
+
+fail:
+	g_free(name);
+}
+
+void
+eventd_dialogs_config_init()
+{
+	events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+}
+
+void
+eventd_dialogs_config_clean()
+{
+	g_hash_table_unref(events);
+}
+

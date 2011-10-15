@@ -54,9 +54,6 @@ GHashTable *clients_config = NULL;
 
 typedef enum {
 	ACTION_NONE = 0,
-#if HAVE_DIALOGS
-	ACTION_MESSAGE,
-#endif /* HAVE_DIALOGS */
 } EventdActionType;
 
 typedef struct {
@@ -110,6 +107,10 @@ event_action(const gchar *client_type, const gchar *client_name, const gchar *ac
 	eventd_notify_event_action(client_type, client_name, action_type, action_name, action_data);
 	#endif /* ENABLE_NOTIFY */
 
+	#if HAVE_DIALOGS
+	eventd_dialogs_event_action(client_type, client_name, action_type, action_name, action_data);
+	#endif /* HAVE_DIALOGS */
+
 	if ( clients_config == NULL )
 		return;
 
@@ -120,11 +121,6 @@ event_action(const gchar *client_type, const gchar *client_name, const gchar *ac
 		EventdAction *action = actions->data;
 		switch ( action->type )
 		{
-		#if HAVE_DIALOGS
-		case ACTION_MESSAGE:
-			create_dialog(action->data, client_name, action_data);
-		break;
-		#endif /* HAVE_DIALOGS */
 		default:
 		break;
 		}
@@ -249,25 +245,7 @@ eventd_parse_client(gchar *type, gchar *config_dir_name)
 		#endif /* ENABLE_NOTIFY */
 
 		#if HAVE_DIALOGS
-		if ( g_key_file_has_group(config_file, "dialog") )
-		{
-			gchar *message = NULL;
-
-			if ( eventd_config_key_file_get_string(config_file, "dialog", "message", event, type, &message) < 0 )
-				goto skip_dialog;
-
-			if ( ( ! message ) && ( defaults_config_file ) && g_key_file_has_group(defaults_config_file, "dialog") )
-					eventd_config_key_file_get_string(defaults_config_file, "dialog", "message", "defaults", type, &message);
-
-			if ( ! message )
-				message = g_strdup("%s");
-
-			list = g_list_prepend(list,
-				eventd_action_new(ACTION_MESSAGE, message));
-
-		skip_dialog:
-			g_free(message);
-		}
+		eventd_dialogs_event_parse(type, event, config_file, defaults_config_file);
 		#endif /* HAVE_DIALOGS */
 
 		g_hash_table_insert(type_config, g_strdup(event), list);
@@ -346,6 +324,10 @@ eventd_config_parser()
 	eventd_notify_config_init();
 	#endif /* ENABLE_NOTIFY */
 
+	#if HAVE_DIALOGS
+	eventd_dialogs_config_init();
+	#endif /* HAVE_DIALOGS */
+
 	clients_config = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_hash_table_remove_all);
 	config_dir = g_dir_open(config_dir_name, 0, &error);
 	if ( ! config_dir )
@@ -393,6 +375,10 @@ out:
 void
 eventd_config_clean()
 {
+	#if HAVE_DIALOGS
+	eventd_dialogs_config_clean();
+	#endif /* HAVE_DIALOGS */
+
 	#if ENABLE_NOTIFY
 	eventd_notify_config_clean();
 	#endif /* ENABLE_NOTIFY */

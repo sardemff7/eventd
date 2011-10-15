@@ -23,6 +23,10 @@
 #ifndef __EVENTD_DIALOGS_H__
 #define __EVENTD_DIALOGS_H__
 
-void create_dialog(const gchar *message, const gchar *client_name, const gchar *action_data);
+void eventd_dialogs_config_init();
+void eventd_dialogs_config_clean();
+
+void eventd_dialogs_event_parse(const gchar *type, const gchar *event, GKeyFile *config_file, GKeyFile *defaults_config_file);
+void eventd_dialogs_event_action(const gchar *client_type, const gchar *client_name, const gchar *event_type, const gchar *event_name, const gchar *event_data);
 
 #endif /* __EVENTD_DIALOGS_H__ */
