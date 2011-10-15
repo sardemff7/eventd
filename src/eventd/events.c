@@ -54,9 +54,6 @@ GHashTable *clients_config = NULL;
 
 typedef enum {
 	ACTION_NONE = 0,
-#if ENABLE_NOTIFY
-	ACTION_NOTIFY,
-#endif /* ENABLE_NOTIFY */
 #if HAVE_DIALOGS
 	ACTION_MESSAGE,
 #endif /* HAVE_DIALOGS */
@@ -83,11 +80,6 @@ eventd_action_free(EventdAction *action)
 	g_return_if_fail(action != NULL);
 	switch ( action->type )
 	{
-		#if ENABLE_NOTIFY
-		case ACTION_NOTIFY:
-			eventd_notify_event_free(action->data);
-		break;
-		#endif /* ENABLE_NOTIFY */
 		default:
 			g_free(action->data);
 		break;
@@ -114,6 +106,10 @@ event_action(const gchar *client_type, const gchar *client_name, const gchar *ac
 	eventd_pulse_event_action(client_type, client_name, action_type, action_name, action_data);
 	#endif /* ENABLE_SOUND */
 
+	#if ENABLE_NOTIFY
+	eventd_notify_event_action(client_type, client_name, action_type, action_name, action_data);
+	#endif /* ENABLE_NOTIFY */
+
 	if ( clients_config == NULL )
 		return;
 
@@ -124,11 +120,6 @@ event_action(const gchar *client_type, const gchar *client_name, const gchar *ac
 		EventdAction *action = actions->data;
 		switch ( action->type )
 		{
-		#if ENABLE_NOTIFY
-		case ACTION_NOTIFY:
-			eventd_notify_event_perform(action->data, client_name, action_name, action_data);
-		break;
-		#endif /* ENABLE_NOTIFY */
 		#if HAVE_DIALOGS
 		case ACTION_MESSAGE:
 			create_dialog(action->data, client_name, action_data);
@@ -254,33 +245,7 @@ eventd_parse_client(gchar *type, gchar *config_dir_name)
 		#endif /* ENABLE_SOUND */
 
 		#if ENABLE_NOTIFY
-		if ( g_key_file_has_group(config_file, "notify") )
-		{
-			gchar *title = NULL;
-			gchar *message = NULL;
-
-			if ( eventd_config_key_file_get_string(config_file, "notify", "title", event, type, &title) < 0 )
-				goto skip_notify;
-			if ( eventd_config_key_file_get_string(config_file, "notify", "message", event, type, &message) < 0 )
-				goto skip_notify;
-
-			/* Check defaults */
-			if ( ( defaults_config_file ) && g_key_file_has_group(defaults_config_file, "notify") )
-			{
-				if ( ! title )
-					eventd_config_key_file_get_string(defaults_config_file, "notify", "title", "defaults", type, &title);
-
-				if ( ! message )
-					eventd_config_key_file_get_string(defaults_config_file, "notify", "message", "defaults", type, &message);
-			}
-
-			list = g_list_prepend(list,
-				eventd_action_new(ACTION_NOTIFY, eventd_notify_event_new(title, message)));
-
-		skip_notify:
-			g_free(message);
-			g_free(title);
-		}
+		eventd_notify_event_parse(type, event, config_file, defaults_config_file);
 		#endif /* ENABLE_NOTIFY */
 
 		#if HAVE_DIALOGS
@@ -377,6 +342,10 @@ eventd_config_parser()
 	eventd_pulse_config_init();
 	#endif /* ENABLE_SOUND */
 
+	#if ENABLE_NOTIFY
+	eventd_notify_config_init();
+	#endif /* ENABLE_NOTIFY */
+
 	clients_config = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_hash_table_remove_all);
 	config_dir = g_dir_open(config_dir_name, 0, &error);
 	if ( ! config_dir )
@@ -424,6 +393,10 @@ out:
 void
 eventd_config_clean()
 {
+	#if ENABLE_NOTIFY
+	eventd_notify_config_clean();
+	#endif /* ENABLE_NOTIFY */
+
 	#if ENABLE_SOUND
 	eventd_pulse_config_clean();
 	#endif /* ENABLE_SOUND */

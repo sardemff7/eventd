@@ -24,11 +24,22 @@
 
 #include <glib.h>
 
+#include "events.h"
 #include "notify.h"
+
+
+typedef struct {
+    gchar *title;
+    gchar *message;
+} EventdNotifyEvent;
+
 
 static GRegex *client_name_regex = NULL;
 static GRegex *event_name_regex = NULL;
 static GRegex *event_data_regex = NULL;
+
+static GHashTable *events = NULL;
+
 
 void
 eventd_notify_start()
@@ -68,7 +79,7 @@ notification_closed_cb(NotifyNotification *notification)
 	return FALSE;
 }
 
-EventdNotifyEvent *
+static EventdNotifyEvent *
 eventd_notify_event_new(const char *title, const char *message)
 {
 	EventdNotifyEvent *event = NULL;
@@ -80,15 +91,63 @@ eventd_notify_event_new(const char *title, const char *message)
 
 	return event;
 }
+void
+eventd_notify_event_free(EventdNotifyEvent *event)
+{
+	g_free(event->message);
+	g_free(event->title);
+	g_free(event);
+}
 
 void
-eventd_notify_event_perform(EventdNotifyEvent *event, const gchar *client_name, const gchar *event_name, const gchar *event_data)
+eventd_notify_event_parse(const gchar *type, const gchar *event, GKeyFile *config_file, GKeyFile *defaults_config_file)
 {
+	gchar *name = NULL;
+	gchar *title = NULL;
+	gchar *message = NULL;
+
+	if ( ! g_key_file_has_group(config_file, "notify") )
+		return;
+
+	if ( eventd_config_key_file_get_string(config_file, "notify", "title", event, type, &title) < 0 )
+		goto skip;
+	if ( eventd_config_key_file_get_string(config_file, "notify", "message", event, type, &message) < 0 )
+		goto skip;
+
+	/* Check defaults */
+	if ( ( defaults_config_file ) && g_key_file_has_group(defaults_config_file, "notify") )
+	{
+		if ( ! title )
+			eventd_config_key_file_get_string(defaults_config_file, "notify", "title", "defaults", type, &title);
+
+		if ( ! message )
+			eventd_config_key_file_get_string(defaults_config_file, "notify", "message", "defaults", type, &message);
+	}
+
+	name = g_strdup_printf("%s-%s", type, event);
+	g_hash_table_insert(events, name, eventd_notify_event_new(title, message));
+
+skip:
+	g_free(message);
+	g_free(title);
+}
+
+void
+eventd_notify_event_action(const gchar *client_type, const gchar *client_name, const gchar *event_type, const gchar *event_name, const gchar *event_data)
+{
+	gchar *name;
 	GError *error = NULL;
+	EventdNotifyEvent *event;
 	gchar *title = NULL;
 	gchar *message = NULL;
 	gchar *tmp = NULL;
 	NotifyNotification *notification = NULL;
+
+	name = g_strdup_printf("%s-%s", client_type, event_type);
+
+	event = g_hash_table_lookup(events, name);
+	if ( event == NULL )
+		goto fail;
 
 	tmp = g_regex_replace_literal(client_name_regex, event->title, -1, 0, client_name ?: "" , 0, &error);
 	if ( ! tmp )
@@ -119,12 +178,20 @@ eventd_notify_event_perform(EventdNotifyEvent *event, const gchar *client_name, 
 	g_object_unref(G_OBJECT(notification));
 	g_free(message);
 	g_free(title);
+
+fail:
+	g_free(name);
+}
+
+
+void
+eventd_notify_config_init()
+{
+	events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)eventd_notify_event_free);
 }
 
 void
-eventd_notify_event_free(EventdNotifyEvent *event)
+eventd_notify_config_clean()
 {
-	g_free(event->message);
-	g_free(event->title);
-	g_free(event);
+	g_hash_table_unref(events);
 }
