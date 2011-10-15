@@ -272,8 +272,8 @@ eventd_parse_client(gchar *type, gchar *config_dir_name)
 			/* Check defaults */
 			if ( ( defaults_config_file ) && ( ! sample ) && ( ! filename ) && g_key_file_has_group(defaults_config_file, "sound") )
 			{
-				eventd_config_key_file_get_string(config_file, "sound", "sample", "defaults", type, &sample);
-				eventd_config_key_file_get_string(config_file, "sound", "file", "defaults", type, &filename);
+				eventd_config_key_file_get_string(defaults_config_file, "sound", "sample", "defaults", type, &sample);
+				eventd_config_key_file_get_string(defaults_config_file, "sound", "file", "defaults", type, &filename);
 			}
 
 			if ( ( filename ) || ( sample ) )
