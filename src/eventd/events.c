@@ -373,16 +373,8 @@ eventd_config_parser()
 	gchar *config_file_name = NULL;
 	GKeyFile *config_file = NULL;
 
-	#if ENABLE_SOUND
-	gchar *sounds_dir_name = NULL;
-	#endif /* ENABLE_SOUND */
-
 
 	config_dir_name = g_strdup_printf("%s/"PACKAGE_NAME, g_get_user_config_dir());
-
-	#if ENABLE_SOUND
-	sounds_dir_name = g_strdup_printf("%s/"PACKAGE_NAME"/sounds", g_get_user_data_dir());
-	#endif /* ENABLE_SOUND */
 
 
 	if ( config )
@@ -409,16 +401,6 @@ eventd_config_parser()
 			g_signal_connect(monitor, "changed", eventd_config_parser, NULL);
 		g_clear_error(&error);
 		g_object_unref(dir);
-
-		#if ENABLE_SOUND
-		dir = g_file_new_for_path(sounds_dir_name);
-		if ( ( monitor = g_file_monitor(dir, G_FILE_MONITOR_NONE, NULL, &error) ) == NULL )
-			g_warning("Couldn't monitor the sounds directory: %s", error->message);
-		else
-			g_signal_connect(monitor, "changed", eventd_config_parser, NULL);
-		g_clear_error(&error);
-		g_object_unref(dir);
-		#endif /* ENABLE_SOUND */
 	}
 
 	config_file_name = g_strdup_printf("%s/"PACKAGE_NAME".conf", config_dir_name);
@@ -472,9 +454,6 @@ out:
 	if ( error )
 		g_warning("Can't read the configuration directory: %s", error->message);
 	g_clear_error(&error);
-	#if ENABLE_SOUND
-	g_free(sounds_dir_name);
-	#endif /* ENABLE_SOUND */
 	g_free(config_dir_name);
 }
 
