@@ -23,8 +23,6 @@
 #ifndef __EVENTD_EVENTS_H__
 #define __EVENTD_EVENTS_H__
 
-void event_action(const gchar *client_type, const gchar *client_name, const gchar *action_type, const gchar *action_name, const gchar *action_data);
-
 void eventd_config_parser();
 void eventd_config_clean();
 

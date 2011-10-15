@@ -32,18 +32,27 @@
 #include <gio/gunixsocketaddress.h>
 #endif /* ENABLE_GIO_UNIX */
 
-#if ENABLE_SOUND
-#include "pulse.h"
-#endif /* ENABLE_SOUND */
-
-#if ENABLE_NOTIFY
-#include "notify.h"
-#endif /* ENABLE_NOTIFY */
-
+#include <eventd-plugin.h>
 #include "events.h"
+#include "plugins.h"
 #include "service.h"
 
 #define BUFFER_SIZE 1024
+
+typedef struct {
+	gchar *client_type;
+	gchar *client_name;
+
+	gchar *action_type;
+	gchar *action_name;
+	gchar *action_data;
+} EventdEventData;
+
+static void
+event_action(EventdPlugin *plugin, EventdEventData *data)
+{
+	plugin->event_action(data->client_type, data->client_name, data->action_type, data->action_name, data->action_data);
+}
 
 static gboolean
 connection_handler(
@@ -56,12 +65,14 @@ connection_handler(
 	GDataOutputStream *output = NULL;
 	GError *error = NULL;
 
-	gchar *type = NULL;
-	gchar *name = NULL;
+	EventdEventData data = {
+		.client_type = NULL,
+		.client_name = NULL,
 
-	gchar *action_type = NULL;
-	gchar *action_name = NULL;
-	gchar *action_data = NULL;
+		.action_type = NULL,
+		.action_name = NULL,
+		.action_data = NULL
+	};
 
 	gsize size = 0;
 	gchar *line = NULL;
@@ -86,9 +97,9 @@ connection_handler(
 			gchar **event = NULL;
 
 			event = g_strsplit(line+6, " ", 2);
-			action_type = g_strdup(g_strstrip(event[0]));
+			data.action_type = g_strdup(g_strstrip(event[0]));
 			if ( event[1] != NULL )
-				action_name = g_strdup(g_strstrip(event[1]));
+				data.action_name = g_strdup(g_strstrip(event[1]));
 
 			g_strfreev(event);
 		}
@@ -105,9 +116,9 @@ connection_handler(
 				break;
 
 			hello = g_strsplit(line+6, " ", 2);
-			type = g_strdup(g_strstrip(hello[0]));
+			data.client_type = g_strdup(g_strstrip(hello[0]));
 			if ( hello[1] != NULL )
-				name = g_strdup(g_strstrip(hello[1]));
+				data.client_name = g_strdup(g_strstrip(hello[1]));
 			g_strfreev(hello);
 		}
 		else if ( g_ascii_strncasecmp(line, "RENAME ", 7) == 0 )
@@ -118,12 +129,12 @@ connection_handler(
 				break;
 
 			rename = g_strsplit(line+6, " ", 2);
-			type = g_strdup(g_strstrip(rename[0]));
+			data.client_type = g_strdup(g_strstrip(rename[0]));
 			if ( rename[1] != NULL )
-				name = g_strdup(g_strstrip(rename[1]));
+				data.client_name = g_strdup(g_strstrip(rename[1]));
 			g_strfreev(rename);
 		}
-		else if ( action_type )
+		else if ( data.action_type )
 		{
 			if ( g_ascii_strcasecmp(line, ".") == 0 )
 			{
@@ -133,26 +144,26 @@ connection_handler(
 				if ( action_time > ( last_action + delay ) )
 				{
 					last_action = action_time;
-					event_action(type, name, action_type, action_name, action_data);
+					eventd_plugins_foreach((GFunc)event_action, &data);
 				}
-				g_free(action_data);
-				g_free(action_name);
-				g_free(action_type);
-				action_data = NULL;
-				action_name = NULL;
-				action_type = NULL;
+				g_free(data.action_data);
+				g_free(data.action_name);
+				g_free(data.action_type);
+				data.action_data = NULL;
+				data.action_name = NULL;
+				data.action_type = NULL;
 			}
-			else if ( action_data )
+			else if ( data.action_data )
 			{
 				gchar *old = NULL;
 
-				old = action_data;
-				action_data = g_strjoin("\n", old, ( line[0] == '.' ) ? line+1 : line, NULL);
+				old = data.action_data;
+				data.action_data = g_strjoin("\n", old, ( line[0] == '.' ) ? line+1 : line, NULL);
 
 				g_free(old);
 			}
 			else
-				action_data = g_strdup(( line[0] == '.' ) ? line+1 : line);
+				data.action_data = g_strdup(( line[0] == '.' ) ? line+1 : line);
 		}
 		else
 			g_warning("Unknown message");
@@ -163,8 +174,8 @@ connection_handler(
 		g_warning("Can't read the socket: %s", error->message);
 	g_clear_error(&error);
 
-	g_free(type);
-	g_free(name);
+	g_free(data.client_type);
+	g_free(data.client_name);
 
 	if ( ! g_io_stream_close((GIOStream *)connection, NULL, &error) )
 		g_warning("Can't close the stream: %s", error->message);
@@ -275,14 +286,7 @@ eventd_service(GList *sockets)
 	signal(SIGTERM, sig_quit_handler);
 	signal(SIGINT, sig_quit_handler);
 
-
-	#if ENABLE_NOTIFY
-	eventd_notify_start();
-	#endif /* ENABLE_NOTIFY */
-
-	#if ENABLE_SOUND
-	eventd_pulse_start();
-	#endif /* ENABLE_SOUND */
+	eventd_plugins_load();
 
 	eventd_config_parser();
 
@@ -306,13 +310,7 @@ eventd_service(GList *sockets)
 
 	eventd_config_clean();
 
-	#if ENABLE_SOUND
-	eventd_pulse_stop();
-	#endif /* ENABLE_SOUND */
-
-	#if ENABLE_NOTIFY
-	eventd_notify_stop();
-	#endif /* ENABLE_NOTIFY */
+	eventd_plugins_unload();
 
 	return retval;
 }

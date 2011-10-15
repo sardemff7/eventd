@@ -24,8 +24,7 @@
 
 #include <glib.h>
 
-#include "events.h"
-#include "notify.h"
+#include <eventd-plugin.h>
 
 
 typedef struct {
@@ -41,7 +40,7 @@ static GRegex *event_data_regex = NULL;
 static GHashTable *events = NULL;
 
 
-void
+static void
 eventd_notify_start()
 {
 	GError *error = NULL;
@@ -64,7 +63,7 @@ eventd_notify_start()
 	g_clear_error(&error);
 }
 
-void
+static void
 eventd_notify_stop()
 {
 	g_regex_unref(event_data_regex);
@@ -91,7 +90,8 @@ eventd_notify_event_new(const char *title, const char *message)
 
 	return event;
 }
-void
+
+static void
 eventd_notify_event_free(EventdNotifyEvent *event)
 {
 	g_free(event->message);
@@ -99,7 +99,7 @@ eventd_notify_event_free(EventdNotifyEvent *event)
 	g_free(event);
 }
 
-void
+static void
 eventd_notify_event_parse(const gchar *type, const gchar *event, GKeyFile *config_file, GKeyFile *defaults_config_file)
 {
 	gchar *name = NULL;
@@ -132,7 +132,7 @@ skip:
 	g_free(title);
 }
 
-void
+static void
 eventd_notify_event_action(const gchar *client_type, const gchar *client_name, const gchar *event_type, const gchar *event_name, const gchar *event_data)
 {
 	gchar *name;
@@ -184,14 +184,28 @@ fail:
 }
 
 
-void
+static void
 eventd_notify_config_init()
 {
 	events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)eventd_notify_event_free);
 }
 
-void
+static void
 eventd_notify_config_clean()
 {
 	g_hash_table_unref(events);
 }
+
+void
+eventd_plugin_get_info(EventdPlugin *plugin)
+{
+	plugin->start = eventd_notify_start;
+	plugin->stop = eventd_notify_stop;
+
+	plugin->config_init = eventd_notify_config_init;
+	plugin->config_clean = eventd_notify_config_clean;
+
+	plugin->event_parse = eventd_notify_event_parse;
+	plugin->event_action = eventd_notify_event_action;
+}
+

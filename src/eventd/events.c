@@ -34,38 +34,12 @@
 #define DEFAULT_DELAY 5
 #define DEFAULT_DELAY_STR "5"
 
-#if ENABLE_SOUND
-#include "pulse.h"
-#endif /* ENABLE_SOUND */
-
-#if ENABLE_NOTIFY
-#include "notify.h"
-#endif /* ENABLE_NOTIFY */
-
-#if HAVE_DIALOGS
-#include "dialogs.h"
-#endif /* HAVE_DIALOGS */
-
+#include <eventd-plugin.h>
+#include "plugins.h"
 #include "events.h"
 
 
 GHashTable *config = NULL;
-
-void
-event_action(const gchar *client_type, const gchar *client_name, const gchar *action_type, const gchar *action_name, const gchar *action_data)
-{
-	#if ENABLE_SOUND
-	eventd_pulse_event_action(client_type, client_name, action_type, action_name, action_data);
-	#endif /* ENABLE_SOUND */
-
-	#if ENABLE_NOTIFY
-	eventd_notify_event_action(client_type, client_name, action_type, action_name, action_data);
-	#endif /* ENABLE_NOTIFY */
-
-	#if HAVE_DIALOGS
-	eventd_dialogs_event_action(client_type, client_name, action_type, action_name, action_data);
-	#endif /* HAVE_DIALOGS */
-}
 
 static void
 eventd_parse_server(GKeyFile *config_file)
@@ -120,6 +94,19 @@ eventd_config_key_file_get_string(GKeyFile *config_file, const gchar *group, con
 	return ret;
 }
 
+typedef struct {
+	gchar *type;
+	gchar *event;
+	GKeyFile *config_file;
+	GKeyFile *defaults_config_file;
+} EventdConfigParseData;
+
+static void
+eventd_plugin_event_parse(EventdPlugin *plugin, EventdConfigParseData *data)
+{
+	plugin->event_parse(data->type, data->event, data->config_file, data->defaults_config_file);
+}
+
 static void
 eventd_parse_client(gchar *type, gchar *config_dir_name)
 {
@@ -127,18 +114,24 @@ eventd_parse_client(gchar *type, gchar *config_dir_name)
 	GDir *config_dir = NULL;
 	gchar *file = NULL;
 	gchar *defaults_config_file_name = NULL;
-	GKeyFile *defaults_config_file = NULL;
+
+	EventdConfigParseData data = {
+		.type = type,
+		.event = NULL,
+		.config_file = NULL,
+		.defaults_config_file = NULL
+	};
 
 	defaults_config_file_name = g_strdup_printf("%s.conf", config_dir_name);
 	if ( g_file_test(defaults_config_file_name, G_FILE_TEST_IS_REGULAR) )
 	{
-		defaults_config_file = g_key_file_new();
-		if ( ! g_key_file_load_from_file(defaults_config_file, defaults_config_file_name, G_KEY_FILE_NONE, &error) )
+		data.defaults_config_file = g_key_file_new();
+		if ( ! g_key_file_load_from_file(data.defaults_config_file, defaults_config_file_name, G_KEY_FILE_NONE, &error) )
 		{
 			g_warning("Can't read the defaults file '%s': %s", defaults_config_file_name, error->message);
 			g_clear_error(&error);
-			g_key_file_free(defaults_config_file);
-			defaults_config_file = NULL;
+			g_key_file_free(data.defaults_config_file);
+			data.defaults_config_file = NULL;
 		}
 	}
 	g_free(defaults_config_file_name);
@@ -153,48 +146,43 @@ eventd_parse_client(gchar *type, gchar *config_dir_name)
 
 	while ( ( file = (gchar *)g_dir_read_name(config_dir) ) != NULL )
 	{
-		gchar *event = NULL;
 		gchar *config_file_name = NULL;
-		GKeyFile *config_file = NULL;
 
 		if ( g_str_has_prefix(file, ".") || ( ! g_str_has_suffix(file, ".conf") ) )
 			continue;
 
-		event = g_strndup(file, strlen(file) - 5);
+		data.event = g_strndup(file, strlen(file) - 5);
 
 		#if DEBUG
-		g_debug("Parsing event '%s' of client type '%s'", event, type);
+		g_debug("Parsing event '%s' of client type '%s'", data.event, type);
 		#endif /* DEBUG */
 
 		config_file_name = g_strdup_printf("%s/%s", config_dir_name, file);
-		config_file = g_key_file_new();
-		if ( ! g_key_file_load_from_file(config_file, config_file_name, G_KEY_FILE_NONE, &error) )
+		data.config_file = g_key_file_new();
+		if ( ! g_key_file_load_from_file(data.config_file, config_file_name, G_KEY_FILE_NONE, &error) )
 			goto next;
 
-
-		#if ENABLE_SOUND
-		eventd_pulse_event_parse(type, event, config_file, defaults_config_file);
-		#endif /* ENABLE_SOUND */
-
-		#if ENABLE_NOTIFY
-		eventd_notify_event_parse(type, event, config_file, defaults_config_file);
-		#endif /* ENABLE_NOTIFY */
-
-		#if HAVE_DIALOGS
-		eventd_dialogs_event_parse(type, event, config_file, defaults_config_file);
-		#endif /* HAVE_DIALOGS */
+		eventd_plugins_foreach((GFunc)eventd_plugin_event_parse, &data);
 
 	next:
+		g_free(data.event);
+		data.event = NULL;
 		if ( error )
 			g_warning("Can't read the configuration file '%s': %s", config_file_name, error->message);
 		g_clear_error(&error);
-		g_key_file_free(config_file);
+		g_key_file_free(data.config_file);
 		g_free(config_file_name);
 	}
 
 	g_dir_close(config_dir);
-	if ( defaults_config_file )
-		g_key_file_free(defaults_config_file);
+	if ( data.defaults_config_file )
+		g_key_file_free(data.defaults_config_file);
+}
+
+static void
+eventd_plugin_config_init(EventdPlugin *plugin, gpointer data)
+{
+	plugin->config_init();
 }
 
 void
@@ -248,17 +236,7 @@ eventd_config_parser()
 	g_key_file_free(config_file);
 	g_free(config_file_name);
 
-	#if ENABLE_SOUND
-	eventd_pulse_config_init();
-	#endif /* ENABLE_SOUND */
-
-	#if ENABLE_NOTIFY
-	eventd_notify_config_init();
-	#endif /* ENABLE_NOTIFY */
-
-	#if HAVE_DIALOGS
-	eventd_dialogs_config_init();
-	#endif /* HAVE_DIALOGS */
+	eventd_plugins_foreach((GFunc)eventd_plugin_config_init, NULL);
 
 	config_dir = g_dir_open(config_dir_name, 0, &error);
 	if ( ! config_dir )
@@ -303,20 +281,16 @@ out:
 	g_free(config_dir_name);
 }
 
+static void
+eventd_plugin_config_clean(EventdPlugin *plugin, gpointer data)
+{
+	plugin->config_clean();
+}
+
 void
 eventd_config_clean()
 {
-	#if HAVE_DIALOGS
-	eventd_dialogs_config_clean();
-	#endif /* HAVE_DIALOGS */
-
-	#if ENABLE_NOTIFY
-	eventd_notify_config_clean();
-	#endif /* ENABLE_NOTIFY */
-
-	#if ENABLE_SOUND
-	eventd_pulse_config_clean();
-	#endif /* ENABLE_SOUND */
+	eventd_plugins_foreach((GFunc)eventd_plugin_config_clean, NULL);
 
 	g_hash_table_remove_all(config);
 }

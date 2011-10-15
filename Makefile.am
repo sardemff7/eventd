@@ -1,7 +1,10 @@
 ACLOCAL_AMFLAGS = -I m4
 
+pluginsdir = $(pkglibdir)/plugins
+
 bin_PROGRAMS =
 lib_LTLIBRARIES =
+plugins_LTLIBRARIES =
 pkginclude_HEADERS =
 
 CLEANFILES =
@@ -21,9 +24,14 @@ AM_VALAFLAGS += \
 bin_PROGRAMS += \
 	eventd
 
+pkginclude_HEADERS += \
+	$(top_builddir)/include/eventd-plugin.h
+
 eventd_SOURCES = \
 	src/eventd/events.h \
 	src/eventd/events.c \
+	src/eventd/plugins.h \
+	src/eventd/plugins.c \
 	src/eventd/service.h \
 	src/eventd/service.c \
 	src/eventd/eventd.h \
@@ -31,13 +39,16 @@ eventd_SOURCES = \
 
 eventd_CFLAGS = \
 	$(AM_CFLAGS) \
+	-D PLUGINS_DIR=\"$(pluginsdir)\" \
 	$(GTK_CFLAGS) \
 	$(GIO_CFLAGS) \
+	$(GMODULE_CFLAGS) \
 	$(GLIB_CFLAGS)
 
 eventd_LDADD = \
 	$(GTK_LIBS) \
 	$(GIO_LIBS) \
+	$(GMODULE_LIBS) \
 	$(GLIB_LIBS)
 
 
@@ -50,38 +61,65 @@ eventd_LDADD += \
 endif
 
 if ENABLE_SOUND
-eventd_SOURCES += \
-	src/eventd/pulse.h \
-	src/eventd/pulse.c
+plugins_LTLIBRARIES += \
+	pulse.la
 
-eventd_CFLAGS += \
+pulse_la_SOURCES = \
+	src/plugins/pulse/pulse.h \
+	src/plugins/pulse/pulse.c
+
+pulse_la_CFLAGS = \
+	$(eventd_CFLAGS) \
 	$(SOUND_CFLAGS)
 
-eventd_LDADD += \
+pulse_la_LDFLAGS = \
+	$(AM_LDFLAGS) \
+	-avoid-version -module
+
+pulse_la_LIBADD = \
+	$(eventd_LDADD) \
 	$(SOUND_LIBS)
 endif
 
 if ENABLE_NOTIFY
-eventd_SOURCES += \
-	src/eventd/notify.h \
-	src/eventd/notify.c
+plugins_LTLIBRARIES += \
+	notify.la
 
-eventd_CFLAGS += \
+notify_la_SOURCES = \
+	src/plugins/notify/notify.h \
+	src/plugins/notify/notify.c
+
+notify_la_CFLAGS = \
+	$(eventd_CFLAGS) \
 	$(NOTIFY_CFLAGS)
 
-eventd_LDADD += \
+notify_la_LDFLAGS = \
+	$(AM_LDFLAGS) \
+	-avoid-version -module
+
+notify_la_LIBADD = \
+	$(eventd_LDADD) \
 	$(NOTIFY_LIBS)
 endif
 
 if ENABLE_DIALOGS
-eventd_SOURCES += \
-	src/eventd/dialogs.h \
-	src/eventd/dialogs.c
+plugins_LTLIBRARIES += \
+	dialogs.la
 
-eventd_CFLAGS += \
+dialogs_la_SOURCES = \
+	src/plugins/dialogs/dialogs.h \
+	src/plugins/dialogs/dialogs.c
+
+dialogs_la_CFLAGS = \
+	$(eventd_CFLAGS) \
 	$(GTK_CFLAGS)
 
-eventd_LDADD += \
+dialogs_la_LDFLAGS = \
+	$(AM_LDFLAGS) \
+	-avoid-version -module
+
+dialogs_la_LIBADD = \
+	$(eventd_LDADD) \
 	$(GTK_LIBS)
 endif
 
@@ -177,9 +215,11 @@ endif
 
 
 # Hooks
-install-exec-hook: la-files-removal
+install-data-hook: la-files-removal
 
 # *.la files cleanup
 la-files-removal:
 	cd $(DESTDIR)/$(libdir) && \
 		rm $(lib_LTLIBRARIES)
+	cd $(DESTDIR)/$(pluginsdir) && \
+		rm $(plugins_LTLIBRARIES)

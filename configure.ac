@@ -27,6 +27,7 @@ glib_min_version="2.28.0"
 gio_min_version="$glib_min_version"
 
 # Server dependencies
+gmodule_min_version="$glib_min_version"
 libpulse_min_version="0.9.15"
 libnotify_min_version="0.6.5"
 gtk_min_version="3.0"
@@ -62,6 +63,8 @@ AC_SUBST(GIO_VALAFLAGS)
 
 
 # Server dependencies
+PKG_CHECK_MODULES(GMODULE, [gmodule-2.0 >= $gmodule_min_version])
+
 AC_ARG_ENABLE(systemd, AS_HELP_STRING([--disable-systemd], [Disable systemd support activation support]), enable_systemd=$enableval, enable_systemd=yes)
 if test x$enable_systemd = xyes; then
   PKG_CHECK_MODULES(SYSTEMD, [libsystemd-daemon])

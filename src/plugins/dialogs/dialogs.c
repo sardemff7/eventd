@@ -29,7 +29,7 @@
 #include <glib.h>
 #include <gio/gio.h>
 
-#include "events.h"
+#include <eventd-plugin.h>
 
 static GHashTable *events = NULL;
 
@@ -65,7 +65,7 @@ do_it(gchar * path, gchar * arg, ...)
 	return ( ret == 0);
 }
 
-void
+static void
 eventd_dialogs_event_parse(const gchar *type, const gchar *event, GKeyFile *config_file, GKeyFile *defaults_config_file)
 {
 	gchar *message = NULL;
@@ -90,7 +90,7 @@ skip:
 	g_free(message);
 }
 
-void
+static void
 eventd_dialogs_event_action(const gchar *client_type, const gchar *client_name, const gchar *event_type, const gchar *event_name, const gchar *event_data)
 {
 	gchar *name;
@@ -111,15 +111,26 @@ fail:
 	g_free(name);
 }
 
-void
+static void
 eventd_dialogs_config_init()
 {
 	events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 }
 
-void
+static void
 eventd_dialogs_config_clean()
 {
 	g_hash_table_unref(events);
 }
+
+void
+eventd_plugin_get_info(EventdPlugin *plugin)
+{
+	plugin->config_init = eventd_dialogs_config_init;
+	plugin->config_clean = eventd_dialogs_config_clean;
+
+	plugin->event_parse = eventd_dialogs_event_parse;
+	plugin->event_action = eventd_dialogs_event_action;
+}
+
 

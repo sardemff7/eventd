@@ -20,16 +20,12 @@
  *
  */
 
-#ifndef __EVENTD_PULSE_H__
-#define __EVENTD_PULSE_H__
+#ifndef __EVENTD_PLUGINS_H__
+#define __EVENTD_PLUGINS_H__
 
-void eventd_pulse_start();
-void eventd_pulse_stop();
+void eventd_plugins_load();
+void eventd_plugins_unload();
 
-void eventd_pulse_config_init();
-void eventd_pulse_config_clean();
+void eventd_plugins_foreach(GFunc func, gpointer user_data);
 
-void eventd_pulse_event_parse(const gchar *type, const gchar *event, GKeyFile *config_file, GKeyFile *defaults_config_file);
-void eventd_pulse_event_action(const gchar *client_type, const gchar *client_name, const gchar *event_type, const gchar *event_name, const gchar *event_data);
-
-#endif /* __EVENTD_PULSE_H__ */
+#endif /* __EVENTD_PLUGINS_H__ */
