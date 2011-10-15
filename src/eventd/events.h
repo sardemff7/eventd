@@ -28,6 +28,8 @@ void event_action(const gchar *client_type, const gchar *client_name, const gcha
 void eventd_config_parser();
 void eventd_config_clean();
 
+gint8 eventd_config_key_file_get_string(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *event, const gchar *type, gchar **value);
+
 guint64 eventd_config_get_guint64(const gchar *name);
 
 #endif /* __EVENTD_EVENTS_H__ */

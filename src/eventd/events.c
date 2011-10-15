@@ -176,7 +176,7 @@ eventd_init_default_server_config()
 		g_hash_table_insert(config, g_strdup("delay"), g_strdup(DEFAULT_DELAY_STR));
 }
 
-static gint8
+gint8
 eventd_config_key_file_get_string(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *event, const gchar *type, gchar **value)
 {
 	GError *error = NULL;
