@@ -28,8 +28,8 @@
 
 static GList *plugins = NULL;
 
-void
-eventd_plugins_load()
+static void
+eventd_plugins_load_dir(const gchar *plugins_dir_name)
 {
 	GError *error;
 	GDir *plugins_dir;
@@ -41,7 +41,7 @@ eventd_plugins_load()
 		return;
 	}
 
-	plugins_dir = g_dir_open(PLUGINS_DIR, 0, &error);
+	plugins_dir = g_dir_open(plugins_dir_name, 0, &error);
 	if ( ! plugins_dir )
 	{
 		g_warning("Can’t read the plugins directory: %s", error->message);
@@ -56,7 +56,7 @@ eventd_plugins_load()
 		EventdPluginGetInfoFunc get_info;
 		void *module;
 
-		full_filename = g_strdup_printf(PLUGINS_DIR "/%s", file);
+		full_filename = g_build_filename(plugins_dir_name, file, NULL);
 		module = g_module_open(full_filename, G_MODULE_BIND_LAZY|G_MODULE_BIND_LOCAL);
 		if ( module == NULL )
 		{
@@ -66,6 +66,10 @@ eventd_plugins_load()
 
 		if ( ! g_module_symbol(module, "eventd_plugin_get_info", (void **)&get_info) )
 			goto next;
+
+		#if DEBUG
+		g_debug("Loading plugin '%s'", file);
+		#endif /* ! DEBUG */
 
 		plugin = g_new0(EventdPlugin, 1);
 		plugin->module = module;
@@ -79,6 +83,21 @@ eventd_plugins_load()
 	next:
 		g_free(full_filename);
 	}
+}
+
+void
+eventd_plugins_load()
+{
+	gchar *user_plugins_dir;
+
+	eventd_plugins_load_dir(PLUGINS_DIR);
+
+	user_plugins_dir = g_build_filename(g_get_user_data_dir(), PACKAGE_NAME, "plugins", NULL);
+
+	if ( g_file_test(user_plugins_dir, G_FILE_TEST_IS_DIR) )
+		eventd_plugins_load_dir(user_plugins_dir);
+
+	g_free(user_plugins_dir);
 }
 
 static void
