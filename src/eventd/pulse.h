@@ -26,13 +26,10 @@
 void eventd_pulse_start();
 void eventd_pulse_stop();
 
-typedef struct {
-    gchar *sample;
-    gboolean created;
-} EventdPulseEvent;
+void eventd_pulse_config_init();
+void eventd_pulse_config_clean();
 
-EventdPulseEvent *eventd_pulse_event_new(const gchar *sample, const gchar *filename);
-void eventd_pulse_event_perform(EventdPulseEvent *event);
-void eventd_pulse_event_free(EventdPulseEvent *event);
+void eventd_pulse_event_parse(const gchar *type, const gchar *event, GKeyFile *config_file, GKeyFile *defaults_config_file);
+void eventd_pulse_event_action(const gchar *client_type, const gchar *client_name, const gchar *event_type, const gchar *event_name, const gchar *event_data);
 
 #endif /* __EVENTD_PULSE_H__ */

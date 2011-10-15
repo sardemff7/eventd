@@ -54,9 +54,6 @@ GHashTable *clients_config = NULL;
 
 typedef enum {
 	ACTION_NONE = 0,
-#if ENABLE_SOUND
-	ACTION_SOUND ,
-#endif /* ENABLE_SOUND */
 #if ENABLE_NOTIFY
 	ACTION_NOTIFY,
 #endif /* ENABLE_NOTIFY */
@@ -86,11 +83,6 @@ eventd_action_free(EventdAction *action)
 	g_return_if_fail(action != NULL);
 	switch ( action->type )
 	{
-		#if ENABLE_SOUND
-		case ACTION_SOUND:
-			eventd_pulse_event_free(action->data);
-		break;
-		#endif /* ENABLE_SOUND */
 		#if ENABLE_NOTIFY
 		case ACTION_NOTIFY:
 			eventd_notify_event_free(action->data);
@@ -117,6 +109,11 @@ event_action(const gchar *client_type, const gchar *client_name, const gchar *ac
 {
 	GHashTable *type_config;
 	GList *actions;
+
+	#if ENABLE_SOUND
+	eventd_pulse_event_action(client_type, client_name, action_type, action_name, action_data);
+	#endif /* ENABLE_SOUND */
+
 	if ( clients_config == NULL )
 		return;
 
@@ -127,11 +124,6 @@ event_action(const gchar *client_type, const gchar *client_name, const gchar *ac
 		EventdAction *action = actions->data;
 		switch ( action->type )
 		{
-		#if ENABLE_SOUND
-		case ACTION_SOUND:
-			eventd_pulse_event_perform(action->data);
-		break;
-		#endif /* ENABLE_SOUND */
 		#if ENABLE_NOTIFY
 		case ACTION_NOTIFY:
 			eventd_notify_event_perform(action->data, client_name, action_name, action_data);
@@ -258,39 +250,7 @@ eventd_parse_client(gchar *type, gchar *config_dir_name)
 
 
 		#if ENABLE_SOUND
-		if ( g_key_file_has_group(config_file, "sound") )
-		{
-			gchar *sample = NULL;
-			gchar *filename = NULL;
-			EventdPulseEvent *pulse_event = NULL;
-
-			if ( eventd_config_key_file_get_string(config_file, "sound", "sample", event, type, &sample) < 0 )
-				goto skip_sound;
-			if ( eventd_config_key_file_get_string(config_file, "sound", "file", event, type, &filename) < 0 )
-				goto skip_sound;
-
-			/* Check defaults */
-			if ( ( defaults_config_file ) && ( ! sample ) && ( ! filename ) && g_key_file_has_group(defaults_config_file, "sound") )
-			{
-				eventd_config_key_file_get_string(defaults_config_file, "sound", "sample", "defaults", type, &sample);
-				eventd_config_key_file_get_string(defaults_config_file, "sound", "file", "defaults", type, &filename);
-			}
-
-			if ( ( filename ) || ( sample ) )
-			{
-				if ( ! sample )
-					sample = g_strdup_printf("%s-%s", type, event);
-
-				pulse_event = eventd_pulse_event_new(sample, filename);
-				if ( pulse_event )
-					list = g_list_prepend(list,
-						eventd_action_new(ACTION_SOUND, pulse_event));
-			}
-
-		skip_sound:
-			g_free(filename);
-			g_free(sample);
-		}
+		eventd_pulse_event_parse(type, event, config_file, defaults_config_file);
 		#endif /* ENABLE_SOUND */
 
 		#if ENABLE_NOTIFY
@@ -413,6 +373,10 @@ eventd_config_parser()
 	g_key_file_free(config_file);
 	g_free(config_file_name);
 
+	#if ENABLE_SOUND
+	eventd_pulse_config_init();
+	#endif /* ENABLE_SOUND */
+
 	clients_config = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_hash_table_remove_all);
 	config_dir = g_dir_open(config_dir_name, 0, &error);
 	if ( ! config_dir )
@@ -460,6 +424,10 @@ out:
 void
 eventd_config_clean()
 {
+	#if ENABLE_SOUND
+	eventd_pulse_config_clean();
+	#endif /* ENABLE_SOUND */
+
 	g_hash_table_remove_all(config);
 	g_hash_table_remove_all(clients_config);
 }

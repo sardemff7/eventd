@@ -25,10 +25,20 @@
 
 #include <glib.h>
 
+#include "events.h"
 #include "pulse.h"
+
+
+typedef struct {
+    gchar *sample;
+    gboolean created;
+} EventdPulseEvent;
 
 static pa_threaded_mainloop *pa_loop = NULL;
 static pa_context *sound = NULL;
+
+static GHashTable *events = NULL;
+
 
 static void
 pa_context_state_callback(pa_context *c, void *userdata)
@@ -229,16 +239,29 @@ out:
 	return retval;
 }
 
-static void
-eventd_pulse_play_sample(const char *name)
+void
+eventd_pulse_event_action(const gchar *client_type, const gchar *client_name, const gchar *event_type, const gchar *event_name, const gchar *event_data)
 {
+	gchar *name;
+	EventdPulseEvent *event = NULL;
+	pa_operation *op;
+
+	name = g_strdup_printf("%s-%s", client_type, event_type);
+
+	event = g_hash_table_lookup(events, name);
+	if ( event == NULL )
+		goto fail;
+
 	pa_threaded_mainloop_lock(pa_loop);
-	pa_operation *op = pa_context_play_sample(sound, name, NULL, PA_VOLUME_NORM, NULL, NULL);
+	op = pa_context_play_sample(sound, name, NULL, PA_VOLUME_NORM, NULL, NULL);
 	if ( op )
 		pa_operation_unref(op);
 	else
 		g_warning("Can't play sample %s", name);
 	pa_threaded_mainloop_unlock(pa_loop);
+
+fail:
+	g_free(name);
 }
 
 static void
@@ -250,7 +273,7 @@ eventd_pulse_remove_sample(const char *name)
 	pa_threaded_mainloop_unlock(pa_loop);
 }
 
-EventdPulseEvent *
+static EventdPulseEvent *
 eventd_pulse_event_new(const gchar *sample, const gchar *filename)
 {
 	EventdPulseEvent *event = NULL;
@@ -278,12 +301,49 @@ fail:
 }
 
 void
-eventd_pulse_event_perform(EventdPulseEvent *event)
+eventd_pulse_event_parse(const gchar *type, const gchar *event, GKeyFile *config_file, GKeyFile *defaults_config_file)
 {
-	eventd_pulse_play_sample(event->sample);
+	gchar *sample = NULL;
+	gchar *filename = NULL;
+	EventdPulseEvent *pulse_event = NULL;
+
+	if ( ! g_key_file_has_group(config_file, "sound") )
+		return;
+
+	if ( eventd_config_key_file_get_string(config_file, "sound", "sample", event, type, &sample) < 0 )
+		goto skip;
+	if ( eventd_config_key_file_get_string(config_file, "sound", "file", event, type, &filename) < 0 )
+		goto skip;
+
+	/* Check defaults */
+	if ( ( defaults_config_file ) && ( ! sample ) && ( ! filename ) && g_key_file_has_group(defaults_config_file, "sound") )
+	{
+		eventd_config_key_file_get_string(defaults_config_file, "sound", "sample", "defaults", type, &sample);
+		eventd_config_key_file_get_string(defaults_config_file, "sound", "file", "defaults", type, &filename);
+	}
+
+	if ( ( filename ) || ( sample ) )
+	{
+		gchar *name;
+
+		name = g_strdup_printf("%s-%s", type, event);
+
+		if ( ! sample )
+			sample = g_strdup(name);
+
+		pulse_event = eventd_pulse_event_new(sample, filename);
+		if ( pulse_event )
+			g_hash_table_insert(events, name, pulse_event);
+		else
+			g_free(name);
+	}
+
+skip:
+	g_free(filename);
+	g_free(sample);
 }
 
-void
+static void
 eventd_pulse_event_free(EventdPulseEvent *event)
 {
 	if ( event->created )
@@ -291,4 +351,16 @@ eventd_pulse_event_free(EventdPulseEvent *event)
 
 	g_free(event->sample);
 	g_free(event);
+}
+
+void
+eventd_pulse_config_init()
+{
+	events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)eventd_pulse_event_free);
+}
+
+void
+eventd_pulse_config_clean()
+{
+	g_hash_table_unref(events);
 }
