@@ -40,13 +40,11 @@ eventd_SOURCES = \
 eventd_CFLAGS = \
 	$(AM_CFLAGS) \
 	-D PLUGINS_DIR=\"$(pluginsdir)\" \
-	$(GTK_CFLAGS) \
 	$(GIO_CFLAGS) \
 	$(GMODULE_CFLAGS) \
 	$(GLIB_CFLAGS)
 
 eventd_LDADD = \
-	$(GTK_LIBS) \
 	$(GIO_LIBS) \
 	$(GMODULE_LIBS) \
 	$(GLIB_LIBS)
@@ -65,7 +63,6 @@ plugins_LTLIBRARIES += \
 	pulse.la
 
 pulse_la_SOURCES = \
-	src/plugins/pulse/pulse.h \
 	src/plugins/pulse/pulse.c
 
 pulse_la_CFLAGS = \
@@ -86,7 +83,6 @@ plugins_LTLIBRARIES += \
 	notify.la
 
 notify_la_SOURCES = \
-	src/plugins/notify/notify.h \
 	src/plugins/notify/notify.c
 
 notify_la_CFLAGS = \
@@ -107,7 +103,6 @@ plugins_LTLIBRARIES += \
 	dialogs.la
 
 dialogs_la_SOURCES = \
-	src/plugins/dialogs/dialogs.h \
 	src/plugins/dialogs/dialogs.c
 
 dialogs_la_CFLAGS = \
