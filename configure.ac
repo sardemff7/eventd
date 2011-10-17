@@ -136,12 +136,3 @@ AC_CONFIG_FILES([
     vapi/libeventc.deps
 ])
 AC_OUTPUT
-
-
-echo GIO UNIX support:     $enable_gio_unix
-
-echo systemd support:      $enable_systemd
-echo Libnotify support:    $enable_notify
-echo Sound support:        $enable_sound
-echo Dialogs support:      $enable_dialogs
-#echo  Using GTK+:          $enable_gtk
