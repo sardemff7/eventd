@@ -73,11 +73,11 @@ fi
 AM_CONDITIONAL(ENABLE_SYSTEMD, test x$enable_systemd = xyes)
 
 
-AC_ARG_ENABLE(sound, AS_HELP_STRING([--disable-sound], [Disable sound support]), enable_sound=$enableval, enable_sound=yes)
-if test x$enable_sound = xyes; then
+AC_ARG_ENABLE(pulseaudio, AS_HELP_STRING([--disable-pulseaudio], [Disable PulseAudio support]), enable_pulseaudio=$enableval, enable_pulseaudio=yes)
+if test x$enable_pulseaudio = xyes; then
     PKG_CHECK_MODULES(SOUND, [libpulse >= $libpulse_min_version sndfile])
 fi
-AM_CONDITIONAL(ENABLE_SOUND, test x$enable_sound = xyes)
+AM_CONDITIONAL(ENABLE_PULSEAUDIO, test x$enable_pulseaudio = xyes)
 
 AC_ARG_ENABLE(libnotify, AS_HELP_STRING([--disable-libnotify], [Disable libnotify support]), enable_libnotify=$enableval, enable_libnotify=yes)
 if test x$enable_libnotify = xyes; then

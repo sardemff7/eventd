@@ -58,22 +58,22 @@ eventd_LDADD += \
 	$(SYSTEMD_LIBS)
 endif
 
-if ENABLE_SOUND
+if ENABLE_PULSEAUDIO
 plugins_LTLIBRARIES += \
-	pulse.la
+	pulseaudio.la
 
-pulse_la_SOURCES = \
-	src/plugins/pulse/pulse.c
+pulseaudio_la_SOURCES = \
+	src/plugins/pulseaudio/pulseaudio.c
 
-pulse_la_CFLAGS = \
+pulseaudio_la_CFLAGS = \
 	$(eventd_CFLAGS) \
 	$(SOUND_CFLAGS)
 
-pulse_la_LDFLAGS = \
+pulseaudio_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
 	-avoid-version -module -export-symbols-regex eventd_plugin_get_info
 
-pulse_la_LIBADD = \
+pulseaudio_la_LIBADD = \
 	$(eventd_LDADD) \
 	$(SOUND_LIBS)
 endif

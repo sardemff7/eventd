@@ -30,7 +30,7 @@
 typedef struct {
     gchar *sample;
     gboolean created;
-} EventdPulseEvent;
+} EventdPulseaudioEvent;
 
 static pa_threaded_mainloop *pa_loop = NULL;
 static pa_context *sound = NULL;
@@ -80,7 +80,7 @@ pa_sample_state_callback(pa_stream *sample, void *userdata)
 }
 
 static void
-eventd_pulse_start()
+eventd_pulseaudio_start()
 {
     pa_loop = pa_threaded_mainloop_new();
     pa_threaded_mainloop_start(pa_loop);
@@ -98,7 +98,7 @@ eventd_pulse_start()
 }
 
 static void
-eventd_pulse_stop()
+eventd_pulseaudio_stop()
 {
     pa_operation* op = pa_context_drain(sound, pa_context_notify_callback, NULL);
     if ( op )
@@ -124,7 +124,7 @@ static const pa_sample_spec sound_spec = {
 typedef sf_count_t (*sndfile_readf_t)(SNDFILE *sndfile, void *ptr, sf_count_t frames);
 
 static gboolean
-eventd_pulse_create_sample(const gchar *sample_name, const gchar *filename)
+eventd_pulseaudio_create_sample(const gchar *sample_name, const gchar *filename)
 {
     int retval = 0;
 
@@ -238,10 +238,10 @@ out:
 }
 
 static void
-eventd_pulse_event_action(const gchar *client_type, const gchar *client_name, const gchar *event_type, const gchar *event_name, const gchar *event_data)
+eventd_pulseaudio_event_action(const gchar *client_type, const gchar *client_name, const gchar *event_type, const gchar *event_name, const gchar *event_data)
 {
     gchar *name;
-    EventdPulseEvent *event = NULL;
+    EventdPulseaudioEvent *event = NULL;
     pa_operation *op;
 
     name = g_strdup_printf("%s-%s", client_type, event_type);
@@ -263,7 +263,7 @@ fail:
 }
 
 static void
-eventd_pulse_remove_sample(const char *name)
+eventd_pulseaudio_remove_sample(const char *name)
 {
     pa_threaded_mainloop_lock(pa_loop);
     pa_context_remove_sample(sound, name, pa_context_success_callback, NULL);
@@ -271,10 +271,10 @@ eventd_pulse_remove_sample(const char *name)
     pa_threaded_mainloop_unlock(pa_loop);
 }
 
-static EventdPulseEvent *
-eventd_pulse_event_new(const gchar *sample, const gchar *filename)
+static EventdPulseaudioEvent *
+eventd_pulseaudio_event_new(const gchar *sample, const gchar *filename)
 {
-    EventdPulseEvent *event = NULL;
+    EventdPulseaudioEvent *event = NULL;
     gchar *real_filename = NULL;
 
     if ( filename )
@@ -284,11 +284,11 @@ eventd_pulse_event_new(const gchar *sample, const gchar *filename)
         else
             real_filename = g_strdup(filename);
 
-        if ( ! eventd_pulse_create_sample(sample, real_filename) )
+        if ( ! eventd_pulseaudio_create_sample(sample, real_filename) )
             goto fail;
     }
 
-    event = g_new0(EventdPulseEvent, 1);
+    event = g_new0(EventdPulseaudioEvent, 1);
 
     event->sample = g_strdup(sample);
     event->created = (filename != NULL);
@@ -299,11 +299,11 @@ fail:
 }
 
 static void
-eventd_pulse_event_parse(const gchar *type, const gchar *event, GKeyFile *config_file, GKeyFile *defaults_config_file)
+eventd_pulseaudio_event_parse(const gchar *type, const gchar *event, GKeyFile *config_file, GKeyFile *defaults_config_file)
 {
     gchar *sample = NULL;
     gchar *filename = NULL;
-    EventdPulseEvent *pulse_event = NULL;
+    EventdPulseaudioEvent *pulse_event = NULL;
 
     if ( ! g_key_file_has_group(config_file, "sound") )
         return;
@@ -329,7 +329,7 @@ eventd_pulse_event_parse(const gchar *type, const gchar *event, GKeyFile *config
         if ( ! sample )
             sample = g_strdup(name);
 
-        pulse_event = eventd_pulse_event_new(sample, filename);
+        pulse_event = eventd_pulseaudio_event_new(sample, filename);
         if ( pulse_event )
             g_hash_table_insert(events, name, pulse_event);
         else
@@ -342,23 +342,23 @@ skip:
 }
 
 static void
-eventd_pulse_event_free(EventdPulseEvent *event)
+eventd_pulseaudio_event_free(EventdPulseaudioEvent *event)
 {
     if ( event->created )
-        eventd_pulse_remove_sample(event->sample);
+        eventd_pulseaudio_remove_sample(event->sample);
 
     g_free(event->sample);
     g_free(event);
 }
 
 static void
-eventd_pulse_config_init()
+eventd_pulseaudio_config_init()
 {
-    events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)eventd_pulse_event_free);
+    events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)eventd_pulseaudio_event_free);
 }
 
 static void
-eventd_pulse_config_clean()
+eventd_pulseaudio_config_clean()
 {
     g_hash_table_unref(events);
 }
@@ -366,12 +366,12 @@ eventd_pulse_config_clean()
 void
 eventd_plugin_get_info(EventdPlugin *plugin)
 {
-    plugin->start = eventd_pulse_start;
-    plugin->stop = eventd_pulse_stop;
+    plugin->start = eventd_pulseaudio_start;
+    plugin->stop = eventd_pulseaudio_stop;
 
-    plugin->config_init = eventd_pulse_config_init;
-    plugin->config_clean = eventd_pulse_config_clean;
+    plugin->config_init = eventd_pulseaudio_config_init;
+    plugin->config_clean = eventd_pulseaudio_config_clean;
 
-    plugin->event_parse = eventd_pulse_event_parse;
-    plugin->event_action = eventd_pulse_event_action;
+    plugin->event_parse = eventd_pulseaudio_event_parse;
+    plugin->event_action = eventd_pulseaudio_event_action;
 }
