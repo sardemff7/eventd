@@ -74,11 +74,17 @@ AM_CONDITIONAL(ENABLE_SYSTEMD, test x$enable_systemd = xyes)
 
 
 AC_ARG_ENABLE(pulseaudio, AS_HELP_STRING([--disable-pulseaudio], [Disable PulseAudio support]), enable_pulseaudio=$enableval, enable_pulseaudio=yes)
+AC_ARG_ENABLE(sndfile, AS_HELP_STRING([--disable-sndfile], [Disable libsndfile support]), enable_sndfile=$enableval, enable_sndfile=yes)
 if test x$enable_pulseaudio = xyes; then
     PKG_CHECK_MODULES(PULSEAUDIO, [libpulse >= $libpulse_min_version])
-    PKG_CHECK_MODULES(SNDFILE, [sndfile])
+    if test x$enable_sndfile = xyes; then
+        PKG_CHECK_MODULES(SNDFILE, [sndfile])
+    fi
+elif test x$enable_sndfile = xyes; then
+    AC_MSG_ERROR([*** libsndfile support requested but not sound support])
 fi
 AM_CONDITIONAL(ENABLE_PULSEAUDIO, test x$enable_pulseaudio = xyes)
+AM_CONDITIONAL(ENABLE_SNDFILE, test x$enable_sndfile = xyes)
 
 AC_ARG_ENABLE(libnotify, AS_HELP_STRING([--disable-libnotify], [Disable libnotify support]), enable_libnotify=$enableval, enable_libnotify=yes)
 if test x$enable_libnotify = xyes; then

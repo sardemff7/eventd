@@ -1,11 +1,13 @@
 ACLOCAL_AMFLAGS = -I m4
 
 pluginsdir = $(pkglibdir)/plugins
+pulseaudiopluginsdir = $(pluginsdir)/pulseaudio
 
 bin_PROGRAMS =
 lib_LTLIBRARIES =
 pkglib_LTLIBRARIES =
 plugins_LTLIBRARIES =
+pulseaudioplugins_LTLIBRARIES =
 pkginclude_HEADERS =
 
 CLEANFILES =
@@ -120,10 +122,33 @@ pulseaudio_la_LDFLAGS = \
 	-avoid-version -module -export-symbols-regex eventd_plugin_get_info
 
 pulseaudio_la_LIBADD = \
+	libeventd-plugin-helper.la \
+	$(PULSEAUDIO_LIBS) \
+	$(GLIB_LIBS)
+
+if ENABLE_SNDFILE
+pulseaudioplugins_LTLIBRARIES += \
+	sndfile.la
+
+sndfile_la_SOURCES = \
+	src/plugins/pulseaudio/sndfile/sndfile.c
+
+sndfile_la_CFLAGS = \
+	$(AM_CFLAGS) \
+	$(SNDFILE_CFLAGS) \
+	$(PULSEAUDIO_CFLAGS) \
+	$(GLIB_CFLAGS)
+
+sndfile_la_LDFLAGS = \
+	$(pulseaudio_la_LDFLAGS)
+
+sndfile_la_LIBADD = \
 	libeventd-config-helper.la \
 	$(SNDFILE_LIBS) \
 	$(PULSEAUDIO_LIBS) \
 	$(GLIB_LIBS)
+endif
+
 endif
 
 if ENABLE_NOTIFY
@@ -274,3 +299,5 @@ la-files-removal:
 		rm $(pkglib_LTLIBRARIES)
 	cd $(DESTDIR)/$(pluginsdir) && \
 		rm $(plugins_LTLIBRARIES)
+	cd $(DESTDIR)/$(pulseaudiopluginsdir) && \
+		rm $(pulseaudioplugins_LTLIBRARIES)
