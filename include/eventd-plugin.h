@@ -23,7 +23,7 @@
 #ifndef __EVENTD_EVENTD_PLUGIN_H__
 #define __EVENTD_EVENTD_PLUGIN_H__
 
-typedef void (*EventdPluginStartFunc)(void);
+typedef void (*EventdPluginStartFunc)(gpointer user_data);
 typedef void (*EventdPluginStopFunc)(void);
 typedef void (*EventdPluginConfigInitFunc)(void);
 typedef void (*EventdPluginConfigCleanFunc)(void);

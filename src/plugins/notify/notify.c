@@ -42,7 +42,7 @@ static GHashTable *events = NULL;
 
 
 static void
-eventd_notify_start()
+eventd_notify_start(gpointer user_data)
 {
     GError *error = NULL;
 

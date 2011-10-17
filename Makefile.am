@@ -42,12 +42,36 @@ libeventd_config_helper_la_LDFLAGS = \
 libeventd_config_helper_la_LIBADD = \
 	$(GLIB_LIBS)
 
+# An helper for plugins
+pkglib_LTLIBRARIES += \
+	libeventd-plugin-helper.la
+
+pkginclude_HEADERS += \
+	include/plugin-helper.h \
+	include/eventd-plugin.h
+
+libeventd_plugin_helper_la_SOURCES = \
+	src/eventd/plugin-helper/plugin-helper.c
+
+libeventd_plugin_helper_la_CFLAGS = \
+	$(AM_CFLAGS) \
+	-D LIBDIR=\"$(libdir)\" \
+	-D DATADIR=\"$(datadir)\" \
+	$(GMODULE_CFLAGS) \
+	$(GLIB_CFLAGS)
+
+libeventd_plugin_helper_la_LDFLAGS = \
+	$(AM_LDFLAGS) \
+	-avoid-version \
+	-export-symbols $(top_srcdir)/src/eventd/plugin-helper/plugin-helper.sym
+
+libeventd_plugin_helper_la_LIBADD = \
+	$(GMODULE_LIBS) \
+	$(GLIB_LIBS)
+
 # Server
 bin_PROGRAMS += \
 	eventd
-
-pkginclude_HEADERS += \
-	$(top_builddir)/include/eventd-plugin.h
 
 eventd_SOURCES = \
 	src/eventd/events.h \
@@ -61,14 +85,12 @@ eventd_SOURCES = \
 
 eventd_CFLAGS = \
 	$(AM_CFLAGS) \
-	-D PLUGINS_DIR=\"$(pluginsdir)\" \
 	$(GIO_CFLAGS) \
-	$(GMODULE_CFLAGS) \
 	$(GLIB_CFLAGS)
 
 eventd_LDADD = \
+	libeventd-plugin-helper.la \
 	$(GIO_LIBS) \
-	$(GMODULE_LIBS) \
 	$(GLIB_LIBS)
 
 

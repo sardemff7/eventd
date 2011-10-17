@@ -26,6 +26,10 @@
 void eventd_plugins_load();
 void eventd_plugins_unload();
 
-void eventd_plugins_foreach(GFunc func, gpointer user_data);
+void eventd_plugins_config_init_all();
+void eventd_plugins_config_clean_all();
+
+void eventd_plugins_event_parse_all(const gchar *type, const gchar *event, GKeyFile *config_file, GKeyFile *defaults_config_file);
+void eventd_plugins_event_action_all(const gchar *client_type, const gchar *client_name, const gchar *action_type, const gchar *action_name, const gchar *action_data);
 
 #endif /* __EVENTD_PLUGINS_H__ */

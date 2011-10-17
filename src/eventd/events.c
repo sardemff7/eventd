@@ -34,7 +34,6 @@
 #define DEFAULT_DELAY 5
 #define DEFAULT_DELAY_STR "5"
 
-#include <eventd-plugin.h>
 #include "plugins.h"
 #include "events.h"
 
@@ -69,19 +68,6 @@ eventd_init_default_server_config()
         g_hash_table_insert(config, g_strdup("delay"), g_strdup(DEFAULT_DELAY_STR));
 }
 
-typedef struct {
-    gchar *type;
-    gchar *event;
-    GKeyFile *config_file;
-    GKeyFile *defaults_config_file;
-} EventdConfigParseData;
-
-static void
-eventd_plugin_event_parse(EventdPlugin *plugin, EventdConfigParseData *data)
-{
-    plugin->event_parse(data->type, data->event, data->config_file, data->defaults_config_file);
-}
-
 static void
 eventd_parse_client(gchar *type, gchar *config_dir_name)
 {
@@ -89,24 +75,18 @@ eventd_parse_client(gchar *type, gchar *config_dir_name)
     GDir *config_dir = NULL;
     gchar *file = NULL;
     gchar *defaults_config_file_name = NULL;
-
-    EventdConfigParseData data = {
-        .type = type,
-        .event = NULL,
-        .config_file = NULL,
-        .defaults_config_file = NULL
-    };
+    GKeyFile *defaults_config_file = NULL;
 
     defaults_config_file_name = g_strdup_printf("%s.conf", config_dir_name);
     if ( g_file_test(defaults_config_file_name, G_FILE_TEST_IS_REGULAR) )
     {
-        data.defaults_config_file = g_key_file_new();
-        if ( ! g_key_file_load_from_file(data.defaults_config_file, defaults_config_file_name, G_KEY_FILE_NONE, &error) )
+        defaults_config_file = g_key_file_new();
+        if ( ! g_key_file_load_from_file(defaults_config_file, defaults_config_file_name, G_KEY_FILE_NONE, &error) )
         {
             g_warning("Can't read the defaults file '%s': %s", defaults_config_file_name, error->message);
             g_clear_error(&error);
-            g_key_file_free(data.defaults_config_file);
-            data.defaults_config_file = NULL;
+            g_key_file_free(defaults_config_file);
+            defaults_config_file = NULL;
         }
     }
     g_free(defaults_config_file_name);
@@ -122,42 +102,37 @@ eventd_parse_client(gchar *type, gchar *config_dir_name)
     while ( ( file = (gchar *)g_dir_read_name(config_dir) ) != NULL )
     {
         gchar *config_file_name = NULL;
+        gchar *event = NULL;
+        GKeyFile *config_file = NULL;
 
         if ( g_str_has_prefix(file, ".") || ( ! g_str_has_suffix(file, ".conf") ) )
             continue;
 
-        data.event = g_strndup(file, strlen(file) - 5);
+        event = g_strndup(file, strlen(file) - 5);
 
         #if DEBUG
-        g_debug("Parsing event '%s' of client type '%s'", data.event, type);
+        g_debug("Parsing event '%s' of client type '%s'", event, type);
         #endif /* DEBUG */
 
         config_file_name = g_strdup_printf("%s/%s", config_dir_name, file);
-        data.config_file = g_key_file_new();
-        if ( ! g_key_file_load_from_file(data.config_file, config_file_name, G_KEY_FILE_NONE, &error) )
+        config_file = g_key_file_new();
+        if ( ! g_key_file_load_from_file(config_file, config_file_name, G_KEY_FILE_NONE, &error) )
             goto next;
 
-        eventd_plugins_foreach((GFunc)eventd_plugin_event_parse, &data);
+        eventd_plugins_event_parse_all(type, event, config_file, defaults_config_file);
 
     next:
-        g_free(data.event);
-        data.event = NULL;
+        g_free(event);
         if ( error )
             g_warning("Can't read the configuration file '%s': %s", config_file_name, error->message);
         g_clear_error(&error);
-        g_key_file_free(data.config_file);
+        g_key_file_free(config_file);
         g_free(config_file_name);
     }
 
     g_dir_close(config_dir);
-    if ( data.defaults_config_file )
-        g_key_file_free(data.defaults_config_file);
-}
-
-static void
-eventd_plugin_config_init(EventdPlugin *plugin, gpointer data)
-{
-    plugin->config_init();
+    if ( defaults_config_file )
+        g_key_file_free(defaults_config_file);
 }
 
 void
@@ -211,7 +186,7 @@ eventd_config_parser()
     g_key_file_free(config_file);
     g_free(config_file_name);
 
-    eventd_plugins_foreach((GFunc)eventd_plugin_config_init, NULL);
+    eventd_plugins_config_init_all();
 
     config_dir = g_dir_open(config_dir_name, 0, &error);
     if ( ! config_dir )
@@ -256,16 +231,10 @@ out:
     g_free(config_dir_name);
 }
 
-static void
-eventd_plugin_config_clean(EventdPlugin *plugin, gpointer data)
-{
-    plugin->config_clean();
-}
-
 void
 eventd_config_clean()
 {
-    eventd_plugins_foreach((GFunc)eventd_plugin_config_clean, NULL);
+    eventd_plugins_config_clean_all();
 
     g_hash_table_remove_all(config);
 }

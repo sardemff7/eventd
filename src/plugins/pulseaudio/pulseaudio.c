@@ -81,7 +81,7 @@ pa_sample_state_callback(pa_stream *sample, void *userdata)
 }
 
 static void
-eventd_pulseaudio_start()
+eventd_pulseaudio_start(gpointer user_data)
 {
     pa_loop = pa_threaded_mainloop_new();
     pa_threaded_mainloop_start(pa_loop);

@@ -1,0 +1,7 @@
+eventd_plugin_helper_config_init_all
+eventd_plugin_helper_config_clean_all
+eventd_plugin_helper_event_parse_all
+eventd_plugin_helper_event_action_all
+eventd_plugin_helper_foreach
+eventd_plugin_helper_load
+eventd_plugin_helper_unload
