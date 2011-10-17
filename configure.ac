@@ -75,7 +75,8 @@ AM_CONDITIONAL(ENABLE_SYSTEMD, test x$enable_systemd = xyes)
 
 AC_ARG_ENABLE(pulseaudio, AS_HELP_STRING([--disable-pulseaudio], [Disable PulseAudio support]), enable_pulseaudio=$enableval, enable_pulseaudio=yes)
 if test x$enable_pulseaudio = xyes; then
-    PKG_CHECK_MODULES(SOUND, [libpulse >= $libpulse_min_version sndfile])
+    PKG_CHECK_MODULES(PULSEAUDIO, [libpulse >= $libpulse_min_version])
+    PKG_CHECK_MODULES(SNDFILE, [sndfile])
 fi
 AM_CONDITIONAL(ENABLE_PULSEAUDIO, test x$enable_pulseaudio = xyes)
 

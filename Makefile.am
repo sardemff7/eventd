@@ -67,7 +67,8 @@ pulseaudio_la_SOURCES = \
 
 pulseaudio_la_CFLAGS = \
 	$(eventd_CFLAGS) \
-	$(SOUND_CFLAGS)
+	$(SNDFILE_CFLAGS) \
+	$(PULSEAUDIO_CFLAGS)
 
 pulseaudio_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
@@ -75,7 +76,8 @@ pulseaudio_la_LDFLAGS = \
 
 pulseaudio_la_LIBADD = \
 	$(eventd_LDADD) \
-	$(SOUND_LIBS)
+	$(SNDFILE_LIBS) \
+	$(PULSEAUDIO_LIBS)
 endif
 
 if ENABLE_NOTIFY
