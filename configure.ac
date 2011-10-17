@@ -76,14 +76,12 @@ AM_CONDITIONAL(ENABLE_SYSTEMD, test x$enable_systemd = xyes)
 AC_ARG_ENABLE(sound, AS_HELP_STRING([--disable-sound], [Disable sound support]), enable_sound=$enableval, enable_sound=yes)
 if test x$enable_sound = xyes; then
     PKG_CHECK_MODULES(SOUND, [libpulse >= $libpulse_min_version sndfile])
-    AC_DEFINE([ENABLE_SOUND], [1], [Enable sound support through PulseAudio and libsndfile])
 fi
 AM_CONDITIONAL(ENABLE_SOUND, test x$enable_sound = xyes)
 
 AC_ARG_ENABLE(libnotify, AS_HELP_STRING([--disable-libnotify], [Disable libnotify support]), enable_libnotify=$enableval, enable_libnotify=yes)
 if test x$enable_libnotify = xyes; then
     PKG_CHECK_MODULES(NOTIFY, [libnotify >= $libnotify_min_version])
-    AC_DEFINE([ENABLE_NOTIFY], [1], [Enable libnotify support])
 fi
 AM_CONDITIONAL(ENABLE_NOTIFY, [test x$enable_libnotify = xyes])
 
@@ -93,11 +91,7 @@ if test x$enable_dialogs = xyes; then
     AC_CHECK_PROG(have_zenity, zenity, yes, no)
     if test x$enable_gtk = xyes; then
         PKG_CHECK_MODULES(GTK, [gtk+-3.0 >= $gtk_min_version])
-        AC_DEFINE([HAVE_DIALOGS], [1], [If we have a dialog support])
-        AC_DEFINE([ENABLE_GTK], [1], [Enable native GTK+ support])
-    elif test x$have_zenity = xyes; then
-        AC_DEFINE([HAVE_DIALOGS], [1], [If we have a dialog support])
-    else
+    elif test x$have_zenity = xno; then
         AC_MSG_ERROR([*** Dialog support requested but zenity not found])
     fi
 elif test x$enable_gtk = xyes; then
