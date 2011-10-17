@@ -53,9 +53,9 @@ connection_handler(
     gchar *client_type = NULL;
     gchar *client_name = NULL;
 
-    gchar *action_type = NULL;
-    gchar *action_name = NULL;
-    gchar *action_data = NULL;
+    gchar *event_type = NULL;
+    gchar *event_name = NULL;
+    gchar *event_data = NULL;
 
     gsize size = 0;
     gchar *line = NULL;
@@ -80,9 +80,9 @@ connection_handler(
             gchar **event = NULL;
 
             event = g_strsplit(line+6, " ", 2);
-            action_type = g_strdup(g_strstrip(event[0]));
+            event_type = g_strdup(g_strstrip(event[0]));
             if ( event[1] != NULL )
-                action_name = g_strdup(g_strstrip(event[1]));
+                event_name = g_strdup(g_strstrip(event[1]));
 
             g_strfreev(event);
         }
@@ -117,36 +117,36 @@ connection_handler(
                 client_name = g_strdup(g_strstrip(rename[1]));
             g_strfreev(rename);
         }
-        else if ( action_type )
+        else if ( event_type )
         {
             if ( g_ascii_strcasecmp(line, ".") == 0 )
             {
-                gint64 action_time = 0;
+                gint64 event_time = 0;
 
-                action_time = g_get_monotonic_time();
-                if ( action_time > ( last_action + delay ) )
+                event_time = g_get_monotonic_time();
+                if ( event_time > ( last_action + delay ) )
                 {
-                    last_action = action_time;
-                    eventd_plugins_event_action_all(client_type, client_name, action_type, action_name, action_data);
+                    last_action = event_time;
+                    eventd_plugins_event_action_all(client_type, client_name, event_type, event_name, event_data);
                 }
-                g_free(action_data);
-                g_free(action_name);
-                g_free(action_type);
-                action_data = NULL;
-                action_name = NULL;
-                action_type = NULL;
+                g_free(event_data);
+                g_free(event_name);
+                g_free(event_type);
+                event_data = NULL;
+                event_name = NULL;
+                event_type = NULL;
             }
-            else if ( action_data )
+            else if ( event_data )
             {
                 gchar *old = NULL;
 
-                old = action_data;
-                action_data = g_strjoin("\n", old, ( line[0] == '.' ) ? line+1 : line, NULL);
+                old = event_data;
+                event_data = g_strjoin("\n", old, ( line[0] == '.' ) ? line+1 : line, NULL);
 
                 g_free(old);
             }
             else
-                action_data = g_strdup(( line[0] == '.' ) ? line+1 : line);
+                event_data = g_strdup(( line[0] == '.' ) ? line+1 : line);
         }
         else
             g_warning("Unknown message");
