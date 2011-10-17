@@ -26,6 +26,7 @@
 #include <glib.h>
 
 #include <eventd-plugin.h>
+#include <config-helper.h>
 
 typedef struct {
     gchar *sample;

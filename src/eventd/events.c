@@ -69,31 +69,6 @@ eventd_init_default_server_config()
         g_hash_table_insert(config, g_strdup("delay"), g_strdup(DEFAULT_DELAY_STR));
 }
 
-gint8
-eventd_config_key_file_get_string(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *event, const gchar *type, gchar **value)
-{
-    GError *error = NULL;
-    gint8 ret = 0;
-    gchar *ret_value = NULL;
-
-    ret_value = g_key_file_get_string(config_file, group, key, &error);
-    if ( ( ! ret_value ) && ( error->code != G_KEY_FILE_ERROR_KEY_NOT_FOUND ) )
-    {
-        ret = -1;
-        g_warning("Can't set the %s action of event '%s' for client type '%s': %s", group, event, type, error->message);
-    }
-    else if ( ! ret_value )
-    {
-        ret = 1;
-        *value = NULL;
-    }
-    else
-        *value = ret_value;
-    g_clear_error(&error);
-
-    return ret;
-}
-
 typedef struct {
     gchar *type;
     gchar *event;

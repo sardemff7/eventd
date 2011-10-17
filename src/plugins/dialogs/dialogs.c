@@ -30,6 +30,7 @@
 #include <gio/gio.h>
 
 #include <eventd-plugin.h>
+#include <config-helper.h>
 
 static GHashTable *events = NULL;
 

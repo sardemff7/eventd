@@ -4,6 +4,7 @@ pluginsdir = $(pkglibdir)/plugins
 
 bin_PROGRAMS =
 lib_LTLIBRARIES =
+pkglib_LTLIBRARIES =
 plugins_LTLIBRARIES =
 pkginclude_HEADERS =
 
@@ -19,6 +20,27 @@ AM_VALAFLAGS += \
 	--vapidir $(top_builddir)/vapi/ \
 	--pkg config
 
+# An helper for config
+pkglib_LTLIBRARIES += \
+	libeventd-config-helper.la
+
+pkginclude_HEADERS += \
+	include/config-helper.h
+
+libeventd_config_helper_la_SOURCES = \
+	src/eventd/config-helper/config-helper.c
+
+libeventd_config_helper_la_CFLAGS = \
+	$(AM_CFLAGS) \
+	$(GLIB_CFLAGS)
+
+libeventd_config_helper_la_LDFLAGS = \
+	$(AM_LDFLAGS) \
+	-avoid-version \
+	-export-symbols $(top_srcdir)/src/eventd/config-helper/config-helper.sym
+
+libeventd_config_helper_la_LIBADD = \
+	$(GLIB_LIBS)
 
 # Server
 bin_PROGRAMS += \
@@ -75,6 +97,7 @@ pulseaudio_la_LDFLAGS = \
 	-avoid-version -module -export-symbols-regex eventd_plugin_get_info
 
 pulseaudio_la_LIBADD = \
+	libeventd-config-helper.la \
 	$(eventd_LDADD) \
 	$(SNDFILE_LIBS) \
 	$(PULSEAUDIO_LIBS)
@@ -96,6 +119,7 @@ notify_la_LDFLAGS = \
 	-avoid-version -module -export-symbols-regex eventd_plugin_get_info
 
 notify_la_LIBADD = \
+	libeventd-config-helper.la \
 	$(eventd_LDADD) \
 	$(NOTIFY_LIBS)
 endif
@@ -116,6 +140,7 @@ dialogs_la_LDFLAGS = \
 	-avoid-version -module -export-symbols-regex eventd_plugin_get_info
 
 dialogs_la_LIBADD = \
+	libeventd-config-helper.la \
 	$(eventd_LDADD) \
 	$(GTK_LIBS)
 endif
@@ -218,5 +243,7 @@ install-data-hook: la-files-removal
 la-files-removal:
 	cd $(DESTDIR)/$(libdir) && \
 		rm $(lib_LTLIBRARIES)
+	cd $(DESTDIR)/$(pkglibdir) && \
+		rm $(pkglib_LTLIBRARIES)
 	cd $(DESTDIR)/$(pluginsdir) && \
 		rm $(plugins_LTLIBRARIES)
