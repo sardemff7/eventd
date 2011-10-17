@@ -110,9 +110,10 @@ pulseaudio_la_SOURCES = \
 	src/plugins/pulseaudio/pulseaudio.c
 
 pulseaudio_la_CFLAGS = \
-	$(eventd_CFLAGS) \
+	$(AM_CFLAGS) \
 	$(SNDFILE_CFLAGS) \
-	$(PULSEAUDIO_CFLAGS)
+	$(PULSEAUDIO_CFLAGS) \
+	$(GLIB_CFLAGS)
 
 pulseaudio_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
@@ -120,9 +121,9 @@ pulseaudio_la_LDFLAGS = \
 
 pulseaudio_la_LIBADD = \
 	libeventd-config-helper.la \
-	$(eventd_LDADD) \
 	$(SNDFILE_LIBS) \
-	$(PULSEAUDIO_LIBS)
+	$(PULSEAUDIO_LIBS) \
+	$(GLIB_LIBS)
 endif
 
 if ENABLE_NOTIFY
@@ -133,8 +134,9 @@ notify_la_SOURCES = \
 	src/plugins/notify/notify.c
 
 notify_la_CFLAGS = \
-	$(eventd_CFLAGS) \
-	$(NOTIFY_CFLAGS)
+	$(AM_CFLAGS) \
+	$(NOTIFY_CFLAGS) \
+	$(GLIB_CFLAGS)
 
 notify_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
@@ -142,8 +144,8 @@ notify_la_LDFLAGS = \
 
 notify_la_LIBADD = \
 	libeventd-config-helper.la \
-	$(eventd_LDADD) \
-	$(NOTIFY_LIBS)
+	$(NOTIFY_LIBS) \
+	$(GLIB_LIBS)
 endif
 
 if ENABLE_DIALOGS
@@ -154,8 +156,10 @@ dialogs_la_SOURCES = \
 	src/plugins/dialogs/dialogs.c
 
 dialogs_la_CFLAGS = \
-	$(eventd_CFLAGS) \
-	$(GTK_CFLAGS)
+	$(AM_CFLAGS) \
+	$(GTK_CFLAGS) \
+	$(GIO_CFLAGS) \
+	$(GLIB_CFLAGS)
 
 dialogs_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
@@ -163,8 +167,9 @@ dialogs_la_LDFLAGS = \
 
 dialogs_la_LIBADD = \
 	libeventd-config-helper.la \
-	$(eventd_LDADD) \
-	$(GTK_LIBS)
+	$(GTK_LIBS) \
+	$(GIO_LIBS) \
+	$(GLIB_LIBS)
 endif
 
 
