@@ -74,7 +74,7 @@ pulse_la_CFLAGS = \
 
 pulse_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
-	-avoid-version -module
+	-avoid-version -module -export-symbols-regex eventd_plugin_get_info
 
 pulse_la_LIBADD = \
 	$(eventd_LDADD) \
@@ -95,7 +95,7 @@ notify_la_CFLAGS = \
 
 notify_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
-	-avoid-version -module
+	-avoid-version -module -export-symbols-regex eventd_plugin_get_info
 
 notify_la_LIBADD = \
 	$(eventd_LDADD) \
@@ -116,7 +116,7 @@ dialogs_la_CFLAGS = \
 
 dialogs_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
-	-avoid-version -module
+	-avoid-version -module -export-symbols-regex eventd_plugin_get_info
 
 dialogs_la_LIBADD = \
 	$(eventd_LDADD) \
