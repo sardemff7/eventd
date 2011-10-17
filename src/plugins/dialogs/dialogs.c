@@ -37,100 +37,100 @@ static GHashTable *events = NULL;
 static int
 do_it(gchar * path, gchar * arg, ...)
 {
-	GError *error = NULL;
-	gint ret;
-	gchar * argv[MAX_ARGS + 2];
-	argv[0] = path;
-	gsize argno = 0;
-	va_list al;
-	va_start(al, arg);
-	while (arg && argno < MAX_ARGS)
-	{
-		argv[++argno] = arg;
-		arg = va_arg(al, gchar *);
-	}
-	argv[++argno] = NULL;
-	va_end(al);
-	g_spawn_sync(g_getenv("HOME"), /* working_dir */
-		argv,
-		NULL, /* env */
-		G_SPAWN_SEARCH_PATH, /* flags */
-		NULL,	/* child setup */
-		NULL,	/* user_data */
-		NULL,	/* stdout */
-		NULL,	/* sterr */
-		&ret,	/* exit_status */
-		&error);	/* error */
-	g_clear_error(&error);
-	return ( ret == 0);
+    GError *error = NULL;
+    gint ret;
+    gchar * argv[MAX_ARGS + 2];
+    argv[0] = path;
+    gsize argno = 0;
+    va_list al;
+    va_start(al, arg);
+    while (arg && argno < MAX_ARGS)
+    {
+        argv[++argno] = arg;
+        arg = va_arg(al, gchar *);
+    }
+    argv[++argno] = NULL;
+    va_end(al);
+    g_spawn_sync(g_getenv("HOME"), /* working_dir */
+        argv,
+        NULL, /* env */
+        G_SPAWN_SEARCH_PATH, /* flags */
+        NULL,   /* child setup */
+        NULL,   /* user_data */
+        NULL,   /* stdout */
+        NULL,   /* sterr */
+        &ret,   /* exit_status */
+        &error);    /* error */
+    g_clear_error(&error);
+    return ( ret == 0);
 }
 
 static void
 eventd_dialogs_event_parse(const gchar *type, const gchar *event, GKeyFile *config_file, GKeyFile *defaults_config_file)
 {
-	gchar *message = NULL;
-	gchar *name = NULL;
+    gchar *message = NULL;
+    gchar *name = NULL;
 
-	if ( ! g_key_file_has_group(config_file, "dialog") )
-		return;
+    if ( ! g_key_file_has_group(config_file, "dialog") )
+        return;
 
-	if ( eventd_config_key_file_get_string(config_file, "dialog", "message", event, type, &message) < 0 )
-		goto skip;
+    if ( eventd_config_key_file_get_string(config_file, "dialog", "message", event, type, &message) < 0 )
+        goto skip;
 
-	if ( ( ! message ) && ( defaults_config_file ) && g_key_file_has_group(defaults_config_file, "dialog") )
-			eventd_config_key_file_get_string(defaults_config_file, "dialog", "message", "defaults", type, &message);
+    if ( ( ! message ) && ( defaults_config_file ) && g_key_file_has_group(defaults_config_file, "dialog") )
+            eventd_config_key_file_get_string(defaults_config_file, "dialog", "message", "defaults", type, &message);
 
-	if ( ! message )
-		message = g_strdup("%s");
+    if ( ! message )
+        message = g_strdup("%s");
 
-	name = g_strdup_printf("%s-%s", type, event);
-	g_hash_table_insert(events, name, message);
+    name = g_strdup_printf("%s-%s", type, event);
+    g_hash_table_insert(events, name, message);
 
 skip:
-	g_free(message);
+    g_free(message);
 }
 
 static void
 eventd_dialogs_event_action(const gchar *client_type, const gchar *client_name, const gchar *event_type, const gchar *event_name, const gchar *event_data)
 {
-	gchar *name;
-	gchar *message;
-	gchar *msg;
+    gchar *name;
+    gchar *message;
+    gchar *msg;
 
-	name = g_strdup_printf("%s-%s", client_type, event_type);
+    name = g_strdup_printf("%s-%s", client_type, event_type);
 
-	message = g_hash_table_lookup(events, name);
-	if ( message == NULL )
-		goto fail;
+    message = g_hash_table_lookup(events, name);
+    if ( message == NULL )
+        goto fail;
 
-	msg = g_strdup_printf(message, event_data ? event_data : "");
-	do_it("zenity", "--info", "--title", client_name, "--text", msg, NULL);
-	g_free(msg);
+    msg = g_strdup_printf(message, event_data ? event_data : "");
+    do_it("zenity", "--info", "--title", client_name, "--text", msg, NULL);
+    g_free(msg);
 
 fail:
-	g_free(name);
+    g_free(name);
 }
 
 static void
 eventd_dialogs_config_init()
 {
-	events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+    events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 }
 
 static void
 eventd_dialogs_config_clean()
 {
-	g_hash_table_unref(events);
+    g_hash_table_unref(events);
 }
 
 void
 eventd_plugin_get_info(EventdPlugin *plugin)
 {
-	plugin->config_init = eventd_dialogs_config_init;
-	plugin->config_clean = eventd_dialogs_config_clean;
+    plugin->config_init = eventd_dialogs_config_init;
+    plugin->config_clean = eventd_dialogs_config_clean;
 
-	plugin->event_parse = eventd_dialogs_event_parse;
-	plugin->event_action = eventd_dialogs_event_action;
+    plugin->event_parse = eventd_dialogs_event_parse;
+    plugin->event_action = eventd_dialogs_event_action;
 }
 
 
