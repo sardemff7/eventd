@@ -30,6 +30,7 @@
 #include <gio/gio.h>
 #if ENABLE_GIO_UNIX
 #include <gio/gunixsocketaddress.h>
+#include <glib/gstdio.h>
 #endif /* ENABLE_GIO_UNIX */
 
 #include <eventd-plugin.h>
@@ -220,7 +221,7 @@ fail:
 
 #if ENABLE_GIO_UNIX
 GSocket *
-eventd_get_unix_socket(gchar *path)
+eventd_get_unix_socket(gchar *path, gboolean take_over_socket)
 {
     GSocket *socket = NULL;
     GError *error = NULL;
@@ -233,6 +234,14 @@ eventd_get_unix_socket(gchar *path)
     {
         g_warning("Unable to create an UNIX socket: %s", error->message);
         goto fail;
+    }
+
+    if ( g_file_test(path, G_FILE_TEST_EXISTS) && ( ! g_file_test(path, G_FILE_TEST_IS_DIR|G_FILE_TEST_IS_REGULAR) ) )
+    {
+        if ( take_over_socket )
+            g_unlink(path);
+        else
+            goto fail;
     }
 
     address = g_unix_socket_address_new(path);

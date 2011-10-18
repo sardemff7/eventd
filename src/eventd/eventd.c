@@ -55,6 +55,7 @@ static guint16 bind_port = DEFAULT_BIND_PORT;
 static gboolean no_network = FALSE;
 static gboolean no_unix = FALSE;
 static gchar *unix_socket = NULL;
+static gboolean take_over_socket = FALSE;
 #endif /* ENABLE_GIO_UNIX */
 
 #ifdef ENABLE_SYSTEMD
@@ -71,6 +72,7 @@ static GOptionEntry entries[] =
     { "no-network", 'N', 0, G_OPTION_ARG_NONE, &no_network, "Disable the network bind", NULL },
     { "no-unix", 'U', 0, G_OPTION_ARG_NONE, &no_unix, "Disable the UNIX socket bind", NULL },
     { "socket", 's', 0, G_OPTION_ARG_FILENAME, &unix_socket, "UNIX socket to listen for inbound connections", "SOCKET_FILE" },
+    { "take-over", 't', 0, G_OPTION_ARG_NONE, &take_over_socket, "Take over socket", NULL },
 #endif /* ENABLE_GIO_UNIX */
 #ifdef ENABLE_SYSTEMD
     { "no-systemd", 'S', 0, G_OPTION_ARG_NONE, &no_systemd, "Disable systemd socket activation", NULL },
@@ -185,7 +187,7 @@ main(int argc, char *argv[])
             g_free(t);
         }
 
-        if ( ( socket = eventd_get_unix_socket(unix_socket) ) != NULL )
+        if ( ( socket = eventd_get_unix_socket(unix_socket, take_over_socket) ) != NULL )
             sockets = g_list_prepend(sockets, socket);
         else if ( no_network )
             g_error("Nothing to bind to, kind of useless, isn't it?");

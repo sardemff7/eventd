@@ -25,7 +25,7 @@
 
 GSocket *eventd_get_inet_socket(guint16 port);
 #if ENABLE_GIO_UNIX
-GSocket *eventd_get_unix_socket(gchar *path);
+GSocket *eventd_get_unix_socket(gchar *path, gboolean take_over_socket);
 #endif /* ENABLE_GIO_UNIX */
 int eventd_service(GList *sockets);
 
