@@ -212,7 +212,7 @@ namespace Eventd
         }
 
         public void
-        event(string type, string? name, string? data) throws EventcError
+        event(string type, string? name, GLib.HashTable<string, string>? data) throws EventcError
         {
             string ev = null;
             if ( name == null )
@@ -223,13 +223,27 @@ namespace Eventd
 
             if ( data != null )
             {
-                var datas = data.split("\n");
-                foreach ( var line in datas )
-                {
-                    if ( line[0] == '.' )
-                        line = "." + line;
-                    this.send(line);
-                }
+                EventcError e = null;
+                data.foreach((name, content) => {
+                    try
+                    {
+                        this.send(@"DATA $name");
+                        var datas = content.split("\n");
+                        foreach ( var line in datas )
+                        {
+                            if ( line[0] == '.' )
+                                line = "." + line;
+                            this.send(line);
+                        }
+                        this.send(".");
+                    }
+                    catch ( EventcError ie )
+                    {
+                        e = ie;
+                    }
+                });
+                if ( e != null )
+                    throw e;
             }
             this.send(".");
         }
