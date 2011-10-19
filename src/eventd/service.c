@@ -113,9 +113,9 @@ connection_handler(
             gchar **event = NULL;
 
             event = g_strsplit(line+6, " ", 2);
-            event_type = g_strdup(g_strstrip(event[0]));
+            event_type = g_strdup(event[0]);
             if ( event[1] != NULL )
-                event_name = g_strdup(g_strstrip(event[1]));
+                event_name = g_strdup(event[1]);
 
             g_strfreev(event);
         }
@@ -132,9 +132,9 @@ connection_handler(
                 break;
 
             hello = g_strsplit(line+6, " ", 2);
-            client_type = g_strdup(g_strstrip(hello[0]));
+            client_type = g_strdup(hello[0]);
             if ( hello[1] != NULL )
-                client_name = g_strdup(g_strstrip(hello[1]));
+                client_name = g_strdup(hello[1]);
             g_strfreev(hello);
         }
         else if ( g_ascii_strncasecmp(line, "RENAME ", 7) == 0 )
@@ -145,9 +145,9 @@ connection_handler(
                 break;
 
             rename = g_strsplit(line+7, " ", 2);
-            client_type = g_strdup(g_strstrip(rename[0]));
+            client_type = g_strdup(rename[0]);
             if ( rename[1] != NULL )
-                client_name = g_strdup(g_strstrip(rename[1]));
+                client_name = g_strdup(rename[1]);
             g_strfreev(rename);
         }
         else
