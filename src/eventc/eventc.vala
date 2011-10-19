@@ -26,7 +26,8 @@ namespace Eventd
     static string name;
     static string event_type;
     static string event_name;
-    static string event_data;
+    static string[] event_data_name;
+    static string[] event_data_content;
     static string host;
     static uint16 port = 0;
     #if ENABLE_GIO_UNIX
@@ -39,7 +40,8 @@ namespace Eventd
     {
         { "type", 't', 0, GLib.OptionArg.STRING, out event_type, N_("Event type to send"), "type" },
         { "name", 'n', 0, GLib.OptionArg.STRING, out event_name, N_("Event name to send"), "name" },
-        { "data", 'd', 0, GLib.OptionArg.STRING, out event_data, N_("Event data to send"), "data" },
+        { "data-name", 'd', 0, GLib.OptionArg.STRING_ARRAY, out event_data_name, N_("Event data name to send"), "name" },
+        { "data-content", 'c', 0, GLib.OptionArg.STRING_ARRAY, out event_data_content, N_("Event data content to send (must be after a data-name)"), "content" },
         { "host", 'h', 0, GLib.OptionArg.STRING, out host, N_("Host to connect to"), "host" },
         { "port", 'p', 0, GLib.OptionArg.INT, ref port, N_("Port to connect to"), "port" },
         #if ENABLE_GIO_UNIX
@@ -113,6 +115,19 @@ namespace Eventd
 
         if ( event_type != null )
         {
+            var n_length = ( event_data_name == null ) ? 0 : strv_length(event_data_name);
+            var c_length = ( event_data_content == null ) ? 0 : strv_length(event_data_content);
+            if ( n_length != c_length )
+            {
+                GLib.warning("Not the same number of data names and data contents");
+                return 1;
+            }
+
+            GLib.HashTable<string, string> event_data = new GLib.HashTable<string, string>(string.hash, GLib.str_equal);
+
+            for ( var i = 0 ; i < n_length ; ++i )
+                event_data.insert(event_data_name[i], event_data_content[i]);
+
             try
             {
                 client.event(event_type, event_name, event_data);
