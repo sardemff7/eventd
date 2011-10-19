@@ -144,7 +144,7 @@ connection_handler(
             if ( ! g_data_output_stream_put_string(output, "RENAMED\n", NULL, &error) )
                 break;
 
-            rename = g_strsplit(line+6, " ", 2);
+            rename = g_strsplit(line+7, " ", 2);
             client_type = g_strdup(g_strstrip(rename[0]));
             if ( rename[1] != NULL )
                 client_name = g_strdup(g_strstrip(rename[1]));
