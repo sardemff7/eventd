@@ -196,7 +196,7 @@ typedef struct {
 
     const gchar *event_type;
     const gchar *event_name;
-    const gchar *event_data;
+    const GHashTable *event_data;
 } EventdEventActionData;
 
 static void
@@ -206,7 +206,7 @@ eventd_plugin_helper_event_action(EventdPlugin *plugin, EventdEventActionData *d
 }
 
 void
-eventd_plugin_helper_event_action_all(GList *plugins, const gchar *client_type, const gchar *client_name, const gchar *event_type, const gchar *event_name, const gchar *event_data)
+eventd_plugin_helper_event_action_all(GList *plugins, const gchar *client_type, const gchar *client_name, const gchar *event_type, const gchar *event_name, const GHashTable *event_data)
 {
     EventdEventActionData data = {
         .client_type = client_type,

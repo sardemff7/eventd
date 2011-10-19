@@ -56,7 +56,9 @@ connection_handler(
 
     gchar *event_type = NULL;
     gchar *event_name = NULL;
-    gchar *event_data = NULL;
+    GHashTable *event_data = NULL;
+    gchar *event_data_name = NULL;
+    gchar *event_data_content = NULL;
 
     gsize size = 0;
     gchar *line = NULL;
@@ -81,32 +83,45 @@ connection_handler(
         {
             if ( g_ascii_strcasecmp(line, ".") == 0 )
             {
-                gint64 event_time = 0;
-
-                event_time = g_get_monotonic_time();
-                if ( event_time > ( last_action + delay ) )
+                if ( event_data_name )
                 {
-                    last_action = event_time;
-                    eventd_plugins_event_action_all(client_type, client_name, event_type, event_name, event_data);
+                    g_hash_table_insert(event_data, event_data_name, event_data_content);
+                    event_data_name = NULL;
+                    event_data_content = NULL;
                 }
-                g_free(event_data);
-                g_free(event_name);
-                g_free(event_type);
-                event_data = NULL;
-                event_name = NULL;
-                event_type = NULL;
+                else
+                {
+                    gint64 event_time = 0;
+
+                    event_time = g_get_monotonic_time();
+                    if ( event_time > ( last_action + delay ) )
+                    {
+                        last_action = event_time;
+                        eventd_plugins_event_action_all(client_type, client_name, event_type, event_name, event_data);
+                    }
+                    g_hash_table_unref(event_data);
+                    g_free(event_name);
+                    g_free(event_type);
+                    event_data = NULL;
+                    event_name = NULL;
+                    event_type = NULL;
+                }
             }
-            else if ( event_data )
+            else if ( event_data_content )
             {
                 gchar *old = NULL;
 
-                old = event_data;
-                event_data = g_strjoin("\n", old, ( line[0] == '.' ) ? line+1 : line, NULL);
+                old = event_data_content;
+                event_data_content = g_strjoin("\n", old, ( line[0] == '.' ) ? line+1 : line, NULL);
 
                 g_free(old);
             }
+            else if ( g_ascii_strncasecmp(line, "DATA ", 5) == 0 )
+            {
+                event_data_name = g_strdup(line+5);
+            }
             else
-                event_data = g_strdup(( line[0] == '.' ) ? line+1 : line);
+                event_data_content = g_strdup(( line[0] == '.' ) ? line+1 : line);
         }
         else if ( g_ascii_strncasecmp(line, "EVENT ", 6) == 0 )
         {
@@ -116,6 +131,8 @@ connection_handler(
             event_type = g_strdup(event[0]);
             if ( event[1] != NULL )
                 event_name = g_strdup(event[1]);
+
+            event_data = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 
             g_strfreev(event);
         }

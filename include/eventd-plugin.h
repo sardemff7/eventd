@@ -28,7 +28,7 @@ typedef void (*EventdPluginStopFunc)(void);
 typedef void (*EventdPluginConfigInitFunc)(void);
 typedef void (*EventdPluginConfigCleanFunc)(void);
 typedef void (*EventdPluginEventParseFunc)(const gchar *, const gchar *, GKeyFile *, GKeyFile *);
-typedef void (*EventdPluginEventActionFunc)(const gchar *client_type, const gchar *client_name, const gchar *action_type, const gchar *action_name, const gchar *action_data);
+typedef void (*EventdPluginEventActionFunc)(const gchar *client_type, const gchar *client_name, const gchar *action_type, const gchar *action_name, const GHashTable *action_data);
 
 typedef struct {
 	//gchar *name;
