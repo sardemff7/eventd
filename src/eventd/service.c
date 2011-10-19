@@ -76,7 +76,39 @@ connection_handler(
         #if DEBUG
         g_debug("Line received: %s", line);
         #endif /* DEBUG */
-        if ( g_ascii_strncasecmp(line, "EVENT ", 6) == 0 )
+
+        if ( event_type != NULL )
+        {
+            if ( g_ascii_strcasecmp(line, ".") == 0 )
+            {
+                gint64 event_time = 0;
+
+                event_time = g_get_monotonic_time();
+                if ( event_time > ( last_action + delay ) )
+                {
+                    last_action = event_time;
+                    eventd_plugins_event_action_all(client_type, client_name, event_type, event_name, event_data);
+                }
+                g_free(event_data);
+                g_free(event_name);
+                g_free(event_type);
+                event_data = NULL;
+                event_name = NULL;
+                event_type = NULL;
+            }
+            else if ( event_data )
+            {
+                gchar *old = NULL;
+
+                old = event_data;
+                event_data = g_strjoin("\n", old, ( line[0] == '.' ) ? line+1 : line, NULL);
+
+                g_free(old);
+            }
+            else
+                event_data = g_strdup(( line[0] == '.' ) ? line+1 : line);
+        }
+        else if ( g_ascii_strncasecmp(line, "EVENT ", 6) == 0 )
         {
             gchar **event = NULL;
 
@@ -117,37 +149,6 @@ connection_handler(
             if ( rename[1] != NULL )
                 client_name = g_strdup(g_strstrip(rename[1]));
             g_strfreev(rename);
-        }
-        else if ( event_type )
-        {
-            if ( g_ascii_strcasecmp(line, ".") == 0 )
-            {
-                gint64 event_time = 0;
-
-                event_time = g_get_monotonic_time();
-                if ( event_time > ( last_action + delay ) )
-                {
-                    last_action = event_time;
-                    eventd_plugins_event_action_all(client_type, client_name, event_type, event_name, event_data);
-                }
-                g_free(event_data);
-                g_free(event_name);
-                g_free(event_type);
-                event_data = NULL;
-                event_name = NULL;
-                event_type = NULL;
-            }
-            else if ( event_data )
-            {
-                gchar *old = NULL;
-
-                old = event_data;
-                event_data = g_strjoin("\n", old, ( line[0] == '.' ) ? line+1 : line, NULL);
-
-                g_free(old);
-            }
-            else
-                event_data = g_strdup(( line[0] == '.' ) ? line+1 : line);
         }
         else
             g_warning("Unknown message");
