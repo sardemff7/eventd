@@ -53,9 +53,9 @@ eventd_plugins_config_clean_all()
 }
 
 void
-eventd_plugins_event_parse_all(const gchar *type, const gchar *event, GKeyFile *config_file, GKeyFile *defaults_config_file)
+eventd_plugins_event_parse_all(const gchar *type, const gchar *event, GKeyFile *config_file)
 {
-    eventd_plugins_helper_event_parse_all(plugins, type, event, config_file, defaults_config_file);
+    eventd_plugins_helper_event_parse_all(plugins, type, event, config_file);
 }
 void
 eventd_plugins_event_action_all(const gchar *client_type, const gchar *client_name, const gchar *action_type, const gchar *action_name, const GHashTable *action_data)

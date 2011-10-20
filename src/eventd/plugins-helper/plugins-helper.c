@@ -170,22 +170,20 @@ typedef struct {
     const gchar *type;
     const gchar *event;
     GKeyFile *config_file;
-    GKeyFile *defaults_config_file;
 } EventdEventParseData;
 
 static void
 eventd_plugins_helper_event_parse(EventdPlugin *plugin, EventdEventParseData *data)
 {
-    plugin->event_parse(data->type, data->event, data->config_file, data->defaults_config_file);
+    plugin->event_parse(data->type, data->event, data->config_file);
 }
 
-void eventd_plugins_helper_event_parse_all(GList *plugins, const gchar *type, const gchar *event, GKeyFile *config_file, GKeyFile *defaults_config_file)
+void eventd_plugins_helper_event_parse_all(GList *plugins, const gchar *type, const gchar *event, GKeyFile *config_file)
 {
     EventdEventParseData data = {
         .type = type,
         .event = event,
         .config_file = config_file,
-        .defaults_config_file = defaults_config_file
     };
     eventd_plugins_helper_foreach(plugins, (GFunc)eventd_plugins_helper_event_parse, &data);
 }

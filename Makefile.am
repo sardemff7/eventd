@@ -87,6 +87,7 @@ eventd_SOURCES = \
 
 eventd_CFLAGS = \
 	$(AM_CFLAGS) \
+	-D SYSCONFDIR=\"$(sysconfdir)\" \
 	$(GIO_CFLAGS) \
 	$(GLIB_CFLAGS)
 

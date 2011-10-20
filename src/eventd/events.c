@@ -74,22 +74,21 @@ eventd_parse_client(gchar *type, gchar *config_dir_name)
     GError *error = NULL;
     GDir *config_dir = NULL;
     gchar *file = NULL;
-    gchar *defaults_config_file_name = NULL;
-    GKeyFile *defaults_config_file = NULL;
+    gchar *config_file_name = NULL;
+    GKeyFile *config_file = NULL;
 
-    defaults_config_file_name = g_strdup_printf("%s.conf", config_dir_name);
-    if ( g_file_test(defaults_config_file_name, G_FILE_TEST_IS_REGULAR) )
+    config_file_name = g_strdup_printf("%s.conf", config_dir_name);
+    if ( g_file_test(config_file_name, G_FILE_TEST_IS_REGULAR) )
     {
-        defaults_config_file = g_key_file_new();
-        if ( ! g_key_file_load_from_file(defaults_config_file, defaults_config_file_name, G_KEY_FILE_NONE, &error) )
-        {
-            g_warning("Can't read the defaults file '%s': %s", defaults_config_file_name, error->message);
-            g_clear_error(&error);
-            g_key_file_free(defaults_config_file);
-            defaults_config_file = NULL;
-        }
+        config_file = g_key_file_new();
+        if ( ! g_key_file_load_from_file(config_file, config_file_name, G_KEY_FILE_NONE, &error) )
+            g_warning("Can't read the defaults file '%s': %s", config_file_name, error->message);
+        else
+            eventd_plugins_event_parse_all(type, NULL, config_file);
+        g_clear_error(&error);
+        g_key_file_free(config_file);
     }
-    g_free(defaults_config_file_name);
+    g_free(config_file_name);
 
     config_dir = g_dir_open(config_dir_name, 0, &error);
     if ( ! config_dir )
@@ -101,9 +100,7 @@ eventd_parse_client(gchar *type, gchar *config_dir_name)
 
     while ( ( file = (gchar *)g_dir_read_name(config_dir) ) != NULL )
     {
-        gchar *config_file_name = NULL;
         gchar *event = NULL;
-        GKeyFile *config_file = NULL;
 
         if ( g_str_has_prefix(file, ".") || ( ! g_str_has_suffix(file, ".conf") ) )
             continue;
@@ -119,7 +116,7 @@ eventd_parse_client(gchar *type, gchar *config_dir_name)
         if ( ! g_key_file_load_from_file(config_file, config_file_name, G_KEY_FILE_NONE, &error) )
             goto next;
 
-        eventd_plugins_event_parse_all(type, event, config_file, defaults_config_file);
+        eventd_plugins_event_parse_all(type, event, config_file);
 
     next:
         g_free(event);
@@ -131,12 +128,10 @@ eventd_parse_client(gchar *type, gchar *config_dir_name)
     }
 
     g_dir_close(config_dir);
-    if ( defaults_config_file )
-        g_key_file_free(defaults_config_file);
 }
 
 void
-eventd_config_parser()
+eventd_config_load_dir(const gchar *base_dir)
 {
     GError *error = NULL;
     gchar *config_dir_name = NULL;
@@ -147,23 +142,22 @@ eventd_config_parser()
     GKeyFile *config_file = NULL;
 
 
-    config_dir_name = g_build_filename(g_get_user_config_dir(), PACKAGE_NAME, NULL);
+    config_dir_name = g_build_filename(base_dir, PACKAGE_NAME, NULL);
 
-
-    if ( config )
-    {
-        g_message("Reloading configuration");
-        eventd_config_clean();
-    }
+    if ( ! g_file_test(config_dir_name, G_FILE_TEST_IS_DIR) )
+        goto out;
 
     config_file_name = g_build_filename(config_dir_name, PACKAGE_NAME ".conf", NULL);
-    config_file = g_key_file_new();
-    if ( ! g_key_file_load_from_file(config_file, config_file_name, G_KEY_FILE_NONE, &error) )
-        g_warning("Can't read the configuration file '%s': %s", config_file_name, error->message);
-    else
-        eventd_parse_server(config_file);
-    g_clear_error(&error);
-    g_key_file_free(config_file);
+    if ( g_file_test(config_file_name, G_FILE_TEST_IS_REGULAR) )
+    {
+        config_file = g_key_file_new();
+        if ( ! g_key_file_load_from_file(config_file, config_file_name, G_KEY_FILE_NONE, &error) )
+            g_warning("Can't read the configuration file '%s': %s", config_file_name, error->message);
+        else
+            eventd_parse_server(config_file);
+        g_clear_error(&error);
+        g_key_file_free(config_file);
+    }
     g_free(config_file_name);
 
     eventd_plugins_config_init_all();
@@ -193,6 +187,18 @@ out:
         g_warning("Can't read the configuration directory: %s", error->message);
     g_clear_error(&error);
     g_free(config_dir_name);
+}
+
+void
+eventd_config_parser()
+{
+    if ( config )
+    {
+        g_message("Reloading configuration");
+        eventd_config_clean();
+    }
+    eventd_config_load_dir(SYSCONFDIR);
+    eventd_config_load_dir(g_get_user_config_dir());
 }
 
 void

@@ -31,7 +31,7 @@ void eventd_plugins_helper_foreach(GList *plugins, GFunc func, gpointer user_dat
 void eventd_plugins_helper_config_init_all(GList *plugins);
 void eventd_plugins_helper_config_clean_all(GList *plugins);
 
-void eventd_plugins_helper_event_parse_all(GList *plugins, const gchar *type, const gchar *event, GKeyFile *config_file, GKeyFile *defaults_config_file);
+void eventd_plugins_helper_event_parse_all(GList *plugins, const gchar *type, const gchar *event, GKeyFile *config_file);
 void eventd_plugins_helper_event_action_all(GList *plugins, const gchar *client_type, const gchar *client_name, const gchar *event_type, const gchar *event_name, const GHashTable *event_data);
 
 #endif /* __EVENTD_PLUGINS_HELPER_H__ */
