@@ -6,6 +6,7 @@ global:
     eventd_eventc_connect_finish;
     eventd_eventc_error_quark;
     eventd_eventc_event;
+    eventd_eventc_get_host_is_socket;
     eventd_eventc_get_timeout;
     eventd_eventc_is_connected;
     eventd_eventc_new;
@@ -13,6 +14,7 @@ global:
     eventd_eventc_set_client_name;
     eventd_eventc_set_client_type;
     eventd_eventc_set_host;
+    eventd_eventc_set_host_is_socket;
     eventd_eventc_set_timeout;
     eventd_eventc_set_port;
 local:

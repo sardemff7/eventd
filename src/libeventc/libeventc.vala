@@ -85,6 +85,10 @@ namespace Eventd
             }
         }
 
+        #if ENABLE_GIO_UNIX
+        public bool host_is_socket { get; set; default = false; }
+        #endif
+
         public uint timeout { get; set; default = 0; }
 
         private GLib.SocketConnectable address;
@@ -110,13 +114,10 @@ namespace Eventd
 
             #if ENABLE_GIO_UNIX
             string path = null;
-            if ( this._host[0] == '/' )
+            if ( this._host == "localhost" )
+                path = GLib.Path.build_filename(GLib.Environment.get_user_runtime_dir(), Common.UNIX_SOCKET);
+            else if ( this.host_is_socket )
                 path = this._host;
-            string runtime_dir = "%s/%s".printf(GLib.Environment.get_user_runtime_dir(), Config.PACKAGE);
-            if ( ( this._host[0] == '%' ) && ( this._host[1] == 's' ) && ( this._host[2] == '/' ) )
-                path = this._host.printf(runtime_dir);
-            else if ( this._host == "localhost" )
-                path = Common.UNIX_SOCKET.printf(runtime_dir);
             if ( ( path != null ) && ( GLib.FileUtils.test(path, GLib.FileTest.EXISTS|GLib.FileTest.IS_REGULAR) ) )
                 this.address = new GLib.UnixSocketAddress(path);
             #endif
