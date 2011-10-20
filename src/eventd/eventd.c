@@ -181,18 +181,8 @@ main(int argc, char *argv[])
     }
     else
     {
-
         if ( unix_socket == NULL )
             unix_socket = g_strdup_printf(UNIX_SOCKET, run_dir);
-        else
-        {
-            gchar *t = unix_socket;
-            if ( t[0] == '/' )
-                unix_socket = g_strdup_printf("%s/%s", run_dir, t);
-            else
-                unix_socket = g_strdup(t);
-            g_free(t);
-        }
 
         if ( ( socket = eventd_get_unix_socket(unix_socket, take_over_socket) ) != NULL )
             sockets = g_list_prepend(sockets, socket);
@@ -215,15 +205,6 @@ main(int argc, char *argv[])
 
     if ( pid_file == NULL )
         pid_file = g_strdup_printf(PID_FILE, run_dir);
-    else
-    {
-        gchar *t = pid_file;
-        if ( t[0] == '/' )
-            pid_file = g_strdup_printf("%s/%s", run_dir, t);
-        else
-            pid_file = g_strdup(t);
-        g_free(t);
-    }
 
     g_free(run_dir);
 
