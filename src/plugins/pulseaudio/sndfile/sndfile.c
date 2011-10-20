@@ -193,7 +193,7 @@ eventd_pulseaudio_sndfile_remove_sample(const char *name)
 }
 
 static void
-eventd_pulseaudio_sndfile_event_action(const gchar *client_type, const gchar *client_name, const gchar *event_type, const gchar *event_name, const gchar *event_data)
+eventd_pulseaudio_sndfile_event_action(const gchar *client_type, const gchar *client_name, const gchar *event_type, const gchar *event_name, const GHashTable *event_data)
 {
     gchar *name;
     EventdPulseaudioSndfileEvent *event = NULL;

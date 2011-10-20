@@ -66,6 +66,19 @@ do_it(gchar * path, gchar * arg, ...)
     return ( ret == 0);
 }
 
+
+static void
+eventd_dialogs_start(gpointer user_data)
+{
+    eventd_plugin_helper_regex_init();
+}
+
+static void
+eventd_dialogs_stop()
+{
+    eventd_plugin_helper_regex_clean();
+}
+
 static void
 eventd_dialogs_event_parse(const gchar *type, const gchar *event, GKeyFile *config_file, GKeyFile *defaults_config_file)
 {
@@ -82,7 +95,7 @@ eventd_dialogs_event_parse(const gchar *type, const gchar *event, GKeyFile *conf
             eventd_plugin_helper_config_key_file_get_string(defaults_config_file, "dialog", "message", "defaults", type, &message);
 
     if ( ! message )
-        message = g_strdup("%s");
+        message = g_strdup("$event-data[text]");
 
     name = g_strdup_printf("%s-%s", type, event);
     g_hash_table_insert(events, name, message);
@@ -92,7 +105,7 @@ skip:
 }
 
 static void
-eventd_dialogs_event_action(const gchar *client_type, const gchar *client_name, const gchar *event_type, const gchar *event_name, const gchar *event_data)
+eventd_dialogs_event_action(const gchar *client_type, const gchar *client_name, const gchar *event_type, const gchar *event_name, const GHashTable *event_data)
 {
     gchar *name;
     gchar *message;
@@ -104,7 +117,7 @@ eventd_dialogs_event_action(const gchar *client_type, const gchar *client_name, 
     if ( message == NULL )
         goto fail;
 
-    msg = g_strdup_printf(message, event_data ? event_data : "");
+    msg = eventd_plugin_helper_regex_replace_event_data(message, event_data);
     do_it("zenity", "--info", "--title", client_name, "--text", msg, NULL);
     g_free(msg);
 
@@ -127,6 +140,9 @@ eventd_dialogs_config_clean()
 void
 eventd_plugin_get_info(EventdPlugin *plugin)
 {
+    plugin->start = eventd_dialogs_start;
+    plugin->stop = eventd_dialogs_stop;
+
     plugin->config_init = eventd_dialogs_config_init;
     plugin->config_clean = eventd_dialogs_config_clean;
 

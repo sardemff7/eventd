@@ -33,43 +33,21 @@ typedef struct {
     gchar *message;
 } EventdNotifyEvent;
 
-
-static GRegex *client_name_regex = NULL;
-static GRegex *event_name_regex = NULL;
-static GRegex *event_data_regex = NULL;
-
 static GHashTable *events = NULL;
-
 
 static void
 eventd_notify_start(gpointer user_data)
 {
-    GError *error = NULL;
-
     notify_init(PACKAGE_NAME);
 
-    client_name_regex = g_regex_new("\\$client-name", G_REGEX_OPTIMIZE, 0, &error);
-    if ( ! client_name_regex )
-        g_warning("Can’t create $client-name regex: %s", error->message);
-    g_clear_error(&error);
-
-    event_name_regex = g_regex_new("\\$event-name", G_REGEX_OPTIMIZE, 0, &error);
-    if ( ! event_name_regex )
-        g_warning("Can’t create $event-name regex: %s", error->message);
-    g_clear_error(&error);
-
-    event_data_regex = g_regex_new("\\$event-data", G_REGEX_OPTIMIZE, 0, &error);
-    if ( ! event_data_regex )
-        g_warning("Can’t create $event-data regex: %s", error->message);
-    g_clear_error(&error);
+    eventd_plugin_helper_regex_init();
 }
 
 static void
 eventd_notify_stop()
 {
-    g_regex_unref(event_data_regex);
-    g_regex_unref(event_name_regex);
-    g_regex_unref(client_name_regex);
+    eventd_plugin_helper_regex_clean();
+
     notify_uninit();
 }
 
@@ -87,7 +65,7 @@ eventd_notify_event_new(const char *title, const char *message)
     event = g_new0(EventdNotifyEvent, 1);
 
     event->title = g_strdup(title ? title : "$client-name - $event-name");
-    event->message = g_strdup(message ? message : "$event-data");
+    event->message = g_strdup(message ? message : "$event-data[text]");
 
     return event;
 }
@@ -134,7 +112,7 @@ skip:
 }
 
 static void
-eventd_notify_event_action(const gchar *client_type, const gchar *client_name, const gchar *event_type, const gchar *event_name, const gchar *event_data)
+eventd_notify_event_action(const gchar *client_type, const gchar *client_name, const gchar *event_type, const gchar *event_name, const GHashTable *event_data)
 {
     gchar *name;
     GError *error = NULL;
@@ -150,20 +128,11 @@ eventd_notify_event_action(const gchar *client_type, const gchar *client_name, c
     if ( event == NULL )
         goto fail;
 
-    tmp = g_regex_replace_literal(client_name_regex, event->title, -1, 0, client_name ?: "" , 0, &error);
-    if ( ! tmp )
-        g_warning("Can’t replace client name: %s", error->message);
-    g_clear_error(&error);
-    title = g_regex_replace_literal(event_name_regex, tmp, -1, 0, event_name ?: "", 0, &error);
-    if ( ! title )
-        g_warning("Can’t replace event name: %s", error->message);
-    g_clear_error(&error);
+    tmp = eventd_plugin_helper_regex_replace_client_name(event->title, client_name);
+    title = eventd_plugin_helper_regex_replace_event_name(tmp, event_name);
     g_free(tmp);
 
-    message = g_regex_replace_literal(event_data_regex, event->message, -1, 0, event_data ?: "", 0, &error);
-    if ( ! message )
-        g_warning("Can’t replace event data: %s", error->message);
-    g_clear_error(&error);
+    message = eventd_plugin_helper_regex_replace_event_data(event->message, event_data);
 
     notification = notify_notification_new(title, message, NULL
     #if ! NOTIFY_CHECK_VERSION(0,7,0)
