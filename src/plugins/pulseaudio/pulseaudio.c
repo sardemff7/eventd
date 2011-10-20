@@ -26,7 +26,6 @@
 
 #include <eventd-plugin.h>
 #include <plugins-helper.h>
-#include <config-helper.h>
 
 #include "pulseaudio.h"
 

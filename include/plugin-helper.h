@@ -1,5 +1,5 @@
 /*
- * libeventd-config-helper - Internal onfig helper
+ * libeventd-plugin-helper - Internal helper for plugins
  *
  * Copyright © 2011 Quentin "Sardem FF7" Glidic
  *
@@ -20,9 +20,9 @@
  *
  */
 
-#ifndef __EVENTD_CONFIG_HELPER_H__
-#define __EVENTD_CONFIG_HELPER_H__
+#ifndef __EVENTD_PLUGIN_HELPER_H__
+#define __EVENTD_PLUGIN_HELPER_H__
 
-gint8 eventd_config_key_file_get_string(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *event, const gchar *type, gchar **value);
+gint8 eventd_plugin_helper_config_key_file_get_string(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *event, const gchar *type, gchar **value);
 
-#endif /* __EVENTD_CONFIG_HELPER_H__ */
+#endif /* __EVENTD_PLUGIN_HELPER_H__ */

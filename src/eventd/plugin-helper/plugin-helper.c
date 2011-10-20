@@ -1,5 +1,5 @@
 /*
- * libeventd-config-helper - Internal onfig helper
+ * libeventd-plugin-helper - Internal helper for plugins
  *
  * Copyright © 2011 Quentin "Sardem FF7" Glidic
  *
@@ -23,10 +23,10 @@
 #include <glib.h>
 #include <gio/gio.h>
 
-#include <config-helper.h>
+#include <plugin-helper.h>
 
 gint8
-eventd_config_key_file_get_string(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *event, const gchar *type, gchar **value)
+eventd_plugin_helper_config_key_file_get_string(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *event, const gchar *type, gchar **value)
 {
     GError *error = NULL;
     gint8 ret = 0;

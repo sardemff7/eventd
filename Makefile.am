@@ -24,24 +24,24 @@ AM_VALAFLAGS += \
 
 # An helper for config
 pkglib_LTLIBRARIES += \
-	libeventd-config-helper.la
+	libeventd-plugin-helper.la
 
 pkginclude_HEADERS += \
-	include/config-helper.h
+	include/plugin-helper.h
 
-libeventd_config_helper_la_SOURCES = \
-	src/eventd/config-helper/config-helper.c
+libeventd_plugin_helper_la_SOURCES = \
+	src/eventd/plugin-helper/plugin-helper.c
 
-libeventd_config_helper_la_CFLAGS = \
+libeventd_plugin_helper_la_CFLAGS = \
 	$(AM_CFLAGS) \
 	$(GLIB_CFLAGS)
 
-libeventd_config_helper_la_LDFLAGS = \
+libeventd_plugin_helper_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
 	-avoid-version \
-	-export-symbols $(top_srcdir)/src/eventd/config-helper/config-helper.sym
+	-export-symbols $(top_srcdir)/src/eventd/plugin-helper/plugin-helper.sym
 
-libeventd_config_helper_la_LIBADD = \
+libeventd_plugin_helper_la_LIBADD = \
 	$(GLIB_LIBS)
 
 # An helper for plugins
@@ -143,7 +143,7 @@ sndfile_la_LDFLAGS = \
 	$(pulseaudio_la_LDFLAGS)
 
 sndfile_la_LIBADD = \
-	libeventd-config-helper.la \
+	libeventd-plugin-helper.la \
 	$(SNDFILE_LIBS) \
 	$(PULSEAUDIO_LIBS) \
 	$(GLIB_LIBS)
@@ -168,7 +168,7 @@ notify_la_LDFLAGS = \
 	-avoid-version -module -export-symbols-regex eventd_plugin_get_info
 
 notify_la_LIBADD = \
-	libeventd-config-helper.la \
+	libeventd-plugin-helper.la \
 	$(NOTIFY_LIBS) \
 	$(GLIB_LIBS)
 endif
@@ -191,7 +191,7 @@ dialogs_la_LDFLAGS = \
 	-avoid-version -module -export-symbols-regex eventd_plugin_get_info
 
 dialogs_la_LIBADD = \
-	libeventd-config-helper.la \
+	libeventd-plugin-helper.la \
 	$(GTK_LIBS) \
 	$(GIO_LIBS) \
 	$(GLIB_LIBS)
