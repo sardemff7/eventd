@@ -23,7 +23,7 @@
 #include <glib.h>
 #include <gmodule.h>
 
-#include <plugin-helper.h>
+#include <plugins-helper.h>
 #include "plugins.h"
 
 static GList *plugins = NULL;
@@ -31,34 +31,34 @@ static GList *plugins = NULL;
 void
 eventd_plugins_load()
 {
-    eventd_plugin_helper_load(&plugins, "plugins", NULL);
+    eventd_plugins_helper_load(&plugins, "plugins", NULL);
 }
 
 void
 eventd_plugins_unload()
 {
-    eventd_plugin_helper_unload(&plugins);
+    eventd_plugins_helper_unload(&plugins);
 }
 
 void
 eventd_plugins_config_init_all()
 {
-    eventd_plugin_helper_config_init_all(plugins);
+    eventd_plugins_helper_config_init_all(plugins);
 }
 
 void
 eventd_plugins_config_clean_all()
 {
-    eventd_plugin_helper_config_clean_all(plugins);
+    eventd_plugins_helper_config_clean_all(plugins);
 }
 
 void
 eventd_plugins_event_parse_all(const gchar *type, const gchar *event, GKeyFile *config_file, GKeyFile *defaults_config_file)
 {
-    eventd_plugin_helper_event_parse_all(plugins, type, event, config_file, defaults_config_file);
+    eventd_plugins_helper_event_parse_all(plugins, type, event, config_file, defaults_config_file);
 }
 void
 eventd_plugins_event_action_all(const gchar *client_type, const gchar *client_name, const gchar *action_type, const gchar *action_name, const GHashTable *action_data)
 {
-    eventd_plugin_helper_event_action_all(plugins, client_type, client_name, action_type, action_name, action_data);
+    eventd_plugins_helper_event_action_all(plugins, client_type, client_name, action_type, action_name, action_data);
 }

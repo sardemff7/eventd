@@ -25,7 +25,7 @@
 #include <glib.h>
 
 #include <eventd-plugin.h>
-#include <plugin-helper.h>
+#include <plugins-helper.h>
 #include <config-helper.h>
 
 #include "pulseaudio.h"
@@ -76,7 +76,7 @@ eventd_pulseaudio_start(gpointer user_data)
 
     data.pa_loop = pa_loop;
     data.sound = sound;
-    eventd_plugin_helper_load(&plugins, "plugins" G_DIR_SEPARATOR_S "pulseaudio", &data);
+    eventd_plugins_helper_load(&plugins, "plugins" G_DIR_SEPARATOR_S "pulseaudio", &data);
 }
 
 static void
@@ -84,7 +84,7 @@ eventd_pulseaudio_stop()
 {
     pa_operation* op;
 
-    eventd_plugin_helper_unload(&plugins);
+    eventd_plugins_helper_unload(&plugins);
 
     op = pa_context_drain(sound, pa_context_notify_callback, NULL);
     if ( op )
@@ -103,25 +103,25 @@ eventd_pulseaudio_stop()
 static void
 eventd_pulseaudio_event_action(const gchar *client_type, const gchar *client_name, const gchar *event_type, const gchar *event_name, const gchar *event_data)
 {
-    eventd_plugin_helper_event_action_all(plugins, client_type, client_name, event_type, event_name, event_data);
+    eventd_plugins_helper_event_action_all(plugins, client_type, client_name, event_type, event_name, event_data);
 }
 
 static void
 eventd_pulseaudio_event_parse(const gchar *type, const gchar *event, GKeyFile *config_file, GKeyFile *defaults_config_file)
 {
-    eventd_plugin_helper_event_parse_all(plugins, type, event, config_file, defaults_config_file);
+    eventd_plugins_helper_event_parse_all(plugins, type, event, config_file, defaults_config_file);
 }
 
 static void
 eventd_pulseaudio_config_init()
 {
-    eventd_plugin_helper_config_init_all(plugins);
+    eventd_plugins_helper_config_init_all(plugins);
 }
 
 static void
 eventd_pulseaudio_config_clean()
 {
-    eventd_plugin_helper_config_clean_all(plugins);
+    eventd_plugins_helper_config_clean_all(plugins);
 }
 
 void

@@ -1,5 +1,5 @@
 /*
- * libeventd-plugin-helper - Internal helper for plugins
+ * libeventd-plugins-helper - Internal helper to deal with plugins
  *
  * Copyright © 2011 Quentin "Sardem FF7" Glidic
  *
@@ -24,10 +24,10 @@
 #include <gmodule.h>
 
 #include <eventd-plugin.h>
-#include "plugin-helper.h"
+#include "plugins-helper.h"
 
 static void
-eventd_plugin_helper_load_dir(GList **plugins, const gchar *plugins_dir_name, gpointer user_data)
+eventd_plugins_helper_load_dir(GList **plugins, const gchar *plugins_dir_name, gpointer user_data)
 {
     GError *error;
     GDir *plugins_dir;
@@ -92,7 +92,7 @@ eventd_plugin_helper_load_dir(GList **plugins, const gchar *plugins_dir_name, gp
 }
 
 void
-eventd_plugin_helper_load(GList **plugins, const gchar *plugins_subdir, gpointer user_data)
+eventd_plugins_helper_load(GList **plugins, const gchar *plugins_subdir, gpointer user_data)
 {
     gchar *plugins_dir;
 
@@ -101,17 +101,17 @@ eventd_plugin_helper_load(GList **plugins, const gchar *plugins_subdir, gpointer
 
     plugins_dir = g_build_filename(LIBDIR, PACKAGE_NAME, plugins_subdir, NULL);
     if ( g_file_test(plugins_dir, G_FILE_TEST_IS_DIR) )
-        eventd_plugin_helper_load_dir(plugins, plugins_dir, user_data);
+        eventd_plugins_helper_load_dir(plugins, plugins_dir, user_data);
     g_free(plugins_dir);
 
     plugins_dir = g_build_filename(DATADIR, PACKAGE_NAME, plugins_subdir, NULL);
     if ( g_file_test(plugins_dir, G_FILE_TEST_IS_DIR) )
-        eventd_plugin_helper_load_dir(plugins, plugins_dir, user_data);
+        eventd_plugins_helper_load_dir(plugins, plugins_dir, user_data);
     g_free(plugins_dir);
 
     plugins_dir = g_build_filename(g_get_user_data_dir(), PACKAGE_NAME, plugins_subdir, NULL);
     if ( g_file_test(plugins_dir, G_FILE_TEST_IS_DIR) )
-        eventd_plugin_helper_load_dir(plugins, plugins_dir, user_data);
+        eventd_plugins_helper_load_dir(plugins, plugins_dir, user_data);
     g_free(plugins_dir);
 }
 
@@ -125,7 +125,7 @@ plugin_free(EventdPlugin *plugin)
 }
 
 void
-eventd_plugin_helper_unload(GList **plugins)
+eventd_plugins_helper_unload(GList **plugins)
 {
     if ( ( plugins == NULL ) || ( *plugins == NULL ) )
         return;
@@ -134,7 +134,7 @@ eventd_plugin_helper_unload(GList **plugins)
 }
 
 void
-eventd_plugin_helper_foreach(GList *plugins, GFunc func, gpointer user_data)
+eventd_plugins_helper_foreach(GList *plugins, GFunc func, gpointer user_data)
 {
     if ( plugins == NULL )
         return;
@@ -143,27 +143,27 @@ eventd_plugin_helper_foreach(GList *plugins, GFunc func, gpointer user_data)
 
 
 void
-eventd_plugin_helper_config_init(EventdPlugin *plugin, gpointer data)
+eventd_plugins_helper_config_init(EventdPlugin *plugin, gpointer data)
 {
     plugin->config_init();
 }
 
 void
-eventd_plugin_helper_config_init_all(GList *plugins)
+eventd_plugins_helper_config_init_all(GList *plugins)
 {
-    eventd_plugin_helper_foreach(plugins, (GFunc)eventd_plugin_helper_config_init, NULL);
+    eventd_plugins_helper_foreach(plugins, (GFunc)eventd_plugins_helper_config_init, NULL);
 }
 
 static void
-eventd_plugin_helper_config_clean(EventdPlugin *plugin, gpointer data)
+eventd_plugins_helper_config_clean(EventdPlugin *plugin, gpointer data)
 {
     plugin->config_clean();
 }
 
 void
-eventd_plugin_helper_config_clean_all(GList *plugins)
+eventd_plugins_helper_config_clean_all(GList *plugins)
 {
-    eventd_plugin_helper_foreach(plugins, (GFunc)eventd_plugin_helper_config_clean, NULL);
+    eventd_plugins_helper_foreach(plugins, (GFunc)eventd_plugins_helper_config_clean, NULL);
 }
 
 typedef struct {
@@ -174,12 +174,12 @@ typedef struct {
 } EventdEventParseData;
 
 static void
-eventd_plugin_helper_event_parse(EventdPlugin *plugin, EventdEventParseData *data)
+eventd_plugins_helper_event_parse(EventdPlugin *plugin, EventdEventParseData *data)
 {
     plugin->event_parse(data->type, data->event, data->config_file, data->defaults_config_file);
 }
 
-void eventd_plugin_helper_event_parse_all(GList *plugins, const gchar *type, const gchar *event, GKeyFile *config_file, GKeyFile *defaults_config_file)
+void eventd_plugins_helper_event_parse_all(GList *plugins, const gchar *type, const gchar *event, GKeyFile *config_file, GKeyFile *defaults_config_file)
 {
     EventdEventParseData data = {
         .type = type,
@@ -187,7 +187,7 @@ void eventd_plugin_helper_event_parse_all(GList *plugins, const gchar *type, con
         .config_file = config_file,
         .defaults_config_file = defaults_config_file
     };
-    eventd_plugin_helper_foreach(plugins, (GFunc)eventd_plugin_helper_event_parse, &data);
+    eventd_plugins_helper_foreach(plugins, (GFunc)eventd_plugins_helper_event_parse, &data);
 }
 
 typedef struct {
@@ -200,13 +200,13 @@ typedef struct {
 } EventdEventActionData;
 
 static void
-eventd_plugin_helper_event_action(EventdPlugin *plugin, EventdEventActionData *data)
+eventd_plugins_helper_event_action(EventdPlugin *plugin, EventdEventActionData *data)
 {
     plugin->event_action(data->client_type, data->client_name, data->event_type, data->event_name, data->event_data);
 }
 
 void
-eventd_plugin_helper_event_action_all(GList *plugins, const gchar *client_type, const gchar *client_name, const gchar *event_type, const gchar *event_name, const GHashTable *event_data)
+eventd_plugins_helper_event_action_all(GList *plugins, const gchar *client_type, const gchar *client_name, const gchar *event_type, const gchar *event_name, const GHashTable *event_data)
 {
     EventdEventActionData data = {
         .client_type = client_type,
@@ -216,5 +216,5 @@ eventd_plugin_helper_event_action_all(GList *plugins, const gchar *client_type, 
         .event_name = event_name,
         .event_data = event_data
     };
-    eventd_plugin_helper_foreach(plugins, (GFunc)eventd_plugin_helper_event_action, &data);
+    eventd_plugins_helper_foreach(plugins, (GFunc)eventd_plugins_helper_event_action, &data);
 }

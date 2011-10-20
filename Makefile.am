@@ -46,28 +46,28 @@ libeventd_config_helper_la_LIBADD = \
 
 # An helper for plugins
 pkglib_LTLIBRARIES += \
-	libeventd-plugin-helper.la
+	libeventd-plugins-helper.la
 
 pkginclude_HEADERS += \
-	include/plugin-helper.h \
+	include/plugins-helper.h \
 	include/eventd-plugin.h
 
-libeventd_plugin_helper_la_SOURCES = \
-	src/eventd/plugin-helper/plugin-helper.c
+libeventd_plugins_helper_la_SOURCES = \
+	src/eventd/plugins-helper/plugins-helper.c
 
-libeventd_plugin_helper_la_CFLAGS = \
+libeventd_plugins_helper_la_CFLAGS = \
 	$(AM_CFLAGS) \
 	-D LIBDIR=\"$(libdir)\" \
 	-D DATADIR=\"$(datadir)\" \
 	$(GMODULE_CFLAGS) \
 	$(GLIB_CFLAGS)
 
-libeventd_plugin_helper_la_LDFLAGS = \
+libeventd_plugins_helper_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
 	-avoid-version \
-	-export-symbols $(top_srcdir)/src/eventd/plugin-helper/plugin-helper.sym
+	-export-symbols $(top_srcdir)/src/eventd/plugins-helper/plugins-helper.sym
 
-libeventd_plugin_helper_la_LIBADD = \
+libeventd_plugins_helper_la_LIBADD = \
 	$(GMODULE_LIBS) \
 	$(GLIB_LIBS)
 
@@ -91,7 +91,7 @@ eventd_CFLAGS = \
 	$(GLIB_CFLAGS)
 
 eventd_LDADD = \
-	libeventd-plugin-helper.la \
+	libeventd-plugins-helper.la \
 	$(GIO_LIBS) \
 	$(GLIB_LIBS)
 
@@ -122,7 +122,7 @@ pulseaudio_la_LDFLAGS = \
 	-avoid-version -module -export-symbols-regex eventd_plugin_get_info
 
 pulseaudio_la_LIBADD = \
-	libeventd-plugin-helper.la \
+	libeventd-plugins-helper.la \
 	$(PULSEAUDIO_LIBS) \
 	$(GLIB_LIBS)
 
