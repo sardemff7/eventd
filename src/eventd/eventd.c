@@ -62,6 +62,10 @@ static gboolean take_over_socket = FALSE;
 static gboolean no_systemd = FALSE;
 #endif /* ENABLE_SYSTEMD */
 
+#ifdef DEBUG
+static gboolean no_plugins = FALSE;
+#endif /* DEBUG */
+
 static GOptionEntry entries[] =
 {
     { "daemonize", 'd', 0, G_OPTION_ARG_NONE, &daemonize, "Run the daemon in the background", NULL },
@@ -77,6 +81,9 @@ static GOptionEntry entries[] =
 #ifdef ENABLE_SYSTEMD
     { "no-systemd", 'S', 0, G_OPTION_ARG_NONE, &no_systemd, "Disable systemd socket activation", NULL },
 #endif /* ENABLE_SYSTEMD */
+#ifdef DEBUG
+    { "no-plugins", 0, 0, G_OPTION_ARG_NONE, &no_plugins, "Disable systemd socket activation", NULL },
+#endif /* DEBUG */
     { NULL }
 };
 
@@ -264,7 +271,11 @@ main(int argc, char *argv[])
     }
 
 start:
+#ifdef DEBUG
+    retval = eventd_service(sockets, no_plugins);
+#else /* ! DEBUG */
     retval = eventd_service(sockets);
+#endif /* ! DEBUG */
 
     g_list_free_full(sockets, g_object_unref);
 
