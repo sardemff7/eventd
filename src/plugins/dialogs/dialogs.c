@@ -80,7 +80,7 @@ eventd_dialogs_stop()
 }
 
 static void
-eventd_dialogs_event_parse(const gchar *type, const gchar *event, GKeyFile *config_file, GKeyFile *defaults_config_file)
+eventd_dialogs_event_parse(const gchar *type, const gchar *event, GKeyFile *config_file)
 {
     gchar *message = NULL;
     gchar *name = NULL;
@@ -91,13 +91,14 @@ eventd_dialogs_event_parse(const gchar *type, const gchar *event, GKeyFile *conf
     if ( eventd_plugin_helper_config_key_file_get_string(config_file, "dialog", "message", &message) < 0 )
         return;
 
-    if ( ( ! message ) && ( defaults_config_file ) && g_key_file_has_group(defaults_config_file, "dialog") )
-            eventd_plugin_helper_config_key_file_get_string(defaults_config_file, "dialog", "message", &message);
-
     if ( ! message )
         message = g_strdup("$event-data[text]");
 
-    name = g_strdup_printf("%s-%s", type, event);
+    if ( event != NULL )
+        name = g_strdup_printf("%s-%s", type, event);
+    else
+        name = g_strdup(type);
+
     g_hash_table_insert(events, name, message);
 }
 
@@ -111,7 +112,7 @@ eventd_dialogs_event_action(const gchar *client_type, const gchar *client_name, 
     name = g_strdup_printf("%s-%s", client_type, event_type);
 
     message = g_hash_table_lookup(events, name);
-    if ( message == NULL )
+    if ( ( message == NULL ) && ( ( message = g_hash_table_lookup(events, event_type) ) == NULL ) )
         goto fail;
 
     msg = eventd_plugin_helper_regex_replace_event_data(message, event_data);
