@@ -89,7 +89,7 @@ eventd_dialogs_event_parse(const gchar *type, const gchar *event, GKeyFile *conf
         return;
 
     if ( eventd_plugin_helper_config_key_file_get_string(config_file, "dialog", "message", event, type, &message) < 0 )
-        goto skip;
+        return;
 
     if ( ( ! message ) && ( defaults_config_file ) && g_key_file_has_group(defaults_config_file, "dialog") )
             eventd_plugin_helper_config_key_file_get_string(defaults_config_file, "dialog", "message", "defaults", type, &message);
@@ -99,9 +99,6 @@ eventd_dialogs_event_parse(const gchar *type, const gchar *event, GKeyFile *conf
 
     name = g_strdup_printf("%s-%s", type, event);
     g_hash_table_insert(events, name, message);
-
-skip:
-    g_free(message);
 }
 
 static void
