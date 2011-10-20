@@ -24,6 +24,7 @@
 #include <sndfile.h>
 
 #include <glib.h>
+#include <string.h>
 
 #include <eventd-plugin.h>
 #include <plugin-helper.h>
@@ -202,11 +203,11 @@ eventd_pulseaudio_sndfile_event_action(const gchar *client_type, const gchar *cl
     name = g_strdup_printf("%s-%s", client_type, event_type);
 
     event = g_hash_table_lookup(events, name);
-    if ( event == NULL )
+    if ( ( event == NULL ) && ( ( event = g_hash_table_lookup(events, event_type) ) == NULL ) )
         goto fail;
 
     pa_threaded_mainloop_lock(pa_loop);
-    op = pa_context_play_sample(sound, name, NULL, PA_VOLUME_NORM, NULL, NULL);
+    op = pa_context_play_sample(sound, event->sample, NULL, PA_VOLUME_NORM, NULL, NULL);
     if ( op )
         pa_operation_unref(op);
     else
@@ -217,13 +218,27 @@ fail:
     g_free(name);
 }
 
-static EventdPulseaudioSndfileEvent *
-eventd_pulseaudio_sndfile_event_new(const gchar *sample, const gchar *filename)
+static void
+eventd_pulseaudio_sndfile_event_clean(EventdPulseaudioSndfileEvent *event)
 {
-    EventdPulseaudioSndfileEvent *event = NULL;
+    if ( event->created )
+        eventd_pulseaudio_sndfile_remove_sample(event->sample);
+
+    g_free(event->sample);
+}
+
+static gboolean
+eventd_pulseaudio_sndfile_event_update(EventdPulseaudioSndfileEvent *event, const gchar *sample, const gchar *filename)
+{
+    gboolean ret = FALSE;
     gchar *real_filename = NULL;
 
-    if ( filename )
+    if ( ( event->sample != NULL ) && ( strcmp(event->sample, sample) == 0 ) )
+        return TRUE;
+
+    eventd_pulseaudio_sndfile_event_clean(event);
+
+    if ( filename != NULL )
     {
         if ( filename[0] != '/')
             real_filename = g_strdup_printf("%s/" PACKAGE_NAME "/sounds/%s", g_get_user_data_dir(), filename);
@@ -234,22 +249,33 @@ eventd_pulseaudio_sndfile_event_new(const gchar *sample, const gchar *filename)
             goto fail;
     }
 
-    event = g_new0(EventdPulseaudioSndfileEvent, 1);
-
     event->sample = g_strdup(sample);
     event->created = (filename != NULL);
 
+    ret = TRUE;
+
 fail:
     g_free(real_filename);
+    return ret;
+}
+
+static EventdPulseaudioSndfileEvent *
+eventd_pulseaudio_sndfile_event_new()
+{
+    EventdPulseaudioSndfileEvent *event = NULL;
+
+
+    event = g_new0(EventdPulseaudioSndfileEvent, 1);
+
     return event;
 }
 
 static void
-eventd_pulseaudio_sndfile_event_parse(const gchar *type, const gchar *event, GKeyFile *config_file, GKeyFile *defaults_config_file)
+eventd_pulseaudio_sndfile_event_parse(const gchar *client_type, const gchar *event_type, GKeyFile *config_file)
 {
     gchar *sample = NULL;
     gchar *filename = NULL;
-    EventdPulseaudioSndfileEvent *pulse_event = NULL;
+    EventdPulseaudioSndfileEvent *event = NULL;
 
     if ( ! g_key_file_has_group(config_file, "sound") )
         return;
@@ -259,27 +285,37 @@ eventd_pulseaudio_sndfile_event_parse(const gchar *type, const gchar *event, GKe
     if ( eventd_plugin_helper_config_key_file_get_string(config_file, "sound", "file", &filename) < 0 )
         goto skip;
 
-    /* Check defaults */
-    if ( ( defaults_config_file ) && ( ! sample ) && ( ! filename ) && g_key_file_has_group(defaults_config_file, "sound") )
-    {
-        eventd_plugin_helper_config_key_file_get_string(defaults_config_file, "sound", "sample", &sample);
-        eventd_plugin_helper_config_key_file_get_string(defaults_config_file, "sound", "file", &filename);
-    }
 
     if ( ( filename ) || ( sample ) )
     {
         gchar *name;
 
-        name = g_strdup_printf("%s-%s", type, event);
+        if ( event_type != NULL )
+            name = g_strdup_printf("%s-%s", client_type, event_type);
+        else
+            name = g_strdup(client_type);
 
         if ( ! sample )
             sample = g_strdup(name);
 
-        pulse_event = eventd_pulseaudio_sndfile_event_new(sample, filename);
-        if ( pulse_event )
-            g_hash_table_insert(events, name, pulse_event);
-        else
+        event = g_hash_table_lookup(events, name);
+        if ( event != NULL )
+        {
+            if ( ! eventd_pulseaudio_sndfile_event_update(event, sample, filename) )
+                g_hash_table_remove(events, name);
             g_free(name);
+        }
+        else
+        {
+            event = eventd_pulseaudio_sndfile_event_new();
+            if ( eventd_pulseaudio_sndfile_event_update(event, sample, filename) )
+                g_hash_table_insert(events, name, event);
+            else
+            {
+                g_free(event);
+                g_free(name);
+            }
+        }
     }
 
 skip:
@@ -290,10 +326,7 @@ skip:
 static void
 eventd_pulseaudio_sndfile_event_free(EventdPulseaudioSndfileEvent *event)
 {
-    if ( event->created )
-        eventd_pulseaudio_sndfile_remove_sample(event->sample);
-
-    g_free(event->sample);
+    eventd_pulseaudio_sndfile_event_clean(event);
     g_free(event);
 }
 
