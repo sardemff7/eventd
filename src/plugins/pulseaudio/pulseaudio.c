@@ -106,9 +106,9 @@ eventd_pulseaudio_event_action(const gchar *client_type, const gchar *client_nam
 }
 
 static void
-eventd_pulseaudio_event_parse(const gchar *type, const gchar *event, GKeyFile *config_file, GKeyFile *defaults_config_file)
+eventd_pulseaudio_event_parse(const gchar *type, const gchar *event, GKeyFile *config_file)
 {
-    eventd_plugins_helper_event_parse_all(plugins, type, event, config_file, defaults_config_file);
+    eventd_plugins_helper_event_parse_all(plugins, type, event, config_file);
 }
 
 static void
