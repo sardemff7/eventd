@@ -254,16 +254,16 @@ eventd_pulseaudio_sndfile_event_parse(const gchar *type, const gchar *event, GKe
     if ( ! g_key_file_has_group(config_file, "sound") )
         return;
 
-    if ( eventd_plugin_helper_config_key_file_get_string(config_file, "sound", "sample", event, type, &sample) < 0 )
+    if ( eventd_plugin_helper_config_key_file_get_string(config_file, "sound", "sample", &sample) < 0 )
         goto skip;
-    if ( eventd_plugin_helper_config_key_file_get_string(config_file, "sound", "file", event, type, &filename) < 0 )
+    if ( eventd_plugin_helper_config_key_file_get_string(config_file, "sound", "file", &filename) < 0 )
         goto skip;
 
     /* Check defaults */
     if ( ( defaults_config_file ) && ( ! sample ) && ( ! filename ) && g_key_file_has_group(defaults_config_file, "sound") )
     {
-        eventd_plugin_helper_config_key_file_get_string(defaults_config_file, "sound", "sample", "defaults", type, &sample);
-        eventd_plugin_helper_config_key_file_get_string(defaults_config_file, "sound", "file", "defaults", type, &filename);
+        eventd_plugin_helper_config_key_file_get_string(defaults_config_file, "sound", "sample", &sample);
+        eventd_plugin_helper_config_key_file_get_string(defaults_config_file, "sound", "file", &filename);
     }
 
     if ( ( filename ) || ( sample ) )

@@ -88,11 +88,11 @@ eventd_dialogs_event_parse(const gchar *type, const gchar *event, GKeyFile *conf
     if ( ! g_key_file_has_group(config_file, "dialog") )
         return;
 
-    if ( eventd_plugin_helper_config_key_file_get_string(config_file, "dialog", "message", event, type, &message) < 0 )
+    if ( eventd_plugin_helper_config_key_file_get_string(config_file, "dialog", "message", &message) < 0 )
         return;
 
     if ( ( ! message ) && ( defaults_config_file ) && g_key_file_has_group(defaults_config_file, "dialog") )
-            eventd_plugin_helper_config_key_file_get_string(defaults_config_file, "dialog", "message", "defaults", type, &message);
+            eventd_plugin_helper_config_key_file_get_string(defaults_config_file, "dialog", "message", &message);
 
     if ( ! message )
         message = g_strdup("$event-data[text]");

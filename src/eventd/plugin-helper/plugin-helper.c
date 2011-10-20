@@ -25,7 +25,7 @@
 #include <plugin-helper.h>
 
 gint8
-eventd_plugin_helper_config_key_file_get_string(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *event, const gchar *type, gchar **value)
+eventd_plugin_helper_config_key_file_get_string(GKeyFile *config_file, const gchar *group, const gchar *key, gchar **value)
 {
     GError *error = NULL;
     gint8 ret = 0;
@@ -35,7 +35,7 @@ eventd_plugin_helper_config_key_file_get_string(GKeyFile *config_file, const gch
     if ( ( ! ret_value ) && ( error->code != G_KEY_FILE_ERROR_KEY_NOT_FOUND ) )
     {
         ret = -1;
-        g_warning("Can't set the %s action of event '%s' for client type '%s': %s", group, event, type, error->message);
+        g_warning("Can’t read the key [%s] '%s': %s", group, key, error->message);
     }
     else if ( ! ret_value )
     {

@@ -88,19 +88,19 @@ eventd_notify_event_parse(const gchar *type, const gchar *event, GKeyFile *confi
     if ( ! g_key_file_has_group(config_file, "notify") )
         return;
 
-    if ( eventd_plugin_helper_config_key_file_get_string(config_file, "notify", "title", event, type, &title) < 0 )
+    if ( eventd_plugin_helper_config_key_file_get_string(config_file, "notify", "title", &title) < 0 )
         goto skip;
-    if ( eventd_plugin_helper_config_key_file_get_string(config_file, "notify", "message", event, type, &message) < 0 )
+    if ( eventd_plugin_helper_config_key_file_get_string(config_file, "notify", "message", &message) < 0 )
         goto skip;
 
     /* Check defaults */
     if ( ( defaults_config_file ) && g_key_file_has_group(defaults_config_file, "notify") )
     {
         if ( ! title )
-            eventd_plugin_helper_config_key_file_get_string(defaults_config_file, "notify", "title", "defaults", type, &title);
+            eventd_plugin_helper_config_key_file_get_string(defaults_config_file, "notify", "title", &title);
 
         if ( ! message )
-            eventd_plugin_helper_config_key_file_get_string(defaults_config_file, "notify", "message", "defaults", type, &message);
+            eventd_plugin_helper_config_key_file_get_string(defaults_config_file, "notify", "message", &message);
     }
 
     name = g_strdup_printf("%s-%s", type, event);

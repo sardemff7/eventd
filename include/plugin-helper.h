@@ -23,7 +23,7 @@
 #ifndef __EVENTD_PLUGIN_HELPER_H__
 #define __EVENTD_PLUGIN_HELPER_H__
 
-gint8 eventd_plugin_helper_config_key_file_get_string(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *event, const gchar *type, gchar **value);
+gint8 eventd_plugin_helper_config_key_file_get_string(GKeyFile *config_file, const gchar *group, const gchar *key, gchar **value);
 
 
 void eventd_plugin_helper_regex_init();
