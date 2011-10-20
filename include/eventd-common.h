@@ -20,7 +20,7 @@
  *
  */
 
-#define PID_FILE "%s/pid"
+#define PID_FILE "pid"
 
 #define DEFAULT_BIND_PORT 7100
-#define UNIX_SOCKET "%s/sock"
+#define UNIX_SOCKET "sock"

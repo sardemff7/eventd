@@ -114,7 +114,7 @@ eventd_parse_client(gchar *type, gchar *config_dir_name)
         g_debug("Parsing event '%s' of client type '%s'", event, type);
         #endif /* DEBUG */
 
-        config_file_name = g_strdup_printf("%s/%s", config_dir_name, file);
+        config_file_name = g_build_filename(config_dir_name, file, NULL);
         config_file = g_key_file_new();
         if ( ! g_key_file_load_from_file(config_file, config_file_name, G_KEY_FILE_NONE, &error) )
             goto next;
@@ -147,7 +147,7 @@ eventd_config_parser()
     GKeyFile *config_file = NULL;
 
 
-    config_dir_name = g_strdup_printf("%s/"PACKAGE_NAME, g_get_user_config_dir());
+    config_dir_name = g_build_filename(g_get_user_config_dir(), PACKAGE_NAME, NULL);
 
 
     if ( config )
@@ -156,7 +156,7 @@ eventd_config_parser()
         eventd_config_clean();
     }
 
-    config_file_name = g_strdup_printf("%s/"PACKAGE_NAME".conf", config_dir_name);
+    config_file_name = g_build_filename(config_dir_name, PACKAGE_NAME ".conf", NULL);
     config_file = g_key_file_new();
     if ( ! g_key_file_load_from_file(config_file, config_file_name, G_KEY_FILE_NONE, &error) )
         g_warning("Can't read the configuration file '%s': %s", config_file_name, error->message);
@@ -177,7 +177,7 @@ eventd_config_parser()
         if ( g_str_has_prefix(file, ".") )
             continue;
 
-        client_config_dir_name = g_strdup_printf("%s/%s", config_dir_name, file);
+        client_config_dir_name = g_build_filename(config_dir_name, file, NULL);
 
         if ( g_file_test(client_config_dir_name, G_FILE_TEST_IS_DIR) )
             eventd_parse_client(file, client_config_dir_name);

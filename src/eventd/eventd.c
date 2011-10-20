@@ -108,7 +108,7 @@ main(int argc, char *argv[])
 
     xdg_runtime_dir = g_get_user_runtime_dir();
 
-    run_dir = g_strdup_printf("%s/%s", xdg_runtime_dir, PACKAGE_NAME);
+    run_dir = g_build_filename(xdg_runtime_dir, PACKAGE_NAME, NULL);
     if ( g_mkdir_with_parents(run_dir, 0755) < 0 )
         g_error("Can't create the run dir (%s): %s", run_dir, strerror(errno));
 
@@ -182,7 +182,7 @@ main(int argc, char *argv[])
     else
     {
         if ( unix_socket == NULL )
-            unix_socket = g_strdup_printf(UNIX_SOCKET, run_dir);
+            unix_socket = g_build_filename(run_dir, UNIX_SOCKET, NULL);
 
         if ( ( socket = eventd_get_unix_socket(unix_socket, take_over_socket) ) != NULL )
             sockets = g_list_prepend(sockets, socket);
@@ -204,7 +204,7 @@ main(int argc, char *argv[])
 #endif /* ENABLE_GIO_UNIX */
 
     if ( pid_file == NULL )
-        pid_file = g_strdup_printf(PID_FILE, run_dir);
+        pid_file = g_build_filename(run_dir, PID_FILE, NULL);
 
     g_free(run_dir);
 
