@@ -21,7 +21,6 @@
  */
 
 #include <glib.h>
-#include <gio/gio.h>
 
 #include <plugin-helper.h>
 
@@ -48,4 +47,112 @@ eventd_plugin_helper_config_key_file_get_string(GKeyFile *config_file, const gch
     g_clear_error(&error);
 
     return ret;
+}
+
+
+static guint64 regex_refcount = 0;
+
+static GRegex *regex_client_name = NULL;
+static GRegex *regex_event_name = NULL;
+static GRegex *regex_event_data = NULL;
+
+void
+eventd_plugin_helper_regex_init()
+{
+    GError *error = NULL;
+    if ( ++regex_refcount > 1 )
+        return;
+
+    regex_client_name = g_regex_new("\\$client-name", G_REGEX_OPTIMIZE, 0, &error);
+    if ( ! regex_client_name )
+        g_warning("Can’t create $client-name regex: %s", error->message);
+    g_clear_error(&error);
+
+    regex_event_name = g_regex_new("\\$event-name", G_REGEX_OPTIMIZE, 0, &error);
+    if ( ! regex_event_name )
+        g_warning("Can’t create $event-name regex: %s", error->message);
+    g_clear_error(&error);
+
+    regex_event_data = g_regex_new("\\$event-data\\[(\\w+)\\]", G_REGEX_OPTIMIZE, 0, &error);
+    if ( ! regex_event_data )
+        g_warning("Can’t create $event-data regex: %s", error->message);
+    g_clear_error(&error);
+}
+
+void
+eventd_plugin_helper_regex_clean()
+{
+    if ( --regex_refcount > 0 )
+        return;
+
+    g_regex_unref(regex_event_data);
+    g_regex_unref(regex_event_name);
+    g_regex_unref(regex_client_name);
+}
+
+gchar *
+eventd_plugin_helper_regex_replace_client_name(const gchar *target, const gchar *client_name)
+{
+    GError *error = NULL;
+    gchar *r;
+
+    r = g_regex_replace_literal(regex_client_name, target, -1, 0, client_name ?: "" , 0, &error);
+    if ( r == NULL )
+    {
+        r = g_strdup(target);
+        g_warning("Can’t replace client name: %s", error->message);
+    }
+    g_clear_error(&error);
+
+
+    return r;
+}
+
+gchar *
+eventd_plugin_helper_regex_replace_event_name(const gchar *target, const gchar *event_name)
+{
+    GError *error = NULL;
+    gchar *r;
+
+    r = g_regex_replace_literal(regex_event_name, target, -1, 0, event_name ?: "" , 0, &error);
+    if ( r == NULL )
+    {
+        r = g_strdup(target);
+        g_warning("Can’t replace event name: %s", error->message);
+    }
+    g_clear_error(&error);
+
+    return r;
+}
+
+static gboolean
+eventd_plugin_helper_regex_event_data_cb(const GMatchInfo *info, GString *r, gpointer event_data)
+{
+    gchar *name;
+    gchar *data = NULL;
+
+    name = g_match_info_fetch(info, 1);
+    if ( event_data != NULL )
+        data = g_hash_table_lookup((GHashTable *)event_data, name);
+    g_string_append(r, data ?: "");
+    g_free(name);
+
+    return FALSE;
+}
+
+gchar *
+eventd_plugin_helper_regex_replace_event_data(const gchar *target, const GHashTable *event_data)
+{
+    GError *error = NULL;
+    gchar *r;
+
+    r = g_regex_replace_eval(regex_event_data, target, -1, 0, 0, eventd_plugin_helper_regex_event_data_cb, (gpointer)event_data, &error);
+    if ( r == NULL )
+    {
+        r = g_strdup(target);
+        g_warning("Can’t replace event data: %s", error->message);
+    }
+    g_clear_error(&error);
+
+    return r;
 }

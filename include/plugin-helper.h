@@ -25,4 +25,12 @@
 
 gint8 eventd_plugin_helper_config_key_file_get_string(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *event, const gchar *type, gchar **value);
 
+
+void eventd_plugin_helper_regex_init();
+void eventd_plugin_helper_regex_clean();
+
+gchar *eventd_plugin_helper_regex_replace_client_name(const gchar *target, const gchar *clieant_name);
+gchar *eventd_plugin_helper_regex_replace_event_name(const gchar *target, const gchar *event_name);
+gchar *eventd_plugin_helper_regex_replace_event_data(const gchar *target, const GHashTable *event_data);
+
 #endif /* __EVENTD_PLUGIN_HELPER_H__ */
