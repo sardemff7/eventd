@@ -57,6 +57,21 @@ notification_closed_cb(NotifyNotification *notification)
     return FALSE;
 }
 
+static void
+eventd_notify_event_clean(EventdNotifyEvent *event)
+{
+    g_free(event->message);
+    g_free(event->title);
+}
+
+static void
+eventd_notify_event_update(EventdNotifyEvent *event, const char *title, const char *message)
+{
+    eventd_notify_event_clean(event);
+    event->title = g_strdup(title ? title : "$client-name - $event-name");
+    event->message = g_strdup(message ? message : "$event-data[text]");
+}
+
 static EventdNotifyEvent *
 eventd_notify_event_new(const char *title, const char *message)
 {
@@ -64,8 +79,7 @@ eventd_notify_event_new(const char *title, const char *message)
 
     event = g_new0(EventdNotifyEvent, 1);
 
-    event->title = g_strdup(title ? title : "$client-name - $event-name");
-    event->message = g_strdup(message ? message : "$event-data[text]");
+    eventd_notify_event_update(event, title, message);
 
     return event;
 }
@@ -73,17 +87,17 @@ eventd_notify_event_new(const char *title, const char *message)
 static void
 eventd_notify_event_free(EventdNotifyEvent *event)
 {
-    g_free(event->message);
-    g_free(event->title);
+    eventd_notify_event_clean(event);
     g_free(event);
 }
 
 static void
-eventd_notify_event_parse(const gchar *type, const gchar *event, GKeyFile *config_file, GKeyFile *defaults_config_file)
+eventd_notify_event_parse(const gchar *client_type, const gchar *event_type, GKeyFile *config_file)
 {
     gchar *name = NULL;
     gchar *title = NULL;
     gchar *message = NULL;
+    EventdNotifyEvent *event;
 
     if ( ! g_key_file_has_group(config_file, "notify") )
         return;
@@ -93,18 +107,16 @@ eventd_notify_event_parse(const gchar *type, const gchar *event, GKeyFile *confi
     if ( eventd_plugin_helper_config_key_file_get_string(config_file, "notify", "message", &message) < 0 )
         goto skip;
 
-    /* Check defaults */
-    if ( ( defaults_config_file ) && g_key_file_has_group(defaults_config_file, "notify") )
-    {
-        if ( ! title )
-            eventd_plugin_helper_config_key_file_get_string(defaults_config_file, "notify", "title", &title);
+    if ( event_type != NULL )
+        name = g_strdup_printf("%s-%s", client_type, event_type);
+    else
+        name = g_strdup(client_type);
 
-        if ( ! message )
-            eventd_plugin_helper_config_key_file_get_string(defaults_config_file, "notify", "message", &message);
-    }
-
-    name = g_strdup_printf("%s-%s", type, event);
-    g_hash_table_insert(events, name, eventd_notify_event_new(title, message));
+    event = g_hash_table_lookup(events, name);
+    if ( event != NULL )
+        eventd_notify_event_update(event, title, message);
+    else
+        g_hash_table_insert(events, name, eventd_notify_event_new(title, message));
 
 skip:
     g_free(message);
@@ -125,7 +137,7 @@ eventd_notify_event_action(const gchar *client_type, const gchar *client_name, c
     name = g_strdup_printf("%s-%s", client_type, event_type);
 
     event = g_hash_table_lookup(events, name);
-    if ( event == NULL )
+    if ( ( event == NULL ) && ( ( event = g_hash_table_lookup(events, event_type) ) == NULL ) )
         goto fail;
 
     tmp = eventd_plugin_helper_regex_replace_client_name(event->title, client_name);
