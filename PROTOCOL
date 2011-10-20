@@ -18,8 +18,13 @@ EVENT <type> [<name>]
     Desktop Entry Specification files
     http://freedesktop.org/wiki/Specifications/desktop-entry-spec
     The client may specify a pretty name after the type
-    After the event, the client may specify datas
-    Data end with a line containing ".", even if there is no data
+    After the event, the client may specify data using
+    one or more DATA message
+    An EVENT message end with a line containing "."
+
+DATA <name>
+    This message is followed by the corresponding data
+    Data end with a line containing "."
     If data contain a line with the first character being ".",
     it has to be replaced by ".."
     On server side, ".." at the beginning of a line
