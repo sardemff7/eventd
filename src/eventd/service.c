@@ -97,7 +97,7 @@ connection_handler(
                     if ( event_time > ( last_action + delay ) )
                     {
                         last_action = event_time;
-                        eventd_plugins_event_action_all(client_type, client_name, event_type, event_name, event_data);
+                        eventd_plugins_event_action_all(client_type, client_name, event_type, event_name, ( g_hash_table_size(event_data) > 0 ) ? event_data : NULL);
                     }
                     g_hash_table_unref(event_data);
                     g_free(event_name);
