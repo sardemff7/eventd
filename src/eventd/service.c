@@ -322,6 +322,8 @@ eventd_service(GList *sockets)
     g_main_loop_run(loop);
     g_main_loop_unref(loop);
 
+    loop = NULL;
+
     g_socket_service_stop(service);
     g_socket_listener_close((GSocketListener *)service);
 
