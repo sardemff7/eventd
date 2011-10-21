@@ -137,7 +137,7 @@ eventd_notify_event_action(const gchar *client_type, const gchar *client_name, c
     name = g_strdup_printf("%s-%s", client_type, event_type);
 
     event = g_hash_table_lookup(events, name);
-    if ( ( event == NULL ) && ( ( event = g_hash_table_lookup(events, event_type) ) == NULL ) )
+    if ( ( event == NULL ) && ( ( event = g_hash_table_lookup(events, client_type) ) == NULL ) )
         goto fail;
 
     tmp = eventd_plugin_helper_regex_replace_client_name(event->title, client_name);

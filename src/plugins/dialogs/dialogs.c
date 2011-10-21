@@ -112,7 +112,7 @@ eventd_dialogs_event_action(const gchar *client_type, const gchar *client_name, 
     name = g_strdup_printf("%s-%s", client_type, event_type);
 
     message = g_hash_table_lookup(events, name);
-    if ( ( message == NULL ) && ( ( message = g_hash_table_lookup(events, event_type) ) == NULL ) )
+    if ( ( message == NULL ) && ( ( message = g_hash_table_lookup(events, client_type) ) == NULL ) )
         goto fail;
 
     msg = eventd_plugin_helper_regex_replace_event_data(message, event_data, NULL);
