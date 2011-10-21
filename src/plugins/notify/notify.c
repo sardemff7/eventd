@@ -144,7 +144,7 @@ eventd_notify_event_action(const gchar *client_type, const gchar *client_name, c
     title = eventd_plugin_helper_regex_replace_event_name(tmp, event_name);
     g_free(tmp);
 
-    message = eventd_plugin_helper_regex_replace_event_data(event->message, event_data);
+    message = eventd_plugin_helper_regex_replace_event_data(event->message, event_data, NULL);
 
     notification = notify_notification_new(title, message, NULL
     #if ! NOTIFY_CHECK_VERSION(0,7,0)
