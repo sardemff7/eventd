@@ -68,14 +68,19 @@ static void
 eventd_notify_event_update(EventdNotifyEvent *event, const char *title, const char *message)
 {
     eventd_notify_event_clean(event);
-    event->title = g_strdup(title ? title : "$client-name - $event-name");
-    event->message = g_strdup(message ? message : "$event-data[text]");
+    if ( title != NULL )
+        event->title = g_strdup(title);
+    if ( message != NULL )
+        event->message = g_strdup(message);
 }
 
 static EventdNotifyEvent *
-eventd_notify_event_new(const char *title, const char *message)
+eventd_notify_event_new(const char *title, const char *message, EventdNotifyEvent *parent)
 {
     EventdNotifyEvent *event = NULL;
+
+    title = title ?: parent ? parent->title : "$client-name - $event-name";
+    message = message ?: parent ? parent->message : "$event-data[text]";
 
     event = g_new0(EventdNotifyEvent, 1);
 
@@ -116,7 +121,7 @@ eventd_notify_event_parse(const gchar *client_type, const gchar *event_type, GKe
     if ( event != NULL )
         eventd_notify_event_update(event, title, message);
     else
-        g_hash_table_insert(events, name, eventd_notify_event_new(title, message));
+        g_hash_table_insert(events, name, eventd_notify_event_new(title, message, g_hash_table_lookup(events, client_type)));
 
 skip:
     g_free(message);
