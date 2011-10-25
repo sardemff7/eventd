@@ -21,6 +21,9 @@
  */
 
 #include <libnotify/notify.h>
+#if ! NOTIFY_CHECK_VERSION(0,7,0)
+#include "libnotify-compat.h"
+#endif
 
 #include <glib.h>
 
@@ -151,11 +154,7 @@ eventd_notify_event_action(const gchar *client_type, const gchar *client_name, c
 
     message = eventd_plugin_helper_regex_replace_event_data(event->message, event_data, NULL);
 
-    notification = notify_notification_new(title, message, NULL
-    #if ! NOTIFY_CHECK_VERSION(0,7,0)
-    , NULL
-    #endif
-    );
+    notification = notify_notification_new(title, message, NULL);
     notify_notification_set_urgency(notification, NOTIFY_URGENCY_NORMAL);
     notify_notification_set_timeout(notification, 1);
     if ( ! notify_notification_show(notification, &error) )
