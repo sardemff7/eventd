@@ -77,7 +77,7 @@ eventd_parse_client(gchar *type, gchar *config_dir_name)
     gchar *config_file_name = NULL;
     GKeyFile *config_file = NULL;
 
-    config_file_name = g_strdup_printf("%s.conf", config_dir_name);
+    config_file_name = g_strconcat(config_dir_name, ".conf", NULL);
     if ( g_file_test(config_file_name, G_FILE_TEST_IS_REGULAR) )
     {
         config_file = g_key_file_new();

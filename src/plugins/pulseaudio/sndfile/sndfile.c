@@ -200,7 +200,7 @@ eventd_pulseaudio_sndfile_event_action(const gchar *client_type, const gchar *cl
     EventdPulseaudioSndfileEvent *event = NULL;
     pa_operation *op;
 
-    name = g_strdup_printf("%s-%s", client_type, event_type);
+    name = g_strconcat(client_type, "-", event_type, NULL);
 
     event = g_hash_table_lookup(events, name);
     if ( ( event == NULL ) && ( ( event = g_hash_table_lookup(events, client_type) ) == NULL ) )
@@ -241,7 +241,7 @@ eventd_pulseaudio_sndfile_event_update(EventdPulseaudioSndfileEvent *event, cons
     if ( filename != NULL )
     {
         if ( filename[0] != '/')
-            real_filename = g_strdup_printf("%s/" PACKAGE_NAME "/sounds/%s", g_get_user_data_dir(), filename);
+            real_filename = g_build_filename(g_get_user_data_dir(), PACKAGE_NAME, "sounds", filename, NULL);
         else
             real_filename = g_strdup(filename);
 
@@ -291,7 +291,7 @@ eventd_pulseaudio_sndfile_event_parse(const gchar *client_type, const gchar *eve
         gchar *name;
 
         if ( event_type != NULL )
-            name = g_strdup_printf("%s-%s", client_type, event_type);
+            name = g_strconcat(client_type, "-", event_type, NULL);
         else
             name = g_strdup(client_type);
 

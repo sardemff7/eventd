@@ -123,7 +123,7 @@ eventd_notify_event_parse(const gchar *client_type, const gchar *event_type, GKe
         goto skip;
 
     if ( event_type != NULL )
-        name = g_strdup_printf("%s-%s", client_type, event_type);
+        name = g_strconcat(client_type, "-", event_type, NULL);
     else
         name = g_strdup(client_type);
 
@@ -151,7 +151,7 @@ eventd_notify_event_action(const gchar *client_type, const gchar *client_name, c
     gchar *tmp = NULL;
     NotifyNotification *notification = NULL;
 
-    name = g_strdup_printf("%s-%s", client_type, event_type);
+    name = g_strconcat(client_type, "-", event_type, NULL);
 
     event = g_hash_table_lookup(events, name);
     if ( ( event == NULL ) && ( ( event = g_hash_table_lookup(events, client_type) ) == NULL ) )
@@ -176,7 +176,7 @@ eventd_notify_event_action(const gchar *client_type, const gchar *client_name, c
         GdkPixbufLoader *loader;
         GdkPixbuf *pixbuf;
 
-        icon_size_name = g_strdup_printf("%s-size", event->icon);
+        icon_size_name = g_strconcat(event->icon, "-size", NULL);
         icon_size_text = g_hash_table_lookup(event_data, icon_size_name);
         g_free(icon_size_name);
 

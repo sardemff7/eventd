@@ -95,7 +95,7 @@ eventd_dialogs_event_parse(const gchar *type, const gchar *event, GKeyFile *conf
         message = g_strdup("$event-data[text]");
 
     if ( event != NULL )
-        name = g_strdup_printf("%s-%s", type, event);
+        name = g_strconcat(type, "-", event, NULL);
     else
         name = g_strdup(type);
 
@@ -109,7 +109,7 @@ eventd_dialogs_event_action(const gchar *client_type, const gchar *client_name, 
     gchar *message;
     gchar *msg;
 
-    name = g_strdup_printf("%s-%s", client_type, event_type);
+    name = g_strconcat(client_type, "-", event_type, NULL);
 
     message = g_hash_table_lookup(events, name);
     if ( ( message == NULL ) && ( ( message = g_hash_table_lookup(events, client_type) ) == NULL ) )

@@ -190,9 +190,9 @@ namespace Eventd
             this.output = new GLib.DataOutputStream((this.connection as GLib.IOStream).get_output_stream());
 
             if ( this._name == null )
-                this.send("HELLO %s".printf(this._type));
+                this.send("HELLO " + this._type);
             else
-                this.send("HELLO %s %s".printf(this._type, this._name));
+                this.send("HELLO " + this._type + " " + this._name);
             var r = this.receive(null);
             if ( r != "HELLO" )
             {
@@ -204,9 +204,9 @@ namespace Eventd
         rename() throws EventcError
         {
             if ( this._name == null )
-                this.send("RENAME %s".printf(this._type));
+                this.send("RENAME " + this._type);
             else
-                this.send("RENAME %s %s".printf(this._type, this._name));
+                this.send("RENAME " + this._type +  " " + this._name);
             var r = this.receive(null);
             if ( r != "RENAMED" )
                 throw new EventcError.RENAMED("Got a wrong renamed message: %s", r);
@@ -271,7 +271,7 @@ namespace Eventd
         {
             try
             {
-                this.output.put_string("%s\n".printf(msg), null);
+                this.output.put_string(msg + "\n", null);
             }
             catch ( GLib.Error e )
             {
