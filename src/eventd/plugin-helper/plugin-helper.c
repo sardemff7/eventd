@@ -141,7 +141,7 @@ eventd_plugin_helper_regex_event_data_cb(const GMatchInfo *info, GString *r, gpo
 }
 
 gchar *
-eventd_plugin_helper_regex_replace_event_data(const gchar *target, const GHashTable *event_data, GRegexEvalCallback callback)
+eventd_plugin_helper_regex_replace_event_data(const gchar *target, GHashTable *event_data, GRegexEvalCallback callback)
 {
     GError *error = NULL;
     gchar *r;

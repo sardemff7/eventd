@@ -31,6 +31,6 @@ void eventd_plugin_helper_regex_clean();
 
 gchar *eventd_plugin_helper_regex_replace_client_name(const gchar *target, const gchar *clieant_name);
 gchar *eventd_plugin_helper_regex_replace_event_name(const gchar *target, const gchar *event_name);
-gchar *eventd_plugin_helper_regex_replace_event_data(const gchar *target, const GHashTable *event_data, GRegexEvalCallback callback);
+gchar *eventd_plugin_helper_regex_replace_event_data(const gchar *target, GHashTable *event_data, GRegexEvalCallback callback);
 
 #endif /* __EVENTD_PLUGIN_HELPER_H__ */

@@ -103,7 +103,7 @@ eventd_dialogs_event_parse(const gchar *type, const gchar *event, GKeyFile *conf
 }
 
 static void
-eventd_dialogs_event_action(const gchar *client_type, const gchar *client_name, const gchar *event_type, const gchar *event_name, const GHashTable *event_data)
+eventd_dialogs_event_action(const gchar *client_type, const gchar *client_name, const gchar *event_type, const gchar *event_name, GHashTable *event_data)
 {
     gchar *name;
     gchar *message;

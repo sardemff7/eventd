@@ -129,7 +129,7 @@ skip:
 }
 
 static void
-eventd_notify_event_action(const gchar *client_type, const gchar *client_name, const gchar *event_type, const gchar *event_name, const GHashTable *event_data)
+eventd_notify_event_action(const gchar *client_type, const gchar *client_name, const gchar *event_type, const gchar *event_name, GHashTable *event_data)
 {
     gchar *name;
     GError *error = NULL;
