@@ -99,7 +99,7 @@ eventd_plugins_helper_load(GList **plugins, const gchar *plugins_subdir, gpointe
     if ( plugins == NULL )
         return;
 
-    plugins_dir = g_build_filename(LIBDIR, PACKAGE_NAME, plugins_subdir, NULL);
+    plugins_dir = g_build_filename(g_get_user_data_dir(), PACKAGE_NAME, plugins_subdir, NULL);
     if ( g_file_test(plugins_dir, G_FILE_TEST_IS_DIR) )
         eventd_plugins_helper_load_dir(plugins, plugins_dir, user_data);
     g_free(plugins_dir);
@@ -109,7 +109,7 @@ eventd_plugins_helper_load(GList **plugins, const gchar *plugins_subdir, gpointe
         eventd_plugins_helper_load_dir(plugins, plugins_dir, user_data);
     g_free(plugins_dir);
 
-    plugins_dir = g_build_filename(g_get_user_data_dir(), PACKAGE_NAME, plugins_subdir, NULL);
+    plugins_dir = g_build_filename(LIBDIR, PACKAGE_NAME, plugins_subdir, NULL);
     if ( g_file_test(plugins_dir, G_FILE_TEST_IS_DIR) )
         eventd_plugins_helper_load_dir(plugins, plugins_dir, user_data);
     g_free(plugins_dir);
