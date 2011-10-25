@@ -34,6 +34,7 @@
 typedef struct {
     gchar *title;
     gchar *message;
+    gchar *icon;
 } EventdNotifyEvent;
 
 static GHashTable *events = NULL;
@@ -68,26 +69,29 @@ eventd_notify_event_clean(EventdNotifyEvent *event)
 }
 
 static void
-eventd_notify_event_update(EventdNotifyEvent *event, const char *title, const char *message)
+eventd_notify_event_update(EventdNotifyEvent *event, const char *title, const char *message, const char *icon)
 {
     eventd_notify_event_clean(event);
     if ( title != NULL )
         event->title = g_strdup(title);
     if ( message != NULL )
         event->message = g_strdup(message);
+    if ( icon != NULL )
+        event->icon = g_strdup(icon);
 }
 
 static EventdNotifyEvent *
-eventd_notify_event_new(const char *title, const char *message, EventdNotifyEvent *parent)
+eventd_notify_event_new(const char *title, const char *message, const char *icon, EventdNotifyEvent *parent)
 {
     EventdNotifyEvent *event = NULL;
 
     title = title ?: parent ? parent->title : "$client-name - $event-name";
     message = message ?: parent ? parent->message : "$event-data[text]";
+    icon = icon ?: parent ? parent->icon : "icon";
 
     event = g_new0(EventdNotifyEvent, 1);
 
-    eventd_notify_event_update(event, title, message);
+    eventd_notify_event_update(event, title, message, icon);
 
     return event;
 }
@@ -105,6 +109,7 @@ eventd_notify_event_parse(const gchar *client_type, const gchar *event_type, GKe
     gchar *name = NULL;
     gchar *title = NULL;
     gchar *message = NULL;
+    gchar *icon = NULL;
     EventdNotifyEvent *event;
 
     if ( ! g_key_file_has_group(config_file, "notify") )
@@ -114,6 +119,8 @@ eventd_notify_event_parse(const gchar *client_type, const gchar *event_type, GKe
         goto skip;
     if ( eventd_plugin_helper_config_key_file_get_string(config_file, "notify", "message", &message) < 0 )
         goto skip;
+    if ( eventd_plugin_helper_config_key_file_get_string(config_file, "notify", "icon", &icon) < 0 )
+        goto skip;
 
     if ( event_type != NULL )
         name = g_strdup_printf("%s-%s", client_type, event_type);
@@ -122,11 +129,12 @@ eventd_notify_event_parse(const gchar *client_type, const gchar *event_type, GKe
 
     event = g_hash_table_lookup(events, name);
     if ( event != NULL )
-        eventd_notify_event_update(event, title, message);
+        eventd_notify_event_update(event, title, message, icon);
     else
-        g_hash_table_insert(events, name, eventd_notify_event_new(title, message, g_hash_table_lookup(events, client_type)));
+        g_hash_table_insert(events, name, eventd_notify_event_new(title, message, icon, g_hash_table_lookup(events, client_type)));
 
 skip:
+    g_free(icon);
     g_free(message);
     g_free(title);
 }
@@ -139,6 +147,7 @@ eventd_notify_event_action(const gchar *client_type, const gchar *client_name, c
     EventdNotifyEvent *event;
     gchar *title = NULL;
     gchar *message = NULL;
+    gchar *icon_base64 = NULL;
     gchar *tmp = NULL;
     NotifyNotification *notification = NULL;
 
@@ -155,6 +164,50 @@ eventd_notify_event_action(const gchar *client_type, const gchar *client_name, c
     message = eventd_plugin_helper_regex_replace_event_data(event->message, event_data, NULL);
 
     notification = notify_notification_new(title, message, NULL);
+
+    if ( event_data != NULL )
+        icon_base64 = g_hash_table_lookup(event_data, event->icon);
+    if ( icon_base64 != NULL )
+    {
+        guchar *icon = NULL;
+        gsize icon_length;
+        gchar *icon_size_name;
+        gchar *icon_size_text;
+        GdkPixbufLoader *loader;
+        GdkPixbuf *pixbuf;
+
+        icon_size_name = g_strdup_printf("%s-size", event->icon);
+        icon_size_text = g_hash_table_lookup(event_data, icon_size_name);
+        g_free(icon_size_name);
+
+        icon = g_base64_decode(icon_base64, &icon_length);
+
+        loader = gdk_pixbuf_loader_new();
+        if ( icon_size_text != NULL )
+        {
+            guint64 icon_size;
+            icon_size = g_ascii_strtoull(icon_size_text, NULL, 10);
+            gdk_pixbuf_loader_set_size(loader, icon_size, icon_size);
+        }
+        if ( ! gdk_pixbuf_loader_write(loader, icon, icon_length, &error) )
+        {
+            g_warning("Couldn’t write icon data: %s", error->message);
+            g_clear_error(&error);
+        }
+        if ( ! gdk_pixbuf_loader_close(loader, &error) )
+        {
+            g_warning("Couldn’t terminate icon data loading: %s", error->message);
+            g_clear_error(&error);
+        }
+
+        pixbuf = gdk_pixbuf_loader_get_pixbuf(loader);
+
+        notify_notification_set_image_from_pixbuf(notification, pixbuf);
+
+        g_object_unref(loader);
+        g_free(icon);
+    }
+
     notify_notification_set_urgency(notification, NOTIFY_URGENCY_NORMAL);
     notify_notification_set_timeout(notification, 1);
     if ( ! notify_notification_show(notification, &error) )
