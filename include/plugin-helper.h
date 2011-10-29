@@ -24,6 +24,7 @@
 #define __EVENTD_PLUGIN_HELPER_H__
 
 gint8 eventd_plugin_helper_config_key_file_get_string(GKeyFile *config_file, const gchar *group, const gchar *key, gchar **value);
+gint8 eventd_plugin_helper_config_key_file_get_int(GKeyFile *config_file, const gchar *group, const gchar *key, gint64 *value);
 
 
 void eventd_plugin_helper_regex_init();

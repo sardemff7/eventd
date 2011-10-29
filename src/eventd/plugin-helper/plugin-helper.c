@@ -24,29 +24,42 @@
 
 #include <plugin-helper.h>
 
+static gint8
+eventd_plugin_helper_config_key_file_error(GError **error, const gchar *group, const gchar *key)
+{
+    gint8 ret = 1;
+
+    if ( *error == NULL )
+        return 0;
+
+    if ( (*error)->code != G_KEY_FILE_ERROR_KEY_NOT_FOUND )
+    {
+        ret = -1;
+        g_warning("Can’t read the key [%s] '%s': %s", group, key, (*error)->message);
+    }
+    g_clear_error(error);
+
+    return ret;
+}
+
+gint8
+eventd_plugin_helper_config_key_file_get_int(GKeyFile *config_file, const gchar *group, const gchar *key, gint64 *value)
+{
+    GError *error = NULL;
+
+    *value = g_key_file_get_int64(config_file, group, key, &error);
+
+    return eventd_plugin_helper_config_key_file_error(&error, group, key);
+}
+
 gint8
 eventd_plugin_helper_config_key_file_get_string(GKeyFile *config_file, const gchar *group, const gchar *key, gchar **value)
 {
     GError *error = NULL;
-    gint8 ret = 0;
-    gchar *ret_value = NULL;
 
-    ret_value = g_key_file_get_string(config_file, group, key, &error);
-    if ( ( ! ret_value ) && ( error->code != G_KEY_FILE_ERROR_KEY_NOT_FOUND ) )
-    {
-        ret = -1;
-        g_warning("Can’t read the key [%s] '%s': %s", group, key, error->message);
-    }
-    else if ( ! ret_value )
-    {
-        ret = 1;
-        *value = NULL;
-    }
-    else
-        *value = ret_value;
-    g_clear_error(&error);
+    *value = g_key_file_get_string(config_file, group, key, &error);
 
-    return ret;
+    return eventd_plugin_helper_config_key_file_error(&error, group, key);
 }
 
 
