@@ -75,16 +75,30 @@ AM_CONDITIONAL(ENABLE_SYSTEMD, test x$enable_systemd = xyes)
 
 AC_ARG_ENABLE(pulseaudio, AS_HELP_STRING([--disable-pulseaudio], [Disable PulseAudio support]), enable_pulseaudio=$enableval, enable_pulseaudio=yes)
 AC_ARG_ENABLE(sndfile, AS_HELP_STRING([--disable-sndfile], [Disable libsndfile support]), enable_sndfile=$enableval, enable_sndfile=yes)
+AC_ARG_ENABLE(espeak, AS_HELP_STRING([--enable-espeak], [Enable eSpeak support]), enable_espeak=$enableval, enable_espeak=no)
 if test x$enable_pulseaudio = xyes; then
     PKG_CHECK_MODULES(PULSEAUDIO, [libpulse >= $libpulse_min_version])
     if test x$enable_sndfile = xyes; then
         PKG_CHECK_MODULES(SNDFILE, [sndfile])
     fi
-elif test x$enable_sndfile = xyes; then
-    AC_MSG_ERROR([*** libsndfile support requested but not sound support])
+    if test x$enable_espeak = xyes; then
+        ESPEAK_CFLAGS="-I/usr/include/espeak"
+        ESPEAK_LIBS="-lespeak"
+        AC_SEARCH_LIBS([espeak_Synth], [espeak],
+            [
+                AC_SUBST(ESPEAK_CFLAGS)
+                AC_SUBST(ESPEAK_LIBS)
+            ],
+            [
+                AC_MSG_ERROR([*** eSpeak support requested but library is missing])
+            ])
+    fi
+elif test x$enable_sndfile = xyes -o x$enable_espeak = xyes ; then
+    AC_MSG_ERROR([*** libsndfile or eSpeak support requested but not sound support])
 fi
 AM_CONDITIONAL(ENABLE_PULSEAUDIO, test x$enable_pulseaudio = xyes)
 AM_CONDITIONAL(ENABLE_SNDFILE, test x$enable_sndfile = xyes)
+AM_CONDITIONAL(ENABLE_ESPEAK, test x$enable_espeak = xyes)
 
 AC_ARG_ENABLE(libnotify, AS_HELP_STRING([--disable-libnotify], [Disable libnotify support]), enable_libnotify=$enableval, enable_libnotify=yes)
 if test x$enable_libnotify = xyes; then

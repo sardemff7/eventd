@@ -150,6 +150,29 @@ sndfile_la_LIBADD = \
 	$(GLIB_LIBS)
 endif
 
+if ENABLE_ESPEAK
+pulseaudioplugins_LTLIBRARIES += \
+	espeak.la
+
+espeak_la_SOURCES = \
+	src/plugins/pulseaudio/espeak/espeak.c
+
+espeak_la_CFLAGS = \
+	$(AM_CFLAGS) \
+	$(ESPEAK_CFLAGS) \
+	$(PULSEAUDIO_CFLAGS) \
+	$(GLIB_CFLAGS)
+
+espeak_la_LDFLAGS = \
+	$(pulseaudio_la_LDFLAGS)
+
+espeak_la_LIBADD = \
+	libeventd-plugin-helper.la \
+	$(ESPEAK_LIBS) \
+	$(PULSEAUDIO_LIBS) \
+	$(GLIB_LIBS)
+endif
+
 endif
 
 if ENABLE_NOTIFY
