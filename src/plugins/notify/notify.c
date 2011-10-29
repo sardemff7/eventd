@@ -272,9 +272,8 @@ eventd_notify_event_action(const gchar *client_type, const gchar *client_name, c
 
         g_object_unref(icon);
     }
-    else if( overlay_icon != NULL )
+    else if ( overlay_icon != NULL )
     {
-
         notify_notification_set_image_from_pixbuf(notification, overlay_icon);
 
         g_object_unref(overlay_icon);
