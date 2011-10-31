@@ -94,7 +94,7 @@ eventd_notify_event_new(const char *title, const char *message, const char *icon
 {
     EventdNotifyEvent *event = NULL;
 
-    title = title ?: parent ? parent->title : "$client-name - $event-name";
+    title = title ?: parent ? parent->title : "$client-name - $event-data[name]";
     message = message ?: parent ? parent->message : "$event-data[text]";
     icon = icon ?: parent ? parent->icon : "icon";
     overlay_icon = overlay_icon ?: parent ? parent->overlay_icon : "overlay-icon";
