@@ -115,10 +115,10 @@ namespace Eventd
             #if ENABLE_GIO_UNIX
             string path = null;
             if ( this._host == "localhost" )
-                path = GLib.Path.build_filename(GLib.Environment.get_user_runtime_dir(), Common.UNIX_SOCKET);
+                path = GLib.Path.build_filename(GLib.Environment.get_user_runtime_dir(), Config.PACKAGE_NAME, Common.UNIX_SOCKET);
             else if ( this.host_is_socket )
                 path = this._host;
-            if ( ( path != null ) && ( GLib.FileUtils.test(path, GLib.FileTest.EXISTS|GLib.FileTest.IS_REGULAR) ) )
+            if ( ( path != null ) && GLib.FileUtils.test(path, GLib.FileTest.EXISTS) && ( ! GLib.FileUtils.test(path, GLib.FileTest.IS_DIR|GLib.FileTest.IS_REGULAR) ) )
                 this.address = new GLib.UnixSocketAddress(path);
             #endif
             if ( this.address == null )
