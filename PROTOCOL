@@ -29,6 +29,9 @@ DATA <name>
     On server side, ".." at the beginning of a line
     has to be replaced by "."
 
+DATAL <name> <data>
+    Simple data in one line, up to "\n"
+
 BYE
     Close the connection
 

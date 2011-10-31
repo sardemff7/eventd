@@ -117,6 +117,15 @@ connection_handler(
             {
                 event_data_name = g_strdup(line+5);
             }
+            else if ( g_ascii_strncasecmp(line, "DATAL ", 6) == 0 )
+            {
+                gchar **data = NULL;
+
+                data = g_strsplit(line+6, " ", 2);
+                g_hash_table_insert(event_data, g_strdup(data[0]), g_strdup(data[1]));
+
+                g_strfreev(data);
+            }
             else
                 event_data_content = g_strdup(( line[0] == '.' ) ? line+1 : line);
         }
