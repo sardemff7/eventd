@@ -81,7 +81,7 @@ eventd_plugin_helper_regex_init()
         g_warning("Can’t create $client-name regex: %s", error->message);
     g_clear_error(&error);
 
-    regex_event_data = g_regex_new("\\$event-data\\[(\\w+)\\]", G_REGEX_OPTIMIZE, 0, &error);
+    regex_event_data = g_regex_new("\\$event-data\\[([\\w-]+)\\]", G_REGEX_OPTIMIZE, 0, &error);
     if ( ! regex_event_data )
         g_warning("Can’t create $event-data regex: %s", error->message);
     g_clear_error(&error);
