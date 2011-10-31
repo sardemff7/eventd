@@ -223,15 +223,20 @@ namespace Eventd
                 data.foreach((name, content) => {
                     try
                     {
-                        this.send(@"DATA $name");
-                        var datas = content.split("\n");
-                        foreach ( var line in datas )
+                        if ( content.index_of_char('\n') == -1 )
+                            this.send(@"DATAL $name $content");
+                        else
                         {
-                            if ( line[0] == '.' )
-                                line = "." + line;
-                            this.send(line);
+                            this.send(@"DATA $name");
+                            var datas = content.split("\n");
+                            foreach ( var line in datas )
+                            {
+                                if ( line[0] == '.' )
+                                    line = "." + line;
+                                this.send(line);
+                            }
+                            this.send(".");
                         }
-                        this.send(".");
                     }
                     catch ( EventcError ie )
                     {
