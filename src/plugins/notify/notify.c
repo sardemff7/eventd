@@ -71,7 +71,7 @@ eventd_notify_event_clean(EventdNotifyEvent *event)
 }
 
 static void
-eventd_notify_event_update(EventdNotifyEvent *event, const char *title, const char *message, const char *icon, const char *overlay_icon, gint64 scale)
+eventd_notify_event_update(EventdNotifyEvent *event, const char *title, const char *message, const char *icon, const char *overlay_icon, Int *scale)
 {
     eventd_notify_event_clean(event);
     if ( title != NULL )
@@ -82,11 +82,12 @@ eventd_notify_event_update(EventdNotifyEvent *event, const char *title, const ch
         event->icon = g_strdup(icon);
     if ( overlay_icon != NULL )
         event->overlay_icon = g_strdup(overlay_icon);
-    event->scale = scale;
+    if ( scale->set )
+        event->scale = scale->value;
 }
 
 static EventdNotifyEvent *
-eventd_notify_event_new(const char *title, const char *message, const char *icon, const char *overlay_icon, gint64 scale, EventdNotifyEvent *parent)
+eventd_notify_event_new(const char *title, const char *message, const char *icon, const char *overlay_icon, Int *scale, EventdNotifyEvent *parent)
 {
     EventdNotifyEvent *event = NULL;
 
@@ -94,7 +95,8 @@ eventd_notify_event_new(const char *title, const char *message, const char *icon
     message = message ?: parent ? parent->message : "$event-data[text]";
     icon = icon ?: parent ? parent->icon : "icon";
     overlay_icon = overlay_icon ?: parent ? parent->overlay_icon : "overlay-icon";
-    scale = scale ?: parent ? parent->scale : 50;
+    scale->value = scale->set ? scale->value : parent ? parent->scale : 50;
+    scale->set = TRUE;
 
     event = g_new0(EventdNotifyEvent, 1);
 
@@ -118,7 +120,7 @@ eventd_notify_event_parse(const gchar *client_type, const gchar *event_type, GKe
     gchar *message = NULL;
     gchar *icon = NULL;
     gchar *overlay_icon = NULL;
-    gint64 scale = 0;
+    Int scale;
     EventdNotifyEvent *event;
 
     if ( ! g_key_file_has_group(config_file, "notify") )
@@ -142,9 +144,9 @@ eventd_notify_event_parse(const gchar *client_type, const gchar *event_type, GKe
 
     event = g_hash_table_lookup(events, name);
     if ( event != NULL )
-        eventd_notify_event_update(event, title, message, icon, overlay_icon, scale);
+        eventd_notify_event_update(event, title, message, icon, overlay_icon, &scale);
     else
-        g_hash_table_insert(events, name, eventd_notify_event_new(title, message, icon, overlay_icon, scale, g_hash_table_lookup(events, client_type)));
+        g_hash_table_insert(events, name, eventd_notify_event_new(title, message, icon, overlay_icon, &scale, g_hash_table_lookup(events, client_type)));
 
 skip:
     g_free(overlay_icon);

@@ -23,8 +23,13 @@
 #ifndef __EVENTD_PLUGIN_HELPER_H__
 #define __EVENTD_PLUGIN_HELPER_H__
 
+typedef struct {
+    gint64 value;
+    gboolean set;
+} Int;
+
 gint8 eventd_plugin_helper_config_key_file_get_string(GKeyFile *config_file, const gchar *group, const gchar *key, gchar **value);
-gint8 eventd_plugin_helper_config_key_file_get_int(GKeyFile *config_file, const gchar *group, const gchar *key, gint64 *value);
+gint8 eventd_plugin_helper_config_key_file_get_int(GKeyFile *config_file, const gchar *group, const gchar *key, Int *value);
 
 
 void eventd_plugin_helper_regex_init();

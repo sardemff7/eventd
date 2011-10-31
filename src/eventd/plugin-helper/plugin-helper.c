@@ -43,11 +43,12 @@ eventd_plugin_helper_config_key_file_error(GError **error, const gchar *group, c
 }
 
 gint8
-eventd_plugin_helper_config_key_file_get_int(GKeyFile *config_file, const gchar *group, const gchar *key, gint64 *value)
+eventd_plugin_helper_config_key_file_get_int(GKeyFile *config_file, const gchar *group, const gchar *key, Int *value)
 {
     GError *error = NULL;
 
-    *value = g_key_file_get_int64(config_file, group, key, &error);
+    value->value = g_key_file_get_int64(config_file, group, key, &error);
+    value->set = ( error == NULL );
 
     return eventd_plugin_helper_config_key_file_error(&error, group, key);
 }
