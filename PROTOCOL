@@ -11,13 +11,12 @@ HELLO <type> [<name>]
     The client may specify a name what
     will be used to display events
 
-EVENT <type> [<name>]
+EVENT <type>
     Inform the server that an event happened
     The type must contain only the characters
     A-Za-z0-9- as for keys of the
     Desktop Entry Specification files
     http://freedesktop.org/wiki/Specifications/desktop-entry-spec
-    The client may specify a pretty name after the type
     After the event, the client may specify data using
     one or more DATA message
     An EVENT message end with a line containing "."

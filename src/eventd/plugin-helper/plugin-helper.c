@@ -67,7 +67,6 @@ eventd_plugin_helper_config_key_file_get_string(GKeyFile *config_file, const gch
 static guint64 regex_refcount = 0;
 
 static GRegex *regex_client_name = NULL;
-static GRegex *regex_event_name = NULL;
 static GRegex *regex_event_data = NULL;
 
 void
@@ -80,11 +79,6 @@ eventd_plugin_helper_regex_init()
     regex_client_name = g_regex_new("\\$client-name", G_REGEX_OPTIMIZE, 0, &error);
     if ( ! regex_client_name )
         g_warning("Can’t create $client-name regex: %s", error->message);
-    g_clear_error(&error);
-
-    regex_event_name = g_regex_new("\\$event-name", G_REGEX_OPTIMIZE, 0, &error);
-    if ( ! regex_event_name )
-        g_warning("Can’t create $event-name regex: %s", error->message);
     g_clear_error(&error);
 
     regex_event_data = g_regex_new("\\$event-data\\[(\\w+)\\]", G_REGEX_OPTIMIZE, 0, &error);
@@ -100,7 +94,6 @@ eventd_plugin_helper_regex_clean()
         return;
 
     g_regex_unref(regex_event_data);
-    g_regex_unref(regex_event_name);
     g_regex_unref(regex_client_name);
 }
 
@@ -118,23 +111,6 @@ eventd_plugin_helper_regex_replace_client_name(const gchar *target, const gchar 
     }
     g_clear_error(&error);
 
-
-    return r;
-}
-
-gchar *
-eventd_plugin_helper_regex_replace_event_name(const gchar *target, const gchar *event_name)
-{
-    GError *error = NULL;
-    gchar *r;
-
-    r = g_regex_replace_literal(regex_event_name, target, -1, 0, event_name ?: "" , 0, &error);
-    if ( r == NULL )
-    {
-        r = g_strdup(target);
-        g_warning("Can’t replace event name: %s", error->message);
-    }
-    g_clear_error(&error);
 
     return r;
 }

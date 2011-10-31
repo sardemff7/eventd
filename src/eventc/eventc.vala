@@ -25,7 +25,6 @@ namespace Eventd
     static string type;
     static string name;
     static string event_type;
-    static string event_name;
     static string[] event_data_name;
     static string[] event_data_content;
     static string host;
@@ -39,8 +38,7 @@ namespace Eventd
     static const GLib.OptionEntry[] entries =
     {
         { "type", 't', 0, GLib.OptionArg.STRING, out event_type, N_("Event type to send"), "type" },
-        { "name", 'n', 0, GLib.OptionArg.STRING, out event_name, N_("Event name to send"), "name" },
-        { "data-name", 'd', 0, GLib.OptionArg.STRING_ARRAY, out event_data_name, N_("Event data name to send"), "name" },
+        { "data-name", 'n', 0, GLib.OptionArg.STRING_ARRAY, out event_data_name, N_("Event data name to send"), "name" },
         { "data-content", 'c', 0, GLib.OptionArg.STRING_ARRAY, out event_data_content, N_("Event data content to send (must be after a data-name)"), "content" },
         { "host", 'h', 0, GLib.OptionArg.STRING, out host, N_("Host to connect to"), "host" },
         { "port", 'p', 0, GLib.OptionArg.INT, ref port, N_("Port to connect to"), "port" },
@@ -123,33 +121,29 @@ namespace Eventd
 
             GLib.HashTable<string, string> event_data = new GLib.HashTable<string, string>(string.hash, GLib.str_equal);
 
-            for ( var i = 0 ; i < n_length ; ++i )
+            for ( uint i = 0 ; i < n_length ; ++i )
                 event_data.insert(event_data_name[i], event_data_content[i]);
 
             try
             {
-                client.event(event_type, event_name, event_data);
+                client.event(event_type, event_data);
             }
             catch ( EventcError e )
             {
-                GLib.warning("Couldn’t send event '%s' / '%s': %s", event_type, event_name, e.message);
+                GLib.warning("Couldn’t send event '%s': %s", event_type, e.message);
             }
         }
         else
         {
-            string line = null;
-            while ( ( line = stdin.read_line() ) != null )
+            while ( ( event_type = stdin.read_line() ) != null )
             {
-                var elements = line.split(" ", 2);
-                event_type = elements[0];
-                event_name = elements[1];
                 try
                 {
-                    client.event(event_type, event_name, null);
+                    client.event(event_type, null);
                 }
                 catch ( EventcError e )
                 {
-                    GLib.warning("Couldn’t send event %s / %s: %s", event_type, event_name, e.message);
+                    GLib.warning("Couldn’t send event '%s': %s", event_type, e.message);
                 }
             }
         }

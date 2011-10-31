@@ -100,9 +100,9 @@ eventd_pulseaudio_stop()
 }
 
 static void
-eventd_pulseaudio_event_action(const gchar *client_type, const gchar *client_name, const gchar *event_type, const gchar *event_name, GHashTable *event_data)
+eventd_pulseaudio_event_action(const gchar *client_type, const gchar *client_name, const gchar *event_type, GHashTable *event_data)
 {
-    eventd_plugins_helper_event_action_all(plugins, client_type, client_name, event_type, event_name, event_data);
+    eventd_plugins_helper_event_action_all(plugins, client_type, client_name, event_type, event_data);
 }
 
 static void

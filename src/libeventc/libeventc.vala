@@ -213,14 +213,9 @@ namespace Eventd
         }
 
         public void
-        event(string type, string? name, GLib.HashTable<string, string>? data) throws EventcError
+        event(string type, GLib.HashTable<string, string>? data) throws EventcError
         {
-            string ev = null;
-            if ( name == null )
-                ev = @"EVENT $type";
-            else
-                ev = @"EVENT $type $name";
-            this.send(ev);
+            this.send( @"EVENT $type");
 
             if ( data != null )
             {

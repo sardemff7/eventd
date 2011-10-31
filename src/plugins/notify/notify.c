@@ -220,7 +220,7 @@ fail:
 }
 
 static void
-eventd_notify_event_action(const gchar *client_type, const gchar *client_name, const gchar *event_type, const gchar *event_name, GHashTable *event_data)
+eventd_notify_event_action(const gchar *client_type, const gchar *client_name, const gchar *event_type, GHashTable *event_data)
 {
     gchar *name;
     GError *error = NULL;
@@ -239,7 +239,7 @@ eventd_notify_event_action(const gchar *client_type, const gchar *client_name, c
         goto fail;
 
     tmp = eventd_plugin_helper_regex_replace_client_name(event->title, client_name);
-    title = eventd_plugin_helper_regex_replace_event_name(tmp, event_name);
+    title = eventd_plugin_helper_regex_replace_event_data(tmp, event_data, NULL);
     g_free(tmp);
 
     message = eventd_plugin_helper_regex_replace_event_data(event->message, event_data, NULL);

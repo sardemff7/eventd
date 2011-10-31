@@ -55,7 +55,6 @@ connection_handler(
     gchar *client_name = NULL;
 
     gchar *event_type = NULL;
-    gchar *event_name = NULL;
     GHashTable *event_data = NULL;
     gchar *event_data_name = NULL;
     gchar *event_data_content = NULL;
@@ -97,13 +96,11 @@ connection_handler(
                     if ( event_time > ( last_action + delay ) )
                     {
                         last_action = event_time;
-                        eventd_plugins_event_action_all(client_type, client_name, event_type, event_name, ( g_hash_table_size(event_data) > 0 ) ? event_data : NULL);
+                        eventd_plugins_event_action_all(client_type, client_name, event_type, ( g_hash_table_size(event_data) > 0 ) ? event_data : NULL);
                     }
                     g_hash_table_unref(event_data);
-                    g_free(event_name);
                     g_free(event_type);
                     event_data = NULL;
-                    event_name = NULL;
                     event_type = NULL;
                 }
             }
@@ -125,16 +122,8 @@ connection_handler(
         }
         else if ( g_ascii_strncasecmp(line, "EVENT ", 6) == 0 )
         {
-            gchar **event = NULL;
-
-            event = g_strsplit(line+6, " ", 2);
-            event_type = g_strdup(event[0]);
-            if ( event[1] != NULL )
-                event_name = g_strdup(event[1]);
-
+            event_type = g_strdup(line+6);
             event_data = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-
-            g_strfreev(event);
         }
         else if ( g_ascii_strcasecmp(line, "BYE") == 0 )
         {

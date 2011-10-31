@@ -196,7 +196,7 @@ eventd_pulseaudio_espeak_regex_event_data_cb(const GMatchInfo *info, GString *r,
 }
 
 static void
-eventd_pulseaudio_espeak_event_action(const gchar *client_type, const gchar *client_name, const gchar *event_type, const gchar *event_name, GHashTable *event_data)
+eventd_pulseaudio_espeak_event_action(const gchar *client_type, const gchar *client_name, const gchar *event_type, GHashTable *event_data)
 {
     gchar *name;
     gchar *message;
