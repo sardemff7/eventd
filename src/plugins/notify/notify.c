@@ -37,6 +37,7 @@ typedef struct {
     gchar *icon;
     gchar *overlay_icon;
     gint64 scale;
+    gint timeout;
 } EventdNotifyEvent;
 
 static GHashTable *events = NULL;
@@ -71,7 +72,7 @@ eventd_notify_event_clean(EventdNotifyEvent *event)
 }
 
 static void
-eventd_notify_event_update(EventdNotifyEvent *event, const char *title, const char *message, const char *icon, const char *overlay_icon, Int *scale)
+eventd_notify_event_update(EventdNotifyEvent *event, const char *title, const char *message, const char *icon, const char *overlay_icon, Int *scale, Int *timeout)
 {
     eventd_notify_event_clean(event);
     if ( title != NULL )
@@ -84,10 +85,12 @@ eventd_notify_event_update(EventdNotifyEvent *event, const char *title, const ch
         event->overlay_icon = g_strdup(overlay_icon);
     if ( scale->set )
         event->scale = scale->value;
+    if ( timeout->set )
+        event->timeout = timeout->value;
 }
 
 static EventdNotifyEvent *
-eventd_notify_event_new(const char *title, const char *message, const char *icon, const char *overlay_icon, Int *scale, EventdNotifyEvent *parent)
+eventd_notify_event_new(const char *title, const char *message, const char *icon, const char *overlay_icon, Int *scale, Int *timeout, EventdNotifyEvent *parent)
 {
     EventdNotifyEvent *event = NULL;
 
@@ -97,10 +100,12 @@ eventd_notify_event_new(const char *title, const char *message, const char *icon
     overlay_icon = overlay_icon ?: parent ? parent->overlay_icon : "overlay-icon";
     scale->value = scale->set ? scale->value : parent ? parent->scale : 50;
     scale->set = TRUE;
+    timeout->value = timeout->set ? timeout->value : parent ? parent->timeout : NOTIFY_EXPIRES_DEFAULT;
+    timeout->set = TRUE;
 
     event = g_new0(EventdNotifyEvent, 1);
 
-    eventd_notify_event_update(event, title, message, icon, overlay_icon, scale);
+    eventd_notify_event_update(event, title, message, icon, overlay_icon, scale, timeout);
 
     return event;
 }
@@ -121,6 +126,7 @@ eventd_notify_event_parse(const gchar *client_type, const gchar *event_type, GKe
     gchar *icon = NULL;
     gchar *overlay_icon = NULL;
     Int scale;
+    Int timeout;
     EventdNotifyEvent *event;
 
     if ( ! g_key_file_has_group(config_file, "notify") )
@@ -136,6 +142,8 @@ eventd_notify_event_parse(const gchar *client_type, const gchar *event_type, GKe
         goto skip;
     if ( eventd_plugin_helper_config_key_file_get_int(config_file, "notify", "overlay-scale", &scale) < 0 )
         goto skip;
+    if ( eventd_plugin_helper_config_key_file_get_int(config_file, "notify", "timeout", &timeout) < 0 )
+        goto skip;
 
     if ( event_type != NULL )
         name = g_strconcat(client_type, "-", event_type, NULL);
@@ -144,9 +152,9 @@ eventd_notify_event_parse(const gchar *client_type, const gchar *event_type, GKe
 
     event = g_hash_table_lookup(events, name);
     if ( event != NULL )
-        eventd_notify_event_update(event, title, message, icon, overlay_icon, &scale);
+        eventd_notify_event_update(event, title, message, icon, overlay_icon, &scale, &timeout);
     else
-        g_hash_table_insert(events, name, eventd_notify_event_new(title, message, icon, overlay_icon, &scale, g_hash_table_lookup(events, client_type)));
+        g_hash_table_insert(events, name, eventd_notify_event_new(title, message, icon, overlay_icon, &scale, &timeout, g_hash_table_lookup(events, client_type)));
 
 skip:
     g_free(overlay_icon);
@@ -282,7 +290,7 @@ eventd_notify_event_action(const gchar *client_type, const gchar *client_name, c
     }
 
     notify_notification_set_urgency(notification, NOTIFY_URGENCY_NORMAL);
-    notify_notification_set_timeout(notification, 1);
+    notify_notification_set_timeout(notification, ( event->timeout > 0 ) ? ( event->timeout * 1000 ) : event->timeout );
     if ( ! notify_notification_show(notification, &error) )
         g_warning("Can't show the notification: %s", error->message);
     g_clear_error(&error);
