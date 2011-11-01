@@ -43,6 +43,16 @@ eventd_plugin_helper_config_key_file_error(GError **error, const gchar *group, c
 }
 
 gint8
+eventd_plugin_helper_config_key_file_get_boolean(GKeyFile *config_file, const gchar *group, const gchar *key, gboolean *value)
+{
+    GError *error = NULL;
+
+    *value = g_key_file_get_boolean(config_file, group, key, &error);
+
+    return eventd_plugin_helper_config_key_file_error(&error, group, key);
+}
+
+gint8
 eventd_plugin_helper_config_key_file_get_int(GKeyFile *config_file, const gchar *group, const gchar *key, Int *value)
 {
     GError *error = NULL;

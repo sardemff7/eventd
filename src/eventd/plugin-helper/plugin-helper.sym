@@ -1,3 +1,4 @@
+eventd_plugin_helper_config_key_file_get_boolean
 eventd_plugin_helper_config_key_file_get_int
 eventd_plugin_helper_config_key_file_get_string
 eventd_plugin_helper_regex_init
