@@ -97,6 +97,8 @@ namespace Eventd
         private GLib.DataInputStream input;
         private GLib.DataOutputStream output;
 
+        private bool hello_received;
+
         public
         Eventc(string host, uint16 port, string type, string? name)
         {
@@ -111,6 +113,8 @@ namespace Eventd
         {
             if ( this.address != null )
                 return;
+
+            this.hello_received = false;
 
             #if ENABLE_GIO_UNIX
             string path = null;
@@ -132,7 +136,7 @@ namespace Eventd
         public bool
         is_connected()
         {
-            return ( ( this.connection != null ) && ( ! this.connection.is_closed() ) );
+            return ( ( this.connection != null ) && ( ! this.connection.is_closed() ) && this.hello_received );
         }
 
         private void
@@ -195,9 +199,9 @@ namespace Eventd
                 this.send("HELLO " + this._type + " " + this._name);
             var r = this.receive(null);
             if ( r != "HELLO" )
-            {
                 throw new EventcError.HELLO("Got a wrong hello message: %s", r);
-            }
+            else
+                this.hello_received = true;
         }
 
         public void
@@ -282,7 +286,7 @@ namespace Eventd
         public void
         close() throws EventcError
         {
-            if ( ! this.connection.is_closed() )
+            if ( ( this.hello_received ) && ( ! this.connection.is_closed() ) )
             {
                 this.send("BYE");
                 var r = this.receive(null);
