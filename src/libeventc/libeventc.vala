@@ -184,11 +184,11 @@ namespace Eventd
                 else
                     throw new EventcError.CONNECTION_OTHER("Failed to connect: %s", e.message);
             }
-            this.hello();
+            yield this.hello_async();
         }
 
         private void
-        hello() throws EventcError
+        hello_common() throws EventcError
         {
             this.input = new GLib.DataInputStream((this.connection as GLib.IOStream).get_input_stream());
             this.output = new GLib.DataOutputStream((this.connection as GLib.IOStream).get_output_stream());
@@ -197,6 +197,26 @@ namespace Eventd
                 this.send("HELLO " + this._type);
             else
                 this.send("HELLO " + this._type + " " + this._name);
+        }
+
+
+        private async void
+        hello_async() throws EventcError
+        {
+            this.hello_common();
+
+            var r = yield this.receive_async(null);
+            if ( r != "HELLO" )
+                throw new EventcError.HELLO("Got a wrong hello message: %s", r);
+            else
+                this.hello_received = true;
+        }
+
+        private void
+        hello() throws EventcError
+        {
+            this.hello_common();
+
             var r = this.receive(null);
             if ( r != "HELLO" )
                 throw new EventcError.HELLO("Got a wrong hello message: %s", r);
@@ -260,6 +280,23 @@ namespace Eventd
             try
             {
                 r = this.input.read_upto("\n", -1, out length);
+                this.input.read_byte(null);
+            }
+            catch ( GLib.Error e )
+            {
+                length = 0;
+                throw new EventcError.RECEIVE("Failed to receive message: %s", e.message);
+            }
+            return r;
+        }
+
+        private async string?
+        receive_async(out size_t? length) throws EventcError
+        {
+            string r = null;
+            try
+            {
+                r = yield this.input.read_upto_async("\n", -1, GLib.Priority.DEFAULT, null, out length);
                 this.input.read_byte(null);
             }
             catch ( GLib.Error e )
