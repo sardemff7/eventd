@@ -32,6 +32,7 @@
 
 
 typedef struct {
+    gboolean disable;
     gchar *title;
     gchar *message;
     gchar *icon;
@@ -72,9 +73,10 @@ eventd_notify_event_clean(EventdNotifyEvent *event)
 }
 
 static void
-eventd_notify_event_update(EventdNotifyEvent *event, const char *title, const char *message, const char *icon, const char *overlay_icon, Int *scale, Int *timeout)
+eventd_notify_event_update(EventdNotifyEvent *event, gboolean disable, const char *title, const char *message, const char *icon, const char *overlay_icon, Int *scale, Int *timeout)
 {
     eventd_notify_event_clean(event);
+    event->disable = disable;
     if ( title != NULL )
         event->title = g_strdup(title);
     if ( message != NULL )
@@ -90,7 +92,7 @@ eventd_notify_event_update(EventdNotifyEvent *event, const char *title, const ch
 }
 
 static EventdNotifyEvent *
-eventd_notify_event_new(const char *title, const char *message, const char *icon, const char *overlay_icon, Int *scale, Int *timeout, EventdNotifyEvent *parent)
+eventd_notify_event_new(gboolean disable, const char *title, const char *message, const char *icon, const char *overlay_icon, Int *scale, Int *timeout, EventdNotifyEvent *parent)
 {
     EventdNotifyEvent *event = NULL;
 
@@ -105,7 +107,7 @@ eventd_notify_event_new(const char *title, const char *message, const char *icon
 
     event = g_new0(EventdNotifyEvent, 1);
 
-    eventd_notify_event_update(event, title, message, icon, overlay_icon, scale, timeout);
+    eventd_notify_event_update(event, disable, title, message, icon, overlay_icon, scale, timeout);
 
     return event;
 }
@@ -120,6 +122,7 @@ eventd_notify_event_free(EventdNotifyEvent *event)
 static void
 eventd_notify_event_parse(const gchar *client_type, const gchar *event_type, GKeyFile *config_file)
 {
+    gboolean disable;
     gchar *name = NULL;
     gchar *title = NULL;
     gchar *message = NULL;
@@ -132,6 +135,8 @@ eventd_notify_event_parse(const gchar *client_type, const gchar *event_type, GKe
     if ( ! g_key_file_has_group(config_file, "notify") )
         return;
 
+    if ( eventd_plugin_helper_config_key_file_get_boolean(config_file, "notify", "disable", &disable) < 0 )
+        goto skip;
     if ( eventd_plugin_helper_config_key_file_get_string(config_file, "notify", "title", &title) < 0 )
         goto skip;
     if ( eventd_plugin_helper_config_key_file_get_string(config_file, "notify", "message", &message) < 0 )
@@ -152,9 +157,9 @@ eventd_notify_event_parse(const gchar *client_type, const gchar *event_type, GKe
 
     event = g_hash_table_lookup(events, name);
     if ( event != NULL )
-        eventd_notify_event_update(event, title, message, icon, overlay_icon, &scale, &timeout);
+        eventd_notify_event_update(event, disable, title, message, icon, overlay_icon, &scale, &timeout);
     else
-        g_hash_table_insert(events, name, eventd_notify_event_new(title, message, icon, overlay_icon, &scale, &timeout, g_hash_table_lookup(events, client_type)));
+        g_hash_table_insert(events, name, eventd_notify_event_new(disable, title, message, icon, overlay_icon, &scale, &timeout, g_hash_table_lookup(events, client_type)));
 
 skip:
     g_free(overlay_icon);
