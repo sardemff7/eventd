@@ -205,7 +205,7 @@ namespace Eventd
         {
             this.hello_common();
 
-            var r = yield this.receive_async(null);
+            var r = yield this.receive_async();
             if ( r != "HELLO" )
                 throw new EventcError.HELLO("Got a wrong hello message: %s", r);
             else
@@ -217,7 +217,7 @@ namespace Eventd
         {
             this.hello_common();
 
-            var r = this.receive(null);
+            var r = this.receive();
             if ( r != "HELLO" )
                 throw new EventcError.HELLO("Got a wrong hello message: %s", r);
             else
@@ -231,7 +231,7 @@ namespace Eventd
                 this.send("RENAME " + this._type);
             else
                 this.send("RENAME " + this._type +  " " + this._name);
-            var r = this.receive(null);
+            var r = this.receive();
             if ( r != "RENAMED" )
                 throw new EventcError.RENAMED("Got a wrong renamed message: %s", r);
         }
@@ -274,34 +274,32 @@ namespace Eventd
         }
 
         private string?
-        receive(out size_t? length) throws EventcError
+        receive() throws EventcError
         {
             string r = null;
             try
             {
-                r = this.input.read_upto("\n", -1, out length);
+                r = this.input.read_upto("\n", -1, null);
                 this.input.read_byte(null);
             }
             catch ( GLib.Error e )
             {
-                length = 0;
                 throw new EventcError.RECEIVE("Failed to receive message: %s", e.message);
             }
             return r;
         }
 
         private async string?
-        receive_async(out size_t? length) throws EventcError
+        receive_async() throws EventcError
         {
             string r = null;
             try
             {
-                r = yield this.input.read_upto_async("\n", -1, GLib.Priority.DEFAULT, null, out length);
+                r = yield this.input.read_upto_async("\n", -1);
                 this.input.read_byte(null);
             }
             catch ( GLib.Error e )
             {
-                length = 0;
                 throw new EventcError.RECEIVE("Failed to receive message: %s", e.message);
             }
             return r;
@@ -326,7 +324,7 @@ namespace Eventd
             if ( ( this.hello_received ) && ( ! this.connection.is_closed() ) )
             {
                 this.send("BYE");
-                var r = this.receive(null);
+                var r = this.receive();
                 if ( r != "BYE" )
                     throw new EventcError.BYE("Got a wrong bye message: %s", r);
             }
