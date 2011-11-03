@@ -238,10 +238,10 @@ eventd_notify_event_action(const gchar *client_type, const gchar *client_name, c
     NotifyNotification *notification = NULL;
 
     name = g_strconcat(client_type, "-", event_type, NULL);
-
     event = g_hash_table_lookup(events, name);
+    g_free(name);
     if ( ( event == NULL ) && ( ( event = g_hash_table_lookup(events, client_type) ) == NULL ) )
-        goto fail;
+        return;
 
     tmp = eventd_plugin_helper_regex_replace_client_name(event->title, client_name);
     title = eventd_plugin_helper_regex_replace_event_data(tmp, event_data, NULL);
@@ -303,9 +303,6 @@ eventd_notify_event_action(const gchar *client_type, const gchar *client_name, c
     g_object_unref(G_OBJECT(notification));
     g_free(message);
     g_free(title);
-
-fail:
-    g_free(name);
 }
 
 

@@ -205,10 +205,10 @@ eventd_pulseaudio_espeak_event_action(const gchar *client_type, const gchar *cli
     pa_stream *stream;
 
     name = g_strconcat(client_type, "-", event_type, NULL);
-
     message = g_hash_table_lookup(events, name);
+    g_free(name);
     if ( ( message == NULL ) && ( ( message = g_hash_table_lookup(events, client_type) ) == NULL ) )
-        goto fail;
+        return;
 
     msg = eventd_plugin_helper_regex_replace_event_data(message, event_data, eventd_pulseaudio_espeak_regex_event_data_cb);
 
@@ -234,9 +234,6 @@ eventd_pulseaudio_espeak_event_action(const gchar *client_type, const gchar *cli
     }
 
     pa_threaded_mainloop_unlock(pa_loop);
-
-fail:
-    g_free(name);
 }
 
 static void

@@ -110,17 +110,14 @@ eventd_dialogs_event_action(const gchar *client_type, const gchar *client_name, 
     gchar *msg;
 
     name = g_strconcat(client_type, "-", event_type, NULL);
-
     message = g_hash_table_lookup(events, name);
+    g_free(name);
     if ( ( message == NULL ) && ( ( message = g_hash_table_lookup(events, client_type) ) == NULL ) )
-        goto fail;
+        return;
 
     msg = eventd_plugin_helper_regex_replace_event_data(message, event_data, NULL);
     do_it("zenity", "--info", "--title", client_name, "--text", msg, NULL);
     g_free(msg);
-
-fail:
-    g_free(name);
 }
 
 static void

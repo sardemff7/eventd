@@ -201,10 +201,10 @@ eventd_pulseaudio_sndfile_event_action(const gchar *client_type, const gchar *cl
     pa_operation *op;
 
     name = g_strconcat(client_type, "-", event_type, NULL);
-
     event = g_hash_table_lookup(events, name);
+    g_free(name);
     if ( ( event == NULL ) && ( ( event = g_hash_table_lookup(events, client_type) ) == NULL ) )
-        goto fail;
+        return;
 
     pa_threaded_mainloop_lock(pa_loop);
     op = pa_context_play_sample(sound, event->sample, NULL, PA_VOLUME_NORM, NULL, NULL);
@@ -213,9 +213,6 @@ eventd_pulseaudio_sndfile_event_action(const gchar *client_type, const gchar *cl
     else
         g_warning("Can't play sample %s", name);
     pa_threaded_mainloop_unlock(pa_loop);
-
-fail:
-    g_free(name);
 }
 
 static void
