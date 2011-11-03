@@ -136,6 +136,7 @@ eventd_pulseaudio_espeak_stop()
 static void
 eventd_pulseaudio_espeak_event_parse(const gchar *client_type, const gchar *event_type, GKeyFile *config_file)
 {
+    gboolean disable;
     gchar *message = NULL;
     gchar *name = NULL;
     gchar *parent = NULL;
@@ -143,6 +144,8 @@ eventd_pulseaudio_espeak_event_parse(const gchar *client_type, const gchar *even
     if ( ! g_key_file_has_group(config_file, "espeak") )
         return;
 
+    if ( eventd_plugin_helper_config_key_file_get_boolean(config_file, "espeak", "disable", &disable) < 0 )
+        return;
     if ( eventd_plugin_helper_config_key_file_get_string(config_file, "espeak", "message", &message) < 0 )
         return;
 
@@ -157,7 +160,13 @@ eventd_pulseaudio_espeak_event_parse(const gchar *client_type, const gchar *even
     if ( ! message )
         message = g_strdup(parent ?: "$event-data[text]");
 
-    g_hash_table_insert(events, name, message);
+    if ( disable )
+    {
+        g_free(name);
+        g_free(message);
+    }
+    else
+        g_hash_table_insert(events, name, message);
 }
 
 static gboolean
