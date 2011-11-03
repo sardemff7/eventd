@@ -257,12 +257,23 @@ fail:
 }
 
 static EventdPulseaudioSndfileEvent *
-eventd_pulseaudio_sndfile_event_new()
+eventd_pulseaudio_sndfile_event_new(const gchar *name, const gchar *sample, const gchar *filename, EventdPulseaudioSndfileEvent *parent)
 {
     EventdPulseaudioSndfileEvent *event = NULL;
 
+    if ( ( filename == NULL ) && ( sample == NULL ) )
+    {
+        if ( parent == NULL )
+            return NULL;
+        sample = parent->sample ?: name;
+    }
+    else
+        sample = sample ?: name;
 
     event = g_new0(EventdPulseaudioSndfileEvent, 1);
+
+    if ( ! eventd_pulseaudio_sndfile_event_update(event, sample, filename) )
+        event = (g_free(event), NULL);
 
     return event;
 }
@@ -272,7 +283,10 @@ eventd_pulseaudio_sndfile_event_parse(const gchar *client_type, const gchar *eve
 {
     gchar *sample = NULL;
     gchar *filename = NULL;
+
     EventdPulseaudioSndfileEvent *event = NULL;
+    EventdPulseaudioSndfileEvent *parent = NULL;
+    gchar *name;
 
     if ( ! g_key_file_has_group(config_file, "sound") )
         return;
@@ -283,35 +297,33 @@ eventd_pulseaudio_sndfile_event_parse(const gchar *client_type, const gchar *eve
         goto skip;
 
 
-    if ( ( filename ) || ( sample ) )
+    if ( event_type != NULL )
     {
-        gchar *name;
+        parent = g_hash_table_lookup(events, client_type);
+        name = g_strconcat(client_type, "-", event_type, NULL);
+    }
+    else
+        name = g_strdup(client_type);
 
-        if ( event_type != NULL )
-            name = g_strconcat(client_type, "-", event_type, NULL);
-        else
-            name = g_strdup(client_type);
-
-        if ( ! sample )
-            sample = g_strdup(name);
-
-        event = g_hash_table_lookup(events, name);
-        if ( event != NULL )
+    event = g_hash_table_lookup(events, name);
+    if ( event != NULL )
+    {
+        if ( ! eventd_pulseaudio_sndfile_event_update(event, sample ?: name, filename) )
         {
-            if ( ! eventd_pulseaudio_sndfile_event_update(event, sample, filename) )
-                g_hash_table_remove(events, name);
-            g_free(name);
+            g_hash_table_remove(events, name);
+            g_free(event);
         }
+        g_free(name);
+    }
+    else
+    {
+        event = eventd_pulseaudio_sndfile_event_new(name, sample, filename, parent);
+        if ( event != NULL )
+            g_hash_table_insert(events, name, event);
         else
         {
-            event = eventd_pulseaudio_sndfile_event_new();
-            if ( eventd_pulseaudio_sndfile_event_update(event, sample, filename) )
-                g_hash_table_insert(events, name, event);
-            else
-            {
-                g_free(event);
-                g_free(name);
-            }
+            g_free(event);
+            g_free(name);
         }
     }
 
