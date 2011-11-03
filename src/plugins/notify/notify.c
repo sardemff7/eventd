@@ -243,6 +243,9 @@ eventd_notify_event_action(const gchar *client_type, const gchar *client_name, c
     if ( ( event == NULL ) && ( ( event = g_hash_table_lookup(events, client_type) ) == NULL ) )
         return;
 
+    if ( event->disable )
+        return;
+
     tmp = eventd_plugin_helper_regex_replace_client_name(event->title, client_name);
     title = eventd_plugin_helper_regex_replace_event_data(tmp, event_data, NULL);
     g_free(tmp);
