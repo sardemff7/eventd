@@ -32,6 +32,7 @@
 #include "../pulseaudio.h"
 
 typedef struct {
+    gboolean disable;
     gchar *sample;
     gboolean created;
 } EventdPulseaudioSndfileEvent;
@@ -206,6 +207,9 @@ eventd_pulseaudio_sndfile_event_action(const gchar *client_type, const gchar *cl
     if ( ( event == NULL ) && ( ( event = g_hash_table_lookup(events, client_type) ) == NULL ) )
         return;
 
+    if ( event->disable )
+        return;
+
     pa_threaded_mainloop_lock(pa_loop);
     op = pa_context_play_sample(sound, event->sample, NULL, PA_VOLUME_NORM, NULL, NULL);
     if ( op )
@@ -225,7 +229,7 @@ eventd_pulseaudio_sndfile_event_clean(EventdPulseaudioSndfileEvent *event)
 }
 
 static gboolean
-eventd_pulseaudio_sndfile_event_update(EventdPulseaudioSndfileEvent *event, const gchar *sample, const gchar *filename)
+eventd_pulseaudio_sndfile_event_update(EventdPulseaudioSndfileEvent *event, gboolean disable, const gchar *sample, const gchar *filename)
 {
     gboolean ret = FALSE;
     gchar *real_filename = NULL;
@@ -246,6 +250,7 @@ eventd_pulseaudio_sndfile_event_update(EventdPulseaudioSndfileEvent *event, cons
             goto fail;
     }
 
+    event->disable = disable;
     event->sample = g_strdup(sample);
     event->created = (filename != NULL);
 
@@ -257,7 +262,7 @@ fail:
 }
 
 static EventdPulseaudioSndfileEvent *
-eventd_pulseaudio_sndfile_event_new(const gchar *name, const gchar *sample, const gchar *filename, EventdPulseaudioSndfileEvent *parent)
+eventd_pulseaudio_sndfile_event_new(gboolean disable, const gchar *name, const gchar *sample, const gchar *filename, EventdPulseaudioSndfileEvent *parent)
 {
     EventdPulseaudioSndfileEvent *event = NULL;
 
@@ -272,7 +277,7 @@ eventd_pulseaudio_sndfile_event_new(const gchar *name, const gchar *sample, cons
 
     event = g_new0(EventdPulseaudioSndfileEvent, 1);
 
-    if ( ! eventd_pulseaudio_sndfile_event_update(event, sample, filename) )
+    if ( ! eventd_pulseaudio_sndfile_event_update(event, disable, sample, filename) )
         event = (g_free(event), NULL);
 
     return event;
@@ -281,6 +286,7 @@ eventd_pulseaudio_sndfile_event_new(const gchar *name, const gchar *sample, cons
 static void
 eventd_pulseaudio_sndfile_event_parse(const gchar *client_type, const gchar *event_type, GKeyFile *config_file)
 {
+    gboolean disable;
     gchar *sample = NULL;
     gchar *filename = NULL;
 
@@ -291,6 +297,8 @@ eventd_pulseaudio_sndfile_event_parse(const gchar *client_type, const gchar *eve
     if ( ! g_key_file_has_group(config_file, "sound") )
         return;
 
+    if ( eventd_plugin_helper_config_key_file_get_boolean(config_file, "sound", "disable", &disable) < 0 )
+        goto skip;
     if ( eventd_plugin_helper_config_key_file_get_string(config_file, "sound", "sample", &sample) < 0 )
         goto skip;
     if ( eventd_plugin_helper_config_key_file_get_string(config_file, "sound", "file", &filename) < 0 )
@@ -308,7 +316,7 @@ eventd_pulseaudio_sndfile_event_parse(const gchar *client_type, const gchar *eve
     event = g_hash_table_lookup(events, name);
     if ( event != NULL )
     {
-        if ( ! eventd_pulseaudio_sndfile_event_update(event, sample ?: name, filename) )
+        if ( ! eventd_pulseaudio_sndfile_event_update(event, disable, sample ?: name, filename) )
         {
             g_hash_table_remove(events, name);
             g_free(event);
@@ -317,7 +325,7 @@ eventd_pulseaudio_sndfile_event_parse(const gchar *client_type, const gchar *eve
     }
     else
     {
-        event = eventd_pulseaudio_sndfile_event_new(name, sample, filename, parent);
+        event = eventd_pulseaudio_sndfile_event_new(disable, name, sample, filename, parent);
         if ( event != NULL )
             g_hash_table_insert(events, name, event);
         else
