@@ -1,13 +1,13 @@
 ACLOCAL_AMFLAGS = -I m4
 
 pluginsdir = $(pkglibdir)/plugins
-pulseaudiopluginsdir = $(pluginsdir)/pulseaudio
+soundpluginsdir = $(pluginsdir)/sound
 
 bin_PROGRAMS =
 lib_LTLIBRARIES =
 pkglib_LTLIBRARIES =
 plugins_LTLIBRARIES =
-pulseaudioplugins_LTLIBRARIES =
+soundplugins_LTLIBRARIES =
 pkginclude_HEADERS =
 
 CLEANFILES =
@@ -105,34 +105,41 @@ eventd_LDADD += \
 	$(SYSTEMD_LIBS)
 endif
 
-if ENABLE_PULSEAUDIO
 plugins_LTLIBRARIES += \
-	pulseaudio.la
+	sound.la
 
-pulseaudio_la_SOURCES = \
-	src/plugins/pulseaudio/pulseaudio.c
+sound_la_SOURCES = \
+	src/plugins/sound/sound.c
 
-pulseaudio_la_CFLAGS = \
+if ENABLE_PULSEAUDIO
+sound_la_SOURCES += \
+	src/plugins/sound/pulseaudio.c
+else
+sound_la_SOURCES += \
+	src/plugins/sound/pulseaudio-dummy.c
+endif
+
+sound_la_CFLAGS = \
 	$(AM_CFLAGS) \
 	$(SNDFILE_CFLAGS) \
 	$(PULSEAUDIO_CFLAGS) \
 	$(GLIB_CFLAGS)
 
-pulseaudio_la_LDFLAGS = \
+sound_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
 	-avoid-version -module -export-symbols-regex eventd_plugin_get_info
 
-pulseaudio_la_LIBADD = \
+sound_la_LIBADD = \
 	libeventd-plugins-helper.la \
 	$(PULSEAUDIO_LIBS) \
 	$(GLIB_LIBS)
 
 if ENABLE_SNDFILE
-pulseaudioplugins_LTLIBRARIES += \
+soundplugins_LTLIBRARIES += \
 	sndfile.la
 
 sndfile_la_SOURCES = \
-	src/plugins/pulseaudio/sndfile/sndfile.c
+	src/plugins/sound/sndfile/sndfile.c
 
 sndfile_la_CFLAGS = \
 	$(AM_CFLAGS) \
@@ -141,7 +148,7 @@ sndfile_la_CFLAGS = \
 	$(GLIB_CFLAGS)
 
 sndfile_la_LDFLAGS = \
-	$(pulseaudio_la_LDFLAGS)
+	$(sound_la_LDFLAGS)
 
 sndfile_la_LIBADD = \
 	libeventd-plugin-helper.la \
@@ -151,11 +158,11 @@ sndfile_la_LIBADD = \
 endif
 
 if ENABLE_ESPEAK
-pulseaudioplugins_LTLIBRARIES += \
+soundplugins_LTLIBRARIES += \
 	espeak.la
 
 espeak_la_SOURCES = \
-	src/plugins/pulseaudio/espeak/espeak.c
+	src/plugins/sound/espeak/espeak.c
 
 espeak_la_CFLAGS = \
 	$(AM_CFLAGS) \
@@ -164,15 +171,13 @@ espeak_la_CFLAGS = \
 	$(GLIB_CFLAGS)
 
 espeak_la_LDFLAGS = \
-	$(pulseaudio_la_LDFLAGS)
+	$(sound_la_LDFLAGS)
 
 espeak_la_LIBADD = \
 	libeventd-plugin-helper.la \
 	$(ESPEAK_LIBS) \
 	$(PULSEAUDIO_LIBS) \
 	$(GLIB_LIBS)
-endif
-
 endif
 
 plugins_LTLIBRARIES += \
@@ -339,5 +344,5 @@ la-files-removal:
 		rm $(pkglib_LTLIBRARIES)
 	cd $(DESTDIR)/$(pluginsdir) && \
 		rm $(plugins_LTLIBRARIES)
-	cd $(DESTDIR)/$(pulseaudiopluginsdir) && \
-		rm $(pulseaudioplugins_LTLIBRARIES)
+	cd $(DESTDIR)/$(soundpluginsdir) && \
+		rm $(soundplugins_LTLIBRARIES)

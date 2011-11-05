@@ -28,12 +28,10 @@
 #include <plugins-helper.h>
 
 #include "pulseaudio.h"
+#include "pulseaudio-internal.h"
 
 static pa_threaded_mainloop *pa_loop = NULL;
 static pa_context *sound = NULL;
-
-static GList *plugins = NULL;
-
 
 static void
 pa_context_state_callback(pa_context *c, void *userdata)
@@ -54,10 +52,10 @@ pa_context_notify_callback(pa_context *s, void *userdata)
     pa_threaded_mainloop_signal(pa_loop, 0);
 }
 
-static void
-eventd_pulseaudio_start(gpointer user_data)
+EventdSoundPulseaudioContext *
+eventd_sound_pulseaudio_start()
 {
-    EventdPulseaudioContext data;
+    EventdSoundPulseaudioContext *data;
 
     pa_loop = pa_threaded_mainloop_new();
     pa_threaded_mainloop_start(pa_loop);
@@ -73,20 +71,20 @@ eventd_pulseaudio_start(gpointer user_data)
     pa_threaded_mainloop_wait(pa_loop);
     pa_threaded_mainloop_unlock(pa_loop);
 
-    data.pa_loop = pa_loop;
-    data.sound = sound;
-    eventd_plugins_helper_load(&plugins, "plugins" G_DIR_SEPARATOR_S "pulseaudio", &data);
+    data = g_new0(EventdSoundPulseaudioContext, 1);
+    data->pa_loop = pa_loop;
+    data->sound = sound;
+
+    return data;
 }
 
-static void
-eventd_pulseaudio_stop()
+void
+eventd_sound_pulseaudio_stop()
 {
     pa_operation* op;
 
-    eventd_plugins_helper_unload(&plugins);
-
     op = pa_context_drain(sound, pa_context_notify_callback, NULL);
-    if ( op )
+    if ( op != NULL )
     {
         pa_threaded_mainloop_lock(pa_loop);
         pa_threaded_mainloop_wait(pa_loop);
@@ -97,43 +95,4 @@ eventd_pulseaudio_stop()
     pa_context_unref(sound);
     pa_threaded_mainloop_stop(pa_loop);
     pa_threaded_mainloop_free(pa_loop);
-}
-
-static GHashTable *
-eventd_pulseaudio_event_action(EventdEvent *event)
-{
-    return eventd_plugins_helper_event_action_all(plugins, event);
-}
-
-static void
-eventd_pulseaudio_event_parse(const gchar *type, const gchar *event, GKeyFile *config_file)
-{
-    eventd_plugins_helper_event_parse_all(plugins, type, event, config_file);
-}
-
-static void
-eventd_pulseaudio_config_init()
-{
-    eventd_plugins_helper_config_init_all(plugins);
-}
-
-static void
-eventd_pulseaudio_config_clean()
-{
-    eventd_plugins_helper_config_clean_all(plugins);
-}
-
-void
-eventd_plugin_get_info(EventdPlugin *plugin)
-{
-    plugin->id = "pulseaudio";
-
-    plugin->start = eventd_pulseaudio_start;
-    plugin->stop = eventd_pulseaudio_stop;
-
-    plugin->config_init = eventd_pulseaudio_config_init;
-    plugin->config_clean = eventd_pulseaudio_config_clean;
-
-    plugin->event_parse = eventd_pulseaudio_event_parse;
-    plugin->event_action = eventd_pulseaudio_event_action;
 }

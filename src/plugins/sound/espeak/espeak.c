@@ -31,6 +31,7 @@
 #include <plugin-helper.h>
 
 #include "../pulseaudio.h"
+#include "../pulseaudio-internal.h"
 
 static GHashTable *events = NULL;
 
@@ -99,7 +100,7 @@ uri_callback(int type, const char *uri, const char *base)
 }
 
 void
-eventd_pulseaudio_espeak_start(EventdPulseaudioContext *context)
+eventd_sound_espeak_start(EventdSoundPulseaudioContext *context)
 {
     gint sample_rate;
 
@@ -125,7 +126,7 @@ eventd_pulseaudio_espeak_start(EventdPulseaudioContext *context)
 }
 
 void
-eventd_pulseaudio_espeak_stop()
+eventd_sound_espeak_stop()
 {
     eventd_plugin_helper_regex_clean();
 
@@ -134,7 +135,7 @@ eventd_pulseaudio_espeak_stop()
 }
 
 static void
-eventd_pulseaudio_espeak_event_parse(const gchar *client_type, const gchar *event_type, GKeyFile *config_file)
+eventd_sound_espeak_event_parse(const gchar *client_type, const gchar *event_type, GKeyFile *config_file)
 {
     gboolean disable;
     gchar *message = NULL;
@@ -170,7 +171,7 @@ eventd_pulseaudio_espeak_event_parse(const gchar *client_type, const gchar *even
 }
 
 static gboolean
-eventd_pulseaudio_espeak_regex_event_data_cb(const GMatchInfo *info, GString *r, gpointer event_data)
+eventd_sound_espeak_regex_event_data_cb(const GMatchInfo *info, GString *r, gpointer event_data)
 {
     gchar *name;
     gchar *data = NULL;
@@ -205,7 +206,7 @@ eventd_pulseaudio_espeak_regex_event_data_cb(const GMatchInfo *info, GString *r,
 }
 
 static GHashTable *
-eventd_pulseaudio_espeak_event_action(EventdEvent *event)
+eventd_sound_espeak_event_action(EventdEvent *event)
 {
     gchar *name;
     gchar *message;
@@ -219,7 +220,7 @@ eventd_pulseaudio_espeak_event_action(EventdEvent *event)
     if ( ( message == NULL ) && ( ( message = g_hash_table_lookup(events, event->client->type) ) == NULL ) )
         return NULL;
 
-    msg = eventd_plugin_helper_regex_replace_event_data(message, event->data, eventd_pulseaudio_espeak_regex_event_data_cb);
+    msg = eventd_plugin_helper_regex_replace_event_data(message, event->data, eventd_sound_espeak_regex_event_data_cb);
 
     stream = pa_stream_new(sound, "eSpeak eventd message", &sample_spec, NULL);
     pa_stream_set_state_callback(stream, pa_stream_state_callback, NULL);
@@ -248,13 +249,13 @@ eventd_pulseaudio_espeak_event_action(EventdEvent *event)
 }
 
 static void
-eventd_pulseaudio_espeak_config_init()
+eventd_sound_espeak_config_init()
 {
     events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 }
 
 static void
-eventd_pulseaudio_espeak_config_clean()
+eventd_sound_espeak_config_clean()
 {
     g_hash_table_unref(events);
 }
@@ -264,12 +265,12 @@ eventd_plugin_get_info(EventdPlugin *plugin)
 {
     plugin->id = "espeak";
 
-    plugin->start = (EventdPluginStartFunc)eventd_pulseaudio_espeak_start;
-    plugin->stop = eventd_pulseaudio_espeak_stop;
+    plugin->start = (EventdPluginStartFunc)eventd_sound_espeak_start;
+    plugin->stop = eventd_sound_espeak_stop;
 
-    plugin->config_init = eventd_pulseaudio_espeak_config_init;
-    plugin->config_clean = eventd_pulseaudio_espeak_config_clean;
+    plugin->config_init = eventd_sound_espeak_config_init;
+    plugin->config_clean = eventd_sound_espeak_config_clean;
 
-    plugin->event_parse = eventd_pulseaudio_espeak_event_parse;
-    plugin->event_action = eventd_pulseaudio_espeak_event_action;
+    plugin->event_parse = eventd_sound_espeak_event_parse;
+    plugin->event_action = eventd_sound_espeak_event_action;
 }

@@ -20,12 +20,12 @@
  *
  */
 
-#ifndef __EVENTD_PLUGINS_PULSEAUDIO_H__
-#define __EVENTD_PLUGINS_PULSEAUDIO_H__
+#ifndef __EVENTD_PLUGINS_SOUND_PULSEAUDIO_INTERNAL_H__
+#define __EVENTD_PLUGINS_SOUND_PULSEAUDIO_INTERNAL_H__
 
-typedef struct {
+struct _EventdSoundPulseaudioContext {
     pa_context *sound;
     pa_threaded_mainloop *pa_loop;
-} EventdPulseaudioContext;
+};
 
-#endif /* __EVENTD_PLUGINS_PULSEAUDIO_H__ */
+#endif /* __EVENTD_PLUGINS_SOUND_PULSEAUDIO_INTERNAL_H__ */

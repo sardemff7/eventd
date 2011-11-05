@@ -30,12 +30,13 @@
 #include <plugin-helper.h>
 
 #include "../pulseaudio.h"
+#include "../pulseaudio-internal.h"
 
 typedef struct {
     gboolean disable;
     gchar *sample;
     gboolean created;
-} EventdPulseaudioSndfileEvent;
+} EventdSoundSndfileEvent;
 
 static GHashTable *events = NULL;
 
@@ -75,7 +76,7 @@ static const pa_sample_spec sound_spec = {
 typedef sf_count_t (*sndfile_readf_t)(SNDFILE *sndfile, void *ptr, sf_count_t frames);
 
 static gboolean
-eventd_pulseaudio_sndfile_create_sample(const gchar *sample_name, const gchar *filename)
+eventd_sound_sndfile_create_sample(const gchar *sample_name, const gchar *filename)
 {
     int retval = 0;
 
@@ -186,7 +187,7 @@ out:
 }
 
 static void
-eventd_pulseaudio_sndfile_remove_sample(const char *name)
+eventd_sound_sndfile_remove_sample(const char *name)
 {
     pa_threaded_mainloop_lock(pa_loop);
     pa_context_remove_sample(sound, name, pa_context_success_callback, NULL);
@@ -195,10 +196,10 @@ eventd_pulseaudio_sndfile_remove_sample(const char *name)
 }
 
 static GHashTable *
-eventd_pulseaudio_sndfile_event_action(EventdEvent *event)
+eventd_sound_sndfile_event_action(EventdEvent *event)
 {
     gchar *name;
-    EventdPulseaudioSndfileEvent *sndfile_event = NULL;
+    EventdSoundSndfileEvent *sndfile_event = NULL;
     pa_operation *op;
 
     name = g_strconcat(event->client->type, "-", event->type, NULL);
@@ -222,16 +223,16 @@ eventd_pulseaudio_sndfile_event_action(EventdEvent *event)
 }
 
 static void
-eventd_pulseaudio_sndfile_event_clean(EventdPulseaudioSndfileEvent *event)
+eventd_sound_sndfile_event_clean(EventdSoundSndfileEvent *event)
 {
     if ( event->created )
-        eventd_pulseaudio_sndfile_remove_sample(event->sample);
+        eventd_sound_sndfile_remove_sample(event->sample);
 
     g_free(event->sample);
 }
 
 static gboolean
-eventd_pulseaudio_sndfile_event_update(EventdPulseaudioSndfileEvent *event, gboolean disable, const gchar *sample, const gchar *filename)
+eventd_sound_sndfile_event_update(EventdSoundSndfileEvent *event, gboolean disable, const gchar *sample, const gchar *filename)
 {
     gboolean ret = FALSE;
     gchar *real_filename = NULL;
@@ -239,7 +240,7 @@ eventd_pulseaudio_sndfile_event_update(EventdPulseaudioSndfileEvent *event, gboo
     if ( ( event->sample != NULL ) && ( strcmp(event->sample, sample) == 0 ) )
         return TRUE;
 
-    eventd_pulseaudio_sndfile_event_clean(event);
+    eventd_sound_sndfile_event_clean(event);
 
     if ( filename != NULL )
     {
@@ -248,7 +249,7 @@ eventd_pulseaudio_sndfile_event_update(EventdPulseaudioSndfileEvent *event, gboo
         else
             real_filename = g_strdup(filename);
 
-        if ( ! eventd_pulseaudio_sndfile_create_sample(sample, real_filename) )
+        if ( ! eventd_sound_sndfile_create_sample(sample, real_filename) )
             goto fail;
     }
 
@@ -263,10 +264,10 @@ fail:
     return ret;
 }
 
-static EventdPulseaudioSndfileEvent *
-eventd_pulseaudio_sndfile_event_new(gboolean disable, const gchar *name, const gchar *sample, const gchar *filename, EventdPulseaudioSndfileEvent *parent)
+static EventdSoundSndfileEvent *
+eventd_sound_sndfile_event_new(gboolean disable, const gchar *name, const gchar *sample, const gchar *filename, EventdSoundSndfileEvent *parent)
 {
-    EventdPulseaudioSndfileEvent *event = NULL;
+    EventdSoundSndfileEvent *event = NULL;
 
     if ( ( filename == NULL ) && ( sample == NULL ) )
     {
@@ -277,23 +278,23 @@ eventd_pulseaudio_sndfile_event_new(gboolean disable, const gchar *name, const g
     else
         sample = sample ?: name;
 
-    event = g_new0(EventdPulseaudioSndfileEvent, 1);
+    event = g_new0(EventdSoundSndfileEvent, 1);
 
-    if ( ! eventd_pulseaudio_sndfile_event_update(event, disable, sample, filename) )
+    if ( ! eventd_sound_sndfile_event_update(event, disable, sample, filename) )
         event = (g_free(event), NULL);
 
     return event;
 }
 
 static void
-eventd_pulseaudio_sndfile_event_parse(const gchar *client_type, const gchar *event_type, GKeyFile *config_file)
+eventd_sound_sndfile_event_parse(const gchar *client_type, const gchar *event_type, GKeyFile *config_file)
 {
     gboolean disable;
     gchar *sample = NULL;
     gchar *filename = NULL;
 
-    EventdPulseaudioSndfileEvent *event = NULL;
-    EventdPulseaudioSndfileEvent *parent = NULL;
+    EventdSoundSndfileEvent *event = NULL;
+    EventdSoundSndfileEvent *parent = NULL;
     gchar *name;
 
     if ( ! g_key_file_has_group(config_file, "sound") )
@@ -318,7 +319,7 @@ eventd_pulseaudio_sndfile_event_parse(const gchar *client_type, const gchar *eve
     event = g_hash_table_lookup(events, name);
     if ( event != NULL )
     {
-        if ( ! eventd_pulseaudio_sndfile_event_update(event, disable, sample ?: name, filename) )
+        if ( ! eventd_sound_sndfile_event_update(event, disable, sample ?: name, filename) )
         {
             g_hash_table_remove(events, name);
             g_free(event);
@@ -327,7 +328,7 @@ eventd_pulseaudio_sndfile_event_parse(const gchar *client_type, const gchar *eve
     }
     else
     {
-        event = eventd_pulseaudio_sndfile_event_new(disable, name, sample, filename, parent);
+        event = eventd_sound_sndfile_event_new(disable, name, sample, filename, parent);
         if ( event != NULL )
             g_hash_table_insert(events, name, event);
         else
@@ -343,27 +344,27 @@ skip:
 }
 
 static void
-eventd_pulseaudio_sndfile_event_free(EventdPulseaudioSndfileEvent *event)
+eventd_sound_sndfile_event_free(EventdSoundSndfileEvent *event)
 {
-    eventd_pulseaudio_sndfile_event_clean(event);
+    eventd_sound_sndfile_event_clean(event);
     g_free(event);
 }
 
 static void
-eventd_pulseaudio_sndfile_start(EventdPulseaudioContext *context)
+eventd_sound_sndfile_start(EventdSoundPulseaudioContext *context)
 {
     pa_loop = context->pa_loop;
     sound = context->sound;
 }
 
 static void
-eventd_pulseaudio_sndfile_config_init()
+eventd_sound_sndfile_config_init()
 {
-    events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)eventd_pulseaudio_sndfile_event_free);
+    events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)eventd_sound_sndfile_event_free);
 }
 
 static void
-eventd_pulseaudio_sndfile_config_clean()
+eventd_sound_sndfile_config_clean()
 {
     g_hash_table_unref(events);
 }
@@ -373,11 +374,11 @@ eventd_plugin_get_info(EventdPlugin *plugin)
 {
     plugin->id = "sndfile";
 
-    plugin->start = (EventdPluginStartFunc)eventd_pulseaudio_sndfile_start;
+    plugin->start = (EventdPluginStartFunc)eventd_sound_sndfile_start;
 
-    plugin->config_init = eventd_pulseaudio_sndfile_config_init;
-    plugin->config_clean = eventd_pulseaudio_sndfile_config_clean;
+    plugin->config_init = eventd_sound_sndfile_config_init;
+    plugin->config_clean = eventd_sound_sndfile_config_clean;
 
-    plugin->event_parse = eventd_pulseaudio_sndfile_event_parse;
-    plugin->event_action = eventd_pulseaudio_sndfile_event_action;
+    plugin->event_parse = eventd_sound_sndfile_event_parse;
+    plugin->event_action = eventd_sound_sndfile_event_action;
 }
