@@ -137,13 +137,35 @@ namespace Eventd
             for ( uint i = 0 ; i < n_length ; ++i )
                 event_data.insert(event_data_name[i], event_data_content[i]);
 
+            GLib.HashTable<string, string>? ret_data = null;
             try
             {
-                client.event(event_type, event_data);
+                ret_data = client.event(event_type, event_data);
             }
             catch ( EventcError e )
             {
                 GLib.warning("Couldn’t send event '%s': %s", event_type, e.message);
+            }
+            if ( ret_data != null )
+            {
+                ret_data.foreach((name, content) => {
+                    if ( content.index_of_char('\n') == -1 )
+                        stdout.puts(@"DATAL $name $content\n");
+                    else
+                    {
+                        stdout.puts(@"DATA $name\n");
+                        var datas = content.split("\n");
+                        foreach ( var line in datas )
+                        {
+                            if ( line[0] == '.' )
+                                stdout.puts(".");
+                            stdout.puts(line);
+                            stdout.puts("\n");
+                        }
+                        stdout.puts(".\n");
+                    }
+                });
+                stdout.puts(".\n");
             }
         }
         else
