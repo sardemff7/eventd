@@ -40,6 +40,45 @@
 
 #define BUFFER_SIZE 1024
 
+static void
+send_data(const gchar *name, const gchar *content, GDataOutputStream *output)
+{
+        #if DEBUG
+        g_debug("Send back data: %s", name);
+        #endif /* DEBUG */
+
+    if ( g_utf8_strchr(content, -1, '\n') == NULL )
+    {
+        gchar *msg;
+        msg = g_strconcat("DATAL ", name, " ", content, "\n", NULL);
+        g_data_output_stream_put_string(output, msg, NULL, NULL);
+        g_free(msg);
+    }
+    else
+    {
+        gchar *msg;
+        gchar **line;
+        gchar **lines;
+
+        msg = g_strconcat("DATA ", name, "\n", NULL);
+        g_data_output_stream_put_string(output, msg, NULL, NULL);
+
+        lines = g_strsplit(content, "\n", 0);
+
+        for ( line = lines ; line != NULL ; ++line )
+        {
+            if ( (*line)[0] == '.' )
+                g_data_output_stream_put_byte(output, '.', NULL, NULL);
+            g_data_output_stream_put_string(output, *line, NULL, NULL);
+            g_data_output_stream_put_byte(output, '\n', NULL, NULL);
+        }
+
+        g_strfreev(lines);
+
+        g_data_output_stream_put_string(output, ".\n", NULL, NULL);
+    }
+}
+
 static gboolean
 connection_handler(
     GThreadedSocketService *service,
@@ -97,8 +136,25 @@ connection_handler(
                     event_time = g_get_monotonic_time();
                     if ( event_time > ( last_action + delay ) )
                     {
+                        GHashTable *ret = NULL;
+
                         last_action = event_time;
-                        eventd_plugins_event_action_all(&event);
+                        ret = eventd_plugins_event_action_all(&event);
+                        switch ( client.mode )
+                        {
+                        case EVENTD_CLIENT_MODE_PING_PONG:
+                            if ( ! g_data_output_stream_put_string(output, "EVENT\n", NULL, &error) )
+                                break;
+                            if ( ret != NULL )
+                                g_hash_table_foreach(ret, (GHFunc)send_data, output);
+                            if ( ! g_data_output_stream_put_string(output, ".\n", NULL, &error) )
+                                break;
+                        case EVENTD_CLIENT_MODE_NORMAL:
+                        default:
+                        break;
+                        }
+                        if ( ret != NULL )
+                            g_hash_table_unref(ret);
                     }
                     event.data = (g_hash_table_unref(event.data), NULL);
                     event.type = (g_free(event.type), NULL);
