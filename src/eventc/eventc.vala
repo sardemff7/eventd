@@ -23,6 +23,7 @@
 namespace Eventd
 {
     static string type;
+    static string mode;
     static string name;
     static string event_type;
     static string[] event_data_name;
@@ -38,6 +39,7 @@ namespace Eventd
     static const GLib.OptionEntry[] entries =
     {
         { "type", 't', 0, GLib.OptionArg.STRING, out event_type, N_("Event type to send"), "<type>" },
+        { "mode", 0, 0, GLib.OptionArg.STRING, out mode, N_("Mode of the client"), "{normal|ping-pong}" },
         { "data-name", 'n', 0, GLib.OptionArg.STRING_ARRAY, out event_data_name, N_("Event data name to send"), "<name>" },
         { "data-content", 'c', 0, GLib.OptionArg.STRING_ARRAY, out event_data_content, N_("Event data content to send (must be after a data-name)"), "<content>" },
         { "host", 'h', 0, GLib.OptionArg.STRING, out host, N_("Host to connect to"), "<host>" },
@@ -90,6 +92,17 @@ namespace Eventd
         if ( unix_socket != null )
             client.host_is_socket = true;
         #endif
+
+        switch ( mode )
+        {
+        case "ping-pong":
+            client.mode = Eventc.Mode.PING_PONG;
+        break;
+        case "normal":
+        default:
+            client.mode = Eventc.Mode.NORMAL;
+        break;
+        }
 
         var tries = 0;
         while ( ! client.is_connected() )
