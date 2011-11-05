@@ -174,6 +174,7 @@ eventd_notification_event_action(EventdEvent *event)
     GError *error = NULL;
     EventdNotificationEvent *notification_event;
     EventdNotificationNotification notification;
+    GHashTable *ret = NULL;
 
     name = g_strconcat(event->client->type, "-", event->type, NULL);
     notification_event = g_hash_table_lookup(events, name);
@@ -186,9 +187,21 @@ eventd_notification_event_action(EventdEvent *event)
 
     eventd_notification_event_action_get_notification(event, notification_event, &notification);
 
-    eventd_notification_notify_event_action(&notification);
+    switch ( event->client->mode )
+    {
+    case EVENTD_CLIENT_MODE_PING_PONG:
+        ret = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+        g_hash_table_insert(ret, g_strdup("title"), notification.title);
+        g_hash_table_insert(ret, g_strdup("message"), notification.message);
+        if ( notification.icon != NULL )
+            g_hash_table_insert(ret, g_strdup("icon"), eventd_notification_icon_get_base64(notification.icon));
+        g_hash_table_insert(ret, g_strdup("timeout"), g_strdup_printf("%lld", notification.timeout));
+    break;
+    default:
+        eventd_notification_notify_event_action(&notification);
+    }
 
-    return NULL;
+    return ret;
 }
 
 
