@@ -30,16 +30,9 @@
 #include <eventd-plugin.h>
 #include <plugin-helper.h>
 
+#include "notification.h"
+#include "icon.h"
 
-typedef struct {
-    gboolean disable;
-    gchar *title;
-    gchar *message;
-    gchar *icon;
-    gchar *overlay_icon;
-    gdouble scale;
-    gint64 timeout;
-} EventdNotificationEvent;
 
 static GHashTable *events = NULL;
 
@@ -168,62 +161,6 @@ skip:
     g_free(title);
 }
 
-static GdkPixbuf *
-eventd_notification_get_icon_pixbuf(const char *icon_name, GHashTable *event_data)
-{
-    GError *error = NULL;
-    gchar *icon_base64 = NULL;
-    guchar *icon = NULL;
-    gsize icon_length;
-    gchar *icon_size_name;
-    gchar *icon_size_text;
-    GdkPixbufLoader *loader;
-    GdkPixbuf *pixbuf = NULL;
-
-    if ( event_data == NULL )
-        return NULL;
-
-    icon_base64 = g_hash_table_lookup(event_data, icon_name);
-    if ( icon_base64 == NULL )
-        return NULL;
-
-    icon_size_name = g_strconcat(icon_name, "-size", NULL);
-    icon_size_text = g_hash_table_lookup(event_data, icon_size_name);
-    g_free(icon_size_name);
-
-    icon = g_base64_decode(icon_base64, &icon_length);
-
-    loader = gdk_pixbuf_loader_new();
-
-    if ( icon_size_text != NULL )
-    {
-        guint64 icon_size;
-        icon_size = g_ascii_strtoull(icon_size_text, NULL, 10);
-        gdk_pixbuf_loader_set_size(loader, icon_size, icon_size);
-    }
-
-    if ( ! gdk_pixbuf_loader_write(loader, icon, icon_length, &error) )
-    {
-        g_warning("Couldn’t write icon data: %s", error->message);
-        g_clear_error(&error);
-        goto fail;
-    }
-
-    if ( ! gdk_pixbuf_loader_close(loader, &error) )
-    {
-        g_warning("Couldn’t terminate icon data loading: %s", error->message);
-        g_clear_error(&error);
-        goto fail;
-    }
-
-    pixbuf = g_object_ref(gdk_pixbuf_loader_get_pixbuf(loader));
-
-fail:
-    g_free(icon);
-    g_object_unref(loader);
-    return pixbuf;
-}
-
 static GHashTable *
 eventd_notification_event_action(EventdEvent *event)
 {
@@ -233,7 +170,6 @@ eventd_notification_event_action(EventdEvent *event)
     gchar *title = NULL;
     gchar *message = NULL;
     GdkPixbuf *icon = NULL;
-    GdkPixbuf *overlay_icon = NULL;
     gchar *tmp = NULL;
     NotifyNotification *notification = NULL;
 
@@ -254,47 +190,12 @@ eventd_notification_event_action(EventdEvent *event)
 
     notification = notify_notification_new(title, message, NULL);
 
-    icon = eventd_notification_get_icon_pixbuf(notification_event->icon, event->data);
-    overlay_icon = eventd_notification_get_icon_pixbuf(notification_event->overlay_icon, event->data);
+    icon = eventd_notification_icon_get_pixbuf(event, notification_event);
     if ( icon != NULL )
     {
-        if ( overlay_icon != NULL )
-        {
-            gint icon_width, icon_height;
-            gint overlay_icon_width, overlay_icon_height;
-            gint x, y;
-            gdouble scale;
-
-            icon_width = gdk_pixbuf_get_width(icon);
-            icon_height = gdk_pixbuf_get_height(icon);
-
-            overlay_icon_width = ( (gdouble)notification_event->scale / 100. ) * (gdouble)icon_width;
-            overlay_icon_height = ( (gdouble)notification_event->scale / 100. ) * (gdouble)icon_height;
-
-            x = icon_width - overlay_icon_width;
-            y = icon_height - overlay_icon_height;
-
-            scale = (gdouble)overlay_icon_width / (gdouble)gdk_pixbuf_get_width(overlay_icon);
-
-            gdk_pixbuf_composite(overlay_icon, icon,
-                                 x, y,
-                                 overlay_icon_width, overlay_icon_height,
-                                 x, y,
-                                 scale, scale,
-                                 GDK_INTERP_BILINEAR, 255);
-
-            g_object_unref(overlay_icon);
-        }
-
         notify_notification_set_image_from_pixbuf(notification, icon);
 
         g_object_unref(icon);
-    }
-    else if ( overlay_icon != NULL )
-    {
-        notify_notification_set_image_from_pixbuf(notification, overlay_icon);
-
-        g_object_unref(overlay_icon);
     }
 
     notify_notification_set_urgency(notification, NOTIFY_URGENCY_NORMAL);

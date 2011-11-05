@@ -182,8 +182,17 @@ plugins_LTLIBRARIES += \
 notification_la_SOURCES = \
 	src/plugins/notification/notification.c
 
+if ENABLE_GDK_PIXBUF
+notification_la_SOURCES += \
+	src/plugins/notification/icon.c
+else
+notification_la_SOURCES += \
+	src/plugins/notification/icon-dummy.c
+endif
+
 notification_la_CFLAGS = \
 	$(AM_CFLAGS) \
+	$(GDK_PIXBUF_CFLAGS) \
 	$(NOTIFY_CFLAGS) \
 	$(GLIB_CFLAGS)
 
@@ -193,6 +202,7 @@ notification_la_LDFLAGS = \
 
 notification_la_LIBADD = \
 	libeventd-plugin-helper.la \
+	$(GDK_PIXBUF_LIBS) \
 	$(NOTIFY_LIBS) \
 	$(GLIB_LIBS)
 endif

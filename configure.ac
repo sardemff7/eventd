@@ -102,10 +102,15 @@ AM_CONDITIONAL(ENABLE_SNDFILE, test x$enable_sndfile = xyes)
 AM_CONDITIONAL(ENABLE_ESPEAK, test x$enable_espeak = xyes)
 
 # Notification plugin
+AC_ARG_ENABLE(gdk-pixbuf, AS_HELP_STRING([--disable-gdk-pixbuf], [Disable icon support through gdk-pixbuf]), enable_gdk_pixbuf=$enableval, enable_gdk_pixbuf=yes)
 AC_ARG_ENABLE(libnotify, AS_HELP_STRING([--disable-libnotify], [Disable libnotify support]), enable_libnotify=$enableval, enable_libnotify=yes)
+if test x$enable_gdk_pixbuf = xyes -o x$enable_libnotify = xyes; then
+    PKG_CHECK_MODULES(GDK_PIXBUF, [gdk-pixbuf-2.0])
+fi
 if test x$enable_libnotify = xyes; then
     PKG_CHECK_MODULES(NOTIFY, [libnotify >= $libnotify_min_version])
 fi
+AM_CONDITIONAL(ENABLE_GDK_PIXBUF, [test x$enable_gdk_pixbuf = xyes -o x$enable_libnotify = xyes])
 AM_CONDITIONAL(ENABLE_NOTIFY, [test x$enable_libnotify = xyes])
 
 # Dialogs plugin
