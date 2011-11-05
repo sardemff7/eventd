@@ -33,6 +33,7 @@ namespace Eventd
         RENAMED,
         SEND,
         RECEIVE,
+        EVENT,
         CLOSE
     }
 
@@ -285,7 +286,7 @@ namespace Eventd
         }
 
         public void
-        event(string type, GLib.HashTable<string, string>? data) throws EventcError
+        event_common(string type, GLib.HashTable<string, string>? data) throws EventcError
         {
             this.send( @"EVENT $type");
 
@@ -319,6 +320,52 @@ namespace Eventd
                     throw e;
             }
             this.send(".");
+        }
+
+        public GLib.HashTable<string, string>?
+        event(string type, GLib.HashTable<string, string>? data) throws EventcError
+        {
+            this.event_common(type, data);
+            GLib.HashTable<string, string>? ret = null;
+            string line = null;
+            string data_name = null;
+            string data_content = null;
+            switch ( this.mode )
+            {
+            case Mode.PING_PONG:
+                while ( ( line = this.receive() ) != null )
+                {
+                    if ( line == "EVENT" )
+                        ret = new GLib.HashTable<string, string>(string.hash, GLib.str_equal);
+                    else if ( line == "." )
+                    {
+                        if ( data_name != null )
+                            ret.insert((owned)data_name, (owned)data_content);
+                        else
+                            break;
+                    }
+                    else if ( ret == null )
+                        throw new EventcError.EVENT("Can’t receive correct event data");
+                    else if ( line.ascii_ncasecmp("DATAL ", 6) == 0 )
+                    {
+                        var data_line = line.substring(6).split(" ", 2);
+                        ret.insert(data_line[0], data_line[1]);
+                    }
+                    else if ( line.ascii_ncasecmp("DATA ", 5) == 0 )
+                    {
+                        data_name = line.substring(5);
+                        data_content = "";
+                    }
+                    else if ( data_name != null )
+                    {
+                        data_content += line;
+                    }
+                }
+            break;
+            default:
+            break;
+            }
+            return (owned)ret;
         }
 
         private string?
