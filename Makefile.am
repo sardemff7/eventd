@@ -175,12 +175,19 @@ endif
 
 endif
 
-if ENABLE_NOTIFY
 plugins_LTLIBRARIES += \
 	notification.la
 
 notification_la_SOURCES = \
 	src/plugins/notification/notification.c
+
+if ENABLE_NOTIFY
+notification_la_SOURCES += \
+	src/plugins/notification/notify.c
+else
+notification_la_SOURCES += \
+	src/plugins/notification/notify-dummy.c
+endif
 
 if ENABLE_GDK_PIXBUF
 notification_la_SOURCES += \
@@ -205,7 +212,6 @@ notification_la_LIBADD = \
 	$(GDK_PIXBUF_LIBS) \
 	$(NOTIFY_LIBS) \
 	$(GLIB_LIBS)
-endif
 
 if ENABLE_DIALOGS
 plugins_LTLIBRARIES += \

@@ -20,11 +20,6 @@
  *
  */
 
-#include <libnotify/notify.h>
-#if ! NOTIFY_CHECK_VERSION(0,7,0)
-#include "libnotify-compat.h"
-#endif
-
 #include <glib.h>
 
 #include <eventd-plugin.h>
@@ -32,6 +27,7 @@
 
 #include "notification.h"
 #include "icon.h"
+#include "notify.h"
 
 
 static GHashTable *events = NULL;
@@ -39,7 +35,7 @@ static GHashTable *events = NULL;
 static void
 eventd_notification_start(gpointer user_data)
 {
-    notify_init(PACKAGE_NAME);
+    eventd_notification_notify_init();
 
     eventd_plugin_helper_regex_init();
 }
@@ -49,13 +45,7 @@ eventd_notification_stop()
 {
     eventd_plugin_helper_regex_clean();
 
-    notify_uninit();
-}
-
-static gboolean
-notification_closed_cb(NotifyNotification *notification)
-{
-    return FALSE;
+    eventd_notification_notify_uninit();
 }
 
 static void
@@ -95,7 +85,7 @@ eventd_notification_event_new(gboolean disable, const char *title, const char *m
     overlay_icon = overlay_icon ?: parent ? parent->overlay_icon : "overlay-icon";
     scale->value = scale->set ? scale->value : parent ? parent->scale : 50;
     scale->set = TRUE;
-    timeout->value = timeout->set ? timeout->value : parent ? parent->timeout : NOTIFY_EXPIRES_DEFAULT;
+    timeout->value = timeout->set ? timeout->value : parent ? parent->timeout : -1;
     timeout->set = TRUE;
 
     event = g_new0(EventdNotificationEvent, 1);
@@ -161,17 +151,29 @@ skip:
     g_free(title);
 }
 
+static void
+eventd_notification_event_action_get_notification(EventdEvent *event, EventdNotificationEvent *notification_event, EventdNotificationNotification *notification)
+{
+    gchar *tmp = NULL;
+
+    tmp = eventd_plugin_helper_regex_replace_client_name(notification_event->title, event->client->name);
+    notification->title = eventd_plugin_helper_regex_replace_event_data(tmp, event->data, NULL);
+    g_free(tmp);
+
+    notification->message = eventd_plugin_helper_regex_replace_event_data(notification_event->message, event->data, NULL);
+
+    notification->icon = eventd_notification_icon_get_pixbuf(event, notification_event);
+
+    notification->timeout = notification_event->timeout;
+}
+
 static GHashTable *
 eventd_notification_event_action(EventdEvent *event)
 {
     gchar *name;
     GError *error = NULL;
     EventdNotificationEvent *notification_event;
-    gchar *title = NULL;
-    gchar *message = NULL;
-    GdkPixbuf *icon = NULL;
-    gchar *tmp = NULL;
-    NotifyNotification *notification = NULL;
+    EventdNotificationNotification notification;
 
     name = g_strconcat(event->client->type, "-", event->type, NULL);
     notification_event = g_hash_table_lookup(events, name);
@@ -182,31 +184,9 @@ eventd_notification_event_action(EventdEvent *event)
     if ( notification_event->disable )
         return NULL;
 
-    tmp = eventd_plugin_helper_regex_replace_client_name(notification_event->title, event->client->name);
-    title = eventd_plugin_helper_regex_replace_event_data(tmp, event->data, NULL);
-    g_free(tmp);
+    eventd_notification_event_action_get_notification(event, notification_event, &notification);
 
-    message = eventd_plugin_helper_regex_replace_event_data(notification_event->message, event->data, NULL);
-
-    notification = notify_notification_new(title, message, NULL);
-
-    icon = eventd_notification_icon_get_pixbuf(event, notification_event);
-    if ( icon != NULL )
-    {
-        notify_notification_set_image_from_pixbuf(notification, icon);
-
-        g_object_unref(icon);
-    }
-
-    notify_notification_set_urgency(notification, NOTIFY_URGENCY_NORMAL);
-    notify_notification_set_timeout(notification, notification_event->timeout);
-    if ( ! notify_notification_show(notification, &error) )
-        g_warning("Can't show the notification: %s", error->message);
-    g_clear_error(&error);
-    g_signal_connect(notification, "closed", G_CALLBACK(notification_closed_cb), NULL);
-    g_object_unref(G_OBJECT(notification));
-    g_free(message);
-    g_free(title);
+    eventd_notification_notify_event_action(&notification);
 
     return NULL;
 }
