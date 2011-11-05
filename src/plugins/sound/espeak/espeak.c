@@ -20,7 +20,6 @@
  *
  */
 
-#include <pulse/pulseaudio.h>
 #include <speak_lib.h>
 
 #include <string.h>
@@ -31,64 +30,59 @@
 #include <plugin-helper.h>
 
 #include "../pulseaudio.h"
-#include "../pulseaudio-internal.h"
+
+#include "espeak.h"
+#include "pulseaudio.h"
 
 static GHashTable *events = NULL;
 
-static pa_threaded_mainloop *pa_loop = NULL;
-static pa_context *sound = NULL;
-
-static pa_sample_spec sample_spec;
 
 #define BUFFER_SIZE 2000
 
 static void
-pa_stream_state_callback(pa_stream *stream, void *userdata)
+eventd_sound_espeak_callback_data_ref(EventdSoundEspeakCallbackData *data)
 {
-    pa_stream_state_t state = pa_stream_get_state(stream);
-    switch  ( state )
-    {
-        case PA_STREAM_TERMINATED:
-            //pa_stream_unref(stream);
-        break;
-        case PA_STREAM_READY:
-            pa_threaded_mainloop_signal(pa_loop, 0);
-        default:
-        break;
-    }
+    ++data->ref_count;
 }
 
 static void
-pa_stream_drain_callback(pa_stream *stream, int success, void *userdata)
+eventd_sound_espeak_callback_data_free(EventdSoundEspeakCallbackData *data)
 {
-    pa_threaded_mainloop_signal(pa_loop, 0);
+    eventd_sound_espeak_pulseaudio_pa_data_free(data->data);
+
+    g_free(data);
+}
+
+static void
+eventd_sound_espeak_callback_data_unref(EventdSoundEspeakCallbackData *data)
+{
+    if ( --data->ref_count > 0 )
+        return;
+
+    eventd_sound_espeak_callback_data_free(data);
+}
+
+static EventdSoundEspeakCallbackData *
+eventd_sound_espeak_callback_data_new(EventdClientMode mode)
+{
+    EventdSoundEspeakCallbackData *data;
+
+    data = g_new0(EventdSoundEspeakCallbackData, 1);
+
+    data->ref_count = 1;
+    data->mode = mode;
+    data->data = eventd_sound_espeak_pulseaudio_pa_data_new();
+
+    return data;
 }
 
 static int
 synth_callback(gshort *wav, gint numsamples, espeak_EVENT *event)
 {
-    pa_stream *stream;
+    eventd_sound_espeak_pulseaudio_play_data(wav, numsamples, event);
 
-    stream = event->user_data;
-
-    pa_threaded_mainloop_lock(pa_loop);
-
-    if ( wav == NULL )
-    {
-        pa_operation *op;
-
-        op = pa_stream_drain(stream, pa_stream_drain_callback, NULL);
-        while ( pa_operation_get_state(op) == PA_OPERATION_RUNNING )
-            pa_threaded_mainloop_wait(pa_loop);
-
-        pa_operation_unref(op);
-
-        pa_stream_disconnect(stream);
-    }
-    else
-        pa_stream_write(stream, wav, numsamples*2, NULL, 0, PA_SEEK_RELATIVE);
-
-    pa_threaded_mainloop_unlock(pa_loop);
+    if ( ( wav == NULL ) && ( event->type == espeakEVENT_LIST_TERMINATED ) )
+        eventd_sound_espeak_callback_data_unref(event->user_data);
 
     return 0;
 }
@@ -115,12 +109,7 @@ eventd_sound_espeak_start(EventdSoundPulseaudioContext *context)
     espeak_SetSynthCallback(synth_callback);
     espeak_SetUriCallback(uri_callback);
 
-    sample_spec.rate = sample_rate;
-    sample_spec.channels = 1;
-    sample_spec.format = PA_SAMPLE_S16LE;
-
-    pa_loop = context->pa_loop;
-    sound = context->sound;
+    eventd_sound_espeak_pulseaudio_start(context, sample_rate);
 
     eventd_plugin_helper_regex_init();
 }
@@ -212,7 +201,7 @@ eventd_sound_espeak_event_action(EventdEvent *event)
     gchar *message;
     gchar *msg;
     espeak_ERROR error;
-    pa_stream *stream;
+    EventdSoundEspeakCallbackData *data;
 
     name = g_strconcat(event->client->type, "-", event->type, NULL);
     message = g_hash_table_lookup(events, name);
@@ -222,28 +211,21 @@ eventd_sound_espeak_event_action(EventdEvent *event)
 
     msg = eventd_plugin_helper_regex_replace_event_data(message, event->data, eventd_sound_espeak_regex_event_data_cb);
 
-    stream = pa_stream_new(sound, "eSpeak eventd message", &sample_spec, NULL);
-    pa_stream_set_state_callback(stream, pa_stream_state_callback, NULL);
-    pa_stream_connect_playback(stream, NULL, NULL, 0, NULL, NULL);
-
-    pa_threaded_mainloop_lock(pa_loop);
-    pa_threaded_mainloop_wait(pa_loop);
-
-    error = espeak_Synth(msg, strlen(msg)+1, 0, POS_CHARACTER, 0, espeakCHARS_UTF8|espeakSSML, NULL, stream);
+    data = eventd_sound_espeak_callback_data_new(event->client->mode);
+    error = espeak_Synth(msg, strlen(msg)+1, 0, POS_CHARACTER, 0, espeakCHARS_UTF8|espeakSSML, NULL, data);
     g_free(msg);
 
     switch ( error )
     {
     case EE_INTERNAL_ERROR:
-        pa_stream_disconnect(stream);
         g_warning("Couldn’t synthetise text");
+        eventd_sound_espeak_callback_data_free(data);
+        return NULL;
     case EE_BUFFER_FULL:
     case EE_OK:
     default:
     break;
     }
-
-    pa_threaded_mainloop_unlock(pa_loop);
 
     return NULL;
 }

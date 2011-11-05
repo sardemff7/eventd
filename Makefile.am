@@ -164,6 +164,14 @@ soundplugins_LTLIBRARIES += \
 espeak_la_SOURCES = \
 	src/plugins/sound/espeak/espeak.c
 
+if ENABLE_PULSEAUDIO
+espeak_la_SOURCES += \
+	src/plugins/sound/espeak/pulseaudio.c
+else
+espeak_la_SOURCES += \
+	src/plugins/sound/espeak/pulseaudio-dummy.c
+endif
+
 espeak_la_CFLAGS = \
 	$(AM_CFLAGS) \
 	$(ESPEAK_CFLAGS) \
