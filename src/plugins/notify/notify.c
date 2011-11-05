@@ -37,7 +37,7 @@ typedef struct {
     gchar *message;
     gchar *icon;
     gchar *overlay_icon;
-    gint64 scale;
+    gdouble scale;
     gint timeout;
 } EventdNotifyEvent;
 
@@ -86,9 +86,9 @@ eventd_notify_event_update(EventdNotifyEvent *event, gboolean disable, const cha
     if ( overlay_icon != NULL )
         event->overlay_icon = g_strdup(overlay_icon);
     if ( scale->set )
-        event->scale = scale->value;
+        event->scale = (gdouble)scale->value / 100.;
     if ( timeout->set )
-        event->timeout = timeout->value;
+        event->timeout = ( timeout->value > 0 ) ? ( timeout->value * 1000 ) : timeout->value;
 }
 
 static EventdNotifyEvent *
@@ -268,8 +268,8 @@ eventd_notify_event_action(const gchar *client_type, const gchar *client_name, c
             icon_width = gdk_pixbuf_get_width(icon);
             icon_height = gdk_pixbuf_get_height(icon);
 
-            overlay_icon_width = ( (gdouble)event->scale / 100. ) * (gdouble)icon_width;
-            overlay_icon_height = ( (gdouble)event->scale / 100. ) * (gdouble)icon_height;
+            overlay_icon_width = event->scale * (gdouble)icon_width;
+            overlay_icon_height = event->scale * (gdouble)icon_height;
 
             x = icon_width - overlay_icon_width;
             y = icon_height - overlay_icon_height;
@@ -298,7 +298,7 @@ eventd_notify_event_action(const gchar *client_type, const gchar *client_name, c
     }
 
     notify_notification_set_urgency(notification, NOTIFY_URGENCY_NORMAL);
-    notify_notification_set_timeout(notification, ( event->timeout > 0 ) ? ( event->timeout * 1000 ) : event->timeout );
+    notify_notification_set_timeout(notification, event->timeout);
     if ( ! notify_notification_show(notification, &error) )
         g_warning("Can't show the notification: %s", error->message);
     g_clear_error(&error);
