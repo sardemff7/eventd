@@ -38,7 +38,7 @@ typedef struct {
     gchar *icon;
     gchar *overlay_icon;
     gdouble scale;
-    gint timeout;
+    gint64 timeout;
 } EventdNotifyEvent;
 
 static GHashTable *events = NULL;
