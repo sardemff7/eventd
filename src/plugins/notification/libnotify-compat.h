@@ -20,9 +20,9 @@
  *
  */
 
-#ifndef __EVENTD_PLUGINS_NOTIFY_COMPAT_H__
-#define __EVENTD_PLUGINS_NOTIFY_COMPAT_H__
+#ifndef __EVENTD_PLUGINS_NOTIFICATION_LIBNOTIFY_COMPAT_H__
+#define __EVENTD_PLUGINS_NOTIFICATION_LIBNOTIFY_COMPAT_H__
 
 #define notify_notification_new(summary, body, icon) notify_notification_new(summary, body, icon, NULL)
 
-#endif /* __EVENTD_PLUGINS_NOTIFY_COMPAT_H__ */
+#endif /* __EVENTD_PLUGINS_NOTIFICATION_LIBNOTIFY_COMPAT_H__ */

@@ -39,12 +39,12 @@ typedef struct {
     gchar *overlay_icon;
     gdouble scale;
     gint64 timeout;
-} EventdNotifyEvent;
+} EventdNotificationEvent;
 
 static GHashTable *events = NULL;
 
 static void
-eventd_notify_start(gpointer user_data)
+eventd_notification_start(gpointer user_data)
 {
     notify_init(PACKAGE_NAME);
 
@@ -52,7 +52,7 @@ eventd_notify_start(gpointer user_data)
 }
 
 static void
-eventd_notify_stop()
+eventd_notification_stop()
 {
     eventd_plugin_helper_regex_clean();
 
@@ -66,16 +66,16 @@ notification_closed_cb(NotifyNotification *notification)
 }
 
 static void
-eventd_notify_event_clean(EventdNotifyEvent *event)
+eventd_notification_event_clean(EventdNotificationEvent *event)
 {
     g_free(event->message);
     g_free(event->title);
 }
 
 static void
-eventd_notify_event_update(EventdNotifyEvent *event, gboolean disable, const char *title, const char *message, const char *icon, const char *overlay_icon, Int *scale, Int *timeout)
+eventd_notification_event_update(EventdNotificationEvent *event, gboolean disable, const char *title, const char *message, const char *icon, const char *overlay_icon, Int *scale, Int *timeout)
 {
-    eventd_notify_event_clean(event);
+    eventd_notification_event_clean(event);
     event->disable = disable;
     if ( title != NULL )
         event->title = g_strdup(title);
@@ -91,10 +91,10 @@ eventd_notify_event_update(EventdNotifyEvent *event, gboolean disable, const cha
         event->timeout = ( timeout->value > 0 ) ? ( timeout->value * 1000 ) : timeout->value;
 }
 
-static EventdNotifyEvent *
-eventd_notify_event_new(gboolean disable, const char *title, const char *message, const char *icon, const char *overlay_icon, Int *scale, Int *timeout, EventdNotifyEvent *parent)
+static EventdNotificationEvent *
+eventd_notification_event_new(gboolean disable, const char *title, const char *message, const char *icon, const char *overlay_icon, Int *scale, Int *timeout, EventdNotificationEvent *parent)
 {
-    EventdNotifyEvent *event = NULL;
+    EventdNotificationEvent *event = NULL;
 
     title = title ?: parent ? parent->title : "$client-name - $event-data[name]";
     message = message ?: parent ? parent->message : "$event-data[text]";
@@ -105,22 +105,22 @@ eventd_notify_event_new(gboolean disable, const char *title, const char *message
     timeout->value = timeout->set ? timeout->value : parent ? parent->timeout : NOTIFY_EXPIRES_DEFAULT;
     timeout->set = TRUE;
 
-    event = g_new0(EventdNotifyEvent, 1);
+    event = g_new0(EventdNotificationEvent, 1);
 
-    eventd_notify_event_update(event, disable, title, message, icon, overlay_icon, scale, timeout);
+    eventd_notification_event_update(event, disable, title, message, icon, overlay_icon, scale, timeout);
 
     return event;
 }
 
 static void
-eventd_notify_event_free(EventdNotifyEvent *event)
+eventd_notification_event_free(EventdNotificationEvent *event)
 {
-    eventd_notify_event_clean(event);
+    eventd_notification_event_clean(event);
     g_free(event);
 }
 
 static void
-eventd_notify_event_parse(const gchar *client_type, const gchar *event_type, GKeyFile *config_file)
+eventd_notification_event_parse(const gchar *client_type, const gchar *event_type, GKeyFile *config_file)
 {
     gboolean disable;
     gchar *name = NULL;
@@ -130,24 +130,24 @@ eventd_notify_event_parse(const gchar *client_type, const gchar *event_type, GKe
     gchar *overlay_icon = NULL;
     Int scale;
     Int timeout;
-    EventdNotifyEvent *event;
+    EventdNotificationEvent *event;
 
-    if ( ! g_key_file_has_group(config_file, "notify") )
+    if ( ! g_key_file_has_group(config_file, "notification") )
         return;
 
-    if ( eventd_plugin_helper_config_key_file_get_boolean(config_file, "notify", "disable", &disable) < 0 )
+    if ( eventd_plugin_helper_config_key_file_get_boolean(config_file, "notification", "disable", &disable) < 0 )
         goto skip;
-    if ( eventd_plugin_helper_config_key_file_get_string(config_file, "notify", "title", &title) < 0 )
+    if ( eventd_plugin_helper_config_key_file_get_string(config_file, "notification", "title", &title) < 0 )
         goto skip;
-    if ( eventd_plugin_helper_config_key_file_get_string(config_file, "notify", "message", &message) < 0 )
+    if ( eventd_plugin_helper_config_key_file_get_string(config_file, "notification", "message", &message) < 0 )
         goto skip;
-    if ( eventd_plugin_helper_config_key_file_get_string(config_file, "notify", "icon", &icon) < 0 )
+    if ( eventd_plugin_helper_config_key_file_get_string(config_file, "notification", "icon", &icon) < 0 )
         goto skip;
-    if ( eventd_plugin_helper_config_key_file_get_string(config_file, "notify", "overlay-icon", &overlay_icon) < 0 )
+    if ( eventd_plugin_helper_config_key_file_get_string(config_file, "notification", "overlay-icon", &overlay_icon) < 0 )
         goto skip;
-    if ( eventd_plugin_helper_config_key_file_get_int(config_file, "notify", "overlay-scale", &scale) < 0 )
+    if ( eventd_plugin_helper_config_key_file_get_int(config_file, "notification", "overlay-scale", &scale) < 0 )
         goto skip;
-    if ( eventd_plugin_helper_config_key_file_get_int(config_file, "notify", "timeout", &timeout) < 0 )
+    if ( eventd_plugin_helper_config_key_file_get_int(config_file, "notification", "timeout", &timeout) < 0 )
         goto skip;
 
     if ( event_type != NULL )
@@ -157,9 +157,9 @@ eventd_notify_event_parse(const gchar *client_type, const gchar *event_type, GKe
 
     event = g_hash_table_lookup(events, name);
     if ( event != NULL )
-        eventd_notify_event_update(event, disable, title, message, icon, overlay_icon, &scale, &timeout);
+        eventd_notification_event_update(event, disable, title, message, icon, overlay_icon, &scale, &timeout);
     else
-        g_hash_table_insert(events, name, eventd_notify_event_new(disable, title, message, icon, overlay_icon, &scale, &timeout, g_hash_table_lookup(events, client_type)));
+        g_hash_table_insert(events, name, eventd_notification_event_new(disable, title, message, icon, overlay_icon, &scale, &timeout, g_hash_table_lookup(events, client_type)));
 
 skip:
     g_free(overlay_icon);
@@ -169,7 +169,7 @@ skip:
 }
 
 static GdkPixbuf *
-eventd_notify_get_icon_pixbuf(const char *icon_name, GHashTable *event_data)
+eventd_notification_get_icon_pixbuf(const char *icon_name, GHashTable *event_data)
 {
     GError *error = NULL;
     gchar *icon_base64 = NULL;
@@ -225,11 +225,11 @@ fail:
 }
 
 static GHashTable *
-eventd_notify_event_action(EventdEvent *event)
+eventd_notification_event_action(EventdEvent *event)
 {
     gchar *name;
     GError *error = NULL;
-    EventdNotifyEvent *notify_event;
+    EventdNotificationEvent *notification_event;
     gchar *title = NULL;
     gchar *message = NULL;
     GdkPixbuf *icon = NULL;
@@ -238,24 +238,24 @@ eventd_notify_event_action(EventdEvent *event)
     NotifyNotification *notification = NULL;
 
     name = g_strconcat(event->client->type, "-", event->type, NULL);
-    notify_event = g_hash_table_lookup(events, name);
+    notification_event = g_hash_table_lookup(events, name);
     g_free(name);
-    if ( ( notify_event == NULL ) && ( ( notify_event = g_hash_table_lookup(events, event->client->type) ) == NULL ) )
+    if ( ( notification_event == NULL ) && ( ( notification_event = g_hash_table_lookup(events, event->client->type) ) == NULL ) )
         return NULL;
 
-    if ( notify_event->disable )
+    if ( notification_event->disable )
         return NULL;
 
-    tmp = eventd_plugin_helper_regex_replace_client_name(notify_event->title, event->client->name);
+    tmp = eventd_plugin_helper_regex_replace_client_name(notification_event->title, event->client->name);
     title = eventd_plugin_helper_regex_replace_event_data(tmp, event->data, NULL);
     g_free(tmp);
 
-    message = eventd_plugin_helper_regex_replace_event_data(notify_event->message, event->data, NULL);
+    message = eventd_plugin_helper_regex_replace_event_data(notification_event->message, event->data, NULL);
 
     notification = notify_notification_new(title, message, NULL);
 
-    icon = eventd_notify_get_icon_pixbuf(notify_event->icon, event->data);
-    overlay_icon = eventd_notify_get_icon_pixbuf(notify_event->overlay_icon, event->data);
+    icon = eventd_notification_get_icon_pixbuf(notification_event->icon, event->data);
+    overlay_icon = eventd_notification_get_icon_pixbuf(notification_event->overlay_icon, event->data);
     if ( icon != NULL )
     {
         if ( overlay_icon != NULL )
@@ -268,8 +268,8 @@ eventd_notify_event_action(EventdEvent *event)
             icon_width = gdk_pixbuf_get_width(icon);
             icon_height = gdk_pixbuf_get_height(icon);
 
-            overlay_icon_width = ( (gdouble)notify_event->scale / 100. ) * (gdouble)icon_width;
-            overlay_icon_height = ( (gdouble)notify_event->scale / 100. ) * (gdouble)icon_height;
+            overlay_icon_width = ( (gdouble)notification_event->scale / 100. ) * (gdouble)icon_width;
+            overlay_icon_height = ( (gdouble)notification_event->scale / 100. ) * (gdouble)icon_height;
 
             x = icon_width - overlay_icon_width;
             y = icon_height - overlay_icon_height;
@@ -298,7 +298,7 @@ eventd_notify_event_action(EventdEvent *event)
     }
 
     notify_notification_set_urgency(notification, NOTIFY_URGENCY_NORMAL);
-    notify_notification_set_timeout(notification, notify_event->timeout);
+    notify_notification_set_timeout(notification, notification_event->timeout);
     if ( ! notify_notification_show(notification, &error) )
         g_warning("Can't show the notification: %s", error->message);
     g_clear_error(&error);
@@ -312,13 +312,13 @@ eventd_notify_event_action(EventdEvent *event)
 
 
 static void
-eventd_notify_config_init()
+eventd_notification_config_init()
 {
-    events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)eventd_notify_event_free);
+    events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)eventd_notification_event_free);
 }
 
 static void
-eventd_notify_config_clean()
+eventd_notification_config_clean()
 {
     g_hash_table_unref(events);
 }
@@ -326,15 +326,15 @@ eventd_notify_config_clean()
 void
 eventd_plugin_get_info(EventdPlugin *plugin)
 {
-    plugin->id = "notify";
+    plugin->id = "notification";
 
-    plugin->start = eventd_notify_start;
-    plugin->stop = eventd_notify_stop;
+    plugin->start = eventd_notification_start;
+    plugin->stop = eventd_notification_stop;
 
-    plugin->config_init = eventd_notify_config_init;
-    plugin->config_clean = eventd_notify_config_clean;
+    plugin->config_init = eventd_notification_config_init;
+    plugin->config_clean = eventd_notification_config_clean;
 
-    plugin->event_parse = eventd_notify_event_parse;
-    plugin->event_action = eventd_notify_event_action;
+    plugin->event_parse = eventd_notification_event_parse;
+    plugin->event_action = eventd_notification_event_action;
 }
 

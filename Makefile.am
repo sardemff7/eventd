@@ -177,21 +177,21 @@ endif
 
 if ENABLE_NOTIFY
 plugins_LTLIBRARIES += \
-	notify.la
+	notification.la
 
-notify_la_SOURCES = \
-	src/plugins/notify/notify.c
+notification_la_SOURCES = \
+	src/plugins/notification/notification.c
 
-notify_la_CFLAGS = \
+notification_la_CFLAGS = \
 	$(AM_CFLAGS) \
 	$(NOTIFY_CFLAGS) \
 	$(GLIB_CFLAGS)
 
-notify_la_LDFLAGS = \
+notification_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
 	-avoid-version -module -export-symbols-regex eventd_plugin_get_info
 
-notify_la_LIBADD = \
+notification_la_LIBADD = \
 	libeventd-plugin-helper.la \
 	$(NOTIFY_LIBS) \
 	$(GLIB_LIBS)
