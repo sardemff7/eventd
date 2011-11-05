@@ -73,6 +73,7 @@ fi
 AM_CONDITIONAL(ENABLE_SYSTEMD, test x$enable_systemd = xyes)
 
 
+# PulseAudio plugin
 AC_ARG_ENABLE(pulseaudio, AS_HELP_STRING([--disable-pulseaudio], [Disable PulseAudio support]), enable_pulseaudio=$enableval, enable_pulseaudio=yes)
 AC_ARG_ENABLE(sndfile, AS_HELP_STRING([--disable-sndfile], [Disable libsndfile support]), enable_sndfile=$enableval, enable_sndfile=yes)
 AC_ARG_ENABLE(espeak, AS_HELP_STRING([--enable-espeak], [Enable eSpeak support]), enable_espeak=$enableval, enable_espeak=no)
@@ -100,12 +101,14 @@ AM_CONDITIONAL(ENABLE_PULSEAUDIO, test x$enable_pulseaudio = xyes)
 AM_CONDITIONAL(ENABLE_SNDFILE, test x$enable_sndfile = xyes)
 AM_CONDITIONAL(ENABLE_ESPEAK, test x$enable_espeak = xyes)
 
+# Notification plugin
 AC_ARG_ENABLE(libnotify, AS_HELP_STRING([--disable-libnotify], [Disable libnotify support]), enable_libnotify=$enableval, enable_libnotify=yes)
 if test x$enable_libnotify = xyes; then
     PKG_CHECK_MODULES(NOTIFY, [libnotify >= $libnotify_min_version])
 fi
 AM_CONDITIONAL(ENABLE_NOTIFY, [test x$enable_libnotify = xyes])
 
+# Dialogs plugin
 AC_ARG_ENABLE(dialogs, AS_HELP_STRING([--disable-dialogs], [Disable dialog support]), enable_dialogs=$enableval, enable_dialogs=no)
 #AC_ARG_ENABLE(gtk, AS_HELP_STRING([--enable-gtk], [Enable GTK+]), enable_gtk=$enableval, enable_gtk=no)
 if test x$enable_dialogs = xyes; then
