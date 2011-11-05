@@ -225,11 +225,11 @@ fail:
 }
 
 static void
-eventd_notify_event_action(const gchar *client_type, const gchar *client_name, const gchar *event_type, GHashTable *event_data)
+eventd_notify_event_action(EventdEvent *event)
 {
     gchar *name;
     GError *error = NULL;
-    EventdNotifyEvent *event;
+    EventdNotifyEvent *notify_event;
     gchar *title = NULL;
     gchar *message = NULL;
     GdkPixbuf *icon = NULL;
@@ -237,25 +237,25 @@ eventd_notify_event_action(const gchar *client_type, const gchar *client_name, c
     gchar *tmp = NULL;
     NotifyNotification *notification = NULL;
 
-    name = g_strconcat(client_type, "-", event_type, NULL);
-    event = g_hash_table_lookup(events, name);
+    name = g_strconcat(event->client->type, "-", event->type, NULL);
+    notify_event = g_hash_table_lookup(events, name);
     g_free(name);
-    if ( ( event == NULL ) && ( ( event = g_hash_table_lookup(events, client_type) ) == NULL ) )
+    if ( ( notify_event == NULL ) && ( ( notify_event = g_hash_table_lookup(events, event->client->type) ) == NULL ) )
         return;
 
-    if ( event->disable )
+    if ( notify_event->disable )
         return;
 
-    tmp = eventd_plugin_helper_regex_replace_client_name(event->title, client_name);
-    title = eventd_plugin_helper_regex_replace_event_data(tmp, event_data, NULL);
+    tmp = eventd_plugin_helper_regex_replace_client_name(notify_event->title, event->client->name);
+    title = eventd_plugin_helper_regex_replace_event_data(tmp, event->data, NULL);
     g_free(tmp);
 
-    message = eventd_plugin_helper_regex_replace_event_data(event->message, event_data, NULL);
+    message = eventd_plugin_helper_regex_replace_event_data(notify_event->message, event->data, NULL);
 
     notification = notify_notification_new(title, message, NULL);
 
-    icon = eventd_notify_get_icon_pixbuf(event->icon, event_data);
-    overlay_icon = eventd_notify_get_icon_pixbuf(event->overlay_icon, event_data);
+    icon = eventd_notify_get_icon_pixbuf(notify_event->icon, event->data);
+    overlay_icon = eventd_notify_get_icon_pixbuf(notify_event->overlay_icon, event->data);
     if ( icon != NULL )
     {
         if ( overlay_icon != NULL )
@@ -268,8 +268,8 @@ eventd_notify_event_action(const gchar *client_type, const gchar *client_name, c
             icon_width = gdk_pixbuf_get_width(icon);
             icon_height = gdk_pixbuf_get_height(icon);
 
-            overlay_icon_width = event->scale * (gdouble)icon_width;
-            overlay_icon_height = event->scale * (gdouble)icon_height;
+            overlay_icon_width = ( (gdouble)notify_event->scale / 100. ) * (gdouble)icon_width;
+            overlay_icon_height = ( (gdouble)notify_event->scale / 100. ) * (gdouble)icon_height;
 
             x = icon_width - overlay_icon_width;
             y = icon_height - overlay_icon_height;
@@ -298,7 +298,7 @@ eventd_notify_event_action(const gchar *client_type, const gchar *client_name, c
     }
 
     notify_notification_set_urgency(notification, NOTIFY_URGENCY_NORMAL);
-    notify_notification_set_timeout(notification, event->timeout);
+    notify_notification_set_timeout(notification, notify_event->timeout);
     if ( ! notify_notification_show(notification, &error) )
         g_warning("Can't show the notification: %s", error->message);
     g_clear_error(&error);

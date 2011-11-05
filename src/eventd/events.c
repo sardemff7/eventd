@@ -34,6 +34,7 @@
 #define DEFAULT_DELAY 5
 #define DEFAULT_DELAY_STR "5"
 
+#include <eventd-plugin.h>
 #include "plugins.h"
 #include "events.h"
 

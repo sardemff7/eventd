@@ -23,16 +23,26 @@
 #ifndef __EVENTD_EVENTD_PLUGIN_H__
 #define __EVENTD_EVENTD_PLUGIN_H__
 
+typedef struct {
+	gchar *type;
+	gchar *name;
+} EventdClient;
+
+typedef struct {
+	EventdClient *client;
+
+	gchar *type;
+	GHashTable *data;
+} EventdEvent;
+
 typedef void (*EventdPluginStartFunc)(gpointer user_data);
 typedef void (*EventdPluginStopFunc)(void);
 typedef void (*EventdPluginConfigInitFunc)(void);
 typedef void (*EventdPluginConfigCleanFunc)(void);
 typedef void (*EventdPluginEventParseFunc)(const gchar *, const gchar *, GKeyFile *);
-typedef void (*EventdPluginEventActionFunc)(const gchar *client_type, const gchar *client_name, const gchar *event_type, GHashTable *event_data);
+typedef void (*EventdPluginEventActionFunc)(EventdEvent *event);
 
 typedef struct {
-	//gchar *name;
-
 	EventdPluginStartFunc start;
 	EventdPluginStopFunc stop;
 

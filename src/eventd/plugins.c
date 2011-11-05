@@ -23,6 +23,7 @@
 #include <glib.h>
 #include <gmodule.h>
 
+#include <eventd-plugin.h>
 #include <plugins-helper.h>
 #include "plugins.h"
 
@@ -59,7 +60,7 @@ eventd_plugins_event_parse_all(const gchar *type, const gchar *event, GKeyFile *
 }
 
 void
-eventd_plugins_event_action_all(const gchar *client_type, const gchar *client_name, const gchar *event_type, GHashTable *event_data)
+eventd_plugins_event_action_all(EventdEvent *event)
 {
-    eventd_plugins_helper_event_action_all(plugins, client_type, client_name, event_type, event_data);
+    eventd_plugins_helper_event_action_all(plugins, event);
 }

@@ -103,20 +103,20 @@ eventd_dialogs_event_parse(const gchar *type, const gchar *event, GKeyFile *conf
 }
 
 static void
-eventd_dialogs_event_action(const gchar *client_type, const gchar *client_name, const gchar *event_type, GHashTable *event_data)
+eventd_dialogs_event_action(EventdEvent *event)
 {
     gchar *name;
     gchar *message;
     gchar *msg;
 
-    name = g_strconcat(client_type, "-", event_type, NULL);
+    name = g_strconcat(event->client->type, "-", event->type, NULL);
     message = g_hash_table_lookup(events, name);
     g_free(name);
-    if ( ( message == NULL ) && ( ( message = g_hash_table_lookup(events, client_type) ) == NULL ) )
+    if ( ( message == NULL ) && ( ( message = g_hash_table_lookup(events, event->client->type) ) == NULL ) )
         return;
 
-    msg = eventd_plugin_helper_regex_replace_event_data(message, event_data, NULL);
-    do_it("zenity", "--info", "--title", client_name, "--text", msg, NULL);
+    msg = eventd_plugin_helper_regex_replace_event_data(message, event->data, NULL);
+    do_it("zenity", "--info", "--title", event->client->name, "--text", msg, NULL);
     g_free(msg);
 }
 

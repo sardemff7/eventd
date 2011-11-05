@@ -205,7 +205,7 @@ eventd_pulseaudio_espeak_regex_event_data_cb(const GMatchInfo *info, GString *r,
 }
 
 static void
-eventd_pulseaudio_espeak_event_action(const gchar *client_type, const gchar *client_name, const gchar *event_type, GHashTable *event_data)
+eventd_pulseaudio_espeak_event_action(EventdEvent *event)
 {
     gchar *name;
     gchar *message;
@@ -213,13 +213,13 @@ eventd_pulseaudio_espeak_event_action(const gchar *client_type, const gchar *cli
     espeak_ERROR error;
     pa_stream *stream;
 
-    name = g_strconcat(client_type, "-", event_type, NULL);
+    name = g_strconcat(event->client->type, "-", event->type, NULL);
     message = g_hash_table_lookup(events, name);
     g_free(name);
-    if ( ( message == NULL ) && ( ( message = g_hash_table_lookup(events, client_type) ) == NULL ) )
+    if ( ( message == NULL ) && ( ( message = g_hash_table_lookup(events, event->client->type) ) == NULL ) )
         return;
 
-    msg = eventd_plugin_helper_regex_replace_event_data(message, event_data, eventd_pulseaudio_espeak_regex_event_data_cb);
+    msg = eventd_plugin_helper_regex_replace_event_data(message, event->data, eventd_pulseaudio_espeak_regex_event_data_cb);
 
     stream = pa_stream_new(sound, "eSpeak eventd message", &sample_spec, NULL);
     pa_stream_set_state_callback(stream, pa_stream_state_callback, NULL);

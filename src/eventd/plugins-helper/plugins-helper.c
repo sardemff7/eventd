@@ -188,29 +188,14 @@ void eventd_plugins_helper_event_parse_all(GList *plugins, const gchar *type, co
     eventd_plugins_helper_foreach(plugins, (GFunc)eventd_plugins_helper_event_parse, &data);
 }
 
-typedef struct {
-    const gchar *client_type;
-    const gchar *client_name;
-
-    const gchar *event_type;
-    GHashTable *event_data;
-} EventdEventActionData;
-
 static void
-eventd_plugins_helper_event_action(EventdPlugin *plugin, EventdEventActionData *data)
+eventd_plugins_helper_event_action(EventdPlugin *plugin, EventdEvent *event)
 {
-    plugin->event_action(data->client_type, data->client_name, data->event_type, data->event_data);
+    plugin->event_action(event);
 }
 
 void
-eventd_plugins_helper_event_action_all(GList *plugins, const gchar *client_type, const gchar *client_name, const gchar *event_type, GHashTable *event_data)
+eventd_plugins_helper_event_action_all(GList *plugins, EventdEvent *event)
 {
-    EventdEventActionData data = {
-        .client_type = client_type,
-        .client_name = client_name,
-
-        .event_type = event_type,
-        .event_data = event_data
-    };
-    eventd_plugins_helper_foreach(plugins, (GFunc)eventd_plugins_helper_event_action, &data);
+    eventd_plugins_helper_foreach(plugins, (GFunc)eventd_plugins_helper_event_action, event);
 }

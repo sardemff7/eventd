@@ -51,11 +51,11 @@ connection_handler(
     GDataOutputStream *output = NULL;
     GError *error = NULL;
 
-    gchar *client_type = NULL;
-    gchar *client_name = NULL;
+    EventdClient client;
+    EventdEvent event = {
+        .client = &client
+    };
 
-    gchar *event_type = NULL;
-    GHashTable *event_data = NULL;
     gchar *event_data_name = NULL;
     gchar *event_data_content = NULL;
 
@@ -78,13 +78,13 @@ connection_handler(
         g_debug("Line received: %s", line);
         #endif /* DEBUG */
 
-        if ( event_type != NULL )
+        if ( event.type != NULL )
         {
             if ( g_ascii_strcasecmp(line, ".") == 0 )
             {
                 if ( event_data_name )
                 {
-                    g_hash_table_insert(event_data, event_data_name, event_data_content);
+                    g_hash_table_insert(event.data, event_data_name, event_data_content);
                     event_data_name = NULL;
                     event_data_content = NULL;
                 }
@@ -96,12 +96,10 @@ connection_handler(
                     if ( event_time > ( last_action + delay ) )
                     {
                         last_action = event_time;
-                        eventd_plugins_event_action_all(client_type, client_name, event_type, ( g_hash_table_size(event_data) > 0 ) ? event_data : NULL);
+                        eventd_plugins_event_action_all(&event);
                     }
-                    g_hash_table_unref(event_data);
-                    g_free(event_type);
-                    event_data = NULL;
-                    event_type = NULL;
+                    event.data = (g_hash_table_unref(event.data), NULL);
+                    event.type = (g_free(event.type), NULL);
                 }
             }
             else if ( event_data_content )
@@ -122,7 +120,7 @@ connection_handler(
                 gchar **data = NULL;
 
                 data = g_strsplit(line+6, " ", 2);
-                g_hash_table_insert(event_data, g_strdup(data[0]), g_strdup(data[1]));
+                g_hash_table_insert(event.data, g_strdup(data[0]), g_strdup(data[1]));
 
                 g_strfreev(data);
             }
@@ -131,8 +129,8 @@ connection_handler(
         }
         else if ( g_ascii_strncasecmp(line, "EVENT ", 6) == 0 )
         {
-            event_type = g_strdup(line+6);
-            event_data = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+            event.type = g_strdup(line+6);
+            event.data = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
         }
         else if ( g_ascii_strcasecmp(line, "BYE") == 0 )
         {
@@ -147,9 +145,9 @@ connection_handler(
                 break;
 
             hello = g_strsplit(line+6, " ", 2);
-            client_type = g_strdup(hello[0]);
+            client.type = g_strdup(hello[0]);
             if ( hello[1] != NULL )
-                client_name = g_strdup(hello[1]);
+                client.name = g_strdup(hello[1]);
             g_strfreev(hello);
         }
         else if ( g_ascii_strncasecmp(line, "RENAME ", 7) == 0 )
@@ -160,9 +158,11 @@ connection_handler(
                 break;
 
             rename = g_strsplit(line+7, " ", 2);
-            client_type = g_strdup(rename[0]);
+            g_free(client.type);
+            g_free(client.name);
+            client.type = g_strdup(rename[0]);
             if ( rename[1] != NULL )
-                client_name = g_strdup(rename[1]);
+                client.name = g_strdup(rename[1]);
             g_strfreev(rename);
         }
         else
@@ -174,8 +174,8 @@ connection_handler(
         g_warning("Can't read the socket: %s", error->message);
     g_clear_error(&error);
 
-    g_free(client_type);
-    g_free(client_name);
+    g_free(client.type);
+    g_free(client.name);
 
     if ( ! g_io_stream_close((GIOStream *)connection, NULL, &error) )
         g_warning("Can't close the stream: %s", error->message);

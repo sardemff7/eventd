@@ -195,23 +195,23 @@ eventd_pulseaudio_sndfile_remove_sample(const char *name)
 }
 
 static void
-eventd_pulseaudio_sndfile_event_action(const gchar *client_type, const gchar *client_name, const gchar *event_type, GHashTable *event_data)
+eventd_pulseaudio_sndfile_event_action(EventdEvent *event)
 {
     gchar *name;
-    EventdPulseaudioSndfileEvent *event = NULL;
+    EventdPulseaudioSndfileEvent *sndfile_event = NULL;
     pa_operation *op;
 
-    name = g_strconcat(client_type, "-", event_type, NULL);
-    event = g_hash_table_lookup(events, name);
+    name = g_strconcat(event->client->type, "-", event->type, NULL);
+    sndfile_event = g_hash_table_lookup(events, name);
     g_free(name);
-    if ( ( event == NULL ) && ( ( event = g_hash_table_lookup(events, client_type) ) == NULL ) )
+    if ( ( sndfile_event == NULL ) && ( ( sndfile_event = g_hash_table_lookup(events, event->client->type) ) == NULL ) )
         return;
 
-    if ( event->disable )
+    if ( sndfile_event->disable )
         return;
 
     pa_threaded_mainloop_lock(pa_loop);
-    op = pa_context_play_sample(sound, event->sample, NULL, PA_VOLUME_NORM, NULL, NULL);
+    op = pa_context_play_sample(sound, sndfile_event->sample, NULL, PA_VOLUME_NORM, NULL, NULL);
     if ( op )
         pa_operation_unref(op);
     else
