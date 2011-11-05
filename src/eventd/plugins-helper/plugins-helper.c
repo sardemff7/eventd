@@ -78,8 +78,11 @@ eventd_plugins_helper_load_dir(GList **plugins, const gchar *plugins_dir_name, g
         #endif /* ! DEBUG */
 
         plugin = g_new0(EventdPlugin, 1);
+        plugin->id = NULL;
         plugin->module = module;
         get_info(plugin);
+
+        plugin->id = g_strdup(plugin->id ?: file);
 
         if ( plugin->start != NULL )
             plugin->start(user_data);
@@ -121,6 +124,7 @@ plugin_free(EventdPlugin *plugin)
     if ( plugin->stop != NULL )
         plugin->stop();
     g_module_close(plugin->module);
+    g_free(plugin->id);
     g_free(plugin);
 }
 
@@ -188,14 +192,55 @@ void eventd_plugins_helper_event_parse_all(GList *plugins, const gchar *type, co
     eventd_plugins_helper_foreach(plugins, (GFunc)eventd_plugins_helper_event_parse, &data);
 }
 
-static void
-eventd_plugins_helper_event_action(EventdPlugin *plugin, EventdEvent *event)
+typedef struct {
+    GHashTable *ret;
+    const gchar *prefix;
+} EventdEventActionReturnData;
+
+static gboolean
+eventd_plugins_helper_event_action_return(gchar *name, gchar *content, EventdEventActionReturnData *data)
 {
-    plugin->event_action(event);
+    gchar *full_name;
+
+    full_name = g_strconcat(data->prefix, "-", name, NULL);
+    g_free(name);
+
+    g_hash_table_insert(data->ret, full_name, content);
+
+    return TRUE;
 }
 
-void
+typedef struct {
+    EventdEvent *event;
+    GHashTable *ret;
+} EventdEventActionData;
+
+static void
+eventd_plugins_helper_event_action(EventdPlugin *plugin, EventdEventActionData *data)
+{
+    GHashTable *ret;
+    ret = plugin->event_action(data->event);
+    if ( ret != NULL )
+    {
+        EventdEventActionReturnData ret_data = {
+            .ret = data->ret,
+            .prefix = plugin->id
+        };
+        g_hash_table_foreach_steal(ret, (GHRFunc)eventd_plugins_helper_event_action_return, &ret_data);
+        g_hash_table_unref(ret);
+    }
+}
+
+GHashTable *
 eventd_plugins_helper_event_action_all(GList *plugins, EventdEvent *event)
 {
-    eventd_plugins_helper_foreach(plugins, (GFunc)eventd_plugins_helper_event_action, event);
+    EventdEventActionData data = {
+        .event = event
+    };
+    data.ret = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+    eventd_plugins_helper_foreach(plugins, (GFunc)eventd_plugins_helper_event_action, &data);
+
+    if ( g_hash_table_size(data.ret) < 1 )
+        data.ret = (g_hash_table_unref(data.ret), NULL);
+    return data.ret;
 }

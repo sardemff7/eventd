@@ -40,9 +40,11 @@ typedef void (*EventdPluginStopFunc)(void);
 typedef void (*EventdPluginConfigInitFunc)(void);
 typedef void (*EventdPluginConfigCleanFunc)(void);
 typedef void (*EventdPluginEventParseFunc)(const gchar *, const gchar *, GKeyFile *);
-typedef void (*EventdPluginEventActionFunc)(EventdEvent *event);
+typedef GHashTable *(*EventdPluginEventActionFunc)(EventdEvent *event);
 
 typedef struct {
+    gchar *id;
+
     EventdPluginStartFunc start;
     EventdPluginStopFunc stop;
 

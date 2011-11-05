@@ -102,7 +102,7 @@ eventd_dialogs_event_parse(const gchar *type, const gchar *event, GKeyFile *conf
     g_hash_table_insert(events, name, message);
 }
 
-static void
+static GHashTable *
 eventd_dialogs_event_action(EventdEvent *event)
 {
     gchar *name;
@@ -113,11 +113,13 @@ eventd_dialogs_event_action(EventdEvent *event)
     message = g_hash_table_lookup(events, name);
     g_free(name);
     if ( ( message == NULL ) && ( ( message = g_hash_table_lookup(events, event->client->type) ) == NULL ) )
-        return;
+        return NULL;
 
     msg = eventd_plugin_helper_regex_replace_event_data(message, event->data, NULL);
     do_it("zenity", "--info", "--title", event->client->name, "--text", msg, NULL);
     g_free(msg);
+
+    return NULL;
 }
 
 static void
@@ -135,6 +137,8 @@ eventd_dialogs_config_clean()
 void
 eventd_plugin_get_info(EventdPlugin *plugin)
 {
+    plugin->id = "dialogs";
+
     plugin->start = eventd_dialogs_start;
     plugin->stop = eventd_dialogs_stop;
 

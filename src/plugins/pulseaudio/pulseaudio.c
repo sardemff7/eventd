@@ -99,10 +99,10 @@ eventd_pulseaudio_stop()
     pa_threaded_mainloop_free(pa_loop);
 }
 
-static void
+static GHashTable *
 eventd_pulseaudio_event_action(EventdEvent *event)
 {
-    eventd_plugins_helper_event_action_all(plugins, event);
+    return eventd_plugins_helper_event_action_all(plugins, event);
 }
 
 static void
@@ -126,6 +126,8 @@ eventd_pulseaudio_config_clean()
 void
 eventd_plugin_get_info(EventdPlugin *plugin)
 {
+    plugin->id = "pulseaudio";
+
     plugin->start = eventd_pulseaudio_start;
     plugin->stop = eventd_pulseaudio_stop;
 

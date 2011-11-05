@@ -194,7 +194,7 @@ eventd_pulseaudio_sndfile_remove_sample(const char *name)
     pa_threaded_mainloop_unlock(pa_loop);
 }
 
-static void
+static GHashTable *
 eventd_pulseaudio_sndfile_event_action(EventdEvent *event)
 {
     gchar *name;
@@ -205,10 +205,10 @@ eventd_pulseaudio_sndfile_event_action(EventdEvent *event)
     sndfile_event = g_hash_table_lookup(events, name);
     g_free(name);
     if ( ( sndfile_event == NULL ) && ( ( sndfile_event = g_hash_table_lookup(events, event->client->type) ) == NULL ) )
-        return;
+        return NULL;
 
     if ( sndfile_event->disable )
-        return;
+        return NULL;
 
     pa_threaded_mainloop_lock(pa_loop);
     op = pa_context_play_sample(sound, sndfile_event->sample, NULL, PA_VOLUME_NORM, NULL, NULL);
@@ -217,6 +217,8 @@ eventd_pulseaudio_sndfile_event_action(EventdEvent *event)
     else
         g_warning("Can't play sample %s", name);
     pa_threaded_mainloop_unlock(pa_loop);
+
+    return NULL;
 }
 
 static void
@@ -369,6 +371,8 @@ eventd_pulseaudio_sndfile_config_clean()
 void
 eventd_plugin_get_info(EventdPlugin *plugin)
 {
+    plugin->id = "sndfile";
+
     plugin->start = (EventdPluginStartFunc)eventd_pulseaudio_sndfile_start;
 
     plugin->config_init = eventd_pulseaudio_sndfile_config_init;

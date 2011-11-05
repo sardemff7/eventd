@@ -224,7 +224,7 @@ fail:
     return pixbuf;
 }
 
-static void
+static GHashTable *
 eventd_notify_event_action(EventdEvent *event)
 {
     gchar *name;
@@ -241,10 +241,10 @@ eventd_notify_event_action(EventdEvent *event)
     notify_event = g_hash_table_lookup(events, name);
     g_free(name);
     if ( ( notify_event == NULL ) && ( ( notify_event = g_hash_table_lookup(events, event->client->type) ) == NULL ) )
-        return;
+        return NULL;
 
     if ( notify_event->disable )
-        return;
+        return NULL;
 
     tmp = eventd_plugin_helper_regex_replace_client_name(notify_event->title, event->client->name);
     title = eventd_plugin_helper_regex_replace_event_data(tmp, event->data, NULL);
@@ -306,6 +306,8 @@ eventd_notify_event_action(EventdEvent *event)
     g_object_unref(G_OBJECT(notification));
     g_free(message);
     g_free(title);
+
+    return NULL;
 }
 
 
@@ -324,6 +326,8 @@ eventd_notify_config_clean()
 void
 eventd_plugin_get_info(EventdPlugin *plugin)
 {
+    plugin->id = "notify";
+
     plugin->start = eventd_notify_start;
     plugin->stop = eventd_notify_stop;
 
