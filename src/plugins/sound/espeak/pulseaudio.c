@@ -98,7 +98,7 @@ eventd_sound_espeak_pulseaudio_play_data(gshort *wav, gint numsamples, espeak_EV
         pa_operation_unref(op);
     }
     else
-        pa_stream_write(stream, wav, numsamples*2, NULL, 0, PA_SEEK_RELATIVE);
+        pa_stream_write(stream, wav, numsamples*sizeof(gshort), NULL, 0, PA_SEEK_RELATIVE);
 
     pa_threaded_mainloop_unlock(pa_loop);
 }
