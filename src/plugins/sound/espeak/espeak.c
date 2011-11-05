@@ -36,6 +36,10 @@
 
 static GHashTable *events = NULL;
 
+typedef struct {
+    guchar *data;
+    gsize length;
+} EventdSoundEspeakSoundData;
 
 #define BUFFER_SIZE 2000
 
@@ -48,7 +52,19 @@ eventd_sound_espeak_callback_data_ref(EventdSoundEspeakCallbackData *data)
 static void
 eventd_sound_espeak_callback_data_free(EventdSoundEspeakCallbackData *data)
 {
-    eventd_sound_espeak_pulseaudio_pa_data_free(data->data);
+    EventdSoundEspeakSoundData *sound_data;
+
+    switch ( data->mode )
+    {
+    case EVENTD_CLIENT_MODE_PING_PONG:
+        sound_data = data->data;
+        g_free(sound_data->data);
+        g_free(sound_data);
+    break;
+    default:
+        eventd_sound_espeak_pulseaudio_pa_data_free(data->data);
+    break;
+    }
 
     g_free(data);
 }
@@ -66,12 +82,24 @@ static EventdSoundEspeakCallbackData *
 eventd_sound_espeak_callback_data_new(EventdClientMode mode)
 {
     EventdSoundEspeakCallbackData *data;
+    EventdSoundEspeakSoundData *sound_data;
 
     data = g_new0(EventdSoundEspeakCallbackData, 1);
 
     data->ref_count = 1;
     data->mode = mode;
-    data->data = eventd_sound_espeak_pulseaudio_pa_data_new();
+    switch ( mode )
+    {
+    case EVENTD_CLIENT_MODE_PING_PONG:
+        eventd_sound_espeak_callback_data_ref(data);
+        sound_data = g_new0(EventdSoundEspeakSoundData, 1);
+        sound_data->data = g_malloc0_n(0, sizeof(guchar));
+        data->data = sound_data;
+    break;
+    default:
+        data->data = eventd_sound_espeak_pulseaudio_pa_data_new();
+    break;
+    }
 
     return data;
 }
@@ -79,7 +107,28 @@ eventd_sound_espeak_callback_data_new(EventdClientMode mode)
 static int
 synth_callback(gshort *wav, gint numsamples, espeak_EVENT *event)
 {
-    eventd_sound_espeak_pulseaudio_play_data(wav, numsamples, event);
+    EventdSoundEspeakCallbackData *data;
+    data = event->user_data;
+
+    switch ( data->mode )
+    {
+    case EVENTD_CLIENT_MODE_PING_PONG:
+        if ( wav != NULL )
+        {
+            EventdSoundEspeakSoundData *sound_data;
+            gsize base;
+
+            sound_data = data->data;
+            base = sound_data->length;
+            sound_data->length += numsamples * sizeof(gshort);
+            sound_data->data = g_realloc_n(sound_data->data, sound_data->length, sizeof(guchar));
+            memcpy(sound_data->data+base, wav, numsamples*sizeof(gshort));
+        }
+    break;
+    default:
+        eventd_sound_espeak_pulseaudio_play_data(wav, numsamples, event);
+    break;
+    }
 
     if ( ( wav == NULL ) && ( event->type == espeakEVENT_LIST_TERMINATED ) )
         eventd_sound_espeak_callback_data_unref(event->user_data);
@@ -197,11 +246,13 @@ eventd_sound_espeak_regex_event_data_cb(const GMatchInfo *info, GString *r, gpoi
 static GHashTable *
 eventd_sound_espeak_event_action(EventdEvent *event)
 {
+    GHashTable *ret = NULL;
     gchar *name;
     gchar *message;
     gchar *msg;
     espeak_ERROR error;
     EventdSoundEspeakCallbackData *data;
+    EventdSoundEspeakSoundData *sound_data;
 
     name = g_strconcat(event->client->type, "-", event->type, NULL);
     message = g_hash_table_lookup(events, name);
@@ -213,21 +264,37 @@ eventd_sound_espeak_event_action(EventdEvent *event)
 
     data = eventd_sound_espeak_callback_data_new(event->client->mode);
     error = espeak_Synth(msg, strlen(msg)+1, 0, POS_CHARACTER, 0, espeakCHARS_UTF8|espeakSSML, NULL, data);
-    g_free(msg);
 
     switch ( error )
     {
     case EE_INTERNAL_ERROR:
         g_warning("Couldn’t synthetise text");
         eventd_sound_espeak_callback_data_free(data);
-        return NULL;
+        goto fail;
     case EE_BUFFER_FULL:
     case EE_OK:
     default:
     break;
     }
 
-    return NULL;
+    switch ( event->client->mode )
+    {
+    case EVENTD_CLIENT_MODE_PING_PONG:
+        espeak_Synchronize();
+        sound_data = data->data;
+        ret = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+        g_hash_table_insert(ret, g_strdup("message"), g_strdup(msg));
+        g_hash_table_insert(ret, g_strdup("audio-data"), g_base64_encode(sound_data->data, sound_data->length));
+        eventd_sound_espeak_callback_data_unref(data);
+    break;
+    default:
+    break;
+    }
+
+fail:
+    g_free(msg);
+
+    return ret;
 }
 
 static void
