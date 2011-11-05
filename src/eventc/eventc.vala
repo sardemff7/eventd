@@ -37,16 +37,16 @@ namespace Eventd
 
     static const GLib.OptionEntry[] entries =
     {
-        { "type", 't', 0, GLib.OptionArg.STRING, out event_type, N_("Event type to send"), "type" },
-        { "data-name", 'n', 0, GLib.OptionArg.STRING_ARRAY, out event_data_name, N_("Event data name to send"), "name" },
-        { "data-content", 'c', 0, GLib.OptionArg.STRING_ARRAY, out event_data_content, N_("Event data content to send (must be after a data-name)"), "content" },
-        { "host", 'h', 0, GLib.OptionArg.STRING, out host, N_("Host to connect to"), "host" },
-        { "port", 'p', 0, GLib.OptionArg.INT, ref port, N_("Port to connect to"), "port" },
+        { "type", 't', 0, GLib.OptionArg.STRING, out event_type, N_("Event type to send"), "<type>" },
+        { "data-name", 'n', 0, GLib.OptionArg.STRING_ARRAY, out event_data_name, N_("Event data name to send"), "<name>" },
+        { "data-content", 'c', 0, GLib.OptionArg.STRING_ARRAY, out event_data_content, N_("Event data content to send (must be after a data-name)"), "<content>" },
+        { "host", 'h', 0, GLib.OptionArg.STRING, out host, N_("Host to connect to"), "<host>" },
+        { "port", 'p', 0, GLib.OptionArg.INT, ref port, N_("Port to connect to"), "<port>" },
         #if ENABLE_GIO_UNIX
-        { "socket", 's', 0, GLib.OptionArg.FILENAME, out unix_socket, N_("UNIX socket to connect to"), "socket_file" },
+        { "socket", 's', 0, GLib.OptionArg.FILENAME, out unix_socket, N_("UNIX socket to connect to"), "<socket file>" },
         #endif
-        { "max-tries", 'm', 0, GLib.OptionArg.INT, ref max_tries, N_("Maximum connection attempts (0 for infinite)"), "times" },
-        { "timeout", 'o', 0, GLib.OptionArg.INT, ref timeout, N_("Connection timeout"), "time" },
+        { "max-tries", 'm', 0, GLib.OptionArg.INT, ref max_tries, N_("Maximum connection attempts (0 for infinite)"), "<times>" },
+        { "timeout", 'o', 0, GLib.OptionArg.INT, ref timeout, N_("Connection timeout"), "<seconds>" },
         { null }
     };
 
