@@ -23,9 +23,16 @@
 #ifndef __EVENTD_EVENTD_PLUGIN_H__
 #define __EVENTD_EVENTD_PLUGIN_H__
 
+typedef enum {
+    EVENTD_CLIENT_MODE_UNKNOWN = -1,
+    EVENTD_CLIENT_MODE_NORMAL = 0,
+    EVENTD_CLIENT_MODE_PING_PONG,
+} EventdClientMode;
+
 typedef struct {
     gchar *type;
     gchar *name;
+    EventdClientMode mode;
 } EventdClient;
 
 typedef struct {

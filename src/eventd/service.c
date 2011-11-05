@@ -51,7 +51,9 @@ connection_handler(
     GDataOutputStream *output = NULL;
     GError *error = NULL;
 
-    EventdClient client;
+    EventdClient client = {
+        .mode = EVENTD_CLIENT_MODE_UNKNOWN
+    };
     EventdEvent event = {
         .client = &client
     };
@@ -136,6 +138,32 @@ connection_handler(
         {
             g_data_output_stream_put_string(output, "BYE\n", NULL, &error);
             break;
+        }
+        else if ( g_ascii_strncasecmp(line, "MODE ", 5) == 0 )
+        {
+            EventdClientMode mode;
+
+            if ( last_action > 0 )
+            {
+                g_warning("Can’t change the mode after the first event");
+                g_free(line);
+                continue;
+            }
+
+            if ( ! g_data_output_stream_put_string(output, "MODE\n", NULL, &error) )
+                break;
+
+            if ( g_ascii_strcasecmp(line+5, "normal") == 0 )
+                mode = EVENTD_CLIENT_MODE_NORMAL;
+            else if ( g_ascii_strcasecmp(line+5, "ping-pong") == 0 )
+                mode = EVENTD_CLIENT_MODE_PING_PONG;
+            else
+            {
+                mode = EVENTD_CLIENT_MODE_UNKNOWN;
+                g_warning("Unknown mode");
+            }
+
+            client.mode = mode;
         }
         else if ( g_ascii_strncasecmp(line, "HELLO ", 6) == 0 )
         {
