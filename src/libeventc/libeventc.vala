@@ -28,6 +28,7 @@ namespace Eventd
         CONNECTION_REFUSED,
         CONNECTION_OTHER,
         HELLO,
+        MODE,
         BYE,
         RENAMED,
         SEND,
@@ -37,11 +38,17 @@ namespace Eventd
 
     public class Eventc : GLib.Object
     {
+        public enum Mode {
+            UNKNOWN = -1,
+            NORMAL = 0,
+            PING_PONG
+        }
 
         private string _host;
         private uint16 _port;
         private string _type;
         private string _name;
+        public Mode mode;
 
         public string host
         {
@@ -106,6 +113,7 @@ namespace Eventd
             this._port = port;
             this._type = type;
             this._name = name;
+            this.mode = Mode.UNKNOWN;
         }
 
         private void
@@ -199,7 +207,6 @@ namespace Eventd
                 this.send("HELLO " + this._type + " " + this._name);
         }
 
-
         private async void
         hello_async() throws EventcError
         {
@@ -210,6 +217,8 @@ namespace Eventd
                 throw new EventcError.HELLO("Got a wrong hello message: %s", r);
             else
                 this.hello_received = true;
+
+            yield this.send_mode_async();
         }
 
         private void
@@ -222,6 +231,45 @@ namespace Eventd
                 throw new EventcError.HELLO("Got a wrong hello message: %s", r);
             else
                 this.hello_received = true;
+
+            this.send_mode();
+        }
+
+        private void
+        send_mode_common() throws EventcError
+        {
+            unowned string mode = null;
+            switch ( this.mode )
+            {
+            case Mode.NORMAL:
+                mode = "normal";
+            break;
+            case Mode.PING_PONG:
+                mode = "ping-pong";
+            break;
+            }
+            if ( mode != null )
+            this.send("MODE " + mode);
+        }
+
+        private async void
+        send_mode_async() throws EventcError
+        {
+            this.send_mode_common();
+
+            var r = yield this.receive_async();
+            if ( r != "MODE" )
+                throw new EventcError.MODE("Got a wrong mode message: %s", r);
+        }
+
+        private void
+        send_mode() throws EventcError
+        {
+            this.send_mode_common();
+
+            var r = this.receive();
+            if ( r != "MODE" )
+                throw new EventcError.MODE("Got a wrong mode message: %s", r);
         }
 
         public void
