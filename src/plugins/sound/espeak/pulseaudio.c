@@ -93,9 +93,12 @@ eventd_sound_espeak_pulseaudio_play_data(gshort *wav, gint numsamples, espeak_EV
         pa_operation *op;
 
         op = pa_stream_drain(stream, pa_stream_drain_callback, NULL);
-        while ( pa_operation_get_state(op) == PA_OPERATION_RUNNING )
-            pa_threaded_mainloop_wait(pa_loop);
-        pa_operation_unref(op);
+        if ( op != NULL )
+        {
+            while ( pa_operation_get_state(op) == PA_OPERATION_RUNNING )
+                pa_threaded_mainloop_wait(pa_loop);
+            pa_operation_unref(op);
+        }
     }
     else
         pa_stream_write(stream, wav, numsamples*sizeof(gshort), NULL, 0, PA_SEEK_RELATIVE);
