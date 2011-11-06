@@ -23,6 +23,7 @@
 #ifndef __EVENTD_PLUGINS_NOTIFICATION_ICON_H__
 #define __EVENTD_PLUGINS_NOTIFICATION_ICON_H__
 
+gpointer eventd_notification_icon_get_pixbuf_from_file(const gchar *filename);
 gpointer eventd_notification_icon_get_pixbuf(EventdEvent *event, EventdNotificationEvent *notification_event);
 gchar *eventd_notification_icon_get_base64(gpointer icon);
 

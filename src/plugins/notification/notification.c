@@ -51,6 +51,12 @@ eventd_notification_stop()
 static void
 eventd_notification_event_clean(EventdNotificationEvent *event)
 {
+    if ( event->pixbuf != NULL )
+        g_object_unref(event->pixbuf);
+    g_free(event->icon);
+    if ( event->overlay_pixbuf != NULL )
+        g_object_unref(event->overlay_pixbuf);
+    g_free(event->overlay_icon);
     g_free(event->message);
     g_free(event->title);
 }
@@ -65,9 +71,19 @@ eventd_notification_event_update(EventdNotificationEvent *event, gboolean disabl
     if ( message != NULL )
         event->message = g_strdup(message);
     if ( icon != NULL )
-        event->icon = g_strdup(icon);
+    {
+        if ( g_str_has_prefix(icon, "file://") )
+            event->pixbuf = eventd_notification_icon_get_pixbuf_from_file(icon+7);
+        if ( event->pixbuf == NULL )
+            event->icon = g_strdup(icon);
+    }
     if ( overlay_icon != NULL )
-        event->overlay_icon = g_strdup(overlay_icon);
+    {
+        if ( g_str_has_prefix(overlay_icon, "file://") )
+            event->overlay_pixbuf = eventd_notification_icon_get_pixbuf_from_file(overlay_icon+7);
+        if ( event->overlay_pixbuf == NULL )
+            event->overlay_icon = g_strdup(overlay_icon);
+    }
     if ( scale->set )
         event->scale = (gdouble)scale->value / 100.;
     if ( timeout->set )

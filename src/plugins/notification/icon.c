@@ -85,13 +85,43 @@ fail:
 }
 
 gpointer
+eventd_notification_icon_get_pixbuf_from_file(const gchar *filename)
+{
+    gchar *real_filename;
+    GError *error = NULL;
+    GdkPixbuf *ret = NULL;
+
+    if ( g_path_is_absolute(filename) )
+        real_filename = g_strdup(filename);
+    else
+        real_filename = g_build_filename(g_get_user_data_dir(), PACKAGE_NAME, "icons", filename, NULL);
+
+    if ( ! g_file_test(real_filename, G_FILE_TEST_IS_REGULAR) )
+        goto fail;
+
+    if ( ( ret = gdk_pixbuf_new_from_file(real_filename, &error) ) == NULL )
+        g_warning("Couldn’t load icon file '%s': %s", real_filename, error->message);
+    g_clear_error(&error);
+
+fail:
+    g_free(real_filename);
+    return ret;
+}
+
+gpointer
 eventd_notification_icon_get_pixbuf(EventdEvent *event, EventdNotificationEvent *notification_event)
 {
     GdkPixbuf *icon = NULL;
     GdkPixbuf *overlay_icon = NULL;
 
-    icon = eventd_notification_icon_data_get_pixbuf(notification_event->icon, event->data);
-    overlay_icon = eventd_notification_icon_data_get_pixbuf(notification_event->overlay_icon, event->data);
+    if ( notification_event->pixbuf != NULL )
+        icon = gdk_pixbuf_copy(notification_event->pixbuf);
+    else
+        icon = eventd_notification_icon_data_get_pixbuf(notification_event->icon, event->data);
+    if ( notification_event->overlay_pixbuf != NULL )
+        overlay_icon = gdk_pixbuf_copy(notification_event->overlay_pixbuf);
+    else
+        overlay_icon = eventd_notification_icon_data_get_pixbuf(notification_event->overlay_icon, event->data);
     if ( icon != NULL )
     {
         if ( overlay_icon != NULL )

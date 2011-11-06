@@ -28,6 +28,12 @@
 #include "icon.h"
 
 gpointer
+eventd_notification_icon_get_pixbuf(const gchar *filename)
+{
+    return NULL;
+}
+
+gpointer
 eventd_notification_icon_get_pixbuf(EventdEvent *event, EventdNotificationEvent *notification_event)
 {
     return NULL;
