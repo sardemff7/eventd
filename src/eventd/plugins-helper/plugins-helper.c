@@ -149,7 +149,8 @@ eventd_plugins_helper_foreach(GList *plugins, GFunc func, gpointer user_data)
 void
 eventd_plugins_helper_config_init(EventdPlugin *plugin, gpointer data)
 {
-    plugin->config_init();
+    if ( plugin->config_init != NULL )
+        plugin->config_init();
 }
 
 void
@@ -161,7 +162,8 @@ eventd_plugins_helper_config_init_all(GList *plugins)
 static void
 eventd_plugins_helper_config_clean(EventdPlugin *plugin, gpointer data)
 {
-    plugin->config_clean();
+    if ( plugin->config_clean != NULL )
+        plugin->config_clean();
 }
 
 void
@@ -179,7 +181,8 @@ typedef struct {
 static void
 eventd_plugins_helper_event_parse(EventdPlugin *plugin, EventdEventParseData *data)
 {
-    plugin->event_parse(data->type, data->event, data->config_file);
+    if ( plugin->event_parse != NULL )
+        plugin->event_parse(data->type, data->event, data->config_file);
 }
 
 void eventd_plugins_helper_event_parse_all(GList *plugins, const gchar *type, const gchar *event, GKeyFile *config_file)
@@ -219,6 +222,10 @@ static void
 eventd_plugins_helper_event_action(EventdPlugin *plugin, EventdEventActionData *data)
 {
     GHashTable *ret;
+
+    if ( plugin->event_action == NULL )
+        return;
+
     ret = plugin->event_action(data->event);
     if ( ret != NULL )
     {
