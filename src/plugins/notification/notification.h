@@ -28,9 +28,7 @@ typedef struct {
     gchar *title;
     gchar *message;
     gchar *icon;
-    gpointer pixbuf;
     gchar *overlay_icon;
-    gpointer overlay_pixbuf;
     gdouble scale;
     gint64 timeout;
 } EventdNotificationEvent;

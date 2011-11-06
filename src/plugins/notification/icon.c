@@ -24,12 +24,13 @@
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
 #include <eventd-plugin.h>
+#include <plugin-helper.h>
 
 #include "notification.h"
 #include "icon.h"
 
 static GdkPixbuf *
-eventd_notification_icon_data_get_pixbuf(const char *icon_name, GHashTable *event_data)
+eventd_notification_get_pixbuf_from_data(const char *icon_name, GHashTable *event_data)
 {
     GError *error = NULL;
     gchar *icon_base64 = NULL;
@@ -84,17 +85,22 @@ fail:
     return pixbuf;
 }
 
-gpointer
-eventd_notification_icon_get_pixbuf_from_file(const gchar *filename)
+static gpointer
+eventd_notification_icon_get_pixbuf_from_file(const gchar *filename, GHashTable *event_data)
 {
     gchar *real_filename;
     GError *error = NULL;
     GdkPixbuf *ret = NULL;
 
-    if ( g_path_is_absolute(filename) )
-        real_filename = g_strdup(filename);
-    else
-        real_filename = g_build_filename(g_get_user_data_dir(), PACKAGE_NAME, "icons", filename, NULL);
+    real_filename = eventd_plugin_helper_regex_replace_event_data(filename, event_data, NULL);
+
+    if ( ! g_path_is_absolute(filename) )
+    {
+        gchar *tmp;
+        tmp = real_filename;
+        real_filename = g_build_filename(g_get_user_data_dir(), PACKAGE_NAME, "icons", tmp, NULL);
+        g_free(tmp);
+    }
 
     if ( ! g_file_test(real_filename, G_FILE_TEST_IS_REGULAR) )
         goto fail;
@@ -114,14 +120,14 @@ eventd_notification_icon_get_pixbuf(EventdEvent *event, EventdNotificationEvent 
     GdkPixbuf *icon = NULL;
     GdkPixbuf *overlay_icon = NULL;
 
-    if ( notification_event->pixbuf != NULL )
-        icon = gdk_pixbuf_copy(notification_event->pixbuf);
+    if ( g_str_has_prefix(notification_event->icon, "file://") )
+        icon = eventd_notification_icon_get_pixbuf_from_file(notification_event->icon+7, event->data);
     else
-        icon = eventd_notification_icon_data_get_pixbuf(notification_event->icon, event->data);
-    if ( notification_event->overlay_pixbuf != NULL )
-        overlay_icon = gdk_pixbuf_copy(notification_event->overlay_pixbuf);
+        icon = eventd_notification_get_pixbuf_from_data(notification_event->icon, event->data);
+    if ( g_str_has_prefix(notification_event->overlay_icon, "file://") )
+        overlay_icon = eventd_notification_icon_get_pixbuf_from_file(notification_event->overlay_icon+7, event->data);
     else
-        overlay_icon = eventd_notification_icon_data_get_pixbuf(notification_event->overlay_icon, event->data);
+        overlay_icon = eventd_notification_get_pixbuf_from_data(notification_event->overlay_icon, event->data);
     if ( icon != NULL )
     {
         if ( overlay_icon != NULL )
