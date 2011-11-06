@@ -49,29 +49,25 @@ eventd_notification_stop()
 }
 
 static void
-eventd_notification_event_clean(EventdNotificationEvent *event)
-{
-    if ( event->pixbuf != NULL )
-        g_object_unref(event->pixbuf);
-    g_free(event->icon);
-    if ( event->overlay_pixbuf != NULL )
-        g_object_unref(event->overlay_pixbuf);
-    g_free(event->overlay_icon);
-    g_free(event->message);
-    g_free(event->title);
-}
-
-static void
 eventd_notification_event_update(EventdNotificationEvent *event, gboolean disable, const char *title, const char *message, const char *icon, const char *overlay_icon, Int *scale, Int *timeout)
 {
-    eventd_notification_event_clean(event);
     event->disable = disable;
     if ( title != NULL )
+    {
+        g_free(event->title);
         event->title = g_strdup(title);
+    }
     if ( message != NULL )
+    {
+        g_free(event->message);
         event->message = g_strdup(message);
+    }
     if ( icon != NULL )
     {
+        event->icon = (g_free(event->icon), NULL);
+        if ( event->pixbuf != NULL )
+            event->pixbuf = (g_object_unref(event->pixbuf), NULL);
+
         if ( g_str_has_prefix(icon, "file://") )
             event->pixbuf = eventd_notification_icon_get_pixbuf_from_file(icon+7);
         if ( event->pixbuf == NULL )
@@ -79,6 +75,10 @@ eventd_notification_event_update(EventdNotificationEvent *event, gboolean disabl
     }
     if ( overlay_icon != NULL )
     {
+        event->overlay_icon = (g_free(event->overlay_icon), NULL);
+        if ( event->overlay_pixbuf != NULL )
+            event->overlay_pixbuf = (g_object_unref(event->overlay_pixbuf), NULL);
+
         if ( g_str_has_prefix(overlay_icon, "file://") )
             event->overlay_pixbuf = eventd_notification_icon_get_pixbuf_from_file(overlay_icon+7);
         if ( event->overlay_pixbuf == NULL )
@@ -114,7 +114,14 @@ eventd_notification_event_new(gboolean disable, const char *title, const char *m
 static void
 eventd_notification_event_free(EventdNotificationEvent *event)
 {
-    eventd_notification_event_clean(event);
+    if ( event->pixbuf != NULL )
+        g_object_unref(event->pixbuf);
+    g_free(event->icon);
+    if ( event->overlay_pixbuf != NULL )
+        g_object_unref(event->overlay_pixbuf);
+    g_free(event->overlay_icon);
+    g_free(event->message);
+    g_free(event->title);
     g_free(event);
 }
 
