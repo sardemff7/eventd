@@ -87,7 +87,7 @@ eventd_notification_event_new(gboolean disable, const char *title, const char *m
     message = message ?: parent ? parent->message : "$event-data[text]";
     icon = icon ?: parent ? parent->icon : "icon";
     overlay_icon = overlay_icon ?: parent ? parent->overlay_icon : "overlay-icon";
-    scale->value = scale->set ? scale->value : parent ? parent->scale : 50;
+    scale->value = scale->set ? scale->value : parent ? parent->scale * 100 : 50;
     scale->set = TRUE;
     timeout->value = timeout->set ? timeout->value : parent ? parent->timeout : -1;
     timeout->set = TRUE;
