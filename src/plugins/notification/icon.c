@@ -134,8 +134,8 @@ eventd_notification_icon_get_pixbuf(EventdEvent *event, EventdNotificationEvent 
             icon_width = gdk_pixbuf_get_width(icon);
             icon_height = gdk_pixbuf_get_height(icon);
 
-            overlay_icon_width = ( (gdouble)notification_event->scale / 100. ) * (gdouble)icon_width;
-            overlay_icon_height = ( (gdouble)notification_event->scale / 100. ) * (gdouble)icon_height;
+            overlay_icon_width = notification_event->scale * (gdouble)icon_width;
+            overlay_icon_height = notification_event->scale * (gdouble)icon_height;
 
             x = icon_width - overlay_icon_width;
             y = icon_height - overlay_icon_height;
