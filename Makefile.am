@@ -76,8 +76,8 @@ bin_PROGRAMS += \
 	eventd
 
 eventd_SOURCES = \
-	src/eventd/events.h \
-	src/eventd/events.c \
+	src/eventd/config.h \
+	src/eventd/config.c \
 	src/eventd/plugins.h \
 	src/eventd/plugins.c \
 	src/eventd/service.h \

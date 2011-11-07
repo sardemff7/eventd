@@ -34,7 +34,7 @@
 #endif /* ENABLE_GIO_UNIX */
 
 #include <eventd-plugin.h>
-#include "events.h"
+#include "config.h"
 #include "plugins.h"
 #include "service.h"
 

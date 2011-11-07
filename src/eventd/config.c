@@ -36,7 +36,7 @@
 
 #include <eventd-plugin.h>
 #include "plugins.h"
-#include "events.h"
+#include "config.h"
 
 
 GHashTable *config = NULL;
