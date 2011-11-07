@@ -98,11 +98,11 @@ main(int argc, char *argv[])
     GSocket *socket = NULL;
     GList *sockets = NULL;
 
-    #ifdef ENABLE_NLS
-        setlocale(LC_ALL, "");
-        bindtextdomain(GETTEXT_PACKAGE, LOCALEDIR);
-        bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
-    #endif /* ENABLE_NLS */
+#ifdef ENABLE_NLS
+    setlocale(LC_ALL, "");
+    bindtextdomain(GETTEXT_PACKAGE, LOCALEDIR);
+    bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
+#endif /* ENABLE_NLS */
 
     g_type_init();
 
@@ -221,9 +221,10 @@ main(int argc, char *argv[])
         return 0;
     }
 
-    #if DEBUG
+#if DEBUG
     daemonize = FALSE;
-    #endif /* ! DEBUG */
+#endif /* DEBUG */
+
     if ( daemonize )
     {
         pid_t pid = -1;
@@ -260,20 +261,17 @@ start:
 
     g_list_free_full(sockets, g_object_unref);
 
-#if ENABLE_SYSTEMD
-    if ( no_systemd )
-    {
-#endif /* ENABLE_SYSTEMD */
 #if ENABLE_GIO_UNIX
-        if ( unix_socket )
-        {
-            g_unlink(unix_socket);
-            g_free(unix_socket);
-        }
-#endif /* ENABLE_GIO_UNIX */
 #if ENABLE_SYSTEMD
+    if ( no_systemd && unix_socket )
+#else /* ! ENABLE_SYSTEMD */
+    if ( unix_socket )
+#endif /* ! ENABLE_SYSTEMD */
+    {
+        g_unlink(unix_socket);
+        g_free(unix_socket);
     }
-#endif /* ENABLE_SYSTEMD */
+#endif /* ENABLE_GIO_UNIX */
 
     if ( daemonize )
         g_unlink(pid_file);
