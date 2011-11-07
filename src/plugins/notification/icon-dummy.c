@@ -44,3 +44,8 @@ eventd_notification_icon_get_base64(gpointer icon)
 {
     return NULL;
 }
+
+void
+eventd_notification_icon_unref(gpointer icon)
+{
+}

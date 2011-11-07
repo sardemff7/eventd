@@ -158,10 +158,13 @@ skip:
     g_free(title);
 }
 
-static void
-eventd_notification_event_action_get_notification(EventdEvent *event, EventdNotificationEvent *notification_event, EventdNotificationNotification *notification)
+static EventdNotificationNotification *
+eventd_notification_notification_new(EventdEvent *event, EventdNotificationEvent *notification_event)
 {
+    EventdNotificationNotification *notification;
     gchar *tmp = NULL;
+
+    notification = g_new0(EventdNotificationNotification, 1);
 
     tmp = eventd_plugin_helper_regex_replace_client_name(notification_event->title, event->client->name);
     notification->title = eventd_plugin_helper_regex_replace_event_data(tmp, event->data, NULL);
@@ -172,6 +175,33 @@ eventd_notification_event_action_get_notification(EventdEvent *event, EventdNoti
     notification->icon = eventd_notification_icon_get_pixbuf(event, notification_event);
 
     notification->timeout = notification_event->timeout;
+
+    return notification;
+}
+
+
+static void
+eventd_notification_notification_insert_data_in_hash_table(EventdNotificationNotification *notification, GHashTable *table)
+{
+    g_hash_table_insert(table, g_strdup("title"), g_strdup(notification->title));
+    g_hash_table_insert(table, g_strdup("message"), g_strdup(notification->message));
+
+    if ( notification->icon != NULL )
+        g_hash_table_insert(table, g_strdup("icon"), eventd_notification_icon_get_base64(notification->icon));
+
+    g_hash_table_insert(table, g_strdup("timeout"), g_strdup_printf("%lld", notification->timeout));
+}
+
+static void
+eventd_notification_notification_free(EventdNotificationNotification *notification)
+{
+    if ( notification->icon != NULL )
+        eventd_notification_icon_unref(notification->icon);
+
+    g_free(notification->message);
+    g_free(notification->title);
+
+    g_free(notification);
 }
 
 static GHashTable *
@@ -180,7 +210,7 @@ eventd_notification_event_action(EventdEvent *event)
     gchar *name;
     GError *error = NULL;
     EventdNotificationEvent *notification_event;
-    EventdNotificationNotification notification;
+    EventdNotificationNotification *notification;
     GHashTable *ret = NULL;
 
     name = g_strconcat(event->client->type, "-", event->type, NULL);
@@ -192,21 +222,19 @@ eventd_notification_event_action(EventdEvent *event)
     if ( notification_event->disable )
         return NULL;
 
-    eventd_notification_event_action_get_notification(event, notification_event, &notification);
+    notification = eventd_notification_notification_new(event, notification_event);
 
     switch ( event->client->mode )
     {
     case EVENTD_CLIENT_MODE_PING_PONG:
         ret = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-        g_hash_table_insert(ret, g_strdup("title"), notification.title);
-        g_hash_table_insert(ret, g_strdup("message"), notification.message);
-        if ( notification.icon != NULL )
-            g_hash_table_insert(ret, g_strdup("icon"), eventd_notification_icon_get_base64(notification.icon));
-        g_hash_table_insert(ret, g_strdup("timeout"), g_strdup_printf("%lld", notification.timeout));
+        eventd_notification_notification_insert_data_in_hash_table(notification, ret);
     break;
     default:
-        eventd_notification_notify_event_action(&notification);
+        eventd_notification_notify_event_action(notification);
     }
+
+    eventd_notification_notification_free(notification);
 
     return ret;
 }

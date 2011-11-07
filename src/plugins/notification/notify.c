@@ -48,14 +48,9 @@ eventd_notification_notify_event_action(EventdNotificationNotification *notifica
     NotifyNotification *notify_notification = NULL;
 
     notify_notification = notify_notification_new(notification->title, notification->message, NULL);
-    g_free(notification->message);
-    g_free(notification->title);
 
     if ( notification->icon != NULL )
-    {
         notify_notification_set_image_from_pixbuf(notify_notification, notification->icon);
-        g_object_unref(notification->icon);
-    }
 
     notify_notification_set_timeout(notify_notification, notification->timeout);
 

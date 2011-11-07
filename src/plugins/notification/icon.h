@@ -25,5 +25,6 @@
 
 gpointer eventd_notification_icon_get_pixbuf(EventdEvent *event, EventdNotificationEvent *notification_event);
 gchar *eventd_notification_icon_get_base64(gpointer icon);
+void eventd_notification_icon_unref(gpointer icon);
 
 #endif /* __EVENTD_PLUGINS_NOTIFICATION_ICON_H__ */
