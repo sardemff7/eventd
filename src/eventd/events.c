@@ -42,7 +42,7 @@
 GHashTable *config = NULL;
 
 static void
-eventd_parse_server(GKeyFile *config_file)
+eventd_config_parse_server(GKeyFile *config_file)
 {
     GError *error = NULL;
     gchar **keys = NULL;
@@ -60,7 +60,7 @@ eventd_parse_server(GKeyFile *config_file)
 }
 
 static void
-eventd_init_default_server_config()
+eventd_config_init_default_server_config()
 {
     if ( ! config )
         config = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
@@ -70,7 +70,7 @@ eventd_init_default_server_config()
 }
 
 static void
-eventd_parse_client(gchar *type, gchar *config_dir_name)
+eventd_config_parse_client(gchar *type, gchar *config_dir_name)
 {
     GError *error = NULL;
     GDir *config_dir = NULL;
@@ -155,7 +155,7 @@ eventd_config_load_dir(const gchar *base_dir)
         if ( ! g_key_file_load_from_file(config_file, config_file_name, G_KEY_FILE_NONE, &error) )
             g_warning("Can't read the configuration file '%s': %s", config_file_name, error->message);
         else
-            eventd_parse_server(config_file);
+            eventd_config_parse_server(config_file);
         g_clear_error(&error);
         g_key_file_free(config_file);
     }
@@ -175,14 +175,14 @@ eventd_config_load_dir(const gchar *base_dir)
         client_config_dir_name = g_build_filename(config_dir_name, file, NULL);
 
         if ( g_file_test(client_config_dir_name, G_FILE_TEST_IS_DIR) )
-            eventd_parse_client(file, client_config_dir_name);
+            eventd_config_parse_client(file, client_config_dir_name);
 
         g_free(client_config_dir_name);
     }
     g_dir_close(config_dir);
 
     if ( ! config )
-        eventd_init_default_server_config();
+        eventd_config_init_default_server_config();
 out:
     if ( error )
         g_warning("Can't read the configuration directory: %s", error->message);
