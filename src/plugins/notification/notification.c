@@ -208,7 +208,6 @@ static GHashTable *
 eventd_notification_event_action(EventdEvent *event)
 {
     gchar *name;
-    GError *error = NULL;
     EventdNotificationEvent *notification_event;
     EventdNotificationNotification *notification;
     GHashTable *ret = NULL;
