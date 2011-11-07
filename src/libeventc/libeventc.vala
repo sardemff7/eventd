@@ -346,6 +346,8 @@ namespace Eventd
                     }
                     else if ( ret == null )
                         throw new EventcError.EVENT("Can’t receive correct event data");
+                    else if ( data_name != null )
+                        data_content += line;
                     else if ( line.ascii_ncasecmp("DATAL ", 6) == 0 )
                     {
                         var data_line = line.substring(6).split(" ", 2);
@@ -356,10 +358,8 @@ namespace Eventd
                         data_name = line.substring(5);
                         data_content = "";
                     }
-                    else if ( data_name != null )
-                    {
-                        data_content += line;
-                    }
+                    else
+                        throw new EventcError.EVENT("Can’t receive correct event data");
                 }
             break;
             default:
