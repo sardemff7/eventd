@@ -241,7 +241,7 @@ main(int argc, char *argv[])
 
             f = g_fopen(pid_file, "w");
             g_fprintf(f, "%d", pid);
-            g_free(f);
+            fclose(f);
             return 0;
         }
         close(0);
