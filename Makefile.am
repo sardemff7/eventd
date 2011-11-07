@@ -30,7 +30,7 @@ pkginclude_HEADERS += \
 	include/plugin-helper.h
 
 libeventd_plugin_helper_la_SOURCES = \
-	src/eventd/plugin-helper/plugin-helper.c
+	src/helper-libs/plugin-helper/plugin-helper.c
 
 libeventd_plugin_helper_la_CFLAGS = \
 	$(AM_CFLAGS) \
@@ -39,7 +39,7 @@ libeventd_plugin_helper_la_CFLAGS = \
 libeventd_plugin_helper_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
 	-avoid-version \
-	-export-symbols $(top_srcdir)/src/eventd/plugin-helper/plugin-helper.sym
+	-export-symbols $(top_srcdir)/src/helper-libs/plugin-helper/plugin-helper.sym
 
 libeventd_plugin_helper_la_LIBADD = \
 	$(GLIB_LIBS)
@@ -53,7 +53,7 @@ pkginclude_HEADERS += \
 	include/eventd-plugin.h
 
 libeventd_plugins_helper_la_SOURCES = \
-	src/eventd/plugins-helper/plugins-helper.c
+	src/helper-libs/plugins-helper/plugins-helper.c
 
 libeventd_plugins_helper_la_CFLAGS = \
 	$(AM_CFLAGS) \
@@ -65,7 +65,7 @@ libeventd_plugins_helper_la_CFLAGS = \
 libeventd_plugins_helper_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
 	-avoid-version \
-	-export-symbols $(top_srcdir)/src/eventd/plugins-helper/plugins-helper.sym
+	-export-symbols $(top_srcdir)/src/helper-libs/plugins-helper/plugins-helper.sym
 
 libeventd_plugins_helper_la_LIBADD = \
 	$(GMODULE_LIBS) \
