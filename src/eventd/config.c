@@ -67,6 +67,8 @@ eventd_config_init_default_server_config()
 
     if ( g_hash_table_lookup(config, "delay") == NULL )
         g_hash_table_insert(config, g_strdup("delay"), g_strdup(DEFAULT_DELAY_STR));
+    if ( g_hash_table_lookup(config, "max-clients") == NULL )
+        g_hash_table_insert(config, g_strdup("max-clients"), g_strdup("-1"));
 }
 
 static void

@@ -389,7 +389,7 @@ eventd_service(GList *sockets)
 
     eventd_config_parser();
 
-    service = g_threaded_socket_service_new(5);
+    service = g_threaded_socket_service_new(eventd_config_get_guint64("max-clients"));
 
     for ( socket = g_list_first(sockets) ; socket ; socket = g_list_next(socket) )
     {
