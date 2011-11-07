@@ -20,6 +20,8 @@
  *
  */
 
+#include <stdlib.h>
+
 #include "pulseaudio.h"
 
 EventdSoundPulseaudioContext *

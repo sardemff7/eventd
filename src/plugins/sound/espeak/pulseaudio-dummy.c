@@ -20,6 +20,10 @@
  *
  */
 
+#include <glib.h>
+#include <speak_lib.h>
+
+#include "../pulseaudio.h"
 #include "pulseaudio.h"
 
 void
