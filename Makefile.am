@@ -276,6 +276,7 @@ libeventc_la_VALAFLAGS = \
 
 libeventc_la_CFLAGS = \
 	$(AM_CFLAGS) \
+	$(AM_VALA_CFLAGS) \
 	$(GIO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS)
@@ -324,6 +325,7 @@ eventc_VALAFLAGS = \
 
 eventc_CFLAGS = \
 	$(AM_CFLAGS) \
+	$(AM_VALA_CFLAGS) \
 	$(GIO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS)

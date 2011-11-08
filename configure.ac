@@ -36,8 +36,9 @@ gtk_min_version="3.0"
 vala_min_version="0.12"
 
 
-AM_CFLAGS="-Wall -Wextra -Wno-unused-but-set-variable -Wno-unused-parameter"
+AM_CFLAGS="-Wall -Wextra -Wno-unused-parameter"
 AM_LDFLAGS=""
+AM_VALA_CFLAGS="-Wno-unused-variable -Wno-unused-function -Wno-unused-but-set-variable"
 AM_VALAFLAGS=""
 
 
@@ -150,6 +151,7 @@ if test x$enable_debug = xyes; then
 fi
 AC_SUBST(AM_CFLAGS)
 AC_SUBST(AM_LDFLAGS)
+AC_SUBST(AM_VALA_CFLAGS)
 AC_SUBST(AM_VALAFLAGS)
 
 AC_CONFIG_FILES([
