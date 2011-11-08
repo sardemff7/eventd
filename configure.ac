@@ -36,7 +36,7 @@ gtk_min_version="3.0"
 vala_min_version="0.12"
 
 
-AM_CFLAGS="-Wall -Wextra -Wno-unused-parameter"
+AM_CFLAGS="-Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers"
 AM_LDFLAGS=""
 AM_VALA_CFLAGS="-Wno-unused-variable -Wno-unused-function -Wno-unused-but-set-variable"
 AM_VALAFLAGS=""
