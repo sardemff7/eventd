@@ -113,20 +113,6 @@ fi
 AM_CONDITIONAL(ENABLE_GDK_PIXBUF, [test x$enable_gdk_pixbuf = xyes -o x$enable_libnotify = xyes])
 AM_CONDITIONAL(ENABLE_NOTIFY, [test x$enable_libnotify = xyes])
 
-# Dialogs plugin
-AC_ARG_ENABLE(dialogs, AS_HELP_STRING([--disable-dialogs], [Disable dialog support]), enable_dialogs=$enableval, enable_dialogs=no)
-#AC_ARG_ENABLE(gtk, AS_HELP_STRING([--enable-gtk], [Enable GTK+]), enable_gtk=$enableval, enable_gtk=no)
-if test x$enable_dialogs = xyes; then
-    AC_CHECK_PROG(have_zenity, zenity, yes, no)
-    if test x$enable_gtk = xyes; then
-        PKG_CHECK_MODULES(GTK, [gtk+-3.0 >= $gtk_min_version])
-    elif test x$have_zenity = xno; then
-        AC_MSG_ERROR([*** Dialog support requested but zenity not found])
-    fi
-elif test x$enable_gtk = xyes; then
-    AC_MSG_ERROR([*** GTK+ support requested but not dialog support])
-fi
-AM_CONDITIONAL(ENABLE_DIALOGS, [test x$enable_dialogs = xyes])
 
 
 # Client dependencies

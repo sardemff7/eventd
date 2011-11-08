@@ -233,31 +233,6 @@ notification_la_SOURCES += \
 	src/plugins/notification/icon-dummy.c
 endif
 
-# dialogs plugin
-if ENABLE_DIALOGS
-plugins_LTLIBRARIES += \
-	dialogs.la
-
-dialogs_la_SOURCES = \
-	src/plugins/dialogs/dialogs.c
-
-dialogs_la_CFLAGS = \
-	$(AM_CFLAGS) \
-	$(GTK_CFLAGS) \
-	$(GIO_CFLAGS) \
-	$(GLIB_CFLAGS)
-
-dialogs_la_LDFLAGS = \
-	$(AM_LDFLAGS) \
-	-avoid-version -module -export-symbols-regex eventd_plugin_get_info
-
-dialogs_la_LIBADD = \
-	libeventd-plugin-helper.la \
-	$(GTK_LIBS) \
-	$(GIO_LIBS) \
-	$(GLIB_LIBS)
-endif
-
 
 #
 # Client
