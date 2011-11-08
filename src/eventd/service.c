@@ -38,7 +38,8 @@
 #include "plugins.h"
 #include "service.h"
 
-#define BUFFER_SIZE 1024
+#define DEFAULT_DELAY 5
+#define DEFAULT_MAX_CLIENTS 5
 
 static void
 send_data(const gchar *name, const gchar *content, GDataOutputStream *output)
@@ -108,7 +109,7 @@ connection_handler(
 
     input = g_data_input_stream_new(g_io_stream_get_input_stream((GIOStream *)connection));
     output = g_data_output_stream_new(g_io_stream_get_output_stream((GIOStream *)connection));
-    delay = eventd_config_get_guint64("delay") * 1e6;
+    delay = eventd_config_get_guint64("delay", DEFAULT_DELAY) * 1e6;
 
     while ( ( line = g_data_input_stream_read_upto(input, "\n", -1, &size, NULL, &error) ) != NULL )
     {
@@ -389,7 +390,7 @@ eventd_service(GList *sockets)
 
     eventd_config_parser();
 
-    service = g_threaded_socket_service_new(eventd_config_get_guint64("max-clients"));
+    service = g_threaded_socket_service_new(eventd_config_get_gint64("max-clients", DEFAULT_MAX_CLIENTS));
 
     for ( socket = g_list_first(sockets) ; socket ; socket = g_list_next(socket) )
     {

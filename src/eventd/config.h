@@ -26,6 +26,7 @@
 void eventd_config_parser();
 void eventd_config_clean();
 
-guint64 eventd_config_get_guint64(const gchar *name);
+guint64 eventd_config_get_guint64(const gchar *name, guint64 default_value);
+gint64 eventd_config_get_gint64(const gchar *name, gint64 default_value);
 
 #endif /* __EVENTD_EVENTS_H__ */

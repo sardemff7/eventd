@@ -31,9 +31,6 @@
 
 #define CONFIG_RELOAD_DELAY 10
 
-#define DEFAULT_DELAY 5
-#define DEFAULT_DELAY_STR "5"
-
 #include <eventd-plugin.h>
 #include "plugins.h"
 #include "config.h"
@@ -48,8 +45,6 @@ eventd_config_parse_server(GKeyFile *config_file)
     gchar **keys = NULL;
     gchar **key = NULL;
 
-    config = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-
     if ( g_key_file_has_group(config_file, "server") )
     {
         keys = g_key_file_get_keys(config_file, "server", NULL, &error);
@@ -57,18 +52,6 @@ eventd_config_parse_server(GKeyFile *config_file)
             g_hash_table_insert(config, g_strdup(*key), g_key_file_get_value(config_file, "server", *key, NULL));
         g_strfreev(keys);
     }
-}
-
-static void
-eventd_config_init_default_server_config()
-{
-    if ( ! config )
-        config = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-
-    if ( g_hash_table_lookup(config, "delay") == NULL )
-        g_hash_table_insert(config, g_strdup("delay"), g_strdup(DEFAULT_DELAY_STR));
-    if ( g_hash_table_lookup(config, "max-clients") == NULL )
-        g_hash_table_insert(config, g_strdup("max-clients"), g_strdup("-1"));
 }
 
 static void
@@ -183,8 +166,6 @@ eventd_config_load_dir(const gchar *base_dir)
     }
     g_dir_close(config_dir);
 
-    if ( ! config )
-        eventd_config_init_default_server_config();
 out:
     if ( error )
         g_warning("Can't read the configuration directory: %s", error->message);
@@ -200,6 +181,9 @@ eventd_config_parser()
         g_message("Reloading configuration");
         eventd_config_clean();
     }
+
+    config = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+
     eventd_config_load_dir(SYSCONFDIR);
     eventd_config_load_dir(g_get_user_config_dir());
 }
@@ -214,11 +198,27 @@ eventd_config_clean()
 
 
 guint64
-eventd_config_get_guint64(const gchar *name)
+eventd_config_get_guint64(const gchar *name, guint64 default_value)
 {
     gchar *value = NULL;
 
     value = g_hash_table_lookup(config, name);
 
-    return g_ascii_strtoull(value, NULL, 10);
+    if ( value == NULL )
+        return default_value;
+    else
+        return g_ascii_strtoull(value, NULL, 10);
+}
+
+gint64
+eventd_config_get_gint64(const gchar *name, gint64 default_value)
+{
+    gchar *value = NULL;
+
+    value = g_hash_table_lookup(config, name);
+
+    if ( value == NULL )
+        return default_value;
+    else
+        return g_ascii_strtoll(value, NULL, 10);
 }
