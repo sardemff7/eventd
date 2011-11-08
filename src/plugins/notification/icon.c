@@ -164,7 +164,7 @@ eventd_notification_icon_get_base64(gpointer icon)
     gdk_pixbuf_save_to_buffer(icon, &data, &data_length, "png", NULL, NULL);
     g_object_unref(icon);
 
-    base64 = g_base64_encode(data, data_length);
+    base64 = g_base64_encode((guchar *)data, data_length);
     g_free(data);
 
     return base64;

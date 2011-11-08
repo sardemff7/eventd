@@ -193,7 +193,7 @@ eventd_notification_notification_insert_data_in_hash_table(EventdNotificationNot
     if ( notification->merged_icon != NULL )
         g_hash_table_insert(table, g_strdup("merged-icon"), eventd_notification_icon_get_base64(notification->merged_icon));
 
-    g_hash_table_insert(table, g_strdup("timeout"), g_strdup_printf("%lld", notification->timeout));
+    g_hash_table_insert(table, g_strdup("timeout"), g_strdup_printf("%jd", notification->timeout));
 }
 
 static void
