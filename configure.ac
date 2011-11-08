@@ -42,7 +42,9 @@ AM_VALA_CFLAGS="-Wno-unused-variable -Wno-unused-function -Wno-unused-but-set-va
 AM_VALAFLAGS=""
 
 
+#
 # Common dependencies
+#
 PKG_CHECK_MODULES(GLIB, [glib-2.0 >= $glib_min_version])
 GLIB_VALAFLAGS="--pkg glib-2.0 --pkg glib-local-2.0"
 AC_SUBST(GLIB_VALAFLAGS)
@@ -63,7 +65,12 @@ AC_SUBST(gio_unix)
 AC_SUBST(GIO_VALAFLAGS)
 
 
-# Server dependencies
+
+#
+# Server and plugins
+#
+
+# Server
 PKG_CHECK_MODULES(GMODULE, [gmodule-2.0 >= $gmodule_min_version])
 
 AC_ARG_ENABLE(systemd, AS_HELP_STRING([--disable-systemd], [Disable systemd support activation support]), enable_systemd=$enableval, enable_systemd=yes)
@@ -72,19 +79,25 @@ if test x$enable_systemd = xyes; then
     AC_DEFINE([ENABLE_SYSTEMD], [1], [Enable systemd activation support])
 fi
 
-
-# PulseAudio plugin
+# sound plugin
 AC_ARG_ENABLE(pulseaudio, AS_HELP_STRING([--disable-pulseaudio], [Disable PulseAudio support]), enable_pulseaudio=$enableval, enable_pulseaudio=yes)
-AC_ARG_ENABLE(sndfile, AS_HELP_STRING([--disable-sndfile], [Disable libsndfile support]), enable_sndfile=$enableval, enable_sndfile=yes)
-AC_ARG_ENABLE(espeak, AS_HELP_STRING([--enable-espeak], [Enable eSpeak support]), enable_espeak=$enableval, enable_espeak=no)
 if test x$enable_pulseaudio = xyes; then
     PKG_CHECK_MODULES(PULSEAUDIO, [libpulse >= $libpulse_min_version])
-    if test x$enable_sndfile = xyes; then
-        PKG_CHECK_MODULES(SNDFILE, [sndfile])
-    fi
-elif test x$enable_sndfile = xyes; then
-    AC_MSG_ERROR([*** libsndfile support requested but not sound support])
 fi
+AM_CONDITIONAL(ENABLE_PULSEAUDIO, test x$enable_pulseaudio = xyes)
+
+# sndfile plugin
+AC_ARG_ENABLE(sndfile, AS_HELP_STRING([--disable-sndfile], [Disable libsndfile support]), enable_sndfile=$enableval, enable_sndfile=yes)
+if test x$enable_sndfile = xyes; then
+    if test x$enable_pulseaudio = xno; then
+        AC_MSG_ERROR([*** libsndfile support requested but not sound support])
+    fi
+    PKG_CHECK_MODULES(SNDFILE, [sndfile])
+fi
+AM_CONDITIONAL(ENABLE_SNDFILE, test x$enable_sndfile = xyes)
+
+# espeak plugin
+AC_ARG_ENABLE(espeak, AS_HELP_STRING([--enable-espeak], [Enable eSpeak support]), enable_espeak=$enableval, enable_espeak=no)
 if test x$enable_espeak = xyes; then
     ESPEAK_CFLAGS="-I/usr/include/espeak"
     ESPEAK_LIBS="-lespeak"
@@ -97,11 +110,9 @@ if test x$enable_espeak = xyes; then
             AC_MSG_ERROR([*** eSpeak support requested but library is missing])
         ])
 fi
-AM_CONDITIONAL(ENABLE_PULSEAUDIO, test x$enable_pulseaudio = xyes)
-AM_CONDITIONAL(ENABLE_SNDFILE, test x$enable_sndfile = xyes)
 AM_CONDITIONAL(ENABLE_ESPEAK, test x$enable_espeak = xyes)
 
-# Notification plugin
+# notification plugin
 AC_ARG_ENABLE(gdk-pixbuf, AS_HELP_STRING([--disable-gdk-pixbuf], [Disable icon support through gdk-pixbuf]), enable_gdk_pixbuf=$enableval, enable_gdk_pixbuf=yes)
 AC_ARG_ENABLE(libnotify, AS_HELP_STRING([--disable-libnotify], [Disable libnotify support]), enable_libnotify=$enableval, enable_libnotify=yes)
 if test x$enable_gdk_pixbuf = xyes -o x$enable_libnotify = xyes; then
@@ -115,7 +126,9 @@ AM_CONDITIONAL(ENABLE_NOTIFY, [test x$enable_libnotify = xyes])
 
 
 
-# Client dependencies
+#
+# Client
+#
 AC_ARG_ENABLE(client, AS_HELP_STRING([--disable-client], [Disable client (libeventc and eventc)]), enable_client=$enableval, enable_client=yes)
 if test x$enable_client = xyes; then
     PKG_CHECK_MODULES(GOBJECT, [gobject-2.0])
