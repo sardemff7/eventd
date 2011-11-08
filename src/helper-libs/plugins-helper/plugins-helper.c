@@ -97,10 +97,24 @@ eventd_plugins_helper_load_dir(GList **plugins, const gchar *plugins_dir_name, g
 void
 eventd_plugins_helper_load(GList **plugins, const gchar *plugins_subdir, gpointer user_data)
 {
+    const gchar *env_base_dir;
     gchar *plugins_dir;
 
     if ( plugins == NULL )
         return;
+
+    env_base_dir = g_getenv("EVENTD_PLUGINS_DIR");
+    if ( env_base_dir != NULL )
+    {
+        if ( env_base_dir[0] == '~' )
+            plugins_dir = g_build_filename(g_get_home_dir(), env_base_dir+2, plugins_subdir, NULL);
+        else
+            plugins_dir = g_build_filename(env_base_dir, plugins_subdir, NULL);
+
+        if ( g_file_test(plugins_dir, G_FILE_TEST_IS_DIR) )
+            eventd_plugins_helper_load_dir(plugins, plugins_dir, user_data);
+        g_free(plugins_dir);
+    }
 
     plugins_dir = g_build_filename(g_get_user_data_dir(), PACKAGE_NAME, plugins_subdir, NULL);
     if ( g_file_test(plugins_dir, G_FILE_TEST_IS_DIR) )
