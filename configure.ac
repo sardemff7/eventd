@@ -71,7 +71,6 @@ if test x$enable_systemd = xyes; then
     PKG_CHECK_MODULES(SYSTEMD, [libsystemd-daemon])
     AC_DEFINE([ENABLE_SYSTEMD], [1], [Enable systemd activation support])
 fi
-AM_CONDITIONAL(ENABLE_SYSTEMD, test x$enable_systemd = xyes)
 
 
 # PulseAudio plugin

@@ -22,7 +22,12 @@ AM_VALAFLAGS += \
 	--vapidir $(top_builddir)/vapi/ \
 	--pkg config
 
-# An helper for config
+
+#
+# Helper libs
+#
+
+# An helper for plugin
 pkglib_LTLIBRARIES += \
 	libeventd-plugin-helper.la
 
@@ -71,6 +76,11 @@ libeventd_plugins_helper_la_LIBADD = \
 	$(GMODULE_LIBS) \
 	$(GLIB_LIBS)
 
+
+#
+# Server and plugins
+#
+
 # Server
 bin_PROGRAMS += \
 	eventd
@@ -88,36 +98,22 @@ eventd_SOURCES = \
 eventd_CFLAGS = \
 	$(AM_CFLAGS) \
 	-D SYSCONFDIR=\"$(sysconfdir)\" \
+	$(SYSTEMD_CFLAGS) \
 	$(GIO_CFLAGS) \
 	$(GLIB_CFLAGS)
 
 eventd_LDADD = \
 	libeventd-plugins-helper.la \
+	$(SYSTEMD_LIBS) \
 	$(GIO_LIBS) \
 	$(GLIB_LIBS)
 
-
-if ENABLE_SYSTEMD
-eventd_CFLAGS += \
-	$(SYSTEMD_CFLAGS)
-
-eventd_LDADD += \
-	$(SYSTEMD_LIBS)
-endif
-
+# Sound plugin
 plugins_LTLIBRARIES += \
 	sound.la
 
 sound_la_SOURCES = \
 	src/plugins/sound/sound.c
-
-if ENABLE_PULSEAUDIO
-sound_la_SOURCES += \
-	src/plugins/sound/pulseaudio.c
-else
-sound_la_SOURCES += \
-	src/plugins/sound/pulseaudio-dummy.c
-endif
 
 sound_la_CFLAGS = \
 	$(AM_CFLAGS) \
@@ -134,6 +130,15 @@ sound_la_LIBADD = \
 	$(PULSEAUDIO_LIBS) \
 	$(GLIB_LIBS)
 
+if ENABLE_PULSEAUDIO
+sound_la_SOURCES += \
+	src/plugins/sound/pulseaudio.c
+else
+sound_la_SOURCES += \
+	src/plugins/sound/pulseaudio-dummy.c
+endif
+
+# sndfile plugin
 if ENABLE_SNDFILE
 soundplugins_LTLIBRARIES += \
 	sndfile.la
@@ -157,20 +162,13 @@ sndfile_la_LIBADD = \
 	$(GLIB_LIBS)
 endif
 
+# espeak plugin
 if ENABLE_ESPEAK
 soundplugins_LTLIBRARIES += \
 	espeak.la
 
 espeak_la_SOURCES = \
 	src/plugins/sound/espeak/espeak.c
-
-if ENABLE_PULSEAUDIO
-espeak_la_SOURCES += \
-	src/plugins/sound/espeak/pulseaudio.c
-else
-espeak_la_SOURCES += \
-	src/plugins/sound/espeak/pulseaudio-dummy.c
-endif
 
 espeak_la_CFLAGS = \
 	$(AM_CFLAGS) \
@@ -186,29 +184,22 @@ espeak_la_LIBADD = \
 	$(ESPEAK_LIBS) \
 	$(PULSEAUDIO_LIBS) \
 	$(GLIB_LIBS)
+
+if ENABLE_PULSEAUDIO
+espeak_la_SOURCES += \
+	src/plugins/sound/espeak/pulseaudio.c
+else
+espeak_la_SOURCES += \
+	src/plugins/sound/espeak/pulseaudio-dummy.c
+endif
 endif
 
+# notification plugin
 plugins_LTLIBRARIES += \
 	notification.la
 
 notification_la_SOURCES = \
 	src/plugins/notification/notification.c
-
-if ENABLE_NOTIFY
-notification_la_SOURCES += \
-	src/plugins/notification/notify.c
-else
-notification_la_SOURCES += \
-	src/plugins/notification/notify-dummy.c
-endif
-
-if ENABLE_GDK_PIXBUF
-notification_la_SOURCES += \
-	src/plugins/notification/icon.c
-else
-notification_la_SOURCES += \
-	src/plugins/notification/icon-dummy.c
-endif
 
 notification_la_CFLAGS = \
 	$(AM_CFLAGS) \
@@ -226,6 +217,23 @@ notification_la_LIBADD = \
 	$(NOTIFY_LIBS) \
 	$(GLIB_LIBS)
 
+if ENABLE_NOTIFY
+notification_la_SOURCES += \
+	src/plugins/notification/notify.c
+else
+notification_la_SOURCES += \
+	src/plugins/notification/notify-dummy.c
+endif
+
+if ENABLE_GDK_PIXBUF
+notification_la_SOURCES += \
+	src/plugins/notification/icon.c
+else
+notification_la_SOURCES += \
+	src/plugins/notification/icon-dummy.c
+endif
+
+# dialogs plugin
 if ENABLE_DIALOGS
 plugins_LTLIBRARIES += \
 	dialogs.la
@@ -251,7 +259,9 @@ dialogs_la_LIBADD = \
 endif
 
 
+#
 # Client
+#
 
 # Client library
 if ENABLE_CLIENT
@@ -343,7 +353,10 @@ eventc_vala.stamp: $(top_builddir)/vapi/libeventc.vapi
 endif
 
 
+#
 # Hooks
+#
+
 install-data-hook: la-files-removal
 
 # *.la files cleanup
