@@ -64,6 +64,11 @@ GIO_VALAFLAGS="--pkg gio-2.0 $gio_unix_vala"
 AC_SUBST(gio_unix)
 AC_SUBST(GIO_VALAFLAGS)
 
+AC_ARG_ENABLE(gdk-pixbuf, AS_HELP_STRING([--disable-gdk-pixbuf], [Disable icon support through gdk-pixbuf]), enable_gdk_pixbuf=$enableval, enable_gdk_pixbuf=yes)
+if test x$enable_gdk_pixbuf = xyes; then
+    PKG_CHECK_MODULES(GDK_PIXBUF, [gdk-pixbuf-2.0])
+fi
+AM_CONDITIONAL(ENABLE_GDK_PIXBUF, [test x$enable_gdk_pixbuf = xyes])
 
 
 #
@@ -113,15 +118,13 @@ fi
 AM_CONDITIONAL(ENABLE_ESPEAK, test x$enable_espeak = xyes)
 
 # notification plugin
-AC_ARG_ENABLE(gdk-pixbuf, AS_HELP_STRING([--disable-gdk-pixbuf], [Disable icon support through gdk-pixbuf]), enable_gdk_pixbuf=$enableval, enable_gdk_pixbuf=yes)
 AC_ARG_ENABLE(libnotify, AS_HELP_STRING([--disable-libnotify], [Disable libnotify support]), enable_libnotify=$enableval, enable_libnotify=yes)
-if test x$enable_gdk_pixbuf = xyes -o x$enable_libnotify = xyes; then
-    PKG_CHECK_MODULES(GDK_PIXBUF, [gdk-pixbuf-2.0])
-fi
 if test x$enable_libnotify = xyes; then
+    if test x$enable_gdk_pixbuf = xno; then
+        AC_MSG_ERROR([*** libnotify support requested but not gdk-pixbuf support])
+    fi
     PKG_CHECK_MODULES(NOTIFY, [libnotify >= $libnotify_min_version])
 fi
-AM_CONDITIONAL(ENABLE_GDK_PIXBUF, [test x$enable_gdk_pixbuf = xyes -o x$enable_libnotify = xyes])
 AM_CONDITIONAL(ENABLE_NOTIFY, [test x$enable_libnotify = xyes])
 
 
