@@ -114,56 +114,44 @@ fail:
     return ret;
 }
 
-gpointer
-eventd_notification_icon_get_pixbuf(EventdEvent *event, EventdNotificationEvent *notification_event)
+void
+eventd_notification_icon_get_pixbuf(EventdEvent *event, EventdNotificationEvent *notification_event, EventdNotificationNotification *notification)
 {
-    GdkPixbuf *icon = NULL;
-    GdkPixbuf *overlay_icon = NULL;
-
     if ( g_str_has_prefix(notification_event->icon, "file://") )
-        icon = eventd_notification_icon_get_pixbuf_from_file(notification_event->icon+7, event->data);
+        notification->icon = eventd_notification_icon_get_pixbuf_from_file(notification_event->icon+7, event->data);
     else
-        icon = eventd_notification_get_pixbuf_from_data(notification_event->icon, event->data);
+        notification->icon = eventd_notification_get_pixbuf_from_data(notification_event->icon, event->data);
     if ( g_str_has_prefix(notification_event->overlay_icon, "file://") )
-        overlay_icon = eventd_notification_icon_get_pixbuf_from_file(notification_event->overlay_icon+7, event->data);
+        notification->overlay_icon = eventd_notification_icon_get_pixbuf_from_file(notification_event->overlay_icon+7, event->data);
     else
-        overlay_icon = eventd_notification_get_pixbuf_from_data(notification_event->overlay_icon, event->data);
-    if ( icon != NULL )
+        notification->overlay_icon = eventd_notification_get_pixbuf_from_data(notification_event->overlay_icon, event->data);
+    if ( ( notification->icon != NULL ) && ( notification->overlay_icon != NULL ) )
     {
-        if ( overlay_icon != NULL )
-        {
-            gint icon_width, icon_height;
-            gint overlay_icon_width, overlay_icon_height;
-            gint x, y;
-            gdouble scale;
+        gint icon_width, icon_height;
+        gint overlay_icon_width, overlay_icon_height;
+        gint x, y;
+        gdouble scale;
 
-            icon_width = gdk_pixbuf_get_width(icon);
-            icon_height = gdk_pixbuf_get_height(icon);
+        notification->merged_icon = gdk_pixbuf_copy(notification->icon);
 
-            overlay_icon_width = notification_event->scale * (gdouble)icon_width;
-            overlay_icon_height = notification_event->scale * (gdouble)icon_height;
+        icon_width = gdk_pixbuf_get_width(notification->merged_icon);
+        icon_height = gdk_pixbuf_get_height(notification->merged_icon);
 
-            x = icon_width - overlay_icon_width;
-            y = icon_height - overlay_icon_height;
+        overlay_icon_width = notification_event->scale * (gdouble)icon_width;
+        overlay_icon_height = notification_event->scale * (gdouble)icon_height;
 
-            scale = (gdouble)overlay_icon_width / (gdouble)gdk_pixbuf_get_width(overlay_icon);
+        x = icon_width - overlay_icon_width;
+        y = icon_height - overlay_icon_height;
 
-            gdk_pixbuf_composite(overlay_icon, icon,
-                                 x, y,
-                                 overlay_icon_width, overlay_icon_height,
-                                 x, y,
-                                 scale, scale,
-                                 GDK_INTERP_BILINEAR, 255);
+        scale = (gdouble)overlay_icon_width / (gdouble)gdk_pixbuf_get_width(notification->overlay_icon);
 
-            g_object_unref(overlay_icon);
-        }
-
-        return icon;
+        gdk_pixbuf_composite(notification->overlay_icon, notification->merged_icon,
+                             x, y,
+                             overlay_icon_width, overlay_icon_height,
+                             x, y,
+                             scale, scale,
+                             GDK_INTERP_BILINEAR, 255);
     }
-    else if ( overlay_icon != NULL )
-        return overlay_icon;
-
-    return NULL;
 }
 
 gchar *

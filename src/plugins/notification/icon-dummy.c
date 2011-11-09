@@ -33,10 +33,13 @@ eventd_notification_icon_get_pixbuf(const gchar *filename)
     return NULL;
 }
 
-gpointer
-eventd_notification_icon_get_pixbuf(EventdEvent *event, EventdNotificationEvent *notification_event)
+
+void
+eventd_notification_icon_get_pixbuf(EventdEvent *event, EventdNotificationEvent *notification_event, EventdNotificationNotification *notification)
 {
-    return NULL;
+    notification->icon = NULL;
+    notification->overlay_icon = NULL;
+    notification->merged_icon = NULL;
 }
 
 gchar *

@@ -37,6 +37,8 @@ typedef struct {
     gchar *title;
     gchar *message;
     gpointer icon;
+    gpointer overlay_icon;
+    gpointer merged_icon;
     gint64 timeout;
 } EventdNotificationNotification;
 

@@ -49,8 +49,12 @@ eventd_notification_notify_event_action(EventdNotificationNotification *notifica
 
     notify_notification = notify_notification_new(notification->title, notification->message, NULL);
 
-    if ( notification->icon != NULL )
+    if ( notification->merged_icon != NULL )
+        notify_notification_set_image_from_pixbuf(notify_notification, notification->merged_icon);
+    else if ( notification->icon != NULL )
         notify_notification_set_image_from_pixbuf(notify_notification, notification->icon);
+    else if ( notification->overlay_icon != NULL )
+        notify_notification_set_image_from_pixbuf(notify_notification, notification->overlay_icon);
 
     notify_notification_set_timeout(notify_notification, notification->timeout);
 

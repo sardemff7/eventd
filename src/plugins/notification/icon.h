@@ -23,7 +23,7 @@
 #ifndef __EVENTD_PLUGINS_NOTIFICATION_ICON_H__
 #define __EVENTD_PLUGINS_NOTIFICATION_ICON_H__
 
-gpointer eventd_notification_icon_get_pixbuf(EventdEvent *event, EventdNotificationEvent *notification_event);
+void eventd_notification_icon_get_pixbuf(EventdEvent *event, EventdNotificationEvent *notification_event, EventdNotificationNotification *notification);
 gchar *eventd_notification_icon_get_base64(gpointer icon);
 void eventd_notification_icon_unref(gpointer icon);
 

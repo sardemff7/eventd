@@ -172,7 +172,7 @@ eventd_notification_notification_new(EventdEvent *event, EventdNotificationEvent
 
     notification->message = eventd_plugin_helper_regex_replace_event_data(notification_event->message, event->data, NULL);
 
-    notification->icon = eventd_notification_icon_get_pixbuf(event, notification_event);
+    eventd_notification_icon_get_pixbuf(event, notification_event, notification);
 
     notification->timeout = notification_event->timeout;
 
@@ -188,6 +188,10 @@ eventd_notification_notification_insert_data_in_hash_table(EventdNotificationNot
 
     if ( notification->icon != NULL )
         g_hash_table_insert(table, g_strdup("icon"), eventd_notification_icon_get_base64(notification->icon));
+    if ( notification->overlay_icon != NULL )
+        g_hash_table_insert(table, g_strdup("overlay-icon"), eventd_notification_icon_get_base64(notification->overlay_icon));
+    if ( notification->merged_icon != NULL )
+        g_hash_table_insert(table, g_strdup("merged-icon"), eventd_notification_icon_get_base64(notification->merged_icon));
 
     g_hash_table_insert(table, g_strdup("timeout"), g_strdup_printf("%lld", notification->timeout));
 }
@@ -195,6 +199,10 @@ eventd_notification_notification_insert_data_in_hash_table(EventdNotificationNot
 static void
 eventd_notification_notification_free(EventdNotificationNotification *notification)
 {
+    if ( notification->merged_icon != NULL )
+        eventd_notification_icon_unref(notification->merged_icon);
+    if ( notification->overlay_icon != NULL )
+        eventd_notification_icon_unref(notification->overlay_icon);
     if ( notification->icon != NULL )
         eventd_notification_icon_unref(notification->icon);
 
