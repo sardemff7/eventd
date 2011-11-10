@@ -24,56 +24,6 @@
 
 #include <plugin-helper.h>
 
-static gint8
-eventd_plugin_helper_config_key_file_error(GError **error, const gchar *group, const gchar *key)
-{
-    gint8 ret = 1;
-
-    if ( *error == NULL )
-        return 0;
-
-    if ( (*error)->code != G_KEY_FILE_ERROR_KEY_NOT_FOUND )
-    {
-        ret = -1;
-        g_warning("Can’t read the key [%s] '%s': %s", group, key, (*error)->message);
-    }
-    g_clear_error(error);
-
-    return ret;
-}
-
-gint8
-eventd_plugin_helper_config_key_file_get_boolean(GKeyFile *config_file, const gchar *group, const gchar *key, gboolean *value)
-{
-    GError *error = NULL;
-
-    *value = g_key_file_get_boolean(config_file, group, key, &error);
-
-    return eventd_plugin_helper_config_key_file_error(&error, group, key);
-}
-
-gint8
-eventd_plugin_helper_config_key_file_get_int(GKeyFile *config_file, const gchar *group, const gchar *key, Int *value)
-{
-    GError *error = NULL;
-
-    value->value = g_key_file_get_int64(config_file, group, key, &error);
-    value->set = ( error == NULL );
-
-    return eventd_plugin_helper_config_key_file_error(&error, group, key);
-}
-
-gint8
-eventd_plugin_helper_config_key_file_get_string(GKeyFile *config_file, const gchar *group, const gchar *key, gchar **value)
-{
-    GError *error = NULL;
-
-    *value = g_key_file_get_string(config_file, group, key, &error);
-
-    return eventd_plugin_helper_config_key_file_error(&error, group, key);
-}
-
-
 static guint64 regex_refcount = 0;
 
 static GRegex *regex_client_name = NULL;

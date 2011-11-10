@@ -1,5 +1,5 @@
 /*
- * libeventd-plugin-helper - Internal helper for plugins
+ * libeventd-config-helper - Internal helper for config
  *
  * Copyright © 2011 Quentin "Sardem FF7" Glidic
  *
@@ -20,14 +20,16 @@
  *
  */
 
-#ifndef __EVENTD_PLUGIN_HELPER_H__
-#define __EVENTD_PLUGIN_HELPER_H__
+#ifndef __EVENTD_CONFIG_HELPER_H__
+#define __EVENTD_CONFIG_HELPER_H__
 
-void eventd_plugin_helper_regex_init();
-void eventd_plugin_helper_regex_clean();
+typedef struct {
+    gint64 value;
+    gboolean set;
+} Int;
 
-gchar *eventd_plugin_helper_regex_replace_client_name(const gchar *target, const gchar *clieant_name);
-gchar *eventd_plugin_helper_regex_replace_event_name(const gchar *target, const gchar *event_name);
-gchar *eventd_plugin_helper_regex_replace_event_data(const gchar *target, GHashTable *event_data, GRegexEvalCallback callback);
+gint8 eventd_config_helper_key_file_get_boolean(GKeyFile *config_file, const gchar *group, const gchar *key, gboolean *value);
+gint8 eventd_config_helper_key_file_get_string(GKeyFile *config_file, const gchar *group, const gchar *key, gchar **value);
+gint8 eventd_config_helper_key_file_get_int(GKeyFile *config_file, const gchar *group, const gchar *key, Int *value);
 
-#endif /* __EVENTD_PLUGIN_HELPER_H__ */
+#endif /* __EVENTD_CONFIG_HELPER_H__ */

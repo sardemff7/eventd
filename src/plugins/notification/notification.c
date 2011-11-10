@@ -23,6 +23,7 @@
 #include <glib.h>
 
 #include <eventd-plugin.h>
+#include <config-helper.h>
 #include <plugin-helper.h>
 
 #include "notification.h"
@@ -125,19 +126,19 @@ eventd_notification_event_parse(const gchar *client_type, const gchar *event_typ
     if ( ! g_key_file_has_group(config_file, "notification") )
         return;
 
-    if ( eventd_plugin_helper_config_key_file_get_boolean(config_file, "notification", "disable", &disable) < 0 )
+    if ( eventd_config_helper_key_file_get_boolean(config_file, "notification", "disable", &disable) < 0 )
         goto skip;
-    if ( eventd_plugin_helper_config_key_file_get_string(config_file, "notification", "title", &title) < 0 )
+    if ( eventd_config_helper_key_file_get_string(config_file, "notification", "title", &title) < 0 )
         goto skip;
-    if ( eventd_plugin_helper_config_key_file_get_string(config_file, "notification", "message", &message) < 0 )
+    if ( eventd_config_helper_key_file_get_string(config_file, "notification", "message", &message) < 0 )
         goto skip;
-    if ( eventd_plugin_helper_config_key_file_get_string(config_file, "notification", "icon", &icon) < 0 )
+    if ( eventd_config_helper_key_file_get_string(config_file, "notification", "icon", &icon) < 0 )
         goto skip;
-    if ( eventd_plugin_helper_config_key_file_get_string(config_file, "notification", "overlay-icon", &overlay_icon) < 0 )
+    if ( eventd_config_helper_key_file_get_string(config_file, "notification", "overlay-icon", &overlay_icon) < 0 )
         goto skip;
-    if ( eventd_plugin_helper_config_key_file_get_int(config_file, "notification", "overlay-scale", &scale) < 0 )
+    if ( eventd_config_helper_key_file_get_int(config_file, "notification", "overlay-scale", &scale) < 0 )
         goto skip;
-    if ( eventd_plugin_helper_config_key_file_get_int(config_file, "notification", "timeout", &timeout) < 0 )
+    if ( eventd_config_helper_key_file_get_int(config_file, "notification", "timeout", &timeout) < 0 )
         goto skip;
 
     if ( event_type != NULL )

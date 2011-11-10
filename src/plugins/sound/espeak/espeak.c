@@ -27,6 +27,7 @@
 #include <gio/gio.h>
 
 #include <eventd-plugin.h>
+#include <config-helper.h>
 #include <plugin-helper.h>
 
 #include "../pulseaudio.h"
@@ -183,9 +184,9 @@ eventd_sound_espeak_event_parse(const gchar *client_type, const gchar *event_typ
     if ( ! g_key_file_has_group(config_file, "espeak") )
         return;
 
-    if ( eventd_plugin_helper_config_key_file_get_boolean(config_file, "espeak", "disable", &disable) < 0 )
+    if ( eventd_config_helper_key_file_get_boolean(config_file, "espeak", "disable", &disable) < 0 )
         return;
-    if ( eventd_plugin_helper_config_key_file_get_string(config_file, "espeak", "message", &message) < 0 )
+    if ( eventd_config_helper_key_file_get_string(config_file, "espeak", "message", &message) < 0 )
         return;
 
     if ( event_type != NULL )

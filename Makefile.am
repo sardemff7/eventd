@@ -27,6 +27,28 @@ AM_VALAFLAGS += \
 # Helper libs
 #
 
+# An helper for config
+pkglib_LTLIBRARIES += \
+	libeventd-config-helper.la
+
+pkginclude_HEADERS += \
+	include/config-helper.h
+
+libeventd_config_helper_la_SOURCES = \
+	src/helper-libs/config-helper/config-helper.c
+
+libeventd_config_helper_la_CFLAGS = \
+	$(AM_CFLAGS) \
+	$(GLIB_CFLAGS)
+
+libeventd_config_helper_la_LDFLAGS = \
+	$(AM_LDFLAGS) \
+	-avoid-version \
+	-export-symbols $(top_srcdir)/src/helper-libs/config-helper/config-helper.sym
+
+libeventd_config_helper_la_LIBADD = \
+	$(GLIB_LIBS)
+
 # An helper for plugin
 pkglib_LTLIBRARIES += \
 	libeventd-plugin-helper.la
@@ -157,6 +179,7 @@ sndfile_la_LDFLAGS = \
 	$(sound_la_LDFLAGS)
 
 sndfile_la_LIBADD = \
+	libeventd-config-helper.la \
 	libeventd-plugin-helper.la \
 	$(SNDFILE_LIBS) \
 	$(PULSEAUDIO_LIBS) \
@@ -181,6 +204,7 @@ espeak_la_LDFLAGS = \
 	$(sound_la_LDFLAGS)
 
 espeak_la_LIBADD = \
+	libeventd-config-helper.la \
 	libeventd-plugin-helper.la \
 	$(ESPEAK_LIBS) \
 	$(PULSEAUDIO_LIBS) \
@@ -213,6 +237,7 @@ notification_la_LDFLAGS = \
 	-avoid-version -module -export-symbols-regex eventd_plugin_get_info
 
 notification_la_LIBADD = \
+	libeventd-config-helper.la \
 	libeventd-plugin-helper.la \
 	$(GDK_PIXBUF_LIBS) \
 	$(NOTIFY_LIBS) \
