@@ -9,4 +9,5 @@
 /src/eventc/*.c
 
 /eventd
+/eventdctl
 /eventc
