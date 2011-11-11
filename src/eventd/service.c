@@ -38,6 +38,17 @@
 #include "plugins.h"
 #include "service.h"
 
+static GMainLoop *loop = NULL;
+
+static void
+_eventd_service_quit(int sig)
+{
+    if ( loop )
+        g_main_loop_quit(loop);
+    else
+        exit(1);
+}
+
 #define DEFAULT_DELAY 5
 #define DEFAULT_MAX_CLIENTS 5
 
@@ -269,18 +280,6 @@ connection_handler(
     return TRUE;
 }
 
-static GMainLoop *loop = NULL;
-
-static void
-sig_quit_handler(int sig)
-{
-    if ( loop )
-        g_main_loop_quit(loop);
-    else
-        exit(1);
-}
-
-
 GSocket *
 eventd_get_inet_socket(guint16 port)
 {
@@ -376,8 +375,8 @@ eventd_service(GList *sockets, gboolean no_plugins)
     GList *socket = NULL;
     GSocketService *service = NULL;
 
-    signal(SIGTERM, sig_quit_handler);
-    signal(SIGINT, sig_quit_handler);
+    signal(SIGTERM, _eventd_service_quit);
+    signal(SIGINT, _eventd_service_quit);
 
     if ( ! no_plugins )
         eventd_plugins_load();
