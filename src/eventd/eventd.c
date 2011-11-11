@@ -62,9 +62,7 @@ static gboolean take_over_socket = FALSE;
 static gboolean no_systemd = FALSE;
 #endif /* ENABLE_SYSTEMD */
 
-#ifdef DEBUG
 static gboolean no_plugins = FALSE;
-#endif /* DEBUG */
 
 static GOptionEntry entries[] =
 {
@@ -253,11 +251,7 @@ main(int argc, char *argv[])
     }
 
 start:
-#ifdef DEBUG
     retval = eventd_service(sockets, no_plugins);
-#else /* ! DEBUG */
-    retval = eventd_service(sockets);
-#endif /* ! DEBUG */
 
     g_list_free_full(sockets, g_object_unref);
 

@@ -369,11 +369,7 @@ fail:
 #endif /* ENABLE_GIO_UNIX */
 
 int
-#if DEBUG
 eventd_service(GList *sockets, gboolean no_plugins)
-#else /* ! DEBUG */
-eventd_service(GList *sockets)
-#endif /* ! DEBUG */
 {
     int retval = 0;
     GError *error = NULL;
@@ -383,10 +379,8 @@ eventd_service(GList *sockets)
     signal(SIGTERM, sig_quit_handler);
     signal(SIGINT, sig_quit_handler);
 
-    #if DEBUG
     if ( ! no_plugins )
-    #endif /* DEBUG */
-    eventd_plugins_load();
+        eventd_plugins_load();
 
     eventd_config_parser();
 
