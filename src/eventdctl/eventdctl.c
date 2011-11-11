@@ -107,6 +107,8 @@ main(int argc, char *argv[])
 
         if ( g_strcmp0(argv[1], "quit") == 0 )
             _eventd_eventdctl_send_command(output, "quit");
+        else if ( g_strcmp0(argv[1], "reload") == 0 )
+            _eventd_eventdctl_send_command(output, "reload");
 
         if ( ! g_output_stream_close((GOutputStream *)output, NULL, &error) )
             g_warning("Can't close the output stream: %s", error->message);

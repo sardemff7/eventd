@@ -84,6 +84,10 @@ private_connection_handler(
         {
             _eventd_service_quit(0);
         }
+        else if ( g_strcmp0(line, "reload") == 0 )
+        {
+            eventd_config_parser();
+        }
     }
 
     if ( ! g_input_stream_close((GInputStream *)input, NULL, &error) )
