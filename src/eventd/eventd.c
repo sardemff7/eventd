@@ -45,9 +45,6 @@
 
 
 static gboolean daemonize = FALSE;
-static gchar *pid_file = NULL;
-
-static gboolean action_kill = FALSE;
 
 static guint16 bind_port = DEFAULT_BIND_PORT;
 
@@ -67,8 +64,6 @@ static gboolean no_plugins = FALSE;
 static GOptionEntry entries[] =
 {
     { "daemonize", 'd', 0, G_OPTION_ARG_NONE, &daemonize, "Run the daemon in the background", NULL },
-    { "pid-file", 'P', 0, G_OPTION_ARG_FILENAME, &pid_file, "Path to the pid file", "filename" },
-    { "kill", 'k', 0, G_OPTION_ARG_NONE, &action_kill, "Kill the running daemon", NULL },
     { "port", 'p', 0, G_OPTION_ARG_INT, &bind_port, "Port to listen for inbound connections", "P" },
 #if ENABLE_GIO_UNIX
     { "no-network", 'N', 0, G_OPTION_ARG_NONE, &no_network, "Disable the network bind", NULL },
@@ -190,6 +185,7 @@ main(int argc, char *argv[])
         }
     }
 #endif /* ENABLE_GIO_UNIX */
+    g_free(run_dir);
 
     if ( ( bind_port > 0 ) && ( ( socket = eventd_get_inet_socket(bind_port) ) != NULL ) )
         sockets = g_list_prepend(sockets, socket);
@@ -197,24 +193,6 @@ main(int argc, char *argv[])
     else if ( no_unix )
         g_error("Nothing to bind to, kind of useless, isn't it?");
 #endif /* ENABLE_GIO_UNIX */
-
-    if ( pid_file == NULL )
-        pid_file = g_build_filename(run_dir, PID_FILE, NULL);
-
-    g_free(run_dir);
-
-    if ( action_kill )
-    {
-        gchar *contents = NULL;
-        guint64 pid = 0;
-        if ( ! g_file_get_contents(pid_file, &contents, NULL, &error) )
-            g_warning("Unable to open pid file: %s", error->message);
-        g_clear_error(&error);
-        pid = g_ascii_strtoull(contents, NULL, 10);
-        g_free(contents);
-        kill(pid, SIGTERM);
-        return 0;
-    }
 
 #if DEBUG
     daemonize = FALSE;
@@ -231,14 +209,7 @@ main(int argc, char *argv[])
             return 1;
         }
         else if ( pid != 0 )
-        {
-            FILE *f = NULL;
-
-            f = g_fopen(pid_file, "w");
-            g_fprintf(f, "%d", pid);
-            fclose(f);
             return 0;
-        }
         close(0);
         close(1);
         close(2);
@@ -263,10 +234,6 @@ start:
         g_free(unix_socket);
     }
 #endif /* ENABLE_GIO_UNIX */
-
-    if ( daemonize )
-        g_unlink(pid_file);
-    g_free(pid_file);
 
     return retval;
 }
