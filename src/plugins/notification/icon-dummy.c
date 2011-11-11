@@ -27,13 +27,6 @@
 #include "notification.h"
 #include "icon.h"
 
-gpointer
-eventd_notification_icon_get_pixbuf(const gchar *filename)
-{
-    return NULL;
-}
-
-
 void
 eventd_notification_icon_get_pixbuf(EventdEvent *event, EventdNotificationEvent *notification_event, EventdNotificationNotification *notification)
 {
