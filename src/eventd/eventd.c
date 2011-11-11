@@ -90,7 +90,6 @@ main(int argc, char *argv[])
 {
     int retval = 0;
     GError *error = NULL;
-    gchar const *xdg_runtime_dir = NULL;
     gchar *run_dir = NULL;
     GOptionContext *context = NULL;
     GSocket *socket = NULL;
@@ -104,9 +103,7 @@ main(int argc, char *argv[])
 
     g_type_init();
 
-    xdg_runtime_dir = g_get_user_runtime_dir();
-
-    run_dir = g_build_filename(xdg_runtime_dir, PACKAGE_NAME, NULL);
+    run_dir = g_build_filename(g_get_user_runtime_dir(), PACKAGE_NAME, NULL);
     if ( g_mkdir_with_parents(run_dir, 0755) < 0 )
         g_error("Can't create the run dir (%s): %s", run_dir, strerror(errno));
 
