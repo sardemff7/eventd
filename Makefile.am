@@ -136,6 +136,8 @@ plugins_LTLIBRARIES += \
 	sound.la
 
 sound_la_SOURCES = \
+	src/plugins/sound/pulseaudio-internal.h \
+	src/plugins/sound/pulseaudio.h \
 	src/plugins/sound/sound.c
 
 sound_la_CFLAGS = \
@@ -192,6 +194,8 @@ soundplugins_LTLIBRARIES += \
 	espeak.la
 
 espeak_la_SOURCES = \
+	src/plugins/sound/espeak/pulseaudio.h \
+	src/plugins/sound/espeak/espeak.h \
 	src/plugins/sound/espeak/espeak.c
 
 espeak_la_CFLAGS = \
@@ -224,6 +228,10 @@ plugins_LTLIBRARIES += \
 	notification.la
 
 notification_la_SOURCES = \
+	src/plugins/notification/libnotify-compat.h \
+	src/plugins/notification/notify.h \
+	src/plugins/notification/icon.h \
+	src/plugins/notification/notification.h \
 	src/plugins/notification/notification.c
 
 notification_la_CFLAGS = \
