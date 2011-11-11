@@ -91,7 +91,7 @@ main(int argc, char *argv[])
     {
         g_warning("Couldn’t connect to eventd: %s", error->message);
     }
-    else if ( argc < 1 )
+    else if ( argc < 2 )
     {
         g_warning("Missing command");
     }
