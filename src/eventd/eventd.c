@@ -51,6 +51,7 @@ static guint16 bind_port = DEFAULT_BIND_PORT;
 #ifdef ENABLE_GIO_UNIX
 static gboolean no_network = FALSE;
 static gboolean no_unix = FALSE;
+static gchar *private_socket = NULL;
 static gchar *unix_socket = NULL;
 static gboolean take_over_socket = FALSE;
 #endif /* ENABLE_GIO_UNIX */
@@ -68,6 +69,7 @@ static GOptionEntry entries[] =
 #if ENABLE_GIO_UNIX
     { "no-network", 'N', 0, G_OPTION_ARG_NONE, &no_network, "Disable the network bind", NULL },
     { "no-unix", 'U', 0, G_OPTION_ARG_NONE, &no_unix, "Disable the UNIX socket bind", NULL },
+    { "private-socket", 'i', 0, G_OPTION_ARG_FILENAME, &private_socket, "UNIX socket to listen for internal control", "SOCKET_FILE" },
     { "socket", 's', 0, G_OPTION_ARG_FILENAME, &unix_socket, "UNIX socket to listen for inbound connections", "SOCKET_FILE" },
     { "take-over", 't', 0, G_OPTION_ARG_NONE, &take_over_socket, "Take over socket", NULL },
 #endif /* ENABLE_GIO_UNIX */
@@ -153,6 +155,14 @@ main(int argc, char *argv[])
     if ( no_network )
         bind_port = 0;
 
+    if ( private_socket == NULL )
+        private_socket = g_build_filename(run_dir, "private", NULL);
+    if ( ( socket = eventd_get_unix_socket(private_socket, take_over_socket) ) != NULL )
+        sockets = g_list_prepend(sockets, socket);
+    else
+        g_error("Couldn’t create private socket");
+
+
     if ( no_unix )
     {
         g_free(unix_socket);
@@ -221,6 +231,9 @@ start:
     {
         g_unlink(unix_socket);
         g_free(unix_socket);
+
+        g_unlink(private_socket);
+        g_free(private_socket);
     }
 #endif /* ENABLE_GIO_UNIX */
 
