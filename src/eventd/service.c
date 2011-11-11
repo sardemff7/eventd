@@ -273,6 +273,14 @@ connection_handler(
     g_free(client.type);
     g_free(client.name);
 
+    if ( ! g_input_stream_close((GInputStream *)input, NULL, &error) )
+        g_warning("Can't close the input stream: %s", error->message);
+    g_clear_error(&error);
+
+    if ( ! g_output_stream_close((GOutputStream *)output, NULL, &error) )
+        g_warning("Can't close the output stream: %s", error->message);
+    g_clear_error(&error);
+
     if ( ! g_io_stream_close((GIOStream *)connection, NULL, &error) )
         g_warning("Can't close the stream: %s", error->message);
     g_clear_error(&error);
