@@ -91,6 +91,14 @@ if test x$enable_systemd = xyes; then
     AC_DEFINE([ENABLE_SYSTEMD], [1], [Enable systemd activation support])
 fi
 
+AC_ARG_ENABLE(eventdctl, AS_HELP_STRING([--disable-eventdctl], [Disable eventdctl]), enable_eventdctl=$enableval, enable_eventdctl=yes)
+if test x$enable_eventdctl = xyes; then
+    if test x$enable_gio_unix = xno; then
+        AC_MSG_ERROR([*** eventdctl requested but not UNIX GIO support])
+    fi
+fi
+AM_CONDITIONAL(ENABLE_EVENTDCTL, test x$enable_eventdctl = xyes)
+
 # sound plugin
 AC_ARG_ENABLE(pulseaudio, AS_HELP_STRING([--disable-pulseaudio], [Disable PulseAudio support]), enable_pulseaudio=$enableval, enable_pulseaudio=yes)
 if test x$enable_pulseaudio = xyes; then
