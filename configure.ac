@@ -80,6 +80,9 @@ PKG_CHECK_MODULES(GMODULE, [gmodule-2.0 >= $gmodule_min_version])
 
 AC_ARG_ENABLE(systemd, AS_HELP_STRING([--disable-systemd], [Disable systemd support activation support]), enable_systemd=$enableval, enable_systemd=yes)
 if test x$enable_systemd = xyes; then
+    if test x$enable_gio_unix = xno; then
+        AC_MSG_ERROR([*** It won’t harm to enable UNIX GIO support])
+    fi
     PKG_CHECK_MODULES(SYSTEMD, [libsystemd-daemon])
     AC_DEFINE([ENABLE_SYSTEMD], [1], [Enable systemd activation support])
 fi
