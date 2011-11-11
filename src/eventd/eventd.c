@@ -116,38 +116,26 @@ main(int argc, char *argv[])
 
         n = sd_listen_fds(TRUE);
         if ( n < 0 )
-        {
             g_error("Failed to acquire systemd socket: %s", strerror(-n));
-            return 2;
-        }
 
         if ( n <= 0 )
-        {
             g_error("No socket received.");
-            return 2;
-        }
 
         for ( fd = SD_LISTEN_FDS_START ; fd < SD_LISTEN_FDS_START + n ; ++fd )
         {
             r = sd_is_socket(fd, AF_UNSPEC, SOCK_STREAM, 1);
             if ( r < 0 )
-            {
                 g_error("Failed to verify systemd socket type: %s", strerror(-r));
-                return 2;
-            }
 
             if ( r <= 0 )
-            {
                 g_error("Passed socket has wrong type.");
-                return 2;
-            }
         }
 
         for ( fd = SD_LISTEN_FDS_START ; fd < SD_LISTEN_FDS_START + n ; ++fd )
         {
             if ( ( socket = g_socket_new_from_fd(fd, &error) ) == NULL )
             {
-                g_error("Failed to take a socket from systemd: %s", error->message);
+                g_warning("Failed to take a socket from systemd: %s", error->message);
                 continue;
             }
             sockets = g_list_prepend(sockets, socket);
