@@ -296,7 +296,6 @@ libeventc_la_VALAFLAGS = \
 	$(AM_VALAFLAGS) \
 	--library $(top_builddir)/vapi/libeventc \
 	-H $(top_builddir)/include/libeventc.h \
-	--pkg eventd-common \
 	$(GIO_VALAFLAGS) \
 	$(GOBJECT_VALAFLAGS) \
 	$(GLIB_VALAFLAGS)

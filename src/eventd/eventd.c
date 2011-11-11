@@ -34,8 +34,6 @@
 #include <glib/gstdio.h>
 #include <gio/gio.h>
 
-#include <eventd-common.h>
-
 #include "service.h"
 
 #if ENABLE_SYSTEMD

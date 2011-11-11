@@ -128,7 +128,7 @@ namespace Eventd
             #if ENABLE_GIO_UNIX
             string path = null;
             if ( this._host == "localhost" )
-                path = GLib.Path.build_filename(GLib.Environment.get_user_runtime_dir(), Config.PACKAGE_NAME, Common.UNIX_SOCKET);
+                path = GLib.Path.build_filename(GLib.Environment.get_user_runtime_dir(), Config.PACKAGE_NAME, Config.UNIX_SOCKET);
             else if ( this.host_is_socket )
                 path = this._host;
             if ( ( path != null ) && GLib.FileUtils.test(path, GLib.FileTest.EXISTS) && ( ! GLib.FileUtils.test(path, GLib.FileTest.IS_DIR|GLib.FileTest.IS_REGULAR) ) )
@@ -136,7 +136,7 @@ namespace Eventd
             #endif
             if ( this.address == null )
             {
-                this.address = new GLib.NetworkAddress(this._host, ( this._port > 0 ) ? ( this._port ) : ( Common.DEFAULT_BIND_PORT ));
+                this.address = new GLib.NetworkAddress(this._host, ( this._port > 0 ) ? ( this._port ) : ( Config.DEFAULT_BIND_PORT ));
                 if ( address == null )
                     throw new EventcError.HOSTNAME("Couldn’t resolve the hostname");
             }

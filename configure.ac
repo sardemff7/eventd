@@ -21,6 +21,10 @@ IT_PROG_INTLTOOL([0.40.0])
 
 AC_PROG_INSTALL
 
+DEFAULT_BIND_PORT="7100"
+UNIX_SOCKET="sock"
+AC_DEFINE_UNQUOTED([DEFAULT_BIND_PORT], [$DEFAULT_BIND_PORT], [Default TCP port to bind])
+AC_DEFINE_UNQUOTED([UNIX_SOCKET], ["$UNIX_SOCKET"], [Default UNIX socket name])
 
 # Common dependencies
 glib_min_version="2.28.0"
