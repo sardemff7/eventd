@@ -97,11 +97,6 @@ main(int argc, char *argv[])
 
     g_type_init();
 
-    run_dir = g_build_filename(g_get_user_runtime_dir(), PACKAGE_NAME, NULL);
-    if ( g_mkdir_with_parents(run_dir, 0755) < 0 )
-        g_error("Can't create the run dir (%s): %s", run_dir, strerror(errno));
-
-
     context = g_option_context_new("- small daemon to act on remote or local events");
     g_option_context_add_main_entries(context, entries, GETTEXT_PACKAGE);
     if ( ! g_option_context_parse(context, &argc, &argv, &error) )
@@ -144,6 +139,10 @@ main(int argc, char *argv[])
         goto start;
     }
 #endif /* ENABLE_SYSTEMD */
+
+    run_dir = g_build_filename(g_get_user_runtime_dir(), PACKAGE_NAME, NULL);
+    if ( g_mkdir_with_parents(run_dir, 0755) < 0 )
+        g_error("Can't create the run dir (%s): %s", run_dir, strerror(errno));
 
 #if ENABLE_GIO_UNIX
     if ( ( no_network ) && ( no_unix ) )
