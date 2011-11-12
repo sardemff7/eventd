@@ -44,6 +44,7 @@
 int
 main(int argc, char *argv[])
 {
+    gboolean no_plugins = FALSE;
     gboolean daemonize = FALSE;
 
     guint16 bind_port = DEFAULT_BIND_PORT;
@@ -60,11 +61,13 @@ main(int argc, char *argv[])
     gboolean no_systemd = FALSE;
 #endif /* ENABLE_SYSTEMD */
 
-    gboolean no_plugins = FALSE;
-
     GOptionEntry entries[] =
     {
+#ifdef DEBUG
+        { "no-plugins", 'P', 0, G_OPTION_ARG_NONE, &no_plugins, "Disable systemd socket activation", NULL },
+#else /* ! DEBUG */
         { "daemonize", 'd', 0, G_OPTION_ARG_NONE, &daemonize, "Run the daemon in the background", NULL },
+#endif /* ! DEBUG */
         { "port", 'p', 0, G_OPTION_ARG_INT, &bind_port, "Port to listen for inbound connections", "P" },
 #if ENABLE_GIO_UNIX
         { "no-network", 'N', 0, G_OPTION_ARG_NONE, &no_network, "Disable the network bind", NULL },
@@ -76,9 +79,6 @@ main(int argc, char *argv[])
 #ifdef ENABLE_SYSTEMD
         { "no-systemd", 'S', 0, G_OPTION_ARG_NONE, &no_systemd, "Disable systemd socket activation", NULL },
 #endif /* ENABLE_SYSTEMD */
-#ifdef DEBUG
-        { "no-plugins", 0, 0, G_OPTION_ARG_NONE, &no_plugins, "Disable systemd socket activation", NULL },
-#endif /*  DEBUG */
         { NULL }
     };
 
@@ -189,10 +189,6 @@ main(int argc, char *argv[])
     else if ( no_unix )
         g_error("Nothing to bind to, kind of useless, isn't it?");
 #endif /* ENABLE_GIO_UNIX */
-
-#if DEBUG
-    daemonize = FALSE;
-#endif /* DEBUG */
 
     if ( daemonize )
     {
