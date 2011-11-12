@@ -201,7 +201,7 @@ connection_handler(
                         GHashTable *ret = NULL;
 
                         last_action = event_time;
-                        ret = eventd_plugins_event_action_all(event);
+                        ret = eventd_plugins_event_action_all(client, event);
                         switch ( client->mode )
                         {
                         case EVENTD_CLIENT_MODE_PING_PONG:
@@ -255,7 +255,6 @@ connection_handler(
                 break;
 
             event = g_new0(EventdEvent, 1);
-            event->client = client;
             event->type = g_strdup(line+6);
             event->data = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
         }

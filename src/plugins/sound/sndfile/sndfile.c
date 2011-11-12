@@ -197,16 +197,16 @@ eventd_sound_sndfile_remove_sample(const char *name)
 }
 
 static GHashTable *
-eventd_sound_sndfile_event_action(EventdEvent *event)
+eventd_sound_sndfile_event_action(EventdClient *client, EventdEvent *event)
 {
     gchar *name;
     EventdSoundSndfileEvent *sndfile_event = NULL;
     pa_operation *op;
 
-    name = g_strconcat(event->client->type, "-", event->type, NULL);
+    name = g_strconcat(client->type, "-", event->type, NULL);
     sndfile_event = g_hash_table_lookup(events, name);
     g_free(name);
-    if ( ( sndfile_event == NULL ) && ( ( sndfile_event = g_hash_table_lookup(events, event->client->type) ) == NULL ) )
+    if ( ( sndfile_event == NULL ) && ( ( sndfile_event = g_hash_table_lookup(events, client->type) ) == NULL ) )
         return NULL;
 
     if ( sndfile_event->disable )

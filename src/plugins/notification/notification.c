@@ -160,14 +160,14 @@ skip:
 }
 
 static EventdNotificationNotification *
-eventd_notification_notification_new(EventdEvent *event, EventdNotificationEvent *notification_event)
+eventd_notification_notification_new(EventdClient *client, EventdEvent *event, EventdNotificationEvent *notification_event)
 {
     EventdNotificationNotification *notification;
     gchar *tmp = NULL;
 
     notification = g_new0(EventdNotificationNotification, 1);
 
-    tmp = libeventd_regex_replace_client_name(notification_event->title, event->client->name);
+    tmp = libeventd_regex_replace_client_name(notification_event->title, client->name);
     notification->title = libeventd_regex_replace_event_data(tmp, event->data, NULL);
     g_free(tmp);
 
@@ -214,25 +214,25 @@ eventd_notification_notification_free(EventdNotificationNotification *notificati
 }
 
 static GHashTable *
-eventd_notification_event_action(EventdEvent *event)
+eventd_notification_event_action(EventdClient *client, EventdEvent *event)
 {
     gchar *name;
     EventdNotificationEvent *notification_event;
     EventdNotificationNotification *notification;
     GHashTable *ret = NULL;
 
-    name = g_strconcat(event->client->type, "-", event->type, NULL);
+    name = g_strconcat(client->type, "-", event->type, NULL);
     notification_event = g_hash_table_lookup(events, name);
     g_free(name);
-    if ( ( notification_event == NULL ) && ( ( notification_event = g_hash_table_lookup(events, event->client->type) ) == NULL ) )
+    if ( ( notification_event == NULL ) && ( ( notification_event = g_hash_table_lookup(events, client->type) ) == NULL ) )
         return NULL;
 
     if ( notification_event->disable )
         return NULL;
 
-    notification = eventd_notification_notification_new(event, notification_event);
+    notification = eventd_notification_notification_new(client, event, notification_event);
 
-    switch ( event->client->mode )
+    switch ( client->mode )
     {
     case EVENTD_CLIENT_MODE_PING_PONG:
         ret = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);

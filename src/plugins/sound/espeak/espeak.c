@@ -245,7 +245,7 @@ eventd_sound_espeak_regex_event_data_cb(const GMatchInfo *info, GString *r, gpoi
 }
 
 static GHashTable *
-eventd_sound_espeak_event_action(EventdEvent *event)
+eventd_sound_espeak_event_action(EventdClient *client, EventdEvent *event)
 {
     GHashTable *ret = NULL;
     gchar *name;
@@ -255,15 +255,15 @@ eventd_sound_espeak_event_action(EventdEvent *event)
     EventdSoundEspeakCallbackData *data;
     EventdSoundEspeakSoundData *sound_data;
 
-    name = g_strconcat(event->client->type, "-", event->type, NULL);
+    name = g_strconcat(client->type, "-", event->type, NULL);
     message = g_hash_table_lookup(events, name);
     g_free(name);
-    if ( ( message == NULL ) && ( ( message = g_hash_table_lookup(events, event->client->type) ) == NULL ) )
+    if ( ( message == NULL ) && ( ( message = g_hash_table_lookup(events, client->type) ) == NULL ) )
         return NULL;
 
     msg = libeventd_regex_replace_event_data(message, event->data, eventd_sound_espeak_regex_event_data_cb);
 
-    data = eventd_sound_espeak_callback_data_new(event->client->mode);
+    data = eventd_sound_espeak_callback_data_new(client->mode);
     error = espeak_Synth(msg, strlen(msg)+1, 0, POS_CHARACTER, 0, espeakCHARS_UTF8|espeakSSML, NULL, data);
 
     switch ( error )
@@ -278,7 +278,7 @@ eventd_sound_espeak_event_action(EventdEvent *event)
     break;
     }
 
-    switch ( event->client->mode )
+    switch ( client->mode )
     {
     case EVENTD_CLIENT_MODE_PING_PONG:
         espeak_Synchronize();

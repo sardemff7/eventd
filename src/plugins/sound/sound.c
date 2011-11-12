@@ -48,9 +48,9 @@ eventd_sound_stop()
 }
 
 static GHashTable *
-eventd_sound_event_action(EventdEvent *event)
+eventd_sound_event_action(EventdClient *client, EventdEvent *event)
 {
-    return libeventd_plugins_event_action_all(plugins, event);
+    return libeventd_plugins_event_action_all(plugins, client, event);
 }
 
 static void

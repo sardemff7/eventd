@@ -228,6 +228,7 @@ libeventd_plugins_event_action_return(gchar *name, gchar *content, EventdEventAc
 }
 
 typedef struct {
+    EventdClient *client;
     EventdEvent *event;
     GHashTable *ret;
 } EventdEventActionData;
@@ -240,7 +241,7 @@ libeventd_plugins_event_action(EventdPlugin *plugin, EventdEventActionData *data
     if ( plugin->event_action == NULL )
         return;
 
-    ret = plugin->event_action(data->event);
+    ret = plugin->event_action(data->client, data->event);
     if ( ret != NULL )
     {
         EventdEventActionReturnData ret_data = {
@@ -253,9 +254,10 @@ libeventd_plugins_event_action(EventdPlugin *plugin, EventdEventActionData *data
 }
 
 GHashTable *
-libeventd_plugins_event_action_all(GList *plugins, EventdEvent *event)
+libeventd_plugins_event_action_all(GList *plugins, EventdClient *client, EventdEvent *event)
 {
     EventdEventActionData data = {
+        .client = client,
         .event = event
     };
     data.ret = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
