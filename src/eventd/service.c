@@ -33,6 +33,8 @@
 #include <glib/gstdio.h>
 #endif /* ENABLE_GIO_UNIX */
 
+#include <libeventd-client.h>
+#include <libeventd-event.h>
 #include <eventd-plugin.h>
 #include "config.h"
 #include "plugins.h"
@@ -187,7 +189,7 @@ connection_handler(
             {
                 if ( event_data_name )
                 {
-                    g_hash_table_insert(event->data, event_data_name, event_data_content);
+                    libeventd_event_add_data(event, event_data_name, event_data_content);
                     event_data_name = NULL;
                     event_data_content = NULL;
                 }
@@ -202,7 +204,7 @@ connection_handler(
 
                         last_action = event_time;
                         ret = eventd_plugins_event_action_all(client, event);
-                        switch ( client->mode )
+                        switch ( libeventd_client_get_mode(client) )
                         {
                         case EVENTD_CLIENT_MODE_PING_PONG:
                             if ( ! g_data_output_stream_put_string(output, "EVENT\n", NULL, &error) )
@@ -218,9 +220,7 @@ connection_handler(
                         if ( ret != NULL )
                             g_hash_table_unref(ret);
                     }
-                    g_object_unref(event->data);
-                    g_free(event->type);
-                    g_free(event); // TODO: Add some timeout
+                    libeventd_event_unref(event); // TODO: Add some timeout
                     event = NULL;
                 }
             }
@@ -242,9 +242,8 @@ connection_handler(
                 gchar **data = NULL;
 
                 data = g_strsplit(line+6, " ", 2);
-                g_hash_table_insert(event->data, g_strdup(data[0]), g_strdup(data[1]));
-
-                g_strfreev(data);
+                libeventd_event_add_data(event, data[0], data[1]);
+                g_free(data);
             }
             else
                 event_data_content = g_strdup(( line[0] == '.' ) ? line+1 : line);
@@ -254,9 +253,7 @@ connection_handler(
             if ( client == NULL )
                 break;
 
-            event = g_new0(EventdEvent, 1);
-            event->type = g_strdup(line+6);
-            event->data = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+            event = libeventd_event_new(line+6);
         }
         else if ( g_ascii_strcasecmp(line, "BYE") == 0 )
         {
@@ -293,7 +290,7 @@ connection_handler(
                 g_warning("Unknown mode");
             }
 
-            client->mode = mode;
+            libeventd_client_set_mode(client, mode);
         }
         else if ( g_ascii_strncasecmp(line, "HELLO ", 6) == 0 )
         {
@@ -303,10 +300,8 @@ connection_handler(
                 break;
 
             hello = g_strsplit(line+6, " ", 2);
-            client = g_new0(EventdClient, 1);
-            client->type = g_strdup(hello[0]);
-            if ( hello[1] != NULL )
-                client->name = g_strdup(hello[1]);
+            client = libeventd_client_new();
+            libeventd_client_update(client, hello[0], hello[1]);
             g_strfreev(hello);
         }
         else if ( g_ascii_strncasecmp(line, "RENAME ", 7) == 0 )
@@ -320,11 +315,7 @@ connection_handler(
                 break;
 
             rename = g_strsplit(line+7, " ", 2);
-            g_free(client->type);
-            g_free(client->name);
-            client->type = g_strdup(rename[0]);
-            if ( rename[1] != NULL )
-                client->name = g_strdup(rename[1]);
+            libeventd_client_update(client, rename[0], rename[1]);
             g_strfreev(rename);
         }
         else
@@ -336,9 +327,7 @@ connection_handler(
         g_warning("Can't read the socket: %s", error->message);
     g_clear_error(&error);
 
-    g_free(client->type);
-    g_free(client->name);
-    g_free(client);
+    libeventd_client_unref(client);
 
     if ( ! g_input_stream_close((GInputStream *)input, NULL, &error) )
         g_warning("Can't close the input stream: %s", error->message);

@@ -32,12 +32,16 @@ pkglib_LTLIBRARIES += \
 pkginclude_HEADERS += \
 	include/libeventd-regex.h \
 	include/libeventd-config.h \
-	include/libeventd-plugins.h
+	include/libeventd-plugins.h \
+	include/libeventd-event.h \
+	include/libeventd-client.h
 
 libeventd_la_SOURCES = \
 	src/libeventd/regex.c \
 	src/libeventd/config.c \
-	src/libeventd/plugins.c
+	src/libeventd/plugins.c \
+	src/libeventd/event.c \
+	src/libeventd/client.c
 
 libeventd_la_CFLAGS = \
 	$(AM_CFLAGS) \

@@ -1,5 +1,5 @@
 /*
- * eventd - Small daemon to act on remote or local events
+ * libeventd - Internal helper
  *
  * Copyright © 2011 Quentin "Sardem FF7" Glidic
  *
@@ -20,27 +20,18 @@
  *
  */
 
-#include <glib.h>
+#ifndef __LIBEVENTD_EVENT_H__
+#define __LIBEVENTD_EVENT_H__
 
+typedef struct _EventdEvent EventdEvent;
 
-#include "notification.h"
-#include "icon.h"
+EventdEvent *libeventd_event_new(const gchar *type);
+void libeventd_event_ref(EventdEvent *event);
+void libeventd_event_unref(EventdEvent *event);
 
-void
-eventd_notification_icon_get_pixbuf(GHashTable *data, EventdNotificationEvent *notification_event, EventdNotificationNotification *notification)
-{
-    notification->icon = NULL;
-    notification->overlay_icon = NULL;
-    notification->merged_icon = NULL;
-}
+void libeventd_event_add_data(EventdEvent *event, gchar *name, gchar *content);
 
-gchar *
-eventd_notification_icon_get_base64(gpointer icon)
-{
-    return NULL;
-}
+const gchar *libeventd_event_get_type(EventdEvent *event);
+GHashTable *libeventd_event_get_data(EventdEvent *event);
 
-void
-eventd_notification_icon_unref(gpointer icon)
-{
-}
+#endif /* __LIBEVENTD_EVENT_H__ */

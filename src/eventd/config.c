@@ -31,6 +31,8 @@
 
 #define CONFIG_RELOAD_DELAY 10
 
+#include <libeventd-client.h>
+#include <libeventd-event.h>
 #include <eventd-plugin.h>
 #include "plugins.h"
 #include "config.h"

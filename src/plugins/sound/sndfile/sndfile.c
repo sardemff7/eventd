@@ -26,6 +26,8 @@
 #include <glib.h>
 #include <string.h>
 
+#include <libeventd-client.h>
+#include <libeventd-event.h>
 #include <eventd-plugin.h>
 #include <libeventd-regex.h>
 #include <libeventd-config.h>
@@ -199,14 +201,17 @@ eventd_sound_sndfile_remove_sample(const char *name)
 static GHashTable *
 eventd_sound_sndfile_event_action(EventdClient *client, EventdEvent *event)
 {
+    const gchar *client_type;
     gchar *name;
     EventdSoundSndfileEvent *sndfile_event = NULL;
     pa_operation *op;
 
-    name = g_strconcat(client->type, "-", event->type, NULL);
+    client_type = libeventd_client_get_type(client);
+
+    name = g_strconcat(client_type, "-", libeventd_event_get_type(event), NULL);
     sndfile_event = g_hash_table_lookup(events, name);
     g_free(name);
-    if ( ( sndfile_event == NULL ) && ( ( sndfile_event = g_hash_table_lookup(events, client->type) ) == NULL ) )
+    if ( ( sndfile_event == NULL ) && ( ( sndfile_event = g_hash_table_lookup(events, client_type) ) == NULL ) )
         return NULL;
 
     if ( sndfile_event->disable )

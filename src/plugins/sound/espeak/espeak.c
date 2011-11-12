@@ -26,6 +26,8 @@
 #include <glib.h>
 #include <gio/gio.h>
 
+#include <libeventd-client.h>
+#include <libeventd-event.h>
 #include <eventd-plugin.h>
 #include <libeventd-config.h>
 #include <libeventd-regex.h>
@@ -248,6 +250,8 @@ static GHashTable *
 eventd_sound_espeak_event_action(EventdClient *client, EventdEvent *event)
 {
     GHashTable *ret = NULL;
+    const gchar *client_type;
+    EventdClientMode client_mode;
     gchar *name;
     gchar *message;
     gchar *msg;
@@ -255,15 +259,18 @@ eventd_sound_espeak_event_action(EventdClient *client, EventdEvent *event)
     EventdSoundEspeakCallbackData *data;
     EventdSoundEspeakSoundData *sound_data;
 
-    name = g_strconcat(client->type, "-", event->type, NULL);
+    client_type = libeventd_client_get_type(client);
+    client_mode = libeventd_client_get_mode(client);
+
+    name = g_strconcat(client_type, "-", libeventd_event_get_type(event), NULL);
     message = g_hash_table_lookup(events, name);
     g_free(name);
-    if ( ( message == NULL ) && ( ( message = g_hash_table_lookup(events, client->type) ) == NULL ) )
+    if ( ( message == NULL ) && ( ( message = g_hash_table_lookup(events, client_type) ) == NULL ) )
         return NULL;
 
-    msg = libeventd_regex_replace_event_data(message, event->data, eventd_sound_espeak_regex_event_data_cb);
+    msg = libeventd_regex_replace_event_data(message, libeventd_event_get_data(event), eventd_sound_espeak_regex_event_data_cb);
 
-    data = eventd_sound_espeak_callback_data_new(client->mode);
+    data = eventd_sound_espeak_callback_data_new(client_mode);
     error = espeak_Synth(msg, strlen(msg)+1, 0, POS_CHARACTER, 0, espeakCHARS_UTF8|espeakSSML, NULL, data);
 
     switch ( error )
@@ -278,7 +285,7 @@ eventd_sound_espeak_event_action(EventdClient *client, EventdEvent *event)
     break;
     }
 
-    switch ( client->mode )
+    switch ( client_mode )
     {
     case EVENTD_CLIENT_MODE_PING_PONG:
         espeak_Synchronize();

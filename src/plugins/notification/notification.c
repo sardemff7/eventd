@@ -22,6 +22,8 @@
 
 #include <glib.h>
 
+#include <libeventd-client.h>
+#include <libeventd-event.h>
 #include <eventd-plugin.h>
 #include <libeventd-config.h>
 #include <libeventd-regex.h>
@@ -160,20 +162,20 @@ skip:
 }
 
 static EventdNotificationNotification *
-eventd_notification_notification_new(EventdClient *client, EventdEvent *event, EventdNotificationEvent *notification_event)
+eventd_notification_notification_new(EventdClient *client, GHashTable *data, EventdNotificationEvent *notification_event)
 {
     EventdNotificationNotification *notification;
     gchar *tmp = NULL;
 
     notification = g_new0(EventdNotificationNotification, 1);
 
-    tmp = libeventd_regex_replace_client_name(notification_event->title, client->name);
-    notification->title = libeventd_regex_replace_event_data(tmp, event->data, NULL);
+    tmp = libeventd_regex_replace_client_name(notification_event->title, libeventd_client_get_name(client));
+    notification->title = libeventd_regex_replace_event_data(tmp, data, NULL);
     g_free(tmp);
 
-    notification->message = libeventd_regex_replace_event_data(notification_event->message, event->data, NULL);
+    notification->message = libeventd_regex_replace_event_data(notification_event->message, data, NULL);
 
-    eventd_notification_icon_get_pixbuf(event, notification_event, notification);
+    eventd_notification_icon_get_pixbuf(data, notification_event, notification);
 
     notification->timeout = notification_event->timeout;
 
@@ -216,23 +218,26 @@ eventd_notification_notification_free(EventdNotificationNotification *notificati
 static GHashTable *
 eventd_notification_event_action(EventdClient *client, EventdEvent *event)
 {
+    const gchar *client_type;
     gchar *name;
     EventdNotificationEvent *notification_event;
     EventdNotificationNotification *notification;
     GHashTable *ret = NULL;
 
-    name = g_strconcat(client->type, "-", event->type, NULL);
+    client_type = libeventd_client_get_type(client);
+
+    name = g_strconcat(client_type, "-", libeventd_event_get_type(event), NULL);
     notification_event = g_hash_table_lookup(events, name);
     g_free(name);
-    if ( ( notification_event == NULL ) && ( ( notification_event = g_hash_table_lookup(events, client->type) ) == NULL ) )
+    if ( ( notification_event == NULL ) && ( ( notification_event = g_hash_table_lookup(events, client_type) ) == NULL ) )
         return NULL;
 
     if ( notification_event->disable )
         return NULL;
 
-    notification = eventd_notification_notification_new(client, event, notification_event);
+    notification = eventd_notification_notification_new(client, libeventd_event_get_data(event), notification_event);
 
-    switch ( client->mode )
+    switch ( libeventd_client_get_mode(client) )
     {
     case EVENTD_CLIENT_MODE_PING_PONG:
         ret = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
