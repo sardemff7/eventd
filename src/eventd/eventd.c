@@ -41,6 +41,61 @@
 #include <systemd/sd-daemon.h>
 #endif /* ENABLE_SYSTEMD */
 
+#if ENABLE_SYSTEMD
+static GList *
+_eventd_get_systemd_sockets()
+{
+    GError *error = NULL;
+    GSocket *socket = NULL;
+    GList *sockets = NULL;
+    gint r, n;
+    gint fd;
+
+    n = sd_listen_fds(TRUE);
+    if ( n < 0 )
+    {
+        g_warning("Failed to acquire systemd socket: %s", strerror(-n));
+        return NULL;
+    }
+
+    if ( n <= 0 )
+    {
+        g_warning("No socket received.");
+        return NULL;
+    }
+
+    for ( fd = SD_LISTEN_FDS_START ; fd < SD_LISTEN_FDS_START + n ; ++fd )
+    {
+        r = sd_is_socket(fd, AF_UNSPEC, SOCK_STREAM, 1);
+        if ( r < 0 )
+        {
+            g_warning("Failed to verify systemd socket type: %s", strerror(-r));
+            return NULL;
+        }
+
+
+        if ( r <= 0 )
+        {
+            g_warning("Passed socket has wrong type.");
+            return NULL;
+        }
+    }
+
+    for ( fd = SD_LISTEN_FDS_START ; fd < SD_LISTEN_FDS_START + n ; ++fd )
+    {
+        if ( ( socket = g_socket_new_from_fd(fd, &error) ) == NULL )
+        {
+            g_warning("Failed to take a socket from systemd: %s", error->message);
+            continue;
+        }
+        sockets = g_list_prepend(sockets, socket);
+    }
+
+    return sockets;
+}
+#endif /* ENABLE_SYSTEMD */
+
+
 int
 main(int argc, char *argv[])
 {
@@ -106,36 +161,7 @@ main(int argc, char *argv[])
 #if ENABLE_SYSTEMD
     if ( ! no_systemd )
     {
-        gint r, n;
-        gint fd;
-
-        n = sd_listen_fds(TRUE);
-        if ( n < 0 )
-            g_error("Failed to acquire systemd socket: %s", strerror(-n));
-
-        if ( n <= 0 )
-            g_error("No socket received.");
-
-        for ( fd = SD_LISTEN_FDS_START ; fd < SD_LISTEN_FDS_START + n ; ++fd )
-        {
-            r = sd_is_socket(fd, AF_UNSPEC, SOCK_STREAM, 1);
-            if ( r < 0 )
-                g_error("Failed to verify systemd socket type: %s", strerror(-r));
-
-            if ( r <= 0 )
-                g_error("Passed socket has wrong type.");
-        }
-
-        for ( fd = SD_LISTEN_FDS_START ; fd < SD_LISTEN_FDS_START + n ; ++fd )
-        {
-            if ( ( socket = g_socket_new_from_fd(fd, &error) ) == NULL )
-            {
-                g_warning("Failed to take a socket from systemd: %s", error->message);
-                continue;
-            }
-            sockets = g_list_prepend(sockets, socket);
-        }
-
+        sockets = _eventd_get_systemd_sockets();
         goto start;
     }
 #endif /* ENABLE_SYSTEMD */
