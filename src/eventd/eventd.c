@@ -41,6 +41,12 @@
 #include <systemd/sd-daemon.h>
 #endif /* ENABLE_SYSTEMD */
 
+#if ENABLE_GIO_UNIX
+#define MIN_SOCKETS 2
+#else /* ! ENABLE_GIO_UNIX */
+#define MIN_SOCKETS 1
+#endif /* ! ENABLE_GIO_UNIX */
+
 #if ENABLE_SYSTEMD
 static GList *
 _eventd_get_systemd_sockets()
@@ -160,84 +166,84 @@ main(int argc, char *argv[])
 
 #if ENABLE_SYSTEMD
     if ( ! no_systemd )
-    {
         sockets = _eventd_get_systemd_sockets();
-        goto start;
-    }
+    else
 #endif /* ENABLE_SYSTEMD */
-
-    run_dir = g_build_filename(g_get_user_runtime_dir(), PACKAGE_NAME, NULL);
-    if ( g_mkdir_with_parents(run_dir, 0755) < 0 )
-        g_error("Can't create the run dir (%s): %s", run_dir, strerror(errno));
-
+    {
 #if ENABLE_GIO_UNIX
-    if ( ( no_network ) && ( no_unix ) )
-        g_error("Nothing to bind to, kind of useless, isn't it?");
+        run_dir = g_build_filename(g_get_user_runtime_dir(), PACKAGE_NAME, NULL);
+        if ( g_mkdir_with_parents(run_dir, 0755) < 0 )
+        {
+            g_warning("Couldn’t create the run dir '%s': %s", run_dir, strerror(errno));
+            goto no_run_dir;
+        }
 
-    if ( no_network )
-        bind_port = 0;
-
-    if ( private_socket == NULL )
-        private_socket = g_build_filename(run_dir, "private", NULL);
-    if ( ( socket = eventd_get_unix_socket(private_socket, take_over_socket) ) != NULL )
-        sockets = g_list_prepend(sockets, socket);
-    else
-        g_error("Couldn’t create private socket");
-
-
-    if ( no_unix )
-    {
-        g_free(unix_socket);
-        unix_socket = NULL;
-    }
-    else
-    {
-        if ( unix_socket == NULL )
-            unix_socket = g_build_filename(run_dir, UNIX_SOCKET, NULL);
-
-        if ( ( socket = eventd_get_unix_socket(unix_socket, take_over_socket) ) != NULL )
+        if ( private_socket == NULL )
+            private_socket = g_build_filename(run_dir, "private", NULL);
+        if ( ( socket = eventd_get_unix_socket(private_socket, take_over_socket) ) != NULL )
             sockets = g_list_prepend(sockets, socket);
-        else if ( no_network )
-            g_error("Nothing to bind to, kind of useless, isn't it?");
         else
+            g_warning("Couldn’t create private socket");
+
+        if ( no_unix )
         {
             g_free(unix_socket);
             unix_socket = NULL;
         }
-    }
-#endif /* ENABLE_GIO_UNIX */
-    g_free(run_dir);
-
-    if ( ( bind_port > 0 ) && ( ( socket = eventd_get_inet_socket(bind_port) ) != NULL ) )
-        sockets = g_list_prepend(sockets, socket);
-#if ENABLE_GIO_UNIX
-    else if ( no_unix )
-        g_error("Nothing to bind to, kind of useless, isn't it?");
-#endif /* ENABLE_GIO_UNIX */
-
-    if ( daemonize )
-    {
-        pid_t pid = -1;
-
-        pid = fork();
-        if ( pid == -1 )
+        else
         {
-            perror("fork");
-            return 1;
+            if ( unix_socket == NULL )
+                unix_socket = g_build_filename(run_dir, UNIX_SOCKET, NULL);
+
+            if ( ( socket = eventd_get_unix_socket(unix_socket, take_over_socket) ) != NULL )
+                sockets = g_list_prepend(sockets, socket);
+            else
+            {
+                g_free(unix_socket);
+                unix_socket = NULL;
+            }
         }
-        else if ( pid != 0 )
-            return 0;
-        close(0);
-        close(1);
-        close(2);
-        open("/dev/null", O_RDWR);
-        dup2(0,1);
-        dup2(0,2);
+
+    no_run_dir:
+        g_free(run_dir);
+
+        if ( no_network )
+            bind_port = 0;
+#endif /* ENABLE_GIO_UNIX */
+
+        if ( ( bind_port > 0 ) && ( ( socket = eventd_get_inet_socket(bind_port) ) != NULL ) )
+            sockets = g_list_prepend(sockets, socket);
     }
 
-start:
-    retval = eventd_service(sockets, no_plugins);
+    if ( g_list_length(sockets) < MIN_SOCKETS )
+    {
+        g_warning("Nothing to bind to, kind of useless, isn't it?");
+        retval = 2;
+    }
+    else
+    {
+        if ( daemonize )
+        {
+            pid_t pid = -1;
 
+            pid = fork();
+            if ( pid == -1 )
+            {
+                perror("fork");
+                return 1;
+            }
+            else if ( pid != 0 )
+                return 0;
+            close(0);
+            close(1);
+            close(2);
+            open("/dev/null", O_RDWR);
+            dup2(0,1);
+            dup2(0,2);
+        }
+
+        retval = eventd_service(sockets, no_plugins);
+    }
     g_list_free_full(sockets, g_object_unref);
 
 #if ENABLE_GIO_UNIX
