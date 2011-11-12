@@ -142,12 +142,12 @@ eventd_config_load_dir(const gchar *base_dir)
 
     while ( ( file = (gchar *)g_dir_read_name(config_dir) ) != NULL )
     {
-        if ( g_str_has_prefix(file, ".") )
+        if ( g_str_has_prefix(file, ".") || ( ! g_str_has_suffix(file, ".conf") ) )
             continue;
 
         config_file_name = g_build_filename(config_dir_name, file, NULL);
 
-        if ( g_str_has_suffix(file, ".conf") && g_file_test(config_file_name, G_FILE_TEST_IS_REGULAR) )
+        if ( g_file_test(config_file_name, G_FILE_TEST_IS_REGULAR) )
         {
             gchar *type;
 
@@ -164,7 +164,19 @@ eventd_config_load_dir(const gchar *base_dir)
             g_key_file_free(config_file);
             g_free(type);
         }
-        else if ( g_file_test(config_file_name, G_FILE_TEST_IS_DIR) )
+
+        g_free(config_file_name);
+    }
+
+    g_dir_rewind(config_dir);
+    while ( ( file = (gchar *)g_dir_read_name(config_dir) ) != NULL )
+    {
+        if ( g_str_has_prefix(file, ".") )
+            continue;
+
+        config_file_name = g_build_filename(config_dir_name, file, NULL);
+
+        if ( g_file_test(config_file_name, G_FILE_TEST_IS_DIR) )
             eventd_config_parse_client(file, config_file_name);
 
         g_free(config_file_name);
