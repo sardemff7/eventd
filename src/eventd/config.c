@@ -65,19 +65,6 @@ eventd_config_parse_client(gchar *type, gchar *config_dir_name)
     gchar *config_file_name = NULL;
     GKeyFile *config_file = NULL;
 
-    config_file_name = g_strconcat(config_dir_name, ".conf", NULL);
-    if ( g_file_test(config_file_name, G_FILE_TEST_IS_REGULAR) )
-    {
-        config_file = g_key_file_new();
-        if ( ! g_key_file_load_from_file(config_file, config_file_name, G_KEY_FILE_NONE, &error) )
-            g_warning("Can't read the defaults file '%s': %s", config_file_name, error->message);
-        else
-            eventd_plugins_event_parse_all(type, NULL, config_file);
-        g_clear_error(&error);
-        g_key_file_free(config_file);
-    }
-    g_free(config_file_name);
-
     config_dir = g_dir_open(config_dir_name, 0, &error);
     if ( ! config_dir )
     {
@@ -124,7 +111,6 @@ eventd_config_load_dir(const gchar *base_dir)
     GError *error = NULL;
     gchar *config_dir_name = NULL;
     GDir *config_dir = NULL;
-    gchar *client_config_dir_name = NULL;
     gchar *file = NULL;
     gchar *config_file_name = NULL;
     GKeyFile *config_file = NULL;
@@ -159,12 +145,29 @@ eventd_config_load_dir(const gchar *base_dir)
         if ( g_str_has_prefix(file, ".") )
             continue;
 
-        client_config_dir_name = g_build_filename(config_dir_name, file, NULL);
+        config_file_name = g_build_filename(config_dir_name, file, NULL);
 
-        if ( g_file_test(client_config_dir_name, G_FILE_TEST_IS_DIR) )
-            eventd_config_parse_client(file, client_config_dir_name);
+        if ( g_str_has_suffix(file, ".conf") && g_file_test(config_file_name, G_FILE_TEST_IS_REGULAR) )
+        {
+            gchar *type;
 
-        g_free(client_config_dir_name);
+            type = g_strndup(file, strlen(file) - 5);
+            config_file = g_key_file_new();
+            #if DEBUG
+            g_debug("Parsing event defaults of client type '%s'", type);
+            #endif /* DEBUG */
+            if ( ! g_key_file_load_from_file(config_file, config_file_name, G_KEY_FILE_NONE, &error) )
+                g_warning("Can't read the defaults file '%s': %s", config_file_name, error->message);
+            else
+                eventd_plugins_event_parse_all(type, NULL, config_file);
+            g_clear_error(&error);
+            g_key_file_free(config_file);
+            g_free(type);
+        }
+        else if ( g_file_test(config_file_name, G_FILE_TEST_IS_DIR) )
+            eventd_config_parse_client(file, config_file_name);
+
+        g_free(config_file_name);
     }
     g_dir_close(config_dir);
 
