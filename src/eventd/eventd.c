@@ -41,48 +41,47 @@
 #include <systemd/sd-daemon.h>
 #endif /* ENABLE_SYSTEMD */
 
-
-static gboolean daemonize = FALSE;
-
-static guint16 bind_port = DEFAULT_BIND_PORT;
-
-#ifdef ENABLE_GIO_UNIX
-static gboolean no_network = FALSE;
-static gboolean no_unix = FALSE;
-static gchar *private_socket = NULL;
-static gchar *unix_socket = NULL;
-static gboolean take_over_socket = FALSE;
-#endif /* ENABLE_GIO_UNIX */
-
-#ifdef ENABLE_SYSTEMD
-static gboolean no_systemd = FALSE;
-#endif /* ENABLE_SYSTEMD */
-
-static gboolean no_plugins = FALSE;
-
-static GOptionEntry entries[] =
-{
-    { "daemonize", 'd', 0, G_OPTION_ARG_NONE, &daemonize, "Run the daemon in the background", NULL },
-    { "port", 'p', 0, G_OPTION_ARG_INT, &bind_port, "Port to listen for inbound connections", "P" },
-#if ENABLE_GIO_UNIX
-    { "no-network", 'N', 0, G_OPTION_ARG_NONE, &no_network, "Disable the network bind", NULL },
-    { "no-unix", 'U', 0, G_OPTION_ARG_NONE, &no_unix, "Disable the UNIX socket bind", NULL },
-    { "private-socket", 'i', 0, G_OPTION_ARG_FILENAME, &private_socket, "UNIX socket to listen for internal control", "SOCKET_FILE" },
-    { "socket", 's', 0, G_OPTION_ARG_FILENAME, &unix_socket, "UNIX socket to listen for inbound connections", "SOCKET_FILE" },
-    { "take-over", 't', 0, G_OPTION_ARG_NONE, &take_over_socket, "Take over socket", NULL },
-#endif /* ENABLE_GIO_UNIX */
-#ifdef ENABLE_SYSTEMD
-    { "no-systemd", 'S', 0, G_OPTION_ARG_NONE, &no_systemd, "Disable systemd socket activation", NULL },
-#endif /* ENABLE_SYSTEMD */
-#ifdef DEBUG
-    { "no-plugins", 0, 0, G_OPTION_ARG_NONE, &no_plugins, "Disable systemd socket activation", NULL },
-#endif /* DEBUG */
-    { NULL }
-};
-
 int
 main(int argc, char *argv[])
 {
+    gboolean daemonize = FALSE;
+
+    guint16 bind_port = DEFAULT_BIND_PORT;
+
+#ifdef ENABLE_GIO_UNIX
+    gboolean no_network = FALSE;
+    gboolean no_unix = FALSE;
+    gchar *private_socket = NULL;
+    gchar *unix_socket = NULL;
+    gboolean take_over_socket = FALSE;
+#endif /* ENABLE_GIO_UNIX */
+
+#ifdef ENABLE_SYSTEMD
+    gboolean no_systemd = FALSE;
+#endif /* ENABLE_SYSTEMD */
+
+    gboolean no_plugins = FALSE;
+
+    GOptionEntry entries[] =
+    {
+        { "daemonize", 'd', 0, G_OPTION_ARG_NONE, &daemonize, "Run the daemon in the background", NULL },
+        { "port", 'p', 0, G_OPTION_ARG_INT, &bind_port, "Port to listen for inbound connections", "P" },
+#if ENABLE_GIO_UNIX
+        { "no-network", 'N', 0, G_OPTION_ARG_NONE, &no_network, "Disable the network bind", NULL },
+        { "no-unix", 'U', 0, G_OPTION_ARG_NONE, &no_unix, "Disable the UNIX socket bind", NULL },
+        { "private-socket", 'i', 0, G_OPTION_ARG_FILENAME, &private_socket, "UNIX socket to listen for internal control", "SOCKET_FILE" },
+        { "socket", 's', 0, G_OPTION_ARG_FILENAME, &unix_socket, "UNIX socket to listen for inbound connections", "SOCKET_FILE" },
+        { "take-over", 't', 0, G_OPTION_ARG_NONE, &take_over_socket, "Take over socket", NULL },
+#endif /* ENABLE_GIO_UNIX */
+#ifdef ENABLE_SYSTEMD
+        { "no-systemd", 'S', 0, G_OPTION_ARG_NONE, &no_systemd, "Disable systemd socket activation", NULL },
+#endif /* ENABLE_SYSTEMD */
+#ifdef DEBUG
+        { "no-plugins", 0, 0, G_OPTION_ARG_NONE, &no_plugins, "Disable systemd socket activation", NULL },
+#endif /*  DEBUG */
+        { NULL }
+    };
+
     int retval = 0;
     GError *error = NULL;
     gchar *run_dir = NULL;
