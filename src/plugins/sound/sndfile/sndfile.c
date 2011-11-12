@@ -213,7 +213,7 @@ eventd_sound_sndfile_event_action(EventdEvent *event)
         return NULL;
 
     pa_threaded_mainloop_lock(pa_loop);
-    op = pa_context_play_sample(sound, sndfile_event->sample, NULL, PA_VOLUME_NORM, NULL, NULL);
+    op = pa_context_play_sample(sound, sndfile_event->sample, NULL, PA_VOLUME_INVALID, NULL, NULL);
     if ( op )
         pa_operation_unref(op);
     else
