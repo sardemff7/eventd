@@ -23,8 +23,8 @@
 #include <glib.h>
 
 #include <eventd-plugin.h>
-#include <config-helper.h>
-#include <plugin-helper.h>
+#include <libeventd-config.h>
+#include <libeventd-regex.h>
 
 #include "notification.h"
 #include "icon.h"
@@ -38,13 +38,13 @@ eventd_notification_start(gpointer user_data)
 {
     eventd_notification_notify_init();
 
-    eventd_plugin_helper_regex_init();
+    libeventd_regex_init();
 }
 
 static void
 eventd_notification_stop()
 {
-    eventd_plugin_helper_regex_clean();
+    libeventd_regex_clean();
 
     eventd_notification_notify_uninit();
 }
@@ -126,19 +126,19 @@ eventd_notification_event_parse(const gchar *client_type, const gchar *event_typ
     if ( ! g_key_file_has_group(config_file, "notification") )
         return;
 
-    if ( eventd_config_helper_key_file_get_boolean(config_file, "notification", "disable", &disable) < 0 )
+    if ( libeventd_config_key_file_get_boolean(config_file, "notification", "disable", &disable) < 0 )
         goto skip;
-    if ( eventd_config_helper_key_file_get_string(config_file, "notification", "title", &title) < 0 )
+    if ( libeventd_config_key_file_get_string(config_file, "notification", "title", &title) < 0 )
         goto skip;
-    if ( eventd_config_helper_key_file_get_string(config_file, "notification", "message", &message) < 0 )
+    if ( libeventd_config_key_file_get_string(config_file, "notification", "message", &message) < 0 )
         goto skip;
-    if ( eventd_config_helper_key_file_get_string(config_file, "notification", "icon", &icon) < 0 )
+    if ( libeventd_config_key_file_get_string(config_file, "notification", "icon", &icon) < 0 )
         goto skip;
-    if ( eventd_config_helper_key_file_get_string(config_file, "notification", "overlay-icon", &overlay_icon) < 0 )
+    if ( libeventd_config_key_file_get_string(config_file, "notification", "overlay-icon", &overlay_icon) < 0 )
         goto skip;
-    if ( eventd_config_helper_key_file_get_int(config_file, "notification", "overlay-scale", &scale) < 0 )
+    if ( libeventd_config_key_file_get_int(config_file, "notification", "overlay-scale", &scale) < 0 )
         goto skip;
-    if ( eventd_config_helper_key_file_get_int(config_file, "notification", "timeout", &timeout) < 0 )
+    if ( libeventd_config_key_file_get_int(config_file, "notification", "timeout", &timeout) < 0 )
         goto skip;
 
     if ( event_type != NULL )
@@ -167,11 +167,11 @@ eventd_notification_notification_new(EventdEvent *event, EventdNotificationEvent
 
     notification = g_new0(EventdNotificationNotification, 1);
 
-    tmp = eventd_plugin_helper_regex_replace_client_name(notification_event->title, event->client->name);
-    notification->title = eventd_plugin_helper_regex_replace_event_data(tmp, event->data, NULL);
+    tmp = libeventd_regex_replace_client_name(notification_event->title, event->client->name);
+    notification->title = libeventd_regex_replace_event_data(tmp, event->data, NULL);
     g_free(tmp);
 
-    notification->message = eventd_plugin_helper_regex_replace_event_data(notification_event->message, event->data, NULL);
+    notification->message = libeventd_regex_replace_event_data(notification_event->message, event->data, NULL);
 
     eventd_notification_icon_get_pixbuf(event, notification_event, notification);
 

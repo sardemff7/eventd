@@ -27,8 +27,8 @@
 #include <gio/gio.h>
 
 #include <eventd-plugin.h>
-#include <config-helper.h>
-#include <plugin-helper.h>
+#include <libeventd-config.h>
+#include <libeventd-regex.h>
 
 #include "../pulseaudio.h"
 
@@ -161,13 +161,13 @@ eventd_sound_espeak_start(EventdSoundPulseaudioContext *context)
 
     eventd_sound_espeak_pulseaudio_start(context, sample_rate);
 
-    eventd_plugin_helper_regex_init();
+    libeventd_regex_init();
 }
 
 void
 eventd_sound_espeak_stop()
 {
-    eventd_plugin_helper_regex_clean();
+    libeventd_regex_clean();
 
     espeak_Synchronize();
     espeak_Terminate();
@@ -184,9 +184,9 @@ eventd_sound_espeak_event_parse(const gchar *client_type, const gchar *event_typ
     if ( ! g_key_file_has_group(config_file, "espeak") )
         return;
 
-    if ( eventd_config_helper_key_file_get_boolean(config_file, "espeak", "disable", &disable) < 0 )
+    if ( libeventd_config_key_file_get_boolean(config_file, "espeak", "disable", &disable) < 0 )
         return;
-    if ( eventd_config_helper_key_file_get_string(config_file, "espeak", "message", &message) < 0 )
+    if ( libeventd_config_key_file_get_string(config_file, "espeak", "message", &message) < 0 )
         return;
 
     if ( event_type != NULL )
@@ -261,7 +261,7 @@ eventd_sound_espeak_event_action(EventdEvent *event)
     if ( ( message == NULL ) && ( ( message = g_hash_table_lookup(events, event->client->type) ) == NULL ) )
         return NULL;
 
-    msg = eventd_plugin_helper_regex_replace_event_data(message, event->data, eventd_sound_espeak_regex_event_data_cb);
+    msg = libeventd_regex_replace_event_data(message, event->data, eventd_sound_espeak_regex_event_data_cb);
 
     data = eventd_sound_espeak_callback_data_new(event->client->mode);
     error = espeak_Synth(msg, strlen(msg)+1, 0, POS_CHARACTER, 0, espeakCHARS_UTF8|espeakSSML, NULL, data);

@@ -24,77 +24,34 @@ AM_VALAFLAGS += \
 
 
 #
-# Helper libs
+# Helper lib
 #
-
-# An helper for config
 pkglib_LTLIBRARIES += \
-	libeventd-config-helper.la
+	libeventd.la
 
 pkginclude_HEADERS += \
-	include/config-helper.h
+	include/libeventd-regex.h \
+	include/libeventd-config.h \
+	include/libeventd-plugins.h
 
-libeventd_config_helper_la_SOURCES = \
-	src/helper-libs/config-helper/config-helper.c
+libeventd_la_SOURCES = \
+	src/libeventd/regex.c \
+	src/libeventd/config.c \
+	src/libeventd/plugins.c
 
-libeventd_config_helper_la_CFLAGS = \
-	$(AM_CFLAGS) \
-	$(GLIB_CFLAGS)
-
-libeventd_config_helper_la_LDFLAGS = \
-	$(AM_LDFLAGS) \
-	-avoid-version \
-	-export-symbols $(top_srcdir)/src/helper-libs/config-helper/config-helper.sym
-
-libeventd_config_helper_la_LIBADD = \
-	$(GLIB_LIBS)
-
-# An helper for plugin
-pkglib_LTLIBRARIES += \
-	libeventd-plugin-helper.la
-
-pkginclude_HEADERS += \
-	include/plugin-helper.h
-
-libeventd_plugin_helper_la_SOURCES = \
-	src/helper-libs/plugin-helper/plugin-helper.c
-
-libeventd_plugin_helper_la_CFLAGS = \
-	$(AM_CFLAGS) \
-	$(GLIB_CFLAGS)
-
-libeventd_plugin_helper_la_LDFLAGS = \
-	$(AM_LDFLAGS) \
-	-avoid-version \
-	-export-symbols $(top_srcdir)/src/helper-libs/plugin-helper/plugin-helper.sym
-
-libeventd_plugin_helper_la_LIBADD = \
-	$(GLIB_LIBS)
-
-# An helper for plugins
-pkglib_LTLIBRARIES += \
-	libeventd-plugins-helper.la
-
-pkginclude_HEADERS += \
-	include/plugins-helper.h \
-	include/eventd-plugin.h
-
-libeventd_plugins_helper_la_SOURCES = \
-	src/helper-libs/plugins-helper/plugins-helper.c
-
-libeventd_plugins_helper_la_CFLAGS = \
+libeventd_la_CFLAGS = \
 	$(AM_CFLAGS) \
 	-D LIBDIR=\"$(libdir)\" \
 	-D DATADIR=\"$(datadir)\" \
 	$(GMODULE_CFLAGS) \
 	$(GLIB_CFLAGS)
 
-libeventd_plugins_helper_la_LDFLAGS = \
+libeventd_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
 	-avoid-version \
-	-export-symbols $(top_srcdir)/src/helper-libs/plugins-helper/plugins-helper.sym
+	-export-symbols $(top_srcdir)/src/libeventd/libeventd.sym
 
-libeventd_plugins_helper_la_LIBADD = \
+libeventd_la_LIBADD = \
 	$(GMODULE_LIBS) \
 	$(GLIB_LIBS)
 
@@ -126,7 +83,7 @@ eventd_CFLAGS = \
 	$(GLIB_CFLAGS)
 
 eventd_LDADD = \
-	libeventd-plugins-helper.la \
+	libeventd.la \
 	$(SYSTEMD_LIBS) \
 	$(GIO_LIBS) \
 	$(GLIB_LIBS)
@@ -169,7 +126,7 @@ sound_la_LDFLAGS = \
 	-avoid-version -module -export-symbols-regex eventd_plugin_get_info
 
 sound_la_LIBADD = \
-	libeventd-plugins-helper.la \
+	libeventd.la \
 	$(PULSEAUDIO_LIBS) \
 	$(GLIB_LIBS)
 
@@ -199,8 +156,7 @@ sndfile_la_LDFLAGS = \
 	$(sound_la_LDFLAGS)
 
 sndfile_la_LIBADD = \
-	libeventd-config-helper.la \
-	libeventd-plugin-helper.la \
+	libeventd.la \
 	$(SNDFILE_LIBS) \
 	$(PULSEAUDIO_LIBS) \
 	$(GLIB_LIBS)
@@ -226,8 +182,7 @@ espeak_la_LDFLAGS = \
 	$(sound_la_LDFLAGS)
 
 espeak_la_LIBADD = \
-	libeventd-config-helper.la \
-	libeventd-plugin-helper.la \
+	libeventd.la \
 	$(ESPEAK_LIBS) \
 	$(PULSEAUDIO_LIBS) \
 	$(GLIB_LIBS)
@@ -263,8 +218,7 @@ notification_la_LDFLAGS = \
 	-avoid-version -module -export-symbols-regex eventd_plugin_get_info
 
 notification_la_LIBADD = \
-	libeventd-config-helper.la \
-	libeventd-plugin-helper.la \
+	libeventd.la \
 	$(GDK_PIXBUF_LIBS) \
 	$(NOTIFY_LIBS) \
 	$(GLIB_LIBS)

@@ -27,8 +27,8 @@
 #include <string.h>
 
 #include <eventd-plugin.h>
-#include <config-helper.h>
-#include <plugin-helper.h>
+#include <libeventd-regex.h>
+#include <libeventd-config.h>
 
 #include "../pulseaudio.h"
 #include "../pulseaudio-internal.h"
@@ -301,11 +301,11 @@ eventd_sound_sndfile_event_parse(const gchar *client_type, const gchar *event_ty
     if ( ! g_key_file_has_group(config_file, "sound") )
         return;
 
-    if ( eventd_config_helper_key_file_get_boolean(config_file, "sound", "disable", &disable) < 0 )
+    if ( libeventd_config_key_file_get_boolean(config_file, "sound", "disable", &disable) < 0 )
         goto skip;
-    if ( eventd_config_helper_key_file_get_string(config_file, "sound", "sample", &sample) < 0 )
+    if ( libeventd_config_key_file_get_string(config_file, "sound", "sample", &sample) < 0 )
         goto skip;
-    if ( eventd_config_helper_key_file_get_string(config_file, "sound", "file", &filename) < 0 )
+    if ( libeventd_config_key_file_get_string(config_file, "sound", "file", &filename) < 0 )
         goto skip;
 
 

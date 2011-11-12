@@ -1,5 +1,5 @@
 /*
- * libeventd-plugins-helper - Internal helper to deal with plugins
+ * libeventd - Internal helper
  *
  * Copyright © 2011 Quentin "Sardem FF7" Glidic
  *
@@ -24,10 +24,10 @@
 #include <gmodule.h>
 
 #include <eventd-plugin.h>
-#include "plugins-helper.h"
+#include <libeventd-plugins.h>
 
 static void
-eventd_plugins_helper_load_dir(GList **plugins, const gchar *plugins_dir_name, gpointer user_data)
+libeventd_plugins_load_dir(GList **plugins, const gchar *plugins_dir_name, gpointer user_data)
 {
     GError *error;
     GDir *plugins_dir;
@@ -95,7 +95,7 @@ eventd_plugins_helper_load_dir(GList **plugins, const gchar *plugins_dir_name, g
 }
 
 void
-eventd_plugins_helper_load(GList **plugins, const gchar *plugins_subdir, gpointer user_data)
+libeventd_plugins_load(GList **plugins, const gchar *plugins_subdir, gpointer user_data)
 {
     const gchar *env_base_dir;
     gchar *plugins_dir;
@@ -112,23 +112,23 @@ eventd_plugins_helper_load(GList **plugins, const gchar *plugins_subdir, gpointe
             plugins_dir = g_build_filename(env_base_dir, plugins_subdir, NULL);
 
         if ( g_file_test(plugins_dir, G_FILE_TEST_IS_DIR) )
-            eventd_plugins_helper_load_dir(plugins, plugins_dir, user_data);
+            libeventd_plugins_load_dir(plugins, plugins_dir, user_data);
         g_free(plugins_dir);
     }
 
     plugins_dir = g_build_filename(g_get_user_data_dir(), PACKAGE_NAME, plugins_subdir, NULL);
     if ( g_file_test(plugins_dir, G_FILE_TEST_IS_DIR) )
-        eventd_plugins_helper_load_dir(plugins, plugins_dir, user_data);
+        libeventd_plugins_load_dir(plugins, plugins_dir, user_data);
     g_free(plugins_dir);
 
     plugins_dir = g_build_filename(DATADIR, PACKAGE_NAME, plugins_subdir, NULL);
     if ( g_file_test(plugins_dir, G_FILE_TEST_IS_DIR) )
-        eventd_plugins_helper_load_dir(plugins, plugins_dir, user_data);
+        libeventd_plugins_load_dir(plugins, plugins_dir, user_data);
     g_free(plugins_dir);
 
     plugins_dir = g_build_filename(LIBDIR, PACKAGE_NAME, plugins_subdir, NULL);
     if ( g_file_test(plugins_dir, G_FILE_TEST_IS_DIR) )
-        eventd_plugins_helper_load_dir(plugins, plugins_dir, user_data);
+        libeventd_plugins_load_dir(plugins, plugins_dir, user_data);
     g_free(plugins_dir);
 }
 
@@ -143,7 +143,7 @@ plugin_free(EventdPlugin *plugin)
 }
 
 void
-eventd_plugins_helper_unload(GList **plugins)
+libeventd_plugins_unload(GList **plugins)
 {
     if ( ( plugins == NULL ) || ( *plugins == NULL ) )
         return;
@@ -152,7 +152,7 @@ eventd_plugins_helper_unload(GList **plugins)
 }
 
 void
-eventd_plugins_helper_foreach(GList *plugins, GFunc func, gpointer user_data)
+libeventd_plugins_foreach(GList *plugins, GFunc func, gpointer user_data)
 {
     if ( plugins == NULL )
         return;
@@ -161,29 +161,29 @@ eventd_plugins_helper_foreach(GList *plugins, GFunc func, gpointer user_data)
 
 
 void
-eventd_plugins_helper_config_init(EventdPlugin *plugin, gpointer data)
+libeventd_plugins_config_init(EventdPlugin *plugin, gpointer data)
 {
     if ( plugin->config_init != NULL )
         plugin->config_init();
 }
 
 void
-eventd_plugins_helper_config_init_all(GList *plugins)
+libeventd_plugins_config_init_all(GList *plugins)
 {
-    eventd_plugins_helper_foreach(plugins, (GFunc)eventd_plugins_helper_config_init, NULL);
+    libeventd_plugins_foreach(plugins, (GFunc)libeventd_plugins_config_init, NULL);
 }
 
 static void
-eventd_plugins_helper_config_clean(EventdPlugin *plugin, gpointer data)
+libeventd_plugins_config_clean(EventdPlugin *plugin, gpointer data)
 {
     if ( plugin->config_clean != NULL )
         plugin->config_clean();
 }
 
 void
-eventd_plugins_helper_config_clean_all(GList *plugins)
+libeventd_plugins_config_clean_all(GList *plugins)
 {
-    eventd_plugins_helper_foreach(plugins, (GFunc)eventd_plugins_helper_config_clean, NULL);
+    libeventd_plugins_foreach(plugins, (GFunc)libeventd_plugins_config_clean, NULL);
 }
 
 typedef struct {
@@ -193,20 +193,20 @@ typedef struct {
 } EventdEventParseData;
 
 static void
-eventd_plugins_helper_event_parse(EventdPlugin *plugin, EventdEventParseData *data)
+libeventd_plugins_event_parse(EventdPlugin *plugin, EventdEventParseData *data)
 {
     if ( plugin->event_parse != NULL )
         plugin->event_parse(data->type, data->event, data->config_file);
 }
 
-void eventd_plugins_helper_event_parse_all(GList *plugins, const gchar *type, const gchar *event, GKeyFile *config_file)
+void libeventd_plugins_event_parse_all(GList *plugins, const gchar *type, const gchar *event, GKeyFile *config_file)
 {
     EventdEventParseData data = {
         .type = type,
         .event = event,
         .config_file = config_file,
     };
-    eventd_plugins_helper_foreach(plugins, (GFunc)eventd_plugins_helper_event_parse, &data);
+    libeventd_plugins_foreach(plugins, (GFunc)libeventd_plugins_event_parse, &data);
 }
 
 typedef struct {
@@ -215,7 +215,7 @@ typedef struct {
 } EventdEventActionReturnData;
 
 static gboolean
-eventd_plugins_helper_event_action_return(gchar *name, gchar *content, EventdEventActionReturnData *data)
+libeventd_plugins_event_action_return(gchar *name, gchar *content, EventdEventActionReturnData *data)
 {
     gchar *full_name;
 
@@ -233,7 +233,7 @@ typedef struct {
 } EventdEventActionData;
 
 static void
-eventd_plugins_helper_event_action(EventdPlugin *plugin, EventdEventActionData *data)
+libeventd_plugins_event_action(EventdPlugin *plugin, EventdEventActionData *data)
 {
     GHashTable *ret;
 
@@ -247,19 +247,19 @@ eventd_plugins_helper_event_action(EventdPlugin *plugin, EventdEventActionData *
             .ret = data->ret,
             .prefix = plugin->id
         };
-        g_hash_table_foreach_steal(ret, (GHRFunc)eventd_plugins_helper_event_action_return, &ret_data);
+        g_hash_table_foreach_steal(ret, (GHRFunc)libeventd_plugins_event_action_return, &ret_data);
         g_hash_table_unref(ret);
     }
 }
 
 GHashTable *
-eventd_plugins_helper_event_action_all(GList *plugins, EventdEvent *event)
+libeventd_plugins_event_action_all(GList *plugins, EventdEvent *event)
 {
     EventdEventActionData data = {
         .event = event
     };
     data.ret = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-    eventd_plugins_helper_foreach(plugins, (GFunc)eventd_plugins_helper_event_action, &data);
+    libeventd_plugins_foreach(plugins, (GFunc)libeventd_plugins_event_action, &data);
 
     if ( g_hash_table_size(data.ret) < 1 )
         data.ret = (g_hash_table_unref(data.ret), NULL);

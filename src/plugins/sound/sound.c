@@ -23,7 +23,7 @@
 #include <glib.h>
 
 #include <eventd-plugin.h>
-#include <plugins-helper.h>
+#include <libeventd-plugins.h>
 
 #include "pulseaudio.h"
 
@@ -35,7 +35,7 @@ eventd_sound_start(gpointer user_data)
     EventdSoundPulseaudioContext *context;
 
     context = eventd_sound_pulseaudio_start();
-    eventd_plugins_helper_load(&plugins, "plugins" G_DIR_SEPARATOR_S "sound", context);
+    libeventd_plugins_load(&plugins, "plugins" G_DIR_SEPARATOR_S "sound", context);
 
     g_free(context);
 }
@@ -43,32 +43,32 @@ eventd_sound_start(gpointer user_data)
 static void
 eventd_sound_stop()
 {
-    eventd_plugins_helper_unload(&plugins);
+    libeventd_plugins_unload(&plugins);
     eventd_sound_pulseaudio_stop();
 }
 
 static GHashTable *
 eventd_sound_event_action(EventdEvent *event)
 {
-    return eventd_plugins_helper_event_action_all(plugins, event);
+    return libeventd_plugins_event_action_all(plugins, event);
 }
 
 static void
 eventd_sound_event_parse(const gchar *type, const gchar *event, GKeyFile *config_file)
 {
-    eventd_plugins_helper_event_parse_all(plugins, type, event, config_file);
+    libeventd_plugins_event_parse_all(plugins, type, event, config_file);
 }
 
 static void
 eventd_sound_config_init()
 {
-    eventd_plugins_helper_config_init_all(plugins);
+    libeventd_plugins_config_init_all(plugins);
 }
 
 static void
 eventd_sound_config_clean()
 {
-    eventd_plugins_helper_config_clean_all(plugins);
+    libeventd_plugins_config_clean_all(plugins);
 }
 
 void

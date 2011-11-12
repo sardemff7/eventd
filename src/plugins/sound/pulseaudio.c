@@ -25,7 +25,7 @@
 #include <glib.h>
 
 #include <eventd-plugin.h>
-#include <plugins-helper.h>
+#include <libeventd-plugins.h>
 
 #include "pulseaudio.h"
 #include "pulseaudio-internal.h"

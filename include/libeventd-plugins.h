@@ -1,5 +1,5 @@
 /*
- * libeventd-config-helper - Internal helper for config
+ * libeventd - Internal helper
  *
  * Copyright © 2011 Quentin "Sardem FF7" Glidic
  *
@@ -20,16 +20,18 @@
  *
  */
 
-#ifndef __EVENTD_CONFIG_HELPER_H__
-#define __EVENTD_CONFIG_HELPER_H__
+#ifndef __EVENTD_LIBEVENTD_PLUGINS_H__
+#define __EVENTD_LIBEVENTD_PLUGINS_H__
 
-typedef struct {
-    gint64 value;
-    gboolean set;
-} Int;
+void libeventd_plugins_load(GList **plugins, const gchar *plugins_subdir, gpointer user_data);
+void libeventd_plugins_unload(GList **plugins);
 
-gint8 eventd_config_helper_key_file_get_boolean(GKeyFile *config_file, const gchar *group, const gchar *key, gboolean *value);
-gint8 eventd_config_helper_key_file_get_string(GKeyFile *config_file, const gchar *group, const gchar *key, gchar **value);
-gint8 eventd_config_helper_key_file_get_int(GKeyFile *config_file, const gchar *group, const gchar *key, Int *value);
+void libeventd_plugins_foreach(GList *plugins, GFunc func, gpointer user_data);
 
-#endif /* __EVENTD_CONFIG_HELPER_H__ */
+void libeventd_plugins_config_init_all(GList *plugins);
+void libeventd_plugins_config_clean_all(GList *plugins);
+
+void libeventd_plugins_event_parse_all(GList *plugins, const gchar *type, const gchar *event, GKeyFile *config_file);
+GHashTable *libeventd_plugins_event_action_all(GList *plugins, EventdEvent *event);
+
+#endif /* __EVENTD_LIBEVENTD_PLUGINS_H__ */

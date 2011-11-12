@@ -24,7 +24,7 @@
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
 #include <eventd-plugin.h>
-#include <plugin-helper.h>
+#include <libeventd-regex.h>
 
 #include "notification.h"
 #include "icon.h"
@@ -92,7 +92,7 @@ eventd_notification_icon_get_pixbuf_from_file(const gchar *filename, GHashTable 
     GError *error = NULL;
     GdkPixbuf *ret = NULL;
 
-    real_filename = eventd_plugin_helper_regex_replace_event_data(filename, event_data, NULL);
+    real_filename = libeventd_regex_replace_event_data(filename, event_data, NULL);
 
     if ( ! g_path_is_absolute(filename) )
     {

@@ -1,5 +1,5 @@
 /*
- * libeventd-plugin-helper - Internal helper for plugins
+ * libeventd - Internal helper
  *
  * Copyright © 2011 Quentin "Sardem FF7" Glidic
  *
@@ -22,7 +22,7 @@
 
 #include <glib.h>
 
-#include <plugin-helper.h>
+#include <libeventd-config.h>
 
 static guint64 regex_refcount = 0;
 
@@ -30,7 +30,7 @@ static GRegex *regex_client_name = NULL;
 static GRegex *regex_event_data = NULL;
 
 void
-eventd_plugin_helper_regex_init()
+libeventd_regex_init()
 {
     GError *error = NULL;
     if ( ++regex_refcount > 1 )
@@ -48,7 +48,7 @@ eventd_plugin_helper_regex_init()
 }
 
 void
-eventd_plugin_helper_regex_clean()
+libeventd_regex_clean()
 {
     if ( --regex_refcount > 0 )
         return;
@@ -58,7 +58,7 @@ eventd_plugin_helper_regex_clean()
 }
 
 gchar *
-eventd_plugin_helper_regex_replace_client_name(const gchar *target, const gchar *client_name)
+libeventd_regex_replace_client_name(const gchar *target, const gchar *client_name)
 {
     GError *error = NULL;
     gchar *r;
@@ -76,7 +76,7 @@ eventd_plugin_helper_regex_replace_client_name(const gchar *target, const gchar 
 }
 
 static gboolean
-eventd_plugin_helper_regex_event_data_cb(const GMatchInfo *info, GString *r, gpointer event_data)
+libeventd_regex_event_data_cb(const GMatchInfo *info, GString *r, gpointer event_data)
 {
     gchar *name;
     gchar *data = NULL;
@@ -91,12 +91,12 @@ eventd_plugin_helper_regex_event_data_cb(const GMatchInfo *info, GString *r, gpo
 }
 
 gchar *
-eventd_plugin_helper_regex_replace_event_data(const gchar *target, GHashTable *event_data, GRegexEvalCallback callback)
+libeventd_regex_replace_event_data(const gchar *target, GHashTable *event_data, GRegexEvalCallback callback)
 {
     GError *error = NULL;
     gchar *r;
 
-    r = g_regex_replace_eval(regex_event_data, target, -1, 0, 0, callback ?: eventd_plugin_helper_regex_event_data_cb, (gpointer)event_data, &error);
+    r = g_regex_replace_eval(regex_event_data, target, -1, 0, 0, callback ?: libeventd_regex_event_data_cb, (gpointer)event_data, &error);
     if ( r == NULL )
     {
         r = g_strdup(target);

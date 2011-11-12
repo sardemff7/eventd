@@ -24,7 +24,7 @@
 #include <gmodule.h>
 
 #include <eventd-plugin.h>
-#include <plugins-helper.h>
+#include <libeventd-plugins.h>
 #include "plugins.h"
 
 static GList *plugins = NULL;
@@ -32,35 +32,35 @@ static GList *plugins = NULL;
 void
 eventd_plugins_load()
 {
-    eventd_plugins_helper_load(&plugins, "plugins", NULL);
+    libeventd_plugins_load(&plugins, "plugins", NULL);
 }
 
 void
 eventd_plugins_unload()
 {
-    eventd_plugins_helper_unload(&plugins);
+    libeventd_plugins_unload(&plugins);
 }
 
 void
 eventd_plugins_config_init_all()
 {
-    eventd_plugins_helper_config_init_all(plugins);
+    libeventd_plugins_config_init_all(plugins);
 }
 
 void
 eventd_plugins_config_clean_all()
 {
-    eventd_plugins_helper_config_clean_all(plugins);
+    libeventd_plugins_config_clean_all(plugins);
 }
 
 void
 eventd_plugins_event_parse_all(const gchar *type, const gchar *event, GKeyFile *config_file)
 {
-    eventd_plugins_helper_event_parse_all(plugins, type, event, config_file);
+    libeventd_plugins_event_parse_all(plugins, type, event, config_file);
 }
 
 GHashTable *
 eventd_plugins_event_action_all(EventdEvent *event)
 {
-    return eventd_plugins_helper_event_action_all(plugins, event);
+    return libeventd_plugins_event_action_all(plugins, event);
 }
