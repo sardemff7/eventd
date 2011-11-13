@@ -37,22 +37,31 @@
 #include "plugins.h"
 #include "service.h"
 
-static EventdConfig *config = NULL;
-static GMainLoop *loop = NULL;
+struct _EventdService {
+    EventdConfig *config;
+    GMainLoop *loop;
+#if ENABLE_GIO_UNIX
+    GSocketService *private_service;
+#endif /* ENABLE_GIO_UNIX */
+    GSocketService *service;
+};
 
 static gboolean
 _eventd_service_quit(gpointer user_data)
 {
-    if ( loop )
-        g_main_loop_quit(loop);
+    EventdService *service = user_data;
+    if ( service->loop != NULL )
+        g_main_loop_quit(service->loop);
 
     return FALSE;
 }
 
 #if ENABLE_GIO_UNIX
 static gboolean
-_eventd_service_private_connection_handler(GThreadedSocketService *service, GSocketConnection *connection, GObject *source_object, gpointer user_data)
+_eventd_service_private_connection_handler(GThreadedSocketService *socket_service, GSocketConnection *connection, GObject *source_object, gpointer user_data)
 {
+    EventdService *service = user_data;
+
     GError *error = NULL;
     GDataInputStream *input = NULL;
     gsize size = 0;
@@ -78,11 +87,11 @@ _eventd_service_private_connection_handler(GThreadedSocketService *service, GSoc
             g_clear_error(&error);
         else if ( g_strcmp0(line, "quit") == 0 )
         {
-            _eventd_service_quit(NULL);
+            _eventd_service_quit(service);
         }
         else if ( g_strcmp0(line, "reload") == 0 )
         {
-            config = eventd_config_parser(config);
+            service->config = eventd_config_parser(service->config);
         }
     }
 
@@ -142,7 +151,7 @@ _eventd_service_send_data(gpointer key, gpointer value, gpointer user_data)
 }
 
 static gboolean
-_eventd_service_connection_handler(GThreadedSocketService *service, GSocketConnection *connection, GObject *source_object, gpointer user_data)
+_eventd_service_connection_handler(GThreadedSocketService *socket_service, GSocketConnection *connection, GObject *source_object, gpointer user_data)
 {
     GDataInputStream *input = NULL;
     GDataOutputStream *output = NULL;
@@ -421,10 +430,9 @@ eventd_service(GList *sockets, gboolean no_plugins)
     int retval = 0;
     GError *error = NULL;
     GList *socket = NULL;
-#if ENABLE_GIO_UNIX
-    GSocketService *private_service = NULL;
-#endif /* ENABLE_GIO_UNIX */
-    GSocketService *service = NULL;
+    EventdService *service;
+
+    service = g_new0(EventdService, 1);
 
 #ifdef G_OS_UNIX
     g_unix_signal_add(SIGTERM, _eventd_service_quit, service);
@@ -432,48 +440,48 @@ eventd_service(GList *sockets, gboolean no_plugins)
 #endif /* G_OS_UNIX */
 
 #if ENABLE_GIO_UNIX
-    private_service = g_threaded_socket_service_new(-1);
+    service->private_service = g_threaded_socket_service_new(-1);
 
     socket = g_list_last(sockets);
     sockets = g_list_remove_link(sockets, socket);
-    if ( ! g_socket_listener_add_socket((GSocketListener *)private_service, socket->data, NULL, &error) )
+    if ( ! g_socket_listener_add_socket((GSocketListener *)service->private_service, socket->data, NULL, &error) )
         g_warning("Unable to add private socket: %s", error->message);
     g_clear_error(&error);
     g_list_free_full(socket, g_object_unref);
 
-    g_signal_connect(private_service, "run", G_CALLBACK(_eventd_service_private_connection_handler), NULL);
+    g_signal_connect(service->private_service, "run", G_CALLBACK(_eventd_service_private_connection_handler), service);
 #endif /* ENABLE_GIO_UNIX */
 
     if ( ! no_plugins )
         eventd_plugins_load();
 
-    config = eventd_config_parser(config);
+    service->config = eventd_config_parser(service->config);
 
-    service = g_threaded_socket_service_new(eventd_config_get_max_clients(config));
+    service->service = g_threaded_socket_service_new(eventd_config_get_max_clients(service->config));
 
     for ( socket = g_list_first(sockets) ; socket ; socket = g_list_next(socket) )
     {
-        if ( ! g_socket_listener_add_socket((GSocketListener *)service, socket->data, NULL, &error) )
+        if ( ! g_socket_listener_add_socket((GSocketListener *)service->service, socket->data, NULL, &error) )
             g_warning("Unable to add socket: %s", error->message);
         g_clear_error(&error);
     }
 
-    g_signal_connect(service, "run", G_CALLBACK(_eventd_service_connection_handler), NULL);
+    g_signal_connect(service->service, "run", G_CALLBACK(_eventd_service_connection_handler), service);
 
-    loop = g_main_loop_new(NULL, FALSE);
-    g_main_loop_run(loop);
-    g_main_loop_unref(loop);
+    service->loop = g_main_loop_new(NULL, FALSE);
+    g_main_loop_run(service->loop);
+    g_main_loop_unref(service->loop);
 
-    loop = NULL;
+    service->loop = NULL;
 
-    g_socket_service_stop(service);
-    g_socket_listener_close((GSocketListener *)service);
+    g_socket_service_stop(service->service);
+    g_socket_listener_close((GSocketListener *)service->service);
 
-    eventd_config_clean(config);
+    eventd_config_clean(service->config);
 
 #if ENABLE_GIO_UNIX
-    g_socket_service_stop(private_service);
-    g_socket_listener_close((GSocketListener *)private_service);
+    g_socket_service_stop(service->private_service);
+    g_socket_listener_close((GSocketListener *)service->private_service);
 #endif /* ENABLE_GIO_UNIX */
 
     eventd_plugins_unload();

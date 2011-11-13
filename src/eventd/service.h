@@ -23,6 +23,8 @@
 #ifndef __EVENTD_SERVICE_H__
 #define __EVENTD_SERVICE_H__
 
+typedef struct _EventdService EventdService;
+
 GSocket *eventd_get_inet_socket(guint16 port);
 #if ENABLE_GIO_UNIX
 GSocket *eventd_get_unix_socket(gchar *path, gboolean take_over_socket);
