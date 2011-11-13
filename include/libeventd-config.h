@@ -23,6 +23,10 @@
 #ifndef __LIBEVENTD_CONFIG_H__
 #define __LIBEVENTD_CONFIG_H__
 
+GHashTable *libeventd_config_events_new(GDestroyNotify value_destroy_func);
+gchar *libeventd_config_events_get_name(const gchar *client_type, const gchar *event_type);
+gpointer libeventd_config_events_get_event(GHashTable *events, const gchar *client_type, const gchar *event_type);
+
 typedef struct {
     gint64 value;
     gboolean set;

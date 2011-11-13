@@ -145,10 +145,7 @@ _eventd_notification_event_parse(const gchar *client_type, const gchar *event_ty
     if ( libeventd_config_key_file_get_int(config_file, "notification", "timeout", &timeout) < 0 )
         goto skip;
 
-    if ( event_type != NULL )
-        name = g_strconcat(client_type, "-", event_type, NULL);
-    else
-        name = g_strdup(client_type);
+    name = libeventd_config_events_get_name(client_type, event_type);
 
     event = g_hash_table_lookup(events, name);
     if ( event != NULL )
@@ -220,18 +217,12 @@ _eventd_notification_notification_free(EventdNotificationNotification *notificat
 static GHashTable *
 _eventd_notification_event_action(EventdClient *client, EventdEvent *event)
 {
-    const gchar *client_type;
-    gchar *name;
     EventdNotificationEvent *notification_event;
     EventdNotificationNotification *notification;
     GHashTable *ret = NULL;
 
-    client_type = libeventd_client_get_type(client);
-
-    name = g_strconcat(client_type, "-", libeventd_event_get_type(event), NULL);
-    notification_event = g_hash_table_lookup(events, name);
-    g_free(name);
-    if ( ( notification_event == NULL ) && ( ( notification_event = g_hash_table_lookup(events, client_type) ) == NULL ) )
+    notification_event = libeventd_config_events_get_event(events, libeventd_client_get_type(client), libeventd_event_get_type(event));
+    if ( notification_event == NULL )
         return NULL;
 
     if ( notification_event->disable )
@@ -258,7 +249,7 @@ _eventd_notification_event_action(EventdClient *client, EventdEvent *event)
 static void
 _eventd_notification_config_init()
 {
-    events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_notification_event_free);
+    events = libeventd_config_events_new(_eventd_notification_event_free);
 }
 
 static void

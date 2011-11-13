@@ -192,13 +192,9 @@ _eventd_sound_espeak_event_parse(const gchar *client_type, const gchar *event_ty
     if ( libeventd_config_key_file_get_string(config_file, "espeak", "message", &message) < 0 )
         return;
 
+    name = libeventd_config_events_get_name(client_type, event_type);
     if ( event_type != NULL )
-    {
         parent = g_hash_table_lookup(events, client_type);
-        name = g_strconcat(client_type, "-", event_type, NULL);
-    }
-    else
-        name = g_strdup(client_type);
 
     if ( ! message )
         message = g_strdup(parent ?: "$event-data[text]");
@@ -251,22 +247,17 @@ static GHashTable *
 _eventd_sound_espeak_event_action(EventdClient *client, EventdEvent *event)
 {
     GHashTable *ret = NULL;
-    const gchar *client_type;
     EventdClientMode client_mode;
-    gchar *name;
     gchar *message;
     gchar *msg;
     espeak_ERROR error;
     EventdSoundEspeakCallbackData *data;
     EventdSoundEspeakSoundData *sound_data;
 
-    client_type = libeventd_client_get_type(client);
     client_mode = libeventd_client_get_mode(client);
 
-    name = g_strconcat(client_type, "-", libeventd_event_get_type(event), NULL);
-    message = g_hash_table_lookup(events, name);
-    g_free(name);
-    if ( ( message == NULL ) && ( ( message = g_hash_table_lookup(events, client_type) ) == NULL ) )
+    message = libeventd_config_events_get_event(events, libeventd_client_get_type(client), libeventd_event_get_type(event));
+    if ( message == NULL )
         return NULL;
 
     msg = libeventd_regex_replace_event_data(message, libeventd_event_get_data(event), _eventd_sound_espeak_regex_event_data_cb);

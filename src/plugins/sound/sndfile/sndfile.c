@@ -201,17 +201,11 @@ _eventd_sound_sndfile_remove_sample(const char *name)
 static GHashTable *
 _eventd_sound_sndfile_event_action(EventdClient *client, EventdEvent *event)
 {
-    const gchar *client_type;
-    gchar *name;
     EventdSoundSndfileEvent *sndfile_event = NULL;
     pa_operation *op;
 
-    client_type = libeventd_client_get_type(client);
-
-    name = g_strconcat(client_type, "-", libeventd_event_get_type(event), NULL);
-    sndfile_event = g_hash_table_lookup(events, name);
-    g_free(name);
-    if ( ( sndfile_event == NULL ) && ( ( sndfile_event = g_hash_table_lookup(events, client_type) ) == NULL ) )
+    sndfile_event = libeventd_config_events_get_event(events, libeventd_client_get_type(client), libeventd_event_get_type(event));
+    if ( sndfile_event == NULL )
         return NULL;
 
     if ( sndfile_event->disable )
@@ -222,7 +216,7 @@ _eventd_sound_sndfile_event_action(EventdClient *client, EventdEvent *event)
     if ( op )
         pa_operation_unref(op);
     else
-        g_warning("Can't play sample %s", name);
+        g_warning("Can't play sample %s", sndfile_event->sample);
     pa_threaded_mainloop_unlock(pa_loop);
 
     return NULL;
@@ -300,7 +294,6 @@ _eventd_sound_sndfile_event_parse(const gchar *client_type, const gchar *event_t
     gchar *filename = NULL;
 
     EventdSoundSndfileEvent *event = NULL;
-    EventdSoundSndfileEvent *parent = NULL;
     gchar *name;
 
     if ( ! g_key_file_has_group(config_file, "sound") )
@@ -313,14 +306,7 @@ _eventd_sound_sndfile_event_parse(const gchar *client_type, const gchar *event_t
     if ( libeventd_config_key_file_get_string(config_file, "sound", "file", &filename) < 0 )
         goto skip;
 
-
-    if ( event_type != NULL )
-    {
-        parent = g_hash_table_lookup(events, client_type);
-        name = g_strconcat(client_type, "-", event_type, NULL);
-    }
-    else
-        name = g_strdup(client_type);
+    name = libeventd_config_events_get_name(client_type, event_type);
 
     event = g_hash_table_lookup(events, name);
     if ( event != NULL )
@@ -334,7 +320,7 @@ _eventd_sound_sndfile_event_parse(const gchar *client_type, const gchar *event_t
     }
     else
     {
-        event = _eventd_sound_sndfile_event_new(disable, name, sample, filename, parent);
+        event = _eventd_sound_sndfile_event_new(disable, name, sample, filename, g_hash_table_lookup(events, client_type));
         if ( event != NULL )
             g_hash_table_insert(events, name, event);
         else
