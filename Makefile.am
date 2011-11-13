@@ -13,6 +13,7 @@ pkginclude_HEADERS =
 CLEANFILES =
 
 AM_CFLAGS += \
+	-D LOCALEDIR=\"$(localedir)\" \
 	--include config.h \
 	-I $(top_srcdir)/include/ \
 	-I $(top_builddir)/include/

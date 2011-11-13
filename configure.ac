@@ -15,9 +15,11 @@ AM_PROG_CC_C_O
 AC_DISABLE_STATIC
 LT_INIT
 
-AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE], ["$PACKAGE_NAME"], [Gettext Package])
-AC_DEFINE_UNQUOTED([LOCALEDIR], ["$localedir"], [Locale directory])
-IT_PROG_INTLTOOL([0.40.0])
+GETTEXT_PACKAGE=$PACKAGE_NAME
+AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE], ["$GETTEXT_PACKAGE"], [Gettext Package])
+AC_SUBST(GETTEXT_PACKAGE)
+dnl Not yet useful
+dnl IT_PROG_INTLTOOL([0.40.0])
 
 AC_PROG_INSTALL
 
@@ -173,7 +175,6 @@ AC_SUBST(AM_VALAFLAGS)
 AC_CONFIG_FILES([
     data/libeventc.pc
     Makefile
-    po/Makefile.in
     vapi/libeventc.deps
 ])
 AC_OUTPUT
