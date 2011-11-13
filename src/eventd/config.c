@@ -35,7 +35,64 @@
 
 struct _EventdConfig {
     gint64 max_clients;
+    GHashTable *events;
 };
+
+struct _EventdConfigEvent {
+    gboolean disable;
+    gint64 timeout;
+};
+
+static void
+_eventd_config_event_update(EventdConfigEvent *event, gboolean disable, Int *timeout)
+{
+    event->disable = disable;
+    if ( timeout->set )
+        event->timeout = timeout->value;
+}
+
+static EventdConfigEvent *
+_eventd_config_event_new(gboolean disable, Int *timeout, EventdConfigEvent *parent)
+{
+    EventdConfigEvent *event;
+
+    timeout->value = timeout->set ? timeout->value : parent ? parent->timeout : -1;
+    timeout->set = TRUE;
+
+    event = g_new0(EventdConfigEvent, 1);
+
+    _eventd_config_event_update(event, disable, timeout);
+
+    return event;
+}
+
+static void
+_eventd_config_event_free(gpointer data)
+{
+    EventdConfigEvent *event = data;
+
+    g_free(event);
+}
+
+void
+eventd_config_event_get_disable_and_timeout(EventdConfig *config, EventdClient *client, EventdEvent *event, gboolean *disable, gint64 *timeout)
+{
+    EventdConfigEvent *config_event;
+
+    config_event = libeventd_config_events_get_event(config->events, libeventd_client_get_type(client), libeventd_event_get_type(event));
+
+    if ( config_event == NULL )
+    {
+        *disable = FALSE;
+        *timeout = -1;
+    }
+    else
+    {
+        *disable = config_event->disable;
+        *timeout = config_event->timeout;
+    }
+}
+
 
 static void
 _eventd_config_defaults(EventdConfig *config)
@@ -58,7 +115,36 @@ _eventd_config_parse_server(EventdConfig *config, GKeyFile *config_file)
 }
 
 static void
-_eventd_config_parse_client(const gchar *type, gchar *config_dir_name)
+_eventd_config_parse_client(EventdConfig *config, const gchar *client_type, const gchar *event_type, GKeyFile *config_file)
+{
+    EventdConfigEvent *event;
+    gchar *name;
+    gboolean disable;
+    Int timeout;
+
+    if ( ! g_key_file_has_group(config_file, "event") )
+        return;
+
+    if ( libeventd_config_key_file_get_boolean(config_file, "event", "disable", &disable) < 0 )
+        goto skip;
+
+    if ( libeventd_config_key_file_get_int(config_file, "event", "timeout", &timeout) < 0 )
+        goto skip;
+
+    name = libeventd_config_events_get_name(client_type, event_type);
+
+    event = g_hash_table_lookup(config->events, name);
+    if ( event != NULL )
+        _eventd_config_event_update(event, disable, &timeout);
+    else
+        g_hash_table_insert(config->events, name, _eventd_config_event_new(disable, &timeout, g_hash_table_lookup(config->events, client_type)));
+
+skip:
+    {}
+}
+
+static void
+_eventd_config_parse_client_dir(EventdConfig *config, const gchar *type, gchar *config_dir_name)
 {
     GError *error = NULL;
     GDir *config_dir = NULL;
@@ -92,6 +178,7 @@ _eventd_config_parse_client(const gchar *type, gchar *config_dir_name)
         if ( ! g_key_file_load_from_file(config_file, config_file_name, G_KEY_FILE_NONE, &error) )
             goto next;
 
+        _eventd_config_parse_client(config, type, event, config_file);
         eventd_plugins_event_parse_all(type, event, config_file);
 
     next:
@@ -178,7 +265,7 @@ _eventd_config_load_dir(EventdConfig *config, const gchar *base_dir)
         config_file_name = g_build_filename(config_dir_name, file, NULL);
 
         if ( g_file_test(config_file_name, G_FILE_TEST_IS_DIR) )
-            _eventd_config_parse_client(file, config_file_name);
+            _eventd_config_parse_client_dir(config, file, config_file_name);
 
         g_free(config_file_name);
     }
@@ -201,6 +288,8 @@ eventd_config_parser(EventdConfig *config)
     }
 
     config = g_new0(EventdConfig, 1);
+
+    config->events = libeventd_config_events_new(_eventd_config_event_free);
 
     _eventd_config_defaults(config);
 

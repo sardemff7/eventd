@@ -153,6 +153,8 @@ _eventd_service_send_data(gpointer key, gpointer value, gpointer user_data)
 static gboolean
 _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSocketConnection *connection, GObject *source_object, gpointer user_data)
 {
+    EventdService *service = user_data;
+
     GDataInputStream *input = NULL;
     GDataOutputStream *output = NULL;
     GError *error = NULL;
@@ -192,26 +194,34 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
                 }
                 else
                 {
-                    GHashTable *ret = NULL;
+                    gboolean disable;
+                    gint64 timeout;
 
-                    last_action = g_get_monotonic_time();
+                    eventd_config_event_get_disable_and_timeout(service->config, client, event, &disable, &timeout);
 
-                    ret = eventd_plugins_event_action_all(client, event);
-                    switch ( libeventd_client_get_mode(client) )
+                    if ( ! disable )
                     {
-                    case EVENTD_CLIENT_MODE_PING_PONG:
-                        if ( ! g_data_output_stream_put_string(output, "EVENT\n", NULL, &error) )
-                            break;
+                        GHashTable *ret = NULL;
+
+                        last_action = g_get_monotonic_time();
+
+                        ret = eventd_plugins_event_action_all(client, event);
+                        switch ( libeventd_client_get_mode(client) )
+                        {
+                        case EVENTD_CLIENT_MODE_PING_PONG:
+                            if ( ! g_data_output_stream_put_string(output, "EVENT\n", NULL, &error) )
+                                break;
+                            if ( ret != NULL )
+                                g_hash_table_foreach(ret, _eventd_service_send_data, output);
+                            if ( ! g_data_output_stream_put_string(output, ".\n", NULL, &error) )
+                                break;
+                        case EVENTD_CLIENT_MODE_NORMAL:
+                        default:
+                        break;
+                        }
                         if ( ret != NULL )
-                            g_hash_table_foreach(ret, _eventd_service_send_data, output);
-                        if ( ! g_data_output_stream_put_string(output, ".\n", NULL, &error) )
-                            break;
-                    case EVENTD_CLIENT_MODE_NORMAL:
-                    default:
-                    break;
+                            g_hash_table_unref(ret);
                     }
-                    if ( ret != NULL )
-                        g_hash_table_unref(ret);
 
                     libeventd_event_unref(event); // TODO: Add some timeout
                     event = NULL;

@@ -24,10 +24,13 @@
 #define __EVENTD_EVENTS_H__
 
 typedef struct _EventdConfig EventdConfig;
+typedef struct _EventdConfigEvent EventdConfigEvent;
 
 EventdConfig *eventd_config_parser(EventdConfig *config);
 void eventd_config_clean(EventdConfig *config);
 
 gint64 eventd_config_get_max_clients(EventdConfig *config);
+
+void eventd_config_event_get_disable_and_timeout(EventdConfig *config, EventdClient *client, EventdEvent *event, gboolean *disable, gint64 *timeout);
 
 #endif /* __EVENTD_EVENTS_H__ */
