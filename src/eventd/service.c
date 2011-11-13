@@ -101,7 +101,6 @@ _eventd_service_private_connection_handler(GThreadedSocketService *service, GSoc
 #endif /* ENABLE_GIO_UNIX */
 
 
-#define DEFAULT_DELAY 5
 #define DEFAULT_MAX_CLIENTS 5
 
 static void
@@ -163,12 +162,10 @@ _eventd_service_connection_handler(GThreadedSocketService *service, GSocketConne
     gsize size = 0;
     gchar *line = NULL;
 
-    gint64 delay = 0;
     gint64 last_action = 0;
 
     input = g_data_input_stream_new(g_io_stream_get_input_stream((GIOStream *)connection));
     output = g_data_output_stream_new(g_io_stream_get_output_stream((GIOStream *)connection));
-    delay = eventd_config_get_guint64("delay", DEFAULT_DELAY) * 1e6;
 
     while ( ( line = g_data_input_stream_read_upto(input, "\n", -1, &size, NULL, &error) ) != NULL )
     {
@@ -191,31 +188,27 @@ _eventd_service_connection_handler(GThreadedSocketService *service, GSocketConne
                 }
                 else
                 {
-                    gint64 event_time = 0;
+                    GHashTable *ret = NULL;
 
-                    event_time = g_get_monotonic_time();
-                    if ( event_time > ( last_action + delay ) )
+                    last_action = g_get_monotonic_time();
+
+                    ret = eventd_plugins_event_action_all(client, event);
+                    switch ( libeventd_client_get_mode(client) )
                     {
-                        GHashTable *ret = NULL;
-
-                        last_action = event_time;
-                        ret = eventd_plugins_event_action_all(client, event);
-                        switch ( libeventd_client_get_mode(client) )
-                        {
-                        case EVENTD_CLIENT_MODE_PING_PONG:
-                            if ( ! g_data_output_stream_put_string(output, "EVENT\n", NULL, &error) )
-                                break;
-                            if ( ret != NULL )
-                                g_hash_table_foreach(ret, _eventd_service_send_data, output);
-                            if ( ! g_data_output_stream_put_string(output, ".\n", NULL, &error) )
-                                break;
-                        case EVENTD_CLIENT_MODE_NORMAL:
-                        default:
-                        break;
-                        }
+                    case EVENTD_CLIENT_MODE_PING_PONG:
+                        if ( ! g_data_output_stream_put_string(output, "EVENT\n", NULL, &error) )
+                            break;
                         if ( ret != NULL )
-                            g_hash_table_unref(ret);
+                            g_hash_table_foreach(ret, _eventd_service_send_data, output);
+                        if ( ! g_data_output_stream_put_string(output, ".\n", NULL, &error) )
+                            break;
+                    case EVENTD_CLIENT_MODE_NORMAL:
+                    default:
+                    break;
                     }
+                    if ( ret != NULL )
+                        g_hash_table_unref(ret);
+
                     libeventd_event_unref(event); // TODO: Add some timeout
                     event = NULL;
                 }
