@@ -20,7 +20,7 @@
  *
  */
 
-namespace Eventd
+namespace Eventc
 {
     public errordomain EventcError
     {
@@ -37,7 +37,7 @@ namespace Eventd
         CLOSE
     }
 
-    public class Eventc : GLib.Object
+    public class Connection : GLib.Object
     {
         public enum Mode {
             UNKNOWN = -1,
@@ -108,7 +108,7 @@ namespace Eventd
         private bool hello_received;
 
         public
-        Eventc(string host, uint16 port, string type, string? name)
+        Connection(string host, uint16 port, string type, string? name)
         {
             this._host = host;
             this._port = port;
@@ -128,7 +128,7 @@ namespace Eventd
             #if ENABLE_GIO_UNIX
             string path = null;
             if ( this._host == "localhost" )
-                path = GLib.Path.build_filename(GLib.Environment.get_user_runtime_dir(), Config.PACKAGE_NAME, Config.UNIX_SOCKET);
+                path = GLib.Path.build_filename(GLib.Environment.get_user_runtime_dir(), Eventd.Config.PACKAGE_NAME, Eventd.Config.UNIX_SOCKET);
             else if ( this.host_is_socket )
                 path = this._host;
             if ( ( path != null ) && GLib.FileUtils.test(path, GLib.FileTest.EXISTS) && ( ! GLib.FileUtils.test(path, GLib.FileTest.IS_DIR|GLib.FileTest.IS_REGULAR) ) )
@@ -136,7 +136,7 @@ namespace Eventd
             #endif
             if ( this.address == null )
             {
-                this.address = new GLib.NetworkAddress(this._host, ( this._port > 0 ) ? ( this._port ) : ( Config.DEFAULT_BIND_PORT ));
+                this.address = new GLib.NetworkAddress(this._host, ( this._port > 0 ) ? ( this._port ) : ( Eventd.Config.DEFAULT_BIND_PORT ));
                 if ( address == null )
                     throw new EventcError.HOSTNAME("Couldn’t resolve the hostname");
             }

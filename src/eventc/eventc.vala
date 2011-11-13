@@ -20,7 +20,7 @@
  *
  */
 
-namespace Eventd
+namespace Eventc
 {
     static string type;
     static string mode;
@@ -56,7 +56,7 @@ namespace Eventd
     {
         var opt_context = new GLib.OptionContext("<client type> [<client name>] - Basic CLI client for eventd");
 
-        opt_context.add_main_entries(entries, Config.GETTEXT_PACKAGE);
+        opt_context.add_main_entries(entries, Eventd.Config.GETTEXT_PACKAGE);
 
         try
         {
@@ -86,7 +86,7 @@ namespace Eventd
         if ( host == null )
             host = "localhost";
 
-        var client = new Eventc(host, port, type, name);
+        var client = new Connection(host, port, type, name);
         client.timeout = timeout;
         #if ENABLE_GIO_UNIX
         if ( unix_socket != null )
@@ -96,11 +96,11 @@ namespace Eventd
         switch ( mode )
         {
         case "ping-pong":
-            client.mode = Eventc.Mode.PING_PONG;
+            client.mode = Connection.Mode.PING_PONG;
         break;
         case "normal":
         default:
-            client.mode = Eventc.Mode.NORMAL;
+            client.mode = Connection.Mode.NORMAL;
         break;
         }
 
