@@ -33,7 +33,7 @@ gio_min_version="$glib_min_version"
 # Server dependencies
 gmodule_min_version="$glib_min_version"
 libpulse_min_version="0.9.15"
-libnotify_min_version="0.6.5"
+libnotify_min_version="0.5.0"
 gtk_min_version="3.0"
 
 # Client dependencies
