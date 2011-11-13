@@ -20,13 +20,10 @@
  *
  */
 
-#include <stdlib.h>
-#include <string.h>
-#include <sys/file.h>
-#include <signal.h>
-#include <errno.h>
-
 #include <glib.h>
+#ifdef G_OS_UNIX
+#include <glib-unix.h>
+#endif /* G_OS_UNIX */
 #include <gio/gio.h>
 #if ENABLE_GIO_UNIX
 #include <gio/gunixsocketaddress.h>
@@ -43,13 +40,13 @@
 static EventdConfig *config = NULL;
 static GMainLoop *loop = NULL;
 
-static void
-_eventd_service_quit(int sig)
+static gboolean
+_eventd_service_quit(gpointer user_data)
 {
     if ( loop )
         g_main_loop_quit(loop);
-    else
-        exit(1);
+
+    return FALSE;
 }
 
 #if ENABLE_GIO_UNIX
@@ -81,7 +78,7 @@ _eventd_service_private_connection_handler(GThreadedSocketService *service, GSoc
             g_clear_error(&error);
         else if ( g_strcmp0(line, "quit") == 0 )
         {
-            _eventd_service_quit(0);
+            _eventd_service_quit(NULL);
         }
         else if ( g_strcmp0(line, "reload") == 0 )
         {
@@ -429,8 +426,10 @@ eventd_service(GList *sockets, gboolean no_plugins)
 #endif /* ENABLE_GIO_UNIX */
     GSocketService *service = NULL;
 
-    signal(SIGTERM, _eventd_service_quit);
-    signal(SIGINT, _eventd_service_quit);
+#ifdef G_OS_UNIX
+    g_unix_signal_add(SIGTERM, _eventd_service_quit, service);
+    g_unix_signal_add(SIGINT, _eventd_service_quit, service);
+#endif /* G_OS_UNIX */
 
 #if ENABLE_GIO_UNIX
     private_service = g_threaded_socket_service_new(-1);
