@@ -105,11 +105,15 @@ _eventd_service_private_connection_handler(GThreadedSocketService *service, GSoc
 #define DEFAULT_MAX_CLIENTS 5
 
 static void
-_eventd_service_send_data(const gchar *name, const gchar *content, GDataOutputStream *output)
+_eventd_service_send_data(gpointer key, gpointer value, gpointer user_data)
 {
-        #if DEBUG
-        g_debug("Send back data: %s", name);
-        #endif /* DEBUG */
+    const gchar *name = key;
+    const gchar *content = value;
+    GDataOutputStream *output = user_data;
+
+    #if DEBUG
+    g_debug("Send back data: %s", name);
+    #endif /* DEBUG */
 
     if ( g_utf8_strchr(content, -1, '\n') == NULL )
     {
@@ -202,7 +206,7 @@ _eventd_service_connection_handler(GThreadedSocketService *service, GSocketConne
                             if ( ! g_data_output_stream_put_string(output, "EVENT\n", NULL, &error) )
                                 break;
                             if ( ret != NULL )
-                                g_hash_table_foreach(ret, (GHFunc)_eventd_service_send_data, output);
+                                g_hash_table_foreach(ret, _eventd_service_send_data, output);
                             if ( ! g_data_output_stream_put_string(output, ".\n", NULL, &error) )
                                 break;
                         case EVENTD_CLIENT_MODE_NORMAL:
@@ -447,7 +451,7 @@ eventd_service(GList *sockets, gboolean no_plugins)
     g_clear_error(&error);
     g_list_free_full(socket, g_object_unref);
 
-    g_signal_connect(G_OBJECT(private_service), "run", G_CALLBACK(_eventd_service_private_connection_handler), NULL);
+    g_signal_connect(private_service, "run", G_CALLBACK(_eventd_service_private_connection_handler), NULL);
 #endif /* ENABLE_GIO_UNIX */
 
     if ( ! no_plugins )
@@ -464,7 +468,7 @@ eventd_service(GList *sockets, gboolean no_plugins)
         g_clear_error(&error);
     }
 
-    g_signal_connect(G_OBJECT(service), "run", G_CALLBACK(_eventd_service_connection_handler), NULL);
+    g_signal_connect(service, "run", G_CALLBACK(_eventd_service_connection_handler), NULL);
 
     loop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(loop);

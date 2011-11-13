@@ -33,7 +33,7 @@ _libeventd_plugins_load_dir(GList **plugins, const gchar *plugins_dir_name, gpoi
 {
     GError *error;
     GDir *plugins_dir;
-    gchar *file;
+    const gchar *file;
 
     if ( ! g_module_supported() )
     {
@@ -53,7 +53,7 @@ _libeventd_plugins_load_dir(GList **plugins, const gchar *plugins_dir_name, gpoi
         return;
     }
 
-    while ( ( file = (gchar *)g_dir_read_name(plugins_dir) ) != NULL )
+    while ( ( file = g_dir_read_name(plugins_dir) ) != NULL )
     {
         gchar *full_filename;
         EventdPlugin *plugin;
@@ -135,8 +135,10 @@ libeventd_plugins_load(GList **plugins, const gchar *plugins_subdir, gpointer us
 }
 
 static void
-_libeventd_plugins_plugin_free(EventdPlugin *plugin)
+_libeventd_plugins_plugin_free(gpointer data)
 {
+    EventdPlugin *plugin = data;
+
     if ( plugin->stop != NULL )
         plugin->stop();
     g_module_close(plugin->module);
@@ -149,7 +151,7 @@ libeventd_plugins_unload(GList **plugins)
 {
     if ( ( plugins == NULL ) || ( *plugins == NULL ) )
         return;
-    g_list_free_full(*plugins, (GDestroyNotify)_libeventd_plugins_plugin_free);
+    g_list_free_full(*plugins, _libeventd_plugins_plugin_free);
     *plugins = NULL;
 }
 
@@ -162,9 +164,11 @@ libeventd_plugins_foreach(GList *plugins, GFunc func, gpointer user_data)
 }
 
 
-void
-libeventd_plugins_config_init(EventdPlugin *plugin, gpointer data)
+static void
+_libeventd_plugins_config_init(gpointer data, gpointer user_data)
 {
+    EventdPlugin *plugin = data;
+
     if ( plugin->config_init != NULL )
         plugin->config_init();
 }
@@ -172,12 +176,14 @@ libeventd_plugins_config_init(EventdPlugin *plugin, gpointer data)
 void
 libeventd_plugins_config_init_all(GList *plugins)
 {
-    libeventd_plugins_foreach(plugins, (GFunc)libeventd_plugins_config_init, NULL);
+    libeventd_plugins_foreach(plugins, _libeventd_plugins_config_init, NULL);
 }
 
 static void
-_libeventd_plugins_config_clean(EventdPlugin *plugin, gpointer data)
+_libeventd_plugins_config_clean(gpointer data, gpointer user_data)
 {
+    EventdPlugin *plugin = data;
+
     if ( plugin->config_clean != NULL )
         plugin->config_clean();
 }
@@ -185,7 +191,7 @@ _libeventd_plugins_config_clean(EventdPlugin *plugin, gpointer data)
 void
 libeventd_plugins_config_clean_all(GList *plugins)
 {
-    libeventd_plugins_foreach(plugins, (GFunc)_libeventd_plugins_config_clean, NULL);
+    libeventd_plugins_foreach(plugins, _libeventd_plugins_config_clean, NULL);
 }
 
 typedef struct {
@@ -195,10 +201,12 @@ typedef struct {
 } EventdEventParseData;
 
 static void
-_libeventd_plugins_event_parse(EventdPlugin *plugin, EventdEventParseData *data)
+_libeventd_plugins_event_parse(gpointer data, gpointer user_data)
 {
+    EventdPlugin *plugin = data;
+    EventdEventParseData *parse_data = user_data;
     if ( plugin->event_parse != NULL )
-        plugin->event_parse(data->type, data->event, data->config_file);
+        plugin->event_parse(parse_data->type, parse_data->event, parse_data->config_file);
 }
 
 void libeventd_plugins_event_parse_all(GList *plugins, const gchar *type, const gchar *event, GKeyFile *config_file)
@@ -208,7 +216,7 @@ void libeventd_plugins_event_parse_all(GList *plugins, const gchar *type, const 
         .event = event,
         .config_file = config_file,
     };
-    libeventd_plugins_foreach(plugins, (GFunc)_libeventd_plugins_event_parse, &data);
+    libeventd_plugins_foreach(plugins, _libeventd_plugins_event_parse, &data);
 }
 
 typedef struct {
@@ -217,14 +225,17 @@ typedef struct {
 } EventdEventActionReturnData;
 
 static gboolean
-_libeventd_plugins_event_action_return(gchar *name, gchar *content, EventdEventActionReturnData *data)
+_libeventd_plugins_event_action_return(gpointer key, gpointer value, gpointer user_data)
 {
+    gchar *name = key;
+    gchar *content = value;
+    EventdEventActionReturnData *return_data = user_data;
     gchar *full_name;
 
-    full_name = g_strconcat(data->prefix, "-", name, NULL);
+    full_name = g_strconcat(return_data->prefix, "-", name, NULL);
     g_free(name);
 
-    g_hash_table_insert(data->ret, full_name, content);
+    g_hash_table_insert(return_data->ret, full_name, content);
 
     return TRUE;
 }
@@ -236,21 +247,23 @@ typedef struct {
 } EventdEventActionData;
 
 static void
-libeventd_plugins_event_action(EventdPlugin *plugin, EventdEventActionData *data)
+libeventd_plugins_event_action(gpointer data, gpointer user_data)
 {
+    EventdPlugin *plugin = data;
+    EventdEventActionData *action_data = user_data;
     GHashTable *ret;
 
     if ( plugin->event_action == NULL )
         return;
 
-    ret = plugin->event_action(data->client, data->event);
+    ret = plugin->event_action(action_data->client, action_data->event);
     if ( ret != NULL )
     {
         EventdEventActionReturnData ret_data = {
-            .ret = data->ret,
+            .ret = action_data->ret,
             .prefix = plugin->id
         };
-        g_hash_table_foreach_steal(ret, (GHRFunc)_libeventd_plugins_event_action_return, &ret_data);
+        g_hash_table_foreach_steal(ret, _libeventd_plugins_event_action_return, &ret_data);
         g_hash_table_unref(ret);
     }
 }
@@ -263,7 +276,7 @@ libeventd_plugins_event_action_all(GList *plugins, EventdClient *client, EventdE
         .event = event
     };
     data.ret = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-    libeventd_plugins_foreach(plugins, (GFunc)libeventd_plugins_event_action, &data);
+    libeventd_plugins_foreach(plugins, libeventd_plugins_event_action, &data);
 
     if ( g_hash_table_size(data.ret) < 1 )
         data.ret = (g_hash_table_unref(data.ret), NULL);

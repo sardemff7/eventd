@@ -146,8 +146,9 @@ uri_callback(int type, const char *uri, const char *base)
 }
 
 void
-_eventd_sound_espeak_start(EventdSoundPulseaudioContext *context)
+_eventd_sound_espeak_start(gpointer user_data)
 {
+    EventdSoundPulseaudioContext *context = user_data;
     gint sample_rate;
 
     sample_rate = espeak_Initialize(AUDIO_OUTPUT_RETRIEVAL, BUFFER_SIZE, NULL, 0);
@@ -224,10 +225,10 @@ _eventd_sound_espeak_regex_event_data_cb(const GMatchInfo *info, GString *r, gpo
         gchar *lang_data = NULL;
         gchar *tmp = NULL;
 
-        data = g_hash_table_lookup((GHashTable *)event_data, name);
+        data = g_hash_table_lookup(event_data, name);
 
         lang_name = g_strconcat(name, "-lang", NULL);
-        lang_data = g_hash_table_lookup((GHashTable *)event_data, lang_name);
+        lang_data = g_hash_table_lookup(event_data, lang_name);
         g_free(lang_name);
 
         if ( lang_data != NULL )
@@ -322,7 +323,7 @@ eventd_plugin_get_info(EventdPlugin *plugin)
 {
     plugin->id = "espeak";
 
-    plugin->start = (EventdPluginStartFunc)_eventd_sound_espeak_start;
+    plugin->start = _eventd_sound_espeak_start;
     plugin->stop = _eventd_sound_espeak_stop;
 
     plugin->config_init = _eventd_sound_espeak_config_init;

@@ -350,15 +350,18 @@ skip:
 }
 
 static void
-_eventd_sound_sndfile_event_free(EventdSoundSndfileEvent *event)
+_eventd_sound_sndfile_event_free(gpointer data)
 {
+    EventdSoundSndfileEvent *event = data;
+
     _eventd_sound_sndfile_event_clean(event);
     g_free(event);
 }
 
 static void
-_eventd_sound_sndfile_start(EventdSoundPulseaudioContext *context)
+_eventd_sound_sndfile_start(gpointer user_data)
 {
+    EventdSoundPulseaudioContext *context = user_data;
     pa_loop = context->pa_loop;
     sound = context->sound;
 }
@@ -366,7 +369,7 @@ _eventd_sound_sndfile_start(EventdSoundPulseaudioContext *context)
 static void
 _eventd_sound_sndfile_config_init()
 {
-    events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)_eventd_sound_sndfile_event_free);
+    events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_sound_sndfile_event_free);
 }
 
 static void
@@ -380,7 +383,7 @@ eventd_plugin_get_info(EventdPlugin *plugin)
 {
     plugin->id = "sndfile";
 
-    plugin->start = (EventdPluginStartFunc)_eventd_sound_sndfile_start;
+    plugin->start = _eventd_sound_sndfile_start;
 
     plugin->config_init = _eventd_sound_sndfile_config_init;
     plugin->config_clean = _eventd_sound_sndfile_config_clean;

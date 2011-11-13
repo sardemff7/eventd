@@ -57,11 +57,11 @@ _eventd_config_parse_server(GKeyFile *config_file)
 }
 
 static void
-_eventd_config_parse_client(gchar *type, gchar *config_dir_name)
+_eventd_config_parse_client(const gchar *type, gchar *config_dir_name)
 {
     GError *error = NULL;
     GDir *config_dir = NULL;
-    gchar *file = NULL;
+    const gchar *file = NULL;
     gchar *config_file_name = NULL;
     GKeyFile *config_file = NULL;
 
@@ -73,7 +73,7 @@ _eventd_config_parse_client(gchar *type, gchar *config_dir_name)
         return;
     }
 
-    while ( ( file = (gchar *)g_dir_read_name(config_dir) ) != NULL )
+    while ( ( file = g_dir_read_name(config_dir) ) != NULL )
     {
         gchar *event = NULL;
 
@@ -111,7 +111,7 @@ _eventd_config_load_dir(const gchar *base_dir)
     GError *error = NULL;
     gchar *config_dir_name = NULL;
     GDir *config_dir = NULL;
-    gchar *file = NULL;
+    const gchar *file = NULL;
     gchar *config_file_name = NULL;
     GKeyFile *config_file = NULL;
 
@@ -140,7 +140,7 @@ _eventd_config_load_dir(const gchar *base_dir)
     if ( ! config_dir )
         goto out;
 
-    while ( ( file = (gchar *)g_dir_read_name(config_dir) ) != NULL )
+    while ( ( file = g_dir_read_name(config_dir) ) != NULL )
     {
         if ( g_str_has_prefix(file, ".") || ( ! g_str_has_suffix(file, ".conf") ) )
             continue;
@@ -169,7 +169,7 @@ _eventd_config_load_dir(const gchar *base_dir)
     }
 
     g_dir_rewind(config_dir);
-    while ( ( file = (gchar *)g_dir_read_name(config_dir) ) != NULL )
+    while ( ( file = g_dir_read_name(config_dir) ) != NULL )
     {
         if ( g_str_has_prefix(file, ".") )
             continue;

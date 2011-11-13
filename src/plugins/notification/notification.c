@@ -103,8 +103,10 @@ _eventd_notification_event_new(gboolean disable, const char *title, const char *
 }
 
 static void
-_eventd_notification_event_free(EventdNotificationEvent *event)
+_eventd_notification_event_free(gpointer data)
 {
+    EventdNotificationEvent *event = data;
+
     g_free(event->icon);
     g_free(event->overlay_icon);
     g_free(event->message);
@@ -256,7 +258,7 @@ _eventd_notification_event_action(EventdClient *client, EventdEvent *event)
 static void
 _eventd_notification_config_init()
 {
-    events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)_eventd_notification_event_free);
+    events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_notification_event_free);
 }
 
 static void
