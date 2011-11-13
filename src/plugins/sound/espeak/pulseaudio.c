@@ -44,7 +44,7 @@ static pa_sample_spec sample_spec;
 #define BUFFER_SIZE 2000
 
 static void
-pa_stream_state_callback(pa_stream *stream, void *userdata)
+_eventd_sound_espeak_pulseaudio_stream_state_callback(pa_stream *stream, void *userdata)
 {
     pa_stream_state_t state = pa_stream_get_state(stream);
     switch  ( state )
@@ -60,7 +60,7 @@ pa_stream_state_callback(pa_stream *stream, void *userdata)
 }
 
 static void
-pa_stream_drain_callback(pa_stream *stream, int success, void *userdata)
+_eventd_sound_espeak_pulseaudio_stream_drain_callback(pa_stream *stream, int success, void *userdata)
 {
     pa_threaded_mainloop_signal(pa_loop, 0);
 }
@@ -92,7 +92,7 @@ eventd_sound_espeak_pulseaudio_play_data(gshort *wav, gint numsamples, espeak_EV
     {
         pa_operation *op;
 
-        op = pa_stream_drain(stream, pa_stream_drain_callback, NULL);
+        op = pa_stream_drain(stream, _eventd_sound_espeak_pulseaudio_stream_drain_callback, NULL);
         if ( op != NULL )
         {
             while ( pa_operation_get_state(op) == PA_OPERATION_RUNNING )
@@ -112,7 +112,7 @@ eventd_sound_espeak_pulseaudio_pa_data_new()
     pa_stream *stream;
 
     stream = pa_stream_new(sound, "eSpeak eventd message", &sample_spec, NULL);
-    pa_stream_set_state_callback(stream, pa_stream_state_callback, NULL);
+    pa_stream_set_state_callback(stream, _eventd_sound_espeak_pulseaudio_stream_state_callback, NULL);
     pa_stream_connect_playback(stream, NULL, NULL, 0, NULL, NULL);
 
     return stream;

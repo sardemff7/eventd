@@ -36,7 +36,7 @@
 static GHashTable *events = NULL;
 
 static void
-eventd_notification_start(gpointer user_data)
+_eventd_notification_start(gpointer user_data)
 {
     eventd_notification_notify_init();
 
@@ -44,7 +44,7 @@ eventd_notification_start(gpointer user_data)
 }
 
 static void
-eventd_notification_stop()
+_eventd_notification_stop()
 {
     libeventd_regex_clean();
 
@@ -52,7 +52,7 @@ eventd_notification_stop()
 }
 
 static void
-eventd_notification_event_update(EventdNotificationEvent *event, gboolean disable, const char *title, const char *message, const char *icon, const char *overlay_icon, Int *scale, Int *timeout)
+_eventd_notification_event_update(EventdNotificationEvent *event, gboolean disable, const char *title, const char *message, const char *icon, const char *overlay_icon, Int *scale, Int *timeout)
 {
     event->disable = disable;
     if ( title != NULL )
@@ -82,7 +82,7 @@ eventd_notification_event_update(EventdNotificationEvent *event, gboolean disabl
 }
 
 static EventdNotificationEvent *
-eventd_notification_event_new(gboolean disable, const char *title, const char *message, const char *icon, const char *overlay_icon, Int *scale, Int *timeout, EventdNotificationEvent *parent)
+_eventd_notification_event_new(gboolean disable, const char *title, const char *message, const char *icon, const char *overlay_icon, Int *scale, Int *timeout, EventdNotificationEvent *parent)
 {
     EventdNotificationEvent *event = NULL;
 
@@ -97,13 +97,13 @@ eventd_notification_event_new(gboolean disable, const char *title, const char *m
 
     event = g_new0(EventdNotificationEvent, 1);
 
-    eventd_notification_event_update(event, disable, title, message, icon, overlay_icon, scale, timeout);
+    _eventd_notification_event_update(event, disable, title, message, icon, overlay_icon, scale, timeout);
 
     return event;
 }
 
 static void
-eventd_notification_event_free(EventdNotificationEvent *event)
+_eventd_notification_event_free(EventdNotificationEvent *event)
 {
     g_free(event->icon);
     g_free(event->overlay_icon);
@@ -113,7 +113,7 @@ eventd_notification_event_free(EventdNotificationEvent *event)
 }
 
 static void
-eventd_notification_event_parse(const gchar *client_type, const gchar *event_type, GKeyFile *config_file)
+_eventd_notification_event_parse(const gchar *client_type, const gchar *event_type, GKeyFile *config_file)
 {
     gboolean disable;
     gchar *name = NULL;
@@ -150,9 +150,9 @@ eventd_notification_event_parse(const gchar *client_type, const gchar *event_typ
 
     event = g_hash_table_lookup(events, name);
     if ( event != NULL )
-        eventd_notification_event_update(event, disable, title, message, icon, overlay_icon, &scale, &timeout);
+        _eventd_notification_event_update(event, disable, title, message, icon, overlay_icon, &scale, &timeout);
     else
-        g_hash_table_insert(events, name, eventd_notification_event_new(disable, title, message, icon, overlay_icon, &scale, &timeout, g_hash_table_lookup(events, client_type)));
+        g_hash_table_insert(events, name, _eventd_notification_event_new(disable, title, message, icon, overlay_icon, &scale, &timeout, g_hash_table_lookup(events, client_type)));
 
 skip:
     g_free(overlay_icon);
@@ -162,7 +162,7 @@ skip:
 }
 
 static EventdNotificationNotification *
-eventd_notification_notification_new(EventdClient *client, GHashTable *data, EventdNotificationEvent *notification_event)
+_eventd_notification_notification_new(EventdClient *client, GHashTable *data, EventdNotificationEvent *notification_event)
 {
     EventdNotificationNotification *notification;
     gchar *tmp = NULL;
@@ -184,7 +184,7 @@ eventd_notification_notification_new(EventdClient *client, GHashTable *data, Eve
 
 
 static void
-eventd_notification_notification_insert_data_in_hash_table(EventdNotificationNotification *notification, GHashTable *table)
+_eventd_notification_notification_insert_data_in_hash_table(EventdNotificationNotification *notification, GHashTable *table)
 {
     g_hash_table_insert(table, g_strdup("title"), g_strdup(notification->title));
     g_hash_table_insert(table, g_strdup("message"), g_strdup(notification->message));
@@ -200,7 +200,7 @@ eventd_notification_notification_insert_data_in_hash_table(EventdNotificationNot
 }
 
 static void
-eventd_notification_notification_free(EventdNotificationNotification *notification)
+_eventd_notification_notification_free(EventdNotificationNotification *notification)
 {
     if ( notification->merged_icon != NULL )
         eventd_notification_icon_unref(notification->merged_icon);
@@ -216,7 +216,7 @@ eventd_notification_notification_free(EventdNotificationNotification *notificati
 }
 
 static GHashTable *
-eventd_notification_event_action(EventdClient *client, EventdEvent *event)
+_eventd_notification_event_action(EventdClient *client, EventdEvent *event)
 {
     const gchar *client_type;
     gchar *name;
@@ -235,32 +235,32 @@ eventd_notification_event_action(EventdClient *client, EventdEvent *event)
     if ( notification_event->disable )
         return NULL;
 
-    notification = eventd_notification_notification_new(client, libeventd_event_get_data(event), notification_event);
+    notification = _eventd_notification_notification_new(client, libeventd_event_get_data(event), notification_event);
 
     switch ( libeventd_client_get_mode(client) )
     {
     case EVENTD_CLIENT_MODE_PING_PONG:
         ret = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-        eventd_notification_notification_insert_data_in_hash_table(notification, ret);
+        _eventd_notification_notification_insert_data_in_hash_table(notification, ret);
     break;
     default:
         eventd_notification_notify_event_action(notification);
     }
 
-    eventd_notification_notification_free(notification);
+    _eventd_notification_notification_free(notification);
 
     return ret;
 }
 
 
 static void
-eventd_notification_config_init()
+_eventd_notification_config_init()
 {
-    events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)eventd_notification_event_free);
+    events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)_eventd_notification_event_free);
 }
 
 static void
-eventd_notification_config_clean()
+_eventd_notification_config_clean()
 {
     g_hash_table_unref(events);
 }
@@ -270,13 +270,13 @@ eventd_plugin_get_info(EventdPlugin *plugin)
 {
     plugin->id = "notification";
 
-    plugin->start = eventd_notification_start;
-    plugin->stop = eventd_notification_stop;
+    plugin->start = _eventd_notification_start;
+    plugin->stop = _eventd_notification_stop;
 
-    plugin->config_init = eventd_notification_config_init;
-    plugin->config_clean = eventd_notification_config_clean;
+    plugin->config_init = _eventd_notification_config_init;
+    plugin->config_clean = _eventd_notification_config_clean;
 
-    plugin->event_parse = eventd_notification_event_parse;
-    plugin->event_action = eventd_notification_event_action;
+    plugin->event_parse = _eventd_notification_event_parse;
+    plugin->event_action = _eventd_notification_event_action;
 }
 

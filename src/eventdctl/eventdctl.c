@@ -26,14 +26,6 @@
 #include <gio/gunixsocketaddress.h>
 #include <glib/gstdio.h>
 
-static gchar *private_socket = NULL;
-
-static GOptionEntry entries[] =
-{
-    { "socket", 's', 0, G_OPTION_ARG_FILENAME, &private_socket, "eventd control socket", "<socket>" },
-    { NULL }
-};
-
 static void
 _eventd_eventdctl_send_command(GDataOutputStream *output, const gchar *command)
 {
@@ -50,6 +42,14 @@ _eventd_eventdctl_send_command(GDataOutputStream *output, const gchar *command)
 int
 main(int argc, char *argv[])
 {
+    gchar *private_socket = NULL;
+
+    GOptionEntry entries[] =
+    {
+        { "socket", 's', 0, G_OPTION_ARG_FILENAME, &private_socket, "eventd control socket", "<socket>" },
+        { NULL }
+    };
+
     int retval = 0;
     GError *error = NULL;
     GOptionContext *context = NULL;

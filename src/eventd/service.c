@@ -53,11 +53,7 @@ _eventd_service_quit(int sig)
 
 #if ENABLE_GIO_UNIX
 static gboolean
-private_connection_handler(
-    GThreadedSocketService *service,
-    GSocketConnection      *connection,
-    GObject                *source_object,
-    gpointer                user_data)
+_eventd_service_private_connection_handler(GThreadedSocketService *service, GSocketConnection *connection, GObject *source_object, gpointer user_data)
 {
     GError *error = NULL;
     GDataInputStream *input = NULL;
@@ -109,7 +105,7 @@ private_connection_handler(
 #define DEFAULT_MAX_CLIENTS 5
 
 static void
-send_data(const gchar *name, const gchar *content, GDataOutputStream *output)
+_eventd_service_send_data(const gchar *name, const gchar *content, GDataOutputStream *output)
 {
         #if DEBUG
         g_debug("Send back data: %s", name);
@@ -148,11 +144,7 @@ send_data(const gchar *name, const gchar *content, GDataOutputStream *output)
 }
 
 static gboolean
-connection_handler(
-    GThreadedSocketService *service,
-    GSocketConnection      *connection,
-    GObject                *source_object,
-    gpointer                user_data)
+_eventd_service_connection_handler(GThreadedSocketService *service, GSocketConnection *connection, GObject *source_object, gpointer user_data)
 {
     GDataInputStream *input = NULL;
     GDataOutputStream *output = NULL;
@@ -210,7 +202,7 @@ connection_handler(
                             if ( ! g_data_output_stream_put_string(output, "EVENT\n", NULL, &error) )
                                 break;
                             if ( ret != NULL )
-                                g_hash_table_foreach(ret, (GHFunc)send_data, output);
+                                g_hash_table_foreach(ret, (GHFunc)_eventd_service_send_data, output);
                             if ( ! g_data_output_stream_put_string(output, ".\n", NULL, &error) )
                                 break;
                         case EVENTD_CLIENT_MODE_NORMAL:
@@ -455,7 +447,7 @@ eventd_service(GList *sockets, gboolean no_plugins)
     g_clear_error(&error);
     g_list_free_full(socket, g_object_unref);
 
-    g_signal_connect(G_OBJECT(private_service), "run", G_CALLBACK(private_connection_handler), NULL);
+    g_signal_connect(G_OBJECT(private_service), "run", G_CALLBACK(_eventd_service_private_connection_handler), NULL);
 #endif /* ENABLE_GIO_UNIX */
 
     if ( ! no_plugins )
@@ -472,7 +464,7 @@ eventd_service(GList *sockets, gboolean no_plugins)
         g_clear_error(&error);
     }
 
-    g_signal_connect(G_OBJECT(service), "run", G_CALLBACK(connection_handler), NULL);
+    g_signal_connect(G_OBJECT(service), "run", G_CALLBACK(_eventd_service_connection_handler), NULL);
 
     loop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(loop);

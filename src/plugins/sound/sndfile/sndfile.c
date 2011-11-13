@@ -48,13 +48,13 @@ static pa_context *sound = NULL;
 
 
 static void
-pa_context_success_callback(pa_context *s, int success, void *userdata)
+_eventd_sound_sndfile_context_success_callback(pa_context *s, int success, void *userdata)
 {
     pa_threaded_mainloop_signal(pa_loop, 0);
 }
 
 static void
-pa_sample_state_callback(pa_stream *sample, void *userdata)
+_eventd_sound_sndfile_sample_state_callback(pa_stream *sample, void *userdata)
 {
     pa_stream_state_t state = pa_stream_get_state(sample);
     switch  ( state )
@@ -79,7 +79,7 @@ static const pa_sample_spec sound_spec = {
 typedef sf_count_t (*sndfile_readf_t)(SNDFILE *sndfile, void *ptr, sf_count_t frames);
 
 static gboolean
-eventd_sound_sndfile_create_sample(const gchar *sample_name, const gchar *filename)
+_eventd_sound_sndfile_create_sample(const gchar *sample_name, const gchar *filename)
 {
     int retval = 0;
 
@@ -150,7 +150,7 @@ eventd_sound_sndfile_create_sample(const gchar *sample_name, const gchar *filena
 
     size_t sample_length = (size_t) sfi.frames *pa_frame_size(&sample_spec);
     pa_stream *sample = pa_stream_new(sound, sample_name, &sample_spec, NULL);
-    pa_stream_set_state_callback(sample, pa_sample_state_callback, NULL);
+    pa_stream_set_state_callback(sample, _eventd_sound_sndfile_sample_state_callback, NULL);
     pa_stream_connect_upload(sample, sample_length);
 
     pa_threaded_mainloop_lock(pa_loop);
@@ -190,16 +190,16 @@ out:
 }
 
 static void
-eventd_sound_sndfile_remove_sample(const char *name)
+_eventd_sound_sndfile_remove_sample(const char *name)
 {
     pa_threaded_mainloop_lock(pa_loop);
-    pa_context_remove_sample(sound, name, pa_context_success_callback, NULL);
+    pa_context_remove_sample(sound, name, _eventd_sound_sndfile_context_success_callback, NULL);
     pa_threaded_mainloop_wait(pa_loop);
     pa_threaded_mainloop_unlock(pa_loop);
 }
 
 static GHashTable *
-eventd_sound_sndfile_event_action(EventdClient *client, EventdEvent *event)
+_eventd_sound_sndfile_event_action(EventdClient *client, EventdEvent *event)
 {
     const gchar *client_type;
     gchar *name;
@@ -229,16 +229,16 @@ eventd_sound_sndfile_event_action(EventdClient *client, EventdEvent *event)
 }
 
 static void
-eventd_sound_sndfile_event_clean(EventdSoundSndfileEvent *event)
+_eventd_sound_sndfile_event_clean(EventdSoundSndfileEvent *event)
 {
     if ( event->created )
-        eventd_sound_sndfile_remove_sample(event->sample);
+        _eventd_sound_sndfile_remove_sample(event->sample);
 
     g_free(event->sample);
 }
 
 static gboolean
-eventd_sound_sndfile_event_update(EventdSoundSndfileEvent *event, gboolean disable, const gchar *sample, const gchar *filename)
+_eventd_sound_sndfile_event_update(EventdSoundSndfileEvent *event, gboolean disable, const gchar *sample, const gchar *filename)
 {
     gboolean ret = FALSE;
     gchar *real_filename = NULL;
@@ -246,7 +246,7 @@ eventd_sound_sndfile_event_update(EventdSoundSndfileEvent *event, gboolean disab
     if ( ( event->sample != NULL ) && ( strcmp(event->sample, sample) == 0 ) )
         return TRUE;
 
-    eventd_sound_sndfile_event_clean(event);
+    _eventd_sound_sndfile_event_clean(event);
 
     if ( filename != NULL )
     {
@@ -255,7 +255,7 @@ eventd_sound_sndfile_event_update(EventdSoundSndfileEvent *event, gboolean disab
         else
             real_filename = g_strdup(filename);
 
-        if ( ! eventd_sound_sndfile_create_sample(sample, real_filename) )
+        if ( ! _eventd_sound_sndfile_create_sample(sample, real_filename) )
             goto fail;
     }
 
@@ -271,7 +271,7 @@ fail:
 }
 
 static EventdSoundSndfileEvent *
-eventd_sound_sndfile_event_new(gboolean disable, const gchar *name, const gchar *sample, const gchar *filename, EventdSoundSndfileEvent *parent)
+_eventd_sound_sndfile_event_new(gboolean disable, const gchar *name, const gchar *sample, const gchar *filename, EventdSoundSndfileEvent *parent)
 {
     EventdSoundSndfileEvent *event = NULL;
 
@@ -286,14 +286,14 @@ eventd_sound_sndfile_event_new(gboolean disable, const gchar *name, const gchar 
 
     event = g_new0(EventdSoundSndfileEvent, 1);
 
-    if ( ! eventd_sound_sndfile_event_update(event, disable, sample, filename) )
+    if ( ! _eventd_sound_sndfile_event_update(event, disable, sample, filename) )
         event = (g_free(event), NULL);
 
     return event;
 }
 
 static void
-eventd_sound_sndfile_event_parse(const gchar *client_type, const gchar *event_type, GKeyFile *config_file)
+_eventd_sound_sndfile_event_parse(const gchar *client_type, const gchar *event_type, GKeyFile *config_file)
 {
     gboolean disable;
     gchar *sample = NULL;
@@ -325,7 +325,7 @@ eventd_sound_sndfile_event_parse(const gchar *client_type, const gchar *event_ty
     event = g_hash_table_lookup(events, name);
     if ( event != NULL )
     {
-        if ( ! eventd_sound_sndfile_event_update(event, disable, sample ?: name, filename) )
+        if ( ! _eventd_sound_sndfile_event_update(event, disable, sample ?: name, filename) )
         {
             g_hash_table_remove(events, name);
             g_free(event);
@@ -334,7 +334,7 @@ eventd_sound_sndfile_event_parse(const gchar *client_type, const gchar *event_ty
     }
     else
     {
-        event = eventd_sound_sndfile_event_new(disable, name, sample, filename, parent);
+        event = _eventd_sound_sndfile_event_new(disable, name, sample, filename, parent);
         if ( event != NULL )
             g_hash_table_insert(events, name, event);
         else
@@ -350,27 +350,27 @@ skip:
 }
 
 static void
-eventd_sound_sndfile_event_free(EventdSoundSndfileEvent *event)
+_eventd_sound_sndfile_event_free(EventdSoundSndfileEvent *event)
 {
-    eventd_sound_sndfile_event_clean(event);
+    _eventd_sound_sndfile_event_clean(event);
     g_free(event);
 }
 
 static void
-eventd_sound_sndfile_start(EventdSoundPulseaudioContext *context)
+_eventd_sound_sndfile_start(EventdSoundPulseaudioContext *context)
 {
     pa_loop = context->pa_loop;
     sound = context->sound;
 }
 
 static void
-eventd_sound_sndfile_config_init()
+_eventd_sound_sndfile_config_init()
 {
-    events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)eventd_sound_sndfile_event_free);
+    events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)_eventd_sound_sndfile_event_free);
 }
 
 static void
-eventd_sound_sndfile_config_clean()
+_eventd_sound_sndfile_config_clean()
 {
     g_hash_table_unref(events);
 }
@@ -380,11 +380,11 @@ eventd_plugin_get_info(EventdPlugin *plugin)
 {
     plugin->id = "sndfile";
 
-    plugin->start = (EventdPluginStartFunc)eventd_sound_sndfile_start;
+    plugin->start = (EventdPluginStartFunc)_eventd_sound_sndfile_start;
 
-    plugin->config_init = eventd_sound_sndfile_config_init;
-    plugin->config_clean = eventd_sound_sndfile_config_clean;
+    plugin->config_init = _eventd_sound_sndfile_config_init;
+    plugin->config_clean = _eventd_sound_sndfile_config_clean;
 
-    plugin->event_parse = eventd_sound_sndfile_event_parse;
-    plugin->event_action = eventd_sound_sndfile_event_action;
+    plugin->event_parse = _eventd_sound_sndfile_event_parse;
+    plugin->event_action = _eventd_sound_sndfile_event_action;
 }

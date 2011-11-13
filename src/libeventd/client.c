@@ -44,7 +44,7 @@ libeventd_client_new()
 }
 
 static void
-libeventd_client_finalize(EventdClient *client)
+_libeventd_client_finalize(EventdClient *client)
 {
     g_free(client->name);
     g_free(client->type);
@@ -67,7 +67,7 @@ libeventd_client_unref(EventdClient *client)
         return;
 
     if ( --client->ref_count < 1 )
-        libeventd_client_finalize(client);
+        _libeventd_client_finalize(client);
 }
 
 void

@@ -32,7 +32,7 @@
 static GList *plugins = NULL;
 
 static void
-eventd_sound_start(gpointer user_data)
+_eventd_sound_start(gpointer user_data)
 {
     EventdSoundPulseaudioContext *context;
 
@@ -43,32 +43,32 @@ eventd_sound_start(gpointer user_data)
 }
 
 static void
-eventd_sound_stop()
+_eventd_sound_stop()
 {
     libeventd_plugins_unload(&plugins);
     eventd_sound_pulseaudio_stop();
 }
 
 static GHashTable *
-eventd_sound_event_action(EventdClient *client, EventdEvent *event)
+_eventd_sound_event_action(EventdClient *client, EventdEvent *event)
 {
     return libeventd_plugins_event_action_all(plugins, client, event);
 }
 
 static void
-eventd_sound_event_parse(const gchar *type, const gchar *event, GKeyFile *config_file)
+_eventd_sound_event_parse(const gchar *type, const gchar *event, GKeyFile *config_file)
 {
     libeventd_plugins_event_parse_all(plugins, type, event, config_file);
 }
 
 static void
-eventd_sound_config_init()
+_eventd_sound_config_init()
 {
     libeventd_plugins_config_init_all(plugins);
 }
 
 static void
-eventd_sound_config_clean()
+_eventd_sound_config_clean()
 {
     libeventd_plugins_config_clean_all(plugins);
 }
@@ -78,12 +78,12 @@ eventd_plugin_get_info(EventdPlugin *plugin)
 {
     plugin->id = "sound";
 
-    plugin->start = eventd_sound_start;
-    plugin->stop = eventd_sound_stop;
+    plugin->start = _eventd_sound_start;
+    plugin->stop = _eventd_sound_stop;
 
-    plugin->config_init = eventd_sound_config_init;
-    plugin->config_clean = eventd_sound_config_clean;
+    plugin->config_init = _eventd_sound_config_init;
+    plugin->config_clean = _eventd_sound_config_clean;
 
-    plugin->event_parse = eventd_sound_event_parse;
-    plugin->event_action = eventd_sound_event_action;
+    plugin->event_parse = _eventd_sound_event_parse;
+    plugin->event_action = _eventd_sound_event_action;
 }

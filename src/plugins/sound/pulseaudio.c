@@ -31,7 +31,7 @@ static pa_threaded_mainloop *pa_loop = NULL;
 static pa_context *sound = NULL;
 
 static void
-pa_context_state_callback(pa_context *c, void *userdata)
+_eventd_sound_pulseaudio_context_state_callback(pa_context *c, void *userdata)
 {
     pa_context_state_t state = pa_context_get_state(c);
     switch ( state )
@@ -44,7 +44,7 @@ pa_context_state_callback(pa_context *c, void *userdata)
 }
 
 static void
-pa_context_notify_callback(pa_context *s, void *userdata)
+_eventd_sound_pulseaudio_context_notify_callback(pa_context *s, void *userdata)
 {
     pa_threaded_mainloop_signal(pa_loop, 0);
 }
@@ -61,7 +61,7 @@ eventd_sound_pulseaudio_start()
     if ( ! sound )
         g_error("Can't open sound system");
     pa_context_get_state(sound);
-    pa_context_set_state_callback(sound, pa_context_state_callback, NULL);
+    pa_context_set_state_callback(sound, _eventd_sound_pulseaudio_context_state_callback, NULL);
 
     pa_threaded_mainloop_lock(pa_loop);
     pa_context_connect(sound, NULL, 0, NULL);
@@ -80,7 +80,7 @@ eventd_sound_pulseaudio_stop()
 {
     pa_operation* op;
 
-    op = pa_context_drain(sound, pa_context_notify_callback, NULL);
+    op = pa_context_drain(sound, _eventd_sound_pulseaudio_context_notify_callback, NULL);
     if ( op != NULL )
     {
         pa_threaded_mainloop_lock(pa_loop);

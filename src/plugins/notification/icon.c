@@ -29,7 +29,7 @@
 #include "icon.h"
 
 static GdkPixbuf *
-eventd_notification_get_pixbuf_from_data(const char *icon_name, GHashTable *event_data)
+_eventd_notification_icon_get_pixbuf_from_data(const char *icon_name, GHashTable *event_data)
 {
     GError *error = NULL;
     gchar *icon_base64 = NULL;
@@ -85,7 +85,7 @@ fail:
 }
 
 static gpointer
-eventd_notification_icon_get_pixbuf_from_file(const gchar *filename, GHashTable *event_data)
+_eventd_notification_icon_get_pixbuf_from_file(const gchar *filename, GHashTable *event_data)
 {
     gchar *real_filename;
     GError *error = NULL;
@@ -117,13 +117,13 @@ void
 eventd_notification_icon_get_pixbuf(GHashTable *data, EventdNotificationEvent *notification_event, EventdNotificationNotification *notification)
 {
     if ( g_str_has_prefix(notification_event->icon, "file://") )
-        notification->icon = eventd_notification_icon_get_pixbuf_from_file(notification_event->icon+7, data);
+        notification->icon = _eventd_notification_icon_get_pixbuf_from_file(notification_event->icon+7, data);
     else
-        notification->icon = eventd_notification_get_pixbuf_from_data(notification_event->icon, data);
+        notification->icon = _eventd_notification_icon_get_pixbuf_from_data(notification_event->icon, data);
     if ( g_str_has_prefix(notification_event->overlay_icon, "file://") )
-        notification->overlay_icon = eventd_notification_icon_get_pixbuf_from_file(notification_event->overlay_icon+7, data);
+        notification->overlay_icon = _eventd_notification_icon_get_pixbuf_from_file(notification_event->overlay_icon+7, data);
     else
-        notification->overlay_icon = eventd_notification_get_pixbuf_from_data(notification_event->overlay_icon, data);
+        notification->overlay_icon = _eventd_notification_icon_get_pixbuf_from_data(notification_event->overlay_icon, data);
     if ( ( notification->icon != NULL ) && ( notification->overlay_icon != NULL ) )
     {
         gint icon_width, icon_height;

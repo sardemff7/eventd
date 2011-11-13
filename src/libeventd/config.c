@@ -25,7 +25,7 @@
 #include <libeventd-config.h>
 
 static gint8
-libeventd_config_key_file_error(GError **error, const gchar *group, const gchar *key)
+_libeventd_config_key_file_error(GError **error, const gchar *group, const gchar *key)
 {
     gint8 ret = 1;
 
@@ -49,7 +49,7 @@ libeventd_config_key_file_get_boolean(GKeyFile *config_file, const gchar *group,
 
     *value = g_key_file_get_boolean(config_file, group, key, &error);
 
-    return libeventd_config_key_file_error(&error, group, key);
+    return _libeventd_config_key_file_error(&error, group, key);
 }
 
 gint8
@@ -60,7 +60,7 @@ libeventd_config_key_file_get_int(GKeyFile *config_file, const gchar *group, con
     value->value = g_key_file_get_int64(config_file, group, key, &error);
     value->set = ( error == NULL );
 
-    return libeventd_config_key_file_error(&error, group, key);
+    return _libeventd_config_key_file_error(&error, group, key);
 }
 
 gint8
@@ -70,5 +70,5 @@ libeventd_config_key_file_get_string(GKeyFile *config_file, const gchar *group, 
 
     *value = g_key_file_get_string(config_file, group, key, &error);
 
-    return libeventd_config_key_file_error(&error, group, key);
+    return _libeventd_config_key_file_error(&error, group, key);
 }

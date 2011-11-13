@@ -46,7 +46,7 @@ libeventd_event_new(const gchar *type)
 }
 
 static void
-libeventd_event_finalize(EventdEvent *event)
+_libeventd_event_finalize(EventdEvent *event)
 {
     g_hash_table_unref(event->data);
     g_free(event->type);
@@ -69,7 +69,7 @@ libeventd_event_unref(EventdEvent *event)
         return;
 
     if ( --event->ref_count < 1 )
-        libeventd_event_finalize(event);
+        _libeventd_event_finalize(event);
 }
 
 void

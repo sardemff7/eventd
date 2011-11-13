@@ -47,13 +47,13 @@ typedef struct {
 #define BUFFER_SIZE 2000
 
 static void
-eventd_sound_espeak_callback_data_ref(EventdSoundEspeakCallbackData *data)
+_eventd_sound_espeak_callback_data_ref(EventdSoundEspeakCallbackData *data)
 {
     ++data->ref_count;
 }
 
 static void
-eventd_sound_espeak_callback_data_free(EventdSoundEspeakCallbackData *data)
+_eventd_sound_espeak_callback_data_free(EventdSoundEspeakCallbackData *data)
 {
     EventdSoundEspeakSoundData *sound_data;
 
@@ -73,16 +73,16 @@ eventd_sound_espeak_callback_data_free(EventdSoundEspeakCallbackData *data)
 }
 
 static void
-eventd_sound_espeak_callback_data_unref(EventdSoundEspeakCallbackData *data)
+_eventd_sound_espeak_callback_data_unref(EventdSoundEspeakCallbackData *data)
 {
     if ( --data->ref_count > 0 )
         return;
 
-    eventd_sound_espeak_callback_data_free(data);
+    _eventd_sound_espeak_callback_data_free(data);
 }
 
 static EventdSoundEspeakCallbackData *
-eventd_sound_espeak_callback_data_new(EventdClientMode mode)
+_eventd_sound_espeak_callback_data_new(EventdClientMode mode)
 {
     EventdSoundEspeakCallbackData *data;
     EventdSoundEspeakSoundData *sound_data;
@@ -94,7 +94,7 @@ eventd_sound_espeak_callback_data_new(EventdClientMode mode)
     switch ( mode )
     {
     case EVENTD_CLIENT_MODE_PING_PONG:
-        eventd_sound_espeak_callback_data_ref(data);
+        _eventd_sound_espeak_callback_data_ref(data);
         sound_data = g_new0(EventdSoundEspeakSoundData, 1);
         sound_data->data = g_malloc0_n(0, sizeof(guchar));
         data->data = sound_data;
@@ -134,7 +134,7 @@ synth_callback(gshort *wav, gint numsamples, espeak_EVENT *event)
     }
 
     if ( ( wav == NULL ) && ( event->type == espeakEVENT_LIST_TERMINATED ) )
-        eventd_sound_espeak_callback_data_unref(event->user_data);
+        _eventd_sound_espeak_callback_data_unref(event->user_data);
 
     return 0;
 }
@@ -146,7 +146,7 @@ uri_callback(int type, const char *uri, const char *base)
 }
 
 void
-eventd_sound_espeak_start(EventdSoundPulseaudioContext *context)
+_eventd_sound_espeak_start(EventdSoundPulseaudioContext *context)
 {
     gint sample_rate;
 
@@ -167,7 +167,7 @@ eventd_sound_espeak_start(EventdSoundPulseaudioContext *context)
 }
 
 void
-eventd_sound_espeak_stop()
+_eventd_sound_espeak_stop()
 {
     libeventd_regex_clean();
 
@@ -176,7 +176,7 @@ eventd_sound_espeak_stop()
 }
 
 static void
-eventd_sound_espeak_event_parse(const gchar *client_type, const gchar *event_type, GKeyFile *config_file)
+_eventd_sound_espeak_event_parse(const gchar *client_type, const gchar *event_type, GKeyFile *config_file)
 {
     gboolean disable;
     gchar *message = NULL;
@@ -212,7 +212,7 @@ eventd_sound_espeak_event_parse(const gchar *client_type, const gchar *event_typ
 }
 
 static gboolean
-eventd_sound_espeak_regex_event_data_cb(const GMatchInfo *info, GString *r, gpointer event_data)
+_eventd_sound_espeak_regex_event_data_cb(const GMatchInfo *info, GString *r, gpointer event_data)
 {
     gchar *name;
     gchar *data = NULL;
@@ -247,7 +247,7 @@ eventd_sound_espeak_regex_event_data_cb(const GMatchInfo *info, GString *r, gpoi
 }
 
 static GHashTable *
-eventd_sound_espeak_event_action(EventdClient *client, EventdEvent *event)
+_eventd_sound_espeak_event_action(EventdClient *client, EventdEvent *event)
 {
     GHashTable *ret = NULL;
     const gchar *client_type;
@@ -268,16 +268,16 @@ eventd_sound_espeak_event_action(EventdClient *client, EventdEvent *event)
     if ( ( message == NULL ) && ( ( message = g_hash_table_lookup(events, client_type) ) == NULL ) )
         return NULL;
 
-    msg = libeventd_regex_replace_event_data(message, libeventd_event_get_data(event), eventd_sound_espeak_regex_event_data_cb);
+    msg = libeventd_regex_replace_event_data(message, libeventd_event_get_data(event), _eventd_sound_espeak_regex_event_data_cb);
 
-    data = eventd_sound_espeak_callback_data_new(client_mode);
+    data = _eventd_sound_espeak_callback_data_new(client_mode);
     error = espeak_Synth(msg, strlen(msg)+1, 0, POS_CHARACTER, 0, espeakCHARS_UTF8|espeakSSML, NULL, data);
 
     switch ( error )
     {
     case EE_INTERNAL_ERROR:
         g_warning("Couldn’t synthetise text");
-        eventd_sound_espeak_callback_data_free(data);
+        _eventd_sound_espeak_callback_data_free(data);
         goto fail;
     case EE_BUFFER_FULL:
     case EE_OK:
@@ -293,7 +293,7 @@ eventd_sound_espeak_event_action(EventdClient *client, EventdEvent *event)
         ret = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
         g_hash_table_insert(ret, g_strdup("message"), g_strdup(msg));
         g_hash_table_insert(ret, g_strdup("audio-data"), g_base64_encode(sound_data->data, sound_data->length));
-        eventd_sound_espeak_callback_data_unref(data);
+        _eventd_sound_espeak_callback_data_unref(data);
     break;
     default:
     break;
@@ -306,13 +306,13 @@ fail:
 }
 
 static void
-eventd_sound_espeak_config_init()
+_eventd_sound_espeak_config_init()
 {
     events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 }
 
 static void
-eventd_sound_espeak_config_clean()
+_eventd_sound_espeak_config_clean()
 {
     g_hash_table_unref(events);
 }
@@ -322,12 +322,12 @@ eventd_plugin_get_info(EventdPlugin *plugin)
 {
     plugin->id = "espeak";
 
-    plugin->start = (EventdPluginStartFunc)eventd_sound_espeak_start;
-    plugin->stop = eventd_sound_espeak_stop;
+    plugin->start = (EventdPluginStartFunc)_eventd_sound_espeak_start;
+    plugin->stop = _eventd_sound_espeak_stop;
 
-    plugin->config_init = eventd_sound_espeak_config_init;
-    plugin->config_clean = eventd_sound_espeak_config_clean;
+    plugin->config_init = _eventd_sound_espeak_config_init;
+    plugin->config_clean = _eventd_sound_espeak_config_clean;
 
-    plugin->event_parse = eventd_sound_espeak_event_parse;
-    plugin->event_action = eventd_sound_espeak_event_action;
+    plugin->event_parse = _eventd_sound_espeak_event_parse;
+    plugin->event_action = _eventd_sound_espeak_event_action;
 }

@@ -76,7 +76,7 @@ libeventd_regex_replace_client_name(const gchar *target, const gchar *client_nam
 }
 
 static gboolean
-libeventd_regex_event_data_cb(const GMatchInfo *info, GString *r, gpointer event_data)
+_libeventd_regex_event_data_cb(const GMatchInfo *info, GString *r, gpointer event_data)
 {
     gchar *name;
     gchar *data = NULL;
@@ -96,7 +96,7 @@ libeventd_regex_replace_event_data(const gchar *target, GHashTable *event_data, 
     GError *error = NULL;
     gchar *r;
 
-    r = g_regex_replace_eval(regex_event_data, target, -1, 0, 0, callback ?: libeventd_regex_event_data_cb, (gpointer)event_data, &error);
+    r = g_regex_replace_eval(regex_event_data, target, -1, 0, 0, callback ?: _libeventd_regex_event_data_cb, (gpointer)event_data, &error);
     if ( r == NULL )
     {
         r = g_strdup(target);

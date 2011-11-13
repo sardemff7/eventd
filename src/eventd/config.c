@@ -41,7 +41,7 @@
 GHashTable *config = NULL;
 
 static void
-eventd_config_parse_server(GKeyFile *config_file)
+_eventd_config_parse_server(GKeyFile *config_file)
 {
     GError *error = NULL;
     gchar **keys = NULL;
@@ -57,7 +57,7 @@ eventd_config_parse_server(GKeyFile *config_file)
 }
 
 static void
-eventd_config_parse_client(gchar *type, gchar *config_dir_name)
+_eventd_config_parse_client(gchar *type, gchar *config_dir_name)
 {
     GError *error = NULL;
     GDir *config_dir = NULL;
@@ -105,8 +105,8 @@ eventd_config_parse_client(gchar *type, gchar *config_dir_name)
     g_dir_close(config_dir);
 }
 
-void
-eventd_config_load_dir(const gchar *base_dir)
+static void
+_eventd_config_load_dir(const gchar *base_dir)
 {
     GError *error = NULL;
     gchar *config_dir_name = NULL;
@@ -128,7 +128,7 @@ eventd_config_load_dir(const gchar *base_dir)
         if ( ! g_key_file_load_from_file(config_file, config_file_name, G_KEY_FILE_NONE, &error) )
             g_warning("Can't read the configuration file '%s': %s", config_file_name, error->message);
         else
-            eventd_config_parse_server(config_file);
+            _eventd_config_parse_server(config_file);
         g_clear_error(&error);
         g_key_file_free(config_file);
     }
@@ -177,7 +177,7 @@ eventd_config_load_dir(const gchar *base_dir)
         config_file_name = g_build_filename(config_dir_name, file, NULL);
 
         if ( g_file_test(config_file_name, G_FILE_TEST_IS_DIR) )
-            eventd_config_parse_client(file, config_file_name);
+            _eventd_config_parse_client(file, config_file_name);
 
         g_free(config_file_name);
     }
@@ -201,9 +201,9 @@ eventd_config_parser()
 
     config = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 
-    eventd_config_load_dir(DATADIR);
-    eventd_config_load_dir(SYSCONFDIR);
-    eventd_config_load_dir(g_get_user_config_dir());
+    _eventd_config_load_dir(DATADIR);
+    _eventd_config_load_dir(SYSCONFDIR);
+    _eventd_config_load_dir(g_get_user_config_dir());
 }
 
 void
