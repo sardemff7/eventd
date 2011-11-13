@@ -20,40 +20,41 @@
  *
  */
 
-#include <stdlib.h>
 #include <string.h>
-#include <sys/file.h>
-#include <signal.h>
-#include <errno.h>
 
 #include <glib.h>
 #include <gio/gio.h>
 
-#define CONFIG_RELOAD_DELAY 10
-
 #include <libeventd-client.h>
 #include <libeventd-event.h>
-#include <eventd-plugin.h>
+#include <libeventd-config.h>
+
 #include "plugins.h"
+
 #include "config.h"
 
-
-GHashTable *config = NULL;
+struct _EventdConfig {
+    gint64 max_clients;
+};
 
 static void
-_eventd_config_parse_server(GKeyFile *config_file)
+_eventd_config_defaults(EventdConfig *config)
 {
-    GError *error = NULL;
-    gchar **keys = NULL;
-    gchar **key = NULL;
+    config->max_clients = -1;
+}
 
-    if ( g_key_file_has_group(config_file, "server") )
-    {
-        keys = g_key_file_get_keys(config_file, "server", NULL, &error);
-        for ( key = keys ; *key ; ++key )
-            g_hash_table_insert(config, g_strdup(*key), g_key_file_get_value(config_file, "server", *key, NULL));
-        g_strfreev(keys);
-    }
+static void
+_eventd_config_parse_server(EventdConfig *config, GKeyFile *config_file)
+{
+    Int integer;
+
+    if ( ! g_key_file_has_group(config_file, "server") )
+        return;
+
+    if ( libeventd_config_key_file_get_int(config_file, "server", "max-clients", &integer) < 0 )
+        return;
+    if ( integer.set )
+        config->max_clients = integer.value;
 }
 
 static void
@@ -106,7 +107,7 @@ _eventd_config_parse_client(const gchar *type, gchar *config_dir_name)
 }
 
 static void
-_eventd_config_load_dir(const gchar *base_dir)
+_eventd_config_load_dir(EventdConfig *config, const gchar *base_dir)
 {
     GError *error = NULL;
     gchar *config_dir_name = NULL;
@@ -128,7 +129,7 @@ _eventd_config_load_dir(const gchar *base_dir)
         if ( ! g_key_file_load_from_file(config_file, config_file_name, G_KEY_FILE_NONE, &error) )
             g_warning("Can't read the configuration file '%s': %s", config_file_name, error->message);
         else
-            _eventd_config_parse_server(config_file);
+            _eventd_config_parse_server(config, config_file);
         g_clear_error(&error);
         g_key_file_free(config_file);
     }
@@ -190,53 +191,36 @@ out:
     g_free(config_dir_name);
 }
 
-void
-eventd_config_parser()
+EventdConfig *
+eventd_config_parser(EventdConfig *config)
 {
-    if ( config )
+    if ( config != NULL )
     {
         g_message("Reloading configuration");
-        eventd_config_clean();
+        eventd_config_clean(config);
     }
 
-    config = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+    config = g_new0(EventdConfig, 1);
 
-    _eventd_config_load_dir(DATADIR);
-    _eventd_config_load_dir(SYSCONFDIR);
-    _eventd_config_load_dir(g_get_user_config_dir());
+    _eventd_config_defaults(config);
+
+    _eventd_config_load_dir(config, DATADIR);
+    _eventd_config_load_dir(config, SYSCONFDIR);
+    _eventd_config_load_dir(config, g_get_user_config_dir());
+
+    return config;
 }
 
 void
-eventd_config_clean()
+eventd_config_clean(EventdConfig *config)
 {
     eventd_plugins_config_clean_all();
 
-    g_hash_table_remove_all(config);
-}
-
-
-guint64
-eventd_config_get_guint64(const gchar *name, guint64 default_value)
-{
-    gchar *value = NULL;
-
-    value = g_hash_table_lookup(config, name);
-
-    if ( value == NULL )
-        return default_value;
-    else
-        return g_ascii_strtoull(value, NULL, 10);
+    g_free(config);
 }
 
 gint64
-eventd_config_get_gint64(const gchar *name, gint64 default_value)
+eventd_config_get_max_clients(EventdConfig *config)
 {
-    gchar *value = NULL;
-
-    value = g_hash_table_lookup(config, name);
-
-    if ( value == NULL )
-        return default_value;
-    else
-        return g_ascii_strtoll(value, NULL, 10);
+    return config->max_clients;
 }

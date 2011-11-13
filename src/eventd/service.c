@@ -40,6 +40,7 @@
 #include "plugins.h"
 #include "service.h"
 
+static EventdConfig *config = NULL;
 static GMainLoop *loop = NULL;
 
 static void
@@ -84,7 +85,7 @@ _eventd_service_private_connection_handler(GThreadedSocketService *service, GSoc
         }
         else if ( g_strcmp0(line, "reload") == 0 )
         {
-            eventd_config_parser();
+            config = eventd_config_parser(config);
         }
     }
 
@@ -99,9 +100,6 @@ _eventd_service_private_connection_handler(GThreadedSocketService *service, GSoc
     return TRUE;
 }
 #endif /* ENABLE_GIO_UNIX */
-
-
-#define DEFAULT_MAX_CLIENTS 5
 
 static void
 _eventd_service_send_data(gpointer key, gpointer value, gpointer user_data)
@@ -450,9 +448,9 @@ eventd_service(GList *sockets, gboolean no_plugins)
     if ( ! no_plugins )
         eventd_plugins_load();
 
-    eventd_config_parser();
+    config = eventd_config_parser(config);
 
-    service = g_threaded_socket_service_new(eventd_config_get_gint64("max-clients", DEFAULT_MAX_CLIENTS));
+    service = g_threaded_socket_service_new(eventd_config_get_max_clients(config));
 
     for ( socket = g_list_first(sockets) ; socket ; socket = g_list_next(socket) )
     {
@@ -472,7 +470,7 @@ eventd_service(GList *sockets, gboolean no_plugins)
     g_socket_service_stop(service);
     g_socket_listener_close((GSocketListener *)service);
 
-    eventd_config_clean();
+    eventd_config_clean(config);
 
 #if ENABLE_GIO_UNIX
     g_socket_service_stop(private_service);

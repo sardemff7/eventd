@@ -23,10 +23,11 @@
 #ifndef __EVENTD_EVENTS_H__
 #define __EVENTD_EVENTS_H__
 
-void eventd_config_parser();
-void eventd_config_clean();
+typedef struct _EventdConfig EventdConfig;
 
-guint64 eventd_config_get_guint64(const gchar *name, guint64 default_value);
-gint64 eventd_config_get_gint64(const gchar *name, gint64 default_value);
+EventdConfig *eventd_config_parser(EventdConfig *config);
+void eventd_config_clean(EventdConfig *config);
+
+gint64 eventd_config_get_max_clients(EventdConfig *config);
 
 #endif /* __EVENTD_EVENTS_H__ */
