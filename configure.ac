@@ -82,7 +82,7 @@ AM_CONDITIONAL(ENABLE_GDK_PIXBUF, [test x$enable_gdk_pixbuf = xyes])
 # Server
 PKG_CHECK_MODULES(GMODULE, [gmodule-2.0 >= $gmodule_min_version])
 
-AC_ARG_ENABLE(systemd, AS_HELP_STRING([--disable-systemd], [Disable systemd support activation support]), enable_systemd=$enableval, enable_systemd=yes)
+AC_ARG_ENABLE(systemd, AS_HELP_STRING([--enable-systemd], [Enable systemd activation support]), enable_systemd=$enableval, enable_systemd=no)
 if test x$enable_systemd = xyes; then
     if test x$enable_gio_unix = xno; then
         AC_MSG_ERROR([*** It won’t harm to enable UNIX GIO support])
