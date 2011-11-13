@@ -23,6 +23,14 @@
 #ifndef __EVENTD_PLUGINS_NOTIFICATION_LIBNOTIFY_COMPAT_H__
 #define __EVENTD_PLUGINS_NOTIFICATION_LIBNOTIFY_COMPAT_H__
 
+#ifndef NOTIFY_CHECK_VERSION
+#define NOTIFY_CHECK_VERSION(maj,min,mic) (0)
+#endif /* NOTIFY_CHECK_VERSION */
+
+#if ! NOTIFY_CHECK_VERSION(0,7,0)
+
 #define notify_notification_new(summary, body, icon) notify_notification_new(summary, body, icon, NULL)
+
+#endif /* !NOTIFY_CHECK_VERSION(0,7,0) */
 
 #endif /* __EVENTD_PLUGINS_NOTIFICATION_LIBNOTIFY_COMPAT_H__ */

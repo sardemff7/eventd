@@ -21,9 +21,7 @@
  */
 
 #include <libnotify/notify.h>
-#if ! NOTIFY_CHECK_VERSION(0,7,0)
 #include "libnotify-compat.h"
-#endif
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
 #include "notification.h"
