@@ -249,8 +249,10 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
                 eventd_event_add_data(event, data[0], data[1]);
                 g_free(data);
             }
-            else
+            else if ( event_data_name )
                 event_data_content = g_strdup(( line[0] == '.' ) ? line+1 : line);
+            else
+                g_warning("Unknown message");
         }
         else if ( g_ascii_strncasecmp(line, "EVENT ", 6) == 0 )
         {
