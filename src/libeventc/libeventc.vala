@@ -160,26 +160,8 @@ namespace Eventc
             this.client.set_timeout(this.timeout);
         }
 
-        public new void
+        public new async void
         connect() throws EventcError
-        {
-            this.set_client();
-            try
-            {
-                this.connection = this.client.connect(this.address);
-            }
-            catch ( GLib.Error e )
-            {
-                if ( e is GLib.IOError.CONNECTION_REFUSED )
-                    throw new EventcError.CONNECTION_REFUSED("Host is not an eventd");
-                else
-                    throw new EventcError.CONNECTION_OTHER("Failed to connect: %s", e.message);
-            }
-            this.hello();
-        }
-
-        public async void
-        connect_async() throws EventcError
         {
             this.set_client();
             try
@@ -193,11 +175,11 @@ namespace Eventc
                 else
                     throw new EventcError.CONNECTION_OTHER("Failed to connect: %s", e.message);
             }
-            yield this.hello_async();
+            yield this.hello();
         }
 
-        private void
-        hello_common() throws EventcError
+        private async void
+        hello() throws EventcError
         {
             this.input = new GLib.DataInputStream((this.connection as GLib.IOStream).get_input_stream());
             this.output = new GLib.DataOutputStream((this.connection as GLib.IOStream).get_output_stream());
@@ -206,38 +188,18 @@ namespace Eventc
                 this.send("HELLO " + this._type);
             else
                 this.send("HELLO " + this._type + " " + this._name);
+
+            var r = yield this.receive();
+            if ( r != "HELLO" )
+                throw new EventcError.HELLO("Got a wrong hello message: %s", r);
+            else
+                this.hello_received = true;
+
+            yield this.send_mode();
         }
 
         private async void
-        hello_async() throws EventcError
-        {
-            this.hello_common();
-
-            var r = yield this.receive_async();
-            if ( r != "HELLO" )
-                throw new EventcError.HELLO("Got a wrong hello message: %s", r);
-            else
-                this.hello_received = true;
-
-            yield this.send_mode_async();
-        }
-
-        private void
-        hello() throws EventcError
-        {
-            this.hello_common();
-
-            var r = this.receive();
-            if ( r != "HELLO" )
-                throw new EventcError.HELLO("Got a wrong hello message: %s", r);
-            else
-                this.hello_received = true;
-
-            this.send_mode();
-        }
-
-        private void
-        send_mode_common() throws EventcError
+        send_mode() throws EventcError
         {
             unowned string mode = null;
             switch ( this.mode )
@@ -251,42 +213,26 @@ namespace Eventc
             }
             if ( mode != null )
             this.send("MODE " + mode);
-        }
 
-        private async void
-        send_mode_async() throws EventcError
-        {
-            this.send_mode_common();
-
-            var r = yield this.receive_async();
+            var r = yield this.receive();
             if ( r != "MODE" )
                 throw new EventcError.MODE("Got a wrong mode message: %s", r);
         }
 
-        private void
-        send_mode() throws EventcError
-        {
-            this.send_mode_common();
-
-            var r = this.receive();
-            if ( r != "MODE" )
-                throw new EventcError.MODE("Got a wrong mode message: %s", r);
-        }
-
-        public void
+        public async void
         rename() throws EventcError
         {
             if ( this._name == null )
                 this.send("RENAME " + this._type);
             else
                 this.send("RENAME " + this._type +  " " + this._name);
-            var r = this.receive();
+            var r = yield this.receive();
             if ( r != "RENAMED" )
                 throw new EventcError.RENAMED("Got a wrong renamed message: %s", r);
         }
 
-        public void
-        event_common(Eventd.Event event) throws EventcError
+        public async void
+        event(Eventd.Event event) throws EventcError
         {
             unowned string type = event.get_type();
             this.send( @"EVENT $type");
@@ -322,61 +268,14 @@ namespace Eventc
                     throw e;
             }
             this.send(".");
-        }
 
-        public void
-        event(Eventd.Event event) throws EventcError
-        {
-            this.event_common(event);
             string line = null;
             string data_name = null;
             string data_content = null;
             switch ( this.mode )
             {
             case Mode.PING_PONG:
-                while ( ( line = this.receive() ) != null )
-                {
-                    if ( line == "EVENT" )
-                    {}
-                    else if ( line == "." )
-                    {
-                        if ( data_name != null )
-                            event.add_pong_data((owned)data_name, (owned)data_content);
-                        else
-                            break;
-                    }
-                    else if ( data_name != null )
-                        data_content += line;
-                    else if ( line.ascii_ncasecmp("DATAL ", 6) == 0 )
-                    {
-                        var data_line = line.substring(6).split(" ", 2);
-                        event.add_pong_data(data_line[0], data_line[1]);
-                    }
-                    else if ( line.ascii_ncasecmp("DATA ", 5) == 0 )
-                    {
-                        data_name = line.substring(5);
-                        data_content = "";
-                    }
-                    else
-                        throw new EventcError.EVENT("Can’t receive correct event data");
-                }
-            break;
-            default:
-            break;
-            }
-        }
-
-        public async void
-        event_async(Eventd.Event event) throws EventcError
-        {
-            this.event_common(event);
-            string line = null;
-            string data_name = null;
-            string data_content = null;
-            switch ( this.mode )
-            {
-            case Mode.PING_PONG:
-                while ( ( line = yield this.receive_async() ) != null )
+                while ( ( line = yield this.receive() ) != null )
                 {
                     if ( line == "EVENT" )
                     {}
@@ -406,26 +305,10 @@ namespace Eventc
             default:
             break;
             }
-        }
-
-        private string?
-        receive() throws EventcError
-        {
-            string r = null;
-            try
-            {
-                r = this.input.read_upto("\n", -1, null);
-                this.input.read_byte(null);
-            }
-            catch ( GLib.Error e )
-            {
-                throw new EventcError.RECEIVE("Failed to receive message: %s", e.message);
-            }
-            return r;
         }
 
         private async string?
-        receive_async() throws EventcError
+        receive() throws EventcError
         {
             string r = null;
             try
@@ -453,19 +336,19 @@ namespace Eventc
             }
         }
 
-        public void
+        public async void
         close() throws EventcError
         {
             if ( ( this.hello_received ) && ( ! this.connection.is_closed() ) )
             {
                 this.send("BYE");
-                var r = this.receive();
+                var r = yield this.receive();
                 if ( r != "BYE" )
                     throw new EventcError.BYE("Got a wrong bye message: %s", r);
             }
             try
             {
-                this.connection.close(null);
+                yield this.connection.close_async(GLib.Priority.DEFAULT);
             }
             catch ( GLib.Error e )
             {

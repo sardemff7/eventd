@@ -33,6 +33,9 @@ namespace Eventc
     #if ENABLE_GIO_UNIX
     static string unix_socket;
     #endif
+    static GLib.MainLoop loop;
+    static Connection client;
+    static int tries;
     static int max_tries = 3;
     static int timeout = 0;
 
@@ -51,6 +54,60 @@ namespace Eventc
         { "timeout", 'o', 0, GLib.OptionArg.INT, ref timeout, N_("Connection timeout"), "<seconds>" },
         { null }
     };
+
+    private new static void
+    connect()
+    {
+        client.connect.begin((source, res) => {
+            try
+            {
+                client.connect.end(res);
+                send_event();
+            }
+            catch ( EventcError e )
+            {
+                GLib.warning("Couldn’t connect to host '%s': %s", host, e.message);
+                if ( ( max_tries > 0 ) && ( ++tries >= max_tries ) )
+                {
+                    GLib.warning("Too many attempts, aborting");
+                    loop.quit();
+                }
+                else
+                    connect();
+            }
+        });
+    }
+
+    private static void
+    send_event()
+    {
+        var n_length = ( event_data_name == null ) ? 0 : strv_length(event_data_name);
+        var c_length = ( event_data_content == null ) ? 0 : strv_length(event_data_content);
+        if ( n_length != c_length )
+        {
+            GLib.warning("Not the same number of data names and data contents");
+                loop.quit();
+            return;
+        }
+
+        var event = new Eventd.Event(event_type);
+
+        for ( uint i = 0 ; i < n_length ; ++i )
+            event.add_data(event_data_name[i], event_data_content[i]);
+
+        client.event.begin(event, (source, res) => {
+            try
+            {
+                client.event.end(res);
+                print_pong_data(event);
+            }
+            catch ( EventcError e )
+            {
+                GLib.warning("Couldn’t send event '%s': %s", event_type, e.message);
+            }
+            disconnect();
+        });
+    }
 
     private static void print_pong_data(Eventd.Event event)
     {
@@ -78,6 +135,23 @@ namespace Eventc
         stdout.puts(".\n");
     }
 
+    private static void
+    disconnect()
+    {
+        client.close.begin((source, res) => {
+            try
+            {
+                client.close.end(res);
+            }
+            catch ( EventcError e )
+            {
+                GLib.warning("Couldn’t disconnect from event: %s", e.message);
+            }
+            loop.quit();
+        });
+    }
+
+
     public static int main(string[] args)
     {
         var opt_context = new GLib.OptionContext("<client type> [<client name>] - Basic CLI client for eventd");
@@ -98,6 +172,11 @@ namespace Eventc
             GLib.print(_("You must define the type of the client.\n"));
             return 1;
         }
+        if ( event_type == null )
+        {
+            GLib.print(_("You must define the type of the event.\n"));
+            return 1;
+        }
         type = args[1];
 
         if ( args.length > 2 )
@@ -112,7 +191,7 @@ namespace Eventc
         if ( host == null )
             host = "localhost";
 
-        var client = new Connection(host, port, type, name);
+        client = new Connection(host, port, type, name);
         client.timeout = timeout;
         #if ENABLE_GIO_UNIX
         if ( unix_socket != null )
@@ -130,75 +209,12 @@ namespace Eventc
         break;
         }
 
-        var tries = 0;
-        while ( ! client.is_connected() )
-        {
-            try
-            {
-                client.connect();
-            }
-            catch ( EventcError e )
-            {
-                GLib.warning("Couldn’t connect to host '%s': %s", host, e.message);
-                if ( ( max_tries > 0 ) && ( ++tries >= max_tries ) )
-                {
-                    GLib.warning("Too many attempts, aborting");
-                    return 1;
-                }
-            }
-        }
+        tries = 0;
+        connect();
 
-        if ( event_type != null )
-        {
-            var n_length = ( event_data_name == null ) ? 0 : strv_length(event_data_name);
-            var c_length = ( event_data_content == null ) ? 0 : strv_length(event_data_content);
-            if ( n_length != c_length )
-            {
-                GLib.warning("Not the same number of data names and data contents");
-                return 1;
-            }
+        loop = new GLib.MainLoop();
 
-            var event = new Eventd.Event(event_type);
-
-            for ( uint i = 0 ; i < n_length ; ++i )
-                event.add_data(event_data_name[i], event_data_content[i]);
-
-            try
-            {
-                client.event(event);
-            }
-            catch ( EventcError e )
-            {
-                GLib.warning("Couldn’t send event '%s': %s", event_type, e.message);
-            }
-            print_pong_data(event);
-        }
-        else
-        {
-            while ( ( event_type = stdin.read_line() ) != null )
-            {
-                var event = new Eventd.Event(event_type);
-                try
-                {
-                    client.event(event);
-                }
-                catch ( EventcError e )
-                {
-                    GLib.warning("Couldn’t send event '%s': %s", event_type, e.message);
-                }
-                print_pong_data(event);
-            }
-        }
-
-        try
-        {
-            client.close();
-        }
-        catch ( EventcError e )
-        {
-            GLib.warning("Couldn’t close connection to host '%s': %s", host, e.message);
-            return 1;
-        }
+        loop.run();
 
         return 0;
     }
