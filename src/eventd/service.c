@@ -45,6 +45,7 @@ struct _EventdService {
     GSocketService *private_service;
 #endif /* ENABLE_GIO_UNIX */
     GSocketService *service;
+    guint32 count;
 };
 
 static gboolean
@@ -169,7 +170,7 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
     gsize size = 0;
     gchar *line = NULL;
 
-    gint64 last_action = 0;
+    gint32 last_eventd_id = 0;
 
     input = g_data_input_stream_new(g_io_stream_get_input_stream((GIOStream *)connection));
     output = g_data_output_stream_new(g_io_stream_get_output_stream((GIOStream *)connection));
@@ -203,8 +204,6 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
                     if ( ! disable )
                     {
                         GHashTable *ret = NULL;
-
-                        last_action = g_get_monotonic_time();
 
                         ret = eventd_plugins_event_action_all(client, event);
                         switch ( libeventd_client_get_mode(client) )
@@ -259,7 +258,9 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
             if ( client == NULL )
                 break;
 
-            event = eventd_event_new(line+6);
+            last_eventd_id = ++service->count;
+
+            event = eventd_event_new_with_id(last_eventd_id, line+6);
         }
         else if ( g_ascii_strcasecmp(line, "BYE") == 0 )
         {
@@ -276,7 +277,7 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
             if ( client == NULL )
                 break;
 
-            if ( last_action > 0 )
+            if ( last_eventd_id > 0 )
             {
                 g_warning("Can’t change the mode after the first event");
                 g_free(line);

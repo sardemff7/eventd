@@ -53,6 +53,7 @@ _eventd_event_end_reason_get_type()
 }
 
 struct _EventdEventPrivate {
+    guint32 id;
     gchar *type;
     GHashTable *data;
     GHashTable *pong_data;
@@ -81,6 +82,17 @@ eventd_event_new(const gchar *type)
     event = g_object_new(EVENTD_TYPE_EVENT, NULL);
 
     event->priv->type = g_strdup(type);
+
+    return event;
+}
+
+EventdEvent *
+eventd_event_new_with_id(guint32 id, const gchar *type)
+{
+    EventdEvent *event;
+
+    event = eventd_event_new(type);
+    event->priv->id = id;
 
     return event;
 }
@@ -123,6 +135,12 @@ eventd_event_add_pong_data(EventdEvent *event, gchar *name, gchar *content)
     g_hash_table_insert(event->priv->pong_data, name, content);
 }
 
+
+guint32
+eventd_event_get_id(EventdEvent *event)
+{
+    return event->priv->id;
+}
 
 const gchar *
 eventd_event_get_type(EventdEvent *event)
