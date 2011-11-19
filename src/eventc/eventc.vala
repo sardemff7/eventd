@@ -52,6 +52,32 @@ namespace Eventc
         { null }
     };
 
+    private static void print_pong_data(Eventd.Event event)
+    {
+        unowned GLib.HashTable<string, string>? ret_data = event.get_pong_data();
+        if ( ret_data == null )
+            return;
+
+        ret_data.foreach((name, content) => {
+            if ( content.index_of_char('\n') == -1 )
+                stdout.puts(@"DATAL $name $content\n");
+            else
+            {
+                stdout.puts(@"DATA $name\n");
+                var datas = content.split("\n");
+                foreach ( var line in datas )
+                {
+                    if ( line[0] == '.' )
+                        stdout.puts(".");
+                    stdout.puts(line);
+                    stdout.puts("\n");
+                }
+                stdout.puts(".\n");
+            }
+        });
+        stdout.puts(".\n");
+    }
+
     public static int main(string[] args)
     {
         var opt_context = new GLib.OptionContext("<client type> [<client name>] - Basic CLI client for eventd");
@@ -132,54 +158,35 @@ namespace Eventc
                 return 1;
             }
 
-            GLib.HashTable<string, string> event_data = new GLib.HashTable<string, string>(string.hash, GLib.str_equal);
+            var event = new Eventd.Event(event_type);
 
             for ( uint i = 0 ; i < n_length ; ++i )
-                event_data.insert(event_data_name[i], event_data_content[i]);
+                event.add_data(event_data_name[i], event_data_content[i]);
 
-            GLib.HashTable<string, string>? ret_data = null;
             try
             {
-                ret_data = client.event(event_type, event_data);
+                client.event(event);
             }
             catch ( EventcError e )
             {
                 GLib.warning("Couldn’t send event '%s': %s", event_type, e.message);
             }
-            if ( ret_data != null )
-            {
-                ret_data.foreach((name, content) => {
-                    if ( content.index_of_char('\n') == -1 )
-                        stdout.puts(@"DATAL $name $content\n");
-                    else
-                    {
-                        stdout.puts(@"DATA $name\n");
-                        var datas = content.split("\n");
-                        foreach ( var line in datas )
-                        {
-                            if ( line[0] == '.' )
-                                stdout.puts(".");
-                            stdout.puts(line);
-                            stdout.puts("\n");
-                        }
-                        stdout.puts(".\n");
-                    }
-                });
-                stdout.puts(".\n");
-            }
+            print_pong_data(event);
         }
         else
         {
             while ( ( event_type = stdin.read_line() ) != null )
             {
+                var event = new Eventd.Event(event_type);
                 try
                 {
-                    client.event(event_type, null);
+                    client.event(event);
                 }
                 catch ( EventcError e )
                 {
                     GLib.warning("Couldn’t send event '%s': %s", event_type, e.message);
                 }
+                print_pong_data(event);
             }
         }
 

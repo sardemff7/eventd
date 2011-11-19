@@ -297,6 +297,7 @@ libeventc_la_SOURCES = \
 
 libeventc_la_VALAFLAGS = \
 	$(AM_VALAFLAGS) \
+	--pkg libeventd-event \
 	--library $(top_builddir)/vapi/libeventc \
 	-H $(top_builddir)/include/libeventc.h \
 	$(GIO_VALAFLAGS) \
@@ -317,6 +318,7 @@ libeventc_la_LDFLAGS = \
 	-Wl,--version-script=$(top_srcdir)/src/libeventc/libeventc.sym
 
 libeventc_la_LIBADD = \
+	libeventd-event.la \
 	$(GIO_LIBS) \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS)
@@ -347,6 +349,7 @@ eventc_SOURCES = \
 
 eventc_VALAFLAGS = \
 	$(AM_VALAFLAGS) \
+	--pkg libeventd-event \
 	--pkg libeventc \
 	$(GIO_VALAFLAGS) \
 	$(GOBJECT_VALAFLAGS) \
@@ -360,6 +363,7 @@ eventc_CFLAGS = \
 	$(GLIB_CFLAGS)
 
 eventc_LDADD = \
+	libeventd-event.la \
 	libeventc.la \
 	$(GIO_LIBS) \
 	$(GOBJECT_LIBS) \

@@ -286,10 +286,12 @@ namespace Eventc
         }
 
         public void
-        event_common(string type, GLib.HashTable<string, string>? data) throws EventcError
+        event_common(Eventd.Event event) throws EventcError
         {
+            unowned string type = event.get_type();
             this.send( @"EVENT $type");
 
+            unowned GLib.HashTable<string, string> data = event.get_data();
             if ( data != null )
             {
                 EventcError e = null;
@@ -322,11 +324,10 @@ namespace Eventc
             this.send(".");
         }
 
-        public GLib.HashTable<string, string>?
-        event(string type, GLib.HashTable<string, string>? data) throws EventcError
+        public void
+        event(Eventd.Event event) throws EventcError
         {
-            this.event_common(type, data);
-            GLib.HashTable<string, string>? ret = null;
+            this.event_common(event);
             string line = null;
             string data_name = null;
             string data_content = null;
@@ -336,22 +337,20 @@ namespace Eventc
                 while ( ( line = this.receive() ) != null )
                 {
                     if ( line == "EVENT" )
-                        ret = new GLib.HashTable<string, string>(string.hash, GLib.str_equal);
+                    {}
                     else if ( line == "." )
                     {
                         if ( data_name != null )
-                            ret.insert((owned)data_name, (owned)data_content);
+                            event.add_pong_data((owned)data_name, (owned)data_content);
                         else
                             break;
                     }
-                    else if ( ret == null )
-                        throw new EventcError.EVENT("Can’t receive correct event data");
                     else if ( data_name != null )
                         data_content += line;
                     else if ( line.ascii_ncasecmp("DATAL ", 6) == 0 )
                     {
                         var data_line = line.substring(6).split(" ", 2);
-                        ret.insert(data_line[0], data_line[1]);
+                        event.add_pong_data(data_line[0], data_line[1]);
                     }
                     else if ( line.ascii_ncasecmp("DATA ", 5) == 0 )
                     {
@@ -365,14 +364,12 @@ namespace Eventc
             default:
             break;
             }
-            return (owned)ret;
         }
 
-        public async GLib.HashTable<string, string>?
-        event_async(string type, GLib.HashTable<string, string>? data) throws EventcError
+        public async void
+        event_async(Eventd.Event event) throws EventcError
         {
-            this.event_common(type, data);
-            GLib.HashTable<string, string>? ret = null;
+            this.event_common(event);
             string line = null;
             string data_name = null;
             string data_content = null;
@@ -382,20 +379,18 @@ namespace Eventc
                 while ( ( line = yield this.receive_async() ) != null )
                 {
                     if ( line == "EVENT" )
-                        ret = new GLib.HashTable<string, string>(string.hash, GLib.str_equal);
+                    {}
                     else if ( line == "." )
                     {
                         if ( data_name != null )
-                            ret.insert((owned)data_name, (owned)data_content);
+                            event.add_pong_data((owned)data_name, (owned)data_content);
                         else
                             break;
                     }
-                    else if ( ret == null )
-                        throw new EventcError.EVENT("Can’t receive correct event data");
                     else if ( line.ascii_ncasecmp("DATAL ", 6) == 0 )
                     {
                         var data_line = line.substring(6).split(" ", 2);
-                        ret.insert(data_line[0], data_line[1]);
+                        event.add_pong_data(data_line[0], data_line[1]);
                     }
                     else if ( line.ascii_ncasecmp("DATA ", 5) == 0 )
                     {
@@ -411,7 +406,6 @@ namespace Eventc
             default:
             break;
             }
-            return (owned)ret;
         }
 
         private string?
