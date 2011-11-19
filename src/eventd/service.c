@@ -206,22 +206,27 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
                     {
                         GHashTable *ret = NULL;
 
-                        ret = eventd_plugins_event_action_all(client, event);
                         switch ( libeventd_client_get_mode(client) )
                         {
                         case EVENTD_CLIENT_MODE_PING_PONG:
+                            ret = eventd_plugins_event_action_all(client, event);
                             if ( ! g_data_output_stream_put_string(output, "EVENT\n", NULL, &error) )
                                 break;
                             if ( ret != NULL )
+                            {
                                 g_hash_table_foreach(ret, _eventd_service_send_data, output);
+                                g_hash_table_unref(ret);
+                            }
                             if ( ! g_data_output_stream_put_string(output, ".\n", NULL, &error) )
                                 break;
+                        break;
                         case EVENTD_CLIENT_MODE_NORMAL:
                         default:
+                            eventd_plugins_event_action_all(client, event);
                         break;
                         }
-                        if ( ret != NULL )
-                            g_hash_table_unref(ret);
+                        if ( error != NULL )
+                            break;
                     }
 
                     g_object_unref(event);
