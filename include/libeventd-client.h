@@ -32,7 +32,7 @@ typedef enum {
 typedef struct _EventdClient EventdClient;
 
 EventdClient *libeventd_client_new();
-void libeventd_client_ref(EventdClient *client);
+EventdClient *libeventd_client_ref(EventdClient *client);
 void libeventd_client_unref(EventdClient *client);
 
 void libeventd_client_update(EventdClient *client, const gchar *type, const gchar *name);

@@ -51,13 +51,13 @@ _libeventd_client_finalize(EventdClient *client)
     g_free(client);
 }
 
-void
+EventdClient *
 libeventd_client_ref(EventdClient *client)
 {
-    if ( client == NULL )
-        return;
+    if ( client != NULL )
+        ++client->ref_count;
 
-    ++client->ref_count;
+    return client;
 }
 
 void
