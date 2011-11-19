@@ -53,7 +53,7 @@ _eventd_notification_stop()
 }
 
 static void
-_eventd_notification_event_update(EventdNotificationEvent *event, gboolean disable, const char *title, const char *message, const char *icon, const char *overlay_icon, Int *scale, Int *timeout)
+_eventd_notification_event_update(EventdNotificationEvent *event, gboolean disable, const char *title, const char *message, const char *icon, const char *overlay_icon, Int *scale)
 {
     event->disable = disable;
     if ( title != NULL )
@@ -78,12 +78,10 @@ _eventd_notification_event_update(EventdNotificationEvent *event, gboolean disab
     }
     if ( scale->set )
         event->scale = (gdouble)scale->value / 100.;
-    if ( timeout->set )
-        event->timeout = ( timeout->value > 0 ) ? ( timeout->value * 1000 ) : timeout->value;
 }
 
 static EventdNotificationEvent *
-_eventd_notification_event_new(gboolean disable, const char *title, const char *message, const char *icon, const char *overlay_icon, Int *scale, Int *timeout, EventdNotificationEvent *parent)
+_eventd_notification_event_new(gboolean disable, const char *title, const char *message, const char *icon, const char *overlay_icon, Int *scale, EventdNotificationEvent *parent)
 {
     EventdNotificationEvent *event = NULL;
 
@@ -93,12 +91,10 @@ _eventd_notification_event_new(gboolean disable, const char *title, const char *
     overlay_icon = overlay_icon ?: parent ? parent->overlay_icon : "overlay-icon";
     scale->value = scale->set ? scale->value : parent ? parent->scale * 100 : 50;
     scale->set = TRUE;
-    timeout->value = timeout->set ? timeout->value : parent ? parent->timeout : -1;
-    timeout->set = TRUE;
 
     event = g_new0(EventdNotificationEvent, 1);
 
-    _eventd_notification_event_update(event, disable, title, message, icon, overlay_icon, scale, timeout);
+    _eventd_notification_event_update(event, disable, title, message, icon, overlay_icon, scale);
 
     return event;
 }
@@ -125,7 +121,6 @@ _eventd_notification_event_parse(const gchar *client_type, const gchar *event_ty
     gchar *icon = NULL;
     gchar *overlay_icon = NULL;
     Int scale;
-    Int timeout;
     EventdNotificationEvent *event;
 
     if ( ! g_key_file_has_group(config_file, "notification") )
@@ -143,16 +138,14 @@ _eventd_notification_event_parse(const gchar *client_type, const gchar *event_ty
         goto skip;
     if ( libeventd_config_key_file_get_int(config_file, "notification", "overlay-scale", &scale) < 0 )
         goto skip;
-    if ( libeventd_config_key_file_get_int(config_file, "notification", "timeout", &timeout) < 0 )
-        goto skip;
 
     name = libeventd_config_events_get_name(client_type, event_type);
 
     event = g_hash_table_lookup(events, name);
     if ( event != NULL )
-        _eventd_notification_event_update(event, disable, title, message, icon, overlay_icon, &scale, &timeout);
+        _eventd_notification_event_update(event, disable, title, message, icon, overlay_icon, &scale);
     else
-        g_hash_table_insert(events, name, _eventd_notification_event_new(disable, title, message, icon, overlay_icon, &scale, &timeout, g_hash_table_lookup(events, client_type)));
+        g_hash_table_insert(events, name, _eventd_notification_event_new(disable, title, message, icon, overlay_icon, &scale, g_hash_table_lookup(events, client_type)));
 
 skip:
     g_free(overlay_icon);
@@ -177,8 +170,6 @@ _eventd_notification_notification_new(EventdClient *client, GHashTable *data, Ev
 
     eventd_notification_icon_get_pixbuf(data, notification_event, notification);
 
-    notification->timeout = notification_event->timeout;
-
     return notification;
 }
 
@@ -195,8 +186,6 @@ _eventd_notification_notification_insert_data_in_hash_table(EventdNotificationNo
         g_hash_table_insert(table, g_strdup("overlay-icon"), eventd_notification_icon_get_base64(notification->overlay_icon));
     if ( notification->merged_icon != NULL )
         g_hash_table_insert(table, g_strdup("merged-icon"), eventd_notification_icon_get_base64(notification->merged_icon));
-
-    g_hash_table_insert(table, g_strdup("timeout"), g_strdup_printf("%jd", notification->timeout));
 }
 
 static void
@@ -238,7 +227,7 @@ _eventd_notification_event_action(EventdClient *client, EventdEvent *event)
         _eventd_notification_notification_insert_data_in_hash_table(notification, ret);
     break;
     default:
-        eventd_notification_notify_event_action(notification);
+        eventd_notification_notify_event_action(event, notification);
     }
 
     _eventd_notification_notification_free(notification);

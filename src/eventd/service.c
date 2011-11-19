@@ -200,6 +200,7 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
                     gint64 timeout;
 
                     eventd_config_event_get_disable_and_timeout(service->config, client, event, &disable, &timeout);
+                    eventd_event_set_timeout(event, timeout);
 
                     if ( ! disable )
                     {

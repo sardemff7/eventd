@@ -55,6 +55,7 @@ _eventd_event_end_reason_get_type()
 struct _EventdEventPrivate {
     guint32 id;
     gchar *type;
+    gint64 timeout;
     GHashTable *data;
     GHashTable *pong_data;
 
@@ -101,6 +102,8 @@ static void
 _eventd_event_init(EventdEvent *event)
 {
     event->priv = g_new0(EventdEventPrivate, 1);
+
+    event->priv->timeout = -1;
 }
 
 static void
@@ -135,6 +138,12 @@ eventd_event_add_pong_data(EventdEvent *event, gchar *name, gchar *content)
     g_hash_table_insert(event->priv->pong_data, name, content);
 }
 
+void
+eventd_event_set_timeout(EventdEvent *event, gint64 timeout)
+{
+    event->priv->timeout = timeout;
+}
+
 
 guint32
 eventd_event_get_id(EventdEvent *event)
@@ -146,6 +155,12 @@ const gchar *
 eventd_event_get_type(EventdEvent *event)
 {
     return event->priv->type;
+}
+
+gint64
+eventd_event_get_timeout(EventdEvent *event)
+{
+    return event->priv->timeout;
 }
 
 GHashTable *

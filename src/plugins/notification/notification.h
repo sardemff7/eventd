@@ -30,7 +30,6 @@ typedef struct {
     gchar *icon;
     gchar *overlay_icon;
     gdouble scale;
-    gint64 timeout;
 } EventdNotificationEvent;
 
 typedef struct {
@@ -39,7 +38,6 @@ typedef struct {
     gpointer icon;
     gpointer overlay_icon;
     gpointer merged_icon;
-    gint64 timeout;
 } EventdNotificationNotification;
 
 #endif /* __EVENTD_PLUGINS_NOTIFICATION_NOTIFICATION_H__ */

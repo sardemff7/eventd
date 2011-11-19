@@ -24,6 +24,11 @@
 #include "libnotify-compat.h"
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
+#include <glib.h>
+#include <glib-object.h>
+
+#include <libeventd-event.h>
+
 #include "notification.h"
 #include "notify.h"
 
@@ -40,7 +45,7 @@ eventd_notification_notify_uninit()
 }
 
 void
-eventd_notification_notify_event_action(EventdNotificationNotification *notification)
+eventd_notification_notify_event_action(EventdEvent *event, EventdNotificationNotification *notification)
 {
     GError *error = NULL;
     NotifyNotification *notify_notification = NULL;
@@ -54,7 +59,7 @@ eventd_notification_notify_event_action(EventdNotificationNotification *notifica
     else if ( notification->overlay_icon != NULL )
         notify_notification_set_image_from_pixbuf(notify_notification, notification->overlay_icon);
 
-    notify_notification_set_timeout(notify_notification, notification->timeout);
+    notify_notification_set_timeout(notify_notification, eventd_event_get_timeout(event));
 
     if ( ! notify_notification_show(notify_notification, &error) )
         g_warning("Can't show the notification: %s", error->message);

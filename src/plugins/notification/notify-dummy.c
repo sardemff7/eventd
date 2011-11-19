@@ -21,6 +21,9 @@
  */
 
 #include <glib.h>
+#include <glib-object.h>
+
+#include <libeventd-event.h>
 
 #include "notification.h"
 #include "notify.h"
@@ -36,6 +39,6 @@ eventd_notification_notify_uninit()
 }
 
 void
-eventd_notification_notify_event_action(EventdNotificationNotification *notification)
+eventd_notification_notify_event_action(EventdEvent *event, EventdNotificationNotification *notification)
 {
 }

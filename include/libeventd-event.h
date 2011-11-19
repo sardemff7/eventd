@@ -45,11 +45,13 @@ struct _EventdEventClass
 EventdEvent *eventd_event_new(const gchar *type);
 EventdEvent *eventd_event_new_with_id(guint32 id, const gchar *type);
 
+void eventd_event_set_timeout(EventdEvent *event, gint64 timeout);
 void eventd_event_add_data(EventdEvent *event, gchar *name, gchar *content);
 void eventd_event_add_pong_data(EventdEvent *event, gchar *name, gchar *content);
 
 guint32 eventd_event_get_id(EventdEvent *event);
 const gchar *eventd_event_get_type(EventdEvent *event);
+gint64 eventd_event_get_timeout(EventdEvent *event);
 GHashTable *eventd_event_get_data(EventdEvent *event);
 GHashTable *eventd_event_get_pong_data(EventdEvent *event);
 
