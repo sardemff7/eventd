@@ -24,6 +24,7 @@
 
 #include <string.h>
 #include <glib.h>
+#include <glib-object.h>
 #include <gio/gio.h>
 
 #include <libeventd-client.h>
@@ -256,11 +257,11 @@ _eventd_sound_espeak_event_action(EventdClient *client, EventdEvent *event)
 
     client_mode = libeventd_client_get_mode(client);
 
-    message = libeventd_config_events_get_event(events, libeventd_client_get_type(client), libeventd_event_get_type(event));
+    message = libeventd_config_events_get_event(events, libeventd_client_get_type(client), eventd_event_get_type(event));
     if ( message == NULL )
         return NULL;
 
-    msg = libeventd_regex_replace_event_data(message, libeventd_event_get_data(event), _eventd_sound_espeak_regex_event_data_cb);
+    msg = libeventd_regex_replace_event_data(message, eventd_event_get_data(event), _eventd_sound_espeak_regex_event_data_cb);
 
     data = _eventd_sound_espeak_callback_data_new(client_mode);
     error = espeak_Synth(msg, strlen(msg)+1, 0, POS_CHARACTER, 0, espeakCHARS_UTF8|espeakSSML, NULL, data);

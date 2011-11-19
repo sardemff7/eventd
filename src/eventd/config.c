@@ -23,6 +23,7 @@
 #include <string.h>
 
 #include <glib.h>
+#include <glib-object.h>
 #include <gio/gio.h>
 
 #include <libeventd-client.h>
@@ -79,7 +80,7 @@ eventd_config_event_get_disable_and_timeout(EventdConfig *config, EventdClient *
 {
     EventdConfigEvent *config_event;
 
-    config_event = libeventd_config_events_get_event(config->events, libeventd_client_get_type(client), libeventd_event_get_type(event));
+    config_event = libeventd_config_events_get_event(config->events, libeventd_client_get_type(client), eventd_event_get_type(event));
 
     if ( config_event == NULL )
     {

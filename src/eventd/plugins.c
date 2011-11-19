@@ -21,6 +21,7 @@
  */
 
 #include <glib.h>
+#include <glib-object.h>
 #include <gmodule.h>
 
 #include <libeventd-client.h>

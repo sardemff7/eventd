@@ -21,6 +21,7 @@
  */
 
 #include <glib.h>
+#include <glib-object.h>
 #ifdef G_OS_UNIX
 #include <glib-unix.h>
 #endif /* G_OS_UNIX */
@@ -188,7 +189,7 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
             {
                 if ( event_data_name )
                 {
-                    libeventd_event_add_data(event, event_data_name, event_data_content);
+                    eventd_event_add_data(event, event_data_name, event_data_content);
                     event_data_name = NULL;
                     event_data_content = NULL;
                 }
@@ -223,7 +224,7 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
                             g_hash_table_unref(ret);
                     }
 
-                    libeventd_event_unref(event); // TODO: Add some timeout
+                    g_object_unref(event);
                     event = NULL;
                 }
             }
@@ -245,7 +246,7 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
                 gchar **data = NULL;
 
                 data = g_strsplit(line+6, " ", 2);
-                libeventd_event_add_data(event, data[0], data[1]);
+                eventd_event_add_data(event, data[0], data[1]);
                 g_free(data);
             }
             else
@@ -256,7 +257,7 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
             if ( client == NULL )
                 break;
 
-            event = libeventd_event_new(line+6);
+            event = eventd_event_new(line+6);
         }
         else if ( g_ascii_strcasecmp(line, "BYE") == 0 )
         {

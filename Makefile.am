@@ -24,8 +24,38 @@ AM_VALAFLAGS += \
 	--pkg config
 
 
+
 #
-# Helper lib
+# Event lib
+#
+LIBEVENTD_EVENT_CURRENT=0
+LIBEVENTD_EVENT_REVISION=0
+LIBEVENTD_EVENT_AGE=0
+
+lib_LTLIBRARIES += \
+	libeventd-event.la
+
+pkginclude_HEADERS += \
+	include/libeventd-event.h
+
+libeventd_event_la_SOURCES = \
+	src/libeventd-event/event.c
+
+libeventd_event_la_CFLAGS = \
+	$(AM_CFLAGS) \
+	$(GLIB_CFLAGS)
+
+libeventd_event_la_LDFLAGS = \
+	$(AM_LDFLAGS) \
+	-version-info $(LIBEVENTD_EVENT_CURRENT):$(LIBEVENTD_EVENT_REVISION):$(LIBEVENTD_EVENT_AGE) \
+	-Wl,--version-script=$(top_srcdir)/src/libeventd-event/libeventd-event.sym
+
+libeventd_event_la_LIBADD = \
+	$(GLIB_LIBS)
+
+
+#
+# Internal helper lib
 #
 pkglib_LTLIBRARIES += \
 	libeventd.la
@@ -34,14 +64,12 @@ pkginclude_HEADERS += \
 	include/libeventd-regex.h \
 	include/libeventd-config.h \
 	include/libeventd-plugins.h \
-	include/libeventd-event.h \
 	include/libeventd-client.h
 
 libeventd_la_SOURCES = \
 	src/libeventd/regex.c \
 	src/libeventd/config.c \
 	src/libeventd/plugins.c \
-	src/libeventd/event.c \
 	src/libeventd/client.c
 
 libeventd_la_CFLAGS = \
@@ -57,6 +85,7 @@ libeventd_la_LDFLAGS = \
 	-export-symbols $(top_srcdir)/src/libeventd/libeventd.sym
 
 libeventd_la_LIBADD = \
+	libeventd-event.la \
 	$(GMODULE_LIBS) \
 	$(GLIB_LIBS)
 
@@ -88,6 +117,7 @@ eventd_CFLAGS = \
 	$(GLIB_CFLAGS)
 
 eventd_LDADD = \
+	libeventd-event.la \
 	libeventd.la \
 	$(SYSTEMD_LIBS) \
 	$(GIO_LIBS) \
@@ -131,6 +161,7 @@ sound_la_LDFLAGS = \
 	-avoid-version -module -export-symbols-regex eventd_plugin_get_info
 
 sound_la_LIBADD = \
+	libeventd-event.la \
 	libeventd.la \
 	$(PULSEAUDIO_LIBS) \
 	$(GLIB_LIBS)
@@ -161,6 +192,7 @@ sndfile_la_LDFLAGS = \
 	$(sound_la_LDFLAGS)
 
 sndfile_la_LIBADD = \
+	libeventd-event.la \
 	libeventd.la \
 	$(SNDFILE_LIBS) \
 	$(PULSEAUDIO_LIBS) \
@@ -187,6 +219,7 @@ espeak_la_LDFLAGS = \
 	$(sound_la_LDFLAGS)
 
 espeak_la_LIBADD = \
+	libeventd-event.la \
 	libeventd.la \
 	$(ESPEAK_LIBS) \
 	$(PULSEAUDIO_LIBS) \
@@ -223,6 +256,7 @@ notification_la_LDFLAGS = \
 	-avoid-version -module -export-symbols-regex eventd_plugin_get_info
 
 notification_la_LIBADD = \
+	libeventd-event.la \
 	libeventd.la \
 	$(GDK_PIXBUF_LIBS) \
 	$(NOTIFY_LIBS) \

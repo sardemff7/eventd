@@ -24,6 +24,7 @@
 #include <sndfile.h>
 
 #include <glib.h>
+#include <glib-object.h>
 #include <string.h>
 
 #include <libeventd-client.h>
@@ -204,7 +205,7 @@ _eventd_sound_sndfile_event_action(EventdClient *client, EventdEvent *event)
     EventdSoundSndfileEvent *sndfile_event = NULL;
     pa_operation *op;
 
-    sndfile_event = libeventd_config_events_get_event(events, libeventd_client_get_type(client), libeventd_event_get_type(event));
+    sndfile_event = libeventd_config_events_get_event(events, libeventd_client_get_type(client), eventd_event_get_type(event));
     if ( sndfile_event == NULL )
         return NULL;
 

@@ -21,6 +21,7 @@
  */
 
 #include <glib.h>
+#include <glib-object.h>
 
 #include <libeventd-client.h>
 #include <libeventd-event.h>
@@ -221,14 +222,14 @@ _eventd_notification_event_action(EventdClient *client, EventdEvent *event)
     EventdNotificationNotification *notification;
     GHashTable *ret = NULL;
 
-    notification_event = libeventd_config_events_get_event(events, libeventd_client_get_type(client), libeventd_event_get_type(event));
+    notification_event = libeventd_config_events_get_event(events, libeventd_client_get_type(client), eventd_event_get_type(event));
     if ( notification_event == NULL )
         return NULL;
 
     if ( notification_event->disable )
         return NULL;
 
-    notification = _eventd_notification_notification_new(client, libeventd_event_get_data(event), notification_event);
+    notification = _eventd_notification_notification_new(client, eventd_event_get_data(event), notification_event);
 
     switch ( libeventd_client_get_mode(client) )
     {
