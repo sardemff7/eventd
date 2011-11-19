@@ -45,6 +45,8 @@ namespace Eventc
             PING_PONG
         }
 
+        private GLib.Mutex mutex;
+
         private string _host;
         private uint16 _port;
         private string _type;
@@ -110,6 +112,7 @@ namespace Eventc
         public
         Connection(string host, uint16 port, string type, string? name)
         {
+            this.mutex = new GLib.Mutex();
             this._host = host;
             this._port = port;
             this._type = type;
@@ -163,6 +166,12 @@ namespace Eventc
         public new async void
         connect() throws EventcError
         {
+            while ( ! this.mutex.trylock() )
+            {
+                Idle.add(this.connect.callback);
+                yield;
+            }
+
             this.set_client();
             try
             {
@@ -176,6 +185,8 @@ namespace Eventc
                     throw new EventcError.CONNECTION_OTHER("Failed to connect: %s", e.message);
             }
             yield this.hello();
+
+            this.mutex.unlock();
         }
 
         private async void
@@ -234,6 +245,12 @@ namespace Eventc
         public async void
         event(Eventd.Event event) throws EventcError
         {
+            while ( ! this.mutex.trylock() )
+            {
+                Idle.add(this.event.callback);
+                yield;
+            }
+
             unowned string type = event.get_type();
             this.send( @"EVENT $type");
 
@@ -305,6 +322,8 @@ namespace Eventc
             default:
             break;
             }
+
+            this.mutex.unlock();
         }
 
         private async string?
@@ -339,6 +358,12 @@ namespace Eventc
         public async void
         close() throws EventcError
         {
+            while ( ! this.mutex.trylock() )
+            {
+                Idle.add(this.close.callback);
+                yield;
+            }
+
             if ( ( this.hello_received ) && ( ! this.connection.is_closed() ) )
             {
                 this.send("BYE");
@@ -358,6 +383,8 @@ namespace Eventc
             this.input = null;
             this.connection = null;
             this.client = null;
+
+            this.mutex.unlock();
         }
     }
 }

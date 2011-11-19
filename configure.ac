@@ -155,6 +155,10 @@ if test x$enable_client = xyes; then
     GOBJECT_VALAFLAGS="--pkg gobject-2.0"
     AC_SUBST(GOBJECT_VALAFLAGS)
 
+    PKG_CHECK_MODULES(GTHREAD, [gthread-2.0])
+    GTHREAD_VALAFLAGS="--thread"
+    AC_SUBST(GTHREAD_VALAFLAGS)
+
     AM_PROG_VALAC([$vala_min_version])
 fi
 AM_CONDITIONAL(ENABLE_CLIENT, [test x$enable_client = xyes])
