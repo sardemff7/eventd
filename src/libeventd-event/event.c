@@ -63,6 +63,14 @@ struct _EventdEventPrivate {
 };
 
 
+enum {
+    SIGNAL_ENDED,
+    LAST_SIGNAL
+};
+
+static guint _eventd_event_signals[LAST_SIGNAL] = { 0 };
+
+
 static void _eventd_event_finalize(GObject *object);
 
 static void
@@ -73,6 +81,16 @@ _eventd_event_class_init(EventdEventClass *klass)
     _eventd_event_parent_class = g_type_class_peek_parent(klass);
 
     object_class->finalize = _eventd_event_finalize;
+
+    _eventd_event_signals[SIGNAL_ENDED] =
+            g_signal_new("ended",
+                         G_TYPE_FROM_CLASS(object_class),
+                         G_SIGNAL_RUN_FIRST,
+                         G_STRUCT_OFFSET(EventdEventClass, ended),
+                         NULL, NULL,
+                         g_cclosure_marshal_VOID__ENUM,
+                         G_TYPE_NONE,
+                         1, EVENTD_TYPE_EVENT_END_REASON);
 }
 
 EventdEvent *
@@ -120,6 +138,12 @@ _eventd_event_finalize(GObject *object)
     g_free(priv);
 
     G_OBJECT_CLASS(_eventd_event_parent_class)->finalize(object);
+}
+
+void
+eventd_event_end(EventdEvent *event, EventdEventEndReason reason)
+{
+    g_signal_emit(event, _eventd_event_signals[SIGNAL_ENDED], 0, reason);
 }
 
 void

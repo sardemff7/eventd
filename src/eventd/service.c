@@ -219,10 +219,12 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
                             }
                             if ( ! g_data_output_stream_put_string(output, ".\n", NULL, &error) )
                                 break;
+                            eventd_event_end(event, EVENTD_EVENT_END_REASON_RESERVED);
                         break;
                         case EVENTD_CLIENT_MODE_NORMAL:
                         default:
                             eventd_plugins_event_action_all(client, event);
+                            eventd_event_end(event, EVENTD_EVENT_END_REASON_TIMEOUT);
                         break;
                         }
                         if ( error != NULL )

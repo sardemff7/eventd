@@ -29,6 +29,14 @@ typedef struct _EventdEvent EventdEvent;
 typedef struct _EventdEventClass EventdEventClass;
 typedef struct _EventdEventPrivate EventdEventPrivate;
 
+typedef enum {
+    EVENTD_EVENT_END_REASON_NONE = 0,
+    EVENTD_EVENT_END_REASON_TIMEOUT = 1,
+    EVENTD_EVENT_END_REASON_USER_DISMISS = 2,
+    EVENTD_EVENT_END_REASON_CLIENT_DISMISS = 3,
+    EVENTD_EVENT_END_REASON_RESERVED = 4
+} EventdEventEndReason;
+
 struct _EventdEvent
 {
         GObject parent_object;
@@ -40,10 +48,15 @@ struct _EventdEvent
 struct _EventdEventClass
 {
         GObjectClass parent_class;
+
+        /* Signals */
+        void (*ended) (EventdEvent *event, EventdEventEndReason reason);
 };
 
 EventdEvent *eventd_event_new(const gchar *type);
 EventdEvent *eventd_event_new_with_id(guint32 id, const gchar *type);
+
+void eventd_event_end(EventdEvent *event, EventdEventEndReason reason);
 
 void eventd_event_set_timeout(EventdEvent *event, gint64 timeout);
 void eventd_event_add_data(EventdEvent *event, gchar *name, gchar *content);
