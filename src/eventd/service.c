@@ -34,22 +34,30 @@
 #include <libeventd-client.h>
 #include <libeventd-event.h>
 #include <eventd-plugin.h>
+
 #include "config.h"
 #include "plugins.h"
+#include "control.h"
+
 #include "service.h"
 
 struct _EventdService {
+    EventdControl *control;
     EventdConfig *config;
     GMainLoop *loop;
-#if ENABLE_GIO_UNIX
-    GSocketService *private_service;
-#endif /* ENABLE_GIO_UNIX */
     GSocketService *service;
     guint32 count;
 };
 
-static gboolean
-_eventd_service_quit(gpointer user_data)
+void
+eventd_service_config_reload(gpointer user_data)
+{
+    EventdService *service = user_data;
+    service->config = eventd_config_parser(service->config);
+}
+
+gboolean
+eventd_service_quit(gpointer user_data)
 {
     EventdService *service = user_data;
     if ( service->loop != NULL )
@@ -57,57 +65,6 @@ _eventd_service_quit(gpointer user_data)
 
     return FALSE;
 }
-
-#if ENABLE_GIO_UNIX
-static gboolean
-_eventd_service_private_connection_handler(GThreadedSocketService *socket_service, GSocketConnection *connection, GObject *source_object, gpointer user_data)
-{
-    EventdService *service = user_data;
-
-    GError *error = NULL;
-    GDataInputStream *input = NULL;
-    gsize size = 0;
-    gchar *line = NULL;
-
-    if ( ! g_output_stream_close(g_io_stream_get_output_stream((GIOStream *)connection), NULL, &error) )
-        g_warning("Can't close the output stream: %s", error->message);
-    g_clear_error(&error);
-
-    input = g_data_input_stream_new(g_io_stream_get_input_stream((GIOStream *)connection));
-
-    if ( ( line = g_data_input_stream_read_upto(input, "\0", 1, &size, NULL, &error) ) == NULL )
-    {
-        if ( error != NULL )
-            g_warning("Can’t read the command: %s", error->message);
-        g_clear_error(&error);
-    }
-    else
-    {
-
-        g_data_input_stream_read_byte(input, NULL, &error);
-        if ( error != NULL )
-            g_clear_error(&error);
-        else if ( g_strcmp0(line, "quit") == 0 )
-        {
-            _eventd_service_quit(service);
-        }
-        else if ( g_strcmp0(line, "reload") == 0 )
-        {
-            service->config = eventd_config_parser(service->config);
-        }
-    }
-
-    if ( ! g_input_stream_close((GInputStream *)input, NULL, &error) )
-        g_warning("Can't close the input stream: %s", error->message);
-    g_clear_error(&error);
-
-    if ( ! g_io_stream_close((GIOStream *)connection, NULL, &error) )
-        g_warning("Can't close the stream: %s", error->message);
-    g_clear_error(&error);
-
-    return TRUE;
-}
-#endif /* ENABLE_GIO_UNIX */
 
 static void
 _eventd_service_send_data(gpointer key, gpointer value, gpointer user_data)
@@ -374,18 +331,7 @@ eventd_service(GList *sockets, gboolean no_plugins)
     g_unix_signal_add(SIGINT, _eventd_service_quit, service);
 #endif /* G_OS_UNIX */
 
-#if ENABLE_GIO_UNIX
-    service->private_service = g_threaded_socket_service_new(-1);
-
-    socket = g_list_last(sockets);
-    sockets = g_list_remove_link(sockets, socket);
-    if ( ! g_socket_listener_add_socket((GSocketListener *)service->private_service, socket->data, NULL, &error) )
-        g_warning("Unable to add private socket: %s", error->message);
-    g_clear_error(&error);
-    g_list_free_full(socket, g_object_unref);
-
-    g_signal_connect(service->private_service, "run", G_CALLBACK(_eventd_service_private_connection_handler), service);
-#endif /* ENABLE_GIO_UNIX */
+    service->control = eventd_control_start(service, &sockets);
 
     if ( ! no_plugins )
         eventd_plugins_load();
@@ -414,10 +360,7 @@ eventd_service(GList *sockets, gboolean no_plugins)
 
     eventd_config_clean(service->config);
 
-#if ENABLE_GIO_UNIX
-    g_socket_service_stop(service->private_service);
-    g_socket_listener_close((GSocketListener *)service->private_service);
-#endif /* ENABLE_GIO_UNIX */
+    eventd_control_stop(service->control);
 
     eventd_plugins_unload();
 

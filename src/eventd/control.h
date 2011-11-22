@@ -20,14 +20,12 @@
  *
  */
 
-#ifndef __EVENTD_SERVICE_H__
-#define __EVENTD_SERVICE_H__
+#ifndef __EVENTD_CONTROL_H__
+#define __EVENTD_CONTROL_H__
 
-typedef struct _EventdService EventdService;
+typedef struct _EventdControl EventdControl;
 
-gint eventd_service(GList *sockets, gboolean no_plugins);
+EventdControl *eventd_control_start(gpointer service, GList **sockets);
+void eventd_control_stop(EventdControl *control);
 
-void eventd_service_config_reload(gpointer user_data);
-gboolean eventd_service_quit(gpointer user_data);
-
-#endif /* __EVENTD_SERVICE_H__ */
+#endif /* __EVENTD_CONTROL_H__ */
