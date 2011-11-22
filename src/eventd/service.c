@@ -39,12 +39,14 @@
 #include "config.h"
 #include "plugins.h"
 #include "control.h"
+#include "queue.h"
 
 #include "service.h"
 
 struct _EventdService {
     EventdControl *control;
     EventdConfig *config;
+    EventdQueue *queue;
     GMainLoop *loop;
     GSocketService *service;
     guint32 count;
@@ -181,8 +183,7 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
                         break;
                         case EVENTD_CLIENT_MODE_NORMAL:
                         default:
-                            eventd_plugins_event_action_all(client, event);
-                            eventd_event_end(event, EVENTD_EVENT_END_REASON_TIMEOUT);
+                            eventd_queue_push(service->queue, client, event);
                         break;
                         }
                         if ( error != NULL )
@@ -328,8 +329,8 @@ eventd_service(GList *sockets, gboolean no_plugins)
     service = g_new0(EventdService, 1);
 
 #ifdef G_OS_UNIX
-    g_unix_signal_add(SIGTERM, _eventd_service_quit, service);
-    g_unix_signal_add(SIGINT, _eventd_service_quit, service);
+    g_unix_signal_add(SIGTERM, eventd_service_quit, service);
+    g_unix_signal_add(SIGINT, eventd_service_quit, service);
 #endif /* G_OS_UNIX */
 
     service->control = eventd_control_start(service, &sockets);
@@ -338,6 +339,8 @@ eventd_service(GList *sockets, gboolean no_plugins)
         eventd_plugins_load();
 
     service->config = eventd_config_parser(service->config);
+
+    service->queue = eventd_queue_new(service);
 
     service->service = g_threaded_socket_service_new(eventd_config_get_max_clients(service->config));
 
@@ -358,6 +361,8 @@ eventd_service(GList *sockets, gboolean no_plugins)
 
     g_socket_service_stop(service->service);
     g_socket_listener_close((GSocketListener *)service->service);
+
+    eventd_queue_free(service->queue);
 
     eventd_config_clean(service->config);
 
