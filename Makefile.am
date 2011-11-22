@@ -103,6 +103,8 @@ eventd_SOURCES = \
 	src/eventd/config.c \
 	src/eventd/plugins.h \
 	src/eventd/plugins.c \
+	src/eventd/sockets.h \
+	src/eventd/sockets.c \
 	src/eventd/service.h \
 	src/eventd/service.c \
 	src/eventd/eventd.h \

@@ -20,11 +20,19 @@
  *
  */
 
-#ifndef __EVENTD_SERVICE_H__
-#define __EVENTD_SERVICE_H__
+#ifndef __EVENTD_SOCKETS_H__
+#define __EVENTD_SOCKETS_H__
 
-typedef struct _EventdService EventdService;
+#if ENABLE_GIO_UNIX
+#define MIN_SOCKETS 2
+#else /* ! ENABLE_GIO_UNIX */
+#define MIN_SOCKETS 1
+#endif /* ! ENABLE_GIO_UNIX */
 
-gint eventd_service(GList *sockets, gboolean no_plugins);
+#if ENABLE_SYSTEMD
+GList *eventd_sockets_get_systemd(gchar **private_socket, gchar **unix_socket);
+#endif /* ENABLE_SYSTEMD */
+GList *eventd_sockets_get_all(guint16 bind_port, gboolean no_network, gboolean no_unix, gchar **private_socket, gchar **unix_socket, gboolean take_over_socket);
+void eventd_sockets_free_all(GList *sockets, gchar *private_socket, gchar *unix_socket);
 
-#endif /* __EVENTD_SERVICE_H__ */
+#endif /* __EVENTD_SOCKETS_H__ */
