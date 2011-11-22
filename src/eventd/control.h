@@ -23,8 +23,6 @@
 #ifndef __EVENTD_CONTROL_H__
 #define __EVENTD_CONTROL_H__
 
-typedef struct _EventdControl EventdControl;
-
 EventdControl *eventd_control_start(gpointer service, GList **sockets);
 void eventd_control_stop(EventdControl *control);
 

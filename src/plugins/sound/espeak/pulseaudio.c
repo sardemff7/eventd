@@ -27,8 +27,8 @@
 #include <glib.h>
 #include <gio/gio.h>
 
+#include <libeventd-types.h>
 #include <libeventd-regex.h>
-#include <libeventd-client.h>
 
 #include "../pulseaudio.h"
 #include "../pulseaudio-internal.h"

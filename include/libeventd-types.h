@@ -1,5 +1,5 @@
 /*
- * eventd - Small daemon to act on remote or local events
+ * libeventd - Internal helper
  *
  * Copyright © 2011 Quentin "Sardem FF7" Glidic
  *
@@ -20,14 +20,15 @@
  *
  */
 
-#ifndef __EVENTD_EVENTS_H__
-#define __EVENTD_EVENTS_H__
+#ifndef __LIBEVENTD_TYPES_H__
+#define __LIBEVENTD_TYPES_H__
 
-EventdConfig *eventd_config_parser(EventdConfig *config);
-void eventd_config_clean(EventdConfig *config);
+typedef struct _EventdClient EventdClient;
 
-gint64 eventd_config_get_max_clients(EventdConfig *config);
+typedef enum {
+    EVENTD_CLIENT_MODE_UNKNOWN = -1,
+    EVENTD_CLIENT_MODE_NORMAL = 0,
+    EVENTD_CLIENT_MODE_PING_PONG,
+} EventdClientMode;
 
-void eventd_config_event_get_disable_and_timeout(EventdConfig *config, EventdClient *client, EventdEvent *event, gboolean *disable, gint64 *timeout);
-
-#endif /* __EVENTD_EVENTS_H__ */
+#endif /* __LIBEVENTD_TYPES_H__ */

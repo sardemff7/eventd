@@ -29,12 +29,14 @@
 #include <gio/gunixsocketaddress.h>
 #include <glib/gstdio.h>
 
+#include "types.h"
+
 #include "service.h"
 
 #include "control.h"
 
 struct _EventdControl {
-    gpointer service;
+    EventdService *service;
     GSocketService *socket_service;
 };
 

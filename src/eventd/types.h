@@ -20,14 +20,18 @@
  *
  */
 
-#ifndef __EVENTD_EVENTS_H__
-#define __EVENTD_EVENTS_H__
+#ifndef __EVENTD_TYPES_H__
+#define __EVENTD_TYPES_H__
 
-EventdConfig *eventd_config_parser(EventdConfig *config);
-void eventd_config_clean(EventdConfig *config);
+#include <libeventd-event-types.h>
+#include <libeventd-types.h>
+#include <eventd-plugin.h>
 
-gint64 eventd_config_get_max_clients(EventdConfig *config);
+typedef struct _EventdQueue EventdQueue;
+typedef struct _EventdService EventdService;
+typedef struct _EventdControl EventdControl;
+typedef struct _EventdConfig EventdConfig;
+typedef struct _EventdConfigEvent EventdConfigEvent;
+typedef struct _EventdQueue EventdQueue;
 
-void eventd_config_event_get_disable_and_timeout(EventdConfig *config, EventdClient *client, EventdEvent *event, gboolean *disable, gint64 *timeout);
-
-#endif /* __EVENTD_EVENTS_H__ */
+#endif /* __EVENTD_TYPES_H__ */

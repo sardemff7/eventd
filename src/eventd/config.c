@@ -30,6 +30,8 @@
 #include <libeventd-event.h>
 #include <libeventd-config.h>
 
+#include "types.h"
+
 #include "plugins.h"
 
 #include "config.h"

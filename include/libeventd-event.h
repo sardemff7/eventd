@@ -23,19 +23,9 @@
 #ifndef __EVENTD_EVENT_H__
 #define __EVENTD_EVENT_H__
 
+#include <libeventd-event-types.h>
+
 G_BEGIN_DECLS
-
-typedef struct _EventdEvent EventdEvent;
-typedef struct _EventdEventClass EventdEventClass;
-typedef struct _EventdEventPrivate EventdEventPrivate;
-
-typedef enum {
-    EVENTD_EVENT_END_REASON_NONE = 0,
-    EVENTD_EVENT_END_REASON_TIMEOUT = 1,
-    EVENTD_EVENT_END_REASON_USER_DISMISS = 2,
-    EVENTD_EVENT_END_REASON_CLIENT_DISMISS = 3,
-    EVENTD_EVENT_END_REASON_RESERVED = 4
-} EventdEventEndReason;
 
 struct _EventdEvent
 {

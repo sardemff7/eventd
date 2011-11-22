@@ -36,6 +36,7 @@ lib_LTLIBRARIES += \
 	libeventd-event.la
 
 pkginclude_HEADERS += \
+	include/libeventd-event-types.h \
 	include/libeventd-event.h
 
 libeventd_event_la_SOURCES = \
@@ -61,6 +62,7 @@ pkglib_LTLIBRARIES += \
 	libeventd.la
 
 pkginclude_HEADERS += \
+	include/libeventd-types.h \
 	include/libeventd-regex.h \
 	include/libeventd-config.h \
 	include/libeventd-plugins.h \
@@ -99,6 +101,7 @@ bin_PROGRAMS += \
 	eventd
 
 eventd_SOURCES = \
+	src/eventd/types.h \
 	src/eventd/config.h \
 	src/eventd/config.c \
 	src/eventd/plugins.h \

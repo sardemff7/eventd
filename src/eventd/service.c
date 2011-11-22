@@ -33,7 +33,8 @@
 
 #include <libeventd-client.h>
 #include <libeventd-event.h>
-#include <eventd-plugin.h>
+
+#include "types.h"
 
 #include "config.h"
 #include "plugins.h"

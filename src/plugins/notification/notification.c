@@ -23,9 +23,9 @@
 #include <glib.h>
 #include <glib-object.h>
 
-#include <libeventd-client.h>
-#include <libeventd-event.h>
 #include <eventd-plugin.h>
+#include <libeventd-event.h>
+#include <libeventd-client.h>
 #include <libeventd-config.h>
 #include <libeventd-regex.h>
 

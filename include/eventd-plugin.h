@@ -23,6 +23,9 @@
 #ifndef __EVENTD_EVENTD_PLUGIN_H__
 #define __EVENTD_EVENTD_PLUGIN_H__
 
+#include <libeventd-types.h>
+#include <libeventd-event-types.h>
+
 typedef void (*EventdPluginStartFunc)(gpointer user_data);
 typedef void (*EventdPluginStopFunc)(void);
 typedef void (*EventdPluginConfigInitFunc)(void);

@@ -23,8 +23,6 @@
 #ifndef __EVENTD_SERVICE_H__
 #define __EVENTD_SERVICE_H__
 
-typedef struct _EventdService EventdService;
-
 gint eventd_service(GList *sockets, gboolean no_plugins);
 
 void eventd_service_config_reload(gpointer user_data);

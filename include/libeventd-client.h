@@ -23,13 +23,7 @@
 #ifndef __LIBEVENTD_CLIENT_H__
 #define __LIBEVENTD_CLIENT_H__
 
-typedef enum {
-    EVENTD_CLIENT_MODE_UNKNOWN = -1,
-    EVENTD_CLIENT_MODE_NORMAL = 0,
-    EVENTD_CLIENT_MODE_PING_PONG,
-} EventdClientMode;
-
-typedef struct _EventdClient EventdClient;
+#include <libeventd-types.h>
 
 EventdClient *libeventd_client_new();
 EventdClient *libeventd_client_ref(EventdClient *client);
