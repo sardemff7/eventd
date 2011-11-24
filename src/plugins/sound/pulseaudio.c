@@ -21,75 +21,83 @@
  */
 
 #include <pulse/pulseaudio.h>
+#include <pulse/glib-mainloop.h>
 
 #include <glib.h>
 
 #include "pulseaudio.h"
 #include "pulseaudio-internal.h"
 
-static pa_threaded_mainloop *pa_loop = NULL;
-static pa_context *sound = NULL;
-
 static void
-_eventd_sound_pulseaudio_context_state_callback(pa_context *c, void *userdata)
+_eventd_sound_pulseaudio_context_state_callback(pa_context *c, void *user_data)
 {
+    EventdSoundPulseaudioContext *context = user_data;
     pa_context_state_t state = pa_context_get_state(c);
     switch ( state )
     {
+        case PA_CONTEXT_FAILED:
+            g_debug("context failed");
+            pa_context_unref(context->sound);
+            context->sound = NULL;
         case PA_CONTEXT_READY:
-            pa_threaded_mainloop_signal(pa_loop, 0);
+        break;
+        case PA_CONTEXT_TERMINATED:
+            g_debug("context terminated");
+            pa_context_unref(context->sound);
+            pa_glib_mainloop_free(context->pa_loop);
+            g_free(context);
         default:
         break;
     }
 }
 
 static void
-_eventd_sound_pulseaudio_context_notify_callback(pa_context *s, void *userdata)
+_eventd_sound_pulseaudio_context_notify_callback(pa_context *s, void *user_data)
 {
-    pa_threaded_mainloop_signal(pa_loop, 0);
+    EventdSoundPulseaudioContext *context = user_data;
+    pa_context_disconnect(context->sound);
 }
 
 EventdSoundPulseaudioContext *
 eventd_sound_pulseaudio_start()
 {
-    EventdSoundPulseaudioContext *data;
+    EventdSoundPulseaudioContext *context;
 
-    pa_loop = pa_threaded_mainloop_new();
-    pa_threaded_mainloop_start(pa_loop);
+    context = g_new0(EventdSoundPulseaudioContext, 1);
 
-    sound = pa_context_new(pa_threaded_mainloop_get_api(pa_loop), PACKAGE_NAME);
-    if ( ! sound )
-        g_error("Can't open sound system");
-    pa_context_get_state(sound);
-    pa_context_set_state_callback(sound, _eventd_sound_pulseaudio_context_state_callback, NULL);
+    context->pa_loop = pa_glib_mainloop_new(NULL);
 
-    pa_threaded_mainloop_lock(pa_loop);
-    pa_context_connect(sound, NULL, 0, NULL);
-    pa_threaded_mainloop_wait(pa_loop);
-    pa_threaded_mainloop_unlock(pa_loop);
+    context->sound = pa_context_new(pa_glib_mainloop_get_api(context->pa_loop), PACKAGE_NAME);
+    if ( context->sound == NULL )
+    {
+        g_warning("Can't open sound system");
+        pa_glib_mainloop_free(context->pa_loop);
+        g_free(context);
+        return NULL;
+    }
 
-    data = g_new0(EventdSoundPulseaudioContext, 1);
-    data->pa_loop = pa_loop;
-    data->sound = sound;
+    pa_context_set_state_callback(context->sound, _eventd_sound_pulseaudio_context_state_callback, context);
+    pa_context_connect(context->sound, NULL, 0, NULL);
 
-    return data;
+    return context;
 }
 
 void
-eventd_sound_pulseaudio_stop()
+eventd_sound_pulseaudio_stop(EventdSoundPulseaudioContext *context)
 {
-    pa_operation* op;
-
-    op = pa_context_drain(sound, _eventd_sound_pulseaudio_context_notify_callback, NULL);
-    if ( op != NULL )
+    if ( context->sound != NULL )
     {
-        pa_threaded_mainloop_lock(pa_loop);
-        pa_threaded_mainloop_wait(pa_loop);
-        pa_operation_unref(op);
-        pa_threaded_mainloop_unlock(pa_loop);
+        pa_operation* op;
+
+        op = pa_context_drain(context->sound, _eventd_sound_pulseaudio_context_notify_callback, context);
+        if ( op != NULL )
+            pa_operation_unref(op);
+        else
+            pa_context_disconnect(context->sound);
     }
-    pa_context_disconnect(sound);
-    pa_context_unref(sound);
-    pa_threaded_mainloop_stop(pa_loop);
-    pa_threaded_mainloop_free(pa_loop);
+    else
+    {
+        pa_glib_mainloop_free(context->pa_loop);
+        g_free(context);
+    }
 }

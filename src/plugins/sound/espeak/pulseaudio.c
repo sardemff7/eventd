@@ -21,6 +21,7 @@
  */
 
 #include <pulse/pulseaudio.h>
+#include <pulse/glib-mainloop.h>
 #include <speak_lib.h>
 
 #include <string.h>
@@ -36,7 +37,6 @@
 #include "espeak.h"
 #include "pulseaudio.h"
 
-static pa_threaded_mainloop *pa_loop = NULL;
 static pa_context *sound = NULL;
 
 static pa_sample_spec sample_spec;
@@ -50,19 +50,12 @@ _eventd_sound_espeak_pulseaudio_stream_state_callback(pa_stream *stream, void *u
     switch  ( state )
     {
         case PA_STREAM_TERMINATED:
-            //pa_stream_unref(stream);
+            pa_stream_unref(stream);
         break;
         case PA_STREAM_READY:
-            pa_threaded_mainloop_signal(pa_loop, 0);
         default:
         break;
     }
-}
-
-static void
-_eventd_sound_espeak_pulseaudio_stream_drain_callback(pa_stream *stream, int success, void *userdata)
-{
-    pa_threaded_mainloop_signal(pa_loop, 0);
 }
 
 void
@@ -72,7 +65,6 @@ eventd_sound_espeak_pulseaudio_start(EventdSoundPulseaudioContext *context, gint
     sample_spec.channels = 1;
     sample_spec.format = PA_SAMPLE_S16LE;
 
-    pa_loop = context->pa_loop;
     sound = context->sound;
 }
 
@@ -86,24 +78,16 @@ eventd_sound_espeak_pulseaudio_play_data(gshort *wav, gint numsamples, espeak_EV
 
     stream = callback_data->data;
 
-    pa_threaded_mainloop_lock(pa_loop);
-
     if ( wav == NULL )
     {
         pa_operation *op;
 
-        op = pa_stream_drain(stream, _eventd_sound_espeak_pulseaudio_stream_drain_callback, NULL);
+        op = pa_stream_drain(stream, NULL, NULL);
         if ( op != NULL )
-        {
-            while ( pa_operation_get_state(op) == PA_OPERATION_RUNNING )
-                pa_threaded_mainloop_wait(pa_loop);
             pa_operation_unref(op);
-        }
     }
     else
         pa_stream_write(stream, wav, numsamples*sizeof(gshort), NULL, 0, PA_SEEK_RELATIVE);
-
-    pa_threaded_mainloop_unlock(pa_loop);
 }
 
 gpointer
@@ -121,10 +105,5 @@ eventd_sound_espeak_pulseaudio_pa_data_new()
 void
 eventd_sound_espeak_pulseaudio_pa_data_free(gpointer stream)
 {
-    pa_threaded_mainloop_lock(pa_loop);
-    pa_threaded_mainloop_wait(pa_loop);
-
     pa_stream_disconnect(stream);
-
-    pa_threaded_mainloop_unlock(pa_loop);
 }

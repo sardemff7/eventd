@@ -104,7 +104,7 @@ AM_CONDITIONAL(ENABLE_EVENTDCTL, test x$enable_eventdctl = xyes)
 # sound plugin
 AC_ARG_ENABLE(pulseaudio, AS_HELP_STRING([--disable-pulseaudio], [Disable PulseAudio support]), enable_pulseaudio=$enableval, enable_pulseaudio=yes)
 if test x$enable_pulseaudio = xyes; then
-    PKG_CHECK_MODULES(PULSEAUDIO, [libpulse >= $libpulse_min_version])
+    PKG_CHECK_MODULES(PULSEAUDIO, [libpulse >= $libpulse_min_version libpulse-mainloop-glib])
 fi
 AM_CONDITIONAL(ENABLE_PULSEAUDIO, test x$enable_pulseaudio = xyes)
 

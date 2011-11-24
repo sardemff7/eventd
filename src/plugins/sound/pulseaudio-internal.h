@@ -25,7 +25,7 @@
 
 struct _EventdSoundPulseaudioContext {
     pa_context *sound;
-    pa_threaded_mainloop *pa_loop;
+    pa_glib_mainloop *pa_loop;
 };
 
 #endif /* __EVENTD_PLUGINS_SOUND_PULSEAUDIO_INTERNAL_H__ */

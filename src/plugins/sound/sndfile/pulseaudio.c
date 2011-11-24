@@ -21,6 +21,7 @@
  */
 
 #include <pulse/pulseaudio.h>
+#include <pulse/glib-mainloop.h>
 #include <sndfile.h>
 
 #include <glib.h>
@@ -36,8 +37,6 @@
 
 static pa_context *sound = NULL;
 
-static pa_threaded_mainloop *pa_loop = NULL;
-
 static void
 _eventd_sound_sndfile_sample_state_callback(pa_stream *sample, void *user_data)
 {
@@ -47,7 +46,6 @@ _eventd_sound_sndfile_sample_state_callback(pa_stream *sample, void *user_data)
     {
         case PA_STREAM_TERMINATED:
             pa_stream_unref(sample);
-            pa_threaded_mainloop_unlock(pa_loop);
         break;
         case PA_STREAM_READY:
             pa_stream_write(sample, event->data, event->length, NULL, 0, PA_SEEK_RELATIVE);
@@ -55,12 +53,6 @@ _eventd_sound_sndfile_sample_state_callback(pa_stream *sample, void *user_data)
         default:
         break;
     }
-}
-
-static void
-_eventd_sound_sndfile_context_success_callback(pa_context *s, int success, void *userdata)
-{
-    pa_threaded_mainloop_unlock(pa_loop);
 }
 
 void
@@ -100,7 +92,6 @@ eventd_sound_sndfile_pulseaudio_create_sample(EventdSoundSndfileEvent *event, SF
         return;
     }
 
-    pa_threaded_mainloop_lock(pa_loop);
     sample = pa_stream_new(sound, event->sample, &sample_spec, NULL);
 
     pa_stream_set_state_callback(sample, _eventd_sound_sndfile_sample_state_callback, event);
@@ -122,13 +113,11 @@ eventd_sound_sndfile_pulseaudio_play_sample(const gchar *name)
 void
 eventd_sound_sndfile_pulseaudio_remove_sample(const char *name)
 {
-    pa_threaded_mainloop_lock(pa_loop);
-    pa_context_remove_sample(sound, name, _eventd_sound_sndfile_context_success_callback, NULL);
+    pa_context_remove_sample(sound, name, NULL, NULL);
 }
 
 void
 eventd_sound_sndfile_pulseaudio_start(EventdSoundPulseaudioContext *context)
 {
     sound = context->sound;
-    pa_loop = context->pa_loop;
 }
