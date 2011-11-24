@@ -1,7 +1,9 @@
+/data/libeventd-event.pc
 /data/libeventc.pc
 /include/config.h.in
 /include/config.h
 /include/libeventc.h
+/vapi/libeventd-event.deps
 /vapi/libeventc.vapi
 /vapi/libeventc.deps
 

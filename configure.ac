@@ -174,8 +174,10 @@ AC_SUBST(AM_VALA_CFLAGS)
 AC_SUBST(AM_VALAFLAGS)
 
 AC_CONFIG_FILES([
+    data/libeventd-event.pc
     data/libeventc.pc
     Makefile
+    vapi/libeventd-event.deps
     vapi/libeventc.deps
 ])
 AC_OUTPUT

@@ -1,5 +1,7 @@
 ACLOCAL_AMFLAGS = -I m4
 
+pkgconfigdir = $(libdir)/pkgconfig
+vapidir = $(datadir)/vala/vapi
 pluginsdir = $(pkglibdir)/plugins
 soundpluginsdir = $(pluginsdir)/sound
 
@@ -9,6 +11,8 @@ pkglib_LTLIBRARIES =
 plugins_LTLIBRARIES =
 soundplugins_LTLIBRARIES =
 pkginclude_HEADERS =
+pkgconfig_DATA =
+dist_vapi_DATA =
 
 CLEANFILES =
 
@@ -53,6 +57,13 @@ libeventd_event_la_LDFLAGS = \
 
 libeventd_event_la_LIBADD = \
 	$(GLIB_LIBS)
+
+pkgconfig_DATA += \
+	$(top_builddir)/data/libeventd-event.pc
+
+dist_vapi_DATA += \
+	$(top_builddir)/vapi/libeventd-event.deps \
+	vapi/libeventd-event.vapi
 
 
 #
@@ -347,11 +358,12 @@ libeventc_la_LIBADD = \
 pkginclude_HEADERS += \
 	$(top_builddir)/include/libeventc.h
 
-vapidir = $(datadir)/vala/vapi
-dist_vapi_DATA = $(top_builddir)/vapi/libeventc.vapi
+pkgconfig_DATA += \
+	$(top_builddir)/data/libeventc.pc
 
-pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = $(top_builddir)/data/libeventc.pc
+dist_vapi_DATA += \
+	$(top_builddir)/vapi/libeventc.deps \
+	$(top_builddir)/vapi/libeventc.vapi
 
 CLEANFILES += \
 	$(top_builddir)/include/libeventc.h \
