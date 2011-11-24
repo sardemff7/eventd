@@ -111,9 +111,6 @@ AM_CONDITIONAL(ENABLE_PULSEAUDIO, test x$enable_pulseaudio = xyes)
 # sndfile plugin
 AC_ARG_ENABLE(sndfile, AS_HELP_STRING([--disable-sndfile], [Disable libsndfile support]), enable_sndfile=$enableval, enable_sndfile=yes)
 if test x$enable_sndfile = xyes; then
-    if test x$enable_pulseaudio = xno; then
-        AC_MSG_ERROR([*** libsndfile support requested but not sound support])
-    fi
     PKG_CHECK_MODULES(SNDFILE, [sndfile])
 fi
 AM_CONDITIONAL(ENABLE_SNDFILE, test x$enable_sndfile = xyes)

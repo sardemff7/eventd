@@ -189,6 +189,7 @@ soundplugins_LTLIBRARIES += \
 	sndfile.la
 
 sndfile_la_SOURCES = \
+	src/plugins/sound/sndfile/pulseaudio.h \
 	src/plugins/sound/sndfile/sndfile.c
 
 sndfile_la_CFLAGS = \
@@ -206,6 +207,14 @@ sndfile_la_LIBADD = \
 	$(SNDFILE_LIBS) \
 	$(PULSEAUDIO_LIBS) \
 	$(GLIB_LIBS)
+
+if ENABLE_PULSEAUDIO
+sndfile_la_SOURCES += \
+	src/plugins/sound/sndfile/pulseaudio.c
+else
+sndfile_la_SOURCES += \
+	src/plugins/sound/sndfile/pulseaudio-dummy.c
+endif
 endif
 
 # espeak plugin
