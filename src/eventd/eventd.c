@@ -75,6 +75,10 @@ main(int argc, char *argv[])
     GOptionContext *context = NULL;
     GList *sockets = NULL;
 
+#if DEBUG
+    g_setenv("G_MESSAGES_DEBUG", "all", FALSE);
+#endif /* ! DEBUG */
+
 #ifdef ENABLE_NLS
     setlocale(LC_ALL, "");
     bindtextdomain(GETTEXT_PACKAGE, LOCALEDIR);

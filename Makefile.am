@@ -48,6 +48,7 @@ libeventd_event_la_SOURCES = \
 
 libeventd_event_la_CFLAGS = \
 	$(AM_CFLAGS) \
+	-D G_LOG_DOMAIN=\"libeventd-event\" \
 	$(GLIB_CFLAGS)
 
 libeventd_event_la_LDFLAGS = \
@@ -87,6 +88,7 @@ libeventd_la_SOURCES = \
 
 libeventd_la_CFLAGS = \
 	$(AM_CFLAGS) \
+	-D G_LOG_DOMAIN=\"libeventd\" \
 	-D LIBDIR=\"$(libdir)\" \
 	-D DATADIR=\"$(datadir)\" \
 	$(GMODULE_CFLAGS) \
@@ -336,6 +338,7 @@ libeventc_la_VALAFLAGS = \
 
 libeventc_la_CFLAGS = \
 	$(AM_CFLAGS) \
+	-D G_LOG_DOMAIN=\"libeventc\" \
 	$(AM_VALA_CFLAGS) \
 	$(GIO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
