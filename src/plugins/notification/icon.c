@@ -23,7 +23,7 @@
 #include <glib.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
-#include <libeventd-regex.h>
+#include <libeventd-config.h>
 
 #include "notification.h"
 #include "icon.h"
@@ -85,43 +85,28 @@ fail:
 }
 
 static gpointer
-_eventd_notification_icon_get_pixbuf_from_file(const gchar *filename, GHashTable *event_data)
+_eventd_notification_icon_get_pixbuf_from_file(gchar *filename)
 {
-    gchar *real_filename;
     GError *error = NULL;
     GdkPixbuf *ret = NULL;
-
-    real_filename = libeventd_regex_replace_event_data(filename, event_data, NULL);
-
-    if ( ! g_path_is_absolute(filename) )
-    {
-        gchar *tmp;
-        tmp = real_filename;
-        real_filename = g_build_filename(g_get_user_data_dir(), PACKAGE_NAME, "icons", tmp, NULL);
-        g_free(tmp);
-    }
-
-    if ( ! g_file_test(real_filename, G_FILE_TEST_IS_REGULAR) )
-        goto fail;
-
-    if ( ( ret = gdk_pixbuf_new_from_file(real_filename, &error) ) == NULL )
-        g_warning("Couldn’t load icon file '%s': %s", real_filename, error->message);
+    if ( ( ret = gdk_pixbuf_new_from_file(filename, &error) ) == NULL )
+        g_warning("Couldn’t load icon file '%s': %s", filename, error->message);
     g_clear_error(&error);
-
-fail:
-    g_free(real_filename);
+    g_free(filename);
     return ret;
 }
 
 void
 eventd_notification_icon_get_pixbuf(GHashTable *data, EventdNotificationEvent *notification_event, EventdNotificationNotification *notification)
 {
-    if ( g_str_has_prefix(notification_event->icon, "file://") )
-        notification->icon = _eventd_notification_icon_get_pixbuf_from_file(notification_event->icon+7, data);
+    gchar *file;
+
+    if ( ( file = libeventd_config_get_filename(notification_event->icon, data, "icons") ) != NULL )
+        notification->icon = _eventd_notification_icon_get_pixbuf_from_file(file);
     else
         notification->icon = _eventd_notification_icon_get_pixbuf_from_data(notification_event->icon, data);
-    if ( g_str_has_prefix(notification_event->overlay_icon, "file://") )
-        notification->overlay_icon = _eventd_notification_icon_get_pixbuf_from_file(notification_event->overlay_icon+7, data);
+    if ( ( file = libeventd_config_get_filename(notification_event->overlay_icon, data, "icons") ) != NULL )
+        notification->overlay_icon = _eventd_notification_icon_get_pixbuf_from_file(file);
     else
         notification->overlay_icon = _eventd_notification_icon_get_pixbuf_from_data(notification_event->overlay_icon, data);
     if ( ( notification->icon != NULL ) && ( notification->overlay_icon != NULL ) )

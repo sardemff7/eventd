@@ -22,6 +22,8 @@
 
 #include <glib.h>
 
+#include <libeventd-regex.h>
+
 #include <libeventd-config.h>
 
 GHashTable *
@@ -103,4 +105,29 @@ libeventd_config_key_file_get_string(GKeyFile *config_file, const gchar *group, 
     *value = g_key_file_get_string(config_file, group, key, &error);
 
     return _libeventd_config_key_file_error(&error, group, key);
+}
+
+gchar *
+libeventd_config_get_filename(const gchar *filename, GHashTable *data, const gchar *subdir)
+{
+    gchar *real_filename;
+
+    if ( ! g_str_has_prefix(filename, "file://") )
+        return NULL;
+
+    real_filename = libeventd_regex_replace_event_data(filename+7, data, NULL);
+
+    if ( ! g_path_is_absolute(real_filename) )
+    {
+        gchar *tmp;
+        tmp = real_filename;
+        real_filename = g_build_filename(g_get_user_data_dir(), PACKAGE_NAME, subdir, tmp, NULL);
+        g_free(tmp);
+    }
+
+    if ( g_file_test(real_filename, G_FILE_TEST_IS_REGULAR) )
+        return real_filename;
+
+    g_free(real_filename);
+    return NULL;
 }
