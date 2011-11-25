@@ -30,6 +30,4 @@
 
 void eventd_sound_sndfile_pulseaudio_start(EventdSoundPulseaudioContext *context) {}
 
-void eventd_sound_sndfile_pulseaudio_create_sample(EventdSoundSndfileEvent *event, SF_INFO *sfi) {}
-void eventd_sound_sndfile_pulseaudio_play_sample(const char *name) {}
-void eventd_sound_sndfile_pulseaudio_remove_sample(const char *name) {}
+void eventd_sound_sndfile_pulseaudio_play_data(void *data, gsize length, gint format, guint32 rate, guint8 channels) {}

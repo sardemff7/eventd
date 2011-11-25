@@ -25,10 +25,7 @@
 
 typedef struct {
     gboolean disable;
-    gchar *sample;
-    gboolean created;
-    void *data;
-    size_t length;
+    gchar *sound;
 } EventdSoundSndfileEvent;
 
 #endif /* __EVENTD_PLUGINS_SOUND_SNDFILE_INTERNAL_H__ */

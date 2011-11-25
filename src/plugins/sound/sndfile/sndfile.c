@@ -40,20 +40,25 @@ static GHashTable *events = NULL;
 
 typedef sf_count_t (*sndfile_readf_t)(SNDFILE *sndfile, void *ptr, sf_count_t frames);
 
-static gboolean
-_eventd_sound_sndfile_read_file(EventdSoundSndfileEvent *event, const gchar *filename)
+static void
+_eventd_sound_sndfile_read_file(const gchar *filename, void **data, gsize *length, gint *format, guint32 *rate, guint8 *channels)
 {
-    gboolean ret = FALSE;
     SF_INFO sfi;
     SNDFILE* f = NULL;
     sndfile_readf_t readf_function = NULL;
     size_t factor = 1;
     sf_count_t r = 0;
 
+    *data = NULL;
+    *length = 0;
+    *format = 0;
+    *rate = 0;
+    *channels = 0;
+
     if ( ( f = sf_open(filename, SFM_READ, &sfi) ) == NULL )
     {
         g_warning("Can't open sound file");
-        return ret;
+        return;
     }
 
     switch ( sfi.format & SF_FORMAT_SUBMASK )
@@ -79,28 +84,38 @@ _eventd_sound_sndfile_read_file(EventdSoundSndfileEvent *event, const gchar *fil
         goto out;
     }
 
-    event->length = (size_t) sfi.frames * sfi.channels * factor;
+    *length = (size_t) sfi.frames * sfi.channels * factor;
 
-    event->data = g_malloc0(event->length);
+    *data = g_malloc0(*length);
 
-    if ( ( r = readf_function(f, event->data, sfi.frames) ) < 0 )
+    if ( ( r = readf_function(f, *data, sfi.frames) ) < 0 )
+    {
         g_warning("Error while reading sound file");
+        g_free(*data);
+        *data = NULL;
+        *length = 0;
+    }
     else
     {
-        ret = TRUE;
-        eventd_sound_sndfile_pulseaudio_create_sample(event, &sfi);
+        *format = sfi.format & SF_FORMAT_SUBMASK;
+        *rate = (guint32) sfi.samplerate;
+        *channels = (guint8) sfi.channels;
     }
 
 out:
     sf_close(f);
-
-    return ret;
 }
 
 static GHashTable *
 _eventd_sound_sndfile_event_action(EventdClient *client, EventdEvent *event)
 {
     EventdSoundSndfileEvent *sndfile_event = NULL;
+    gchar *file;
+    gpointer data = NULL;
+    gsize length = 0;
+    gint format = 0;
+    guint32 rate = 0;
+    guint8 channels = 0;
 
     sndfile_event = libeventd_config_events_get_event(events, libeventd_client_get_type(client), eventd_event_get_type(event));
     if ( sndfile_event == NULL )
@@ -109,63 +124,45 @@ _eventd_sound_sndfile_event_action(EventdClient *client, EventdEvent *event)
     if ( sndfile_event->disable )
         return NULL;
 
+
+    if ( ( file = libeventd_config_get_filename(sndfile_event->sound, eventd_event_get_data(event), "sounds") ) != NULL )
+        _eventd_sound_sndfile_read_file(file, &data, &length, &format, &rate, &channels);
+    // TODO: using event data
+
+    switch ( libeventd_client_get_mode(client) )
+    {
+    case EVENTD_CLIENT_MODE_PING_PONG:
+        //TODO: send back data
+    break;
+    default:
+        eventd_sound_sndfile_pulseaudio_play_data(data, length, format, rate, channels);
+    }
+
     return NULL;
 }
 
 static void
-_eventd_sound_sndfile_event_clean(EventdSoundSndfileEvent *event)
+_eventd_sound_sndfile_event_update(EventdSoundSndfileEvent *event, gboolean disable, const gchar *sound)
 {
-    g_free(event->data);
-    event->length = 0;
-    eventd_sound_sndfile_pulseaudio_remove_sample(event->sample);
-    g_free(event->sample);
-}
-
-static gboolean
-_eventd_sound_sndfile_event_update(EventdSoundSndfileEvent *event, gboolean disable, const gchar *filename, EventdSoundSndfileEvent *parent)
-{
-    gboolean ret = TRUE;
-    gchar *real_filename = NULL;
-
     event->disable = disable;
 
-    if ( disable )
-        _eventd_sound_sndfile_event_clean(event);
-    else if ( filename != NULL )
+    if ( sound != NULL )
     {
-        if ( g_path_is_absolute(filename) )
-            real_filename = g_strdup(filename);
-        else
-            real_filename = g_build_filename(g_get_user_data_dir(), PACKAGE_NAME, "sounds", filename, NULL);
-
-        ret = _eventd_sound_sndfile_read_file(event, real_filename);
-        g_free(real_filename);
+        g_free(event->sound);
+        event->sound = g_strdup(sound);
     }
-    else if ( parent != NULL )
-    {
-        event->length = parent->length;
-        event->data = g_memdup(parent->data, event->length);
-    }
-
-    return ret;
 }
 
 static EventdSoundSndfileEvent *
-_eventd_sound_sndfile_event_new(gboolean disable, const gchar *name, const gchar *sample, const gchar *filename, EventdSoundSndfileEvent *parent)
+_eventd_sound_sndfile_event_new(gboolean disable, const gchar *sound, EventdSoundSndfileEvent *parent)
 {
     EventdSoundSndfileEvent *event = NULL;
 
+    sound = sound ?: parent ? parent->sound : "sound";
+
     event = g_new0(EventdSoundSndfileEvent, 1);
 
-    event->sample = g_strdup(sample);
-    if ( ( parent != NULL ) && ( filename == NULL ) )
-    {
-        event->length = parent->length;
-        event->data = g_memdup(parent->data, event->length);
-    }
-
-    if ( ! _eventd_sound_sndfile_event_update(event, disable, filename, parent) )
-        event = (g_free(event), NULL);
+    _eventd_sound_sndfile_event_update(event, disable, sound);
 
     return event;
 }
@@ -174,7 +171,7 @@ static void
 _eventd_sound_sndfile_event_parse(const gchar *client_type, const gchar *event_type, GKeyFile *config_file)
 {
     gboolean disable;
-    gchar *filename = NULL;
+    gchar *sound = NULL;
 
     EventdSoundSndfileEvent *event = NULL;
     gchar *name;
@@ -184,7 +181,7 @@ _eventd_sound_sndfile_event_parse(const gchar *client_type, const gchar *event_t
 
     if ( libeventd_config_key_file_get_boolean(config_file, "sound", "disable", &disable) < 0 )
         goto skip;
-    if ( libeventd_config_key_file_get_string(config_file, "sound", "file", &filename) < 0 )
+    if ( libeventd_config_key_file_get_string(config_file, "sound", "sound", &sound) < 0 )
         goto skip;
 
     name = libeventd_config_events_get_name(client_type, event_type);
@@ -192,27 +189,14 @@ _eventd_sound_sndfile_event_parse(const gchar *client_type, const gchar *event_t
     event = g_hash_table_lookup(events, name);
     if ( event != NULL )
     {
-        if ( ! _eventd_sound_sndfile_event_update(event, disable, filename, NULL) )
-        {
-            g_hash_table_remove(events, name);
-            g_free(event);
-        }
+        _eventd_sound_sndfile_event_update(event, disable, sound);
         g_free(name);
     }
     else
-    {
-        event = _eventd_sound_sndfile_event_new(disable, name, name, filename, g_hash_table_lookup(events, client_type));
-        if ( event != NULL )
-            g_hash_table_insert(events, name, event);
-        else
-        {
-            g_free(event);
-            g_free(name);
-        }
-    }
+        g_hash_table_insert(events, name, _eventd_sound_sndfile_event_new(disable, sound, g_hash_table_lookup(events, client_type)));
 
 skip:
-    g_free(filename);
+    g_free(sound);
 }
 
 static void
@@ -220,7 +204,8 @@ _eventd_sound_sndfile_event_free(gpointer data)
 {
     EventdSoundSndfileEvent *event = data;
 
-    _eventd_sound_sndfile_event_clean(event);
+    g_free(event->sound);
+
     g_free(event);
 }
 

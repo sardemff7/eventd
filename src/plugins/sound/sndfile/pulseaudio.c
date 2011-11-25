@@ -37,31 +37,51 @@
 
 static pa_context *sound = NULL;
 
+typedef struct {
+    gpointer data;
+    gsize length;
+} EventdSoundSndfilePulseaudioEventData;
+
 static void
-_eventd_sound_sndfile_sample_state_callback(pa_stream *sample, void *user_data)
+_eventd_sound_sndfile_pulseaudio_stream_drain_callback(pa_stream *stream, gint success, gpointer user_data)
 {
-    EventdSoundSndfileEvent *event = user_data;
-    pa_stream_state_t state = pa_stream_get_state(sample);
+    pa_stream_disconnect(stream);
+}
+
+static void
+_eventd_sound_sndfile_pulseaudio_stream_state_callback(pa_stream *stream, gpointer user_data)
+{
+    EventdSoundSndfilePulseaudioEventData *data = user_data;
+    pa_stream_state_t state = pa_stream_get_state(stream);
+    pa_operation *op;
     switch ( state )
     {
+        case PA_STREAM_FAILED:
+            g_warning("Failed sample creation");
         case PA_STREAM_TERMINATED:
-            pa_stream_unref(sample);
+            pa_stream_unref(stream);
         break;
         case PA_STREAM_READY:
-            pa_stream_write(sample, event->data, event->length, NULL, 0, PA_SEEK_RELATIVE);
-            pa_stream_finish_upload(sample);
+            pa_stream_write(stream, data->data, data->length, g_free, 0, PA_SEEK_RELATIVE);
+            op = pa_stream_drain(stream, _eventd_sound_sndfile_pulseaudio_stream_drain_callback, NULL);
+            if ( op != NULL )
+                pa_operation_unref(op);
         default:
         break;
     }
 }
 
 void
-eventd_sound_sndfile_pulseaudio_create_sample(EventdSoundSndfileEvent *event, SF_INFO *sfi)
+eventd_sound_sndfile_pulseaudio_play_data(gpointer data, gsize length, gint format, guint32 rate, guint8 channels)
 {
     pa_sample_spec sample_spec;
-    pa_stream *sample;
+    pa_stream *stream;
+    EventdSoundSndfilePulseaudioEventData *event_data;
 
-    switch ( sfi->format & SF_FORMAT_SUBMASK )
+    if ( data == NULL )
+        return;
+
+    switch ( format )
     {
     case SF_FORMAT_PCM_16:
     case SF_FORMAT_PCM_U8:
@@ -83,8 +103,8 @@ eventd_sound_sndfile_pulseaudio_create_sample(EventdSoundSndfileEvent *event, SF
         return;
     }
 
-    sample_spec.rate = (uint32_t)sfi->samplerate;
-    sample_spec.channels = (uint8_t)sfi->channels;
+    sample_spec.rate = rate;
+    sample_spec.channels = channels;
 
     if ( ! pa_sample_spec_valid(&sample_spec) )
     {
@@ -92,28 +112,14 @@ eventd_sound_sndfile_pulseaudio_create_sample(EventdSoundSndfileEvent *event, SF
         return;
     }
 
-    sample = pa_stream_new(sound, event->sample, &sample_spec, NULL);
+    stream = pa_stream_new(sound, "sndfile plugin playback", &sample_spec, NULL);
 
-    pa_stream_set_state_callback(sample, _eventd_sound_sndfile_sample_state_callback, event);
-    pa_stream_connect_upload(sample, event->length);
-}
+    event_data = g_new0(EventdSoundSndfilePulseaudioEventData, 1);
+    event_data->data = data;
+    event_data->length = length;
 
-void
-eventd_sound_sndfile_pulseaudio_play_sample(const gchar *name)
-{
-    pa_operation *op;
-
-    op = pa_context_play_sample(sound, name, NULL, PA_VOLUME_INVALID, NULL, NULL);
-    if ( op )
-        pa_operation_unref(op);
-    else
-        g_warning("Can't play sample %s", name);
-}
-
-void
-eventd_sound_sndfile_pulseaudio_remove_sample(const char *name)
-{
-    pa_context_remove_sample(sound, name, NULL, NULL);
+    pa_stream_set_state_callback(stream, _eventd_sound_sndfile_pulseaudio_stream_state_callback, event_data);
+    pa_stream_connect_playback(stream, NULL, NULL, 0, NULL, NULL);
 }
 
 void
