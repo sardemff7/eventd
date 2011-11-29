@@ -28,6 +28,8 @@ void libeventd_plugins_unload(GList **plugins);
 
 void libeventd_plugins_foreach(GList *plugins, GFunc func, gpointer user_data);
 
+void libeventd_plugins_control_command_all(GList *plugins, gchar *command);
+
 void libeventd_plugins_config_init_all(GList *plugins);
 void libeventd_plugins_config_clean_all(GList *plugins);
 

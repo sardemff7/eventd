@@ -32,6 +32,7 @@
 #include "types.h"
 
 #include "service.h"
+#include "plugins.h"
 
 #include "control.h"
 
@@ -80,6 +81,8 @@ _eventd_service_private_connection_handler(GThreadedSocketService *socket_servic
         {
             eventd_service_config_reload(control->service);
         }
+        else
+            eventd_plugins_control_command(line);
 
         g_free(line);
     }

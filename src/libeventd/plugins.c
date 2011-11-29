@@ -169,6 +169,20 @@ libeventd_plugins_foreach(GList *plugins, GFunc func, gpointer user_data)
     g_list_foreach(plugins, func, user_data);
 }
 
+static void
+_libeventd_plugins_control_command(gpointer data, gpointer user_data)
+{
+    EventdPlugin *plugin = data;
+
+    if ( plugin->control_command != NULL )
+        plugin->control_command(plugin->context, user_data);
+}
+
+void
+libeventd_plugins_control_command_all(GList *plugins, gchar *command)
+{
+    libeventd_plugins_foreach(plugins, _libeventd_plugins_control_command, command);
+}
 
 static void
 _libeventd_plugins_config_init(gpointer data, gpointer user_data)

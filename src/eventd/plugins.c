@@ -46,6 +46,12 @@ eventd_plugins_unload()
 }
 
 void
+eventd_plugins_control_command(gchar *command)
+{
+    libeventd_plugins_control_command_all(plugins, command);
+}
+
+void
 eventd_plugins_config_init_all()
 {
     libeventd_plugins_config_init_all(plugins);

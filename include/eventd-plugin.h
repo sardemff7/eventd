@@ -30,6 +30,7 @@ typedef struct _EventdPluginContext EventdPluginContext;
 
 typedef EventdPluginContext *(*EventdPluginStartFunc)(gpointer user_data);
 typedef void (*EventdPluginStopFunc)(EventdPluginContext *context);
+typedef void (*EventdPluginControlCommandFunc)(EventdPluginContext *context, const gchar *command);
 typedef void (*EventdPluginConfigInitFunc)(EventdPluginContext *context);
 typedef void (*EventdPluginConfigCleanFunc)(EventdPluginContext *context);
 typedef void (*EventdPluginEventParseFunc)(EventdPluginContext *context, const gchar *, const gchar *, GKeyFile *);
@@ -38,6 +39,8 @@ typedef void (*EventdPluginEventActionFunc)(EventdPluginContext *context, Eventd
 typedef struct {
     EventdPluginStartFunc start;
     EventdPluginStopFunc stop;
+
+    EventdPluginControlCommandFunc control_command;
 
     EventdPluginConfigInitFunc config_init;
     EventdPluginConfigCleanFunc config_clean;
