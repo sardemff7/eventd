@@ -108,7 +108,7 @@ out:
     sf_close(f);
 }
 
-static GHashTable *
+static void
 _eventd_sound_sndfile_event_action(EventdPluginContext *context, EventdClient *client, EventdEvent *event)
 {
     EventdSoundSndfileEvent *sndfile_event = NULL;
@@ -121,10 +121,10 @@ _eventd_sound_sndfile_event_action(EventdPluginContext *context, EventdClient *c
 
     sndfile_event = libeventd_config_events_get_event(context->events, libeventd_client_get_type(client), eventd_event_get_name(event));
     if ( sndfile_event == NULL )
-        return NULL;
+        return;
 
     if ( sndfile_event->disable )
-        return NULL;
+        return;
 
 
     if ( ( file = libeventd_config_get_filename(sndfile_event->sound, eventd_event_get_data(event), "sounds") ) != NULL )
@@ -139,8 +139,6 @@ _eventd_sound_sndfile_event_action(EventdPluginContext *context, EventdClient *c
     default:
         eventd_sound_sndfile_pulseaudio_play_data(data, length, format, rate, channels);
     }
-
-    return NULL;
 }
 
 static void
@@ -244,8 +242,6 @@ _eventd_sound_sndfile_config_clean(EventdPluginContext *context)
 void
 eventd_plugin_get_info(EventdPlugin *plugin)
 {
-    plugin->id = "sndfile";
-
     plugin->start = _eventd_sound_sndfile_start;
     plugin->stop = _eventd_sound_sndfile_stop;
 

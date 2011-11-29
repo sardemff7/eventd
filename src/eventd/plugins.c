@@ -63,8 +63,8 @@ eventd_plugins_event_parse_all(const gchar *type, const gchar *event, GKeyFile *
     libeventd_plugins_event_parse_all(plugins, type, event, config_file);
 }
 
-GHashTable *
+void
 eventd_plugins_event_action_all(EventdClient *client, EventdEvent *event)
 {
-    return libeventd_plugins_event_action_all(plugins, client, event);
+    libeventd_plugins_event_action_all(plugins, client, event);
 }

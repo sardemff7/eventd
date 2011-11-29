@@ -33,11 +33,9 @@ typedef void (*EventdPluginStopFunc)(EventdPluginContext *context);
 typedef void (*EventdPluginConfigInitFunc)(EventdPluginContext *context);
 typedef void (*EventdPluginConfigCleanFunc)(EventdPluginContext *context);
 typedef void (*EventdPluginEventParseFunc)(EventdPluginContext *context, const gchar *, const gchar *, GKeyFile *);
-typedef GHashTable *(*EventdPluginEventActionFunc)(EventdPluginContext *context, EventdClient *client, EventdEvent *event);
+typedef void (*EventdPluginEventActionFunc)(EventdPluginContext *context, EventdClient *client, EventdEvent *event);
 
 typedef struct {
-    gchar *id;
-
     EventdPluginStartFunc start;
     EventdPluginStopFunc stop;
 

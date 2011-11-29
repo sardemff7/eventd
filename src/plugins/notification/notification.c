@@ -185,17 +185,17 @@ _eventd_notification_notification_new(EventdClient *client, GHashTable *data, Ev
 
 
 static void
-_eventd_notification_notification_insert_data_in_hash_table(EventdNotificationNotification *notification, GHashTable *table)
+_eventd_notification_notification_add_pong_data(EventdEvent *event, EventdNotificationNotification *notification)
 {
-    g_hash_table_insert(table, g_strdup("title"), g_strdup(notification->title));
-    g_hash_table_insert(table, g_strdup("message"), g_strdup(notification->message));
+    eventd_event_add_pong_data(event, g_strdup("notification-title"), g_strdup(notification->title));
+    eventd_event_add_pong_data(event, g_strdup("notification-message"), g_strdup(notification->message));
 
     if ( notification->icon != NULL )
-        g_hash_table_insert(table, g_strdup("icon"), eventd_notification_icon_get_base64(notification->icon));
+        eventd_event_add_pong_data(event, g_strdup("notification-icon"), eventd_notification_icon_get_base64(notification->icon));
     if ( notification->overlay_icon != NULL )
-        g_hash_table_insert(table, g_strdup("overlay-icon"), eventd_notification_icon_get_base64(notification->overlay_icon));
+        eventd_event_add_pong_data(event, g_strdup("notification-overlay-icon"), eventd_notification_icon_get_base64(notification->overlay_icon));
     if ( notification->merged_icon != NULL )
-        g_hash_table_insert(table, g_strdup("merged-icon"), eventd_notification_icon_get_base64(notification->merged_icon));
+        eventd_event_add_pong_data(event, g_strdup("notification-merged-icon"), eventd_notification_icon_get_base64(notification->merged_icon));
 }
 
 static void
@@ -214,35 +214,31 @@ _eventd_notification_notification_free(EventdNotificationNotification *notificat
     g_free(notification);
 }
 
-static GHashTable *
+static void
 _eventd_notification_event_action(EventdPluginContext *context, EventdClient *client, EventdEvent *event)
 {
     EventdNotificationEvent *notification_event;
     EventdNotificationNotification *notification;
-    GHashTable *ret = NULL;
 
     notification_event = libeventd_config_events_get_event(context->events, libeventd_client_get_type(client), eventd_event_get_name(event));
     if ( notification_event == NULL )
-        return NULL;
+        return;
 
     if ( notification_event->disable )
-        return NULL;
+        return;
 
     notification = _eventd_notification_notification_new(client, eventd_event_get_data(event), notification_event);
 
     switch ( libeventd_client_get_mode(client) )
     {
     case EVENTD_CLIENT_MODE_PING_PONG:
-        ret = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-        _eventd_notification_notification_insert_data_in_hash_table(notification, ret);
+        _eventd_notification_notification_add_pong_data(event, notification);
     break;
     default:
         eventd_notification_notify_event_action(event, notification);
     }
 
     _eventd_notification_notification_free(notification);
-
-    return ret;
 }
 
 
@@ -261,8 +257,6 @@ _eventd_notification_config_clean(EventdPluginContext *context)
 void
 eventd_plugin_get_info(EventdPlugin *plugin)
 {
-    plugin->id = "notification";
-
     plugin->start = _eventd_notification_start;
     plugin->stop = _eventd_notification_stop;
 

@@ -54,10 +54,10 @@ _eventd_sound_stop(EventdPluginContext *context)
     g_free(context);
 }
 
-static GHashTable *
+static void
 _eventd_sound_event_action(EventdPluginContext *context, EventdClient *client, EventdEvent *event)
 {
-    return libeventd_plugins_event_action_all(context->plugins, client, event);
+    libeventd_plugins_event_action_all(context->plugins, client, event);
 }
 
 static void
@@ -81,8 +81,6 @@ _eventd_sound_config_clean(EventdPluginContext *context)
 void
 eventd_plugin_get_info(EventdPlugin *plugin)
 {
-    plugin->id = "sound";
-
     plugin->start = _eventd_sound_start;
     plugin->stop = _eventd_sound_stop;
 

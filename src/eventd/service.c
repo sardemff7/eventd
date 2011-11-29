@@ -164,19 +164,17 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
 
                     if ( ! disable )
                     {
-                        GHashTable *ret = NULL;
+                        GHashTable *pong = NULL;
 
                         switch ( libeventd_client_get_mode(client) )
                         {
                         case EVENTD_CLIENT_MODE_PING_PONG:
-                            ret = eventd_plugins_event_action_all(client, event);
+                            eventd_plugins_event_action_all(client, event);
                             if ( ! g_data_output_stream_put_string(output, "EVENT\n", NULL, &error) )
                                 break;
-                            if ( ret != NULL )
-                            {
-                                g_hash_table_foreach(ret, _eventd_service_send_data, output);
-                                g_hash_table_unref(ret);
-                            }
+                            pong = eventd_event_get_pong_data(event);
+                            if ( pong != NULL )
+                                g_hash_table_foreach(pong, _eventd_service_send_data, output);
                             if ( ! g_data_output_stream_put_string(output, ".\n", NULL, &error) )
                                 break;
                             eventd_event_end(event, EVENTD_EVENT_END_REASON_RESERVED);

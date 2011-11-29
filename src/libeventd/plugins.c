@@ -84,7 +84,6 @@ _libeventd_plugins_load_dir(GList **plugins, const gchar *plugins_dir_name, gpoi
         #endif /* ! DEBUG */
 
         plugin = g_new0(EventdPlugin, 1);
-        plugin->id = NULL;
         plugin->module = module;
         get_info(plugin);
 
@@ -99,8 +98,6 @@ _libeventd_plugins_load_dir(GList **plugins, const gchar *plugins_dir_name, gpoi
                 continue;
             }
         }
-
-        plugin->id = g_strdup(plugin->id ?: file);
 
         *plugins = g_list_prepend(*plugins, plugin);
     }
@@ -152,7 +149,6 @@ _libeventd_plugins_plugin_free(gpointer data)
     if ( plugin->stop != NULL )
         plugin->stop(plugin->context);
     g_module_close(plugin->module);
-    g_free(plugin->id);
     g_free(plugin);
 }
 
@@ -230,30 +226,8 @@ void libeventd_plugins_event_parse_all(GList *plugins, const gchar *type, const 
 }
 
 typedef struct {
-    GHashTable *ret;
-    const gchar *prefix;
-} EventdEventActionReturnData;
-
-static gboolean
-_libeventd_plugins_event_action_return(gpointer key, gpointer value, gpointer user_data)
-{
-    gchar *name = key;
-    gchar *content = value;
-    EventdEventActionReturnData *return_data = user_data;
-    gchar *full_name;
-
-    full_name = g_strconcat(return_data->prefix, "-", name, NULL);
-    g_free(name);
-
-    g_hash_table_insert(return_data->ret, full_name, content);
-
-    return TRUE;
-}
-
-typedef struct {
     EventdClient *client;
     EventdEvent *event;
-    GHashTable *ret;
 } EventdEventActionData;
 
 static void
@@ -261,34 +235,19 @@ libeventd_plugins_event_action(gpointer data, gpointer user_data)
 {
     EventdPlugin *plugin = data;
     EventdEventActionData *action_data = user_data;
-    GHashTable *ret;
 
     if ( plugin->event_action == NULL )
         return;
 
-    ret = plugin->event_action(plugin->context, action_data->client, action_data->event);
-    if ( ret != NULL )
-    {
-        EventdEventActionReturnData ret_data = {
-            .ret = action_data->ret,
-            .prefix = plugin->id
-        };
-        g_hash_table_foreach_steal(ret, _libeventd_plugins_event_action_return, &ret_data);
-        g_hash_table_unref(ret);
-    }
+    plugin->event_action(plugin->context, action_data->client, action_data->event);
 }
 
-GHashTable *
+void
 libeventd_plugins_event_action_all(GList *plugins, EventdClient *client, EventdEvent *event)
 {
     EventdEventActionData data = {
         .client = client,
         .event = event
     };
-    data.ret = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
     libeventd_plugins_foreach(plugins, libeventd_plugins_event_action, &data);
-
-    if ( g_hash_table_size(data.ret) < 1 )
-        data.ret = (g_hash_table_unref(data.ret), NULL);
-    return data.ret;
 }

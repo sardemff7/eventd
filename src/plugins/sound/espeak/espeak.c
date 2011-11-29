@@ -252,10 +252,9 @@ _eventd_sound_espeak_regex_event_data_cb(const GMatchInfo *info, GString *r, gpo
     return FALSE;
 }
 
-static GHashTable *
+static void
 _eventd_sound_espeak_event_action(EventdPluginContext *context, EventdClient *client, EventdEvent *event)
 {
-    GHashTable *ret = NULL;
     EventdClientMode client_mode;
     gchar *message;
     gchar *msg;
@@ -267,7 +266,7 @@ _eventd_sound_espeak_event_action(EventdPluginContext *context, EventdClient *cl
 
     message = libeventd_config_events_get_event(context->events, libeventd_client_get_type(client), eventd_event_get_name(event));
     if ( message == NULL )
-        return NULL;
+        return;
 
     msg = libeventd_regex_replace_event_data(message, eventd_event_get_data(event), _eventd_sound_espeak_regex_event_data_cb);
 
@@ -291,9 +290,9 @@ _eventd_sound_espeak_event_action(EventdPluginContext *context, EventdClient *cl
     case EVENTD_CLIENT_MODE_PING_PONG:
         espeak_Synchronize();
         sound_data = data->data;
-        ret = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-        g_hash_table_insert(ret, g_strdup("message"), g_strdup(msg));
-        g_hash_table_insert(ret, g_strdup("audio-data"), g_base64_encode(sound_data->data, sound_data->length));
+        eventd_event_add_pong_data(event, g_strdup("espeak-message"), msg);
+        msg = NULL;
+        eventd_event_add_pong_data(event, g_strdup("espeak-audio-data"), g_base64_encode(sound_data->data, sound_data->length));
         _eventd_sound_espeak_callback_data_unref(data);
     break;
     default:
@@ -302,8 +301,6 @@ _eventd_sound_espeak_event_action(EventdPluginContext *context, EventdClient *cl
 
 fail:
     g_free(msg);
-
-    return ret;
 }
 
 static void
@@ -321,8 +318,6 @@ _eventd_sound_espeak_config_clean(EventdPluginContext *context)
 void
 eventd_plugin_get_info(EventdPlugin *plugin)
 {
-    plugin->id = "espeak";
-
     plugin->start = _eventd_sound_espeak_start;
     plugin->stop = _eventd_sound_espeak_stop;
 
