@@ -25,7 +25,7 @@ namespace Eventc
     static string type;
     static string mode;
     static string name;
-    static string event_type;
+    static string event_name;
     static string[] event_data_name;
     static string[] event_data_content;
     static string host;
@@ -41,9 +41,9 @@ namespace Eventc
 
     static const GLib.OptionEntry[] entries =
     {
-        { "type", 't', 0, GLib.OptionArg.STRING, out event_type, N_("Event type to send"), "<type>" },
+        { "name", 'n', 0, GLib.OptionArg.STRING, out event_name, N_("Event name to send"), "<name>" },
         { "mode", 0, 0, GLib.OptionArg.STRING, out mode, N_("Mode of the client"), "{normal|ping-pong}" },
-        { "data-name", 'n', 0, GLib.OptionArg.STRING_ARRAY, out event_data_name, N_("Event data name to send"), "<name>" },
+        { "data-name", 'd', 0, GLib.OptionArg.STRING_ARRAY, out event_data_name, N_("Event data name to send"), "<name>" },
         { "data-content", 'c', 0, GLib.OptionArg.STRING_ARRAY, out event_data_content, N_("Event data content to send (must be after a data-name)"), "<content>" },
         { "host", 'h', 0, GLib.OptionArg.STRING, out host, N_("Host to connect to"), "<host>" },
         { "port", 'p', 0, GLib.OptionArg.INT, ref port, N_("Port to connect to"), "<port>" },
@@ -90,7 +90,7 @@ namespace Eventc
             return;
         }
 
-        var event = new Eventd.Event(event_type);
+        var event = new Eventd.Event(event_name);
 
         for ( uint i = 0 ; i < n_length ; ++i )
             event.add_data(event_data_name[i], event_data_content[i]);
@@ -103,7 +103,7 @@ namespace Eventc
             }
             catch ( EventcError e )
             {
-                GLib.warning("Couldn’t send event '%s': %s", event_type, e.message);
+                GLib.warning("Couldn’t send event '%s': %s", event_name, e.message);
             }
             disconnect();
         });
@@ -172,9 +172,9 @@ namespace Eventc
             GLib.print(_("You must define the type of the client.\n"));
             return 1;
         }
-        if ( event_type == null )
+        if ( event_name == null )
         {
-            GLib.print(_("You must define the type of the event.\n"));
+            GLib.print(_("You must define the name of the event.\n"));
             return 1;
         }
         type = args[1];

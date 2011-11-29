@@ -82,7 +82,7 @@ eventd_config_event_get_disable_and_timeout(EventdConfig *config, EventdClient *
 {
     EventdConfigEvent *config_event;
 
-    config_event = libeventd_config_events_get_event(config->events, libeventd_client_get_type(client), eventd_event_get_type(event));
+    config_event = libeventd_config_events_get_event(config->events, libeventd_client_get_type(client), eventd_event_get_name(event));
 
     if ( config_event == NULL )
     {
@@ -118,7 +118,7 @@ _eventd_config_parse_server(EventdConfig *config, GKeyFile *config_file)
 }
 
 static void
-_eventd_config_parse_client(EventdConfig *config, const gchar *client_type, const gchar *event_type, GKeyFile *config_file)
+_eventd_config_parse_client(EventdConfig *config, const gchar *client_type, const gchar *event_name, GKeyFile *config_file)
 {
     EventdConfigEvent *event;
     gchar *name;
@@ -134,7 +134,7 @@ _eventd_config_parse_client(EventdConfig *config, const gchar *client_type, cons
     if ( libeventd_config_key_file_get_int(config_file, "event", "timeout", &timeout) < 0 )
         goto skip;
 
-    name = libeventd_config_events_get_name(client_type, event_type);
+    name = libeventd_config_events_get_name(client_type, event_name);
 
     event = g_hash_table_lookup(config->events, name);
     if ( event != NULL )

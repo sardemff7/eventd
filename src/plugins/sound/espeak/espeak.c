@@ -178,7 +178,7 @@ _eventd_sound_espeak_stop()
 }
 
 static void
-_eventd_sound_espeak_event_parse(const gchar *client_type, const gchar *event_type, GKeyFile *config_file)
+_eventd_sound_espeak_event_parse(const gchar *client_type, const gchar *event_name, GKeyFile *config_file)
 {
     gboolean disable;
     gchar *message = NULL;
@@ -193,8 +193,8 @@ _eventd_sound_espeak_event_parse(const gchar *client_type, const gchar *event_ty
     if ( libeventd_config_key_file_get_string(config_file, "espeak", "message", &message) < 0 )
         return;
 
-    name = libeventd_config_events_get_name(client_type, event_type);
-    if ( event_type != NULL )
+    name = libeventd_config_events_get_name(client_type, event_name);
+    if ( event_name != NULL )
         parent = g_hash_table_lookup(events, client_type);
 
     if ( ! message )
@@ -257,7 +257,7 @@ _eventd_sound_espeak_event_action(EventdClient *client, EventdEvent *event)
 
     client_mode = libeventd_client_get_mode(client);
 
-    message = libeventd_config_events_get_event(events, libeventd_client_get_type(client), eventd_event_get_type(event));
+    message = libeventd_config_events_get_event(events, libeventd_client_get_type(client), eventd_event_get_name(event));
     if ( message == NULL )
         return NULL;
 

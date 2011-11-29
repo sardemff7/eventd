@@ -5,11 +5,13 @@ global:
     eventd_event_end;
     eventd_event_get_id;
     eventd_event_get_data;
+    eventd_event_get_name;
     eventd_event_get_pong_data;
     eventd_event_get_timeout;
     eventd_event_get_type;
     eventd_event_new;
     eventd_event_new_with_id;
+    eventd_event_reason_get_type;
     eventd_event_set_timeout;
 local:
     *;

@@ -251,8 +251,8 @@ namespace Eventc
                 yield;
             }
 
-            unowned string type = event.get_type();
-            this.send( @"EVENT $type");
+            unowned string name = event.get_name();
+            this.send( @"EVENT $name");
 
             unowned GLib.HashTable<string, string> data = event.get_data();
             if ( data != null )

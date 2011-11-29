@@ -112,7 +112,7 @@ _eventd_notification_event_free(gpointer data)
 }
 
 static void
-_eventd_notification_event_parse(const gchar *client_type, const gchar *event_type, GKeyFile *config_file)
+_eventd_notification_event_parse(const gchar *client_type, const gchar *event_name, GKeyFile *config_file)
 {
     gboolean disable;
     gchar *name = NULL;
@@ -139,7 +139,7 @@ _eventd_notification_event_parse(const gchar *client_type, const gchar *event_ty
     if ( libeventd_config_key_file_get_int(config_file, "notification", "overlay-scale", &scale) < 0 )
         goto skip;
 
-    name = libeventd_config_events_get_name(client_type, event_type);
+    name = libeventd_config_events_get_name(client_type, event_name);
 
     event = g_hash_table_lookup(events, name);
     if ( event != NULL )
@@ -211,7 +211,7 @@ _eventd_notification_event_action(EventdClient *client, EventdEvent *event)
     EventdNotificationNotification *notification;
     GHashTable *ret = NULL;
 
-    notification_event = libeventd_config_events_get_event(events, libeventd_client_get_type(client), eventd_event_get_type(event));
+    notification_event = libeventd_config_events_get_event(events, libeventd_client_get_type(client), eventd_event_get_name(event));
     if ( notification_event == NULL )
         return NULL;
 

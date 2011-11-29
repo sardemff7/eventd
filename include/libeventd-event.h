@@ -27,6 +27,19 @@
 
 G_BEGIN_DECLS
 
+GType eventd_event_get_type();
+GType eventd_event_end_reason_get_type();
+
+#define EVENTD_TYPE_EVENT            (eventd_event_get_type())
+#define EVENTD_EVENT(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), EVENTD_TYPE_EVENT, EventdEvent))
+#define EVENTD_IS_EVENT(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), EVENTD_TYPE_EVENT))
+#define EVENTD_EVENT_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), EVENTD_TYPE_EVENT, EventdEventClass))
+#define EVENTD_IS_EVENT_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), EVENTD_TYPE_EVENT))
+#define EVENTD_EVENT_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), EVENTD_TYPE_EVENT, EventdEventClass))
+
+#define EVENTD_TYPE_EVENT_END_REASON (eventd_event_end_reason_get_type())
+
+
 struct _EventdEvent
 {
         GObject parent_object;
@@ -43,8 +56,8 @@ struct _EventdEventClass
         void (*ended) (EventdEvent *event, EventdEventEndReason reason);
 };
 
-EventdEvent *eventd_event_new(const gchar *type);
-EventdEvent *eventd_event_new_with_id(guint32 id, const gchar *type);
+EventdEvent *eventd_event_new(const gchar *name);
+EventdEvent *eventd_event_new_with_id(guint32 id, const gchar *name);
 
 void eventd_event_end(EventdEvent *event, EventdEventEndReason reason);
 
@@ -53,7 +66,7 @@ void eventd_event_add_data(EventdEvent *event, gchar *name, gchar *content);
 void eventd_event_add_pong_data(EventdEvent *event, gchar *name, gchar *content);
 
 guint32 eventd_event_get_id(EventdEvent *event);
-const gchar *eventd_event_get_type(EventdEvent *event);
+const gchar *eventd_event_get_name(EventdEvent *event);
 gint64 eventd_event_get_timeout(EventdEvent *event);
 GHashTable *eventd_event_get_data(EventdEvent *event);
 GHashTable *eventd_event_get_pong_data(EventdEvent *event);

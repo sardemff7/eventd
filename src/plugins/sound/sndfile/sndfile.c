@@ -117,7 +117,7 @@ _eventd_sound_sndfile_event_action(EventdClient *client, EventdEvent *event)
     guint32 rate = 0;
     guint8 channels = 0;
 
-    sndfile_event = libeventd_config_events_get_event(events, libeventd_client_get_type(client), eventd_event_get_type(event));
+    sndfile_event = libeventd_config_events_get_event(events, libeventd_client_get_type(client), eventd_event_get_name(event));
     if ( sndfile_event == NULL )
         return NULL;
 
@@ -168,7 +168,7 @@ _eventd_sound_sndfile_event_new(gboolean disable, const gchar *sound, EventdSoun
 }
 
 static void
-_eventd_sound_sndfile_event_parse(const gchar *client_type, const gchar *event_type, GKeyFile *config_file)
+_eventd_sound_sndfile_event_parse(const gchar *client_type, const gchar *event_name, GKeyFile *config_file)
 {
     gboolean disable;
     gchar *sound = NULL;
@@ -184,7 +184,7 @@ _eventd_sound_sndfile_event_parse(const gchar *client_type, const gchar *event_t
     if ( libeventd_config_key_file_get_string(config_file, "sound", "sound", &sound) < 0 )
         goto skip;
 
-    name = libeventd_config_events_get_name(client_type, event_type);
+    name = libeventd_config_events_get_name(client_type, event_name);
 
     event = g_hash_table_lookup(events, name);
     if ( event != NULL )

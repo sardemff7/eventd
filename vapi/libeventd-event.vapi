@@ -25,12 +25,12 @@ namespace Eventd
 	[CCode (cheader_filename = "libeventd-event.h")]
 	public class Event : GLib.Object
 	{
-		public Event(string type);
+		public Event(string name);
 
 		public void add_data(owned string name, owned string content);
 		public void add_pong_data(owned string name, owned string content);
 
-		public unowned string get_type();
+		public unowned string get_name();
 		public unowned GLib.HashTable<string, string> get_data();
 		public unowned GLib.HashTable<string, string> get_pong_data();
 	}
