@@ -55,6 +55,10 @@ PKG_CHECK_MODULES(GLIB, [glib-2.0 >= $glib_min_version])
 GLIB_VALAFLAGS="--pkg glib-2.0 --pkg glib-local-2.0"
 AC_SUBST(GLIB_VALAFLAGS)
 
+PKG_CHECK_MODULES(GOBJECT, [gobject-2.0])
+GOBJECT_VALAFLAGS="--pkg gobject-2.0"
+AC_SUBST(GOBJECT_VALAFLAGS)
+
 gio_unix=
 gio_unix_vala=
 AC_ARG_ENABLE(gio-unix, AS_HELP_STRING([--disable-gio-unix], [Disable UNIX-specific GIO support]), enable_gio_unix=$enableval, enable_gio_unix=yes)
@@ -148,10 +152,6 @@ AM_CONDITIONAL(ENABLE_NOTIFY, [test x$enable_libnotify = xyes])
 #
 AC_ARG_ENABLE(client, AS_HELP_STRING([--disable-client], [Disable client (libeventc and eventc)]), enable_client=$enableval, enable_client=yes)
 if test x$enable_client = xyes; then
-    PKG_CHECK_MODULES(GOBJECT, [gobject-2.0])
-    GOBJECT_VALAFLAGS="--pkg gobject-2.0"
-    AC_SUBST(GOBJECT_VALAFLAGS)
-
     PKG_CHECK_MODULES(GTHREAD, [gthread-2.0])
     GTHREAD_VALAFLAGS="--thread"
     AC_SUBST(GTHREAD_VALAFLAGS)
@@ -172,6 +172,8 @@ AC_SUBST(AM_CFLAGS)
 AC_SUBST(AM_LDFLAGS)
 AC_SUBST(AM_VALA_CFLAGS)
 AC_SUBST(AM_VALAFLAGS)
+
+AM_SUBST_NOTMAKE(LIBS)
 
 AC_CONFIG_FILES([
     data/libeventd-event.pc

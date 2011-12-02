@@ -49,6 +49,7 @@ libeventd_event_la_SOURCES = \
 libeventd_event_la_CFLAGS = \
 	$(AM_CFLAGS) \
 	-D G_LOG_DOMAIN=\"libeventd-event\" \
+	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS)
 
 libeventd_event_la_LDFLAGS = \
@@ -57,6 +58,7 @@ libeventd_event_la_LDFLAGS = \
 	-Wl,--version-script=$(top_srcdir)/src/libeventd-event/libeventd-event.sym
 
 libeventd_event_la_LIBADD = \
+	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS)
 
 pkgconfig_DATA += \
@@ -135,6 +137,7 @@ eventd_CFLAGS = \
 	-D SYSCONFDIR=\"$(sysconfdir)\" \
 	-D DATADIR=\"$(datadir)\" \
 	$(SYSTEMD_CFLAGS) \
+	$(GTHREAD_CFLAGS) \
 	$(GIO_CFLAGS) \
 	$(GLIB_CFLAGS)
 
@@ -142,6 +145,7 @@ eventd_LDADD = \
 	libeventd-event.la \
 	libeventd.la \
 	$(SYSTEMD_LIBS) \
+	$(GTHREAD_LIBS) \
 	$(GIO_LIBS) \
 	$(GLIB_LIBS)
 
