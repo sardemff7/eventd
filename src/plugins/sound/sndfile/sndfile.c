@@ -36,7 +36,9 @@
 #include "pulseaudio.h"
 
 
-static GHashTable *events = NULL;
+struct _EventdPluginContext {
+    GHashTable *events;
+};
 
 typedef sf_count_t (*sndfile_readf_t)(SNDFILE *sndfile, void *ptr, sf_count_t frames);
 
@@ -107,7 +109,7 @@ out:
 }
 
 static GHashTable *
-_eventd_sound_sndfile_event_action(EventdClient *client, EventdEvent *event)
+_eventd_sound_sndfile_event_action(EventdPluginContext *context, EventdClient *client, EventdEvent *event)
 {
     EventdSoundSndfileEvent *sndfile_event = NULL;
     gchar *file;
@@ -117,7 +119,7 @@ _eventd_sound_sndfile_event_action(EventdClient *client, EventdEvent *event)
     guint32 rate = 0;
     guint8 channels = 0;
 
-    sndfile_event = libeventd_config_events_get_event(events, libeventd_client_get_type(client), eventd_event_get_name(event));
+    sndfile_event = libeventd_config_events_get_event(context->events, libeventd_client_get_type(client), eventd_event_get_name(event));
     if ( sndfile_event == NULL )
         return NULL;
 
@@ -168,7 +170,7 @@ _eventd_sound_sndfile_event_new(gboolean disable, const gchar *sound, EventdSoun
 }
 
 static void
-_eventd_sound_sndfile_event_parse(const gchar *client_type, const gchar *event_name, GKeyFile *config_file)
+_eventd_sound_sndfile_event_parse(EventdPluginContext *context, const gchar *client_type, const gchar *event_name, GKeyFile *config_file)
 {
     gboolean disable;
     gchar *sound = NULL;
@@ -186,14 +188,14 @@ _eventd_sound_sndfile_event_parse(const gchar *client_type, const gchar *event_n
 
     name = libeventd_config_events_get_name(client_type, event_name);
 
-    event = g_hash_table_lookup(events, name);
+    event = g_hash_table_lookup(context->events, name);
     if ( event != NULL )
     {
         _eventd_sound_sndfile_event_update(event, disable, sound);
         g_free(name);
     }
     else
-        g_hash_table_insert(events, name, _eventd_sound_sndfile_event_new(disable, sound, g_hash_table_lookup(events, client_type)));
+        g_hash_table_insert(context->events, name, _eventd_sound_sndfile_event_new(disable, sound, g_hash_table_lookup(context->events, client_type)));
 
 skip:
     g_free(sound);
@@ -209,22 +211,34 @@ _eventd_sound_sndfile_event_free(gpointer data)
     g_free(event);
 }
 
-static void
+static EventdPluginContext *
 _eventd_sound_sndfile_start(gpointer user_data)
 {
+    EventdPluginContext *context;
+
+    context = g_new0(EventdPluginContext, 1);
+
     eventd_sound_sndfile_pulseaudio_start(user_data);
+
+    return context;
 }
 
 static void
-_eventd_sound_sndfile_config_init()
+_eventd_sound_sndfile_stop(EventdPluginContext *context)
 {
-    events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_sound_sndfile_event_free);
+    g_free(context);
 }
 
 static void
-_eventd_sound_sndfile_config_clean()
+_eventd_sound_sndfile_config_init(EventdPluginContext *context)
 {
-    g_hash_table_unref(events);
+    context->events = libeventd_config_events_new(_eventd_sound_sndfile_event_free);
+}
+
+static void
+_eventd_sound_sndfile_config_clean(EventdPluginContext *context)
+{
+    g_hash_table_unref(context->events);
 }
 
 void
@@ -233,6 +247,7 @@ eventd_plugin_get_info(EventdPlugin *plugin)
     plugin->id = "sndfile";
 
     plugin->start = _eventd_sound_sndfile_start;
+    plugin->stop = _eventd_sound_sndfile_stop;
 
     plugin->config_init = _eventd_sound_sndfile_config_init;
     plugin->config_clean = _eventd_sound_sndfile_config_clean;

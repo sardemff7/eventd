@@ -38,7 +38,9 @@
 #include "espeak.h"
 #include "pulseaudio.h"
 
-static GHashTable *events = NULL;
+struct _EventdPluginContext {
+    GHashTable *events;
+};
 
 typedef struct {
     guchar *data;
@@ -146,39 +148,45 @@ uri_callback(int type, const char *uri, const char *base)
     return 1;
 }
 
-void
+static EventdPluginContext *
 _eventd_sound_espeak_start(gpointer user_data)
 {
-    EventdSoundPulseaudioContext *context = user_data;
     gint sample_rate;
+    EventdPluginContext *context;
 
     sample_rate = espeak_Initialize(AUDIO_OUTPUT_RETRIEVAL, BUFFER_SIZE, NULL, 0);
 
     if ( sample_rate == EE_INTERNAL_ERROR )
     {
         g_warning("Couldn’t initialize eSpeak system");
-        return;
+        return NULL;
     }
+
+    context = g_new0(EventdPluginContext, 1);
 
     espeak_SetSynthCallback(synth_callback);
     espeak_SetUriCallback(uri_callback);
 
-    eventd_sound_espeak_pulseaudio_start(context, sample_rate);
+    eventd_sound_espeak_pulseaudio_start(user_data, sample_rate);
 
     libeventd_regex_init();
+
+    return context;
 }
 
-void
-_eventd_sound_espeak_stop()
+static void
+_eventd_sound_espeak_stop(EventdPluginContext *context)
 {
     libeventd_regex_clean();
 
     espeak_Synchronize();
     espeak_Terminate();
+
+    g_free(context);
 }
 
 static void
-_eventd_sound_espeak_event_parse(const gchar *client_type, const gchar *event_name, GKeyFile *config_file)
+_eventd_sound_espeak_event_parse(EventdPluginContext *context, const gchar *client_type, const gchar *event_name, GKeyFile *config_file)
 {
     gboolean disable;
     gchar *message = NULL;
@@ -195,7 +203,7 @@ _eventd_sound_espeak_event_parse(const gchar *client_type, const gchar *event_na
 
     name = libeventd_config_events_get_name(client_type, event_name);
     if ( event_name != NULL )
-        parent = g_hash_table_lookup(events, client_type);
+        parent = g_hash_table_lookup(context->events, client_type);
 
     if ( ! message )
         message = g_strdup(parent ?: "$event-data[text]");
@@ -206,7 +214,7 @@ _eventd_sound_espeak_event_parse(const gchar *client_type, const gchar *event_na
         g_free(message);
     }
     else
-        g_hash_table_insert(events, name, message);
+        g_hash_table_insert(context->events, name, message);
 }
 
 static gboolean
@@ -245,7 +253,7 @@ _eventd_sound_espeak_regex_event_data_cb(const GMatchInfo *info, GString *r, gpo
 }
 
 static GHashTable *
-_eventd_sound_espeak_event_action(EventdClient *client, EventdEvent *event)
+_eventd_sound_espeak_event_action(EventdPluginContext *context, EventdClient *client, EventdEvent *event)
 {
     GHashTable *ret = NULL;
     EventdClientMode client_mode;
@@ -257,7 +265,7 @@ _eventd_sound_espeak_event_action(EventdClient *client, EventdEvent *event)
 
     client_mode = libeventd_client_get_mode(client);
 
-    message = libeventd_config_events_get_event(events, libeventd_client_get_type(client), eventd_event_get_name(event));
+    message = libeventd_config_events_get_event(context->events, libeventd_client_get_type(client), eventd_event_get_name(event));
     if ( message == NULL )
         return NULL;
 
@@ -299,15 +307,15 @@ fail:
 }
 
 static void
-_eventd_sound_espeak_config_init()
+_eventd_sound_espeak_config_init(EventdPluginContext *context)
 {
-    events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+    context->events = libeventd_config_events_new(g_free);
 }
 
 static void
-_eventd_sound_espeak_config_clean()
+_eventd_sound_espeak_config_clean(EventdPluginContext *context)
 {
-    g_hash_table_unref(events);
+    g_hash_table_unref(context->events);
 }
 
 void

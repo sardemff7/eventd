@@ -26,6 +26,6 @@
 typedef struct _EventdSoundPulseaudioContext EventdSoundPulseaudioContext;
 
 EventdSoundPulseaudioContext *eventd_sound_pulseaudio_start();
-void eventd_sound_pulseaudio_stop();
+void eventd_sound_pulseaudio_stop(EventdSoundPulseaudioContext *context);
 
 #endif /* __EVENTD_PLUGINS_SOUND_PULSEAUDIO_H__ */

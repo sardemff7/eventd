@@ -62,17 +62,22 @@ _libeventd_plugins_load_dir(GList **plugins, const gchar *plugins_dir_name, gpoi
         full_filename = g_build_filename(plugins_dir_name, file, NULL);
 
         if ( g_file_test(full_filename, G_FILE_TEST_IS_DIR) )
-            goto next;
+        {
+            g_free(full_filename);
+            continue;
+        }
 
         module = g_module_open(full_filename, G_MODULE_BIND_LAZY|G_MODULE_BIND_LOCAL);
         if ( module == NULL )
         {
             g_warning("Couldn’t load module '%s': %s", file, g_module_error());
-            goto next;
+            g_free(full_filename);
+            continue;
         }
+        g_free(full_filename);
 
         if ( ! g_module_symbol(module, "eventd_plugin_get_info", (void **)&get_info) )
-            goto next;
+            continue;
 
         #if DEBUG
         g_debug("Loading plugin '%s'", file);
@@ -83,15 +88,21 @@ _libeventd_plugins_load_dir(GList **plugins, const gchar *plugins_dir_name, gpoi
         plugin->module = module;
         get_info(plugin);
 
+        if ( plugin->start != NULL )
+        {
+            plugin->context = plugin->start(user_data);
+            if ( plugin->context == NULL )
+            {
+                g_warning("Couldn’t load plugin '%s'", file);
+                g_module_close(plugin->module);
+                g_free(plugin);
+                continue;
+            }
+        }
+
         plugin->id = g_strdup(plugin->id ?: file);
 
-        if ( plugin->start != NULL )
-            plugin->start(user_data);
-
         *plugins = g_list_prepend(*plugins, plugin);
-
-    next:
-        g_free(full_filename);
     }
 }
 
@@ -139,7 +150,7 @@ _libeventd_plugins_plugin_free(gpointer data)
     EventdPlugin *plugin = data;
 
     if ( plugin->stop != NULL )
-        plugin->stop();
+        plugin->stop(plugin->context);
     g_module_close(plugin->module);
     g_free(plugin->id);
     g_free(plugin);
@@ -169,7 +180,7 @@ _libeventd_plugins_config_init(gpointer data, gpointer user_data)
     EventdPlugin *plugin = data;
 
     if ( plugin->config_init != NULL )
-        plugin->config_init();
+        plugin->config_init(plugin->context);
 }
 
 void
@@ -184,7 +195,7 @@ _libeventd_plugins_config_clean(gpointer data, gpointer user_data)
     EventdPlugin *plugin = data;
 
     if ( plugin->config_clean != NULL )
-        plugin->config_clean();
+        plugin->config_clean(plugin->context);
 }
 
 void
@@ -205,7 +216,7 @@ _libeventd_plugins_event_parse(gpointer data, gpointer user_data)
     EventdPlugin *plugin = data;
     EventdEventParseData *parse_data = user_data;
     if ( plugin->event_parse != NULL )
-        plugin->event_parse(parse_data->type, parse_data->event, parse_data->config_file);
+        plugin->event_parse(plugin->context, parse_data->type, parse_data->event, parse_data->config_file);
 }
 
 void libeventd_plugins_event_parse_all(GList *plugins, const gchar *type, const gchar *event, GKeyFile *config_file)
@@ -255,7 +266,7 @@ libeventd_plugins_event_action(gpointer data, gpointer user_data)
     if ( plugin->event_action == NULL )
         return;
 
-    ret = plugin->event_action(action_data->client, action_data->event);
+    ret = plugin->event_action(plugin->context, action_data->client, action_data->event);
     if ( ret != NULL )
     {
         EventdEventActionReturnData ret_data = {

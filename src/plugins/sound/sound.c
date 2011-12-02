@@ -28,48 +28,54 @@
 
 #include "pulseaudio.h"
 
-static GList *plugins = NULL;
+struct _EventdPluginContext {
+    GList *plugins;
+    EventdSoundPulseaudioContext *context;
+};
 
-static void
+static EventdPluginContext *
 _eventd_sound_start(gpointer user_data)
 {
-    EventdSoundPulseaudioContext *context;
+    EventdPluginContext *context;
 
-    context = eventd_sound_pulseaudio_start();
-    libeventd_plugins_load(&plugins, "plugins" G_DIR_SEPARATOR_S "sound", context);
+    context = g_new0(EventdPluginContext, 1);
 
+    context->context = eventd_sound_pulseaudio_start();
+    libeventd_plugins_load(&context->plugins, "plugins" G_DIR_SEPARATOR_S "sound", context->context);
+
+    return context;
+}
+
+static void
+_eventd_sound_stop(EventdPluginContext *context)
+{
+    libeventd_plugins_unload(&context->plugins);
+    eventd_sound_pulseaudio_stop(context->context);
     g_free(context);
 }
 
-static void
-_eventd_sound_stop()
-{
-    libeventd_plugins_unload(&plugins);
-    eventd_sound_pulseaudio_stop();
-}
-
 static GHashTable *
-_eventd_sound_event_action(EventdClient *client, EventdEvent *event)
+_eventd_sound_event_action(EventdPluginContext *context, EventdClient *client, EventdEvent *event)
 {
-    return libeventd_plugins_event_action_all(plugins, client, event);
+    return libeventd_plugins_event_action_all(context->plugins, client, event);
 }
 
 static void
-_eventd_sound_event_parse(const gchar *type, const gchar *event, GKeyFile *config_file)
+_eventd_sound_event_parse(EventdPluginContext *context, const gchar *type, const gchar *event, GKeyFile *config_file)
 {
-    libeventd_plugins_event_parse_all(plugins, type, event, config_file);
+    libeventd_plugins_event_parse_all(context->plugins, type, event, config_file);
 }
 
 static void
-_eventd_sound_config_init()
+_eventd_sound_config_init(EventdPluginContext *context)
 {
-    libeventd_plugins_config_init_all(plugins);
+    libeventd_plugins_config_init_all(context->plugins);
 }
 
 static void
-_eventd_sound_config_clean()
+_eventd_sound_config_clean(EventdPluginContext *context)
 {
-    libeventd_plugins_config_clean_all(plugins);
+    libeventd_plugins_config_clean_all(context->plugins);
 }
 
 void

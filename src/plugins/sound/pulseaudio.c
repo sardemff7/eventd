@@ -36,14 +36,13 @@ _eventd_sound_pulseaudio_context_state_callback(pa_context *c, void *user_data)
     switch ( state )
     {
         case PA_CONTEXT_FAILED:
-            g_debug("context failed");
             pa_context_unref(context->sound);
             context->sound = NULL;
         case PA_CONTEXT_READY:
         break;
         case PA_CONTEXT_TERMINATED:
-            g_debug("context terminated");
             pa_context_unref(context->sound);
+            context->sound = NULL;
             pa_glib_mainloop_free(context->pa_loop);
             g_free(context);
         default:
@@ -85,6 +84,9 @@ eventd_sound_pulseaudio_start()
 void
 eventd_sound_pulseaudio_stop(EventdSoundPulseaudioContext *context)
 {
+    if ( context == NULL )
+        return;
+
     if ( context->sound != NULL )
     {
         pa_operation* op;

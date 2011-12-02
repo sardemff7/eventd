@@ -34,22 +34,32 @@
 #include "notify.h"
 
 
-static GHashTable *events = NULL;
+struct _EventdPluginContext {
+    GHashTable *events;
+};
 
-static void
+static EventdPluginContext *
 _eventd_notification_start(gpointer user_data)
 {
+    EventdPluginContext *context;
+
+    context = g_new0(EventdPluginContext, 1);
+
     eventd_notification_notify_init();
 
     libeventd_regex_init();
+
+    return context;
 }
 
 static void
-_eventd_notification_stop()
+_eventd_notification_stop(EventdPluginContext *context)
 {
     libeventd_regex_clean();
 
     eventd_notification_notify_uninit();
+
+    g_free(context);
 }
 
 static void
@@ -112,7 +122,7 @@ _eventd_notification_event_free(gpointer data)
 }
 
 static void
-_eventd_notification_event_parse(const gchar *client_type, const gchar *event_name, GKeyFile *config_file)
+_eventd_notification_event_parse(EventdPluginContext *context, const gchar *client_type, const gchar *event_name, GKeyFile *config_file)
 {
     gboolean disable;
     gchar *name = NULL;
@@ -141,11 +151,11 @@ _eventd_notification_event_parse(const gchar *client_type, const gchar *event_na
 
     name = libeventd_config_events_get_name(client_type, event_name);
 
-    event = g_hash_table_lookup(events, name);
+    event = g_hash_table_lookup(context->events, name);
     if ( event != NULL )
         _eventd_notification_event_update(event, disable, title, message, icon, overlay_icon, &scale);
     else
-        g_hash_table_insert(events, name, _eventd_notification_event_new(disable, title, message, icon, overlay_icon, &scale, g_hash_table_lookup(events, client_type)));
+        g_hash_table_insert(context->events, name, _eventd_notification_event_new(disable, title, message, icon, overlay_icon, &scale, g_hash_table_lookup(context->events, client_type)));
 
 skip:
     g_free(overlay_icon);
@@ -205,13 +215,13 @@ _eventd_notification_notification_free(EventdNotificationNotification *notificat
 }
 
 static GHashTable *
-_eventd_notification_event_action(EventdClient *client, EventdEvent *event)
+_eventd_notification_event_action(EventdPluginContext *context, EventdClient *client, EventdEvent *event)
 {
     EventdNotificationEvent *notification_event;
     EventdNotificationNotification *notification;
     GHashTable *ret = NULL;
 
-    notification_event = libeventd_config_events_get_event(events, libeventd_client_get_type(client), eventd_event_get_name(event));
+    notification_event = libeventd_config_events_get_event(context->events, libeventd_client_get_type(client), eventd_event_get_name(event));
     if ( notification_event == NULL )
         return NULL;
 
@@ -237,15 +247,15 @@ _eventd_notification_event_action(EventdClient *client, EventdEvent *event)
 
 
 static void
-_eventd_notification_config_init()
+_eventd_notification_config_init(EventdPluginContext *context)
 {
-    events = libeventd_config_events_new(_eventd_notification_event_free);
+    context->events = libeventd_config_events_new(_eventd_notification_event_free);
 }
 
 static void
-_eventd_notification_config_clean()
+_eventd_notification_config_clean(EventdPluginContext *context)
 {
-    g_hash_table_unref(events);
+    g_hash_table_unref(context->events);
 }
 
 void

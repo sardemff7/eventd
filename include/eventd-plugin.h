@@ -26,12 +26,14 @@
 #include <libeventd-types.h>
 #include <libeventd-event-types.h>
 
-typedef void (*EventdPluginStartFunc)(gpointer user_data);
-typedef void (*EventdPluginStopFunc)(void);
-typedef void (*EventdPluginConfigInitFunc)(void);
-typedef void (*EventdPluginConfigCleanFunc)(void);
-typedef void (*EventdPluginEventParseFunc)(const gchar *, const gchar *, GKeyFile *);
-typedef GHashTable *(*EventdPluginEventActionFunc)(EventdClient *client, EventdEvent *event);
+typedef struct _EventdPluginContext EventdPluginContext;
+
+typedef EventdPluginContext *(*EventdPluginStartFunc)(gpointer user_data);
+typedef void (*EventdPluginStopFunc)(EventdPluginContext *context);
+typedef void (*EventdPluginConfigInitFunc)(EventdPluginContext *context);
+typedef void (*EventdPluginConfigCleanFunc)(EventdPluginContext *context);
+typedef void (*EventdPluginEventParseFunc)(EventdPluginContext *context, const gchar *, const gchar *, GKeyFile *);
+typedef GHashTable *(*EventdPluginEventActionFunc)(EventdPluginContext *context, EventdClient *client, EventdEvent *event);
 
 typedef struct {
     gchar *id;
@@ -47,6 +49,7 @@ typedef struct {
 
     /* Private stuff */
     void *module;
+    EventdPluginContext *context;
 } EventdPlugin;
 
 typedef EventdPlugin *(*EventdPluginGetInfoFunc)(EventdPlugin *plugin);
