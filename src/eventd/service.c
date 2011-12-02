@@ -63,6 +63,9 @@ gboolean
 eventd_service_quit(gpointer user_data)
 {
     EventdService *service = user_data;
+
+    eventd_queue_free(service->queue);
+
     if ( service->loop != NULL )
         g_main_loop_quit(service->loop);
 
@@ -359,8 +362,6 @@ eventd_service(GList *sockets, gboolean no_plugins)
 
     g_socket_service_stop(service->service);
     g_socket_listener_close((GSocketListener *)service->service);
-
-    eventd_queue_free(service->queue);
 
     eventd_config_clean(service->config);
 

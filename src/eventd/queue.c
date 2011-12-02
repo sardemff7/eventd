@@ -120,6 +120,9 @@ eventd_queue_new(EventdService *service)
 void
 eventd_queue_free(EventdQueue *queue)
 {
+    if ( queue->current != NULL )
+        eventd_event_end(queue->current->event, EVENTD_EVENT_END_REASON_RESERVED);
+
     g_async_queue_push(queue->queue, g_new0(EventdQueueEvent, 1));
 
     g_thread_join(queue->thread);
