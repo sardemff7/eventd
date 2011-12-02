@@ -273,6 +273,7 @@ notification_la_SOURCES = \
 	src/plugins/notification/libnotify-compat.h \
 	src/plugins/notification/notify.h \
 	src/plugins/notification/icon.h \
+	src/plugins/notification/icon.c \
 	src/plugins/notification/notification.h \
 	src/plugins/notification/notification.c
 
@@ -299,14 +300,6 @@ notification_la_SOURCES += \
 else
 notification_la_SOURCES += \
 	src/plugins/notification/notify-dummy.c
-endif
-
-if ENABLE_GDK_PIXBUF
-notification_la_SOURCES += \
-	src/plugins/notification/icon.c
-else
-notification_la_SOURCES += \
-	src/plugins/notification/icon-dummy.c
 endif
 
 

@@ -23,8 +23,6 @@
 #ifndef __EVENTD_PLUGINS_NOTIFICATION_ICON_H__
 #define __EVENTD_PLUGINS_NOTIFICATION_ICON_H__
 
-void eventd_notification_icon_get_pixbuf(GHashTable *data, EventdNotificationEvent *notification_event, EventdNotificationNotification *notification);
-gchar *eventd_notification_icon_get_base64(gpointer icon);
-void eventd_notification_icon_unref(gpointer icon);
+GdkPixbuf *eventd_notification_icon_get_pixbuf_from_data(const guchar *data, gsize length, guint size);
 
 #endif /* __EVENTD_PLUGINS_NOTIFICATION_ICON_H__ */

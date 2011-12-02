@@ -22,25 +22,6 @@
 
 #include <glib.h>
 
-
-#include "notification.h"
 #include "icon.h"
 
-void
-eventd_notification_icon_get_pixbuf(GHashTable *data, EventdNotificationEvent *notification_event, EventdNotificationNotification *notification)
-{
-    notification->icon = NULL;
-    notification->overlay_icon = NULL;
-    notification->merged_icon = NULL;
-}
-
-gchar *
-eventd_notification_icon_get_base64(gpointer icon)
-{
-    return NULL;
-}
-
-void
-eventd_notification_icon_unref(gpointer icon)
-{
-}
+GdkPixbuf *eventd_notification_icon_get_pixbuf_from_data(const guchar *data, gsize length, guint size) { return NULL; }

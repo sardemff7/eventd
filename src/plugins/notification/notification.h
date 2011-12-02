@@ -35,9 +35,10 @@ typedef struct {
 typedef struct {
     gchar *title;
     gchar *message;
-    gpointer icon;
-    gpointer overlay_icon;
-    gpointer merged_icon;
+    guchar *icon;
+    gsize icon_length;
+    guchar *overlay_icon;
+    gsize overlay_icon_length;
 } EventdNotificationNotification;
 
 #endif /* __EVENTD_PLUGINS_NOTIFICATION_NOTIFICATION_H__ */

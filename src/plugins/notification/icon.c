@@ -20,49 +20,29 @@
  *
  */
 
+#if ENABLE_GDK_PIXBUF
+
 #include <glib.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
-#include <libeventd-config.h>
-
-#include "notification.h"
 #include "icon.h"
 
-static GdkPixbuf *
-_eventd_notification_icon_get_pixbuf_from_data(const char *icon_name, GHashTable *event_data)
+GdkPixbuf *
+eventd_notification_icon_get_pixbuf_from_data(const guchar *data, gsize length, guint size)
 {
     GError *error = NULL;
-    gchar *icon_base64 = NULL;
-    guchar *icon = NULL;
-    gsize icon_length;
-    gchar *icon_size_name;
-    gchar *icon_size_text;
     GdkPixbufLoader *loader;
     GdkPixbuf *pixbuf = NULL;
 
-    if ( event_data == NULL )
+    if ( data == NULL )
         return NULL;
-
-    icon_base64 = g_hash_table_lookup(event_data, icon_name);
-    if ( icon_base64 == NULL )
-        return NULL;
-
-    icon_size_name = g_strconcat(icon_name, "-size", NULL);
-    icon_size_text = g_hash_table_lookup(event_data, icon_size_name);
-    g_free(icon_size_name);
-
-    icon = g_base64_decode(icon_base64, &icon_length);
 
     loader = gdk_pixbuf_loader_new();
 
-    if ( icon_size_text != NULL )
-    {
-        guint64 icon_size;
-        icon_size = g_ascii_strtoull(icon_size_text, NULL, 10);
-        gdk_pixbuf_loader_set_size(loader, icon_size, icon_size);
-    }
+    if ( size != 0 )
+        gdk_pixbuf_loader_set_size(loader, size, size);
 
-    if ( ! gdk_pixbuf_loader_write(loader, icon, icon_length, &error) )
+    if ( ! gdk_pixbuf_loader_write(loader, data, length, &error) )
     {
         g_warning("Couldn’t write icon data: %s", error->message);
         g_clear_error(&error);
@@ -79,83 +59,8 @@ _eventd_notification_icon_get_pixbuf_from_data(const char *icon_name, GHashTable
     pixbuf = g_object_ref(gdk_pixbuf_loader_get_pixbuf(loader));
 
 fail:
-    g_free(icon);
     g_object_unref(loader);
     return pixbuf;
 }
 
-static gpointer
-_eventd_notification_icon_get_pixbuf_from_file(gchar *filename)
-{
-    GError *error = NULL;
-    GdkPixbuf *ret = NULL;
-    if ( ( ret = gdk_pixbuf_new_from_file(filename, &error) ) == NULL )
-        g_warning("Couldn’t load icon file '%s': %s", filename, error->message);
-    g_clear_error(&error);
-    g_free(filename);
-    return ret;
-}
-
-void
-eventd_notification_icon_get_pixbuf(GHashTable *data, EventdNotificationEvent *notification_event, EventdNotificationNotification *notification)
-{
-    gchar *file;
-
-    if ( ( file = libeventd_config_get_filename(notification_event->icon, data, "icons") ) != NULL )
-        notification->icon = _eventd_notification_icon_get_pixbuf_from_file(file);
-    else
-        notification->icon = _eventd_notification_icon_get_pixbuf_from_data(notification_event->icon, data);
-    if ( ( file = libeventd_config_get_filename(notification_event->overlay_icon, data, "icons") ) != NULL )
-        notification->overlay_icon = _eventd_notification_icon_get_pixbuf_from_file(file);
-    else
-        notification->overlay_icon = _eventd_notification_icon_get_pixbuf_from_data(notification_event->overlay_icon, data);
-    if ( ( notification->icon != NULL ) && ( notification->overlay_icon != NULL ) )
-    {
-        gint icon_width, icon_height;
-        gint overlay_icon_width, overlay_icon_height;
-        gint x, y;
-        gdouble scale;
-
-        notification->merged_icon = gdk_pixbuf_copy(notification->icon);
-
-        icon_width = gdk_pixbuf_get_width(notification->merged_icon);
-        icon_height = gdk_pixbuf_get_height(notification->merged_icon);
-
-        overlay_icon_width = notification_event->scale * (gdouble)icon_width;
-        overlay_icon_height = notification_event->scale * (gdouble)icon_height;
-
-        x = icon_width - overlay_icon_width;
-        y = icon_height - overlay_icon_height;
-
-        scale = (gdouble)overlay_icon_width / (gdouble)gdk_pixbuf_get_width(notification->overlay_icon);
-
-        gdk_pixbuf_composite(notification->overlay_icon, notification->merged_icon,
-                             x, y,
-                             overlay_icon_width, overlay_icon_height,
-                             x, y,
-                             scale, scale,
-                             GDK_INTERP_BILINEAR, 255);
-    }
-}
-
-gchar *
-eventd_notification_icon_get_base64(gpointer icon)
-{
-    gchar *data;
-    gsize data_length;
-    gchar *base64;
-
-    gdk_pixbuf_save_to_buffer(icon, &data, &data_length, "png", NULL, NULL);
-    g_object_unref(icon);
-
-    base64 = g_base64_encode((guchar *)data, data_length);
-    g_free(data);
-
-    return base64;
-}
-
-void
-eventd_notification_icon_unref(gpointer icon)
-{
-    g_object_unref(icon);
-}
+#endif /* ENABLE_GDK_PIXBUF */

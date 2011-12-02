@@ -73,8 +73,8 @@ AC_SUBST(GIO_VALAFLAGS)
 AC_ARG_ENABLE(gdk-pixbuf, AS_HELP_STRING([--disable-gdk-pixbuf], [Disable icon support through gdk-pixbuf]), enable_gdk_pixbuf=$enableval, enable_gdk_pixbuf=yes)
 if test x$enable_gdk_pixbuf = xyes; then
     PKG_CHECK_MODULES(GDK_PIXBUF, [gdk-pixbuf-2.0])
+    AC_DEFINE([ENABLE_GDK_PIXBUF], [1], [Enable gdk-pixbuf support])
 fi
-AM_CONDITIONAL(ENABLE_GDK_PIXBUF, [test x$enable_gdk_pixbuf = xyes])
 
 
 #

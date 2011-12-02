@@ -22,6 +22,7 @@
 
 #include <glib.h>
 #include <glib-object.h>
+#include <gio/gio.h>
 
 #include <eventd-plugin.h>
 #include <libeventd-event.h>
@@ -30,7 +31,6 @@
 #include <libeventd-regex.h>
 
 #include "notification.h"
-#include "icon.h"
 #include "notify.h"
 
 
@@ -164,11 +164,24 @@ skip:
     g_free(title);
 }
 
+static void
+_eventd_notification_notification_icon_data_from_file(gchar *path, guchar **data, gsize *length)
+{
+    GError *error = NULL;
+
+    if ( ! g_file_get_contents(path, (gchar **)data, length, &error) )
+        g_warning("Couldn’t load file '%s': %s", path, error->message);
+    g_clear_error(&error);
+
+    g_free(path);
+}
+
 static EventdNotificationNotification *
 _eventd_notification_notification_new(EventdClient *client, GHashTable *data, EventdNotificationEvent *notification_event)
 {
     EventdNotificationNotification *notification;
     gchar *tmp = NULL;
+    gchar *icon;
 
     notification = g_new0(EventdNotificationNotification, 1);
 
@@ -178,7 +191,15 @@ _eventd_notification_notification_new(EventdClient *client, GHashTable *data, Ev
 
     notification->message = libeventd_regex_replace_event_data(notification_event->message, data, NULL);
 
-    eventd_notification_icon_get_pixbuf(data, notification_event, notification);
+    if ( ( icon = libeventd_config_get_filename(notification_event->icon, data, "icons") ) != NULL )
+        _eventd_notification_notification_icon_data_from_file(icon, &notification->icon, &notification->icon_length);
+    else if ( ( icon = g_hash_table_lookup(data, notification_event->icon) ) != NULL )
+        notification->icon = g_base64_decode(icon, &notification->icon_length);
+
+    if ( ( icon = libeventd_config_get_filename(notification_event->overlay_icon, data, "icons") ) != NULL )
+        _eventd_notification_notification_icon_data_from_file(icon, &notification->overlay_icon, &notification->overlay_icon_length);
+    else if ( ( icon = g_hash_table_lookup(data, notification_event->overlay_icon) ) != NULL )
+        notification->overlay_icon = g_base64_decode(icon, &notification->overlay_icon_length);
 
     return notification;
 }
@@ -191,23 +212,16 @@ _eventd_notification_notification_add_pong_data(EventdEvent *event, EventdNotifi
     eventd_event_add_pong_data(event, g_strdup("notification-message"), g_strdup(notification->message));
 
     if ( notification->icon != NULL )
-        eventd_event_add_pong_data(event, g_strdup("notification-icon"), eventd_notification_icon_get_base64(notification->icon));
+        eventd_event_add_pong_data(event, g_strdup("notification-icon"), g_base64_encode(notification->icon, notification->icon_length));
     if ( notification->overlay_icon != NULL )
-        eventd_event_add_pong_data(event, g_strdup("notification-overlay-icon"), eventd_notification_icon_get_base64(notification->overlay_icon));
-    if ( notification->merged_icon != NULL )
-        eventd_event_add_pong_data(event, g_strdup("notification-merged-icon"), eventd_notification_icon_get_base64(notification->merged_icon));
+        eventd_event_add_pong_data(event, g_strdup("notification-overlay-icon"), g_base64_encode(notification->overlay_icon, notification->overlay_icon_length));
 }
 
 static void
 _eventd_notification_notification_free(EventdNotificationNotification *notification)
 {
-    if ( notification->merged_icon != NULL )
-        eventd_notification_icon_unref(notification->merged_icon);
-    if ( notification->overlay_icon != NULL )
-        eventd_notification_icon_unref(notification->overlay_icon);
-    if ( notification->icon != NULL )
-        eventd_notification_icon_unref(notification->icon);
-
+    g_free(notification->overlay_icon);
+    g_free(notification->icon);
     g_free(notification->message);
     g_free(notification->title);
 
@@ -235,7 +249,7 @@ _eventd_notification_event_action(EventdPluginContext *context, EventdClient *cl
         _eventd_notification_notification_add_pong_data(event, notification);
     break;
     default:
-        eventd_notification_notify_event_action(event, notification);
+        eventd_notification_notify_event_action(notification, eventd_event_get_timeout(event), notification_event->scale);
     }
 
     _eventd_notification_notification_free(notification);

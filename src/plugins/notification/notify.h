@@ -25,6 +25,6 @@
 
 void eventd_notification_notify_init();
 void eventd_notification_notify_uninit();
-void eventd_notification_notify_event_action(EventdEvent *event, EventdNotificationNotification *notification);
+void eventd_notification_notify_event_action(EventdNotificationNotification *notification, guint64 timeout, gdouble scale);
 
 #endif /* __EVENTD_PLUGINS_NOTIFICATION_NOTIFY_H__ */
