@@ -30,6 +30,7 @@
 typedef struct _EventdQueue EventdQueue;
 typedef struct _EventdService EventdService;
 typedef struct _EventdControl EventdControl;
+typedef struct _EventdDbusContext EventdDbusContext;
 typedef struct _EventdConfig EventdConfig;
 typedef struct _EventdConfigEvent EventdConfigEvent;
 typedef struct _EventdQueue EventdQueue;

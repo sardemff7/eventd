@@ -1,5 +1,5 @@
 /*
- * libeventd - Internal helper
+ * eventd - Small daemon to act on remote or local events
  *
  * Copyright © 2011 Quentin "Sardem FF7" Glidic
  *
@@ -20,16 +20,10 @@
  *
  */
 
-#ifndef __LIBEVENTD_TYPES_H__
-#define __LIBEVENTD_TYPES_H__
+#include "types.h"
 
-typedef struct _EventdClient EventdClient;
+#include "dbus.h"
 
-typedef enum {
-    EVENTD_CLIENT_MODE_UNKNOWN = -1,
-    EVENTD_CLIENT_MODE_NORMAL = 0,
-    EVENTD_CLIENT_MODE_PING_PONG,
-    EVENTD_CLIENT_MODE_LIBNOTIFY,
-} EventdClientMode;
+EventdDbusContext *eventd_dbus_start(EventdConfig *config, EventdQueue *queue) { return NULL; }
+void eventd_dbus_stop(EventdDbusContext *context) {}
 
-#endif /* __LIBEVENTD_TYPES_H__ */

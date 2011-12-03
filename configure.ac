@@ -97,6 +97,9 @@ if test x$enable_systemd = xyes; then
     AC_DEFINE([ENABLE_SYSTEMD], [1], [Enable systemd activation support])
 fi
 
+AC_ARG_ENABLE(dbus, AS_HELP_STRING([--disable-dbus], [Disable DBus support (org.freedesktop.Notifications interface)]), enable_dbus=$enableval, enable_dbus=yes)
+AM_CONDITIONAL(ENABLE_DBUS, test x$enable_dbus = xyes)
+
 AC_ARG_ENABLE(eventdctl, AS_HELP_STRING([--disable-eventdctl], [Disable eventdctl]), enable_eventdctl=$enableval, enable_eventdctl=yes)
 if test x$enable_eventdctl = xyes; then
     if test x$enable_gio_unix = xno; then

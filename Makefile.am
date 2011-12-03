@@ -13,6 +13,7 @@ soundplugins_LTLIBRARIES =
 pkginclude_HEADERS =
 pkgconfig_DATA =
 dist_vapi_DATA =
+pkgdata_DATA =
 
 CLEANFILES =
 
@@ -127,6 +128,7 @@ eventd_SOURCES = \
 	src/eventd/control.c \
 	src/eventd/sockets.h \
 	src/eventd/sockets.c \
+	src/eventd/dbus.h \
 	src/eventd/service.h \
 	src/eventd/service.c \
 	src/eventd/eventd.h \
@@ -148,6 +150,14 @@ eventd_LDADD = \
 	$(GTHREAD_LIBS) \
 	$(GIO_LIBS) \
 	$(GLIB_LIBS)
+
+if ENABLE_DBUS
+eventd_SOURCES += \
+	src/eventd/dbus.c
+else
+eventd_SOURCES += \
+	src/eventd/dbus-dummy.c
+endif
 
 # eventdctl
 if ENABLE_EVENTDCTL
@@ -436,6 +446,16 @@ CLEANFILES += \
 	$(eventc_SOURCES:.vala=.c)
 
 eventc_vala.stamp: $(top_builddir)/vapi/libeventc.vapi
+endif
+
+
+#
+# Basic configurations
+#
+
+if ENABLE_DBUS
+pkgdata_DATA += \
+	data/libnotify.conf
 endif
 
 
