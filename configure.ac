@@ -156,6 +156,9 @@ AM_CONDITIONAL(ENABLE_NOTIFY, [test x$enable_libnotify = xyes])
 
 AC_ARG_ENABLE(notification-daemon, AS_HELP_STRING([--disable-notification-daemon], [Disable notification daemon @<:@default=xcb@:>@]), enable_notification_daemon=$enableval, enable_notification_daemon=xcb)
 if test x$enable_notification_daemon != xno; then
+    if test x$enable_gdk_pixbuf = xno; then
+        AC_MSG_ERROR([*** notification-daemon requested but not gdk-pixbuf support])
+    fi
     PKG_CHECK_MODULES(CAIRO, [cairo])
     PKG_CHECK_MODULES(PANGO, [pango pangocairo])
     case $enable_notification_daemon in
