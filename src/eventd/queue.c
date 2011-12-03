@@ -149,5 +149,5 @@ eventd_queue_push(EventdQueue *queue, EventdClient *client, EventdEvent *event)
     queue_event->client = libeventd_client_ref(client);
     queue_event->event = g_object_ref(event);
 
-    g_async_queue_push(queue->queue, queue_event);
+    g_async_queue_push_unlocked(queue->queue, queue_event);
 }
