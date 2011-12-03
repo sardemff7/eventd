@@ -26,6 +26,7 @@
 EventdQueue *eventd_queue_new(EventdService *service);
 void eventd_queue_free(EventdQueue *queue);
 
+guint32 eventd_queue_get_next_event_id(EventdQueue *queue);
 void eventd_queue_push(EventdQueue *queue, EventdClient *client, EventdEvent *event);
 void eventd_queue_event_ended(EventdQueue *queue);
 

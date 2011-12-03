@@ -49,7 +49,6 @@ struct _EventdService {
     EventdQueue *queue;
     GMainLoop *loop;
     GSocketService *service;
-    guint32 count;
 };
 
 void
@@ -226,7 +225,7 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
             if ( client == NULL )
                 break;
 
-            last_eventd_id = ++service->count;
+            last_eventd_id = eventd_queue_get_next_event_id(service->queue);
 
             event = eventd_event_new_with_id(last_eventd_id, line+6);
         }
