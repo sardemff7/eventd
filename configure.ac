@@ -136,7 +136,7 @@ fi
 AM_CONDITIONAL(ENABLE_ESPEAK, test x$enable_espeak = xyes)
 
 # notification plugin
-AC_ARG_ENABLE(libnotify, AS_HELP_STRING([--disable-libnotify], [Disable libnotify support]), enable_libnotify=$enableval, enable_libnotify=yes)
+AC_ARG_ENABLE(libnotify, AS_HELP_STRING([--enable-libnotify], [Enable libnotify support (client side)]), enable_libnotify=$enableval, enable_libnotify=no)
 if test x$enable_libnotify = xyes; then
     if test x$enable_gdk_pixbuf = xno; then
         AC_MSG_ERROR([*** libnotify support requested but not gdk-pixbuf support])
@@ -145,6 +145,26 @@ if test x$enable_libnotify = xyes; then
 fi
 AM_CONDITIONAL(ENABLE_NOTIFY, [test x$enable_libnotify = xyes])
 
+
+
+#
+# notification-daemon
+#
+
+AC_ARG_ENABLE(notification-daemon, AS_HELP_STRING([--disable-notification-daemon], [Disable notification daemon @<:@default=xcb@:>@]), enable_notification_daemon=$enableval, enable_notification_daemon=xcb)
+if test x$enable_notification_daemon != xno; then
+    PKG_CHECK_MODULES(CAIRO, [cairo])
+    PKG_CHECK_MODULES(PANGO, [pango pangocairo])
+    case $enable_notification_daemon in
+        xcb|yes)
+            enable_notification_daemon=xcb
+            PKG_CHECK_MODULES(XCB, [cairo-xcb xcb])
+        ;;
+        *) AC_MSG_ERROR([*** Unknow graphical backend for notification-daemon]) ;;
+    esac
+fi
+AM_CONDITIONAL(ENABLE_NOTIFICATION_DAEMON, [test x$enable_notification_daemon != xno])
+AM_CONDITIONAL(ENABLE_XCB, [test x$enable_notification_daemon = xxcb])
 
 
 #

@@ -109,6 +109,19 @@ main(int argc, char *argv[])
             _eventd_eventdctl_send_command(output, "quit");
         else if ( g_strcmp0(argv[1], "reload") == 0 )
             _eventd_eventdctl_send_command(output, "reload");
+        else if ( g_strcmp0(argv[1], "notification-daemon") == 0 )
+        {
+            const gchar *target;
+
+            target = g_getenv("DISPLAY");
+
+            if ( target != NULL )
+            {
+                gchar *command = g_strconcat("notification-daemon ", target, NULL);
+                _eventd_eventdctl_send_command(output, command);
+                g_free(command);
+            }
+        }
 
         if ( ! g_output_stream_close((GOutputStream *)output, NULL, &error) )
             g_warning("Can't close the output stream: %s", error->message);

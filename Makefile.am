@@ -278,13 +278,20 @@ notification_la_SOURCES = \
 	src/plugins/notification/notify.h \
 	src/plugins/notification/icon.h \
 	src/plugins/notification/icon.c \
+	src/plugins/notification/daemon.h \
 	src/plugins/notification/notification.h \
 	src/plugins/notification/notification.c
 
 notification_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	$(GDK_PIXBUF_CFLAGS) \
+	-D SYSCONFDIR=\"$(sysconfdir)\" \
+	-D LIBDIR=\"$(libdir)\" \
+	-D DATADIR=\"$(datadir)\" \
 	$(NOTIFY_CFLAGS) \
+	$(XCB_CFLAGS) \
+	$(CAIRO_CFLAGS) \
+	$(PANGO_CFLAGS) \
+	$(GDK_PIXBUF_CFLAGS) \
 	$(GLIB_CFLAGS)
 
 notification_la_LDFLAGS = \
@@ -294,9 +301,32 @@ notification_la_LDFLAGS = \
 notification_la_LIBADD = \
 	libeventd-event.la \
 	libeventd.la \
-	$(GDK_PIXBUF_LIBS) \
 	$(NOTIFY_LIBS) \
+	$(XCB_LIBS) \
+	$(CAIRO_LIBS) \
+	$(PANGO_LIBS) \
+	$(GDK_PIXBUF_LIBS) \
 	$(GLIB_LIBS)
+
+if ENABLE_NOTIFICATION_DAEMON
+notification_la_SOURCES += \
+	src/plugins/notification/daemon/backends/backend.h \
+	src/plugins/notification/daemon/style.h \
+	src/plugins/notification/daemon/style.c \
+	src/plugins/notification/daemon/bubble.h \
+	src/plugins/notification/daemon/bubble.c \
+	src/plugins/notification/daemon/types.h \
+	src/plugins/notification/daemon/daemon.c
+
+if ENABLE_XCB
+notification_la_SOURCES += \
+	src/plugins/notification/daemon/backends/xcb.c
+endif
+
+else
+notification_la_SOURCES += \
+	src/plugins/notification/daemon/dummy.c
+endif
 
 if ENABLE_NOTIFY
 notification_la_SOURCES += \

@@ -31,11 +31,13 @@
 #include <libeventd-regex.h>
 
 #include "notification.h"
+#include "daemon/daemon.h"
 #include "notify.h"
 
 
 struct _EventdPluginContext {
     GHashTable *events;
+    EventdNdContext *daemon;
 };
 
 static EventdPluginContext *
@@ -45,6 +47,7 @@ _eventd_notification_start(gpointer user_data)
 
     context = g_new0(EventdPluginContext, 1);
 
+    context->daemon = eventd_nd_init();
     eventd_notification_notify_init();
 
     libeventd_regex_init();
@@ -58,8 +61,15 @@ _eventd_notification_stop(EventdPluginContext *context)
     libeventd_regex_clean();
 
     eventd_notification_notify_uninit();
+    eventd_nd_uninit(context->daemon);
 
     g_free(context);
+}
+
+static void
+_eventd_notification_control_command(EventdPluginContext *context, const gchar *command)
+{
+    eventd_nd_control_command(context->daemon, command);
 }
 
 static void
@@ -249,6 +259,7 @@ _eventd_notification_event_action(EventdPluginContext *context, EventdClient *cl
         _eventd_notification_notification_add_pong_data(event, notification);
     break;
     default:
+        eventd_nd_event_action(context->daemon, event, notification);
         eventd_notification_notify_event_action(notification, eventd_event_get_timeout(event), notification_event->scale);
     }
 
@@ -273,6 +284,8 @@ eventd_plugin_get_info(EventdPlugin *plugin)
 {
     plugin->start = _eventd_notification_start;
     plugin->stop = _eventd_notification_stop;
+
+    plugin->control_command = _eventd_notification_control_command;
 
     plugin->config_init = _eventd_notification_config_init;
     plugin->config_clean = _eventd_notification_config_clean;
