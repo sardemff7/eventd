@@ -20,6 +20,7 @@
  *
  */
 
+#include <string.h>
 #include <glib.h>
 #include <gio/gio.h>
 
@@ -106,6 +107,7 @@ _eventd_dbus_notify(EventdDbusContext *context, const gchar *sender, GVariant *p
     GVariant *hint;
     const gchar *event_name = "libnotify";
     gint16 urgency = -1;
+    GVariant *icon_data = NULL;
 
     gint timeout;
     gboolean disable;
@@ -143,10 +145,7 @@ _eventd_dbus_notify(EventdDbusContext *context, const gchar *sender, GVariant *p
             event_name = g_variant_get_string(hint, NULL);
         else if ( ( g_strcmp0(hint_name, "image-data") == 0 )
                 || ( g_strcmp0(hint_name, "image_data") == 0 ) )
-            {}
-        else if ( ( g_strcmp0(hint_name, "icon-data") == 0 )
-                || ( g_strcmp0(hint_name, "icon_data") == 0 ) )
-            {}
+            icon_data = g_variant_ref(hint);
         else if ( g_strcmp0(hint_name, "sound-file") == 0 )
             {}
 
@@ -191,6 +190,20 @@ _eventd_dbus_notify(EventdDbusContext *context, const gchar *sender, GVariant *p
         }
     }
 
+    if ( icon_data != NULL )
+    {
+        gboolean a;
+        gint b, w, h, s, n;
+        GVariant *data;
+        gchar *format;
+
+        g_variant_get(icon_data, "(iiibii@ay)", &w, &h, &s, &a, &b, &n, &data);
+        eventd_event_add_data(event, g_strdup("icon"), g_base64_encode(g_variant_get_data(data), g_variant_get_size(data)));
+
+        format = g_strdup_printf("%x %x %x %x", w, h, s, a);
+        eventd_event_add_data(event, g_strdup("icon-format"), format);
+    }
+
     eventd_event_set_timeout(event, ( timeout > -1 ) ? timeout : ( urgency > -1 ) ? ( 3000 + urgency * 2000 ) : server_timeout);
 
     _eventd_dbus_notification_new(context, sender, id, event);
@@ -233,10 +246,7 @@ _eventd_dbus_get_capabilities(GDBusMethodInvocation *invocation)
 
     g_variant_builder_add(builder, "s", "body");
     g_variant_builder_add(builder, "s", "body-markup");
-
-    /* TODO: quite easy, should be done soon
     g_variant_builder_add(builder, "s", "icon-static");
-    */
 
     /* TODO: make the notification plugin works fine with these
     g_variant_builder_add(builder, "s", "body-hyperlinks");
