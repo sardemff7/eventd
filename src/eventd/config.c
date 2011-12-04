@@ -225,8 +225,6 @@ _eventd_config_load_dir(EventdConfig *config, const gchar *base_dir)
     }
     g_free(config_file_name);
 
-    eventd_plugins_config_init_all();
-
     config_dir = g_dir_open(config_dir_name, 0, &error);
     if ( ! config_dir )
         goto out;
@@ -295,6 +293,8 @@ eventd_config_parser(EventdConfig *config)
     config->events = libeventd_config_events_new(_eventd_config_event_free);
 
     _eventd_config_defaults(config);
+
+    eventd_plugins_config_init_all();
 
     _eventd_config_load_dir(config, DATADIR);
     _eventd_config_load_dir(config, SYSCONFDIR);
