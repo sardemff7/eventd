@@ -77,12 +77,15 @@ static GList *
 _eventd_nd_bubble_text_split(EventdNotificationNotification *notification, EventdNdStyle *style)
 {
     GList *lines = NULL;
+    gchar *escaped_title;
     gchar **message_lines;
     gchar **message_line;
     guint8 max;
     guint size;
 
-    lines = g_list_prepend(lines, _eventd_nd_bubble_text_line_new(notification->title));
+    escaped_title = g_markup_escape_text(notification->title, -1);
+    lines = g_list_prepend(lines, _eventd_nd_bubble_text_line_new(escaped_title));
+    g_free(escaped_title);
 
     message_lines = g_strsplit(notification->message, "\n", -1);
 
@@ -113,7 +116,7 @@ _eventd_nd_bubble_text_process_line(EventdNdTextLine *line, PangoContext *pango_
 
     line->layout = pango_layout_new(pango_context);
     pango_layout_set_font_description(line->layout, font);
-    pango_layout_set_text(line->layout, line->text, -1);
+    pango_layout_set_markup(line->layout, line->text, -1);
     pango_layout_get_pixel_size(line->layout, &w, &line->height);
 
     *text_height += line->height;

@@ -232,6 +232,7 @@ _eventd_dbus_get_capabilities(GDBusMethodInvocation *invocation)
     builder = g_variant_builder_new(G_VARIANT_TYPE("as"));
 
     g_variant_builder_add(builder, "s", "body");
+    g_variant_builder_add(builder, "s", "body-markup");
 
     /* TODO: quite easy, should be done soon
     g_variant_builder_add(builder, "s", "icon-static");
@@ -239,7 +240,6 @@ _eventd_dbus_get_capabilities(GDBusMethodInvocation *invocation)
 
     /* TODO: make the notification plugin works fine with these
     g_variant_builder_add(builder, "s", "body-hyperlinks");
-    g_variant_builder_add(builder, "s", "body-markup");
     */
 
     /* TODO: pass the data to the sound plugin
