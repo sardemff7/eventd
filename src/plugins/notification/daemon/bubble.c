@@ -225,28 +225,17 @@ alpha_mult(guchar c, guchar a)
 }
 
 static cairo_surface_t *
-_eventd_nd_bubble_get_icon_surface(const guchar *data, gsize length)
+_eventd_nd_bubble_get_icon_surface_from_data(gint width, gint height, const guchar *pixels, gint stride, gboolean alpha)
 {
-    GdkPixbuf *pixbuf;
     cairo_surface_t *surface = NULL;
-    gint width, height;
-    gint gstride, cstride;
+
+    gint cstride;
     guint lo, o;
     guchar a = 0xff;
-    gboolean alpha;
-    guchar *gpixels, *gpixels_end, *cpixels;
-    guchar *gline, *gline_end, *cline;
+    const guchar *pixels_end, *line, *line_end;
+    guchar *cpixels, *cline;
 
-    pixbuf = eventd_notification_icon_get_pixbuf_from_data(data, length, 0);
-    if ( pixbuf == NULL )
-        return NULL;
-
-    width = gdk_pixbuf_get_width(pixbuf);
-    height = gdk_pixbuf_get_height(pixbuf);
-    gpixels = gdk_pixbuf_get_pixels(pixbuf);
-    gstride = gdk_pixbuf_get_rowstride(pixbuf);
-    gpixels_end = gpixels + height * gstride;
-    alpha = gdk_pixbuf_get_has_alpha(pixbuf);
+    pixels_end = pixels + height * stride;
     o = alpha ? 4 : 3;
     lo = o * width;
 
@@ -255,32 +244,70 @@ _eventd_nd_bubble_get_icon_surface(const guchar *data, gsize length)
     cstride = cairo_image_surface_get_stride(surface);
 
     cairo_surface_flush(surface);
-    while ( gpixels < gpixels_end )
+    while ( pixels < pixels_end )
     {
-        gline = gpixels;
-        gline_end = gline + lo;
+        line = pixels;
+        line_end = line + lo;
         cline = cpixels;
 
-        while ( gline < gline_end )
+        while ( line < line_end )
         {
             if ( alpha )
-                a = gline[3];
-            cline[RED_BYTE] = alpha_mult(gline[0], a);
-            cline[GREEN_BYTE] = alpha_mult(gline[1], a);
-            cline[BLUE_BYTE] = alpha_mult(gline[2], a);
+                a = line[3];
+            cline[RED_BYTE] = alpha_mult(line[0], a);
+            cline[GREEN_BYTE] = alpha_mult(line[1], a);
+            cline[BLUE_BYTE] = alpha_mult(line[2], a);
             cline[ALPHA_BYTE] = a;
 
-            gline += o;
+            line += o;
             cline += 4;
         }
 
-        gpixels += gstride;
+        pixels += stride;
         cpixels += cstride;
     }
     cairo_surface_mark_dirty(surface);
-    g_object_unref(pixbuf);
 
     return surface;
+}
+
+static cairo_surface_t *
+_eventd_nd_bubble_get_icon_surface(const guchar *data, gsize length, gchar *format)
+{
+    GdkPixbuf *pixbuf = NULL;
+    cairo_surface_t *r;
+    gint width, height;
+    const guchar *pixels;
+    gint stride;
+    gboolean alpha;
+
+    if ( format != NULL )
+    {
+        width = g_ascii_strtoll(format, &format, 16);
+        height = g_ascii_strtoll(format+1, &format, 16);
+        stride = g_ascii_strtoll(format+1, &format, 16);
+        alpha = g_ascii_strtoll(format+1, &format, 16);
+
+        pixels = data;
+    }
+    else
+    {
+        pixbuf = eventd_notification_icon_get_pixbuf_from_data(data, length, 0);
+        if ( pixbuf == NULL )
+            return NULL;
+
+        width = gdk_pixbuf_get_width(pixbuf);
+        height = gdk_pixbuf_get_height(pixbuf);
+        pixels = gdk_pixbuf_get_pixels(pixbuf);
+        stride = gdk_pixbuf_get_rowstride(pixbuf);
+        alpha = gdk_pixbuf_get_has_alpha(pixbuf);
+    }
+
+    r = _eventd_nd_bubble_get_icon_surface_from_data(width, height, pixels, stride, alpha);
+    if ( pixbuf != NULL )
+        g_object_unref(pixbuf);
+
+    return r;
 }
 
 static cairo_surface_t *
@@ -500,8 +527,8 @@ eventd_nd_bubble_new(EventdNotificationNotification *notification, EventdNdStyle
     lines = _eventd_nd_bubble_text_process(notification, style, &text_height, &text_width);
 
     icon = _eventd_nd_bubble_icon_process(style,
-                                          _eventd_nd_bubble_get_icon_surface(notification->icon, notification->icon_length),
-                                          _eventd_nd_bubble_get_icon_surface(notification->overlay_icon, notification->overlay_icon_length),
+                                          _eventd_nd_bubble_get_icon_surface(notification->icon, notification->icon_length, notification->icon_format),
+                                          _eventd_nd_bubble_get_icon_surface(notification->overlay_icon, notification->overlay_icon_length, notification->overlay_icon_format),
                                           &icon_width, &icon_height);
 
     /* compute the bubble size */

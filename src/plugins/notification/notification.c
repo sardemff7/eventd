@@ -186,6 +186,21 @@ _eventd_notification_notification_icon_data_from_file(gchar *path, guchar **data
     g_free(path);
 }
 
+static void
+_eventd_notification_notification_icon_data_from_base64(GHashTable *event_data, const gchar *name, guchar **data, gsize *length, gchar **format)
+{
+    const gchar *base64;
+    gchar *format_name;
+
+    base64 = g_hash_table_lookup(event_data, name);
+    if ( base64 != NULL )
+        *data = g_base64_decode(base64, length);
+
+    format_name = g_strconcat(name, "-format", NULL);
+    *format = g_hash_table_lookup(event_data, format_name);
+    g_free(format_name);
+}
+
 static EventdNotificationNotification *
 _eventd_notification_notification_new(EventdClient *client, GHashTable *data, EventdNotificationEvent *notification_event)
 {
@@ -203,13 +218,13 @@ _eventd_notification_notification_new(EventdClient *client, GHashTable *data, Ev
 
     if ( ( icon = libeventd_config_get_filename(notification_event->icon, data, "icons") ) != NULL )
         _eventd_notification_notification_icon_data_from_file(icon, &notification->icon, &notification->icon_length);
-    else if ( ( icon = g_hash_table_lookup(data, notification_event->icon) ) != NULL )
-        notification->icon = g_base64_decode(icon, &notification->icon_length);
+    else
+         _eventd_notification_notification_icon_data_from_base64(data, notification_event->icon, &notification->icon, &notification->icon_length, &notification->icon_format);
 
     if ( ( icon = libeventd_config_get_filename(notification_event->overlay_icon, data, "icons") ) != NULL )
         _eventd_notification_notification_icon_data_from_file(icon, &notification->overlay_icon, &notification->overlay_icon_length);
-    else if ( ( icon = g_hash_table_lookup(data, notification_event->overlay_icon) ) != NULL )
-        notification->overlay_icon = g_base64_decode(icon, &notification->overlay_icon_length);
+    else
+         _eventd_notification_notification_icon_data_from_base64(data, notification_event->overlay_icon, &notification->overlay_icon, &notification->overlay_icon_length, &notification->overlay_icon_format);
 
     return notification;
 }
