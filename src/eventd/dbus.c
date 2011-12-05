@@ -108,6 +108,7 @@ _eventd_dbus_notify(EventdDbusContext *context, const gchar *sender, GVariant *p
     const gchar *event_name = "libnotify";
     gint16 urgency = -1;
     GVariant *image_data = NULL;
+    const gchar *image_path = NULL;
 
     gint timeout;
     gboolean disable;
@@ -146,6 +147,9 @@ _eventd_dbus_notify(EventdDbusContext *context, const gchar *sender, GVariant *p
         else if ( ( g_strcmp0(hint_name, "image-data") == 0 )
                 || ( g_strcmp0(hint_name, "image_data") == 0 ) )
             image_data = g_variant_ref(hint);
+        else if ( ( g_strcmp0(hint_name, "image-path") == 0 )
+                || ( g_strcmp0(hint_name, "image_path") == 0 ) )
+            image_path = g_variant_get_string(hint, NULL);
         else if ( ( g_strcmp0(hint_name, "icon_data") == 0 )
                 && image_data == NULL )
             image_data = g_variant_ref(hint);
@@ -206,6 +210,12 @@ _eventd_dbus_notify(EventdDbusContext *context, const gchar *sender, GVariant *p
         format = g_strdup_printf("%x %x %x %x", w, h, s, a);
         eventd_event_add_data(event, g_strdup("icon-format"), format);
     }
+    else if ( image_path != NULL )
+    {
+        if ( g_str_has_prefix(image_path, "file://") )
+            eventd_event_add_data(event, g_strdup("icon"), g_strdup(image_path));
+    }
+
 
     eventd_event_set_timeout(event, ( timeout > -1 ) ? timeout : ( urgency > -1 ) ? ( 3000 + urgency * 2000 ) : server_timeout);
 
