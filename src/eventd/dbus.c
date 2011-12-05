@@ -184,7 +184,7 @@ _eventd_dbus_notify(EventdDbusContext *context, const gchar *sender, GVariant *p
         #endif /* DEBUG */
 
         if ( g_str_has_prefix(icon, "file://") )
-            eventd_event_add_data(event, g_strdup("overlay-icon"), g_strdup(icon+7));
+            eventd_event_add_data(event, g_strdup("overlay-icon"), g_strdup(icon));
         else
         {
             /*

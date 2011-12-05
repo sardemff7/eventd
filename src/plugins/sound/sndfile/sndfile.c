@@ -57,6 +57,9 @@ _eventd_sound_sndfile_read_file(const gchar *filename, void **data, gsize *lengt
     *rate = 0;
     *channels = 0;
 
+    if ( *filename == 0 )
+        return;
+
     if ( ( f = sf_open(filename, SFM_READ, &sfi) ) == NULL )
     {
         g_warning("Can't open sound file");

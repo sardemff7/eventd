@@ -108,14 +108,20 @@ libeventd_config_key_file_get_string(GKeyFile *config_file, const gchar *group, 
 }
 
 gchar *
-libeventd_config_get_filename(const gchar *filename, GHashTable *data, const gchar *subdir)
+libeventd_config_get_filename(const gchar *filename, GHashTable *event_data, const gchar *subdir)
 {
     gchar *real_filename;
 
     if ( ! g_str_has_prefix(filename, "file://") )
-        return NULL;
-
-    real_filename = libeventd_regex_replace_event_data(filename+7, data, NULL);
+    {
+        filename = g_hash_table_lookup(event_data, filename);
+        if ( ( filename != NULL ) && g_str_has_prefix(filename, "file://") )
+            real_filename = g_strdup(filename+7);
+        else
+            return NULL;
+    }
+    else
+        real_filename = libeventd_regex_replace_event_data(filename+7, event_data, NULL);
 
     if ( ! g_path_is_absolute(real_filename) )
     {
@@ -129,5 +135,5 @@ libeventd_config_get_filename(const gchar *filename, GHashTable *data, const gch
         return real_filename;
 
     g_free(real_filename);
-    return NULL;
+    return "";
 }

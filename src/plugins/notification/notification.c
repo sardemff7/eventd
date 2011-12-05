@@ -179,6 +179,9 @@ _eventd_notification_notification_icon_data_from_file(gchar *path, guchar **data
 {
     GError *error = NULL;
 
+    if ( *path == 0 )
+        return;
+
     if ( ! g_file_get_contents(path, (gchar **)data, length, &error) )
         g_warning("Couldn’t load file '%s': %s", path, error->message);
     g_clear_error(&error);
