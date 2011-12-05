@@ -260,6 +260,7 @@ _eventd_dbus_get_capabilities(GDBusMethodInvocation *invocation)
     */
 
     /* TODO: or not, these imply “some” work
+    g_variant_builder_add(builder, "s", "body-images");
     g_variant_builder_add(builder, "s", "persistence");
     g_variant_builder_add(builder, "s", "actions");
     g_variant_builder_add(builder, "s", "action-icons");
