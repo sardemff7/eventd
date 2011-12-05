@@ -111,9 +111,10 @@ main(int argc, char *argv[])
             _eventd_eventdctl_send_command(output, "reload");
         else if ( g_strcmp0(argv[1], "notification-daemon") == 0 )
         {
-            const gchar *target;
+            const gchar *target = ( argc > 2 ) ? argv[2] : NULL;
 
-            target = g_getenv("DISPLAY");
+            if ( target == NULL )
+                target = g_getenv("DISPLAY");
 
             if ( target != NULL )
             {
