@@ -107,7 +107,7 @@ _eventd_dbus_notify(EventdDbusContext *context, const gchar *sender, GVariant *p
     GVariant *hint;
     const gchar *event_name = "libnotify";
     gint16 urgency = -1;
-    GVariant *icon_data = NULL;
+    GVariant *image_data = NULL;
 
     gint timeout;
     gboolean disable;
@@ -145,7 +145,10 @@ _eventd_dbus_notify(EventdDbusContext *context, const gchar *sender, GVariant *p
             event_name = g_variant_get_string(hint, NULL);
         else if ( ( g_strcmp0(hint_name, "image-data") == 0 )
                 || ( g_strcmp0(hint_name, "image_data") == 0 ) )
-            icon_data = g_variant_ref(hint);
+            image_data = g_variant_ref(hint);
+        else if ( ( g_strcmp0(hint_name, "icon_data") == 0 )
+                && image_data == NULL )
+            image_data = g_variant_ref(hint);
         else if ( g_strcmp0(hint_name, "sound-file") == 0 )
             {}
 
@@ -190,14 +193,14 @@ _eventd_dbus_notify(EventdDbusContext *context, const gchar *sender, GVariant *p
         }
     }
 
-    if ( icon_data != NULL )
+    if ( image_data != NULL )
     {
         gboolean a;
         gint b, w, h, s, n;
         GVariant *data;
         gchar *format;
 
-        g_variant_get(icon_data, "(iiibii@ay)", &w, &h, &s, &a, &b, &n, &data);
+        g_variant_get(image_data, "(iiibii@ay)", &w, &h, &s, &a, &b, &n, &data);
         eventd_event_add_data(event, g_strdup("icon"), g_base64_encode(g_variant_get_data(data), g_variant_get_size(data)));
 
         format = g_strdup_printf("%x %x %x %x", w, h, s, a);
