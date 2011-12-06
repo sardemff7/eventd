@@ -164,7 +164,7 @@ if test x$enable_notification_daemon != xno; then
     case $enable_notification_daemon in
         xcb|yes)
             enable_notification_daemon=xcb
-            PKG_CHECK_MODULES(XCB, [cairo-xcb xcb])
+            PKG_CHECK_MODULES(XCB, [cairo-xcb xcb xcb-shape])
         ;;
         *) AC_MSG_ERROR([*** Unknow graphical backend for notification-daemon]) ;;
     esac

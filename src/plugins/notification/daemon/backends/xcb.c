@@ -35,6 +35,7 @@
 struct _EventdNdDisplay {
     xcb_connection_t *xcb_connection;
     xcb_screen_t *screen;
+    gboolean shape;
 };
 
 struct _EventdNdSurface {
@@ -69,6 +70,7 @@ eventd_nd_display_new(const gchar *target)
 {
     EventdNdDisplay *context;
     xcb_connection_t *c;
+    const xcb_query_extension_reply_t *shape_query;
 
     c = xcb_connect(target, NULL);
     if ( xcb_connection_has_error(c) )
@@ -82,6 +84,12 @@ eventd_nd_display_new(const gchar *target)
     context->xcb_connection = c;
 
     context->screen = xcb_setup_roots_iterator(xcb_get_setup(context->xcb_connection)).data;
+
+    shape_query = xcb_get_extension_data(context->xcb_connection, &xcb_shape_id);
+    if ( ! shape_query->present )
+        g_warning("No Shape extension");
+    else
+        context->shape = TRUE;
 
     return context;
 }
@@ -152,6 +160,28 @@ eventd_nd_surface_new(EventdNdDisplay *context, gint margin, EventdNdStyleAnchor
     cairo_fill(cr);
     cairo_destroy(cr);
     cairo_surface_destroy(cs);
+
+    if ( context->shape )
+    {
+        xcb_pixmap_t shape_id;
+        xcb_gcontext_t gc;
+
+        shape_id = xcb_generate_id(surface->xcb_connection);
+        xcb_create_pixmap(surface->xcb_connection, 1,
+                          shape_id, context->screen->root,
+                          width, height);
+
+        gc = xcb_generate_id(surface->xcb_connection);
+        xcb_create_gc(surface->xcb_connection, gc, shape_id, 0, NULL);
+        xcb_put_image(surface->xcb_connection, XCB_IMAGE_FORMAT_Z_PIXMAP, shape_id, gc, width, height, 0, 0, 0, 1, cairo_image_surface_get_stride(shape) * height, cairo_image_surface_get_data(shape));
+        xcb_free_gc(surface->xcb_connection, gc);
+
+        xcb_shape_mask(surface->xcb_connection,
+                       XCB_SHAPE_SO_INTERSECT, XCB_SHAPE_SK_BOUNDING,
+                       surface->window, 0, 0, shape_id);
+
+        xcb_free_pixmap(surface->xcb_connection, shape_id);
+    }
 
     return surface;
 }
