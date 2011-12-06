@@ -31,7 +31,7 @@
 #include "types.h"
 #include "bubble.h"
 #include "style.h"
-#include "backends/backend.h"
+#include "backends/graphical.h"
 
 #include "daemon.h"
 
@@ -65,7 +65,7 @@ eventd_nd_uninit(EventdNdContext *context)
 
     g_hash_table_unref(context->bubbles);
 
-    g_list_free_full(context->displays, eventd_nd_display_free);
+    g_list_free_full(context->displays, eventd_nd_graphical_display_free);
 
     eventd_nd_style_free(context->style);
 
@@ -86,7 +86,7 @@ eventd_nd_control_command(EventdNdContext *context, const gchar *command)
     if ( ! g_str_has_prefix(command, "notification-daemon ") )
         return;
 
-    display = eventd_nd_display_new(target, context->style);
+    display = eventd_nd_graphical_display_new(target, context->style);
     if ( display == NULL )
         g_warning("Couldn’t initialize display for '%s'", target);
     else

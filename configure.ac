@@ -154,24 +154,22 @@ AM_CONDITIONAL(ENABLE_NOTIFY, [test x$enable_libnotify = xyes])
 # notification-daemon
 #
 
-AC_ARG_ENABLE(notification-daemon, AS_HELP_STRING([--disable-notification-daemon], [Disable notification daemon @<:@default=xcb@:>@]), enable_notification_daemon=$enableval, enable_notification_daemon=xcb)
-if test x$enable_notification_daemon != xno; then
+AC_ARG_ENABLE(graphical-backend, AS_HELP_STRING([--disable-graphical-backend@<:@=BACKEND@:>@], [Disable notification graphical backend @<:@default=xcb@:>@]), enable_graphical_backend=$enableval, enable_graphical_backend=xcb)
+if test x$enable_graphical_backend != xno; then
     if test x$enable_gdk_pixbuf = xno; then
         AC_MSG_ERROR([*** notification-daemon requested but not gdk-pixbuf support])
     fi
+    case "$enable_graphical_backend" in
+        xcb|yes)
+            PKG_CHECK_MODULES(XCB, [cairo-xcb xcb xcb-shape])
+            AC_DEFINE([ENABLE_XCB], [1], [Enable XCB support])
+        ;;
+        *) AC_MSG_ERROR([*** Unknow graphical backend for notification]) ;;
+    esac
     PKG_CHECK_MODULES(CAIRO, [cairo])
     PKG_CHECK_MODULES(PANGO, [pango pangocairo])
-    case $enable_notification_daemon in
-        xcb|yes)
-            enable_notification_daemon=xcb
-            PKG_CHECK_MODULES(XCB, [cairo-xcb xcb xcb-shape])
-        ;;
-        *) AC_MSG_ERROR([*** Unknow graphical backend for notification-daemon]) ;;
-    esac
 fi
-AM_CONDITIONAL(ENABLE_NOTIFICATION_DAEMON, [test x$enable_notification_daemon != xno])
-AM_CONDITIONAL(ENABLE_XCB, [test x$enable_notification_daemon = xxcb])
-
+AM_CONDITIONAL(ENABLE_NOTIFICATION_DAEMON, [test x$enable_graphical_backend != xno])
 
 #
 # Client

@@ -20,6 +20,8 @@
  *
  */
 
+#if ENABLE_XCB
+
 #include <glib.h>
 
 #include <cairo.h>
@@ -32,7 +34,7 @@
 #include "../types.h"
 #include "../style-internal.h"
 
-#include "backend.h"
+#include "graphical.h"
 
 struct _EventdNdDisplay {
     xcb_connection_t *xcb_connection;
@@ -70,7 +72,7 @@ get_root_visual_type(xcb_screen_t *s)
 }
 
 EventdNdDisplay *
-eventd_nd_display_new(const gchar *target, EventdNdStyle *style)
+eventd_nd_graphical_display_new(const gchar *target, EventdNdStyle *style)
 {
     EventdNdDisplay *context;
     xcb_connection_t *c;
@@ -119,7 +121,7 @@ eventd_nd_display_new(const gchar *target, EventdNdStyle *style)
 }
 
 void
-eventd_nd_display_free(gpointer data)
+eventd_nd_graphical_display_free(gpointer data)
 {
     EventdNdDisplay *context = data;
     xcb_disconnect(context->xcb_connection);
@@ -127,7 +129,7 @@ eventd_nd_display_free(gpointer data)
 }
 
 EventdNdSurface *
-eventd_nd_surface_new(EventdNdDisplay *context, gint width, gint height, cairo_surface_t *bubble, cairo_surface_t *shape)
+eventd_nd_graphical_surface_new(EventdNdDisplay *context, gint width, gint height, cairo_surface_t *bubble, cairo_surface_t *shape)
 {
     guint32 selmask = XCB_CW_OVERRIDE_REDIRECT;
     guint32 selval[] = { 1 };
@@ -195,21 +197,21 @@ eventd_nd_surface_new(EventdNdDisplay *context, gint width, gint height, cairo_s
 }
 
 void
-eventd_nd_surface_show(EventdNdSurface *surface)
+eventd_nd_graphical_surface_show(EventdNdSurface *surface)
 {
     xcb_map_window(surface->xcb_connection, surface->window);
     xcb_flush(surface->xcb_connection);
 }
 
 void
-eventd_nd_surface_hide(EventdNdSurface *surface)
+eventd_nd_graphical_surface_hide(EventdNdSurface *surface)
 {
     xcb_unmap_window(surface->xcb_connection, surface->window);
     xcb_flush(surface->xcb_connection);
 }
 
 void
-eventd_nd_surface_free(gpointer data)
+eventd_nd_graphical_surface_free(gpointer data)
 {
     EventdNdSurface *surface = data;
 
@@ -221,3 +223,5 @@ eventd_nd_surface_free(gpointer data)
 
     g_free(surface);
 }
+
+#endif /* ENABLE_XCB */

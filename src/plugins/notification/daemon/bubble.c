@@ -41,7 +41,7 @@
 #include "style.h"
 #include "style-internal.h"
 
-#include "backends/backend.h"
+#include "backends/graphical.h"
 
 #include "bubble.h"
 
@@ -637,7 +637,7 @@ eventd_nd_bubble_new(EventdNotificationNotification *notification, EventdNdStyle
     for ( display = g_list_first(display) ; display != NULL ; display = g_list_next(display) )
     {
         EventdNdSurface *surface;
-        surface = eventd_nd_surface_new(display->data, width, height, bubble, shape);
+        surface = eventd_nd_graphical_surface_new(display->data, width, height, bubble, shape);
         if ( surface != NULL )
             surfaces = g_list_prepend(surfaces, surface);
     }
@@ -652,19 +652,19 @@ void
 eventd_nd_bubble_show(EventdNdBubble *bubble)
 {
     for ( bubble = g_list_first(bubble) ; bubble != NULL ; bubble = g_list_next(bubble) )
-        eventd_nd_surface_show(bubble->data);
+        eventd_nd_graphical_surface_show(bubble->data);
 }
 
 void
 eventd_nd_bubble_hide(EventdNdBubble *bubble)
 {
     for ( bubble = g_list_first(bubble) ; bubble != NULL ; bubble = g_list_next(bubble) )
-        eventd_nd_surface_hide(bubble->data);
+        eventd_nd_graphical_surface_hide(bubble->data);
 }
 
 void
 eventd_nd_bubble_free(gpointer data)
 {
     EventdNdBubble *bubble = data;
-    g_list_free_full(bubble, eventd_nd_surface_free);
+    g_list_free_full(bubble, eventd_nd_graphical_surface_free);
 }

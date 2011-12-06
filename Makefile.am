@@ -320,19 +320,14 @@ notification_la_LIBADD = \
 
 if ENABLE_NOTIFICATION_DAEMON
 notification_la_SOURCES += \
-	src/plugins/notification/daemon/backends/backend.h \
+	src/plugins/notification/daemon/backends/graphical.h \
+	src/plugins/notification/daemon/backends/xcb.c \
 	src/plugins/notification/daemon/style.h \
 	src/plugins/notification/daemon/style.c \
 	src/plugins/notification/daemon/bubble.h \
 	src/plugins/notification/daemon/bubble.c \
 	src/plugins/notification/daemon/types.h \
 	src/plugins/notification/daemon/daemon.c
-
-if ENABLE_XCB
-notification_la_SOURCES += \
-	src/plugins/notification/daemon/backends/xcb.c
-endif
-
 else
 notification_la_SOURCES += \
 	src/plugins/notification/daemon/dummy.c
