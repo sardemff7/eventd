@@ -45,6 +45,44 @@
 
 #include "bubble.h"
 
+static GRegex *regex_amp = NULL;
+static GRegex *regex_markup = NULL;
+
+void
+eventd_nd_bubble_init()
+{
+    GError *error = NULL;
+
+    if ( regex_amp == NULL )
+    {
+        regex_amp = g_regex_new("&(?!amp;|quot;|apos;|lt;|gt;)", G_REGEX_OPTIMIZE, 0, &error);
+        if ( regex_amp == NULL )
+            g_warning("Couldn’t create amp regex: %s", error->message);
+        g_clear_error(&error);
+    }
+    else
+        g_regex_ref(regex_amp);
+
+    if ( regex_markup == NULL )
+    {
+        regex_markup = g_regex_new("<(?!/?[biu]>)", G_REGEX_OPTIMIZE, 0, &error);
+        if ( regex_markup == NULL )
+            g_warning("Couldn’t create markup regex: %s", error->message);
+        g_clear_error(&error);
+    }
+    else
+        g_regex_ref(regex_markup);
+}
+
+void
+eventd_nd_bubble_uninit()
+{
+    if ( regex_markup != NULL )
+        g_regex_unref(regex_markup);
+    if ( regex_amp != NULL )
+        g_regex_unref(regex_amp);
+}
+
 typedef struct {
     gchar *text;
     PangoLayout *layout;
@@ -73,6 +111,43 @@ _eventd_nd_bubble_text_line_free(gpointer data)
     g_free(line);
 }
 
+static gchar **
+_eventd_nd_bubble_message_escape_and_split(const gchar *message)
+{
+    GError *error = NULL;
+    gchar *escaped, *tmp = NULL;
+    gchar **ret;
+
+    escaped = g_regex_replace_literal(regex_amp, message, -1, 0, "&amp;" , 0, &error);
+    if ( escaped == NULL )
+    {
+        g_warning("Couldn’t escape amp: %s", error->message);
+        goto fallback;
+    }
+
+    escaped = g_regex_replace_literal(regex_markup, tmp = escaped, -1, 0, "&lt;" , 0, &error);
+    if ( escaped == NULL )
+    {
+        g_warning("Couldn’t escape markup: %s", error->message);
+        goto fallback;
+    }
+
+    if ( ! pango_parse_markup(tmp = escaped, -1, 0, NULL, NULL, NULL, NULL) )
+        goto fallback;
+
+split:
+    ret = g_strsplit(escaped, "\n", -1);
+    g_free(escaped);
+
+    return ret;
+
+fallback:
+    g_free(tmp);
+    g_clear_error(&error);
+    escaped = g_markup_escape_text(message, -1);
+    goto split;
+}
+
 static GList *
 _eventd_nd_bubble_text_split(EventdNotificationNotification *notification, EventdNdStyle *style)
 {
@@ -87,7 +162,7 @@ _eventd_nd_bubble_text_split(EventdNotificationNotification *notification, Event
     lines = g_list_prepend(lines, _eventd_nd_bubble_text_line_new(escaped_title));
     g_free(escaped_title);
 
-    message_lines = g_strsplit(notification->message, "\n", -1);
+    message_lines = _eventd_nd_bubble_message_escape_and_split(notification->message);
 
     max = style->message_max_lines;
     size = g_strv_length(message_lines);

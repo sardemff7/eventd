@@ -23,6 +23,9 @@
 #ifndef __EVENTD_ND_NOTIFICATION_H__
 #define __EVENTD_ND_NOTIFICATION_H__
 
+void eventd_nd_bubble_init();
+void eventd_nd_bubble_uninit();
+
 EventdNdBubble *eventd_nd_bubble_new(EventdNotificationNotification *notification, EventdNdStyle *style, GList *displays);
 void eventd_nd_bubble_free(gpointer data);
 

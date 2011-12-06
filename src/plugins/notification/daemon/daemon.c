@@ -48,6 +48,8 @@ eventd_nd_init()
 
     context = g_new0(EventdNdContext, 1);
 
+    eventd_nd_bubble_init();
+
     context->style = eventd_nd_style_new();
 
     context->bubbles = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, eventd_nd_bubble_free);
@@ -66,6 +68,8 @@ eventd_nd_uninit(EventdNdContext *context)
     g_list_free_full(context->displays, eventd_nd_display_free);
 
     eventd_nd_style_free(context->style);
+
+    eventd_nd_bubble_uninit();
 
     g_free(context);
 }
