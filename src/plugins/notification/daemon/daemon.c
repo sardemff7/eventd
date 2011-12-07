@@ -86,7 +86,7 @@ eventd_nd_control_command(EventdNdContext *context, const gchar *command)
     if ( ! g_str_has_prefix(command, "notification-daemon ") )
         return;
 
-    display = eventd_nd_display_new(target);
+    display = eventd_nd_display_new(target, context->style);
     if ( display == NULL )
         g_warning("Couldn’t initialize display for '%s'", target);
     else

@@ -637,7 +637,7 @@ eventd_nd_bubble_new(EventdNotificationNotification *notification, EventdNdStyle
     for ( display = g_list_first(display) ; display != NULL ; display = g_list_next(display) )
     {
         EventdNdSurface *surface;
-        surface = eventd_nd_surface_new(display->data, style->bubble_margin, style->bubble_anchor, width, height, bubble, shape);
+        surface = eventd_nd_surface_new(display->data, width, height, bubble, shape);
         if ( surface != NULL )
             surfaces = g_list_prepend(surfaces, surface);
     }

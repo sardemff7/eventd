@@ -66,9 +66,11 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
     style->bubble_margin    = 20;
     style->bubble_anchor    = EVENTD_ND_STYLE_ANCHOR_TOP_RIGHT;
 
-    /* bubble geometry and style */
+    /* bubble geometry */
     style->bubble_min_width = 200;
     style->bubble_max_width = -1;
+
+    /* bubble style */
     style->bubble_padding   = 10;
     style->bubble_radius    = 15;
     style->bubble_colour.r = 0.1;

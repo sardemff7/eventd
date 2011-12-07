@@ -29,6 +29,7 @@ struct _EventdNdStyle {
 
     gint bubble_min_width;
     gint bubble_max_width;
+
     gint bubble_padding;
     gint bubble_radius;
     Colour bubble_colour;

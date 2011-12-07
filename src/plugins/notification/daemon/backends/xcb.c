@@ -23,18 +23,22 @@
 #include <glib.h>
 
 #include <cairo.h>
+#include <pango/pango.h>
 
 #include <cairo-xcb.h>
 #include <xcb/xcb.h>
 #include <xcb/shape.h>
 
 #include "../types.h"
+#include "../style-internal.h"
 
 #include "backend.h"
 
 struct _EventdNdDisplay {
     xcb_connection_t *xcb_connection;
     xcb_screen_t *screen;
+    gint x;
+    gint y;
     gboolean shape;
 };
 
@@ -66,7 +70,7 @@ get_root_visual_type(xcb_screen_t *s)
 }
 
 EventdNdDisplay *
-eventd_nd_display_new(const gchar *target)
+eventd_nd_display_new(const gchar *target, EventdNdStyle *style)
 {
     EventdNdDisplay *context;
     xcb_connection_t *c;
@@ -91,6 +95,26 @@ eventd_nd_display_new(const gchar *target)
     else
         context->shape = TRUE;
 
+    switch ( style->bubble_anchor )
+    {
+    case EVENTD_ND_STYLE_ANCHOR_TOP_LEFT:
+        context->x = style->bubble_margin;
+        context->y = style->bubble_margin;
+    break;
+    case EVENTD_ND_STYLE_ANCHOR_TOP_RIGHT:
+        context->x = - context->screen->width_in_pixels + style->bubble_margin;
+        context->y = style->bubble_margin;
+    break;
+    case EVENTD_ND_STYLE_ANCHOR_BOTTOM_LEFT:
+        context->x = style->bubble_margin;
+        context->y = - context->screen->height_in_pixels + style->bubble_margin;
+    break;
+    case EVENTD_ND_STYLE_ANCHOR_BOTTOM_RIGHT:
+        context->x = - context->screen->width_in_pixels + style->bubble_margin;
+        context->y = - context->screen->height_in_pixels + style->bubble_margin;
+    break;
+    }
+
     return context;
 }
 
@@ -103,12 +127,11 @@ eventd_nd_display_free(gpointer data)
 }
 
 EventdNdSurface *
-eventd_nd_surface_new(EventdNdDisplay *context, gint margin, EventdNdStyleAnchor anchor, gint width, gint height, cairo_surface_t *bubble, cairo_surface_t *shape)
+eventd_nd_surface_new(EventdNdDisplay *context, gint width, gint height, cairo_surface_t *bubble, cairo_surface_t *shape)
 {
     guint32 selmask = XCB_CW_OVERRIDE_REDIRECT;
     guint32 selval[] = { 1 };
     gint x = 0, y = 0;
-    gint w = 0, h = 0;
     EventdNdSurface *surface;
     cairo_surface_t *cs;
     cairo_t *cr;
@@ -117,28 +140,13 @@ eventd_nd_surface_new(EventdNdDisplay *context, gint margin, EventdNdStyleAnchor
 
     surface->xcb_connection = context->xcb_connection;
 
-    w = context->screen->width_in_pixels;
-    h = context->screen->height_in_pixels;
+    x = context->x;
+    y = context->y;
 
-    switch ( anchor )
-    {
-    case EVENTD_ND_STYLE_ANCHOR_TOP_LEFT:
-        x = margin;
-        y = margin;
-    break;
-    case EVENTD_ND_STYLE_ANCHOR_TOP_RIGHT:
-        x = w - width - margin;
-        y = margin;
-    break;
-    case EVENTD_ND_STYLE_ANCHOR_BOTTOM_LEFT:
-        x = margin;
-        y = h - height - margin;
-    break;
-    case EVENTD_ND_STYLE_ANCHOR_BOTTOM_RIGHT:
-        x = w - width - margin;
-        y = h - height - margin;
-    break;
-    }
+    if ( x < 0 )
+        x = - x - width;
+    if ( y < 0 )
+        y = - y - height;
 
     surface->window = xcb_generate_id(surface->xcb_connection);
     xcb_create_window(surface->xcb_connection,
