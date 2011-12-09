@@ -11,6 +11,12 @@ HELLO <type> [<name>]
     The client may specify a name what
     will be used to display events
 
+MODE <mode>
+    Inform the server of the mode used
+    by the client. You can omit this message
+    for now (compatibility with the old
+    protocol)
+
 EVENT <type>
     Inform the server that an event happened
     The type must contain only the characters
@@ -40,6 +46,9 @@ BYE
 
 HELLO
     Answer to the client HELLO message
+
+MODE
+    Answer to the client MODE message
 
 BYE
     Answer to the client BYE message
