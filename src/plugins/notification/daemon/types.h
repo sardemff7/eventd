@@ -26,7 +26,7 @@
 typedef struct _EventdNdStyle EventdNdStyle;
 typedef struct _EventdNdDisplay EventdNdDisplay;
 typedef struct _EventdNdSurface EventdNdSurface;
-typedef GList EventdNdBubble;
+typedef struct _EventdNdBubble EventdNdBubble;
 
 typedef struct {
     gdouble r;

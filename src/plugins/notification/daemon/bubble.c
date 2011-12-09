@@ -41,7 +41,12 @@
 #include "style.h"
 #include "style-internal.h"
 
+#if ! DISABLE_GRAPHICAL_BACKENDS
 #include "backends/graphical.h"
+#endif /* ! DISABLE_GRAPHICAL_BACKENDS */
+#if ! DISABLE_FRAMEBUFFER_BACKENDS
+#include "backends/fb.h"
+#endif /* ! DISABLE_FRAMEBUFFER_BACKENDS */
 
 #include "bubble.h"
 
@@ -88,6 +93,11 @@ typedef struct {
     PangoLayout *layout;
     gint height;
 } EventdNdTextLine;
+
+struct _EventdNdBubble {
+    GList *graphical_surfaces;
+    GList *framebuffer_surfaces;
+};
 
 static EventdNdTextLine *
 _eventd_nd_bubble_text_line_new(const gchar *text)
@@ -578,7 +588,7 @@ _eventd_nd_bubble_icon_draw(cairo_t *cr, cairo_surface_t *icon, gint x, gint y)
 }
 
 EventdNdBubble *
-eventd_nd_bubble_new(EventdNotificationNotification *notification, EventdNdStyle *style, GList *display)
+eventd_nd_bubble_new(EventdNotificationNotification *notification, EventdNdStyle *style, GList *graphical_displays, GList *framebuffer_displays)
 {
     gint padding;
     gint min_width, max_width;
@@ -596,7 +606,10 @@ eventd_nd_bubble_new(EventdNotificationNotification *notification, EventdNdStyle
     cairo_surface_t *shape;
     cairo_t *cr;
 
-    EventdNdBubble *surfaces = NULL;
+    EventdNdBubble *bubble_surfaces;
+    GList *display;
+
+    bubble_surfaces = g_new0(EventdNdBubble, 1);
 
     /* proccess data */
     lines = _eventd_nd_bubble_text_process(notification, style, &text_height, &text_width);
@@ -634,37 +647,54 @@ eventd_nd_bubble_new(EventdNotificationNotification *notification, EventdNdStyle
     _eventd_nd_bubble_shape_draw(cr, style->bubble_radius, width, height);
     cairo_destroy(cr);
 
-    for ( display = g_list_first(display) ; display != NULL ; display = g_list_next(display) )
+    for ( display = g_list_first(graphical_displays) ; display != NULL ; display = g_list_next(display) )
     {
         EventdNdSurface *surface;
         surface = eventd_nd_graphical_surface_new(display->data, width, height, bubble, shape);
         if ( surface != NULL )
-            surfaces = g_list_prepend(surfaces, surface);
+            bubble_surfaces->graphical_surfaces = g_list_prepend(bubble_surfaces->graphical_surfaces, surface);
+    }
+    for ( display = g_list_first(framebuffer_displays) ; display != NULL ; display = g_list_next(display) )
+    {
+        EventdNdSurface *surface;
+        surface = eventd_nd_fb_surface_new(display->data, width, height, bubble, shape);
+        if ( surface != NULL )
+            bubble_surfaces->framebuffer_surfaces = g_list_prepend(bubble_surfaces->framebuffer_surfaces, surface);
     }
 
     cairo_surface_destroy(shape);
     cairo_surface_destroy(bubble);
 
-    return surfaces;
+    return bubble_surfaces;
 }
 
 void
 eventd_nd_bubble_show(EventdNdBubble *bubble)
 {
-    for ( bubble = g_list_first(bubble) ; bubble != NULL ; bubble = g_list_next(bubble) )
-        eventd_nd_graphical_surface_show(bubble->data);
+    GList *surface;
+
+    for ( surface = g_list_first(bubble->graphical_surfaces) ; surface != NULL ; surface = g_list_next(surface) )
+        eventd_nd_graphical_surface_show(surface->data);
+    for ( surface = g_list_first(bubble->framebuffer_surfaces) ; surface != NULL ; surface = g_list_next(surface) )
+        eventd_nd_fb_surface_show(surface->data);
 }
 
 void
 eventd_nd_bubble_hide(EventdNdBubble *bubble)
 {
-    for ( bubble = g_list_first(bubble) ; bubble != NULL ; bubble = g_list_next(bubble) )
-        eventd_nd_graphical_surface_hide(bubble->data);
+    GList *surface;
+
+    for ( surface = g_list_first(bubble->graphical_surfaces) ; surface != NULL ; surface = g_list_next(surface) )
+        eventd_nd_graphical_surface_hide(surface->data);
+    for ( surface = g_list_first(bubble->framebuffer_surfaces) ; surface != NULL ; surface = g_list_next(surface) )
+        eventd_nd_fb_surface_hide(surface->data);
 }
 
 void
 eventd_nd_bubble_free(gpointer data)
 {
     EventdNdBubble *bubble = data;
-    g_list_free_full(bubble, eventd_nd_graphical_surface_free);
+    g_list_free_full(bubble->graphical_surfaces, eventd_nd_graphical_surface_free);
+    g_list_free_full(bubble->framebuffer_surfaces, eventd_nd_fb_surface_free);
+    g_free(bubble);
 }

@@ -20,6 +20,10 @@
  *
  */
 
+#if ENABLE_FRAMEBUFFER
+#include <unistd.h>
+#endif /* ENABLE_FRAMEBUFFER */
+
 #include <glib.h>
 #include <glib/gstdio.h>
 #include <gio/gio.h>
@@ -115,6 +119,11 @@ main(int argc, char *argv[])
 
             if ( target == NULL )
                 target = g_getenv("DISPLAY");
+
+        #if ! DISABLE_FRAMEBUFFER_BACKENDS
+            if ( target == NULL )
+                target = ttyname(1);
+        #endif /* ! DISABLE_FRAMEBUFFER_BACKENDS */
 
             if ( target != NULL )
             {

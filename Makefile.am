@@ -320,8 +320,11 @@ notification_la_LIBADD = \
 
 if ENABLE_NOTIFICATION_DAEMON
 notification_la_SOURCES += \
+	src/plugins/notification/daemon/backends/fb.h \
+	src/plugins/notification/daemon/backends/linux.c \
 	src/plugins/notification/daemon/backends/graphical.h \
 	src/plugins/notification/daemon/backends/xcb.c \
+	src/plugins/notification/daemon/backends/dummy.c \
 	src/plugins/notification/daemon/style.h \
 	src/plugins/notification/daemon/style.c \
 	src/plugins/notification/daemon/bubble.h \

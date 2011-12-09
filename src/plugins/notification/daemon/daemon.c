@@ -31,14 +31,20 @@
 #include "types.h"
 #include "bubble.h"
 #include "style.h"
+#if ! DISABLE_GRAPHICAL_BACKENDS
 #include "backends/graphical.h"
+#endif /* ! DISABLE_GRAPHICAL_BACKENDS */
+#if ! DISABLE_FRAMEBUFFER_BACKENDS
+#include "backends/fb.h"
+#endif /* ! DISABLE_FRAMEBUFFER_BACKENDS */
 
 #include "daemon.h"
 
 struct _EventdNdContext {
     EventdNdStyle *style;
     GHashTable *bubbles;
-    GList *displays;
+    GList *graphical_displays;
+    GList *framebuffer_displays;
 };
 
 EventdNdContext *
@@ -65,7 +71,12 @@ eventd_nd_uninit(EventdNdContext *context)
 
     g_hash_table_unref(context->bubbles);
 
-    g_list_free_full(context->displays, eventd_nd_graphical_display_free);
+#if ! DISABLE_GRAPHICAL_BACKENDS
+    g_list_free_full(context->graphical_displays, eventd_nd_graphical_display_free);
+#endif /* ! DISABLE_GRAPHICAL_BACKENDS */
+#if ! DISABLE_FRAMEBUFFER_BACKENDS
+    g_list_free_full(context->framebuffer_displays, eventd_nd_fb_display_free);
+#endif /* ! DISABLE_FRAMEBUFFER_BACKENDS */
 
     eventd_nd_style_free(context->style);
 
@@ -86,11 +97,26 @@ eventd_nd_control_command(EventdNdContext *context, const gchar *command)
     if ( ! g_str_has_prefix(command, "notification-daemon ") )
         return;
 
-    display = eventd_nd_graphical_display_new(target, context->style);
-    if ( display == NULL )
-        g_warning("Couldn’t initialize display for '%s'", target);
+#if ! DISABLE_FRAMEBUFFER_BACKENDS
+    if ( g_str_has_prefix(target, FRAMEBUFFER_TARGET_PREFIX) )
+    {
+        display = eventd_nd_fb_display_new(target, context->style);
+        if ( display == NULL )
+            g_warning("Couldn’t initialize framebuffer display for '%s'", target);
+        else
+            context->framebuffer_displays = g_list_prepend(context->framebuffer_displays, display);
+    }
     else
-        context->displays = g_list_prepend(context->displays, display);
+#endif /* ! DISABLE_FRAMEBUFFER_BACKENDS */
+    {
+#if ! DISABLE_GRAPHICAL_BACKENDS
+        display = eventd_nd_graphical_display_new(target, context->style);
+        if ( display == NULL )
+            g_warning("Couldn’t initialize graphical display for '%s'", target);
+        else
+            context->graphical_displays = g_list_prepend(context->graphical_displays, display);
+#endif /* ! DISABLE_GRAPHICAL_BACKENDS */
+    }
 }
 
 static void
@@ -123,7 +149,7 @@ eventd_nd_event_action(EventdNdContext *context, EventdEvent *event, EventdNotif
     /*
      * TODO: Update an existing bubble
      */
-    bubble = eventd_nd_bubble_new(notification, context->style, context->displays);
+    bubble = eventd_nd_bubble_new(notification, context->style, context->graphical_displays, context->framebuffer_displays);
 
     eventd_nd_bubble_show(bubble);
     g_hash_table_insert(context->bubbles, id, bubble);

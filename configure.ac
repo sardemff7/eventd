@@ -155,7 +155,8 @@ AM_CONDITIONAL(ENABLE_NOTIFY, [test x$enable_libnotify = xyes])
 #
 
 AC_ARG_ENABLE(graphical-backend, AS_HELP_STRING([--disable-graphical-backend@<:@=BACKEND@:>@], [Disable notification graphical backend @<:@default=xcb@:>@]), enable_graphical_backend=$enableval, enable_graphical_backend=xcb)
-if test x$enable_graphical_backend != xno; then
+AC_ARG_ENABLE(framebuffer-bakend, AS_HELP_STRING([--disable-framebuffer-backend@<:@=BACKEND@:>@], [Disable notificaton framebuffer backend @<:@default=linux@:>@]), enable_framebuffer_backend=$enableval, enable_framebuffer_backend=linux)
+if test x$enable_graphical_backend != xno -o x$enable_framebuffer_backend != xno; then
     if test x$enable_gdk_pixbuf = xno; then
         AC_MSG_ERROR([*** notification-daemon requested but not gdk-pixbuf support])
     fi
@@ -164,12 +165,22 @@ if test x$enable_graphical_backend != xno; then
             PKG_CHECK_MODULES(XCB, [cairo-xcb xcb xcb-shape])
             AC_DEFINE([ENABLE_XCB], [1], [Enable XCB support])
         ;;
+        no) AC_DEFINE([DISABLE_GRAPHICAL_BACKENDS], [1], [No graphical support]) ;;
         *) AC_MSG_ERROR([*** Unknow graphical backend for notification]) ;;
+    esac
+    case "$enable_framebuffer_backend" in
+        linux|yes)
+            AC_CHECK_HEADER([linux/fb.h])
+            AC_DEFINE([FRAMEBUFFER_TARGET_PREFIX], ["/dev/tty"], [Linux framebuffer target prefix])
+            AC_DEFINE([ENABLE_LINUX_FB], [1], [Enable Linux framebuffer support])
+        ;;
+        no) AC_DEFINE([DISABLE_FRAMEBUFFER_BACKENDS], [1], [No framebuffer support]) ;;
+        *) AC_MSG_ERROR([*** Unknow framebuffer backend for notification]) ;;
     esac
     PKG_CHECK_MODULES(CAIRO, [cairo])
     PKG_CHECK_MODULES(PANGO, [pango pangocairo])
 fi
-AM_CONDITIONAL(ENABLE_NOTIFICATION_DAEMON, [test x$enable_graphical_backend != xno])
+AM_CONDITIONAL(ENABLE_NOTIFICATION_DAEMON, [test x$enable_graphical_backend != xno -o x$enable_framebuffer_backend != xno])
 
 #
 # Client

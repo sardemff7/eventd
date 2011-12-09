@@ -20,16 +20,15 @@
  *
  */
 
-#ifndef __EVENTD_ND_NOTIFICATION_H__
-#define __EVENTD_ND_NOTIFICATION_H__
+#ifndef __EVENTD_PLUGINS_NOTIFICATION_DAEMON_FRAMEBUFFER_BACKEND_H__
+#define __EVENTD_PLUGINS_NOTIFICATION_DAEMON_FRAMEBUFFER_BACKEND_H__
 
-void eventd_nd_bubble_init();
-void eventd_nd_bubble_uninit();
+EventdNdDisplay *eventd_nd_fb_display_new(const gchar *target, EventdNdStyle *style);
+void eventd_nd_fb_display_free(gpointer data);
 
-EventdNdBubble *eventd_nd_bubble_new(EventdNotificationNotification *notification, EventdNdStyle *style, GList *graphical_displays, GList *framebuffer_displays);
-void eventd_nd_bubble_free(gpointer data);
+EventdNdSurface *eventd_nd_fb_surface_new(EventdNdDisplay *display, gint width, gint height, cairo_surface_t *bubble, cairo_surface_t *shape);
+void eventd_nd_fb_surface_show(EventdNdSurface *surface);
+void eventd_nd_fb_surface_hide(EventdNdSurface *surface);
+void eventd_nd_fb_surface_free(gpointer data);
 
-void eventd_nd_bubble_show(EventdNdBubble *bubble);
-void eventd_nd_bubble_hide(EventdNdBubble *bubble);
-
-#endif /* __EVENTD_ND_NOTIFICATION_H__ */
+#endif /* __EVENTD_PLUGINS_NOTIFICATION_DAEMON_FRAMEBUFFER_BACKEND_H__ */
