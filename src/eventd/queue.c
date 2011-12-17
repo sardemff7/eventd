@@ -21,6 +21,7 @@
  */
 
 #include <glib.h>
+#include <glib-compat.h>
 #include <glib-object.h>
 #include <gio/gio.h>
 
@@ -133,7 +134,6 @@ eventd_queue_free(EventdQueue *queue)
     g_async_queue_push(queue->queue, g_new0(EventdQueueEvent, 1));
 
     g_thread_join(queue->thread);
-    g_thread_unref(queue->thread);
 
     g_async_queue_unref(queue->queue);
 
