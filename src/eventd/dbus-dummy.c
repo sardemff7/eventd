@@ -20,6 +20,8 @@
  *
  */
 
+#include <glib.h>
+
 #include "types.h"
 
 #include "dbus.h"
