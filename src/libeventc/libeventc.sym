@@ -6,6 +6,7 @@ global:
     eventc_connection_connect_finish;
     eventc_connection_event;
     eventc_connection_event_finish;
+    eventc_connection_get_enable_proxy;
     eventc_connection_get_host_is_socket;
     eventc_connection_get_timeout;
     eventc_connection_is_connected;
@@ -14,6 +15,7 @@ global:
     eventc_connection_rename_finish;
     eventc_connection_set_client_name;
     eventc_connection_set_client_type;
+    eventc_connection_set_enable_proxy;
     eventc_connection_set_host;
     eventc_connection_set_host_is_socket;
     eventc_connection_set_timeout;

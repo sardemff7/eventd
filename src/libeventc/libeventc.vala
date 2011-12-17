@@ -100,6 +100,7 @@ namespace Eventc
         #endif
 
         public uint timeout { get; set; default = 0; }
+        public bool enable_proxy { get; set; default = true; }
 
         private GLib.SocketConnectable address;
         private GLib.SocketClient client;
@@ -161,6 +162,7 @@ namespace Eventc
 
             this.client = new GLib.SocketClient();
             this.client.set_timeout(this.timeout);
+            this.client.set_enable_proxy(this.enable_proxy);
         }
 
         public new async void
