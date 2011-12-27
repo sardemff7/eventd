@@ -223,8 +223,10 @@ namespace Eventc
             case Mode.PING_PONG:
                 mode = "ping-pong";
             break;
+            default:
+                throw new EventcError.MODE("Please specify a mode");
             }
-            if ( mode != null )
+
             this.send("MODE " + mode);
 
             var r = yield this.receive();
