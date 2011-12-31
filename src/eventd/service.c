@@ -51,7 +51,16 @@ struct _EventdService {
     EventdQueue *queue;
     GMainLoop *loop;
     GSocketService *service;
+    GSList *clients;
 };
+
+static void
+_eventd_service_client_disconnect(gpointer data)
+{
+    GCancellable *cancellable = data;
+    g_cancellable_cancel(cancellable);
+    g_object_unref(cancellable);
+}
 
 void
 eventd_service_config_reload(gpointer user_data)
@@ -66,6 +75,8 @@ eventd_service_quit(gpointer user_data)
     EventdService *service = user_data;
 
     eventd_queue_free(service->queue);
+
+    g_slist_free_full(service->clients, _eventd_service_client_disconnect);
 
     if ( service->loop != NULL )
         g_main_loop_quit(service->loop);
@@ -121,6 +132,7 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
 {
     EventdService *service = user_data;
 
+    GCancellable *cancellable;
     GDataInputStream *input = NULL;
     GDataOutputStream *output = NULL;
     GError *error = NULL;
@@ -136,10 +148,14 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
 
     gint32 last_eventd_id = 0;
 
+    cancellable = g_cancellable_new();
+
+    service->clients = g_slist_prepend(service->clients, cancellable);
+
     input = g_data_input_stream_new(g_io_stream_get_input_stream((GIOStream *)connection));
     output = g_data_output_stream_new(g_io_stream_get_output_stream((GIOStream *)connection));
 
-    while ( ( line = g_data_input_stream_read_upto(input, "\n", -1, &size, NULL, &error) ) != NULL )
+    while ( ( line = g_data_input_stream_read_upto(input, "\n", -1, &size, cancellable, &error) ) != NULL )
     {
         g_data_input_stream_read_byte(input, NULL, &error);
         if ( error )
@@ -299,19 +315,11 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
 
         g_free(line);
     }
-    if ( error )
+    if ( ( error != NULL ) && ( error->code == G_IO_ERROR_CANCELLED ) )
         g_warning("Can't read the socket: %s", error->message);
     g_clear_error(&error);
 
     libeventd_client_unref(client);
-
-    if ( ! g_input_stream_close((GInputStream *)input, NULL, &error) )
-        g_warning("Can't close the input stream: %s", error->message);
-    g_clear_error(&error);
-
-    if ( ! g_output_stream_close((GOutputStream *)output, NULL, &error) )
-        g_warning("Can't close the output stream: %s", error->message);
-    g_clear_error(&error);
 
     if ( ! g_io_stream_close((GIOStream *)connection, NULL, &error) )
         g_warning("Can't close the stream: %s", error->message);
