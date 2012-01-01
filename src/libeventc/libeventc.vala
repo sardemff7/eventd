@@ -27,6 +27,7 @@ namespace Eventc
         HOSTNAME,
         CONNECTION_REFUSED,
         CONNECTION_OTHER,
+        ALREADY_CONNECTED,
         HELLO,
         MODE,
         BYE,
@@ -119,6 +120,14 @@ namespace Eventc
             this._type = type;
             this._name = name;
             this.mode = Mode.UNKNOWN;
+
+            this.client = new GLib.SocketClient();
+        }
+
+        public bool
+        is_connected()
+        {
+            return ( ( this.connection != null ) && ( ! this.connection.is_closed() ) && this.hello_received );
         }
 
         private void
@@ -126,8 +135,6 @@ namespace Eventc
         {
             if ( this.address != null )
                 return;
-
-            this.hello_received = false;
 
             #if ENABLE_GIO_UNIX
             string path = null;
@@ -146,21 +153,11 @@ namespace Eventc
             }
         }
 
-        public bool
-        is_connected()
-        {
-            return ( ( this.connection != null ) && ( ! this.connection.is_closed() ) && this.hello_received );
-        }
-
         private void
         set_client() throws EventcError
         {
-            if ( this.connection != null )
-                this.close();
-
             this.proccess_address();
 
-            this.client = new GLib.SocketClient();
             this.client.set_timeout(this.timeout);
             this.client.set_enable_proxy(this.enable_proxy);
         }
@@ -168,6 +165,16 @@ namespace Eventc
         public new async void
         connect() throws EventcError
         {
+            if ( this.connection != null )
+            {
+                if ( this.hello_received )
+                    throw new EventcError.ALREADY_CONNECTED("Already connected, you must disconnect first");
+                else
+                    yield this.close();
+            }
+
+            this.hello_received = false;
+
             while ( ! this.mutex.trylock() )
             {
                 Idle.add(this.connect.callback);
@@ -386,7 +393,6 @@ namespace Eventc
             this.output = null;
             this.input = null;
             this.connection = null;
-            this.client = null;
 
             this.mutex.unlock();
         }
