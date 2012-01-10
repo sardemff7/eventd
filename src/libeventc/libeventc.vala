@@ -377,19 +377,18 @@ namespace Eventc
 
             if ( ( this.hello_received ) && ( ! this.connection.is_closed() ) )
             {
-                this.send("BYE");
-                var r = yield this.receive();
-                if ( r != "BYE" )
-                    throw new EventcError.BYE("Got a wrong bye message: %s", r);
+                try
+                {
+                    this.send("BYE");
+                }
+                catch ( EventcError ee ) {}
             }
             try
             {
                 yield this.connection.close_async(GLib.Priority.DEFAULT);
             }
-            catch ( GLib.Error e )
-            {
-                throw new EventcError.CLOSE("Failed to close socket: %s", e.message);
-            }
+            catch ( GLib.Error e ) {}
+
             this.output = null;
             this.input = null;
             this.connection = null;
