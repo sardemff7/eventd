@@ -25,7 +25,7 @@
 
 typedef struct {
     guint ref_count;
-    EventdClientMode mode;
+    gboolean pong_mode;
     gpointer data;
 } EventdSoundEspeakCallbackData;
 

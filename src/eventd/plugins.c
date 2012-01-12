@@ -74,3 +74,9 @@ eventd_plugins_event_action_all(EventdClient *client, EventdEvent *event)
 {
     libeventd_plugins_event_action_all(plugins, client, event);
 }
+
+void
+eventd_plugins_event_pong_all(EventdClient *client, EventdEvent *event)
+{
+    libeventd_plugins_event_pong_all(plugins, client, event);
+}

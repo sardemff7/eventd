@@ -25,11 +25,4 @@
 
 typedef struct _EventdClient EventdClient;
 
-typedef enum {
-    EVENTD_CLIENT_MODE_UNKNOWN = -1,
-    EVENTD_CLIENT_MODE_NORMAL = 0,
-    EVENTD_CLIENT_MODE_PING_PONG,
-    EVENTD_CLIENT_MODE_LIBNOTIFY,
-} EventdClientMode;
-
 #endif /* __LIBEVENTD_TYPES_H__ */

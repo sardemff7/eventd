@@ -27,7 +27,6 @@
 struct _EventdClient {
     gchar *type;
     gchar *name;
-    EventdClientMode mode;
 
     guint64 ref_count;
 };
@@ -82,12 +81,6 @@ libeventd_client_update(EventdClient *client, const gchar *type, const gchar *na
         client->name = g_strdup(name);
 }
 
-void
-libeventd_client_set_mode(EventdClient *client, EventdClientMode mode)
-{
-    client->mode = mode;
-}
-
 
 const gchar *
 libeventd_client_get_type(EventdClient *client)
@@ -99,10 +92,4 @@ const gchar *
 libeventd_client_get_name(EventdClient *client)
 {
     return client->name;
-}
-
-EventdClientMode
-libeventd_client_get_mode(EventdClient *client)
-{
-    return client->mode;
 }

@@ -34,7 +34,7 @@ typedef void (*EventdPluginControlCommandFunc)(EventdPluginContext *context, con
 typedef void (*EventdPluginConfigInitFunc)(EventdPluginContext *context);
 typedef void (*EventdPluginConfigCleanFunc)(EventdPluginContext *context);
 typedef void (*EventdPluginEventParseFunc)(EventdPluginContext *context, const gchar *, const gchar *, GKeyFile *);
-typedef void (*EventdPluginEventActionFunc)(EventdPluginContext *context, EventdClient *client, EventdEvent *event);
+typedef void (*EventdPluginEventDispatchFunc)(EventdPluginContext *context, EventdClient *client, EventdEvent *event);
 
 typedef struct {
     EventdPluginStartFunc start;
@@ -46,7 +46,8 @@ typedef struct {
     EventdPluginConfigCleanFunc config_clean;
 
     EventdPluginEventParseFunc event_parse;
-    EventdPluginEventActionFunc event_action;
+    EventdPluginEventDispatchFunc event_action;
+    EventdPluginEventDispatchFunc event_pong;
 
     /* Private stuff */
     void *module;

@@ -127,6 +127,11 @@ _eventd_service_send_data(gpointer key, gpointer value, gpointer user_data)
     }
 }
 
+typedef enum {
+    MODE_NORMAL = 0,
+    MODE_PING_PONG,
+} EventdClientMode;
+
 static gboolean
 _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSocketConnection *connection, GObject *source_object, gpointer user_data)
 {
@@ -139,6 +144,8 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
 
     EventdClient *client = NULL;
     EventdEvent *event = NULL;
+
+    EventdClientMode mode = MODE_NORMAL;
 
     gchar *event_data_name = NULL;
     gchar *event_data_content = NULL;
@@ -186,10 +193,13 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
                     {
                         GHashTable *pong = NULL;
 
-                        switch ( libeventd_client_get_mode(client) )
+                        switch ( mode )
                         {
-                        case EVENTD_CLIENT_MODE_PING_PONG:
-                            eventd_plugins_event_action_all(client, event);
+                        case MODE_NORMAL:
+                            eventd_queue_push(service->queue, client, event);
+                        break;
+                        case MODE_PING_PONG:
+                            eventd_plugins_event_pong_all(client, event);
                             if ( ! g_data_output_stream_put_string(output, "EVENT\n", NULL, &error) )
                                 break;
                             pong = eventd_event_get_pong_data(event);
@@ -198,10 +208,6 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
                             if ( ! g_data_output_stream_put_string(output, ".\n", NULL, &error) )
                                 break;
                             eventd_event_end(event, EVENTD_EVENT_END_REASON_RESERVED);
-                        break;
-                        case EVENTD_CLIENT_MODE_NORMAL:
-                        default:
-                            eventd_queue_push(service->queue, client, event);
                         break;
                         }
                         if ( error != NULL )
@@ -257,8 +263,6 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
         }
         else if ( g_ascii_strncasecmp(line, "MODE ", 5) == 0 )
         {
-            EventdClientMode mode;
-
             if ( client == NULL )
                 break;
 
@@ -272,17 +276,8 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
             if ( ! g_data_output_stream_put_string(output, "MODE\n", NULL, &error) )
                 break;
 
-            if ( g_ascii_strcasecmp(line+5, "normal") == 0 )
-                mode = EVENTD_CLIENT_MODE_NORMAL;
-            else if ( g_ascii_strcasecmp(line+5, "ping-pong") == 0 )
-                mode = EVENTD_CLIENT_MODE_PING_PONG;
-            else
-            {
-                mode = EVENTD_CLIENT_MODE_UNKNOWN;
-                g_warning("Unknown mode");
-            }
-
-            libeventd_client_set_mode(client, mode);
+            if ( g_ascii_strcasecmp(line+5, "ping-pong") == 0 )
+                mode = MODE_PING_PONG;
         }
         else if ( g_ascii_strncasecmp(line, "HELLO ", 6) == 0 )
         {

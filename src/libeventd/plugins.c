@@ -265,3 +265,26 @@ libeventd_plugins_event_action_all(GList *plugins, EventdClient *client, EventdE
     };
     libeventd_plugins_foreach(plugins, libeventd_plugins_event_action, &data);
 }
+
+static void
+libeventd_plugins_event_pong(gpointer data, gpointer user_data)
+{
+    EventdPlugin *plugin = data;
+    EventdEventActionData *action_data = user_data;
+
+    if ( plugin->event_pong == NULL )
+        return;
+
+    plugin->event_pong(plugin->context, action_data->client, action_data->event);
+}
+
+void
+libeventd_plugins_event_pong_all(GList *plugins, EventdClient *client, EventdEvent *event)
+{
+    EventdEventActionData data = {
+        .client = client,
+        .event = event
+    };
+    libeventd_plugins_foreach(plugins, libeventd_plugins_event_pong, &data);
+}
+

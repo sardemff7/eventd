@@ -271,15 +271,28 @@ _eventd_notification_event_action(EventdPluginContext *context, EventdClient *cl
 
     notification = _eventd_notification_notification_new(client, eventd_event_get_data(event), notification_event);
 
-    switch ( libeventd_client_get_mode(client) )
-    {
-    case EVENTD_CLIENT_MODE_PING_PONG:
-        _eventd_notification_notification_add_pong_data(event, notification);
-    break;
-    default:
-        eventd_nd_event_action(context->daemon, event, notification);
-        eventd_notification_notify_event_action(notification, eventd_event_get_timeout(event), notification_event->scale);
-    }
+    eventd_nd_event_action(context->daemon, event, notification);
+    eventd_notification_notify_event_action(notification, eventd_event_get_timeout(event), notification_event->scale);
+
+    _eventd_notification_notification_free(notification);
+}
+
+static void
+_eventd_notification_event_pong(EventdPluginContext *context, EventdClient *client, EventdEvent *event)
+{
+    EventdNotificationEvent *notification_event;
+    EventdNotificationNotification *notification;
+
+    notification_event = libeventd_config_events_get_event(context->events, libeventd_client_get_type(client), eventd_event_get_name(event));
+    if ( notification_event == NULL )
+        return;
+
+    if ( notification_event->disable )
+        return;
+
+    notification = _eventd_notification_notification_new(client, eventd_event_get_data(event), notification_event);
+
+    _eventd_notification_notification_add_pong_data(event, notification);
 
     _eventd_notification_notification_free(notification);
 }
@@ -310,5 +323,6 @@ eventd_plugin_get_info(EventdPlugin *plugin)
 
     plugin->event_parse = _eventd_notification_event_parse;
     plugin->event_action = _eventd_notification_event_action;
+    plugin->event_pong = _eventd_notification_event_pong;
 }
 

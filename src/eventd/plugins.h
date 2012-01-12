@@ -33,5 +33,6 @@ void eventd_plugins_config_clean_all();
 
 void eventd_plugins_event_parse_all(const gchar *type, const gchar *event, GKeyFile *config_file);
 void eventd_plugins_event_action_all(EventdClient *client, EventdEvent *event);
+void eventd_plugins_event_pong_all(EventdClient *client, EventdEvent *event);
 
 #endif /* __EVENTD_PLUGINS_H__ */

@@ -118,7 +118,6 @@ _eventd_dbus_notify(EventdDbusContext *context, const gchar *sender, GVariant *p
     EventdEvent *event = NULL;
 
     client = libeventd_client_new();
-    libeventd_client_set_mode(client, EVENTD_CLIENT_MODE_NORMAL);
 
     g_variant_get(parameters, "(&su&s&s&s^a&sa{sv}i)",
                   &app_name,

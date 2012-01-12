@@ -134,14 +134,7 @@ _eventd_sound_sndfile_event_action(EventdPluginContext *context, EventdClient *c
         _eventd_sound_sndfile_read_file(file, &data, &length, &format, &rate, &channels);
     // TODO: using event data
 
-    switch ( libeventd_client_get_mode(client) )
-    {
-    case EVENTD_CLIENT_MODE_PING_PONG:
-        //TODO: send back data
-    break;
-    default:
-        eventd_sound_sndfile_pulseaudio_play_data(data, length, format, rate, channels);
-    }
+    eventd_sound_sndfile_pulseaudio_play_data(data, length, format, rate, channels);
 }
 
 static void
