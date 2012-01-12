@@ -23,6 +23,4 @@ libeventd_plugins_load
 libeventd_plugins_unload
 libeventd_regex_init
 libeventd_regex_clean
-libeventd_regex_replace_client_name
 libeventd_regex_replace_event_data
-libeventd_regex_replace_event_name

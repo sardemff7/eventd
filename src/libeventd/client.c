@@ -26,7 +26,6 @@
 
 struct _EventdClient {
     gchar *type;
-    gchar *name;
 
     guint64 ref_count;
 };
@@ -45,7 +44,6 @@ libeventd_client_new()
 static void
 _libeventd_client_finalize(EventdClient *client)
 {
-    g_free(client->name);
     g_free(client->type);
     g_free(client);
 }
@@ -70,15 +68,11 @@ libeventd_client_unref(EventdClient *client)
 }
 
 void
-libeventd_client_update(EventdClient *client, const gchar *type, const gchar *name)
+libeventd_client_update(EventdClient *client, const gchar *type)
 {
     client->type = (g_free(client->type), NULL);
     if ( type != NULL )
         client->type = g_strdup(type);
-
-    client->name = (g_free(client->name), NULL);
-    if ( name != NULL )
-        client->name = g_strdup(name);
 }
 
 
@@ -86,10 +80,4 @@ const gchar *
 libeventd_client_get_type(EventdClient *client)
 {
     return client->type;
-}
-
-const gchar *
-libeventd_client_get_name(EventdClient *client)
-{
-    return client->name;
 }

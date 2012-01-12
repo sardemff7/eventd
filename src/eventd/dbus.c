@@ -162,7 +162,7 @@ _eventd_dbus_notify(EventdDbusContext *context, const gchar *sender, GVariant *p
     g_debug("Creanting event '%s' for client '%s' ", event_name, app_name);
     #endif /* DEBUG */
 
-    libeventd_client_update(client, "libnotify", app_name);
+    libeventd_client_update(client, "libnotify");
     if ( id == 0 )
         id = eventd_queue_get_next_event_id(context->queue);
     event = eventd_event_new_with_id(id, event_name);
@@ -174,6 +174,8 @@ _eventd_dbus_notify(EventdDbusContext *context, const gchar *sender, GVariant *p
         g_object_unref(event);
         goto out;
     }
+
+    eventd_event_add_data(event, g_strdup("client-name"), g_strdup(app_name));
 
     eventd_event_add_data(event, g_strdup("summary"), g_strdup(summary));
 

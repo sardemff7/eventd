@@ -26,8 +26,6 @@
 void libeventd_regex_init();
 void libeventd_regex_clean();
 
-gchar *libeventd_regex_replace_client_name(const gchar *target, const gchar *clieant_name);
-gchar *libeventd_regex_replace_event_name(const gchar *target, const gchar *event_name);
 gchar *libeventd_regex_replace_event_data(const gchar *target, GHashTable *event_data, GRegexEvalCallback callback);
 
 #endif /* __LIBEVENTD_REGEX_H__ */

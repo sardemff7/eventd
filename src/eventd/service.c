@@ -143,6 +143,7 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
     GError *error = NULL;
 
     EventdClient *client = NULL;
+    gchar *client_name = NULL;
     EventdEvent *event = NULL;
 
     EventdClientMode mode = MODE_NORMAL;
@@ -252,6 +253,8 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
             last_eventd_id = eventd_queue_get_next_event_id(service->queue);
 
             event = eventd_event_new_with_id(last_eventd_id, line+6);
+
+            eventd_event_add_data(event, g_strdup("client-name"), g_strdup(client_name));
         }
         else if ( g_ascii_strcasecmp(line, "BYE") == 0 )
         {
@@ -288,7 +291,8 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
 
             hello = g_strsplit(line+6, " ", 2);
             client = libeventd_client_new();
-            libeventd_client_update(client, hello[0], hello[1]);
+            libeventd_client_update(client, hello[0]);
+            client_name = g_strdup(hello[1]);
             g_strfreev(hello);
         }
         else if ( g_ascii_strncasecmp(line, "RENAME ", 7) == 0 )
@@ -302,7 +306,9 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
                 break;
 
             rename = g_strsplit(line+7, " ", 2);
-            libeventd_client_update(client, rename[0], rename[1]);
+            libeventd_client_update(client, rename[0]);
+            g_free(client_name);
+            client_name = g_strdup(rename[1]);
             g_strfreev(rename);
         }
         else

@@ -26,7 +26,6 @@
 
 static guint64 regex_refcount = 0;
 
-static GRegex *regex_client_name = NULL;
 static GRegex *regex_event_data = NULL;
 
 void
@@ -35,11 +34,6 @@ libeventd_regex_init()
     GError *error = NULL;
     if ( ++regex_refcount > 1 )
         return;
-
-    regex_client_name = g_regex_new("\\$client-name", G_REGEX_OPTIMIZE, 0, &error);
-    if ( ! regex_client_name )
-        g_warning("Can’t create $client-name regex: %s", error->message);
-    g_clear_error(&error);
 
     regex_event_data = g_regex_new("\\$event-data\\[([\\w-]+)\\]", G_REGEX_OPTIMIZE, 0, &error);
     if ( ! regex_event_data )
@@ -54,25 +48,6 @@ libeventd_regex_clean()
         return;
 
     g_regex_unref(regex_event_data);
-    g_regex_unref(regex_client_name);
-}
-
-gchar *
-libeventd_regex_replace_client_name(const gchar *target, const gchar *client_name)
-{
-    GError *error = NULL;
-    gchar *r;
-
-    r = g_regex_replace_literal(regex_client_name, target, -1, 0, client_name ?: "" , 0, &error);
-    if ( r == NULL )
-    {
-        r = g_strdup(target);
-        g_warning("Can’t replace client name: %s", error->message);
-    }
-    g_clear_error(&error);
-
-
-    return r;
 }
 
 static gboolean

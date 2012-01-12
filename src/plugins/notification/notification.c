@@ -105,7 +105,7 @@ _eventd_notification_event_new(gboolean disable, const char *title, const char *
 {
     EventdNotificationEvent *event = NULL;
 
-    title = title ?: parent ? parent->title : "$client-name - $event-data[name]";
+    title = title ?: parent ? parent->title : "$event-data[client-name] - $event-data[name]";
     message = message ?: parent ? parent->message : "$event-data[text]";
     icon = icon ?: parent ? parent->icon : "icon";
     overlay_icon = overlay_icon ?: parent ? parent->overlay_icon : "overlay-icon";
@@ -208,14 +208,11 @@ static EventdNotificationNotification *
 _eventd_notification_notification_new(EventdClient *client, GHashTable *data, EventdNotificationEvent *notification_event)
 {
     EventdNotificationNotification *notification;
-    gchar *tmp = NULL;
     gchar *icon;
 
     notification = g_new0(EventdNotificationNotification, 1);
 
-    tmp = libeventd_regex_replace_client_name(notification_event->title, libeventd_client_get_name(client));
-    notification->title = libeventd_regex_replace_event_data(tmp, data, NULL);
-    g_free(tmp);
+    notification->title = libeventd_regex_replace_event_data(notification_event->title, data, NULL);
 
     notification->message = libeventd_regex_replace_event_data(notification_event->message, data, NULL);
 

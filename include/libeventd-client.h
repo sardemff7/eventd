@@ -29,9 +29,8 @@ EventdClient *libeventd_client_new();
 EventdClient *libeventd_client_ref(EventdClient *client);
 void libeventd_client_unref(EventdClient *client);
 
-void libeventd_client_update(EventdClient *client, const gchar *type, const gchar *name);
+void libeventd_client_update(EventdClient *client, const gchar *type);
 
 const gchar * libeventd_client_get_type(EventdClient *client);
-const gchar * libeventd_client_get_name(EventdClient *client);
 
 #endif /* __LIBEVENTD_CLIENT_H__ */
