@@ -128,6 +128,7 @@ _eventd_service_send_data(gpointer key, gpointer value, gpointer user_data)
 
 typedef enum {
     MODE_NORMAL = 0,
+    MODE_RELAY,
     MODE_PING_PONG,
 } EventdClientMode;
 
@@ -181,6 +182,13 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
                     event_data_name = NULL;
                     event_data_content = NULL;
                 }
+                else if ( ( mode == MODE_RELAY )
+                          && ( eventd_event_get_category(event) == NULL ) )
+                {
+                    g_warning("Relay client missing real client description");
+                    g_object_unref(event);
+                    event = NULL;
+                }
                 else
                 {
                     gboolean disable;
@@ -196,6 +204,7 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
                         switch ( mode )
                         {
                         case MODE_NORMAL:
+                        case MODE_RELAY:
                             eventd_queue_push(service->queue, event);
                         break;
                         case MODE_PING_PONG:
@@ -239,6 +248,19 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
                 eventd_event_add_data(event, data[0], data[1]);
                 g_free(data);
             }
+            else if ( ( mode == MODE_RELAY )
+                      && ( g_ascii_strncasecmp(line, "CLIENT ", 7) == 0 ) )
+            {
+                gchar **relay_client = NULL;
+
+                relay_client = g_strsplit(line+7, " ", 2);
+
+                eventd_event_set_category(event, relay_client[0]);
+                if ( relay_client[1][0] != 0 )
+                    eventd_event_add_data(event, g_strdup("client-name"), g_strdup(relay_client[1]));
+
+                g_strfreev(relay_client);
+            }
             else if ( event_data_name )
                 event_data_content = g_strdup(( line[0] == '.' ) ? line+1 : line);
             else
@@ -253,8 +275,11 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
 
             event = eventd_event_new_with_id(last_eventd_id, line+6);
 
-            eventd_event_set_category(event, category);
-            eventd_event_add_data(event, g_strdup("client-name"), g_strdup(client_name));
+            if ( mode != MODE_RELAY )
+            {
+                eventd_event_set_category(event, category);
+                eventd_event_add_data(event, g_strdup("client-name"), g_strdup(client_name));
+            }
         }
         else if ( g_ascii_strcasecmp(line, "BYE") == 0 )
         {
@@ -279,7 +304,9 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
             if ( ! g_data_output_stream_put_string(output, "MODE\n", NULL, &error) )
                 break;
 
-            if ( g_ascii_strcasecmp(line+5, "ping-pong") == 0 )
+            if ( g_ascii_strcasecmp(line+5, "relay") == 0 )
+                mode = MODE_RELAY;
+            else if ( g_ascii_strcasecmp(line+5, "ping-pong") == 0 )
                 mode = MODE_PING_PONG;
         }
         else if ( g_ascii_strncasecmp(line, "HELLO ", 6) == 0 )
