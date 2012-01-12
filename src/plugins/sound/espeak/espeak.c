@@ -197,7 +197,7 @@ _eventd_sound_espeak_event_parse(EventdPluginContext *context, const gchar *clie
         parent = g_hash_table_lookup(context->events, client_type);
 
     if ( ! message )
-        message = g_strdup(parent ?: "$event-data[text]");
+        message = g_strdup(parent ?: "$text");
 
     if ( disable )
     {
