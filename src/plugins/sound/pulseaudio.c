@@ -94,8 +94,6 @@ eventd_sound_pulseaudio_stop(EventdSoundPulseaudioContext *context)
         op = pa_context_drain(context->sound, _eventd_sound_pulseaudio_context_notify_callback, context);
         if ( op != NULL )
             pa_operation_unref(op);
-        else
-            pa_context_disconnect(context->sound);
     }
     else
     {
