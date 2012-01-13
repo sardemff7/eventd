@@ -166,7 +166,7 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
     while ( ( line = g_data_input_stream_read_upto(input, "\n", -1, &size, cancellable, &error) ) != NULL )
     {
         g_data_input_stream_read_byte(input, NULL, &error);
-        if ( error )
+        if ( error != NULL )
             break;
         #if DEBUG
         g_debug("Line received: %s", line);
@@ -176,7 +176,7 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
         {
             if ( g_ascii_strcasecmp(line, ".") == 0 )
             {
-                if ( event_data_name )
+                if ( event_data_name != NULL )
                 {
                     eventd_event_add_data(event, event_data_name, event_data_content);
                     event_data_name = NULL;
@@ -227,7 +227,7 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
                     event = NULL;
                 }
             }
-            else if ( event_data_content )
+            else if ( event_data_content != NULL )
             {
                 gchar *old = NULL;
 
@@ -261,7 +261,7 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
 
                 g_strfreev(relay_client);
             }
-            else if ( event_data_name )
+            else if ( event_data_name != NULL )
                 event_data_content = g_strdup(( line[0] == '.' ) ? line+1 : line);
             else
                 g_warning("Unknown message");

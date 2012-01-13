@@ -185,7 +185,7 @@ _eventd_config_parse_client_dir(EventdConfig *config, const gchar *type, gchar *
 
     next:
         g_free(event);
-        if ( error )
+        if ( error != NULL )
             g_warning("Can't read the configuration file '%s': %s", config_file_name, error->message);
         g_clear_error(&error);
         g_key_file_free(config_file);
@@ -272,7 +272,7 @@ _eventd_config_load_dir(EventdConfig *config, const gchar *base_dir)
     g_dir_close(config_dir);
 
 out:
-    if ( error )
+    if ( error != NULL )
         g_warning("Can't read the configuration directory: %s", error->message);
     g_clear_error(&error);
     g_free(config_dir_name);

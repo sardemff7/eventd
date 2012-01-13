@@ -171,7 +171,7 @@ _eventd_sockets_get_unix_socket(gchar *path, gboolean take_over_socket)
     return socket;
 
 fail:
-    if ( socket )
+    if ( socket != NULL )
         g_object_unref(socket);
     g_clear_error(&error);
 #endif /* ENABLE_GIO_UNIX */
