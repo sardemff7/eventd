@@ -58,7 +58,7 @@ _eventd_config_event_new(gboolean disable, Int *timeout, EventdConfigEvent *pare
 {
     EventdConfigEvent *event;
 
-    timeout->value = timeout->set ? timeout->value : parent ? parent->timeout : -1;
+    timeout->value = timeout->set ? timeout->value : ( parent != NULL ) ? parent->timeout : -1;
     timeout->set = TRUE;
 
     event = g_new0(EventdConfigEvent, 1);

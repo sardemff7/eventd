@@ -104,11 +104,11 @@ _eventd_notification_event_new(gboolean disable, const char *title, const char *
 {
     EventdNotificationEvent *event = NULL;
 
-    title = title ?: parent ? parent->title : "$client-name - $name";
-    message = message ?: parent ? parent->message : "$text";
-    icon = icon ?: parent ? parent->icon : "icon";
-    overlay_icon = overlay_icon ?: parent ? parent->overlay_icon : "overlay-icon";
-    scale->value = scale->set ? scale->value : parent ? parent->scale * 100 : 50;
+    title = ( title != NULL ) ? title : ( parent != NULL ) ? parent->title : "$client-name - $name";
+    message = ( message != NULL ) ? message : ( parent != NULL ) ? parent->message : "$text";
+    icon = ( icon != NULL ) ? icon : ( parent != NULL ) ? parent->icon : "icon";
+    overlay_icon = ( overlay_icon != NULL ) ? overlay_icon : ( parent != NULL ) ? parent->overlay_icon : "overlay-icon";
+    scale->value = scale->set ? scale->value : ( parent != NULL ) ? parent->scale * 100 : 50;
     scale->set = TRUE;
 
     event = g_new0(EventdNotificationEvent, 1);

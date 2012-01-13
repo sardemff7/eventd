@@ -153,7 +153,7 @@ _eventd_sound_sndfile_event_new(gboolean disable, const gchar *sound, EventdSoun
 {
     EventdSoundSndfileEvent *event = NULL;
 
-    sound = sound ?: parent ? parent->sound : "sound";
+    sound = ( sound != NULL ) ? sound : ( parent != NULL ) ? parent->sound : "sound";
 
     event = g_new0(EventdSoundSndfileEvent, 1);
 

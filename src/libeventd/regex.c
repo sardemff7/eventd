@@ -59,7 +59,7 @@ _libeventd_regex_event_data_cb(const GMatchInfo *info, GString *r, gpointer even
     name = g_match_info_fetch(info, 1);
     if ( event_data != NULL )
         data = g_hash_table_lookup(event_data, name);
-    g_string_append(r, data ?: "");
+    g_string_append(r, ( data != NULL ) ? data : "");
     g_free(name);
 
     return FALSE;
@@ -71,7 +71,7 @@ libeventd_regex_replace_event_data(const gchar *target, GHashTable *event_data, 
     GError *error = NULL;
     gchar *r;
 
-    r = g_regex_replace_eval(regex_event_data, target, -1, 0, 0, callback ?: _libeventd_regex_event_data_cb, event_data, &error);
+    r = g_regex_replace_eval(regex_event_data, target, -1, 0, 0, ( callback != NULL ) ? callback : _libeventd_regex_event_data_cb, event_data, &error);
     if ( r == NULL )
     {
         r = g_strdup(target);

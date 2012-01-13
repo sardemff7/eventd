@@ -196,7 +196,7 @@ _eventd_sound_espeak_event_parse(EventdPluginContext *context, const gchar *even
         parent = g_hash_table_lookup(context->events, event_category);
 
     if ( ! message )
-        message = g_strdup(parent ?: "$text");
+        message = g_strdup((parent != NULL ) ? parent : "$text");
 
     if ( disable )
     {
@@ -236,7 +236,7 @@ _eventd_sound_espeak_regex_event_data_cb(const GMatchInfo *info, GString *r, gpo
     }
     g_free(name);
 
-    g_string_append(r, data ?: "");
+    g_string_append(r, ( data != NULL ) ? data : "");
     g_free(data);
 
     return FALSE;
