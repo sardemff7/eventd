@@ -13,8 +13,8 @@ global:
     eventc_connection_new;
     eventc_connection_rename;
     eventc_connection_rename_finish;
+    eventc_connection_set_category;
     eventc_connection_set_client_name;
-    eventc_connection_set_client_type;
     eventc_connection_set_enable_proxy;
     eventc_connection_set_host;
     eventc_connection_set_host_is_socket;

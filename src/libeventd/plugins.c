@@ -239,52 +239,39 @@ void libeventd_plugins_event_parse_all(GList *plugins, const gchar *type, const 
     libeventd_plugins_foreach(plugins, _libeventd_plugins_event_parse, &data);
 }
 
-typedef struct {
-    EventdClient *client;
-    EventdEvent *event;
-} EventdEventActionData;
-
 static void
 libeventd_plugins_event_action(gpointer data, gpointer user_data)
 {
     EventdPlugin *plugin = data;
-    EventdEventActionData *action_data = user_data;
+    EventdEvent *event = user_data;
 
     if ( plugin->event_action == NULL )
         return;
 
-    plugin->event_action(plugin->context, action_data->client, action_data->event);
+    plugin->event_action(plugin->context, event);
 }
 
 void
-libeventd_plugins_event_action_all(GList *plugins, EventdClient *client, EventdEvent *event)
+libeventd_plugins_event_action_all(GList *plugins, EventdEvent *event)
 {
-    EventdEventActionData data = {
-        .client = client,
-        .event = event
-    };
-    libeventd_plugins_foreach(plugins, libeventd_plugins_event_action, &data);
+    libeventd_plugins_foreach(plugins, libeventd_plugins_event_action, event);
 }
 
 static void
 libeventd_plugins_event_pong(gpointer data, gpointer user_data)
 {
     EventdPlugin *plugin = data;
-    EventdEventActionData *action_data = user_data;
+    EventdEvent *event = user_data;
 
     if ( plugin->event_pong == NULL )
         return;
 
-    plugin->event_pong(plugin->context, action_data->client, action_data->event);
+    plugin->event_pong(plugin->context, event);
 }
 
 void
-libeventd_plugins_event_pong_all(GList *plugins, EventdClient *client, EventdEvent *event)
+libeventd_plugins_event_pong_all(GList *plugins, EventdEvent *event)
 {
-    EventdEventActionData data = {
-        .client = client,
-        .event = event
-    };
-    libeventd_plugins_foreach(plugins, libeventd_plugins_event_pong, &data);
+    libeventd_plugins_foreach(plugins, libeventd_plugins_event_pong, event);
 }
 

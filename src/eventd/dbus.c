@@ -24,7 +24,6 @@
 #include <glib.h>
 #include <gio/gio.h>
 
-#include <libeventd-client.h>
 #include <libeventd-event.h>
 #include <eventd-plugin.h>
 
@@ -114,10 +113,7 @@ _eventd_dbus_notify(EventdDbusContext *context, const gchar *sender, GVariant *p
     gboolean disable;
     gint64 server_timeout;
 
-    EventdClient *client = NULL;
     EventdEvent *event = NULL;
-
-    client = libeventd_client_new();
 
     g_variant_get(parameters, "(&su&s&s&s^a&sa{sv}i)",
                   &app_name,
@@ -162,17 +158,17 @@ _eventd_dbus_notify(EventdDbusContext *context, const gchar *sender, GVariant *p
     g_debug("Creanting event '%s' for client '%s' ", event_name, app_name);
     #endif /* DEBUG */
 
-    libeventd_client_update(client, "libnotify");
     if ( id == 0 )
         id = eventd_queue_get_next_event_id(context->queue);
     event = eventd_event_new_with_id(id, event_name);
+    eventd_event_set_category(event, "libnotify");
 
-    eventd_config_event_get_disable_and_timeout(context->config, client, event, &disable, &server_timeout);
+    eventd_config_event_get_disable_and_timeout(context->config, event, &disable, &server_timeout);
     if ( disable )
     {
         g_dbus_method_invocation_return_dbus_error(invocation, NOTIFICATION_BUS_NAME ".Disabled", "Notification type disabled");
         g_object_unref(event);
-        goto out;
+        return;
     }
 
     eventd_event_add_data(event, g_strdup("client-name"), g_strdup(app_name));
@@ -221,12 +217,9 @@ _eventd_dbus_notify(EventdDbusContext *context, const gchar *sender, GVariant *p
     eventd_event_set_timeout(event, ( timeout > -1 ) ? timeout : ( urgency > -1 ) ? ( 3000 + urgency * 2000 ) : server_timeout);
 
     _eventd_dbus_notification_new(context, sender, id, event);
-    eventd_queue_push(context->queue, client, event);
+    eventd_queue_push(context->queue, event);
 
     g_dbus_method_invocation_return_value(invocation, g_variant_new("(u)", id));
-
-out:
-    libeventd_client_unref(client);
 }
 
 static void

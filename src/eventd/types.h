@@ -24,7 +24,6 @@
 #define __EVENTD_TYPES_H__
 
 #include <libeventd-event-types.h>
-#include <libeventd-types.h>
 #include <eventd-plugin.h>
 
 typedef struct _EventdQueue EventdQueue;

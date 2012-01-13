@@ -34,7 +34,7 @@ void libeventd_plugins_config_init_all(GList *plugins);
 void libeventd_plugins_config_clean_all(GList *plugins);
 
 void libeventd_plugins_event_parse_all(GList *plugins, const gchar *type, const gchar *event, GKeyFile *config_file);
-void libeventd_plugins_event_action_all(GList *plugins, EventdClient *client, EventdEvent *event);
-void libeventd_plugins_event_pong_all(GList *plugins, EventdClient *client, EventdEvent *event);
+void libeventd_plugins_event_action_all(GList *plugins, EventdEvent *event);
+void libeventd_plugins_event_pong_all(GList *plugins, EventdEvent *event);
 
 #endif /* __EVENTD_LIBEVENTD_PLUGINS_H__ */

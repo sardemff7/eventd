@@ -29,7 +29,6 @@
 
 #include <eventd-plugin.h>
 #include <libeventd-event.h>
-#include <libeventd-client.h>
 #include <libeventd-config.h>
 #include <libeventd-regex.h>
 
@@ -177,7 +176,7 @@ _eventd_sound_espeak_stop(EventdPluginContext *context)
 }
 
 static void
-_eventd_sound_espeak_event_parse(EventdPluginContext *context, const gchar *client_type, const gchar *event_name, GKeyFile *config_file)
+_eventd_sound_espeak_event_parse(EventdPluginContext *context, const gchar *event_category, const gchar *event_name, GKeyFile *config_file)
 {
     gboolean disable;
     gchar *message = NULL;
@@ -192,9 +191,9 @@ _eventd_sound_espeak_event_parse(EventdPluginContext *context, const gchar *clie
     if ( libeventd_config_key_file_get_string(config_file, "espeak", "message", &message) < 0 )
         return;
 
-    name = libeventd_config_events_get_name(client_type, event_name);
+    name = libeventd_config_events_get_name(event_category, event_name);
     if ( event_name != NULL )
-        parent = g_hash_table_lookup(context->events, client_type);
+        parent = g_hash_table_lookup(context->events, event_category);
 
     if ( ! message )
         message = g_strdup(parent ?: "$text");
@@ -244,14 +243,14 @@ _eventd_sound_espeak_regex_event_data_cb(const GMatchInfo *info, GString *r, gpo
 }
 
 static void
-_eventd_sound_espeak_event_action(EventdPluginContext *context, EventdClient *client, EventdEvent *event)
+_eventd_sound_espeak_event_action(EventdPluginContext *context, EventdEvent *event)
 {
     gchar *message;
     gchar *msg;
     espeak_ERROR error;
     EventdSoundEspeakCallbackData *data;
 
-    message = libeventd_config_events_get_event(context->events, libeventd_client_get_type(client), eventd_event_get_name(event));
+    message = libeventd_config_events_get_event(context->events, eventd_event_get_category(event), eventd_event_get_name(event));
     if ( message == NULL )
         return;
 
@@ -277,7 +276,7 @@ fail:
 }
 
 static void
-_eventd_sound_espeak_event_pong(EventdPluginContext *context, EventdClient *client, EventdEvent *event)
+_eventd_sound_espeak_event_pong(EventdPluginContext *context, EventdEvent *event)
 {
     gchar *message;
     gchar *msg;
@@ -285,7 +284,7 @@ _eventd_sound_espeak_event_pong(EventdPluginContext *context, EventdClient *clie
     EventdSoundEspeakCallbackData *data;
     EventdSoundEspeakSoundData *sound_data;
 
-    message = libeventd_config_events_get_event(context->events, libeventd_client_get_type(client), eventd_event_get_name(event));
+    message = libeventd_config_events_get_event(context->events, eventd_event_get_category(event), eventd_event_get_name(event));
     if ( message == NULL )
         return;
 

@@ -25,7 +25,6 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 
-#include <libeventd-client.h>
 #include <libeventd-event.h>
 
 #include "types.h"
@@ -35,7 +34,6 @@
 #include "queue.h"
 
 typedef struct {
-    EventdClient *client;
     EventdEvent *event;
     guint timeout_id;
 } EventdQueueEvent;
@@ -67,7 +65,6 @@ _eventd_queue_event_ended(GObject *object, gint reason, gpointer user_data)
     g_async_queue_unlock(queue->queue);
 
     g_object_unref(event->event);
-    libeventd_client_unref(event->client);
     g_free(event);
 }
 
@@ -95,7 +92,7 @@ _eventd_queue_source_dispatch(gpointer user_data)
         g_async_queue_lock(queue->queue);
         queue->current = event;
 
-        eventd_plugins_event_action_all(event->client, event->event);
+        eventd_plugins_event_action_all(event->event);
 
         g_signal_connect(event->event, "ended", G_CALLBACK(_eventd_queue_event_ended), queue);
         timeout = eventd_event_get_timeout(event->event);
@@ -141,12 +138,11 @@ eventd_queue_free(EventdQueue *queue)
 }
 
 void
-eventd_queue_push(EventdQueue *queue, EventdClient *client, EventdEvent *event)
+eventd_queue_push(EventdQueue *queue, EventdEvent *event)
 {
     EventdQueueEvent *queue_event;
 
     queue_event = g_new0(EventdQueueEvent, 1);
-    queue_event->client = libeventd_client_ref(client);
     queue_event->event = g_object_ref(event);
 
     g_async_queue_push_unlocked(queue->queue, queue_event);

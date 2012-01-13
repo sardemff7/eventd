@@ -28,6 +28,6 @@ void eventd_config_clean(EventdConfig *config);
 
 gint64 eventd_config_get_max_clients(EventdConfig *config);
 
-void eventd_config_event_get_disable_and_timeout(EventdConfig *config, EventdClient *client, EventdEvent *event, gboolean *disable, gint64 *timeout);
+void eventd_config_event_get_disable_and_timeout(EventdConfig *config, EventdEvent *event, gboolean *disable, gint64 *timeout);
 
 #endif /* __EVENTD_EVENTS_H__ */

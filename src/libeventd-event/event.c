@@ -53,6 +53,7 @@ eventd_event_end_reason_get_type()
 
 struct _EventdEventPrivate {
     guint32 id;
+    gchar *category;
     gchar *name;
     gint64 timeout;
     GHashTable *data;
@@ -167,11 +168,24 @@ eventd_event_set_timeout(EventdEvent *self, gint64 timeout)
     self->priv->timeout = timeout;
 }
 
+void
+eventd_event_set_category(EventdEvent *self, const gchar *category)
+{
+    g_free(self->priv->category);
+    self->priv->category = g_strdup(category);
+}
+
 
 guint32
 eventd_event_get_id(EventdEvent *self)
 {
     return self->priv->id;
+}
+
+const gchar *
+eventd_event_get_category(EventdEvent *self)
+{
+    return self->priv->category;
 }
 
 const gchar *

@@ -23,7 +23,6 @@
 #ifndef __EVENTD_EVENTD_PLUGIN_H__
 #define __EVENTD_EVENTD_PLUGIN_H__
 
-#include <libeventd-types.h>
 #include <libeventd-event-types.h>
 
 typedef struct _EventdPluginContext EventdPluginContext;
@@ -34,7 +33,7 @@ typedef void (*EventdPluginControlCommandFunc)(EventdPluginContext *context, con
 typedef void (*EventdPluginConfigInitFunc)(EventdPluginContext *context);
 typedef void (*EventdPluginConfigCleanFunc)(EventdPluginContext *context);
 typedef void (*EventdPluginEventParseFunc)(EventdPluginContext *context, const gchar *, const gchar *, GKeyFile *);
-typedef void (*EventdPluginEventDispatchFunc)(EventdPluginContext *context, EventdClient *client, EventdEvent *event);
+typedef void (*EventdPluginEventDispatchFunc)(EventdPluginContext *context, EventdEvent *event);
 
 typedef struct {
     EventdPluginStartFunc start;

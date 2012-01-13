@@ -26,7 +26,6 @@
 
 #include <eventd-plugin.h>
 #include <libeventd-event.h>
-#include <libeventd-client.h>
 #include <libeventd-config.h>
 #include <libeventd-regex.h>
 
@@ -132,7 +131,7 @@ _eventd_notification_event_free(gpointer data)
 }
 
 static void
-_eventd_notification_event_parse(EventdPluginContext *context, const gchar *client_type, const gchar *event_name, GKeyFile *config_file)
+_eventd_notification_event_parse(EventdPluginContext *context, const gchar *event_category, const gchar *event_name, GKeyFile *config_file)
 {
     gboolean disable;
     gchar *name = NULL;
@@ -159,13 +158,13 @@ _eventd_notification_event_parse(EventdPluginContext *context, const gchar *clie
     if ( libeventd_config_key_file_get_int(config_file, "notification", "overlay-scale", &scale) < 0 )
         goto skip;
 
-    name = libeventd_config_events_get_name(client_type, event_name);
+    name = libeventd_config_events_get_name(event_category, event_name);
 
     event = g_hash_table_lookup(context->events, name);
     if ( event != NULL )
         _eventd_notification_event_update(event, disable, title, message, icon, overlay_icon, &scale);
     else
-        g_hash_table_insert(context->events, name, _eventd_notification_event_new(disable, title, message, icon, overlay_icon, &scale, g_hash_table_lookup(context->events, client_type)));
+        g_hash_table_insert(context->events, name, _eventd_notification_event_new(disable, title, message, icon, overlay_icon, &scale, g_hash_table_lookup(context->events, event_category)));
 
 skip:
     g_free(overlay_icon);
@@ -205,7 +204,7 @@ _eventd_notification_notification_icon_data_from_base64(GHashTable *event_data, 
 }
 
 static EventdNotificationNotification *
-_eventd_notification_notification_new(EventdClient *client, GHashTable *data, EventdNotificationEvent *notification_event)
+_eventd_notification_notification_new(GHashTable *data, EventdNotificationEvent *notification_event)
 {
     EventdNotificationNotification *notification;
     gchar *icon;
@@ -254,19 +253,19 @@ _eventd_notification_notification_free(EventdNotificationNotification *notificat
 }
 
 static void
-_eventd_notification_event_action(EventdPluginContext *context, EventdClient *client, EventdEvent *event)
+_eventd_notification_event_action(EventdPluginContext *context, EventdEvent *event)
 {
     EventdNotificationEvent *notification_event;
     EventdNotificationNotification *notification;
 
-    notification_event = libeventd_config_events_get_event(context->events, libeventd_client_get_type(client), eventd_event_get_name(event));
+    notification_event = libeventd_config_events_get_event(context->events, eventd_event_get_category(event), eventd_event_get_name(event));
     if ( notification_event == NULL )
         return;
 
     if ( notification_event->disable )
         return;
 
-    notification = _eventd_notification_notification_new(client, eventd_event_get_data(event), notification_event);
+    notification = _eventd_notification_notification_new(eventd_event_get_data(event), notification_event);
 
     eventd_nd_event_action(context->daemon, event, notification);
     eventd_notification_notify_event_action(notification, eventd_event_get_timeout(event), notification_event->scale);
@@ -275,19 +274,19 @@ _eventd_notification_event_action(EventdPluginContext *context, EventdClient *cl
 }
 
 static void
-_eventd_notification_event_pong(EventdPluginContext *context, EventdClient *client, EventdEvent *event)
+_eventd_notification_event_pong(EventdPluginContext *context, EventdEvent *event)
 {
     EventdNotificationEvent *notification_event;
     EventdNotificationNotification *notification;
 
-    notification_event = libeventd_config_events_get_event(context->events, libeventd_client_get_type(client), eventd_event_get_name(event));
+    notification_event = libeventd_config_events_get_event(context->events, eventd_event_get_category(event), eventd_event_get_name(event));
     if ( notification_event == NULL )
         return;
 
     if ( notification_event->disable )
         return;
 
-    notification = _eventd_notification_notification_new(client, eventd_event_get_data(event), notification_event);
+    notification = _eventd_notification_notification_new(eventd_event_get_data(event), notification_event);
 
     _eventd_notification_notification_add_pong_data(event, notification);
 

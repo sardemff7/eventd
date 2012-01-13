@@ -61,11 +61,14 @@ EventdEvent *eventd_event_new_with_id(guint32 id, const gchar *name);
 
 void eventd_event_end(EventdEvent *event, EventdEventEndReason reason);
 
+
+void eventd_event_set_category(EventdEvent *event, const gchar *category);
 void eventd_event_set_timeout(EventdEvent *event, gint64 timeout);
 void eventd_event_add_data(EventdEvent *event, gchar *name, gchar *content);
 void eventd_event_add_pong_data(EventdEvent *event, gchar *name, gchar *content);
 
 guint32 eventd_event_get_id(EventdEvent *event);
+const gchar *eventd_event_get_category(EventdEvent *event);
 const gchar *eventd_event_get_name(EventdEvent *event);
 gint64 eventd_event_get_timeout(EventdEvent *event);
 GHashTable *eventd_event_get_data(EventdEvent *event);

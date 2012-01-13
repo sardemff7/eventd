@@ -33,27 +33,27 @@ libeventd_config_events_new(GDestroyNotify value_destroy_func)
 }
 
 gchar *
-libeventd_config_events_get_name(const gchar *client_type, const gchar *event_name)
+libeventd_config_events_get_name(const gchar *event_category, const gchar *event_name)
 {
     gchar *name;
     if ( event_name != NULL )
-        name = g_strconcat(client_type, "-", event_name, NULL);
+        name = g_strconcat(event_category, "-", event_name, NULL);
     else
-        name = g_strdup(client_type);
+        name = g_strdup(event_category);
     return name;
 }
 
 gpointer
-libeventd_config_events_get_event(GHashTable *events, const gchar *client_type, const gchar *event_name)
+libeventd_config_events_get_event(GHashTable *events, const gchar *event_category, const gchar *event_name)
 {
     gpointer ret = NULL;
     gchar *name;
 
-    name = libeventd_config_events_get_name(client_type, event_name);
+    name = libeventd_config_events_get_name(event_category, event_name);
     ret = g_hash_table_lookup(events, name);
     g_free(name);
     if ( ret == NULL )
-        ret = g_hash_table_lookup(events, client_type);
+        ret = g_hash_table_lookup(events, event_category);
 
     return ret;
 }

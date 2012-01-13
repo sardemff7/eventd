@@ -31,7 +31,6 @@
 #include <glib/gstdio.h>
 #endif /* ENABLE_GIO_UNIX */
 
-#include <libeventd-client.h>
 #include <libeventd-event.h>
 
 #include "types.h"
@@ -142,7 +141,7 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
     GDataOutputStream *output = NULL;
     GError *error = NULL;
 
-    EventdClient *client = NULL;
+    gchar *category = NULL;
     gchar *client_name = NULL;
     EventdEvent *event = NULL;
 
@@ -187,7 +186,7 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
                     gboolean disable;
                     gint64 timeout;
 
-                    eventd_config_event_get_disable_and_timeout(service->config, client, event, &disable, &timeout);
+                    eventd_config_event_get_disable_and_timeout(service->config, event, &disable, &timeout);
                     eventd_event_set_timeout(event, timeout);
 
                     if ( ! disable )
@@ -197,10 +196,10 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
                         switch ( mode )
                         {
                         case MODE_NORMAL:
-                            eventd_queue_push(service->queue, client, event);
+                            eventd_queue_push(service->queue, event);
                         break;
                         case MODE_PING_PONG:
-                            eventd_plugins_event_pong_all(client, event);
+                            eventd_plugins_event_pong_all(event);
                             if ( ! g_data_output_stream_put_string(output, "EVENT\n", NULL, &error) )
                                 break;
                             pong = eventd_event_get_pong_data(event);
@@ -247,18 +246,19 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
         }
         else if ( g_ascii_strncasecmp(line, "EVENT ", 6) == 0 )
         {
-            if ( client == NULL )
+            if ( category == NULL )
                 break;
 
             last_eventd_id = eventd_queue_get_next_event_id(service->queue);
 
             event = eventd_event_new_with_id(last_eventd_id, line+6);
 
+            eventd_event_set_category(event, category);
             eventd_event_add_data(event, g_strdup("client-name"), g_strdup(client_name));
         }
         else if ( g_ascii_strcasecmp(line, "BYE") == 0 )
         {
-            if ( client == NULL )
+            if ( category == NULL )
                 break;
 
             g_data_output_stream_put_string(output, "BYE\n", NULL, &error);
@@ -266,7 +266,7 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
         }
         else if ( g_ascii_strncasecmp(line, "MODE ", 5) == 0 )
         {
-            if ( client == NULL )
+            if ( category == NULL )
                 break;
 
             if ( last_eventd_id > 0 )
@@ -290,26 +290,30 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
                 break;
 
             hello = g_strsplit(line+6, " ", 2);
-            client = libeventd_client_new();
-            libeventd_client_update(client, hello[0]);
-            client_name = g_strdup(hello[1]);
-            g_strfreev(hello);
+
+            category = hello[0];
+            client_name = hello[1];
+
+            g_free(hello);
         }
         else if ( g_ascii_strncasecmp(line, "RENAME ", 7) == 0 )
         {
             gchar **rename = NULL;
 
-            if ( client == NULL )
+            if ( category == NULL )
                 break;
 
             if ( ! g_data_output_stream_put_string(output, "RENAMED\n", NULL, &error) )
                 break;
 
             rename = g_strsplit(line+7, " ", 2);
-            libeventd_client_update(client, rename[0]);
+
+            g_free(category);
             g_free(client_name);
-            client_name = g_strdup(rename[1]);
-            g_strfreev(rename);
+            category = rename[0];
+            client_name = rename[1];
+
+            g_free(rename);
         }
         else
             g_warning("Unknown message");
@@ -320,7 +324,8 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
         g_warning("Can't read the socket: %s", error->message);
     g_clear_error(&error);
 
-    libeventd_client_unref(client);
+    g_free(category);
+    g_free(client_name);
 
     if ( ! g_io_stream_close((GIOStream *)connection, NULL, &error) )
         g_warning("Can't close the stream: %s", error->message);

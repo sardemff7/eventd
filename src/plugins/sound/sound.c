@@ -55,9 +55,9 @@ _eventd_sound_stop(EventdPluginContext *context)
 }
 
 static void
-_eventd_sound_event_action(EventdPluginContext *context, EventdClient *client, EventdEvent *event)
+_eventd_sound_event_action(EventdPluginContext *context, EventdEvent *event)
 {
-    libeventd_plugins_event_action_all(context->plugins, client, event);
+    libeventd_plugins_event_action_all(context->plugins, event);
 }
 
 static void
