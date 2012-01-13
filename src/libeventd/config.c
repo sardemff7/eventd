@@ -107,6 +107,16 @@ libeventd_config_key_file_get_string(GKeyFile *config_file, const gchar *group, 
     return _libeventd_config_key_file_error(&error, group, key);
 }
 
+gint8
+libeventd_config_key_file_get_string_list(GKeyFile *config_file, const gchar *group, const gchar *key, gchar ***value, gsize *length)
+{
+    GError *error = NULL;
+
+    *value = g_key_file_get_string_list(config_file, group, key, length, &error);
+
+    return _libeventd_config_key_file_error(&error, group, key);
+}
+
 gchar *
 libeventd_config_get_filename(const gchar *filename, GHashTable *event_data, const gchar *subdir)
 {
