@@ -1,7 +1,7 @@
 /*
  * eventc - Basic CLI client for eventd
  *
- * Copyright © 2011 Quentin "Sardem FF7" Glidic
+ * Copyright © 2011-2012 Quentin "Sardem FF7" Glidic
  *
  * This file is part of eventd.
  *
