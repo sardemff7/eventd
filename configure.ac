@@ -155,7 +155,7 @@ AM_CONDITIONAL(ENABLE_NOTIFY, [test x$enable_libnotify = xyes])
 #
 
 AC_ARG_ENABLE(graphical-backend, AS_HELP_STRING([--disable-graphical-backend@<:@=BACKEND@:>@], [Disable notification graphical backend @<:@default=xcb@:>@]), enable_graphical_backend=$enableval, enable_graphical_backend=xcb)
-AC_ARG_ENABLE(framebuffer-bakend, AS_HELP_STRING([--disable-framebuffer-backend@<:@=BACKEND@:>@], [Disable notificaton framebuffer backend @<:@default=linux@:>@]), enable_framebuffer_backend=$enableval, enable_framebuffer_backend=linux)
+AC_ARG_ENABLE(framebuffer-backend, AS_HELP_STRING([--disable-framebuffer-backend@<:@=BACKEND@:>@], [Disable notificaton framebuffer backend @<:@default=linux@:>@]), enable_framebuffer_backend=$enableval, enable_framebuffer_backend=linux)
 if test x$enable_graphical_backend != xno -o x$enable_framebuffer_backend != xno; then
     if test x$enable_gdk_pixbuf = xno; then
         AC_MSG_ERROR([*** notification-daemon requested but not gdk-pixbuf support])
