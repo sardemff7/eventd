@@ -21,6 +21,8 @@ libeventd_plugins_event_parse_all
 libeventd_plugins_event_pong_all
 libeventd_plugins_foreach
 libeventd_plugins_load
+libeventd_plugins_start_all
+libeventd_plugins_stop_all
 libeventd_plugins_unload
 libeventd_regex_init
 libeventd_regex_clean

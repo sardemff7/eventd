@@ -65,7 +65,9 @@ void
 eventd_service_config_reload(gpointer user_data)
 {
     EventdService *service = user_data;
+    eventd_plugins_stop_all();
     service->config = eventd_config_parser(service->config);
+    eventd_plugins_start_all();
 }
 
 gboolean
@@ -76,6 +78,8 @@ eventd_service_quit(gpointer user_data)
     eventd_queue_free(service->queue);
 
     g_slist_free_full(service->clients, _eventd_service_client_disconnect);
+
+    eventd_plugins_stop_all();
 
     if ( service->loop != NULL )
         g_main_loop_quit(service->loop);
@@ -352,6 +356,8 @@ eventd_service(GList *sockets, gboolean no_plugins)
         eventd_plugins_load();
 
     service->config = eventd_config_parser(service->config);
+
+    eventd_plugins_start_all();
 
     service->queue = eventd_queue_new(service);
 

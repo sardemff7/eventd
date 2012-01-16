@@ -26,6 +26,9 @@
 void eventd_plugins_load();
 void eventd_plugins_unload();
 
+void eventd_plugins_start_all();
+void eventd_plugins_stop_all();
+
 void eventd_plugins_control_command(gchar *command);
 
 void eventd_plugins_config_init_all();

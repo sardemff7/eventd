@@ -170,6 +170,36 @@ libeventd_plugins_foreach(GList *plugins, GFunc func, gpointer user_data)
 }
 
 static void
+_libeventd_plugins_start(gpointer data, gpointer user_data)
+{
+    EventdPlugin *plugin = data;
+
+    if ( plugin->start != NULL )
+        plugin->start(plugin->context);
+}
+
+void
+libeventd_plugins_start_all(GList *plugins)
+{
+    libeventd_plugins_foreach(plugins, _libeventd_plugins_start, NULL);
+}
+
+static void
+_libeventd_plugins_stop(gpointer data, gpointer user_data)
+{
+    EventdPlugin *plugin = data;
+
+    if ( plugin->stop != NULL )
+        plugin->stop(plugin->context);
+}
+
+void
+libeventd_plugins_stop_all(GList *plugins)
+{
+    libeventd_plugins_foreach(plugins, _libeventd_plugins_stop, NULL);
+}
+
+static void
 _libeventd_plugins_control_command(gpointer data, gpointer user_data)
 {
     EventdPlugin *plugin = data;
