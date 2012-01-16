@@ -237,7 +237,7 @@ _eventd_sound_sndfile_config_clean(EventdPluginContext *context)
 void
 eventd_plugin_get_info(EventdPlugin *plugin)
 {
-    plugin->start = _eventd_sound_sndfile_start;
+    plugin->init = _eventd_sound_sndfile_start;
     plugin->stop = _eventd_sound_sndfile_stop;
 
     plugin->config_init = _eventd_sound_sndfile_config_init;

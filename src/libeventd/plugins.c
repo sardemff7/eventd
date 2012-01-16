@@ -87,9 +87,9 @@ _libeventd_plugins_load_dir(GList **plugins, const gchar *plugins_dir_name, gpoi
         plugin->module = module;
         get_info(plugin);
 
-        if ( plugin->start != NULL )
+        if ( plugin->init != NULL )
         {
-            plugin->context = plugin->start(user_data);
+            plugin->context = plugin->init(user_data);
             if ( plugin->context == NULL )
             {
                 g_warning("Couldn’t load plugin '%s'", file);
@@ -146,8 +146,8 @@ _libeventd_plugins_plugin_free(gpointer data)
 {
     EventdPlugin *plugin = data;
 
-    if ( plugin->stop != NULL )
-        plugin->stop(plugin->context);
+    if ( plugin->uninit != NULL )
+        plugin->uninit(plugin->context);
     g_module_close(plugin->module);
     g_free(plugin);
 }

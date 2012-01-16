@@ -331,8 +331,8 @@ _eventd_sound_espeak_config_clean(EventdPluginContext *context)
 void
 eventd_plugin_get_info(EventdPlugin *plugin)
 {
-    plugin->start = _eventd_sound_espeak_start;
-    plugin->stop = _eventd_sound_espeak_stop;
+    plugin->init = _eventd_sound_espeak_start;
+    plugin->uninit = _eventd_sound_espeak_stop;
 
     plugin->config_init = _eventd_sound_espeak_config_init;
     plugin->config_clean = _eventd_sound_espeak_config_clean;

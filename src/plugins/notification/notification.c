@@ -309,8 +309,8 @@ _eventd_notification_config_clean(EventdPluginContext *context)
 void
 eventd_plugin_get_info(EventdPlugin *plugin)
 {
-    plugin->start = _eventd_notification_start;
-    plugin->stop = _eventd_notification_stop;
+    plugin->init = _eventd_notification_start;
+    plugin->uninit = _eventd_notification_stop;
 
     plugin->control_command = _eventd_notification_control_command;
 

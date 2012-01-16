@@ -81,8 +81,8 @@ _eventd_sound_config_clean(EventdPluginContext *context)
 void
 eventd_plugin_get_info(EventdPlugin *plugin)
 {
-    plugin->start = _eventd_sound_start;
-    plugin->stop = _eventd_sound_stop;
+    plugin->init = _eventd_sound_start;
+    plugin->uninit = _eventd_sound_stop;
 
     plugin->config_init = _eventd_sound_config_init;
     plugin->config_clean = _eventd_sound_config_clean;
