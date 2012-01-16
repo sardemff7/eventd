@@ -160,8 +160,8 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
 
     service->clients = g_slist_prepend(service->clients, cancellable);
 
-    input = g_data_input_stream_new(g_io_stream_get_input_stream((GIOStream *)connection));
-    output = g_data_output_stream_new(g_io_stream_get_output_stream((GIOStream *)connection));
+    input = g_data_input_stream_new(g_io_stream_get_input_stream(G_IO_STREAM(connection)));
+    output = g_data_output_stream_new(g_io_stream_get_output_stream(G_IO_STREAM(connection)));
 
     while ( ( line = g_data_input_stream_read_upto(input, "\n", -1, &size, cancellable, &error) ) != NULL )
     {
@@ -354,7 +354,7 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
     g_free(category);
     g_free(client_name);
 
-    if ( ! g_io_stream_close((GIOStream *)connection, NULL, &error) )
+    if ( ! g_io_stream_close(G_IO_STREAM(connection), NULL, &error) )
         g_warning("Can't close the stream: %s", error->message);
     g_clear_error(&error);
 
@@ -389,7 +389,7 @@ eventd_service(GList *sockets, gboolean no_plugins)
 
     for ( socket = g_list_first(sockets) ; socket ; socket = g_list_next(socket) )
     {
-        if ( ! g_socket_listener_add_socket((GSocketListener *)service->service, socket->data, NULL, &error) )
+        if ( ! g_socket_listener_add_socket(G_SOCKET_LISTENER(service->service), socket->data, NULL, &error) )
             g_warning("Unable to add socket: %s", error->message);
         g_clear_error(&error);
     }
@@ -407,7 +407,7 @@ eventd_service(GList *sockets, gboolean no_plugins)
     eventd_dbus_stop(service->dbus);
 
     g_socket_service_stop(service->service);
-    g_socket_listener_close((GSocketListener *)service->service);
+    g_socket_listener_close(G_SOCKET_LISTENER(service->service));
 
     eventd_config_clean(service->config);
 

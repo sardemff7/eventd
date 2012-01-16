@@ -88,7 +88,7 @@ main(int argc, char *argv[])
     g_free(private_socket);
 
     client = g_socket_client_new();
-    connection = g_socket_client_connect(client, (GSocketConnectable *)address, NULL, &error);
+    connection = g_socket_client_connect(client, G_SOCKET_CONNECTABLE(address), NULL, &error);
     g_object_unref(address);
 
     if ( connection == NULL )
@@ -103,11 +103,11 @@ main(int argc, char *argv[])
     {
         GDataOutputStream *output = NULL;
 
-        if ( ! g_input_stream_close(g_io_stream_get_input_stream((GIOStream *)connection), NULL, &error) )
+        if ( ! g_input_stream_close(g_io_stream_get_input_stream(G_IO_STREAM(connection)), NULL, &error) )
             g_warning("Can't close the input stream: %s", error->message);
         g_clear_error(&error);
 
-        output = g_data_output_stream_new(g_io_stream_get_output_stream((GIOStream *)connection));
+        output = g_data_output_stream_new(g_io_stream_get_output_stream(G_IO_STREAM(connection)));
 
         if ( g_strcmp0(argv[1], "quit") == 0 )
             _eventd_eventdctl_send_command(output, "quit");
@@ -133,11 +133,7 @@ main(int argc, char *argv[])
             }
         }
 
-        if ( ! g_output_stream_close((GOutputStream *)output, NULL, &error) )
-            g_warning("Can't close the output stream: %s", error->message);
-        g_clear_error(&error);
-
-        if ( ! g_io_stream_close((GIOStream *)connection, NULL, &error) )
+        if ( ! g_io_stream_close(G_IO_STREAM(connection), NULL, &error) )
             g_warning("Can't close the stream: %s", error->message);
         g_clear_error(&error);
     }

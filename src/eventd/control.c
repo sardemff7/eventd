@@ -52,11 +52,11 @@ _eventd_service_private_connection_handler(GThreadedSocketService *socket_servic
     gsize size = 0;
     gchar *line = NULL;
 
-    if ( ! g_output_stream_close(g_io_stream_get_output_stream((GIOStream *)connection), NULL, &error) )
+    if ( ! g_output_stream_close(g_io_stream_get_output_stream(G_IO_STREAM(connection)), NULL, &error) )
         g_warning("Can't close the output stream: %s", error->message);
     g_clear_error(&error);
 
-    input = g_data_input_stream_new(g_io_stream_get_input_stream((GIOStream *)connection));
+    input = g_data_input_stream_new(g_io_stream_get_input_stream(G_IO_STREAM(connection)));
 
     if ( ( line = g_data_input_stream_read_upto(input, "\0", 1, &size, NULL, &error) ) == NULL )
     {
@@ -87,11 +87,7 @@ _eventd_service_private_connection_handler(GThreadedSocketService *socket_servic
         g_free(line);
     }
 
-    if ( ! g_input_stream_close((GInputStream *)input, NULL, &error) )
-        g_warning("Can't close the input stream: %s", error->message);
-    g_clear_error(&error);
-
-    if ( ! g_io_stream_close((GIOStream *)connection, NULL, &error) )
+    if ( ! g_io_stream_close(G_IO_STREAM(connection), NULL, &error) )
         g_warning("Can't close the stream: %s", error->message);
     g_clear_error(&error);
 
@@ -114,7 +110,7 @@ eventd_control_start(gpointer service, GList **sockets)
     socket = g_list_last(*sockets);
 
     *sockets = g_list_remove_link(*sockets, socket);
-    if ( ! g_socket_listener_add_socket((GSocketListener *)control->socket_service, socket->data, NULL, &error) )
+    if ( ! g_socket_listener_add_socket(G_SOCKET_LISTENER(control->socket_service), socket->data, NULL, &error) )
         g_warning("Unable to add private socket: %s", error->message);
     g_clear_error(&error);
     g_list_free_full(socket, g_object_unref);
@@ -128,7 +124,7 @@ void
 eventd_control_stop(EventdControl *control)
 {
     g_socket_service_stop(control->socket_service);
-    g_socket_listener_close((GSocketListener *)control->socket_service);
+    g_socket_listener_close(G_SOCKET_LISTENER(control->socket_service));
 
     g_free(control);
 }
