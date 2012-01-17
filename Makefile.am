@@ -347,7 +347,6 @@ endif
 #
 
 # Client library
-if ENABLE_CLIENT
 lib_LTLIBRARIES += \
 	libeventc.la
 
@@ -438,7 +437,6 @@ CLEANFILES += \
 	$(eventc_SOURCES:.vala=.c)
 
 eventc_vala.stamp: $(top_builddir)/vapi/libeventc.vapi
-endif
 
 
 #

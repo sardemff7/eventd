@@ -187,11 +187,7 @@ AM_CONDITIONAL(ENABLE_NOTIFICATION_DAEMON, [test x$enable_graphical_backend != x
 #
 # Client
 #
-AC_ARG_ENABLE(client, AS_HELP_STRING([--disable-client], [Disable client (libeventc and eventc)]), enable_client=$enableval, enable_client=yes)
-if test x$enable_client = xyes; then
-    AM_PROG_VALAC([$vala_min_version])
-fi
-AM_CONDITIONAL(ENABLE_CLIENT, [test x$enable_client = xyes])
+AM_PROG_VALAC([$vala_min_version])
 
 
 # Debug flags
