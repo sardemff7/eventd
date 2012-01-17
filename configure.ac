@@ -59,6 +59,8 @@ PKG_CHECK_MODULES(GOBJECT, [gobject-2.0])
 GOBJECT_VALAFLAGS="--pkg gobject-2.0"
 AC_SUBST(GOBJECT_VALAFLAGS)
 
+PKG_CHECK_MODULES(GTHREAD, [gthread-2.0])
+
 gio_unix=
 gio_unix_vala=
 AC_ARG_ENABLE(gio-unix, AS_HELP_STRING([--disable-gio-unix], [Disable UNIX-specific GIO support]), enable_gio_unix=$enableval, enable_gio_unix=yes)
@@ -187,10 +189,6 @@ AM_CONDITIONAL(ENABLE_NOTIFICATION_DAEMON, [test x$enable_graphical_backend != x
 #
 AC_ARG_ENABLE(client, AS_HELP_STRING([--disable-client], [Disable client (libeventc and eventc)]), enable_client=$enableval, enable_client=yes)
 if test x$enable_client = xyes; then
-    PKG_CHECK_MODULES(GTHREAD, [gthread-2.0])
-    GTHREAD_VALAFLAGS="--thread"
-    AC_SUBST(GTHREAD_VALAFLAGS)
-
     AM_PROG_VALAC([$vala_min_version])
 fi
 AM_CONDITIONAL(ENABLE_CLIENT, [test x$enable_client = xyes])

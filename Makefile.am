@@ -365,7 +365,6 @@ libeventc_la_VALAFLAGS = \
 	-H $(top_builddir)/include/libeventc.h \
 	$(GIO_VALAFLAGS) \
 	$(GOBJECT_VALAFLAGS) \
-	$(GTHREAD_VALAFLAGS) \
 	$(GLIB_VALAFLAGS)
 
 libeventc_la_CFLAGS = \
@@ -374,7 +373,6 @@ libeventc_la_CFLAGS = \
 	$(AM_VALA_CFLAGS) \
 	$(GIO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
-	$(GTHREAD_CFLAGS) \
 	$(GLIB_CFLAGS)
 
 libeventc_la_LDFLAGS = \
@@ -387,7 +385,6 @@ libeventc_la_LIBADD = \
 	libeventd-event.la \
 	$(GIO_LIBS) \
 	$(GOBJECT_LIBS) \
-	$(GTHREAD_LIBS) \
 	$(GLIB_LIBS)
 
 pkginclude_HEADERS += \
