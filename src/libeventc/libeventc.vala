@@ -51,7 +51,6 @@ namespace Eventc
         private string _host;
         private uint16 _port;
         private string _category;
-        private string _name;
         public Mode mode;
 
         public string host
@@ -87,15 +86,6 @@ namespace Eventc
             }
         }
 
-        public string client_name
-        {
-            set
-            {
-                if ( this._name != value )
-                    this._name = value;
-            }
-        }
-
         #if ENABLE_GIO_UNIX
         public bool host_is_socket { get; set; default = false; }
         #endif
@@ -112,13 +102,12 @@ namespace Eventc
         private bool hello_received;
 
         public
-        Connection(string host, uint16 port, string category, string? name)
+        Connection(string host, uint16 port, string category)
         {
             this.mutex = new GLib.Mutex();
             this._host = host;
             this._port = port;
             this._category = category;
-            this._name = name;
             this.mode = Mode.UNKNOWN;
 
             this.client = new GLib.SocketClient();
@@ -204,10 +193,7 @@ namespace Eventc
             this.input = new GLib.DataInputStream((this.connection as GLib.IOStream).get_input_stream());
             this.output = new GLib.DataOutputStream((this.connection as GLib.IOStream).get_output_stream());
 
-            if ( this._name == null )
-                this.send("HELLO " + this._category);
-            else
-                this.send("HELLO " + this._category + " " + this._name);
+            this.send("HELLO " + this._category);
 
             var r = yield this.receive();
             if ( r != "HELLO" )
@@ -244,10 +230,7 @@ namespace Eventc
         public async void
         rename() throws EventcError
         {
-            if ( this._name == null )
-                this.send("RENAME " + this._category);
-            else
-                this.send("RENAME " + this._category +  " " + this._name);
+            this.send("RENAME " + this._category);
             var r = yield this.receive();
             if ( r != "RENAMED" )
                 throw new EventcError.RENAMED("Got a wrong renamed message: %s", r);

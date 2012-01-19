@@ -143,7 +143,6 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
     GError *error = NULL;
 
     gchar *category = NULL;
-    gchar *client_name = NULL;
     EventdEvent *event = NULL;
 
     EventdClientMode mode = MODE_NORMAL;
@@ -250,17 +249,7 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
             }
             else if ( ( mode == MODE_RELAY )
                       && ( g_ascii_strncasecmp(line, "CLIENT ", 7) == 0 ) )
-            {
-                gchar **relay_client = NULL;
-
-                relay_client = g_strsplit(line+7, " ", 2);
-
-                eventd_event_set_category(event, relay_client[0]);
-                if ( relay_client[1][0] != 0 )
-                    eventd_event_add_data(event, g_strdup("client-name"), g_strdup(relay_client[1]));
-
-                g_strfreev(relay_client);
-            }
+                eventd_event_set_category(event, line+7);
             else if ( event_data_name != NULL )
                 event_data_content = g_strdup(( line[0] == '.' ) ? line+1 : line);
             else
@@ -276,10 +265,7 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
             event = eventd_event_new_with_id(last_eventd_id, line+6);
 
             if ( mode != MODE_RELAY )
-            {
                 eventd_event_set_category(event, category);
-                eventd_event_add_data(event, g_strdup("client-name"), g_strdup(client_name));
-            }
         }
         else if ( g_ascii_strcasecmp(line, "BYE") == 0 )
         {
@@ -311,36 +297,21 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
         }
         else if ( g_ascii_strncasecmp(line, "HELLO ", 6) == 0 )
         {
-            gchar **hello = NULL;
-
             if ( ! g_data_output_stream_put_string(output, "HELLO\n", NULL, &error) )
                 break;
 
-            hello = g_strsplit(line+6, " ", 2);
-
-            category = hello[0];
-            client_name = hello[1];
-
-            g_free(hello);
+            category = g_strdup(line+6);
         }
         else if ( g_ascii_strncasecmp(line, "RENAME ", 7) == 0 )
         {
-            gchar **rename = NULL;
-
             if ( category == NULL )
                 break;
 
             if ( ! g_data_output_stream_put_string(output, "RENAMED\n", NULL, &error) )
                 break;
 
-            rename = g_strsplit(line+7, " ", 2);
-
             g_free(category);
-            g_free(client_name);
-            category = rename[0];
-            client_name = rename[1];
-
-            g_free(rename);
+            category = g_strdup(line+7);
         }
         else
             g_warning("Unknown message");
@@ -352,7 +323,6 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
     g_clear_error(&error);
 
     g_free(category);
-    g_free(client_name);
 
     if ( ! g_io_stream_close(G_IO_STREAM(connection), NULL, &error) )
         g_warning("Can't close the stream: %s", error->message);

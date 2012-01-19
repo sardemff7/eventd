@@ -24,7 +24,6 @@ namespace Eventc
 {
     static string type;
     static string mode;
-    static string name;
     static string event_name;
     static string[] event_data_name;
     static string[] event_data_content;
@@ -154,7 +153,7 @@ namespace Eventc
 
     public static int main(string[] args)
     {
-        var opt_context = new GLib.OptionContext("<client type> [<client name>] - Basic CLI client for eventd");
+        var opt_context = new GLib.OptionContext("<client type> - Basic CLI client for eventd");
 
         opt_context.add_main_entries(entries, Eventd.Config.GETTEXT_PACKAGE);
 
@@ -179,11 +178,6 @@ namespace Eventc
         }
         type = args[1];
 
-        if ( args.length > 2 )
-            name = string.joinv(" ", args[2:args.length-1]);
-        else
-            name = null;
-
         #if ENABLE_GIO_UNIX
         if ( unix_socket != null )
             host = unix_socket;
@@ -191,7 +185,7 @@ namespace Eventc
         if ( host == null )
             host = "localhost";
 
-        client = new Connection(host, port, type, name);
+        client = new Connection(host, port, type);
         client.timeout = timeout;
         #if ENABLE_GIO_UNIX
         if ( unix_socket != null )
