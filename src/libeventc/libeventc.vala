@@ -170,6 +170,9 @@ namespace Eventc
                 yield;
             }
 
+            try
+            {
+
             this.set_client();
             try
             {
@@ -184,7 +187,11 @@ namespace Eventc
             }
             yield this.hello();
 
+            }
+            finally
+            {
             this.mutex.unlock();
+            }
         }
 
         private async void
@@ -244,6 +251,9 @@ namespace Eventc
                 Idle.add(this.event.callback);
                 yield;
             }
+
+            try
+            {
 
             unowned string name = event.get_name();
             this.send( @"EVENT $name");
@@ -317,7 +327,11 @@ namespace Eventc
             break;
             }
 
+            }
+            finally
+            {
             this.mutex.unlock();
+            }
         }
 
         private async string?
@@ -358,6 +372,9 @@ namespace Eventc
                 yield;
             }
 
+            try
+            {
+
             if ( ( this.hello_received ) && ( ! this.connection.is_closed() ) )
             {
                 try
@@ -376,7 +393,11 @@ namespace Eventc
             this.input = null;
             this.connection = null;
 
+            }
+            finally
+            {
             this.mutex.unlock();
+            }
         }
     }
 }
