@@ -49,6 +49,7 @@ namespace Eventc
         public enum Mode {
             UNKNOWN = -1,
             NORMAL = 0,
+            RELAY,
             PING_PONG
         }
 
@@ -226,6 +227,9 @@ namespace Eventc
             case Mode.NORMAL:
                 mode = "normal";
             break;
+            case Mode.RELAY:
+                mode = "relay";
+            break;
             case Mode.PING_PONG:
                 mode = "ping-pong";
             break;
@@ -263,6 +267,9 @@ namespace Eventc
 
             unowned string name = event.get_name();
             this.send( @"EVENT $name");
+
+            if ( ( this.mode == Mode.RELAY ) && ( this._category != event.get_category() ) )
+                this.send("CLIENT " + event.get_category());
 
             unowned GLib.HashTable<string, string> data = event.get_data();
             if ( data != null )
