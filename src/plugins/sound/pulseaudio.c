@@ -36,6 +36,7 @@ _eventd_sound_pulseaudio_context_state_callback(pa_context *c, void *user_data)
     switch ( state )
     {
         case PA_CONTEXT_FAILED:
+            g_warning("Connection to PulseAudio failed: %s", pa_strerror(pa_context_errno(c)));
             pa_context_unref(context->sound);
             context->sound = NULL;
         case PA_CONTEXT_READY:
