@@ -46,15 +46,27 @@ include src/eventc/eventc.mk
 # Hooks
 #
 
-install-data-hook: la-files-removal
+install-data-hook: la-files-install-hook
+uninstall-hook: la-files-uninstall-hook
 
 # *.la files cleanup
-la-files-removal:
-	cd $(DESTDIR)/$(libdir) && \
-		rm $(lib_LTLIBRARIES)
+la-files-install-hook:
 	cd $(DESTDIR)/$(pkglibdir) && \
 		rm $(pkglib_LTLIBRARIES)
 	cd $(DESTDIR)/$(pluginsdir) && \
 		rm $(plugins_LTLIBRARIES)
 	cd $(DESTDIR)/$(soundpluginsdir) && \
 		rm $(soundplugins_LTLIBRARIES)
+
+# Remove *.so files at uninstall since
+# we remove *.la files at install
+la-files-uninstall-hook:
+	cd $(DESTDIR)/$(pkglibdir) && \
+		rm $(pkglib_LTLIBRARIES:.la=.so)
+	cd $(DESTDIR)/$(pluginsdir) && \
+		rm $(plugins_LTLIBRARIES:.la=.so)
+	cd $(DESTDIR)/$(soundpluginsdir) && \
+		rm $(soundplugins_LTLIBRARIES:.la=.so)
+	rmdir $(DESTDIR)/$(soundpluginsdir)
+	rmdir $(DESTDIR)/$(pluginsdir)
+	rmdir $(DESTDIR)/$(pkglibdir)
