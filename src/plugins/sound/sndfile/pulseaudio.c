@@ -37,6 +37,23 @@
 
 static pa_context *sound = NULL;
 
+static void
+_eventd_sound_sndfile_pulseaudio_context_state_callback(pa_context *c, void *user_data)
+{
+    pa_context_state_t state = pa_context_get_state(c);
+    switch ( state )
+    {
+        case PA_CONTEXT_READY:
+        break;
+        case PA_CONTEXT_FAILED:
+        case PA_CONTEXT_TERMINATED:
+            pa_context_unref(sound);
+            sound = NULL;
+        default:
+        break;
+    }
+}
+
 typedef struct {
     gpointer data;
     gsize length;
@@ -59,6 +76,7 @@ _eventd_sound_sndfile_pulseaudio_stream_state_callback(pa_stream *stream, gpoint
         case PA_STREAM_FAILED:
             g_warning("Failed sample creation");
         case PA_STREAM_TERMINATED:
+            g_free(data);
             pa_stream_unref(stream);
         break;
         case PA_STREAM_READY:
@@ -80,6 +98,12 @@ eventd_sound_sndfile_pulseaudio_play_data(gpointer data, gsize length, gint form
 
     if ( data == NULL )
         return;
+
+    if ( ( sound == NULL ) || ( pa_context_get_state(sound) != PA_CONTEXT_READY ) )
+    {
+        g_free(data);
+        return;
+    }
 
     switch ( format )
     {
@@ -125,5 +149,6 @@ eventd_sound_sndfile_pulseaudio_play_data(gpointer data, gsize length, gint form
 void
 eventd_sound_sndfile_pulseaudio_start(EventdSoundPulseaudioContext *context)
 {
-    sound = context->sound;
+    sound = pa_context_ref(context->sound);
+    pa_context_set_state_callback(sound, _eventd_sound_sndfile_pulseaudio_context_state_callback, NULL);
 }
