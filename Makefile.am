@@ -13,8 +13,9 @@ soundplugins_LTLIBRARIES =
 pkginclude_HEADERS =
 pkgconfig_DATA =
 dist_vapi_DATA =
-pkgdata_DATA =
+dist_pkgdata_DATA =
 
+EXTRA_DIST =
 CLEANFILES =
 
 AM_CFLAGS += \
@@ -43,6 +44,9 @@ lib_LTLIBRARIES += \
 pkginclude_HEADERS += \
 	include/libeventd-event-types.h \
 	include/libeventd-event.h
+
+EXTRA_DIST += \
+	src/libeventd-event/libeventd-event.sym
 
 libeventd_event_la_SOURCES = \
 	src/libeventd-event/event.c
@@ -81,6 +85,9 @@ pkginclude_HEADERS += \
 	include/libeventd-config.h \
 	include/libeventd-plugins.h
 
+EXTRA_DIST += \
+	src/libeventd/libeventd.sym
+
 libeventd_la_SOURCES = \
 	src/libeventd/regex.c \
 	src/libeventd/config.c \
@@ -113,12 +120,16 @@ libeventd_la_LIBADD = \
 bin_PROGRAMS += \
 	eventd
 
+pkginclude_HEADERS += \
+	include/eventd-plugin.h
+
 eventd_SOURCES = \
 	src/eventd/types.h \
 	src/eventd/config.h \
 	src/eventd/config.c \
 	src/eventd/plugins.h \
 	src/eventd/plugins.c \
+	include/glib-compat.h \
 	src/eventd/queue.h \
 	src/eventd/queue.c \
 	src/eventd/control.h \
@@ -128,7 +139,6 @@ eventd_SOURCES = \
 	src/eventd/dbus.h \
 	src/eventd/service.h \
 	src/eventd/service.c \
-	src/eventd/eventd.h \
 	src/eventd/eventd.c
 
 eventd_CFLAGS = \
@@ -214,6 +224,7 @@ soundplugins_LTLIBRARIES += \
 
 sndfile_la_SOURCES = \
 	src/plugins/sound/sndfile/pulseaudio.h \
+	src/plugins/sound/sndfile/sndfile-internal.h \
 	src/plugins/sound/sndfile/sndfile.c
 
 sndfile_la_CFLAGS = \
@@ -285,7 +296,7 @@ notification_la_SOURCES = \
 	src/plugins/notification/notify.h \
 	src/plugins/notification/icon.h \
 	src/plugins/notification/icon.c \
-	src/plugins/notification/daemon.h \
+	src/plugins/notification/daemon/daemon.h \
 	src/plugins/notification/notification.h \
 	src/plugins/notification/notification.c
 
@@ -322,6 +333,7 @@ notification_la_SOURCES += \
 	src/plugins/notification/daemon/backends/graphical.h \
 	src/plugins/notification/daemon/backends/xcb.c \
 	src/plugins/notification/daemon/backends/dummy.c \
+	src/plugins/notification/daemon/style-internal.h \
 	src/plugins/notification/daemon/style.h \
 	src/plugins/notification/daemon/style.c \
 	src/plugins/notification/daemon/bubble.h \
@@ -444,7 +456,7 @@ eventc_vala.stamp: $(top_builddir)/vapi/libeventc.vapi
 #
 
 if ENABLE_DBUS
-pkgdata_DATA += \
+dist_pkgdata_DATA += \
 	data/libnotify.conf
 endif
 
