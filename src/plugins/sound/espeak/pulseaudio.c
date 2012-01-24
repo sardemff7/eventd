@@ -43,6 +43,23 @@ static pa_sample_spec sample_spec;
 #define BUFFER_SIZE 2000
 
 static void
+_eventd_sound_espeak_pulseaudio_context_state_callback(pa_context *c, void *user_data)
+{
+    pa_context_state_t state = pa_context_get_state(c);
+    switch ( state )
+    {
+        case PA_CONTEXT_READY:
+        break;
+        case PA_CONTEXT_FAILED:
+        case PA_CONTEXT_TERMINATED:
+            pa_context_unref(sound);
+            sound = NULL;
+        default:
+        break;
+    }
+}
+
+static void
 _eventd_sound_espeak_pulseaudio_stream_state_callback(pa_stream *stream, void *userdata)
 {
     pa_stream_state_t state = pa_stream_get_state(stream);
@@ -64,7 +81,8 @@ eventd_sound_espeak_pulseaudio_start(EventdSoundPulseaudioContext *context, gint
     sample_spec.channels = 1;
     sample_spec.format = PA_SAMPLE_S16LE;
 
-    sound = context->sound;
+    sound = pa_context_ref(context->sound);
+    pa_context_set_state_callback(sound, _eventd_sound_espeak_pulseaudio_context_state_callback, NULL);
 }
 
 void
