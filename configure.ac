@@ -88,6 +88,13 @@ if test x$enable_gdk_pixbuf = xyes; then
     AC_DEFINE([ENABLE_GDK_PIXBUF], [1], [Enable gdk-pixbuf support])
 fi
 
+AC_ARG_ENABLE(avahi, AS_HELP_STRING([--disable-avahi], [Disable Avahi support]), enable_avahi=$enableval, enable_avahi=yes)
+if test x$enable_avahi = xyes; then
+    PKG_CHECK_MODULES(AVAHI, [avahi-client avahi-glib])
+    AC_DEFINE([ENABLE_AVAHI], [1], [Enable Avahi support])
+fi
+AM_CONDITIONAL(ENABLE_AVAHI, test x$enable_avahi = xyes)
+
 
 #
 # Server and plugins

@@ -23,7 +23,7 @@
 #ifndef __EVENTD_SERVICE_H__
 #define __EVENTD_SERVICE_H__
 
-gint eventd_service(GList *sockets, gboolean no_plugins);
+gint eventd_service(GList *sockets, gboolean no_plugins, gboolean no_avahi);
 
 void eventd_service_config_reload(gpointer user_data);
 gboolean eventd_service_quit(gpointer user_data);

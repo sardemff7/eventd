@@ -18,6 +18,7 @@ eventd_SOURCES = \
 	src/eventd/control.c \
 	src/eventd/sockets.h \
 	src/eventd/sockets.c \
+	src/eventd/avahi.h \
 	src/eventd/dbus.h \
 	src/eventd/service.h \
 	src/eventd/service.c \
@@ -28,6 +29,7 @@ eventd_CFLAGS = \
 	-D SYSCONFDIR=\"$(sysconfdir)\" \
 	-D DATADIR=\"$(datadir)\" \
 	$(SYSTEMD_CFLAGS) \
+	$(AVAHI_CFLAGS) \
 	$(GTHREAD_CFLAGS) \
 	$(GIO_CFLAGS) \
 	$(GLIB_CFLAGS)
@@ -36,9 +38,18 @@ eventd_LDADD = \
 	libeventd-event.la \
 	libeventd.la \
 	$(SYSTEMD_LIBS) \
+	$(AVAHI_LIBS) \
 	$(GTHREAD_LIBS) \
 	$(GIO_LIBS) \
 	$(GLIB_LIBS)
+
+if ENABLE_AVAHI
+eventd_SOURCES += \
+	src/eventd/avahi.c
+else
+eventd_SOURCES += \
+	src/eventd/avahi-dummy.c
+endif
 
 if ENABLE_DBUS
 eventd_SOURCES += \

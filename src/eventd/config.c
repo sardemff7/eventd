@@ -37,6 +37,7 @@
 
 struct _EventdConfig {
     gint64 max_clients;
+    gchar *avahi_name;
     GHashTable *events;
 };
 
@@ -100,12 +101,14 @@ static void
 _eventd_config_defaults(EventdConfig *config)
 {
     config->max_clients = -1;
+    config->avahi_name = g_strdup(PACKAGE_NAME);
 }
 
 static void
 _eventd_config_parse_server(EventdConfig *config, GKeyFile *config_file)
 {
     Int integer;
+    gchar *avahi_name;
 
     if ( ! g_key_file_has_group(config_file, "server") )
         return;
@@ -114,6 +117,14 @@ _eventd_config_parse_server(EventdConfig *config, GKeyFile *config_file)
         return;
     if ( integer.set )
         config->max_clients = integer.value;
+
+    if ( libeventd_config_key_file_get_string(config_file, "server", "avahi-name", &avahi_name) < 0 )
+        return;
+    if ( avahi_name != NULL )
+    {
+        g_free(config->avahi_name);
+        config->avahi_name= avahi_name;
+    }
 }
 
 static void
@@ -314,4 +325,10 @@ gint64
 eventd_config_get_max_clients(EventdConfig *config)
 {
     return config->max_clients;
+}
+
+const gchar *
+eventd_config_get_avahi_name(EventdConfig *config)
+{
+    return config->avahi_name;
 }

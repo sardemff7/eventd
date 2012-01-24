@@ -48,6 +48,7 @@ main(int argc, char *argv[])
 #if ENABLE_SYSTEMD
     gboolean no_systemd = FALSE;
 #endif /* ENABLE_SYSTEMD */
+    gboolean no_avahi = FALSE;
 
     gboolean print_version = FALSE;
 
@@ -69,6 +70,9 @@ main(int argc, char *argv[])
 #if ENABLE_SYSTEMD
         { "no-systemd", 'S', 0, G_OPTION_ARG_NONE, &no_systemd, "Disable systemd socket activation", NULL },
 #endif /* ENABLE_SYSTEMD */
+#if ENABLE_AVAHI
+        { "no-avahi", 'A', 0, G_OPTION_ARG_NONE, &no_avahi, "Disable avahi publishing", NULL },
+#endif /* ENABLE_AVAHI */
         { "version", 'V', 0, G_OPTION_ARG_NONE, &print_version, "Print version", NULL },
         { NULL }
     };
@@ -136,7 +140,7 @@ main(int argc, char *argv[])
             dup2(0,2);
         }
 
-        retval = eventd_service(sockets, no_plugins);
+        retval = eventd_service(sockets, no_plugins, no_avahi);
     }
 
     eventd_sockets_free_all(sockets, unix_socket, private_socket);

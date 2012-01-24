@@ -20,15 +20,11 @@
  *
  */
 
-#ifndef __EVENTD_EVENTS_H__
-#define __EVENTD_EVENTS_H__
+#include <glib.h>
 
-EventdConfig *eventd_config_parser(EventdConfig *config);
-void eventd_config_clean(EventdConfig *config);
+#include "types.h"
 
-gint64 eventd_config_get_max_clients(EventdConfig *config);
-const gchar *eventd_config_get_avahi_name(EventdConfig *config);
+#include "avahi.h"
 
-void eventd_config_event_get_disable_and_timeout(EventdConfig *config, EventdEvent *event, gboolean *disable, gint64 *timeout);
-
-#endif /* __EVENTD_EVENTS_H__ */
+EventdAvahiContext *eventd_avahi_start(EventdConfig *config, GList *sockets) { return NULL; }
+void eventd_avahi_stop(EventdAvahiContext *context) {}

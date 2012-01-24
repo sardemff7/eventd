@@ -39,12 +39,14 @@
 #include "plugins.h"
 #include "control.h"
 #include "queue.h"
+#include "avahi.h"
 #include "dbus.h"
 
 #include "service.h"
 
 struct _EventdService {
     EventdControl *control;
+    EventdAvahiContext *avahi;
     EventdDbusContext *dbus;
     EventdConfig *config;
     EventdQueue *queue;
@@ -336,7 +338,7 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
 }
 
 int
-eventd_service(GList *sockets, gboolean no_plugins)
+eventd_service(GList *sockets, gboolean no_plugins, gboolean no_avahi)
 {
     int retval = 0;
     GError *error = NULL;
@@ -372,6 +374,8 @@ eventd_service(GList *sockets, gboolean no_plugins)
 
     g_signal_connect(service->service, "run", G_CALLBACK(_eventd_service_connection_handler), service);
 
+    if ( ! no_avahi )
+        service->avahi = eventd_avahi_start(service->config, g_list_first(sockets));
     service->dbus = eventd_dbus_start(service->config, service->queue);
 
     service->loop = g_main_loop_new(NULL, FALSE);
@@ -381,6 +385,8 @@ eventd_service(GList *sockets, gboolean no_plugins)
     service->loop = NULL;
 
     eventd_dbus_stop(service->dbus);
+    if ( ! no_avahi )
+        eventd_avahi_stop(service->avahi);
 
     g_socket_service_stop(service->service);
     g_socket_listener_close(G_SOCKET_LISTENER(service->service));
