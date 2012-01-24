@@ -20,17 +20,14 @@
  *
  */
 
-#ifndef __EVENTD_PLUGINS_RELAY_SERVER_H__
-#define __EVENTD_PLUGINS_RELAY_SERVER_H__
+#ifndef __EVENTD_PLUGINS_RELAY_AVAHI_H__
+#define __EVENTD_PLUGINS_RELAY_AVAHI_H__
 
-EventdRelayServer *eventd_relay_server_new(const gchar *uri);
-EventdRelayServer *eventd_relay_server_new_avahi(EventdRelayAvahi *context, const gchar *name);
-void eventd_relay_server_free(gpointer data);
+EventdRelayAvahi *eventd_relay_avahi_init();
+void eventd_relay_avahi_uninit(EventdRelayAvahi *context);
 
-void eventd_relay_server_avahi_connect(EventdRelayServer *server, const gchar *host, guint16 port);
-void eventd_relay_server_start(EventdRelayServer *server);
-void eventd_relay_server_stop(EventdRelayServer *server);
+EventdRelayAvahiServer *eventd_relay_avahi_server_new(EventdRelayAvahi *context, const gchar *name, EventdRelayServer *relay_server);
+void eventd_relay_avahi_server_free(EventdRelayAvahiServer *server);
 
-void eventd_relay_server_event(EventdRelayServer *server, EventdEvent *event);
+#endif /* __EVENTD_PLUGINS_RELAY_AVAHI_H__ */
 
-#endif /* __EVENTD_PLUGINS_RELAY_SERVER_H__ */

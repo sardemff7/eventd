@@ -25,4 +25,7 @@
 
 typedef struct _EventdRelayServer EventdRelayServer;
 
+typedef struct _EventdRelayAvahi EventdRelayAvahi;
+typedef struct _EventdRelayAvahiServer EventdRelayAvahiServer;
+
 #endif /* __EVENTD_PLUGINS_RELAY_TYPES_H__ */

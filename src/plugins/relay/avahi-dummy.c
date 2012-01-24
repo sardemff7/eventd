@@ -20,17 +20,6 @@
  *
  */
 
-#ifndef __EVENTD_PLUGINS_RELAY_SERVER_H__
-#define __EVENTD_PLUGINS_RELAY_SERVER_H__
+#include <glib.h>
 
-EventdRelayServer *eventd_relay_server_new(const gchar *uri);
-EventdRelayServer *eventd_relay_server_new_avahi(EventdRelayAvahi *context, const gchar *name);
-void eventd_relay_server_free(gpointer data);
-
-void eventd_relay_server_avahi_connect(EventdRelayServer *server, const gchar *host, guint16 port);
-void eventd_relay_server_start(EventdRelayServer *server);
-void eventd_relay_server_stop(EventdRelayServer *server);
-
-void eventd_relay_server_event(EventdRelayServer *server, EventdEvent *event);
-
-#endif /* __EVENTD_PLUGINS_RELAY_SERVER_H__ */
+#include "avahi.h"

@@ -30,13 +30,30 @@
 
 #include "types.h"
 
+#include "avahi.h"
+
 #include "server.h"
 
 struct _EventdRelayServer {
+    EventdRelayAvahiServer *avahi;
     EventcConnection *connection;
     guint64 tries;
     guint connection_timeout_id;
 };
+
+static void
+_eventd_relay_server_create_eventc(EventdRelayServer *server, const gchar *host, guint16 port)
+{
+    server->connection = eventc_connection_new(host, port, PACKAGE_NAME);
+    server->connection->mode = EVENTC_CONNECTION_MODE_RELAY;
+}
+
+void
+eventd_relay_server_avahi_connect(EventdRelayServer *server, const gchar *host, guint16 port)
+{
+    _eventd_relay_server_create_eventc(server, host, port);
+    eventd_relay_server_start(server);
+}
 
 EventdRelayServer *
 eventd_relay_server_new(const gchar *uri)
@@ -63,10 +80,27 @@ eventd_relay_server_new(const gchar *uri)
 
     server = g_new0(EventdRelayServer, 1);
 
-    server->connection = eventc_connection_new(host, port, PACKAGE_NAME);
-    server->connection->mode = EVENTC_CONNECTION_MODE_RELAY;
+    _eventd_relay_server_create_eventc(server, host, port);
 
     g_free(host);
+
+    return server;
+}
+
+EventdRelayServer *
+eventd_relay_server_new_avahi(EventdRelayAvahi *context, const gchar *name)
+{
+    EventdRelayServer *server;
+
+    server = g_new0(EventdRelayServer, 1);
+
+    server->avahi = eventd_relay_avahi_server_new(context, name, server);
+
+    if ( server->avahi == NULL )
+    {
+        g_free(server);
+        return NULL;
+    }
 
     return server;
 }
@@ -169,6 +203,9 @@ eventd_relay_server_free(gpointer data)
 
     if ( server->connection != NULL )
         g_object_unref(server->connection);
+
+    if ( server->avahi != NULL )
+        eventd_relay_avahi_server_free(server->avahi);
 
     g_free(server);
 }

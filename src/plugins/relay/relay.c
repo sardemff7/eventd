@@ -30,9 +30,12 @@
 
 #include "types.h"
 
+#include "avahi.h"
+
 #include "server.h"
 
 struct _EventdPluginContext {
+    EventdRelayAvahi *avahi;
     GHashTable *servers;
     GHashTable *events;
 };
@@ -51,6 +54,7 @@ _eventd_relay_init(gpointer user_data)
 
     context = g_new0(EventdPluginContext, 1);
 
+    context->avahi = eventd_relay_avahi_init();
     context->servers = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, eventd_relay_server_free);
 
     return context;
@@ -60,6 +64,7 @@ static void
 _eventd_relay_uninit(EventdPluginContext *context)
 {
     g_hash_table_unref(context->servers);
+    eventd_relay_avahi_uninit(context->avahi);
 
     g_free(context);
 }
@@ -82,6 +87,8 @@ _eventd_relay_event_parse(EventdPluginContext *context, const gchar *event_categ
     gboolean disable;
     gchar **server_uris = NULL;
     gchar **server_uri = NULL;
+    gchar **avahi_names = NULL;
+    gchar **avahi_name = NULL;
     gchar *name;
     GList *list = NULL;
     EventdRelayServer *server;
@@ -92,6 +99,8 @@ _eventd_relay_event_parse(EventdPluginContext *context, const gchar *event_categ
     if ( libeventd_config_key_file_get_boolean(config_file, "relay", "disable", &disable) < 0 )
         return;
     if ( libeventd_config_key_file_get_string_list(config_file, "relay", "servers", &server_uris, NULL) < 0 )
+        goto fail;
+    if ( libeventd_config_key_file_get_string_list(config_file, "relay", "avahi", &avahi_names, NULL) < 0 )
         goto fail;
 
     name = libeventd_config_events_get_name(event_category, event_name);
@@ -115,11 +124,29 @@ _eventd_relay_event_parse(EventdPluginContext *context, const gchar *event_categ
                     list = g_list_prepend(list, server);
             }
         }
+
+        if ( avahi_names != NULL )
+        {
+            for ( avahi_name = avahi_names ; *avahi_name != NULL ; ++avahi_name )
+            {
+                server = g_hash_table_lookup(context->servers, *avahi_name);
+                if ( server == NULL )
+                {
+                    server = eventd_relay_server_new_avahi(context->avahi, *avahi_name);
+                    if ( server != NULL )
+                        g_hash_table_insert(context->servers, g_strdup(*avahi_name), server);
+                }
+                if ( server != NULL )
+                    list = g_list_prepend(list, server);
+            }
+        }
     }
 
     g_hash_table_insert(context->events, name, list);
 
 fail:
+    if ( avahi_names != NULL )
+        g_strfreev(avahi_names);
     if ( server_uris != NULL )
         g_strfreev(server_uris);
 }
