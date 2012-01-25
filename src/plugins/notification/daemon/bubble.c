@@ -647,6 +647,7 @@ eventd_nd_bubble_new(EventdNotificationNotification *notification, EventdNdStyle
     _eventd_nd_bubble_shape_draw(cr, style->bubble_radius, width, height);
     cairo_destroy(cr);
 
+    #if ! DISABLE_GRAPHICAL_BACKENDS
     for ( display = g_list_first(graphical_displays) ; display != NULL ; display = g_list_next(display) )
     {
         EventdNdSurface *surface;
@@ -654,6 +655,8 @@ eventd_nd_bubble_new(EventdNotificationNotification *notification, EventdNdStyle
         if ( surface != NULL )
             bubble_surfaces->graphical_surfaces = g_list_prepend(bubble_surfaces->graphical_surfaces, surface);
     }
+    #endif /* ! DISABLE_GRAPHICAL_BACKENDS */
+    #if ! DISABLE_FRAMEBUFFER_BACKENDS
     for ( display = g_list_first(framebuffer_displays) ; display != NULL ; display = g_list_next(display) )
     {
         EventdNdSurface *surface;
@@ -661,6 +664,7 @@ eventd_nd_bubble_new(EventdNotificationNotification *notification, EventdNdStyle
         if ( surface != NULL )
             bubble_surfaces->framebuffer_surfaces = g_list_prepend(bubble_surfaces->framebuffer_surfaces, surface);
     }
+    #endif /* ! DISABLE_FRAMEBUFFER_BACKENDS */
 
     cairo_surface_destroy(shape);
     cairo_surface_destroy(bubble);
@@ -673,10 +677,14 @@ eventd_nd_bubble_show(EventdNdBubble *bubble)
 {
     GList *surface;
 
+    #if ! DISABLE_GRAPHICAL_BACKENDS
     for ( surface = g_list_first(bubble->graphical_surfaces) ; surface != NULL ; surface = g_list_next(surface) )
         eventd_nd_graphical_surface_show(surface->data);
+    #endif /* ! DISABLE_GRAPHICAL_BACKENDS */
+    #if ! DISABLE_FRAMEBUFFER_BACKENDS
     for ( surface = g_list_first(bubble->framebuffer_surfaces) ; surface != NULL ; surface = g_list_next(surface) )
         eventd_nd_fb_surface_show(surface->data);
+    #endif /* ! DISABLE_FRAMEBUFFER_BACKENDS */
 }
 
 void
@@ -684,17 +692,25 @@ eventd_nd_bubble_hide(EventdNdBubble *bubble)
 {
     GList *surface;
 
+    #if ! DISABLE_GRAPHICAL_BACKENDS
     for ( surface = g_list_first(bubble->graphical_surfaces) ; surface != NULL ; surface = g_list_next(surface) )
         eventd_nd_graphical_surface_hide(surface->data);
+    #endif /* ! DISABLE_GRAPHICAL_BACKENDS */
+    #if ! DISABLE_FRAMEBUFFER_BACKENDS
     for ( surface = g_list_first(bubble->framebuffer_surfaces) ; surface != NULL ; surface = g_list_next(surface) )
         eventd_nd_fb_surface_hide(surface->data);
+    #endif /* ! DISABLE_FRAMEBUFFER_BACKENDS */
 }
 
 void
 eventd_nd_bubble_free(gpointer data)
 {
     EventdNdBubble *bubble = data;
+    #if ! DISABLE_GRAPHICAL_BACKENDS
     g_list_free_full(bubble->graphical_surfaces, eventd_nd_graphical_surface_free);
+    #endif /* ! DISABLE_GRAPHICAL_BACKENDS */
+    #if ! DISABLE_FRAMEBUFFER_BACKENDS
     g_list_free_full(bubble->framebuffer_surfaces, eventd_nd_fb_surface_free);
+    #endif /* ! DISABLE_FRAMEBUFFER_BACKENDS */
     g_free(bubble);
 }

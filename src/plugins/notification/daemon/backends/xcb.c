@@ -20,8 +20,6 @@
  *
  */
 
-#if ENABLE_XCB
-
 #include <glib.h>
 
 #include <cairo.h>
@@ -223,5 +221,3 @@ eventd_nd_graphical_surface_free(gpointer data)
 
     g_free(surface);
 }
-
-#endif /* ENABLE_XCB */
