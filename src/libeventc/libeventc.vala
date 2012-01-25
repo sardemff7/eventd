@@ -372,9 +372,6 @@ namespace Eventc
                 yield;
             }
 
-            try
-            {
-
             if ( ( this.hello_received ) && ( ! this.connection.is_closed() ) )
             {
                 try
@@ -393,11 +390,7 @@ namespace Eventc
             this.input = null;
             this.connection = null;
 
-            }
-            finally
-            {
             this.mutex.unlock();
-            }
         }
     }
 }
