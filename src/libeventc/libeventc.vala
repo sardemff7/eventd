@@ -243,6 +243,25 @@ namespace Eventc
                 throw new EventcError.RENAMED("Got a wrong renamed message: %s", r);
         }
 
+        private void
+        print_data_each(string name, string content) throws EventcError
+        {
+            if ( content.index_of_char('\n') == -1 )
+                this.send(@"DATAL $name $content");
+            else
+            {
+                this.send(@"DATA $name");
+                var datas = content.split("\n");
+                foreach ( var line in datas )
+                {
+                    if ( line[0] == '.' )
+                        line = "." + line;
+                    this.send(line);
+                }
+                this.send(".");
+            }
+        }
+
         public async void
         event(Eventd.Event event) throws EventcError
         {
@@ -260,34 +279,7 @@ namespace Eventc
 
             unowned GLib.HashTable<string, string> data = event.get_data();
             if ( data != null )
-            {
-                EventcError e = null;
-                data.foreach((name, content) => {
-                    try
-                    {
-                        if ( content.index_of_char('\n') == -1 )
-                            this.send(@"DATAL $name $content");
-                        else
-                        {
-                            this.send(@"DATA $name");
-                            var datas = content.split("\n");
-                            foreach ( var line in datas )
-                            {
-                                if ( line[0] == '.' )
-                                    line = "." + line;
-                                this.send(line);
-                            }
-                            this.send(".");
-                        }
-                    }
-                    catch ( EventcError ie )
-                    {
-                        e = ie;
-                    }
-                });
-                if ( e != null )
-                    throw e;
-            }
+                data.foreach((GLib.HFunc<string, string>)print_data_each);
             this.send(".");
 
             string line = null;
