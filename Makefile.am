@@ -29,6 +29,9 @@ AM_VALAFLAGS += \
 	--vapidir $(top_builddir)/vapi/ \
 	--pkg config
 
+EXTRA_DIST += \
+	vapi/glib-local-2.0.vapi \
+	vapi/config.vapi
 
 include src/libeventd-event/libeventd-event.mk
 include src/libeventd/libeventd.mk
