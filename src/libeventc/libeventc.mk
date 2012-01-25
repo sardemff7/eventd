@@ -9,6 +9,9 @@ LIBEVENTC_AGE=0
 libeventc_la_SOURCES = \
 	src/libeventc/libeventc.vala
 
+EXTRA_DIST += \
+	src/libeventc/libeventc.sym
+
 libeventc_la_VALAFLAGS = \
 	$(AM_VALAFLAGS) \
 	--pkg libeventd-event \
