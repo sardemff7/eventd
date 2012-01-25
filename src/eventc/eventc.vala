@@ -109,29 +109,33 @@ namespace Eventc
     }
 
     private static void
+    print_pong_data_each(string name, string content)
+    {
+        if ( content.index_of_char('\n') == -1 )
+            stdout.puts(@"DATAL $name $content\n");
+        else
+        {
+            stdout.puts(@"DATA $name\n");
+            var datas = content.split("\n");
+            foreach ( var line in datas )
+            {
+                if ( line[0] == '.' )
+                    stdout.puts(".");
+                stdout.puts(line);
+                stdout.puts("\n");
+            }
+            stdout.puts(".\n");
+        }
+    }
+
+    private static void
     print_pong_data(Eventd.Event event)
     {
         unowned GLib.HashTable<string, string>? ret_data = event.get_pong_data();
         if ( ret_data == null )
             return;
 
-        ret_data.foreach((name, content) => {
-            if ( content.index_of_char('\n') == -1 )
-                stdout.puts(@"DATAL $name $content\n");
-            else
-            {
-                stdout.puts(@"DATA $name\n");
-                var datas = content.split("\n");
-                foreach ( var line in datas )
-                {
-                    if ( line[0] == '.' )
-                        stdout.puts(".");
-                    stdout.puts(line);
-                    stdout.puts("\n");
-                }
-                stdout.puts(".\n");
-            }
-        });
+        ret_data.foreach((GLib.HFunc<string, string>)print_pong_data_each);
         stdout.puts(".\n");
     }
 
