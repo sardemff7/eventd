@@ -108,7 +108,8 @@ namespace Eventc
         });
     }
 
-    private static void print_pong_data(Eventd.Event event)
+    private static void
+    print_pong_data(Eventd.Event event)
     {
         unowned GLib.HashTable<string, string>? ret_data = event.get_pong_data();
         if ( ret_data == null )
@@ -151,7 +152,8 @@ namespace Eventc
     }
 
 
-    public static int main(string[] args)
+    public static int
+    main(string[] args)
     {
         var opt_context = new GLib.OptionContext("<client type> - Basic CLI client for eventd");
 
