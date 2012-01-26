@@ -90,9 +90,9 @@ _eventd_service_send_data(gpointer key, gpointer value, gpointer user_data)
     const gchar *content = value;
     GDataOutputStream *output = user_data;
 
-    #if DEBUG
+#if DEBUG
     g_debug("Send back data: %s", name);
-    #endif /* DEBUG */
+#endif /* DEBUG */
 
     if ( g_utf8_strchr(content, -1, '\n') == NULL )
     {
@@ -167,9 +167,9 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
         g_data_input_stream_read_byte(input, NULL, &error);
         if ( error != NULL )
             break;
-        #if DEBUG
+#if DEBUG
         g_debug("Line received: %s", line);
-        #endif /* DEBUG */
+#endif /* DEBUG */
 
         if ( event != NULL )
         {

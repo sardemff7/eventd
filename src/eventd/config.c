@@ -171,9 +171,9 @@ _eventd_config_parse_client_dir(EventdConfig *config, const gchar *type, gchar *
 
         event = g_strndup(file, strlen(file) - 5);
 
-        #if DEBUG
+#if DEBUG
         g_debug("Parsing event '%s' of client type '%s'", event, type);
-        #endif /* DEBUG */
+#endif /* DEBUG */
 
         config_file_name = g_build_filename(config_dir_name, file, NULL);
         config_file = g_key_file_new();
@@ -241,9 +241,9 @@ _eventd_config_load_dir(EventdConfig *config, const gchar *base_dir)
 
             type = g_strndup(file, strlen(file) - 5);
             config_file = g_key_file_new();
-            #if DEBUG
+#if DEBUG
             g_debug("Parsing event defaults of client type '%s'", type);
-            #endif /* DEBUG */
+#endif /* DEBUG */
             if ( ! g_key_file_load_from_file(config_file, config_file_name, G_KEY_FILE_NONE, &error) )
                 g_warning("Can't read the defaults file '%s': %s", config_file_name, error->message);
             else

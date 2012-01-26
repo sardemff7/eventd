@@ -125,28 +125,28 @@ _eventd_dbus_notify(EventdDbusContext *context, const gchar *sender, GVariant *p
                   &hints,
                   &timeout);
 
-    #if DEBUG
+#if DEBUG
     g_debug("Received notification from '%s': '%s'", app_name, summary);
-    #endif /* DEBUG */
+#endif /* DEBUG */
 
     while ( g_variant_iter_next(hints, "{&sv}", &hint_name, &hint) )
     {
-        #if DEBUG
+#if DEBUG
         g_debug("Found hint '%s'", hint_name);
-        #endif /* DEBUG */
+#endif /* DEBUG */
 
         if ( g_strcmp0(hint_name, "urgency") == 0 )
             urgency = g_variant_get_byte(hint);
         else if ( g_strcmp0(hint_name, "category") == 0 )
             event_name = g_variant_get_string(hint, NULL);
         else if ( ( g_strcmp0(hint_name, "image-data") == 0 )
-                || ( g_strcmp0(hint_name, "image_data") == 0 ) )
+                  || ( g_strcmp0(hint_name, "image_data") == 0 ) )
             image_data = g_variant_ref(hint);
         else if ( ( g_strcmp0(hint_name, "image-path") == 0 )
-                || ( g_strcmp0(hint_name, "image_path") == 0 ) )
+                  || ( g_strcmp0(hint_name, "image_path") == 0 ) )
             image_path = g_variant_get_string(hint, NULL);
         else if ( ( g_strcmp0(hint_name, "icon_data") == 0 )
-                && image_data == NULL )
+                  && image_data == NULL )
             image_data = g_variant_ref(hint);
         else if ( g_strcmp0(hint_name, "sound-file") == 0 )
             {}
@@ -154,9 +154,9 @@ _eventd_dbus_notify(EventdDbusContext *context, const gchar *sender, GVariant *p
         g_variant_unref(hint);
     }
 
-    #if DEBUG
+#if DEBUG
     g_debug("Creanting event '%s' for client '%s' ", event_name, app_name);
-    #endif /* DEBUG */
+#endif /* DEBUG */
 
     if ( id == 0 )
         id = eventd_queue_get_next_event_id(context->queue);
@@ -180,9 +180,9 @@ _eventd_dbus_notify(EventdDbusContext *context, const gchar *sender, GVariant *p
 
     if ( ( icon != NULL ) && ( *icon != 0 ) )
     {
-        #if DEBUG
+#if DEBUG
         g_debug("Icon specified: '%s'", icon);
-        #endif /* DEBUG */
+#endif /* DEBUG */
 
         if ( g_str_has_prefix(icon, "file://") )
             eventd_event_add_data(event, g_strdup("overlay-icon"), g_strdup(icon));

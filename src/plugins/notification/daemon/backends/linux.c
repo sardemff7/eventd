@@ -252,7 +252,7 @@ eventd_nd_fb_surface_hide(EventdNdSurface *self)
         while ( sline < sline_end )
         {
             line[0] = sline[0];
-            line[1] = sline[1],
+            line[1] = sline[1];
             line[2] = sline[2];
             line[3] = sline[3];
 

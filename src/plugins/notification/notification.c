@@ -218,12 +218,12 @@ _eventd_notification_notification_new(GHashTable *data, EventdNotificationEvent 
     if ( ( icon = libeventd_config_get_filename(notification_event->icon, data, "icons") ) != NULL )
         _eventd_notification_notification_icon_data_from_file(icon, &notification->icon, &notification->icon_length);
     else
-         _eventd_notification_notification_icon_data_from_base64(data, notification_event->icon, &notification->icon, &notification->icon_length, &notification->icon_format);
+        _eventd_notification_notification_icon_data_from_base64(data, notification_event->icon, &notification->icon, &notification->icon_length, &notification->icon_format);
 
     if ( ( icon = libeventd_config_get_filename(notification_event->overlay_icon, data, "icons") ) != NULL )
         _eventd_notification_notification_icon_data_from_file(icon, &notification->overlay_icon, &notification->overlay_icon_length);
     else
-         _eventd_notification_notification_icon_data_from_base64(data, notification_event->overlay_icon, &notification->overlay_icon, &notification->overlay_icon_length, &notification->overlay_icon_format);
+        _eventd_notification_notification_icon_data_from_base64(data, notification_event->overlay_icon, &notification->overlay_icon, &notification->overlay_icon_length, &notification->overlay_icon_format);
 
     return notification;
 }

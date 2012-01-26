@@ -45,7 +45,7 @@ static void
 _eventd_sound_sndfile_read_file(const gchar *filename, void **data, gsize *length, gint *format, guint32 *rate, guint8 *channels)
 {
     SF_INFO sfi;
-    SNDFILE* f = NULL;
+    SNDFILE *f = NULL;
     sndfile_readf_t readf_function = NULL;
     size_t factor = 1;
     sf_count_t r = 0;

@@ -66,9 +66,9 @@ _eventd_service_private_connection_handler(GThreadedSocketService *socket_servic
     }
     else
     {
-        #if DEBUG
+#if DEBUG
         g_debug("Received control command: '%s'", line);
-        #endif /* DEBUG */
+#endif /* DEBUG */
 
         g_data_input_stream_read_byte(input, NULL, &error);
         if ( error != NULL )

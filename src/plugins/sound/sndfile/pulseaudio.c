@@ -43,14 +43,14 @@ _eventd_sound_sndfile_pulseaudio_context_state_callback(pa_context *c, void *use
     pa_context_state_t state = pa_context_get_state(c);
     switch ( state )
     {
-        case PA_CONTEXT_READY:
-        break;
-        case PA_CONTEXT_FAILED:
-        case PA_CONTEXT_TERMINATED:
-            pa_context_unref(sound);
-            sound = NULL;
-        default:
-        break;
+    case PA_CONTEXT_READY:
+    break;
+    case PA_CONTEXT_FAILED:
+    case PA_CONTEXT_TERMINATED:
+        pa_context_unref(sound);
+        sound = NULL;
+    default:
+    break;
     }
 }
 
@@ -73,19 +73,19 @@ _eventd_sound_sndfile_pulseaudio_stream_state_callback(pa_stream *stream, gpoint
     pa_operation *op;
     switch ( state )
     {
-        case PA_STREAM_FAILED:
-            g_warning("Failed sample creation");
-        case PA_STREAM_TERMINATED:
-            g_free(data);
-            pa_stream_unref(stream);
-        break;
-        case PA_STREAM_READY:
-            pa_stream_write(stream, data->data, data->length, g_free, 0, PA_SEEK_RELATIVE);
-            op = pa_stream_drain(stream, _eventd_sound_sndfile_pulseaudio_stream_drain_callback, NULL);
-            if ( op != NULL )
-                pa_operation_unref(op);
-        default:
-        break;
+    case PA_STREAM_FAILED:
+        g_warning("Failed sample creation");
+    case PA_STREAM_TERMINATED:
+        g_free(data);
+        pa_stream_unref(stream);
+    break;
+    case PA_STREAM_READY:
+        pa_stream_write(stream, data->data, data->length, g_free, 0, PA_SEEK_RELATIVE);
+        op = pa_stream_drain(stream, _eventd_sound_sndfile_pulseaudio_stream_drain_callback, NULL);
+        if ( op != NULL )
+            pa_operation_unref(op);
+    default:
+    break;
     }
 }
 

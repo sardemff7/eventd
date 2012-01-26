@@ -48,14 +48,14 @@ _eventd_sound_espeak_pulseaudio_context_state_callback(pa_context *c, void *user
     pa_context_state_t state = pa_context_get_state(c);
     switch ( state )
     {
-        case PA_CONTEXT_READY:
-        break;
-        case PA_CONTEXT_FAILED:
-        case PA_CONTEXT_TERMINATED:
-            pa_context_unref(sound);
-            sound = NULL;
-        default:
-        break;
+    case PA_CONTEXT_READY:
+    break;
+    case PA_CONTEXT_FAILED:
+    case PA_CONTEXT_TERMINATED:
+        pa_context_unref(sound);
+        sound = NULL;
+    default:
+    break;
     }
 }
 
@@ -65,12 +65,12 @@ _eventd_sound_espeak_pulseaudio_stream_state_callback(pa_stream *stream, void *u
     pa_stream_state_t state = pa_stream_get_state(stream);
     switch  ( state )
     {
-        case PA_STREAM_TERMINATED:
-            pa_stream_unref(stream);
-        break;
-        case PA_STREAM_READY:
-        default:
-        break;
+    case PA_STREAM_TERMINATED:
+        pa_stream_unref(stream);
+    break;
+    case PA_STREAM_READY:
+    default:
+    break;
     }
 }
 

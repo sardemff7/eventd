@@ -83,14 +83,14 @@ eventd_event_class_init(EventdEventClass *klass)
     object_class->finalize = _eventd_event_finalize;
 
     _eventd_event_signals[SIGNAL_ENDED] =
-            g_signal_new("ended",
-                         G_TYPE_FROM_CLASS(object_class),
-                         G_SIGNAL_RUN_FIRST,
-                         G_STRUCT_OFFSET(EventdEventClass, ended),
-                         NULL, NULL,
-                         g_cclosure_marshal_VOID__ENUM,
-                         G_TYPE_NONE,
-                         1, EVENTD_TYPE_EVENT_END_REASON);
+        g_signal_new("ended",
+                     G_TYPE_FROM_CLASS(object_class),
+                     G_SIGNAL_RUN_FIRST,
+                     G_STRUCT_OFFSET(EventdEventClass, ended),
+                     NULL, NULL,
+                     g_cclosure_marshal_VOID__ENUM,
+                     G_TYPE_NONE,
+                     1, EVENTD_TYPE_EVENT_END_REASON);
 }
 
 EventdEvent *

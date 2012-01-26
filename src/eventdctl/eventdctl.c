@@ -61,7 +61,7 @@ main(int argc, char *argv[])
     GSocketClient *client = NULL;
     GSocketConnection *connection = NULL;
 
-#ifdef ENABLE_NLS
+#if ENABLE_NLS
     setlocale(LC_ALL, "");
     bindtextdomain(GETTEXT_PACKAGE, LOCALEDIR);
     bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
@@ -120,10 +120,10 @@ main(int argc, char *argv[])
             if ( target == NULL )
                 target = g_getenv("DISPLAY");
 
-        #if ! DISABLE_FRAMEBUFFER_BACKENDS
+#if ! DISABLE_FRAMEBUFFER_BACKENDS
             if ( target == NULL )
                 target = ttyname(1);
-        #endif /* ! DISABLE_FRAMEBUFFER_BACKENDS */
+#endif /* ! DISABLE_FRAMEBUFFER_BACKENDS */
 
             if ( target != NULL )
             {

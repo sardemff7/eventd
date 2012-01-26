@@ -35,19 +35,19 @@ _eventd_sound_pulseaudio_context_state_callback(pa_context *c, void *user_data)
     pa_context_state_t state = pa_context_get_state(c);
     switch ( state )
     {
-        case PA_CONTEXT_FAILED:
-            g_warning("Connection to PulseAudio failed: %s", pa_strerror(pa_context_errno(c)));
-            pa_context_unref(context->sound);
-            context->sound = NULL;
-        case PA_CONTEXT_READY:
-        break;
-        case PA_CONTEXT_TERMINATED:
-            pa_context_unref(context->sound);
-            context->sound = NULL;
-            pa_glib_mainloop_free(context->pa_loop);
-            g_free(context);
-        default:
-        break;
+    case PA_CONTEXT_FAILED:
+        g_warning("Connection to PulseAudio failed: %s", pa_strerror(pa_context_errno(c)));
+        pa_context_unref(context->sound);
+        context->sound = NULL;
+    case PA_CONTEXT_READY:
+    break;
+    case PA_CONTEXT_TERMINATED:
+        pa_context_unref(context->sound);
+        context->sound = NULL;
+        pa_glib_mainloop_free(context->pa_loop);
+        g_free(context);
+    default:
+    break;
     }
 }
 
@@ -90,7 +90,7 @@ eventd_sound_pulseaudio_stop(EventdSoundPulseaudioContext *context)
 
     if ( context->sound != NULL )
     {
-        pa_operation* op;
+        pa_operation *op;
 
         op = pa_context_drain(context->sound, _eventd_sound_pulseaudio_context_notify_callback, context);
         if ( op != NULL )

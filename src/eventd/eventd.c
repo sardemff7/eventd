@@ -45,13 +45,13 @@ main(int argc, char *argv[])
     gchar *unix_socket = NULL;
     gboolean take_over_socket = FALSE;
 
-#ifdef ENABLE_SYSTEMD
+#if ENABLE_SYSTEMD
     gboolean no_systemd = FALSE;
 #endif /* ENABLE_SYSTEMD */
 
     GOptionEntry entries[] =
     {
-#ifdef DEBUG
+#if DEBUG
         { "no-plugins", 'P', 0, G_OPTION_ARG_NONE, &no_plugins, "Disable systemd socket activation", NULL },
 #else /* ! DEBUG */
         { "daemonize", 'd', 0, G_OPTION_ARG_NONE, &daemonize, "Run the daemon in the background", NULL },
@@ -64,7 +64,7 @@ main(int argc, char *argv[])
         { "socket", 's', 0, G_OPTION_ARG_FILENAME, &unix_socket, "UNIX socket to listen for inbound connections", "SOCKET_FILE" },
         { "take-over", 't', 0, G_OPTION_ARG_NONE, &take_over_socket, "Take over socket", NULL },
 #endif /* ENABLE_GIO_UNIX */
-#ifdef ENABLE_SYSTEMD
+#if ENABLE_SYSTEMD
         { "no-systemd", 'S', 0, G_OPTION_ARG_NONE, &no_systemd, "Disable systemd socket activation", NULL },
 #endif /* ENABLE_SYSTEMD */
         { NULL }
@@ -79,7 +79,7 @@ main(int argc, char *argv[])
     g_setenv("G_MESSAGES_DEBUG", "all", FALSE);
 #endif /* ! DEBUG */
 
-#ifdef ENABLE_NLS
+#if ENABLE_NLS
     setlocale(LC_ALL, "");
     bindtextdomain(GETTEXT_PACKAGE, LOCALEDIR);
     bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");

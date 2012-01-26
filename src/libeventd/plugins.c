@@ -40,9 +40,9 @@ _libeventd_plugins_load_dir(GList **plugins, const gchar *plugins_dir_name, gpoi
         return;
     }
 
-    #if DEBUG
+#if DEBUG
     g_debug("Scannig plugins dir: %s", plugins_dir_name);
-    #endif /* DEBUG */
+#endif /* DEBUG */
 
     plugins_dir = g_dir_open(plugins_dir_name, 0, &error);
     if ( ! plugins_dir )
@@ -79,9 +79,9 @@ _libeventd_plugins_load_dir(GList **plugins, const gchar *plugins_dir_name, gpoi
         if ( ! g_module_symbol(module, "eventd_plugin_get_info", (void **)&get_info) )
             continue;
 
-        #if DEBUG
+#if DEBUG
         g_debug("Loading plugin '%s'", file);
-        #endif /* ! DEBUG */
+#endif /* ! DEBUG */
 
         plugin = g_new0(EventdPlugin, 1);
         plugin->module = module;
