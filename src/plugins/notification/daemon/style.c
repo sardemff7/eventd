@@ -63,7 +63,7 @@ static void
 _eventd_nd_style_init_defaults(EventdNdStyle *style)
 {
     /* bubble position */
-    style->bubble_margin    = 20;
+    style->bubble_margin    = 13;
     style->bubble_anchor    = EVENTD_ND_STYLE_ANCHOR_TOP_RIGHT;
 
     /* bubble geometry */
@@ -72,10 +72,10 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
 
     /* bubble style */
     style->bubble_padding   = 10;
-    style->bubble_radius    = 15;
-    style->bubble_colour.r = 0.1;
-    style->bubble_colour.g = 0.1;
-    style->bubble_colour.b = 0.1;
+    style->bubble_radius    = 10;
+    style->bubble_colour.r = 0.15;
+    style->bubble_colour.g = 0.15;
+    style->bubble_colour.b = 0.15;
     style->bubble_colour.a = 1.0;
 
     /* icon */
