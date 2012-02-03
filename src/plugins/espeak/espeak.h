@@ -27,6 +27,6 @@ typedef struct {
     guint ref_count;
     gboolean pong_mode;
     gpointer data;
-} EventdSoundEspeakCallbackData;
+} EventdEspeakCallbackData;
 
 #endif /* __EVENTD_PLUGINS_SOUND_ESPEAK_H__ */

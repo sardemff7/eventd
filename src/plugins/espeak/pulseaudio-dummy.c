@@ -20,14 +20,18 @@
  *
  */
 
-#ifndef __EVENTD_PLUGINS_SOUND_ESPEAK_PULSEAUDIO_H__
-#define __EVENTD_PLUGINS_SOUND_ESPEAK_PULSEAUDIO_H__
+#include <glib.h>
+#include <speak_lib.h>
 
-void eventd_sound_espeak_pulseaudio_start(EventdSoundPulseaudioContext *context, gint sample_rate);
+#include "pulseaudio.h"
 
-void eventd_sound_espeak_pulseaudio_play_data(gshort *wav, gint numsamples, espeak_EVENT *event);
+EventdEspeakPulseaudioContext *eventd_espeak_pulseaudio_init(gint sample_rate) { return NULL; }
+void eventd_espeak_pulseaudio_uninit(EventdEspeakPulseaudioContext *context) {}
 
-gpointer eventd_sound_espeak_pulseaudio_pa_data_new();
-void eventd_sound_espeak_pulseaudio_pa_data_free(gpointer pa_data);
+void eventd_espeak_pulseaudio_start(EventdEspeakPulseaudioContext *context) {}
+void eventd_espeak_pulseaudio_stop(EventdEspeakPulseaudioContext *context) {}
 
-#endif /* __EVENTD_PLUGINS_SOUND_ESPEAK_PULSEAUDIO_H__ */
+void eventd_espeak_pulseaudio_play_data(gshort *wav, gint numsamples, espeak_EVENT *event) {}
+
+gpointer eventd_espeak_pulseaudio_pa_data_new(EventdEspeakPulseaudioContext *context) { return NULL; }
+void eventd_espeak_pulseaudio_pa_data_free(gpointer pa_data) {}

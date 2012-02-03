@@ -1,12 +1,12 @@
 # espeak plugin
 if ENABLE_ESPEAK
-soundplugins_LTLIBRARIES += \
+plugins_LTLIBRARIES += \
 	espeak.la
 
 espeak_la_SOURCES = \
-	src/plugins/sound/espeak/pulseaudio.h \
-	src/plugins/sound/espeak/espeak.h \
-	src/plugins/sound/espeak/espeak.c
+	src/plugins/espeak/pulseaudio.h \
+	src/plugins/espeak/espeak.h \
+	src/plugins/espeak/espeak.c
 
 espeak_la_CFLAGS = \
 	$(AM_CFLAGS) \
@@ -15,7 +15,8 @@ espeak_la_CFLAGS = \
 	$(GLIB_CFLAGS)
 
 espeak_la_LDFLAGS = \
-	$(sound_la_LDFLAGS)
+	$(AM_LDFLAGS) \
+	-avoid-version -module -export-symbols-regex eventd_plugin_get_info
 
 espeak_la_LIBADD = \
 	libeventd-event.la \
@@ -26,9 +27,9 @@ espeak_la_LIBADD = \
 
 if ENABLE_PULSEAUDIO
 espeak_la_SOURCES += \
-	src/plugins/sound/espeak/pulseaudio.c
+	src/plugins/espeak/pulseaudio.c
 else
 espeak_la_SOURCES += \
-	src/plugins/sound/espeak/pulseaudio-dummy.c
+	src/plugins/espeak/pulseaudio-dummy.c
 endif
 endif

@@ -39,7 +39,7 @@ include src/eventd/eventd.mk
 include src/eventdctl/eventdctl.mk
 include src/plugins/sound/sound.mk
 include src/plugins/sound/sndfile/sndfile.mk
-include src/plugins/sound/espeak/espeak.mk
+include src/plugins/espeak/espeak.mk
 include src/plugins/notification/notification.mk
 include src/libeventc/libeventc.mk
 include src/eventc/eventc.mk

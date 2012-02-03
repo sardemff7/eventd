@@ -20,29 +20,20 @@
  *
  */
 
-#include <glib.h>
-#include <speak_lib.h>
+#ifndef __EVENTD_PLUGINS_SOUND_ESPEAK_PULSEAUDIO_H__
+#define __EVENTD_PLUGINS_SOUND_ESPEAK_PULSEAUDIO_H__
 
-#include "../pulseaudio.h"
-#include "pulseaudio.h"
+typedef struct _EventdEspeakPulseaudioContext EventdEspeakPulseaudioContext;
 
-void
-eventd_sound_espeak_pulseaudio_start(EventdSoundPulseaudioContext *context, gint sample_rate)
-{
-}
+EventdEspeakPulseaudioContext *eventd_espeak_pulseaudio_init(gint sample_rate);
+void eventd_espeak_pulseaudio_uninit(EventdEspeakPulseaudioContext *context);
 
-void
-eventd_sound_espeak_pulseaudio_play_data(gshort *wav, gint numsamples, espeak_EVENT *event)
-{
-}
+void eventd_espeak_pulseaudio_start(EventdEspeakPulseaudioContext *context);
+void eventd_espeak_pulseaudio_stop(EventdEspeakPulseaudioContext *context);
 
-gpointer
-eventd_sound_espeak_pulseaudio_pa_data_new()
-{
-    return NULL;
-}
+void eventd_espeak_pulseaudio_play_data(gshort *wav, gint numsamples, espeak_EVENT *event);
 
-void
-eventd_sound_espeak_pulseaudio_pa_data_free(gpointer pa_data)
-{
-}
+gpointer eventd_espeak_pulseaudio_pa_data_new();
+void eventd_espeak_pulseaudio_pa_data_free(gpointer pa_data);
+
+#endif /* __EVENTD_PLUGINS_SOUND_ESPEAK_PULSEAUDIO_H__ */
