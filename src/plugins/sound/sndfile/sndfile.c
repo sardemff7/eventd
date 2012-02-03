@@ -213,12 +213,16 @@ _eventd_sound_sndfile_start(gpointer user_data)
 
     eventd_sound_sndfile_pulseaudio_start(user_data);
 
+    libeventd_regex_init();
+
     return context;
 }
 
 static void
 _eventd_sound_sndfile_stop(EventdPluginContext *context)
 {
+    libeventd_regex_clean();
+
     g_free(context);
 }
 
