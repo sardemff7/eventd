@@ -43,6 +43,7 @@ include src/eventdctl/eventdctl.mk
 include src/plugins/sndfile/sndfile.mk
 include src/plugins/espeak/espeak.mk
 include src/plugins/notification/notification.mk
+include src/plugins/relay/relay.mk
 include src/libeventc/libeventc.mk
 include src/eventc/eventc.mk
 
