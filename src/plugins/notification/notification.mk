@@ -13,6 +13,7 @@ notification_la_SOURCES = \
 
 notification_la_CFLAGS = \
 	$(AM_CFLAGS) \
+	-D G_LOG_DOMAIN=\"notification\" \
 	-D SYSCONFDIR=\"$(sysconfdir)\" \
 	-D LIBDIR=\"$(libdir)\" \
 	-D DATADIR=\"$(datadir)\" \
