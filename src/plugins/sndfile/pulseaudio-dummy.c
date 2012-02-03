@@ -20,11 +20,18 @@
  *
  */
 
-#ifndef __EVENTD_PLUGINS_SOUND_SNDFILE_PULSEAUDIO_H__
-#define __EVENTD_PLUGINS_SOUND_SNDFILE_PULSEAUDIO_H__
+#include <sndfile.h>
 
-void eventd_sound_sndfile_pulseaudio_start(EventdSoundPulseaudioContext *context);
+#include <glib.h>
 
-void eventd_sound_sndfile_pulseaudio_play_data(void *data, gsize length, gint format, guint32 rate, guint8 channels);
+#include "sndfile-internal.h"
+#include "pulseaudio.h"
 
-#endif /* __EVENTD_PLUGINS_SOUND_SNDFILE_PULSEAUDIO_H__ */
+
+EventdSndfilePulseaudioContext *eventd_sndfile_pulseaudio_init() { return NULL; }
+void eventd_sndfile_pulseaudio_uninit(EventdSndfilePulseaudioContext *context) {}
+
+void eventd_sndfile_pulseaudio_start(EventdSndfilePulseaudioContext *context) {}
+void eventd_sndfile_pulseaudio_stop(EventdSndfilePulseaudioContext *context) {}
+
+void eventd_sndfile_pulseaudio_play_data(EventdSndfilePulseaudioContext *context, void *data, gsize length, gint format, guint32 rate, guint8 channels) {}

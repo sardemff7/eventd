@@ -26,6 +26,6 @@
 typedef struct {
     gboolean disable;
     gchar *sound;
-} EventdSoundSndfileEvent;
+} EventdSndfileEvent;
 
 #endif /* __EVENTD_PLUGINS_SOUND_SNDFILE_INTERNAL_H__ */
