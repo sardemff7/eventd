@@ -1,4 +1,5 @@
-ACLOCAL_AMFLAGS = -I m4
+ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
+AM_MAKEFLAGS = --no-print-directory
 
 pkgconfigdir = $(libdir)/pkgconfig
 vapidir = $(datadir)/vala/vapi
