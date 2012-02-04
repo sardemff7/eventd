@@ -49,6 +49,8 @@ main(int argc, char *argv[])
     gboolean no_systemd = FALSE;
 #endif /* ENABLE_SYSTEMD */
 
+    gboolean print_version = FALSE;
+
     GOptionEntry entries[] =
     {
 #if DEBUG
@@ -67,6 +69,7 @@ main(int argc, char *argv[])
 #if ENABLE_SYSTEMD
         { "no-systemd", 'S', 0, G_OPTION_ARG_NONE, &no_systemd, "Disable systemd socket activation", NULL },
 #endif /* ENABLE_SYSTEMD */
+        { "version", 'V', 0, G_OPTION_ARG_NONE, &print_version, "Print version", NULL },
         { NULL }
     };
 
@@ -92,6 +95,12 @@ main(int argc, char *argv[])
     if ( ! g_option_context_parse(context, &argc, &argv, &error) )
         g_error("Option parsing failed: %s\n", error->message);
     g_option_context_free(context);
+
+    if ( print_version )
+    {
+        fprintf(stdout, PACKAGE_NAME " " PACKAGE_VERSION "\n");
+        return 0;
+    }
 
 #if ENABLE_SYSTEMD
     if ( ! no_systemd )

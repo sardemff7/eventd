@@ -47,10 +47,12 @@ int
 main(int argc, char *argv[])
 {
     gchar *private_socket = NULL;
+    gboolean print_version = FALSE;
 
     GOptionEntry entries[] =
     {
         { "socket", 's', 0, G_OPTION_ARG_FILENAME, &private_socket, "eventd control socket", "<socket>" },
+        { "version", 'V', 0, G_OPTION_ARG_NONE, &print_version, "Print version", NULL },
         { NULL }
     };
 
@@ -74,6 +76,12 @@ main(int argc, char *argv[])
     if ( ! g_option_context_parse(context, &argc, &argv, &error) )
         g_error("Option parsing failed: %s\n", error->message);
     g_option_context_free(context);
+
+    if ( print_version )
+    {
+        fprintf(stdout, "eventdctl " PACKAGE_VERSION "\n");
+        return 0;
+    }
 
     if ( private_socket == NULL )
         private_socket = g_build_filename(g_get_user_runtime_dir(), PACKAGE_NAME, "private", NULL);

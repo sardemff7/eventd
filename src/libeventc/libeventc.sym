@@ -21,6 +21,7 @@ global:
     eventc_connection_set_timeout;
     eventc_connection_set_port;
     eventc_eventc_error_quark;
+    eventc_get_version;
 local:
     *;
 };

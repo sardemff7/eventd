@@ -26,10 +26,8 @@ namespace Eventd
     namespace Config
     {
         public const string GETTEXT_PACKAGE;
-        public const string PACKAGE;
         public const string PACKAGE_NAME;
         public const string PACKAGE_VERSION;
-        public const string VERSION;
 
         public const uint16 DEFAULT_BIND_PORT;
         public const string UNIX_SOCKET;

@@ -38,6 +38,8 @@ namespace Eventc
     static int max_tries = 3;
     static int timeout = 0;
 
+    static bool print_version = false;
+
     static const GLib.OptionEntry[] entries =
     {
         { "name", 'n', 0, GLib.OptionArg.STRING, out event_name, N_("Event name to send"), "<name>" },
@@ -51,6 +53,7 @@ namespace Eventc
         #endif
         { "max-tries", 'm', 0, GLib.OptionArg.INT, ref max_tries, N_("Maximum connection attempts (0 for infinite)"), "<times>" },
         { "timeout", 'o', 0, GLib.OptionArg.INT, ref timeout, N_("Connection timeout"), "<seconds>" },
+        { "version", 'V', 0, GLib.OptionArg.NONE, ref print_version, N_("Print version"), null },
         { null }
     };
 
@@ -170,6 +173,15 @@ namespace Eventc
         catch ( OptionError e )
         {
             GLib.error("Couldn’t parse the arguments: %s", e.message);
+        }
+
+        if ( print_version )
+        {
+            stdout.printf("eventc %s (using libeventc %s)\n",
+                Eventd.Config.PACKAGE_VERSION,
+                Eventc.get_version());
+
+            return 0;
         }
 
         if ( args.length < 2 )

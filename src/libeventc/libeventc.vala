@@ -38,6 +38,12 @@ namespace Eventc
         CLOSE
     }
 
+    public static unowned string
+    get_version()
+    {
+        return Eventd.Config.PACKAGE_VERSION;
+    }
+
     public class Connection : GLib.Object
     {
         public enum Mode {
