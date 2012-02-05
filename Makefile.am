@@ -1,3 +1,7 @@
+AM_DISTCHECK_CONFIGURE_FLAGS = \
+	--disable-debug \
+	--disable-git-version
+
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 AM_MAKEFLAGS = --no-print-directory
 

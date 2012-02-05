@@ -49,6 +49,11 @@ AM_VALA_CFLAGS="-Wno-unused-variable -Wno-unused-function -Wno-unused-but-set-va
 AM_VALAFLAGS=""
 
 
+AC_ARG_ENABLE(git-version, AS_HELP_STRING([--disable-git-version], [Do not append git version information to the version string]), enable_git_version=$enableval, enable_git_version=yes)
+if test x$enable_git_version = xyes; then
+    AC_DEFINE_UNQUOTED([PACKAGE_VERSION], ["${PACKAGE_VERSION} − `git describe --tags --always`, branch `git describe --tags --always --all | sed -e 's:heads/::'`"], [Full version with git information])
+fi
+
 #
 # Common dependencies
 #
