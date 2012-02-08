@@ -32,67 +32,11 @@
 #include <libeventd-config.h>
 #include <libeventd-regex.h>
 
-#include "espeak.h"
-#include "pulseaudio.h"
-
 struct _EventdPluginContext {
     GHashTable *events;
-    EventdEspeakPulseaudioContext *pulseaudio;
 };
 
-typedef struct {
-    guchar *data;
-    gsize length;
-} EventdEspeakSoundData;
-
 #define BUFFER_SIZE 2000
-
-static void
-_eventd_espeak_callback_data_free(EventdEspeakCallbackData *data)
-{
-    eventd_espeak_pulseaudio_pa_data_free(data->data);
-
-    g_free(data);
-}
-
-static void
-_eventd_espeak_callback_data_unref(EventdEspeakCallbackData *data)
-{
-    if ( --data->ref_count > 0 )
-        return;
-
-    _eventd_espeak_callback_data_free(data);
-}
-
-static EventdEspeakCallbackData *
-_eventd_espeak_callback_data_new(EventdPluginContext *context)
-{
-    EventdEspeakCallbackData *data;
-
-    data = g_new0(EventdEspeakCallbackData, 1);
-
-    data->ref_count = 1;
-    data->data = eventd_espeak_pulseaudio_pa_data_new(context->pulseaudio);
-
-    return data;
-}
-
-static int
-synth_callback(gshort *wav, gint numsamples, espeak_EVENT *event)
-{
-    eventd_espeak_pulseaudio_play_data(wav, numsamples, event);
-
-    if ( ( wav == NULL ) && ( event->type == espeakEVENT_LIST_TERMINATED ) )
-        _eventd_espeak_callback_data_unref(event->user_data);
-
-    return 0;
-}
-
-static int
-uri_callback(int type, const char *uri, const char *base)
-{
-    return 1;
-}
 
 static EventdPluginContext *
 _eventd_espeak_init(EventdCoreContext *core, EventdCoreInterface *interface)
@@ -100,7 +44,7 @@ _eventd_espeak_init(EventdCoreContext *core, EventdCoreInterface *interface)
     gint sample_rate;
     EventdPluginContext *context;
 
-    sample_rate = espeak_Initialize(AUDIO_OUTPUT_RETRIEVAL, BUFFER_SIZE, NULL, 0);
+    sample_rate = espeak_Initialize(AUDIO_OUTPUT_PLAYBACK, BUFFER_SIZE, NULL, 0);
 
     if ( sample_rate == EE_INTERNAL_ERROR )
     {
@@ -110,12 +54,7 @@ _eventd_espeak_init(EventdCoreContext *core, EventdCoreInterface *interface)
 
     context = g_new0(EventdPluginContext, 1);
 
-    espeak_SetSynthCallback(synth_callback);
-    espeak_SetUriCallback(uri_callback);
-
     context->events = libeventd_config_events_new(g_free);
-
-    context->pulseaudio = eventd_espeak_pulseaudio_init(sample_rate);
 
     libeventd_regex_init();
 
@@ -125,8 +64,6 @@ _eventd_espeak_init(EventdCoreContext *core, EventdCoreInterface *interface)
 static void
 _eventd_espeak_uninit(EventdPluginContext *context)
 {
-    eventd_espeak_pulseaudio_uninit(context->pulseaudio);
-
     g_hash_table_unref(context->events);
 
     libeventd_regex_clean();
@@ -137,16 +74,9 @@ _eventd_espeak_uninit(EventdPluginContext *context)
 }
 
 static void
-_eventd_espeak_start(EventdPluginContext *context)
-{
-    eventd_espeak_pulseaudio_start(context->pulseaudio);
-}
-
-static void
 _eventd_espeak_stop(EventdPluginContext *context)
 {
     espeak_Synchronize();
-    eventd_espeak_pulseaudio_stop(context->pulseaudio);
 }
 
 static void
@@ -222,7 +152,6 @@ _eventd_espeak_event_action(EventdPluginContext *context, EventdEvent *event)
     gchar *message;
     gchar *msg;
     espeak_ERROR error;
-    EventdEspeakCallbackData *data;
 
     message = libeventd_config_events_get_event(context->events, eventd_event_get_category(event), eventd_event_get_name(event));
     if ( message == NULL )
@@ -230,22 +159,19 @@ _eventd_espeak_event_action(EventdPluginContext *context, EventdEvent *event)
 
     msg = libeventd_regex_replace_event_data(message, eventd_event_get_data(event), _eventd_espeak_regex_event_data_cb);
 
-    data = _eventd_espeak_callback_data_new(context);
-    error = espeak_Synth(msg, strlen(msg)+1, 0, POS_CHARACTER, 0, espeakCHARS_UTF8|espeakSSML, NULL, data);
+    error = espeak_Synth(msg, strlen(msg)+1, 0, POS_CHARACTER, 0, espeakCHARS_UTF8|espeakSSML, NULL, NULL);
 
     switch ( error )
     {
     case EE_INTERNAL_ERROR:
-        g_warning("Couldn’t synthetise text");
-        _eventd_espeak_callback_data_free(data);
-        goto fail;
     case EE_BUFFER_FULL:
+        g_warning("Couldn’t synthetise text");
     case EE_OK:
-    default:
     break;
+    case EE_NOT_FOUND:
+        g_assert_not_reached();
     }
 
-fail:
     g_free(msg);
 }
 static void
@@ -260,7 +186,6 @@ eventd_plugin_get_info(EventdPlugin *plugin)
     plugin->init = _eventd_espeak_init;
     plugin->uninit = _eventd_espeak_uninit;
 
-    plugin->start = _eventd_espeak_start;
     plugin->stop = _eventd_espeak_stop;
 
     plugin->config_reset = _eventd_espeak_config_reset;
