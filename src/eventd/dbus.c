@@ -254,6 +254,11 @@ _eventd_dbus_get_capabilities(GDBusMethodInvocation *invocation)
     g_variant_builder_add(builder, "s", "body");
     g_variant_builder_add(builder, "s", "body-markup");
     g_variant_builder_add(builder, "s", "icon-static");
+    g_variant_builder_add(builder, "s", "image/svg+xml");
+
+    /* eventd special features */
+    g_variant_builder_add(builder, "s", "x-eventd-overlay-icon");
+    g_variant_builder_add(builder, "s", "x-eventd-user-control");
 
     /* TODO: make the notification plugin works fine with these
     g_variant_builder_add(builder, "s", "body-hyperlinks");
