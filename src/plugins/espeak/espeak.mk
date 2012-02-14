@@ -1,5 +1,4 @@
 # espeak plugin
-if ENABLE_ESPEAK
 plugins_LTLIBRARIES += \
 	espeak.la
 
@@ -32,5 +31,4 @@ espeak_la_SOURCES += \
 else
 espeak_la_SOURCES += \
 	src/plugins/espeak/pulseaudio-dummy.c
-endif
 endif

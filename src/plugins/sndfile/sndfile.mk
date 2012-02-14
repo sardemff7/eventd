@@ -1,5 +1,4 @@
 # sndfile plugin
-if ENABLE_SNDFILE
 plugins_LTLIBRARIES += \
 	sndfile.la
 
@@ -32,5 +31,4 @@ sndfile_la_SOURCES += \
 else
 sndfile_la_SOURCES += \
 	src/plugins/sndfile/pulseaudio-dummy.c
-endif
 endif

@@ -40,8 +40,12 @@ include src/libeventd-event/libeventd-event.mk
 include src/libeventd/libeventd.mk
 include src/eventd/eventd.mk
 include src/eventdctl/eventdctl.mk
+if ENABLE_SNDFILE
 include src/plugins/sndfile/sndfile.mk
+endif
+if ENABLE_ESPEAK
 include src/plugins/espeak/espeak.mk
+endif
 include src/plugins/notification/notification.mk
 include src/plugins/relay/relay.mk
 include src/libeventc/libeventc.mk
