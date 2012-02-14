@@ -82,7 +82,7 @@ _eventd_service_private_connection_handler(GThreadedSocketService *socket_servic
             eventd_core_config_reload(control->core);
         }
         else
-            eventd_plugins_control_command(line);
+            eventd_plugins_control_command_all(line);
 
         g_free(line);
     }

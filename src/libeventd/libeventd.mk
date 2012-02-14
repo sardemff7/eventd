@@ -6,22 +6,18 @@ pkglib_LTLIBRARIES += \
 
 pkginclude_HEADERS += \
 	include/libeventd-regex.h \
-	include/libeventd-config.h \
-	include/libeventd-plugins.h
+	include/libeventd-config.h
 
 EXTRA_DIST += \
 	src/libeventd/libeventd.sym
 
 libeventd_la_SOURCES = \
 	src/libeventd/regex.c \
-	src/libeventd/config.c \
-	src/libeventd/plugins.c
+	src/libeventd/config.c
 
 libeventd_la_CFLAGS = \
 	$(AM_CFLAGS) \
 	-D G_LOG_DOMAIN=\"libeventd\" \
-	-D LIBDIR=\"$(libdir)\" \
-	-D DATADIR=\"$(datadir)\" \
 	$(GMODULE_CFLAGS) \
 	$(GLIB_CFLAGS)
 

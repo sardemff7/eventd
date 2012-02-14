@@ -27,7 +27,7 @@
 
 typedef struct _EventdPluginContext EventdPluginContext;
 
-typedef EventdPluginContext *(*EventdPluginInitFunc)(gpointer user_data);
+typedef EventdPluginContext *(*EventdPluginInitFunc)();
 typedef void (*EventdPluginFunc)(EventdPluginContext *context);
 typedef void (*EventdPluginControlCommandFunc)(EventdPluginContext *context, const gchar *command);
 typedef void (*EventdPluginEventParseFunc)(EventdPluginContext *context, const gchar *, const gchar *, GKeyFile *);

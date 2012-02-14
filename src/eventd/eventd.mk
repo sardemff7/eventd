@@ -27,6 +27,7 @@ eventd_SOURCES = \
 eventd_CFLAGS = \
 	$(AM_CFLAGS) \
 	-D SYSCONFDIR=\"$(sysconfdir)\" \
+	-D LIBDIR=\"$(libdir)\" \
 	-D DATADIR=\"$(datadir)\" \
 	$(SYSTEMD_CFLAGS) \
 	$(AVAHI_CFLAGS) \
