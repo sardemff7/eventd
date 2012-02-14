@@ -58,7 +58,7 @@ eventd_nd_init()
 
     context->style = eventd_nd_style_new();
 
-    context->bubbles = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, eventd_nd_bubble_free);
+    context->bubbles = g_hash_table_new_full(g_direct_hash, g_direct_equal, g_object_unref, eventd_nd_bubble_free);
 
     return context;
 }
@@ -123,26 +123,21 @@ static void
 _eventd_nd_event_ended(EventdEvent *event, EventdEventEndReason reason, EventdNdContext *context)
 {
     EventdNdBubble *bubble;
-    gpointer id;
 
-    id = GUINT_TO_POINTER(eventd_event_get_id(event));
-    bubble = g_hash_table_lookup(context->bubbles, id);
+    bubble = g_hash_table_lookup(context->bubbles, event);
 
     eventd_nd_bubble_hide(bubble);
 
-    g_hash_table_remove(context->bubbles, id);
+    g_hash_table_remove(context->bubbles, event);
 }
 
 void
 eventd_nd_event_action(EventdNdContext *context, EventdEvent *event, EventdNotificationNotification *notification)
 {
     EventdNdBubble *bubble;
-    gpointer id;
 
     if ( context == NULL )
         return;
-
-    id = GUINT_TO_POINTER(eventd_event_get_id(event));
 
     g_signal_connect(event, "ended", G_CALLBACK(_eventd_nd_event_ended), context);
 
@@ -152,5 +147,5 @@ eventd_nd_event_action(EventdNdContext *context, EventdEvent *event, EventdNotif
     bubble = eventd_nd_bubble_new(notification, context->style, context->graphical_displays, context->framebuffer_displays);
 
     eventd_nd_bubble_show(bubble);
-    g_hash_table_insert(context->bubbles, id, bubble);
+    g_hash_table_insert(context->bubbles, g_object_ref(event), bubble);
 }

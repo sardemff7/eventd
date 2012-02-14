@@ -45,11 +45,13 @@ struct _EventdDbusContext {
     GDBusNodeInfo *introspection_data;
     guint id;
     GDBusConnection *connection;
+    guint32 count;
     GHashTable *events;
 };
 
 typedef struct {
     EventdDbusContext *context;
+    guint32 id;
     gchar *sender;
     EventdEvent *event;
 } EventdDbusNotification;
@@ -57,14 +59,11 @@ typedef struct {
 static void
 _eventd_dbus_event_ended(EventdEvent *event, EventdEventEndReason reason, EventdDbusNotification *notification)
 {
-    guint32 id;
-
-    id = eventd_event_get_id(event);
     g_dbus_connection_emit_signal(notification->context->connection, notification->sender,
                                   NOTIFICATION_BUS_PATH, NOTIFICATION_BUS_NAME,
-                                  "NotificationClosed", g_variant_new("(uu)", id, reason),
+                                  "NotificationClosed", g_variant_new("(uu)", notification->id, reason),
                                   NULL);
-    g_hash_table_remove(notification->context->events, GUINT_TO_POINTER(id));
+    g_hash_table_remove(notification->context->events, GUINT_TO_POINTER(notification->id));
 }
 
 static void
@@ -85,10 +84,11 @@ _eventd_dbus_notification_new(EventdDbusContext *context, const gchar *sender, g
 
     notification = g_new0(EventdDbusNotification, 1);
     notification->context = context;
+    notification->id = id;
     notification->sender = g_strdup(sender);
     notification->event = event;
 
-    g_hash_table_insert(context->events, GUINT_TO_POINTER(id), notification);
+    g_hash_table_insert(context->events, GUINT_TO_POINTER(notification->id), notification);
     g_signal_connect(event, "ended", G_CALLBACK(_eventd_dbus_event_ended), notification);
 }
 
@@ -158,9 +158,15 @@ _eventd_dbus_notify(EventdDbusContext *context, const gchar *sender, GVariant *p
     g_debug("Creanting event '%s' for client '%s' ", event_name, app_name);
 #endif /* DEBUG */
 
-    if ( id == 0 )
-        id = eventd_queue_get_next_event_id(context->queue);
-    event = eventd_event_new_with_id(id, event_name);
+    if ( id > 0 )
+    {
+        /*
+         * TODO: Update the notification
+         */
+    }
+    else
+        id = ++context->count;
+    event = eventd_event_new(event_name);
     eventd_event_set_category(event, "libnotify");
 
     eventd_config_event_get_disable_and_timeout(context->config, event, &disable, &server_timeout);

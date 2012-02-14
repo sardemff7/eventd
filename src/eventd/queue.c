@@ -43,14 +43,7 @@ struct _EventdQueue {
     GAsyncQueue *queue;
     GThread *thread;
     EventdQueueEvent *current;
-    guint32 count;
 };
-
-guint32
-eventd_queue_get_next_event_id(EventdQueue *queue)
-{
-    return ++queue->count;
-}
 
 static void
 _eventd_queue_event_ended(GObject *object, gint reason, gpointer user_data)

@@ -266,9 +266,7 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
             if ( category == NULL )
                 break;
 
-            last_eventd_id = eventd_queue_get_next_event_id(service->queue);
-
-            event = eventd_event_new_with_id(last_eventd_id, line+6);
+            event = eventd_event_new(line+6);
 
             if ( mode != MODE_RELAY )
                 eventd_event_set_category(event, category);
