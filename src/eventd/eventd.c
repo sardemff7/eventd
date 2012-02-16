@@ -35,7 +35,6 @@ int
 main(int argc, char *argv[])
 {
     gboolean no_plugins = FALSE;
-    gboolean daemonize = FALSE;
 
     guint16 bind_port = DEFAULT_BIND_PORT;
 
@@ -56,9 +55,7 @@ main(int argc, char *argv[])
     {
 #if DEBUG
         { "no-plugins", 'P', 0, G_OPTION_ARG_NONE, &no_plugins, "Disable systemd socket activation", NULL },
-#else /* ! DEBUG */
-        { "daemonize", 'd', 0, G_OPTION_ARG_NONE, &daemonize, "Run the daemon in the background", NULL },
-#endif /* ! DEBUG */
+#endif /* DEBUG */
         { "port", 'p', 0, G_OPTION_ARG_INT, &bind_port, "Port to listen for inbound connections", "P" },
 #if ENABLE_GIO_UNIX
         { "no-network", 'N', 0, G_OPTION_ARG_NONE, &no_network, "Disable the network bind", NULL },
@@ -119,29 +116,7 @@ main(int argc, char *argv[])
         retval = 2;
     }
     else
-    {
-        if ( daemonize )
-        {
-            pid_t pid = -1;
-
-            pid = fork();
-            if ( pid == -1 )
-            {
-                perror("fork");
-                return 1;
-            }
-            else if ( pid != 0 )
-                return 0;
-            close(0);
-            close(1);
-            close(2);
-            open("/dev/null", O_RDWR);
-            dup2(0,1);
-            dup2(0,2);
-        }
-
         retval = eventd_service(sockets, no_plugins, no_avahi);
-    }
 
     eventd_sockets_free_all(sockets, unix_socket, private_socket);
 
