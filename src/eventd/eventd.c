@@ -105,13 +105,7 @@ main(int argc, char *argv[])
 #endif /* ENABLE_SYSTEMD */
         sockets = eventd_sockets_get_all(bind_port, no_network, no_unix, &private_socket, &unix_socket, take_over_socket);
 
-    if ( g_list_length(sockets) < MIN_SOCKETS )
-    {
-        g_warning("Nothing to bind to, kind of useless, isn't it?");
-        retval = 2;
-    }
-    else
-        retval = eventd_service(sockets, no_avahi);
+    retval = eventd_service(sockets, no_avahi);
 
     eventd_sockets_free_all(sockets, unix_socket, private_socket);
 

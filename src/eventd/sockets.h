@@ -23,12 +23,6 @@
 #ifndef __EVENTD_SOCKETS_H__
 #define __EVENTD_SOCKETS_H__
 
-#if ENABLE_GIO_UNIX
-#define MIN_SOCKETS 2
-#else /* ! ENABLE_GIO_UNIX */
-#define MIN_SOCKETS 1
-#endif /* ! ENABLE_GIO_UNIX */
-
 #if ENABLE_SYSTEMD
 GList *eventd_sockets_get_systemd(gchar **private_socket, gchar **unix_socket);
 #endif /* ENABLE_SYSTEMD */
