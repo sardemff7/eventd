@@ -31,6 +31,8 @@
 
 #include "plugins.h"
 
+#include "config.h"
+
 #include "queue.h"
 
 typedef struct {
@@ -39,7 +41,7 @@ typedef struct {
 } EventdQueueEvent;
 
 struct _EventdQueue {
-    EventdService *service;
+    EventdConfig *config;
     GAsyncQueue *queue;
     GThread *thread;
     EventdQueueEvent *current;
@@ -89,8 +91,6 @@ _eventd_queue_source_dispatch(gpointer user_data)
 
         g_signal_connect(event->event, "ended", G_CALLBACK(_eventd_queue_event_ended), queue);
         timeout = eventd_event_get_timeout(event->event);
-        if ( timeout < 0 )
-            timeout = 3000;
         if ( timeout > 0 )
             event->timeout_id = g_timeout_add(timeout, _eventd_queue_event_timeout, event);
     }
@@ -100,13 +100,13 @@ _eventd_queue_source_dispatch(gpointer user_data)
 }
 
 EventdQueue *
-eventd_queue_new(EventdService *service)
+eventd_queue_new(EventdConfig *config)
 {
     EventdQueue *queue;
 
     queue = g_new0(EventdQueue, 1);
 
-    queue->service = service;
+    queue->config = config;
 
     queue->queue = g_async_queue_new();
 
@@ -134,9 +134,20 @@ void
 eventd_queue_push(EventdQueue *queue, EventdEvent *event)
 {
     EventdQueueEvent *queue_event;
+    gint64 timeout;
 
     queue_event = g_new0(EventdQueueEvent, 1);
     queue_event->event = g_object_ref(event);
+
+    timeout = eventd_event_get_timeout(event);
+    if ( timeout < 0 )
+    {
+        timeout = eventd_config_event_get_timeout(queue->config, event);
+
+        if ( timeout < 0 )
+            timeout = 3000;
+    }
+    eventd_event_set_timeout(event, timeout);
 
     g_async_queue_push_unlocked(queue->queue, queue_event);
 }

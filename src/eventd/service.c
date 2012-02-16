@@ -196,13 +196,8 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
                 }
                 else
                 {
-                    gboolean disable;
-                    gint64 timeout;
 
-                    eventd_config_event_get_disable_and_timeout(service->config, event, &disable, &timeout);
-                    eventd_event_set_timeout(event, timeout);
-
-                    if ( ! disable )
+                    if ( ! eventd_config_event_get_disable(service->config, event) )
                     {
                         GHashTable *pong = NULL;
 
@@ -359,7 +354,7 @@ eventd_service(GList *sockets, gboolean no_avahi)
 
     eventd_plugins_start_all();
 
-    service->queue = eventd_queue_new(service);
+    service->queue = eventd_queue_new(service->config);
 
     service->service = g_threaded_socket_service_new(eventd_config_get_max_clients(service->config));
 

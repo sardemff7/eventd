@@ -77,23 +77,30 @@ _eventd_config_event_free(gpointer data)
     g_free(event);
 }
 
-void
-eventd_config_event_get_disable_and_timeout(EventdConfig *config, EventdEvent *event, gboolean *disable, gint64 *timeout)
+gboolean
+eventd_config_event_get_disable(EventdConfig *config, EventdEvent *event)
 {
     EventdConfigEvent *config_event;
 
     config_event = libeventd_config_events_get_event(config->events, eventd_event_get_category(event), eventd_event_get_name(event));
 
     if ( config_event == NULL )
-    {
-        *disable = FALSE;
-        *timeout = -1;
-    }
+        return FALSE;
     else
-    {
-        *disable = config_event->disable;
-        *timeout = config_event->timeout;
-    }
+        return config_event->disable;
+}
+
+gint64
+eventd_config_event_get_timeout(EventdConfig *config, EventdEvent *event)
+{
+    EventdConfigEvent *config_event;
+
+    config_event = libeventd_config_events_get_event(config->events, eventd_event_get_category(event), eventd_event_get_name(event));
+
+    if ( config_event == NULL )
+        return -1;
+    else
+        return config_event->timeout;
 }
 
 

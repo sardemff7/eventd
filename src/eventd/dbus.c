@@ -110,8 +110,6 @@ _eventd_dbus_notify(EventdDbusContext *context, const gchar *sender, GVariant *p
     const gchar *image_path = NULL;
 
     gint timeout;
-    gboolean disable;
-    gint64 server_timeout;
 
     EventdEvent *event = NULL;
 
@@ -169,8 +167,7 @@ _eventd_dbus_notify(EventdDbusContext *context, const gchar *sender, GVariant *p
     event = eventd_event_new(event_name);
     eventd_event_set_category(event, "libnotify");
 
-    eventd_config_event_get_disable_and_timeout(context->config, event, &disable, &server_timeout);
-    if ( disable )
+    if ( eventd_config_event_get_disable(context->config, event) )
     {
         g_dbus_method_invocation_return_dbus_error(invocation, NOTIFICATION_BUS_NAME ".Disabled", "Notification type disabled");
         g_object_unref(event);
@@ -220,7 +217,7 @@ _eventd_dbus_notify(EventdDbusContext *context, const gchar *sender, GVariant *p
     }
 
 
-    eventd_event_set_timeout(event, ( timeout > -1 ) ? timeout : ( urgency > -1 ) ? ( 3000 + urgency * 2000 ) : server_timeout);
+    eventd_event_set_timeout(event, ( timeout > -1 ) ? timeout : ( urgency > -1 ) ? ( 3000 + urgency * 2000 ) : -1);
 
     _eventd_dbus_notification_new(context, sender, id, event);
     eventd_queue_push(context->queue, event);

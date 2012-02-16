@@ -23,7 +23,7 @@
 #ifndef __EVENTD_QUEUE_H__
 #define __EVENTD_QUEUE_H__
 
-EventdQueue *eventd_queue_new(EventdService *service);
+EventdQueue *eventd_queue_new(EventdConfig *config);
 void eventd_queue_free(EventdQueue *queue);
 
 void eventd_queue_push(EventdQueue *queue, EventdEvent *event);

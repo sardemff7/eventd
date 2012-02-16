@@ -29,6 +29,7 @@ void eventd_config_clean(EventdConfig *config);
 gint64 eventd_config_get_max_clients(EventdConfig *config);
 const gchar *eventd_config_get_avahi_name(EventdConfig *config);
 
-void eventd_config_event_get_disable_and_timeout(EventdConfig *config, EventdEvent *event, gboolean *disable, gint64 *timeout);
+gboolean eventd_config_event_get_disable(EventdConfig *config, EventdEvent *event);
+gint64 eventd_config_event_get_timeout(EventdConfig *config, EventdEvent *event);
 
 #endif /* __EVENTD_EVENTS_H__ */
