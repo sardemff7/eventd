@@ -34,8 +34,6 @@
 int
 main(int argc, char *argv[])
 {
-    gboolean no_plugins = FALSE;
-
     guint16 bind_port = DEFAULT_BIND_PORT;
 
     gboolean no_network = FALSE;
@@ -53,9 +51,6 @@ main(int argc, char *argv[])
 
     GOptionEntry entries[] =
     {
-#if DEBUG
-        { "no-plugins", 'P', 0, G_OPTION_ARG_NONE, &no_plugins, "Disable systemd socket activation", NULL },
-#endif /* DEBUG */
         { "port", 'p', 0, G_OPTION_ARG_INT, &bind_port, "Port to listen for inbound connections", "P" },
 #if ENABLE_GIO_UNIX
         { "no-network", 'N', 0, G_OPTION_ARG_NONE, &no_network, "Disable the network bind", NULL },
@@ -116,7 +111,7 @@ main(int argc, char *argv[])
         retval = 2;
     }
     else
-        retval = eventd_service(sockets, no_plugins, no_avahi);
+        retval = eventd_service(sockets, no_avahi);
 
     eventd_sockets_free_all(sockets, unix_socket, private_socket);
 

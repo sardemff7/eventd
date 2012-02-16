@@ -336,7 +336,7 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
 }
 
 int
-eventd_service(GList *sockets, gboolean no_plugins, gboolean no_avahi)
+eventd_service(GList *sockets, gboolean no_avahi)
 {
     int retval = 0;
     GError *error = NULL;
@@ -352,7 +352,7 @@ eventd_service(GList *sockets, gboolean no_plugins, gboolean no_avahi)
 
     service->control = eventd_control_start(service, &sockets);
 
-    if ( ! no_plugins )
+    if ( g_getenv("EVENTD_NO_PLUGINS") == NULL )
         eventd_plugins_load();
 
     service->config = eventd_config_parser(service->config);
