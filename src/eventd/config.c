@@ -41,10 +41,10 @@ struct _EventdConfig {
     GHashTable *events;
 };
 
-struct _EventdConfigEvent {
+typedef struct {
     gboolean disable;
     gint64 timeout;
-};
+} EventdConfigEvent;
 
 static void
 _eventd_config_event_update(EventdConfigEvent *event, gboolean disable, Int *timeout)

@@ -32,6 +32,5 @@ typedef struct _EventdControl EventdControl;
 typedef struct _EventdAvahiContext EventdAvahiContext;
 typedef struct _EventdDbusContext EventdDbusContext;
 typedef struct _EventdConfig EventdConfig;
-typedef struct _EventdConfigEvent EventdConfigEvent;
 
 #endif /* __EVENTD_TYPES_H__ */

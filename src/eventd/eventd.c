@@ -20,13 +20,9 @@
  *
  */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <sys/file.h>
-#include <unistd.h>
-
 #include <glib.h>
 #include <glib-object.h>
+#include <glib/gprintf.h>
 
 #include "sockets.h"
 #include "service.h"
@@ -71,7 +67,7 @@ main(int argc, char *argv[])
 
     int retval = 0;
     GError *error = NULL;
-    GOptionContext *context = NULL;
+    GOptionContext *option_context = NULL;
     GList *sockets = NULL;
 
 #if DEBUG
@@ -86,15 +82,15 @@ main(int argc, char *argv[])
 
     g_type_init();
 
-    context = g_option_context_new("- small daemon to act on remote or local events");
-    g_option_context_add_main_entries(context, entries, GETTEXT_PACKAGE);
-    if ( ! g_option_context_parse(context, &argc, &argv, &error) )
+    option_context = g_option_context_new("- small daemon to act on remote or local events");
+    g_option_context_add_main_entries(option_context, entries, GETTEXT_PACKAGE);
+    if ( ! g_option_context_parse(option_context, &argc, &argv, &error) )
         g_error("Option parsing failed: %s\n", error->message);
-    g_option_context_free(context);
+    g_option_context_free(option_context);
 
     if ( print_version )
     {
-        fprintf(stdout, PACKAGE_NAME " " PACKAGE_VERSION "\n");
+        g_fprintf(stdout, PACKAGE_NAME " " PACKAGE_VERSION "\n");
         return 0;
     }
 
