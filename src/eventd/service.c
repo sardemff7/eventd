@@ -36,13 +36,11 @@
 #include "plugins.h"
 #include "queue.h"
 #include "avahi.h"
-#include "dbus.h"
 
 #include "service.h"
 
 struct _EventdService {
     EventdAvahiContext *avahi;
-    EventdDbusContext *dbus;
     EventdConfig *config;
     EventdQueue *queue;
     GSocketService *service;
@@ -330,7 +328,6 @@ eventd_service_new(EventdConfig *config, EventdQueue *queue, GList *sockets, gbo
 
     if ( ! no_avahi )
         service->avahi = eventd_avahi_start(service->config, g_list_first(sockets));
-    service->dbus = eventd_dbus_start(service->config, service->queue);
 
     return service;
 }
@@ -338,7 +335,6 @@ eventd_service_new(EventdConfig *config, EventdQueue *queue, GList *sockets, gbo
 void
 eventd_service_free(EventdService *service)
 {
-    eventd_dbus_stop(service->dbus);
     eventd_avahi_stop(service->avahi);
 
     g_socket_service_stop(service->service);

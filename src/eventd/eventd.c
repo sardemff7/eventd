@@ -35,6 +35,7 @@
 #include "queue.h"
 #include "sockets.h"
 #include "service.h"
+#include "dbus.h"
 
 #include "eventd.h"
 
@@ -43,6 +44,7 @@ struct _EventdCoreContext {
     EventdControl *control;
     EventdQueue *queue;
     EventdService *service;
+    EventdDbusContext *dbus;
     GMainLoop *loop;
 };
 
@@ -162,11 +164,13 @@ main(int argc, char *argv[])
     eventd_plugins_start_all();
 
     context->service = eventd_service_new(context->config, context->queue, sockets, no_avahi);
+    context->dbus = eventd_dbus_start(context->config, context->queue);
 
     context->loop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(context->loop);
     g_main_loop_unref(context->loop);
 
+    eventd_dbus_stop(context->dbus);
     eventd_service_free(context->service);
 
     eventd_sockets_free_all(sockets, unix_socket, private_socket);
