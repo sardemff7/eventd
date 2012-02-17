@@ -347,9 +347,6 @@ eventd_service(GList *sockets, gboolean no_avahi)
 
     service->control = eventd_control_start(service, &sockets);
 
-    if ( g_getenv("EVENTD_NO_PLUGINS") == NULL )
-        eventd_plugins_load();
-
     service->config = eventd_config_new();
 
     eventd_config_parse(service->config);
@@ -389,8 +386,6 @@ eventd_service(GList *sockets, gboolean no_avahi)
     eventd_config_free(service->config);
 
     eventd_control_stop(service->control);
-
-    eventd_plugins_unload();
 
     return retval;
 }

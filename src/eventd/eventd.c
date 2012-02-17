@@ -24,6 +24,9 @@
 #include <glib-object.h>
 #include <glib/gprintf.h>
 
+#include "types.h"
+
+#include "plugins.h"
 #include "sockets.h"
 #include "service.h"
 
@@ -79,6 +82,9 @@ main(int argc, char *argv[])
 
     context = g_new0(EventdCoreContext, 1);
 
+    if ( g_getenv("EVENTD_NO_PLUGINS") == NULL )
+        eventd_plugins_load();
+
     option_context = g_option_context_new("- small daemon to act on remote or local events");
     g_option_context_add_main_entries(option_context, entries, GETTEXT_PACKAGE);
     if ( ! g_option_context_parse(option_context, &argc, &argv, &error) )
@@ -98,6 +104,8 @@ main(int argc, char *argv[])
     eventd_sockets_free_all(sockets, unix_socket, private_socket);
 
 end:
+    eventd_plugins_unload();
+
     g_free(context);
 
     return retval;
