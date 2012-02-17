@@ -23,8 +23,9 @@
 #ifndef __EVENTD_EVENTS_H__
 #define __EVENTD_EVENTS_H__
 
-EventdConfig *eventd_config_parser(EventdConfig *config);
-void eventd_config_clean(EventdConfig *config);
+EventdConfig *eventd_config_new();
+void eventd_config_parse(EventdConfig *config);
+void eventd_config_free(EventdConfig *config);
 
 gint64 eventd_config_get_max_clients(EventdConfig *config);
 const gchar *eventd_config_get_avahi_name(EventdConfig *config);

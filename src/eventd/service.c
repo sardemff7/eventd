@@ -68,7 +68,7 @@ eventd_service_config_reload(gpointer user_data)
 {
     EventdService *service = user_data;
     eventd_plugins_stop_all();
-    service->config = eventd_config_parser(service->config);
+    eventd_config_parse(service->config);
     eventd_plugins_start_all();
 }
 
@@ -350,7 +350,9 @@ eventd_service(GList *sockets, gboolean no_avahi)
     if ( g_getenv("EVENTD_NO_PLUGINS") == NULL )
         eventd_plugins_load();
 
-    service->config = eventd_config_parser(service->config);
+    service->config = eventd_config_new();
+
+    eventd_config_parse(service->config);
 
     eventd_plugins_start_all();
 
@@ -384,7 +386,7 @@ eventd_service(GList *sockets, gboolean no_avahi)
     g_socket_service_stop(service->service);
     g_socket_listener_close(G_SOCKET_LISTENER(service->service));
 
-    eventd_config_clean(service->config);
+    eventd_config_free(service->config);
 
     eventd_control_stop(service->control);
 

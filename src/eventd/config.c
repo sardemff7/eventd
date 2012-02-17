@@ -36,6 +36,7 @@
 #include "config.h"
 
 struct _EventdConfig {
+    gboolean loaded;
     gint64 max_clients;
     gchar *avahi_name;
     GHashTable *events;
@@ -297,17 +298,34 @@ out:
 }
 
 EventdConfig *
-eventd_config_parser(EventdConfig *config)
+eventd_config_new()
 {
-    if ( config != NULL )
-    {
-        g_message("Reloading configuration");
-        eventd_config_clean(config);
-    }
+    EventdConfig *config;
 
     config = g_new0(EventdConfig, 1);
 
     config->events = libeventd_config_events_new(_eventd_config_event_free);
+
+    return config;
+}
+
+static void
+_eventd_config_clean(EventdConfig *config)
+{
+    if ( ! config->loaded )
+        return;
+
+    eventd_plugins_config_clean_all();
+
+    g_hash_table_remove_all(config->events);
+}
+
+void
+eventd_config_parse(EventdConfig *config)
+{
+    _eventd_config_clean(config);
+
+    config->loaded = TRUE;
 
     _eventd_config_defaults(config);
 
@@ -316,14 +334,16 @@ eventd_config_parser(EventdConfig *config)
     _eventd_config_load_dir(config, DATADIR);
     _eventd_config_load_dir(config, SYSCONFDIR);
     _eventd_config_load_dir(config, g_get_user_config_dir());
-
-    return config;
 }
 
 void
-eventd_config_clean(EventdConfig *config)
+eventd_config_free(EventdConfig *config)
 {
-    eventd_plugins_config_clean_all();
+    _eventd_config_clean(config);
+
+    g_hash_table_unref(config->events);
+
+    g_free(config->avahi_name);
 
     g_free(config);
 }
