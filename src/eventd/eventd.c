@@ -59,7 +59,7 @@ eventd_core_config_reload(EventdCoreContext *context)
 void
 eventd_core_quit(EventdCoreContext *context)
 {
-    eventd_queue_free(context->queue);
+    eventd_queue_stop(context->queue);
 
     eventd_service_quit(context->service);
 
@@ -135,6 +135,7 @@ main(int argc, char *argv[])
         eventd_plugins_load();
 
     context->config = eventd_config_new();
+    context->queue = eventd_queue_new(context->config);
 
     option_context = g_option_context_new("- small daemon to act on remote or local events");
     g_option_context_add_main_entries(option_context, entries, GETTEXT_PACKAGE);
@@ -159,7 +160,7 @@ main(int argc, char *argv[])
 
     eventd_control_start(context->control, &sockets);
 
-    context->queue = eventd_queue_new(context->config);
+    eventd_queue_start(context->queue);
 
     eventd_plugins_start_all();
 
@@ -176,6 +177,7 @@ main(int argc, char *argv[])
     eventd_sockets_free_all(sockets, unix_socket, private_socket);
 
 end:
+    eventd_queue_free(context->queue);
     eventd_config_free(context->config);
 
     eventd_plugins_unload();

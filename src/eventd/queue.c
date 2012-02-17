@@ -110,13 +110,17 @@ eventd_queue_new(EventdConfig *config)
 
     queue->queue = g_async_queue_new();
 
-    queue->thread = g_thread_new("Event queue", _eventd_queue_source_dispatch, queue);
-
     return queue;
 }
 
 void
-eventd_queue_free(EventdQueue *queue)
+eventd_queue_start(EventdQueue *queue)
+{
+    queue->thread = g_thread_new("Event queue", _eventd_queue_source_dispatch, queue);
+}
+
+void
+eventd_queue_stop(EventdQueue *queue)
 {
     if ( queue->current != NULL )
         eventd_event_end(queue->current->event, EVENTD_EVENT_END_REASON_RESERVED);
@@ -124,7 +128,11 @@ eventd_queue_free(EventdQueue *queue)
     g_async_queue_push(queue->queue, g_new0(EventdQueueEvent, 1));
 
     g_thread_join(queue->thread);
+}
 
+void
+eventd_queue_free(EventdQueue *queue)
+{
     g_async_queue_unref(queue->queue);
 
     g_free(queue);
