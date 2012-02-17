@@ -74,8 +74,6 @@ eventd_service_quit(EventdService *service)
     eventd_queue_free(service->queue);
 
     g_slist_free_full(service->clients, _eventd_service_client_disconnect);
-
-    eventd_plugins_stop_all();
 }
 
 static void
@@ -331,8 +329,6 @@ eventd_service_new(EventdConfig *config, GList *sockets, gboolean no_avahi)
     service->control = eventd_control_start(service, &sockets);
 
     service->config = config;
-
-    eventd_plugins_start_all();
 
     service->queue = eventd_queue_new(service->config);
 

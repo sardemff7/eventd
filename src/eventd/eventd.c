@@ -45,6 +45,8 @@ eventd_core_quit(EventdCoreContext *context)
 {
     eventd_service_quit(context->service);
 
+    eventd_plugins_stop_all();
+
     if ( context->loop != NULL )
         g_main_loop_quit(context->loop);
 }
@@ -132,6 +134,8 @@ main(int argc, char *argv[])
     eventd_config_parse(context->config);
 
     sockets = eventd_sockets_get_all(bind_port, &private_socket, &unix_socket, take_over_socket);
+
+    eventd_plugins_start_all();
 
     context->service = eventd_service_new(context->config, sockets, no_avahi);
 
