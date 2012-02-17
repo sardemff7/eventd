@@ -29,6 +29,7 @@
 #ifdef G_OS_UNIX
 #include <glib-unix.h>
 #endif /* G_OS_UNIX */
+#include <gio/gio.h>
 
 #include "types.h"
 
@@ -49,8 +50,37 @@ struct _EventdCoreContext {
     EventdService *service;
     EventdDbusContext *dbus;
     gchar *runtime_dir;
+    gboolean take_over_socket;
     GMainLoop *loop;
 };
+
+
+GSocket *
+eventd_core_get_unix_socket(EventdCoreContext *context, const gchar *path, const gchar *default_path, gchar **ret_used_path, gboolean *created)
+{
+    GSocket *socket;
+    gchar *used_path = NULL;
+
+    if ( path == NULL )
+    {
+        if ( default_path == NULL )
+            return NULL;
+        used_path = g_build_filename(context->runtime_dir, default_path, NULL);
+    }
+
+    socket = eventd_sockets_get_unix_socket(( path != NULL ) ? path : used_path, context->take_over_socket, created);
+
+    if ( ret_used_path != NULL )
+        *ret_used_path = used_path;
+
+    return socket;
+}
+
+GSocket *
+eventd_core_get_inet_socket(EventdCoreContext *context, gint16 port)
+{
+    return eventd_sockets_get_inet_socket(port);
+}
 
 void
 eventd_core_push_event(EventdCoreContext *context, EventdEvent *event)
@@ -99,7 +129,6 @@ main(int argc, char *argv[])
 
     gchar *private_socket = NULL;
     gchar *unix_socket = NULL;
-    gboolean take_over_socket = FALSE;
 
     gboolean no_avahi = FALSE;
 
@@ -131,7 +160,7 @@ main(int argc, char *argv[])
 #if ENABLE_GIO_UNIX
         { "private-socket", 'i', 0, G_OPTION_ARG_FILENAME, &private_socket, "UNIX socket to listen for internal control", "SOCKET_FILE" },
         { "socket", 's', 0, G_OPTION_ARG_FILENAME, &unix_socket, "UNIX socket to listen for inbound connections", "SOCKET_FILE" },
-        { "take-over", 't', 0, G_OPTION_ARG_NONE, &take_over_socket, "Take over socket", NULL },
+        { "take-over", 't', 0, G_OPTION_ARG_NONE, &context->take_over_socket, "Take over socket", NULL },
 #endif /* ENABLE_GIO_UNIX */
 #if ENABLE_AVAHI
         { "no-avahi", 'A', 0, G_OPTION_ARG_NONE, &no_avahi, "Disable avahi publishing", NULL },
@@ -185,7 +214,7 @@ main(int argc, char *argv[])
 
     eventd_config_parse(context->config);
 
-    sockets = eventd_sockets_get_all(context->runtime_dir, bind_port, &private_socket, &unix_socket, take_over_socket);
+    sockets = eventd_sockets_get_all(context->runtime_dir, bind_port, &private_socket, &unix_socket, context->take_over_socket);
 
     eventd_control_start(context->control, &sockets);
 

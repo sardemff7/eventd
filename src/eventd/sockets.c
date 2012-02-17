@@ -36,8 +36,8 @@
 static gint nfds = 0;
 #endif /* ENABLE_SYSTEMD */
 
-static GSocket *
-_eventd_sockets_get_inet_socket(guint16 port)
+GSocket *
+eventd_sockets_get_inet_socket(guint16 port)
 {
     GSocket *socket = NULL;
     GError *error = NULL;
@@ -98,8 +98,8 @@ fail:
     return NULL;
 }
 
-static GSocket *
-_eventd_sockets_get_unix_socket(const gchar *path, gboolean take_over_socket, gboolean *created)
+GSocket *
+eventd_sockets_get_unix_socket(const gchar *path, gboolean take_over_socket, gboolean *created)
 {
 #if ENABLE_GIO_UNIX
     GSocket *socket = NULL;
@@ -207,7 +207,7 @@ eventd_sockets_get_all(
     }
     if ( *private_socket == NULL )
         *private_socket = g_build_filename(run_dir, "private", NULL);
-    if ( ( socket = _eventd_sockets_get_unix_socket(*private_socket, take_over_socket, &created) ) != NULL )
+    if ( ( socket = eventd_sockets_get_unix_socket(*private_socket, take_over_socket, &created) ) != NULL )
         sockets = g_list_prepend(sockets, socket);
     else
         g_warning("Couldn’t create private socket");
@@ -227,7 +227,7 @@ eventd_sockets_get_all(
         if ( *unix_socket == NULL )
             *unix_socket = g_build_filename(run_dir, UNIX_SOCKET, NULL);
 
-        if ( ( socket = _eventd_sockets_get_unix_socket(*unix_socket, take_over_socket, &created) ) != NULL )
+        if ( ( socket = eventd_sockets_get_unix_socket(*unix_socket, take_over_socket, &created) ) != NULL )
             sockets = g_list_prepend(sockets, socket);
         if ( ( socket == NULL ) || ( ! created ) )
         {
@@ -239,7 +239,7 @@ eventd_sockets_get_all(
 no_run_dir:
 #endif /* ENABLE_GIO_UNIX */
 
-    if ( ( bind_port > 0 ) && ( ( socket = _eventd_sockets_get_inet_socket(bind_port) ) != NULL ) )
+    if ( ( bind_port > 0 ) && ( ( socket = eventd_sockets_get_inet_socket(bind_port) ) != NULL ) )
         sockets = g_list_prepend(sockets, socket);
 
     return sockets;
