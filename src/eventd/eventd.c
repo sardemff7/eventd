@@ -59,6 +59,8 @@ eventd_core_quit(EventdCoreContext *context)
 
     eventd_plugins_stop_all();
 
+    eventd_control_stop(context->control);
+
     if ( context->loop != NULL )
         g_main_loop_quit(context->loop);
 }
@@ -121,6 +123,8 @@ main(int argc, char *argv[])
 
     context = g_new0(EventdCoreContext, 1);
 
+    context->control = eventd_control_new(context);
+
     if ( g_getenv("EVENTD_NO_PLUGINS") == NULL )
         eventd_plugins_load();
 
@@ -147,7 +151,7 @@ main(int argc, char *argv[])
 
     sockets = eventd_sockets_get_all(bind_port, &private_socket, &unix_socket, take_over_socket);
 
-    context->control = eventd_control_start(context, &sockets);
+    eventd_control_start(context->control, &sockets);
 
     eventd_plugins_start_all();
 
@@ -159,14 +163,14 @@ main(int argc, char *argv[])
 
     eventd_service_free(context->service);
 
-    eventd_control_stop(context->control);
-
     eventd_sockets_free_all(sockets, unix_socket, private_socket);
 
 end:
     eventd_config_free(context->config);
 
     eventd_plugins_unload();
+
+    eventd_control_free(context->control);
 
     g_free(context);
 

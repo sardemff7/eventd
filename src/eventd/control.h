@@ -23,7 +23,10 @@
 #ifndef __EVENTD_CONTROL_H__
 #define __EVENTD_CONTROL_H__
 
-EventdControl *eventd_control_start(EventdCoreContext *core, GList **sockets);
+EventdControl *eventd_control_new(EventdCoreContext *core);
+void eventd_control_free(EventdControl *control);
+
+void eventd_control_start(EventdControl *control, GList **sockets);
 void eventd_control_stop(EventdControl *control);
 
 #endif /* __EVENTD_CONTROL_H__ */

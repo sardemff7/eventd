@@ -41,7 +41,6 @@ struct _EventdControl {
     GSocketService *socket_service;
 };
 
-
 static gboolean
 _eventd_service_private_connection_handler(GThreadedSocketService *socket_service, GSocketConnection *connection, GObject *source_object, gpointer user_data)
 {
@@ -95,15 +94,28 @@ _eventd_service_private_connection_handler(GThreadedSocketService *socket_servic
 }
 
 EventdControl *
-eventd_control_start(EventdCoreContext *core, GList **sockets)
+eventd_control_new(EventdCoreContext *core)
 {
-    GError *error = NULL;
-    GList *socket = NULL;
     EventdControl *control;
 
     control = g_new0(EventdControl, 1);
 
     control->core = core;
+
+    return control;
+}
+
+void
+eventd_control_free(EventdControl *control)
+{
+    g_free(control);
+}
+
+void
+eventd_control_start(EventdControl *control, GList **sockets)
+{
+    GError *error = NULL;
+    GList *socket = NULL;
 
     control->socket_service = g_threaded_socket_service_new(-1);
 
@@ -117,7 +129,6 @@ eventd_control_start(EventdCoreContext *core, GList **sockets)
 
     g_signal_connect(control->socket_service, "run", G_CALLBACK(_eventd_service_private_connection_handler), control);
 
-    return control;
 }
 
 void
@@ -125,8 +136,7 @@ eventd_control_stop(EventdControl *control)
 {
     g_socket_service_stop(control->socket_service);
     g_socket_listener_close(G_SOCKET_LISTENER(control->socket_service));
-
-    g_free(control);
+    g_object_unref(control->socket_service);
 }
 
 #else /* ! ENABLE_GIO_UNIX */
@@ -135,7 +145,10 @@ eventd_control_stop(EventdControl *control)
 
 #include "control.h"
 
-EventdControl *eventd_control_start(EventdCoreContext *service, GList **sockets) { return NULL; }
+EventdControl *eventd_control_start(EventdCoreContext *service) { return NULL; }
+void eventd_control_free(EventdControl *control) {}
+
+void eventd_control_start(EventdControl *control, GList **sockets) {}
 void eventd_control_stop(EventdControl *control) {}
 
 #endif /* ! ENABLE_GIO_UNIX */
