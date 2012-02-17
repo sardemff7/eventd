@@ -23,9 +23,6 @@
 #ifndef __EVENTD_SOCKETS_H__
 #define __EVENTD_SOCKETS_H__
 
-#if ENABLE_SYSTEMD
-GList *eventd_sockets_get_systemd(gchar **private_socket, gchar **unix_socket);
-#endif /* ENABLE_SYSTEMD */
 GList *eventd_sockets_get_all(guint16 bind_port, gchar **private_socket, gchar **unix_socket, gboolean take_over_socket);
 void eventd_sockets_free_all(GList *sockets, gchar *private_socket, gchar *unix_socket);
 

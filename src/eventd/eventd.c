@@ -36,9 +36,6 @@ main(int argc, char *argv[])
     gchar *unix_socket = NULL;
     gboolean take_over_socket = FALSE;
 
-#if ENABLE_SYSTEMD
-    gboolean no_systemd = FALSE;
-#endif /* ENABLE_SYSTEMD */
     gboolean no_avahi = FALSE;
 
     gboolean print_version = FALSE;
@@ -51,9 +48,6 @@ main(int argc, char *argv[])
         { "socket", 's', 0, G_OPTION_ARG_FILENAME, &unix_socket, "UNIX socket to listen for inbound connections", "SOCKET_FILE" },
         { "take-over", 't', 0, G_OPTION_ARG_NONE, &take_over_socket, "Take over socket", NULL },
 #endif /* ENABLE_GIO_UNIX */
-#if ENABLE_SYSTEMD
-        { "no-systemd", 'S', 0, G_OPTION_ARG_NONE, &no_systemd, "Disable systemd socket activation", NULL },
-#endif /* ENABLE_SYSTEMD */
 #if ENABLE_AVAHI
         { "no-avahi", 'A', 0, G_OPTION_ARG_NONE, &no_avahi, "Disable avahi publishing", NULL },
 #endif /* ENABLE_AVAHI */
@@ -90,12 +84,7 @@ main(int argc, char *argv[])
         return 0;
     }
 
-#if ENABLE_SYSTEMD
-    if ( ! no_systemd )
-        sockets = eventd_sockets_get_systemd(&private_socket, &unix_socket);
-    else
-#endif /* ENABLE_SYSTEMD */
-        sockets = eventd_sockets_get_all(bind_port, &private_socket, &unix_socket, take_over_socket);
+    sockets = eventd_sockets_get_all(bind_port, &private_socket, &unix_socket, take_over_socket);
 
     retval = eventd_service(sockets, no_avahi);
 

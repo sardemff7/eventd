@@ -33,74 +33,42 @@
 #include <sys/socket.h>
 #include <systemd/sd-daemon.h>
 
-GList *
-eventd_sockets_get_systemd(gchar **private_socket, gchar **unix_socket)
-{
-    GError *error = NULL;
-    GList *sockets = NULL;
-    GSocket *socket = NULL;
-    gint r, n;
-    gint fd;
-
-    g_free(*unix_socket);
-    *unix_socket = NULL;
-    g_free(*private_socket);
-    *private_socket = NULL;
-
-    n = sd_listen_fds(TRUE);
-    if ( n < 0 )
-    {
-        g_warning("Failed to acquire systemd socket: %s", strerror(-n));
-        return NULL;
-    }
-
-    if ( n <= 0 )
-    {
-        g_warning("No socket received.");
-        return NULL;
-    }
-
-    for ( fd = SD_LISTEN_FDS_START ; fd < SD_LISTEN_FDS_START + n ; ++fd )
-    {
-        r = sd_is_socket(fd, AF_UNSPEC, SOCK_STREAM, 1);
-        if ( r < 0 )
-        {
-            g_warning("Failed to verify systemd socket type: %s", strerror(-r));
-            return NULL;
-        }
-
-
-        if ( r <= 0 )
-        {
-            g_warning("Passed socket has wrong type.");
-            return NULL;
-        }
-    }
-
-    for ( fd = SD_LISTEN_FDS_START ; fd < SD_LISTEN_FDS_START + n ; ++fd )
-    {
-        if ( ( socket = g_socket_new_from_fd(fd, &error) ) == NULL )
-        {
-            g_warning("Failed to take a socket from systemd: %s", error->message);
-            continue;
-        }
-        sockets = g_list_prepend(sockets, socket);
-    }
-
-    return sockets;
-}
+static gint nfds = 0;
 #endif /* ENABLE_SYSTEMD */
 
 static GSocket *
-_eventd_socketsget_inet_socket(guint16 port)
+_eventd_sockets_get_inet_socket(guint16 port)
 {
     GSocket *socket = NULL;
     GError *error = NULL;
     GInetAddress *inet_address = NULL;
     GSocketAddress *address = NULL;
+#if ENABLE_SYSTEMD
+    gint r;
+    gint fd;
+#endif /* ENABLE_SYSTEMD */
 
     if ( port == 0 )
         goto fail;
+#if ENABLE_SYSTEMD
+    for ( fd = SD_LISTEN_FDS_START ; fd < SD_LISTEN_FDS_START + nfds ; ++fd )
+    {
+        r = sd_is_socket_inet(fd, AF_UNSPEC, SOCK_STREAM, 1, port);
+        if ( r < 0 )
+        {
+            g_warning("Failed to verify systemd socket type: %s", strerror(-r));
+            continue;
+        }
+
+        if ( r == 0 )
+            continue;
+
+        if ( ( socket = g_socket_new_from_fd(fd, &error) ) == NULL )
+            g_warning("Failed to take a socket from systemd: %s", error->message);
+        else
+            return socket;
+    }
+#endif /* ENABLE_SYSTEMD */
 
     if ( ( socket = g_socket_new(G_SOCKET_FAMILY_IPV6, G_SOCKET_TYPE_STREAM, 0, &error)  ) == NULL )
     {
@@ -131,15 +99,44 @@ fail:
 }
 
 static GSocket *
-_eventd_sockets_get_unix_socket(gchar *path, gboolean take_over_socket)
+_eventd_sockets_get_unix_socket(gchar **path_p, gboolean take_over_socket)
 {
 #if ENABLE_GIO_UNIX
+    gchar *path = *path_p;
     GSocket *socket = NULL;
     GError *error = NULL;
     GSocketAddress *address = NULL;
+#if ENABLE_SYSTEMD
+    gint r;
+    gint fd;
+#endif /* ENABLE_SYSTEMD */
 
     if ( path == NULL )
         goto fail;
+
+#if ENABLE_SYSTEMD
+    for ( fd = SD_LISTEN_FDS_START ; fd < SD_LISTEN_FDS_START + nfds ; ++fd )
+    {
+        r = sd_is_socket_unix(fd, SOCK_STREAM, 1, path, 0);
+        if ( r < 0 )
+        {
+            g_warning("Failed to verify systemd socket type: %s", strerror(-r));
+            continue;
+        }
+
+        if ( r == 0 )
+            continue;
+
+        if ( ( socket = g_socket_new_from_fd(fd, &error) ) == NULL )
+            g_warning("Failed to take a socket from systemd: %s", error->message);
+        else
+        {
+            g_free(*path_p);
+            *path_p = NULL;
+            return socket;
+        }
+    }
+#endif /* ENABLE_SYSTEMD */
 
     if ( ( socket = g_socket_new(G_SOCKET_FAMILY_UNIX, G_SOCKET_TYPE_STREAM, 0, &error)  ) == NULL )
     {
@@ -190,8 +187,14 @@ eventd_sockets_get_all(
 #if ENABLE_GIO_UNIX
     gchar *run_dir = NULL;
 
+#if ENABLE_SYSTEMD
+    nfds = sd_listen_fds(TRUE);
+    if ( nfds < 0 )
+        g_warning("Failed to acquire systemd sockets: %s", strerror(-nfds));
+#endif /* ENABLE_SYSTEMD */
+
     run_dir = g_build_filename(g_get_user_runtime_dir(), PACKAGE_NAME, NULL);
-    if ( g_mkdir_with_parents(run_dir, 0755) < 0 )
+    if ( ( ! g_file_test(run_dir, G_FILE_TEST_IS_DIR) ) && ( g_mkdir_with_parents(run_dir, 0755) < 0 ) )
     {
         g_warning("Couldn’t create the run dir '%s': %s", run_dir, strerror(errno));
         goto no_run_dir;
@@ -204,7 +207,7 @@ eventd_sockets_get_all(
     }
     if ( *private_socket == NULL )
         *private_socket = g_build_filename(run_dir, "private", NULL);
-    if ( ( socket = _eventd_sockets_get_unix_socket(*private_socket, take_over_socket) ) != NULL )
+    if ( ( socket = _eventd_sockets_get_unix_socket(private_socket, take_over_socket) ) != NULL )
         sockets = g_list_prepend(sockets, socket);
     else
         g_warning("Couldn’t create private socket");
@@ -219,7 +222,7 @@ eventd_sockets_get_all(
         if ( *unix_socket == NULL )
             *unix_socket = g_build_filename(run_dir, UNIX_SOCKET, NULL);
 
-        if ( ( socket = _eventd_sockets_get_unix_socket(*unix_socket, take_over_socket) ) != NULL )
+        if ( ( socket = _eventd_sockets_get_unix_socket(unix_socket, take_over_socket) ) != NULL )
             sockets = g_list_prepend(sockets, socket);
         else
         {
@@ -232,7 +235,7 @@ no_run_dir:
     g_free(run_dir);
 #endif /* ENABLE_GIO_UNIX */
 
-    if ( ( bind_port > 0 ) && ( ( socket = _eventd_socketsget_inet_socket(bind_port) ) != NULL ) )
+    if ( ( bind_port > 0 ) && ( ( socket = _eventd_sockets_get_inet_socket(bind_port) ) != NULL ) )
         sockets = g_list_prepend(sockets, socket);
 
     return sockets;
