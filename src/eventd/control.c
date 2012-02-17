@@ -31,13 +31,13 @@
 
 #include "types.h"
 
-#include "service.h"
+#include "eventd.h"
 #include "plugins.h"
 
 #include "control.h"
 
 struct _EventdControl {
-    EventdService *service;
+    EventdCoreContext *core;
     GSocketService *socket_service;
 };
 
@@ -75,11 +75,11 @@ _eventd_service_private_connection_handler(GThreadedSocketService *socket_servic
             g_clear_error(&error);
         else if ( g_strcmp0(line, "quit") == 0 )
         {
-            eventd_service_quit(control->service);
+            eventd_core_quit(control->core);
         }
         else if ( g_strcmp0(line, "reload") == 0 )
         {
-            eventd_service_config_reload(control->service);
+            eventd_core_config_reload(control->core);
         }
         else
             eventd_plugins_control_command(line);
@@ -95,7 +95,7 @@ _eventd_service_private_connection_handler(GThreadedSocketService *socket_servic
 }
 
 EventdControl *
-eventd_control_start(gpointer service, GList **sockets)
+eventd_control_start(EventdCoreContext *core, GList **sockets)
 {
     GError *error = NULL;
     GList *socket = NULL;
@@ -103,7 +103,7 @@ eventd_control_start(gpointer service, GList **sockets)
 
     control = g_new0(EventdControl, 1);
 
-    control->service = service;
+    control->core = core;
 
     control->socket_service = g_threaded_socket_service_new(-1);
 
@@ -131,9 +131,11 @@ eventd_control_stop(EventdControl *control)
 
 #else /* ! ENABLE_GIO_UNIX */
 
+#include "types.h"
+
 #include "control.h"
 
-EventdControl *eventd_control_start(gpointer service, GList **sockets) { return NULL; }
+EventdControl *eventd_control_start(EventdCoreContext *service, GList **sockets) { return NULL; }
 void eventd_control_stop(EventdControl *control) {}
 
 #endif /* ! ENABLE_GIO_UNIX */

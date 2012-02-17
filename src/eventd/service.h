@@ -26,7 +26,6 @@
 EventdService *eventd_service_new(EventdConfig *config, GList *sockets, gboolean no_avahi);
 void eventd_service_free(EventdService *service);
 
-void eventd_service_config_reload(gpointer user_data);
 void eventd_service_quit(EventdService *service);
 
 #endif /* __EVENTD_SERVICE_H__ */

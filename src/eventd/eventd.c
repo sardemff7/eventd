@@ -31,14 +31,26 @@
 
 #include "plugins.h"
 #include "config.h"
+#include "control.h"
 #include "sockets.h"
 #include "service.h"
 
-typedef struct {
+#include "eventd.h"
+
+struct _EventdCoreContext {
     EventdConfig *config;
+    EventdControl *control;
     EventdService *service;
     GMainLoop *loop;
-} EventdCoreContext;
+};
+
+void
+eventd_core_config_reload(EventdCoreContext *context)
+{
+    eventd_plugins_stop_all();
+    eventd_config_parse(context->config);
+    eventd_plugins_start_all();
+}
 
 void
 eventd_core_quit(EventdCoreContext *context)
@@ -135,6 +147,8 @@ main(int argc, char *argv[])
 
     sockets = eventd_sockets_get_all(bind_port, &private_socket, &unix_socket, take_over_socket);
 
+    context->control = eventd_control_start(context, &sockets);
+
     eventd_plugins_start_all();
 
     context->service = eventd_service_new(context->config, sockets, no_avahi);
@@ -144,6 +158,8 @@ main(int argc, char *argv[])
     g_main_loop_unref(context->loop);
 
     eventd_service_free(context->service);
+
+    eventd_control_stop(context->control);
 
     eventd_sockets_free_all(sockets, unix_socket, private_socket);
 

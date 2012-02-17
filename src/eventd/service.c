@@ -34,7 +34,6 @@
 
 #include "config.h"
 #include "plugins.h"
-#include "control.h"
 #include "queue.h"
 #include "avahi.h"
 #include "dbus.h"
@@ -42,7 +41,6 @@
 #include "service.h"
 
 struct _EventdService {
-    EventdControl *control;
     EventdAvahiContext *avahi;
     EventdDbusContext *dbus;
     EventdConfig *config;
@@ -57,15 +55,6 @@ _eventd_service_client_disconnect(gpointer data)
     GCancellable *cancellable = data;
     g_cancellable_cancel(cancellable);
     g_object_unref(cancellable);
-}
-
-void
-eventd_service_config_reload(gpointer user_data)
-{
-    EventdService *service = user_data;
-    eventd_plugins_stop_all();
-    eventd_config_parse(service->config);
-    eventd_plugins_start_all();
 }
 
 void
@@ -326,8 +315,6 @@ eventd_service_new(EventdConfig *config, GList *sockets, gboolean no_avahi)
 
     service = g_new0(EventdService, 1);
 
-    service->control = eventd_control_start(service, &sockets);
-
     service->config = config;
 
     service->queue = eventd_queue_new(service->config);
@@ -358,6 +345,4 @@ eventd_service_free(EventdService *service)
 
     g_socket_service_stop(service->service);
     g_socket_listener_close(G_SOCKET_LISTENER(service->service));
-
-    eventd_control_stop(service->control);
 }
