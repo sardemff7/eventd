@@ -23,6 +23,7 @@
 #ifndef __EVENTD_CONTROL_H__
 #define __EVENTD_CONTROL_H__
 
+void eventd_core_push_event(EventdCoreContext *context, EventdEvent *event);
 void eventd_core_config_reload(EventdCoreContext *context);
 void eventd_core_quit(EventdCoreContext *context);
 

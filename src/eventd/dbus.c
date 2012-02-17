@@ -29,8 +29,8 @@
 
 #include "types.h"
 
+#include "eventd.h"
 #include "config.h"
-#include "queue.h"
 
 #include "dbus.h"
 
@@ -40,7 +40,7 @@
 #define NOTIFICATION_SPEC_VERSION  "1.2"
 
 struct _EventdDbusContext {
-    EventdQueue *queue;
+    EventdCoreContext *core;
     EventdConfig *config;
     GDBusNodeInfo *introspection_data;
     guint id;
@@ -220,7 +220,7 @@ _eventd_dbus_notify(EventdDbusContext *context, const gchar *sender, GVariant *p
     eventd_event_set_timeout(event, ( timeout > -1 ) ? timeout : ( urgency > -1 ) ? ( 3000 + urgency * 2000 ) : -1);
 
     _eventd_dbus_notification_new(context, sender, id, event);
-    eventd_queue_push(context->queue, event);
+    eventd_core_push_event(context->core, event);
 
     g_dbus_method_invocation_return_value(invocation, g_variant_new("(u)", id));
 }
@@ -373,7 +373,7 @@ _eventd_dbus_on_name_lost(GDBusConnection *connection, const gchar *name, gpoint
 }
 
 EventdDbusContext *
-eventd_dbus_new(EventdConfig *config, EventdQueue *queue)
+eventd_dbus_new(EventdCoreContext *core, EventdConfig *config)
 {
     EventdDbusContext *context;
     GError *error = NULL;
@@ -391,8 +391,8 @@ eventd_dbus_new(EventdConfig *config, EventdQueue *queue)
 
     context->introspection_data = introspection_data;
 
+    context->core = core;
     context->config = config;
-    context->queue = queue;
 
     context->events = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, _eventd_dbus_notification_free);
 

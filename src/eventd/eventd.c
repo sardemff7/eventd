@@ -49,6 +49,12 @@ struct _EventdCoreContext {
 };
 
 void
+eventd_core_push_event(EventdCoreContext *context, EventdEvent *event)
+{
+    eventd_queue_push(context->queue, event);
+}
+
+void
 eventd_core_config_reload(EventdCoreContext *context)
 {
     eventd_plugins_stop_all();
@@ -137,8 +143,8 @@ main(int argc, char *argv[])
     context->config = eventd_config_new();
     context->queue = eventd_queue_new(context->config);
 
-    context->service = eventd_service_new(context->config, context->queue);
-    context->dbus = eventd_dbus_new(context->config, context->queue);
+    context->service = eventd_service_new(context, context->config);
+    context->dbus = eventd_dbus_new(context, context->config);
 
     option_context = g_option_context_new("- small daemon to act on remote or local events");
     g_option_context_add_main_entries(option_context, entries, GETTEXT_PACKAGE);

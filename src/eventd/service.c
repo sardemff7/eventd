@@ -32,17 +32,17 @@
 
 #include "types.h"
 
+#include "eventd.h"
 #include "config.h"
 #include "plugins.h"
-#include "queue.h"
 #include "avahi.h"
 
 #include "service.h"
 
 struct _EventdService {
+    EventdCoreContext *core;
     EventdAvahiContext *avahi;
     EventdConfig *config;
-    EventdQueue *queue;
     GSocketService *service;
     GSList *clients;
 };
@@ -171,7 +171,7 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
                         {
                         case MODE_NORMAL:
                         case MODE_RELAY:
-                            eventd_queue_push(service->queue, event);
+                            eventd_core_push_event(service->core, event);
                         break;
                         case MODE_PING_PONG:
                             eventd_plugins_event_pong_all(event);
@@ -297,15 +297,14 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
 }
 
 EventdService *
-eventd_service_new(EventdConfig *config, EventdQueue *queue)
+eventd_service_new(EventdCoreContext *core, EventdConfig *config)
 {
     EventdService *service;
 
     service = g_new0(EventdService, 1);
 
+    service->core = core;
     service->config = config;
-
-    service->queue = queue;
 
     return service;
 }
