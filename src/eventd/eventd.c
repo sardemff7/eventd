@@ -32,6 +32,7 @@
 #include "plugins.h"
 #include "config.h"
 #include "control.h"
+#include "queue.h"
 #include "sockets.h"
 #include "service.h"
 
@@ -40,6 +41,7 @@
 struct _EventdCoreContext {
     EventdConfig *config;
     EventdControl *control;
+    EventdQueue *queue;
     EventdService *service;
     GMainLoop *loop;
 };
@@ -55,6 +57,8 @@ eventd_core_config_reload(EventdCoreContext *context)
 void
 eventd_core_quit(EventdCoreContext *context)
 {
+    eventd_queue_free(context->queue);
+
     eventd_service_quit(context->service);
 
     eventd_plugins_stop_all();
@@ -153,9 +157,11 @@ main(int argc, char *argv[])
 
     eventd_control_start(context->control, &sockets);
 
+    context->queue = eventd_queue_new(context->config);
+
     eventd_plugins_start_all();
 
-    context->service = eventd_service_new(context->config, sockets, no_avahi);
+    context->service = eventd_service_new(context->config, context->queue, sockets, no_avahi);
 
     context->loop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(context->loop);

@@ -23,7 +23,7 @@
 #ifndef __EVENTD_SERVICE_H__
 #define __EVENTD_SERVICE_H__
 
-EventdService *eventd_service_new(EventdConfig *config, GList *sockets, gboolean no_avahi);
+EventdService *eventd_service_new(EventdConfig *config, EventdQueue *queue, GList *sockets, gboolean no_avahi);
 void eventd_service_free(EventdService *service);
 
 void eventd_service_quit(EventdService *service);

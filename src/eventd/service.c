@@ -60,8 +60,6 @@ _eventd_service_client_disconnect(gpointer data)
 void
 eventd_service_quit(EventdService *service)
 {
-    eventd_queue_free(service->queue);
-
     g_slist_free_full(service->clients, _eventd_service_client_disconnect);
 }
 
@@ -307,7 +305,7 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
 }
 
 EventdService *
-eventd_service_new(EventdConfig *config, GList *sockets, gboolean no_avahi)
+eventd_service_new(EventdConfig *config, EventdQueue *queue, GList *sockets, gboolean no_avahi)
 {
     GError *error = NULL;
     GList *socket = NULL;
@@ -317,7 +315,7 @@ eventd_service_new(EventdConfig *config, GList *sockets, gboolean no_avahi)
 
     service->config = config;
 
-    service->queue = eventd_queue_new(service->config);
+    service->queue = queue;
 
     service->service = g_threaded_socket_service_new(eventd_config_get_max_clients(service->config));
 
