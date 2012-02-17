@@ -119,6 +119,7 @@ main(int argc, char *argv[])
     int retval = 0;
     GError *error = NULL;
     GOptionContext *option_context = NULL;
+    GOptionGroup *option_group;
     GList *sockets = NULL;
 
 #if DEBUG
@@ -146,8 +147,14 @@ main(int argc, char *argv[])
     context->service = eventd_service_new(context, context->config);
     context->dbus = eventd_dbus_new(context, context->config);
 
+
     option_context = g_option_context_new("- small daemon to act on remote or local events");
-    g_option_context_add_main_entries(option_context, entries, GETTEXT_PACKAGE);
+
+    option_group = g_option_group_new(NULL, NULL, NULL, NULL, NULL);
+    g_option_group_set_translation_domain(option_group, GETTEXT_PACKAGE);
+    g_option_group_add_entries(option_group, entries);
+    g_option_context_set_main_group(option_context, option_group);
+
     if ( ! g_option_context_parse(option_context, &argc, &argv, &error) )
         g_error("Option parsing failed: %s\n", error->message);
     g_option_context_free(option_context);
@@ -157,6 +164,7 @@ main(int argc, char *argv[])
         g_fprintf(stdout, PACKAGE_NAME " " PACKAGE_VERSION "\n");
         goto end;
     }
+
 
 #ifdef G_OS_UNIX
     g_unix_signal_add(SIGTERM, _eventd_core_quit, context);
