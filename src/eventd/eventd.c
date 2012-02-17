@@ -27,9 +27,14 @@
 #include "sockets.h"
 #include "service.h"
 
+typedef struct {
+} EventdCoreContext;
+
 int
 main(int argc, char *argv[])
 {
+    EventdCoreContext *context;
+
     guint16 bind_port = DEFAULT_BIND_PORT;
 
     gchar *private_socket = NULL;
@@ -72,6 +77,8 @@ main(int argc, char *argv[])
 
     g_type_init();
 
+    context = g_new0(EventdCoreContext, 1);
+
     option_context = g_option_context_new("- small daemon to act on remote or local events");
     g_option_context_add_main_entries(option_context, entries, GETTEXT_PACKAGE);
     if ( ! g_option_context_parse(option_context, &argc, &argv, &error) )
@@ -81,7 +88,7 @@ main(int argc, char *argv[])
     if ( print_version )
     {
         g_fprintf(stdout, PACKAGE_NAME " " PACKAGE_VERSION "\n");
-        return 0;
+        goto end;
     }
 
     sockets = eventd_sockets_get_all(bind_port, &private_socket, &unix_socket, take_over_socket);
@@ -89,6 +96,9 @@ main(int argc, char *argv[])
     retval = eventd_service(sockets, no_avahi);
 
     eventd_sockets_free_all(sockets, unix_socket, private_socket);
+
+end:
+    g_free(context);
 
     return retval;
 }
