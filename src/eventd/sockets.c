@@ -99,10 +99,9 @@ fail:
 }
 
 static GSocket *
-_eventd_sockets_get_unix_socket(gchar **path_p, gboolean take_over_socket)
+_eventd_sockets_get_unix_socket(const gchar *path, gboolean take_over_socket, gboolean *created)
 {
 #if ENABLE_GIO_UNIX
-    gchar *path = *path_p;
     GSocket *socket = NULL;
     GError *error = NULL;
     GSocketAddress *address = NULL;
@@ -131,8 +130,8 @@ _eventd_sockets_get_unix_socket(gchar **path_p, gboolean take_over_socket)
             g_warning("Failed to take a socket from systemd: %s", error->message);
         else
         {
-            g_free(*path_p);
-            *path_p = NULL;
+            if ( created != NULL )
+                *created = FALSE;
             return socket;
         }
     }
@@ -165,6 +164,8 @@ _eventd_sockets_get_unix_socket(gchar **path_p, gboolean take_over_socket)
         goto fail;
     }
 
+    if ( created != NULL )
+        *created = TRUE;
     return socket;
 
 fail:
@@ -172,6 +173,8 @@ fail:
         g_object_unref(socket);
     g_clear_error(&error);
 #endif /* ENABLE_GIO_UNIX */
+    if ( created != NULL )
+        *created = FALSE;
     return NULL;
 }
 
@@ -186,6 +189,7 @@ eventd_sockets_get_all(
     GSocket *socket = NULL;
 #if ENABLE_GIO_UNIX
     gchar *run_dir = NULL;
+    gboolean created;
 
 #if ENABLE_SYSTEMD
     nfds = sd_listen_fds(TRUE);
@@ -207,10 +211,15 @@ eventd_sockets_get_all(
     }
     if ( *private_socket == NULL )
         *private_socket = g_build_filename(run_dir, "private", NULL);
-    if ( ( socket = _eventd_sockets_get_unix_socket(private_socket, take_over_socket) ) != NULL )
+    if ( ( socket = _eventd_sockets_get_unix_socket(*private_socket, take_over_socket, &created) ) != NULL )
         sockets = g_list_prepend(sockets, socket);
     else
         g_warning("Couldn’t create private socket");
+    if ( ( socket == NULL ) || ( ! created ) )
+    {
+        g_free(*private_socket);
+        *private_socket = NULL;
+    }
 
     if ( ( *unix_socket != NULL ) && ( **unix_socket == 0 ) )
     {
@@ -222,9 +231,9 @@ eventd_sockets_get_all(
         if ( *unix_socket == NULL )
             *unix_socket = g_build_filename(run_dir, UNIX_SOCKET, NULL);
 
-        if ( ( socket = _eventd_sockets_get_unix_socket(unix_socket, take_over_socket) ) != NULL )
+        if ( ( socket = _eventd_sockets_get_unix_socket(*unix_socket, take_over_socket, &created) ) != NULL )
             sockets = g_list_prepend(sockets, socket);
-        else
+        if ( ( socket == NULL ) || ( ! created ) )
         {
             g_free(*unix_socket);
             *unix_socket = NULL;
