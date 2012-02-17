@@ -22,9 +22,6 @@
 
 #include <glib.h>
 #include <glib-object.h>
-#ifdef G_OS_UNIX
-#include <glib-unix.h>
-#endif /* G_OS_UNIX */
 #include <gio/gio.h>
 #if ENABLE_GIO_UNIX
 #include <gio/gunixsocketaddress.h>
@@ -50,7 +47,6 @@ struct _EventdService {
     EventdDbusContext *dbus;
     EventdConfig *config;
     EventdQueue *queue;
-    GMainLoop *loop;
     GSocketService *service;
     GSList *clients;
 };
@@ -72,21 +68,14 @@ eventd_service_config_reload(gpointer user_data)
     eventd_plugins_start_all();
 }
 
-gboolean
-eventd_service_quit(gpointer user_data)
+void
+eventd_service_quit(EventdService *service)
 {
-    EventdService *service = user_data;
-
     eventd_queue_free(service->queue);
 
     g_slist_free_full(service->clients, _eventd_service_client_disconnect);
 
     eventd_plugins_stop_all();
-
-    if ( service->loop != NULL )
-        g_main_loop_quit(service->loop);
-
-    return FALSE;
 }
 
 static void
@@ -330,20 +319,14 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
     return TRUE;
 }
 
-int
-eventd_service(EventdConfig *config, GList *sockets, gboolean no_avahi)
+EventdService *
+eventd_service_new(EventdConfig *config, GList *sockets, gboolean no_avahi)
 {
-    int retval = 0;
     GError *error = NULL;
     GList *socket = NULL;
     EventdService *service;
 
     service = g_new0(EventdService, 1);
-
-#ifdef G_OS_UNIX
-    g_unix_signal_add(SIGTERM, eventd_service_quit, service);
-    g_unix_signal_add(SIGINT, eventd_service_quit, service);
-#endif /* G_OS_UNIX */
 
     service->control = eventd_control_start(service, &sockets);
 
@@ -368,20 +351,17 @@ eventd_service(EventdConfig *config, GList *sockets, gboolean no_avahi)
         service->avahi = eventd_avahi_start(service->config, g_list_first(sockets));
     service->dbus = eventd_dbus_start(service->config, service->queue);
 
-    service->loop = g_main_loop_new(NULL, FALSE);
-    g_main_loop_run(service->loop);
-    g_main_loop_unref(service->loop);
+    return service;
+}
 
-    service->loop = NULL;
-
+void
+eventd_service_free(EventdService *service)
+{
     eventd_dbus_stop(service->dbus);
-    if ( ! no_avahi )
-        eventd_avahi_stop(service->avahi);
+    eventd_avahi_stop(service->avahi);
 
     g_socket_service_stop(service->service);
     g_socket_listener_close(G_SOCKET_LISTENER(service->service));
 
     eventd_control_stop(service->control);
-
-    return retval;
 }

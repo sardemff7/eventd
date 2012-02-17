@@ -23,6 +23,9 @@
 #include <glib.h>
 #include <glib-object.h>
 #include <glib/gprintf.h>
+#ifdef G_OS_UNIX
+#include <glib-unix.h>
+#endif /* G_OS_UNIX */
 
 #include "types.h"
 
@@ -33,7 +36,27 @@
 
 typedef struct {
     EventdConfig *config;
+    EventdService *service;
+    GMainLoop *loop;
 } EventdCoreContext;
+
+void
+eventd_core_quit(EventdCoreContext *context)
+{
+    eventd_service_quit(context->service);
+
+    if ( context->loop != NULL )
+        g_main_loop_quit(context->loop);
+}
+
+#ifdef G_OS_UNIX
+static gboolean
+_eventd_core_quit(gpointer user_data)
+{
+    eventd_core_quit(user_data);
+    return FALSE;
+}
+#endif /* G_OS_UNIX */
 
 int
 main(int argc, char *argv[])
@@ -101,11 +124,22 @@ main(int argc, char *argv[])
         goto end;
     }
 
+#ifdef G_OS_UNIX
+    g_unix_signal_add(SIGTERM, _eventd_core_quit, context);
+    g_unix_signal_add(SIGINT, _eventd_core_quit, context);
+#endif /* G_OS_UNIX */
+
     eventd_config_parse(context->config);
 
     sockets = eventd_sockets_get_all(bind_port, &private_socket, &unix_socket, take_over_socket);
 
-    retval = eventd_service(context->config, sockets, no_avahi);
+    context->service = eventd_service_new(context->config, sockets, no_avahi);
+
+    context->loop = g_main_loop_new(NULL, FALSE);
+    g_main_loop_run(context->loop);
+    g_main_loop_unref(context->loop);
+
+    eventd_service_free(context->service);
 
     eventd_sockets_free_all(sockets, unix_socket, private_socket);
 

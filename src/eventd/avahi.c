@@ -154,6 +154,9 @@ eventd_avahi_start(EventdConfig *config, GList *sockets)
 void
 eventd_avahi_stop(EventdAvahiContext *context)
 {
+    if ( context == NULL )
+        return;
+
     if ( context->client != NULL )
         avahi_client_free(context->client);
 
