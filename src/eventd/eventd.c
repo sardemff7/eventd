@@ -101,21 +101,6 @@ main(int argc, char *argv[])
 
     gboolean print_version = FALSE;
 
-    GOptionEntry entries[] =
-    {
-        { "port", 'p', 0, G_OPTION_ARG_INT, &bind_port, "Port to listen for inbound connections", "P" },
-#if ENABLE_GIO_UNIX
-        { "private-socket", 'i', 0, G_OPTION_ARG_FILENAME, &private_socket, "UNIX socket to listen for internal control", "SOCKET_FILE" },
-        { "socket", 's', 0, G_OPTION_ARG_FILENAME, &unix_socket, "UNIX socket to listen for inbound connections", "SOCKET_FILE" },
-        { "take-over", 't', 0, G_OPTION_ARG_NONE, &take_over_socket, "Take over socket", NULL },
-#endif /* ENABLE_GIO_UNIX */
-#if ENABLE_AVAHI
-        { "no-avahi", 'A', 0, G_OPTION_ARG_NONE, &no_avahi, "Disable avahi publishing", NULL },
-#endif /* ENABLE_AVAHI */
-        { "version", 'V', 0, G_OPTION_ARG_NONE, &print_version, "Print version", NULL },
-        { NULL }
-    };
-
     int retval = 0;
     GError *error = NULL;
     GOptionContext *option_context = NULL;
@@ -135,6 +120,21 @@ main(int argc, char *argv[])
     g_type_init();
 
     context = g_new0(EventdCoreContext, 1);
+
+    GOptionEntry entries[] =
+    {
+        { "port", 'p', 0, G_OPTION_ARG_INT, &bind_port, "Port to listen for inbound connections", "P" },
+#if ENABLE_GIO_UNIX
+        { "private-socket", 'i', 0, G_OPTION_ARG_FILENAME, &private_socket, "UNIX socket to listen for internal control", "SOCKET_FILE" },
+        { "socket", 's', 0, G_OPTION_ARG_FILENAME, &unix_socket, "UNIX socket to listen for inbound connections", "SOCKET_FILE" },
+        { "take-over", 't', 0, G_OPTION_ARG_NONE, &take_over_socket, "Take over socket", NULL },
+#endif /* ENABLE_GIO_UNIX */
+#if ENABLE_AVAHI
+        { "no-avahi", 'A', 0, G_OPTION_ARG_NONE, &no_avahi, "Disable avahi publishing", NULL },
+#endif /* ENABLE_AVAHI */
+        { "version", 'V', 0, G_OPTION_ARG_NONE, &print_version, "Print version", NULL },
+        { NULL }
+    };
 
     context->control = eventd_control_new(context);
 
