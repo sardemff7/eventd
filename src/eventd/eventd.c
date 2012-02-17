@@ -27,10 +27,12 @@
 #include "types.h"
 
 #include "plugins.h"
+#include "config.h"
 #include "sockets.h"
 #include "service.h"
 
 typedef struct {
+    EventdConfig *config;
 } EventdCoreContext;
 
 int
@@ -85,6 +87,8 @@ main(int argc, char *argv[])
     if ( g_getenv("EVENTD_NO_PLUGINS") == NULL )
         eventd_plugins_load();
 
+    context->config = eventd_config_new();
+
     option_context = g_option_context_new("- small daemon to act on remote or local events");
     g_option_context_add_main_entries(option_context, entries, GETTEXT_PACKAGE);
     if ( ! g_option_context_parse(option_context, &argc, &argv, &error) )
@@ -97,13 +101,17 @@ main(int argc, char *argv[])
         goto end;
     }
 
+    eventd_config_parse(context->config);
+
     sockets = eventd_sockets_get_all(bind_port, &private_socket, &unix_socket, take_over_socket);
 
-    retval = eventd_service(sockets, no_avahi);
+    retval = eventd_service(context->config, sockets, no_avahi);
 
     eventd_sockets_free_all(sockets, unix_socket, private_socket);
 
 end:
+    eventd_config_free(context->config);
+
     eventd_plugins_unload();
 
     g_free(context);

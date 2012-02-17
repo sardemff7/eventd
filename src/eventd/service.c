@@ -331,7 +331,7 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
 }
 
 int
-eventd_service(GList *sockets, gboolean no_avahi)
+eventd_service(EventdConfig *config, GList *sockets, gboolean no_avahi)
 {
     int retval = 0;
     GError *error = NULL;
@@ -347,9 +347,7 @@ eventd_service(GList *sockets, gboolean no_avahi)
 
     service->control = eventd_control_start(service, &sockets);
 
-    service->config = eventd_config_new();
-
-    eventd_config_parse(service->config);
+    service->config = config;
 
     eventd_plugins_start_all();
 
@@ -382,8 +380,6 @@ eventd_service(GList *sockets, gboolean no_avahi)
 
     g_socket_service_stop(service->service);
     g_socket_listener_close(G_SOCKET_LISTENER(service->service));
-
-    eventd_config_free(service->config);
 
     eventd_control_stop(service->control);
 
