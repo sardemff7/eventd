@@ -46,7 +46,7 @@ struct _EventdDbusContext {
     guint id;
     GDBusConnection *connection;
     guint32 count;
-    GHashTable *events;
+    GHashTable *notifications;
 };
 
 typedef struct {
@@ -63,7 +63,7 @@ _eventd_dbus_event_ended(EventdEvent *event, EventdEventEndReason reason, Eventd
                                   NOTIFICATION_BUS_PATH, NOTIFICATION_BUS_NAME,
                                   "NotificationClosed", g_variant_new("(uu)", notification->id, reason),
                                   NULL);
-    g_hash_table_remove(notification->context->events, GUINT_TO_POINTER(notification->id));
+    g_hash_table_remove(notification->context->notifications, GUINT_TO_POINTER(notification->id));
 }
 
 static void
@@ -88,7 +88,7 @@ _eventd_dbus_notification_new(EventdDbusContext *context, const gchar *sender, g
     notification->sender = g_strdup(sender);
     notification->event = event;
 
-    g_hash_table_insert(context->events, GUINT_TO_POINTER(notification->id), notification);
+    g_hash_table_insert(context->notifications, GUINT_TO_POINTER(notification->id), notification);
     g_signal_connect(event, "ended", G_CALLBACK(_eventd_dbus_event_ended), notification);
 }
 
@@ -239,7 +239,7 @@ _eventd_dbus_close_notification(EventdDbusContext *context, GVariant *parameters
         return;
     }
 
-    event = g_hash_table_lookup(context->events, GUINT_TO_POINTER(id));
+    event = g_hash_table_lookup(context->notifications, GUINT_TO_POINTER(id));
 
     if ( event != NULL )
         eventd_event_end(event, EVENTD_EVENT_END_REASON_CLIENT_DISMISS);
@@ -394,7 +394,7 @@ eventd_dbus_new(EventdCoreContext *core, EventdConfig *config)
     context->core = core;
     context->config = config;
 
-    context->events = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, _eventd_dbus_notification_free);
+    context->notifications = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, _eventd_dbus_notification_free);
 
     return context;
 }
@@ -423,7 +423,7 @@ eventd_dbus_free(EventdDbusContext *context)
     if ( context == NULL )
         return;
 
-    g_hash_table_unref(context->events);
+    g_hash_table_unref(context->notifications);
 
     g_free(context);
 }
