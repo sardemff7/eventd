@@ -39,38 +39,6 @@ struct _EventdPluginContext {
     EventdNdContext *daemon;
 };
 
-static EventdPluginContext *
-_eventd_notification_start(gpointer user_data)
-{
-    EventdPluginContext *context;
-
-    context = g_new0(EventdPluginContext, 1);
-
-    context->daemon = eventd_nd_init();
-    eventd_notification_notify_init();
-
-    libeventd_regex_init();
-
-    return context;
-}
-
-static void
-_eventd_notification_stop(EventdPluginContext *context)
-{
-    libeventd_regex_clean();
-
-    eventd_notification_notify_uninit();
-    eventd_nd_uninit(context->daemon);
-
-    g_free(context);
-}
-
-static void
-_eventd_notification_control_command(EventdPluginContext *context, const gchar *command)
-{
-    eventd_nd_control_command(context->daemon, command);
-}
-
 static void
 _eventd_notification_event_update(EventdNotificationEvent *event, gboolean disable, const char *title, const char *message, const char *icon, const char *overlay_icon, Int *scale)
 {
@@ -252,6 +220,42 @@ _eventd_notification_notification_free(EventdNotificationNotification *notificat
     g_free(notification);
 }
 
+static EventdPluginContext *
+_eventd_notification_start(gpointer user_data)
+{
+    EventdPluginContext *context;
+
+    context = g_new0(EventdPluginContext, 1);
+
+    context->events = libeventd_config_events_new(_eventd_notification_event_free);
+
+    context->daemon = eventd_nd_init();
+    eventd_notification_notify_init();
+
+    libeventd_regex_init();
+
+    return context;
+}
+
+static void
+_eventd_notification_stop(EventdPluginContext *context)
+{
+    libeventd_regex_clean();
+
+    eventd_notification_notify_uninit();
+    eventd_nd_uninit(context->daemon);
+
+    g_hash_table_unref(context->events);
+
+    g_free(context);
+}
+
+static void
+_eventd_notification_control_command(EventdPluginContext *context, const gchar *command)
+{
+    eventd_nd_control_command(context->daemon, command);
+}
+
 static void
 _eventd_notification_event_action(EventdPluginContext *context, EventdEvent *event)
 {
@@ -293,17 +297,10 @@ _eventd_notification_event_pong(EventdPluginContext *context, EventdEvent *event
     _eventd_notification_notification_free(notification);
 }
 
-
 static void
-_eventd_notification_config_init(EventdPluginContext *context)
+_eventd_notification_config_reset(EventdPluginContext *context)
 {
-    context->events = libeventd_config_events_new(_eventd_notification_event_free);
-}
-
-static void
-_eventd_notification_config_clean(EventdPluginContext *context)
-{
-    g_hash_table_unref(context->events);
+    g_hash_table_remove_all(context->events);
 }
 
 void
@@ -314,8 +311,7 @@ eventd_plugin_get_info(EventdPlugin *plugin)
 
     plugin->control_command = _eventd_notification_control_command;
 
-    plugin->config_init = _eventd_notification_config_init;
-    plugin->config_clean = _eventd_notification_config_clean;
+    plugin->config_reset = _eventd_notification_config_reset;
 
     plugin->event_parse = _eventd_notification_event_parse;
     plugin->event_action = _eventd_notification_event_action;

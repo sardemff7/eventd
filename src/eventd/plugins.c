@@ -64,15 +64,9 @@ eventd_plugins_control_command(gchar *command)
 }
 
 void
-eventd_plugins_config_init_all()
+eventd_plugins_config_reset_all()
 {
-    libeventd_plugins_config_init_all(plugins);
-}
-
-void
-eventd_plugins_config_clean_all()
-{
-    libeventd_plugins_config_clean_all(plugins);
+    libeventd_plugins_config_reset_all(plugins);
 }
 
 void

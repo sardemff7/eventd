@@ -54,6 +54,8 @@ _eventd_relay_init(gpointer user_data)
 
     context = g_new0(EventdPluginContext, 1);
 
+    context->events = libeventd_config_events_new(_eventd_relay_server_list_free);
+
     context->avahi = eventd_relay_avahi_init();
     context->servers = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, eventd_relay_server_free);
 
@@ -66,19 +68,15 @@ _eventd_relay_uninit(EventdPluginContext *context)
     g_hash_table_unref(context->servers);
     eventd_relay_avahi_uninit(context->avahi);
 
+    g_hash_table_unref(context->events);
+
     g_free(context);
 }
 
 static void
-_eventd_relay_config_init(EventdPluginContext *context)
+_eventd_relay_config_reset(EventdPluginContext *context)
 {
-    context->events = libeventd_config_events_new(_eventd_relay_server_list_free);
-}
-
-static void
-_eventd_relay_config_clean(EventdPluginContext *context)
-{
-    g_hash_table_unref(context->events);
+    g_hash_table_remove_all(context->events);
 }
 
 static void
@@ -204,8 +202,7 @@ eventd_plugin_get_info(EventdPlugin *plugin)
     plugin->start = _eventd_relay_start;
     plugin->stop = _eventd_relay_stop;
 
-    plugin->config_init = _eventd_relay_config_init;
-    plugin->config_clean = _eventd_relay_config_clean;
+    plugin->config_reset = _eventd_relay_config_reset;
 
     plugin->event_parse = _eventd_relay_event_parse;
     plugin->event_action = _eventd_relay_event_action;

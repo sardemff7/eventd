@@ -33,8 +33,7 @@ void libeventd_plugins_stop_all(GList *plugins);
 
 void libeventd_plugins_control_command_all(GList *plugins, gchar *command);
 
-void libeventd_plugins_config_init_all(GList *plugins);
-void libeventd_plugins_config_clean_all(GList *plugins);
+void libeventd_plugins_config_reset_all(GList *plugins);
 
 void libeventd_plugins_event_parse_all(GList *plugins, const gchar *type, const gchar *event, GKeyFile *config_file);
 void libeventd_plugins_event_action_all(GList *plugins, EventdEvent *event);

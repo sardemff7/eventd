@@ -315,7 +315,7 @@ _eventd_config_clean(EventdConfig *config)
     if ( ! config->loaded )
         return;
 
-    eventd_plugins_config_clean_all();
+    eventd_plugins_config_reset_all();
 
     g_hash_table_remove_all(config->events);
 }
@@ -328,8 +328,6 @@ eventd_config_parse(EventdConfig *config)
     config->loaded = TRUE;
 
     _eventd_config_defaults(config);
-
-    eventd_plugins_config_init_all();
 
     _eventd_config_load_dir(config, DATADIR);
     _eventd_config_load_dir(config, SYSCONFDIR);

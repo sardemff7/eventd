@@ -215,33 +215,18 @@ libeventd_plugins_control_command_all(GList *plugins, gchar *command)
 }
 
 static void
-_libeventd_plugins_config_init(gpointer data, gpointer user_data)
+_libeventd_plugins_config_reset(gpointer data, gpointer user_data)
 {
     EventdPlugin *plugin = data;
 
-    if ( plugin->config_init != NULL )
-        plugin->config_init(plugin->context);
+    if ( plugin->config_reset != NULL )
+        plugin->config_reset(plugin->context);
 }
 
 void
-libeventd_plugins_config_init_all(GList *plugins)
+libeventd_plugins_config_reset_all(GList *plugins)
 {
-    libeventd_plugins_foreach(plugins, _libeventd_plugins_config_init, NULL);
-}
-
-static void
-_libeventd_plugins_config_clean(gpointer data, gpointer user_data)
-{
-    EventdPlugin *plugin = data;
-
-    if ( plugin->config_clean != NULL )
-        plugin->config_clean(plugin->context);
-}
-
-void
-libeventd_plugins_config_clean_all(GList *plugins)
-{
-    libeventd_plugins_foreach(plugins, _libeventd_plugins_config_clean, NULL);
+    libeventd_plugins_foreach(plugins, _libeventd_plugins_config_reset, NULL);
 }
 
 typedef struct {

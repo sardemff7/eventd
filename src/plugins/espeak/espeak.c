@@ -156,6 +156,8 @@ _eventd_espeak_init(gpointer user_data)
     espeak_SetSynthCallback(synth_callback);
     espeak_SetUriCallback(uri_callback);
 
+    context->events = libeventd_config_events_new(g_free);
+
     context->pulseaudio = eventd_espeak_pulseaudio_init(sample_rate);
 
     libeventd_regex_init();
@@ -167,6 +169,9 @@ static void
 _eventd_espeak_uninit(EventdPluginContext *context)
 {
     eventd_espeak_pulseaudio_uninit(context->pulseaudio);
+
+    g_hash_table_unref(context->events);
+
     libeventd_regex_clean();
 
     espeak_Terminate();
@@ -329,15 +334,9 @@ fail:
 }
 
 static void
-_eventd_espeak_config_init(EventdPluginContext *context)
+_eventd_espeak_config_reset(EventdPluginContext *context)
 {
-    context->events = libeventd_config_events_new(g_free);
-}
-
-static void
-_eventd_espeak_config_clean(EventdPluginContext *context)
-{
-    g_hash_table_unref(context->events);
+    g_hash_table_remove_all(context->events);
 }
 
 void
@@ -349,8 +348,7 @@ eventd_plugin_get_info(EventdPlugin *plugin)
     plugin->start = _eventd_espeak_start;
     plugin->stop = _eventd_espeak_stop;
 
-    plugin->config_init = _eventd_espeak_config_init;
-    plugin->config_clean = _eventd_espeak_config_clean;
+    plugin->config_reset = _eventd_espeak_config_reset;
 
     plugin->event_parse = _eventd_espeak_event_parse;
     plugin->event_action = _eventd_espeak_event_action;

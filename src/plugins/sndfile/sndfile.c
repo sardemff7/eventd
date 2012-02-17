@@ -211,6 +211,8 @@ _eventd_sndfile_init(gpointer user_data)
 
     context = g_new0(EventdPluginContext, 1);
 
+    context->events = libeventd_config_events_new(_eventd_sndfile_event_free);
+
     context->pulseaudio = eventd_sndfile_pulseaudio_init();
 
     libeventd_regex_init();
@@ -241,15 +243,9 @@ _eventd_sndfile_stop(EventdPluginContext *context)
 }
 
 static void
-_eventd_sndfile_config_init(EventdPluginContext *context)
+_eventd_sndfile_config_reset(EventdPluginContext *context)
 {
-    context->events = libeventd_config_events_new(_eventd_sndfile_event_free);
-}
-
-static void
-_eventd_sndfile_config_clean(EventdPluginContext *context)
-{
-    g_hash_table_unref(context->events);
+    g_hash_table_remove_all(context->events);
 }
 
 void
@@ -261,8 +257,7 @@ eventd_plugin_get_info(EventdPlugin *plugin)
     plugin->start = _eventd_sndfile_start;
     plugin->stop = _eventd_sndfile_stop;
 
-    plugin->config_init = _eventd_sndfile_config_init;
-    plugin->config_clean = _eventd_sndfile_config_clean;
+    plugin->config_reset = _eventd_sndfile_config_reset;
 
     plugin->event_parse = _eventd_sndfile_event_parse;
     plugin->event_action = _eventd_sndfile_event_action;
