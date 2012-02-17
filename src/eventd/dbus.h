@@ -23,7 +23,10 @@
 #ifndef __EVENTD_DBUS_H__
 #define __EVENTD_DBUS_H__
 
-EventdDbusContext *eventd_dbus_start(EventdConfig *config, EventdQueue *queue);
+EventdDbusContext *eventd_dbus_new(EventdConfig *config, EventdQueue *queue);
+void eventd_dbus_free(EventdDbusContext *context);
+
+void eventd_dbus_start(EventdDbusContext *context);
 void eventd_dbus_stop(EventdDbusContext *context);
 
 #endif /* __EVENTD_DBUS_H__ */

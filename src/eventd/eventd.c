@@ -138,6 +138,7 @@ main(int argc, char *argv[])
     context->queue = eventd_queue_new(context->config);
 
     context->service = eventd_service_new(context->config, context->queue);
+    context->dbus = eventd_dbus_new(context->config, context->queue);
 
     option_context = g_option_context_new("- small daemon to act on remote or local events");
     g_option_context_add_main_entries(option_context, entries, GETTEXT_PACKAGE);
@@ -167,8 +168,7 @@ main(int argc, char *argv[])
     eventd_plugins_start_all();
 
     eventd_service_start(context->service, sockets, no_avahi);
-
-    context->dbus = eventd_dbus_start(context->config, context->queue);
+    eventd_dbus_start(context->dbus);
 
     context->loop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(context->loop);
@@ -179,6 +179,7 @@ main(int argc, char *argv[])
     eventd_sockets_free_all(sockets, unix_socket, private_socket);
 
 end:
+    eventd_dbus_free(context->dbus);
     eventd_service_free(context->service);
 
     eventd_queue_free(context->queue);

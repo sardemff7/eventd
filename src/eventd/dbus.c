@@ -373,7 +373,7 @@ _eventd_dbus_on_name_lost(GDBusConnection *connection, const gchar *name, gpoint
 }
 
 EventdDbusContext *
-eventd_dbus_start(EventdConfig *config, EventdQueue *queue)
+eventd_dbus_new(EventdConfig *config, EventdQueue *queue)
 {
     EventdDbusContext *context;
     GError *error = NULL;
@@ -394,11 +394,18 @@ eventd_dbus_start(EventdConfig *config, EventdQueue *queue)
     context->config = config;
     context->queue = queue;
 
-    context->id = g_bus_own_name(G_BUS_TYPE_SESSION, NOTIFICATION_BUS_NAME, G_BUS_NAME_OWNER_FLAGS_NONE, _eventd_dbus_on_bus_acquired, _eventd_dbus_on_name_acquired, _eventd_dbus_on_name_lost, context, NULL);
-
     context->events = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, _eventd_dbus_notification_free);
 
     return context;
+}
+
+void
+eventd_dbus_start(EventdDbusContext *context)
+{
+    if ( context == NULL )
+        return;
+
+    context->id = g_bus_own_name(G_BUS_TYPE_SESSION, NOTIFICATION_BUS_NAME, G_BUS_NAME_OWNER_FLAGS_NONE, _eventd_dbus_on_bus_acquired, _eventd_dbus_on_name_acquired, _eventd_dbus_on_name_lost, context, NULL);
 }
 
 void
@@ -407,9 +414,16 @@ eventd_dbus_stop(EventdDbusContext *context)
     if ( context == NULL )
         return;
 
-    g_hash_table_unref(context->events);
-
     g_bus_unown_name(context->id);
+}
+
+void
+eventd_dbus_free(EventdDbusContext *context)
+{
+    if ( context == NULL )
+        return;
+
+    g_hash_table_unref(context->events);
 
     g_free(context);
 }
