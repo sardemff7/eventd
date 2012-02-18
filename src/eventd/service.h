@@ -26,7 +26,9 @@
 EventdService *eventd_service_new(EventdCoreContext *core, EventdConfig *config);
 void eventd_service_free(EventdService *service);
 
-void eventd_service_start(EventdService *service, GList *sockets, gboolean no_avahi);
+void eventd_service_start(EventdService *service);
 void eventd_service_stop(EventdService *service);
+
+GOptionGroup *eventd_service_get_option_group(EventdService *context);
 
 #endif /* __EVENTD_SERVICE_H__ */

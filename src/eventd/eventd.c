@@ -49,6 +49,7 @@ struct _EventdCoreContext {
     EventdQueue *queue;
     EventdService *service;
     EventdDbusContext *dbus;
+    GList *sockets;
     gchar *runtime_dir;
     gboolean take_over_socket;
     GMainLoop *loop;
@@ -68,7 +69,7 @@ eventd_core_get_unix_socket(EventdCoreContext *context, const gchar *path, const
         used_path = g_build_filename(context->runtime_dir, default_path, NULL);
     }
 
-    socket = eventd_sockets_get_unix_socket(( path != NULL ) ? path : used_path, context->take_over_socket, created);
+    socket = eventd_sockets_get_unix_socket(&context->sockets, ( path != NULL ) ? path : used_path, context->take_over_socket, created);
 
     if ( ret_used_path != NULL )
         *ret_used_path = used_path;
@@ -79,7 +80,7 @@ eventd_core_get_unix_socket(EventdCoreContext *context, const gchar *path, const
 GSocket *
 eventd_core_get_inet_socket(EventdCoreContext *context, gint16 port)
 {
-    return eventd_sockets_get_inet_socket(port);
+    return eventd_sockets_get_inet_socket(&context->sockets, port);
 }
 
 void
@@ -125,11 +126,6 @@ main(int argc, char *argv[])
 {
     EventdCoreContext *context;
 
-    guint16 bind_port = DEFAULT_BIND_PORT;
-
-    gchar *unix_socket = NULL;
-
-    gboolean no_avahi = FALSE;
 
     gboolean print_version = FALSE;
 
@@ -137,7 +133,6 @@ main(int argc, char *argv[])
     GError *error = NULL;
     GOptionContext *option_context = NULL;
     GOptionGroup *option_group;
-    GList *sockets = NULL;
 
 #if DEBUG
     g_setenv("G_MESSAGES_DEBUG", "all", FALSE);
@@ -155,14 +150,9 @@ main(int argc, char *argv[])
 
     GOptionEntry entries[] =
     {
-        { "port", 'p', 0, G_OPTION_ARG_INT, &bind_port, "Port to listen for inbound connections", "P" },
 #if ENABLE_GIO_UNIX
-        { "socket", 's', 0, G_OPTION_ARG_FILENAME, &unix_socket, "UNIX socket to listen for inbound connections", "SOCKET_FILE" },
         { "take-over", 't', 0, G_OPTION_ARG_NONE, &context->take_over_socket, "Take over socket", NULL },
 #endif /* ENABLE_GIO_UNIX */
-#if ENABLE_AVAHI
-        { "no-avahi", 'A', 0, G_OPTION_ARG_NONE, &no_avahi, "Disable avahi publishing", NULL },
-#endif /* ENABLE_AVAHI */
         { "version", 'V', 0, G_OPTION_ARG_NONE, &print_version, "Print version", NULL },
         { NULL }
     };
@@ -186,6 +176,8 @@ main(int argc, char *argv[])
     g_option_group_add_entries(option_group, entries);
     eventd_control_add_option_entry(context->control, option_group);
     g_option_context_set_main_group(option_context, option_group);
+
+    g_option_context_add_group(option_context, eventd_service_get_option_group(context->service));
 
     if ( ! g_option_context_parse(option_context, &argc, &argv, &error) )
         g_error("Option parsing failed: %s\n", error->message);
@@ -213,7 +205,7 @@ main(int argc, char *argv[])
 
     eventd_config_parse(context->config);
 
-    sockets = eventd_sockets_get_all(context->runtime_dir, bind_port, &unix_socket, context->take_over_socket);
+    context->sockets = eventd_sockets_get_list();
 
     eventd_control_start(context->control);
 
@@ -221,16 +213,16 @@ main(int argc, char *argv[])
 
     eventd_plugins_start_all();
 
-    eventd_service_start(context->service, sockets, no_avahi);
+    eventd_service_start(context->service);
     eventd_dbus_start(context->dbus);
+
+    eventd_sockets_free_all(context->sockets);
 
     context->loop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(context->loop);
     g_main_loop_unref(context->loop);
 
     eventd_dbus_stop(context->dbus);
-
-    eventd_sockets_free_all(sockets, unix_socket);
 
     g_free(context->runtime_dir);
 end:

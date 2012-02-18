@@ -24,7 +24,6 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 #if ENABLE_GIO_UNIX
-#include <gio/gunixsocketaddress.h>
 #include <glib/gstdio.h>
 #endif /* ENABLE_GIO_UNIX */
 
@@ -43,6 +42,9 @@ struct _EventdService {
     EventdCoreContext *core;
     EventdAvahiContext *avahi;
     EventdConfig *config;
+    guint16 bind_port;
+    gchar *unix_socket;
+    gboolean no_avahi;
     GSocketService *service;
     GSList *clients;
 };
@@ -306,34 +308,74 @@ eventd_service_new(EventdCoreContext *core, EventdConfig *config)
     service->core = core;
     service->config = config;
 
+    service->bind_port = DEFAULT_BIND_PORT;
+
     return service;
 }
 
 void
 eventd_service_free(EventdService *service)
 {
+    g_free(service->unix_socket);
+
     g_free(service);
 }
 
 void
-eventd_service_start(EventdService *service, GList *sockets, gboolean no_avahi)
+eventd_service_start(EventdService *service)
 {
     GError *error = NULL;
-    GList *socket = NULL;
+    GList *sockets = NULL;
+    GSocket *socket = NULL;
+#if ENABLE_GIO_UNIX
+    gchar *used_path = NULL;
+    gboolean created = FALSE;
+#endif /* ENABLE_GIO_UNIX */
 
     service->service = g_threaded_socket_service_new(eventd_config_get_max_clients(service->config));
 
-    for ( socket = g_list_first(sockets) ; socket ; socket = g_list_next(socket) )
+    if ( service->bind_port > 0 )
     {
-        if ( ! g_socket_listener_add_socket(G_SOCKET_LISTENER(service->service), socket->data, NULL, &error) )
+        socket = eventd_core_get_inet_socket(service->core, service->bind_port);
+        sockets = g_list_prepend(sockets, socket);
+    }
+    if ( socket != NULL )
+    {
+        if ( ! g_socket_listener_add_socket(G_SOCKET_LISTENER(service->service), socket, NULL, &error) )
             g_warning("Unable to add socket: %s", error->message);
         g_clear_error(&error);
     }
 
+#if ENABLE_GIO_UNIX
+    if ( ( service->unix_socket != NULL ) && ( *service->unix_socket == 0 ) )
+    {
+        socket = NULL;
+    }
+    else
+        socket = eventd_core_get_unix_socket(service->core, service->unix_socket, UNIX_SOCKET, &used_path, &created);
+    if ( used_path != NULL )
+    {
+        g_free(service->unix_socket);
+        service->unix_socket = used_path;
+    }
+    if ( ! created )
+    {
+        g_free(service->unix_socket);
+        service->unix_socket = NULL;
+    }
+    if ( socket != NULL )
+    {
+        sockets = g_list_prepend(sockets, socket);
+        if ( ! g_socket_listener_add_socket(G_SOCKET_LISTENER(service->service), socket, NULL, &error) )
+            g_warning("Unable to add socket: %s", error->message);
+        g_clear_error(&error);
+    }
+#endif /* ENABLE_GIO_UNIX */
+
     g_signal_connect(service->service, "run", G_CALLBACK(_eventd_service_connection_handler), service);
 
-    if ( ! no_avahi )
-        service->avahi = eventd_avahi_start(service->config, g_list_first(sockets));
+    if ( ! service->no_avahi )
+        service->avahi = eventd_avahi_start(service->config, sockets);
 }
 
 void
@@ -346,4 +388,31 @@ eventd_service_stop(EventdService *service)
     g_socket_service_stop(service->service);
     g_socket_listener_close(G_SOCKET_LISTENER(service->service));
     g_object_unref(service->service);
+
+#if ENABLE_GIO_UNIX
+    if ( service->unix_socket != NULL )
+        g_unlink(service->unix_socket);
+#endif /* ENABLE_GIO_UNIX */
+}
+
+GOptionGroup *
+eventd_service_get_option_group(EventdService *context)
+{
+    GOptionGroup *option_group;
+    GOptionEntry entries[] =
+    {
+        { "port", 'p', 0, G_OPTION_ARG_INT, &context->bind_port, "Port to listen for inbound connections", "<port>" },
+#if ENABLE_GIO_UNIX
+        { "socket", 's', 0, G_OPTION_ARG_FILENAME, &context->unix_socket, "UNIX socket to listen for inbound connections", "<socket>" },
+#endif /* ENABLE_GIO_UNIX */
+#if ENABLE_AVAHI
+        { "no-avahi", 'A', 0, G_OPTION_ARG_NONE, &context->no_avahi, "Disable avahi publishing", NULL },
+#endif /* ENABLE_AVAHI */
+        { NULL }
+    };
+
+    option_group = g_option_group_new("event", "EVENT protocol plugin options", "Show EVENT plugin help options", NULL, NULL);
+    g_option_group_set_translation_domain(option_group, GETTEXT_PACKAGE);
+    g_option_group_add_entries(option_group, entries);
+    return option_group;
 }

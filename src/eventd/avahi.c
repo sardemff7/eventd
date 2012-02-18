@@ -93,6 +93,7 @@ _eventd_avahi_create_group(EventdAvahiContext *context, AvahiClient *client)
     next:
         g_object_unref(address);
     }
+    g_list_free_full(context->sockets, g_object_unref);
 
     if ( ( error = avahi_entry_group_commit(context->group) ) < 0 )
     {

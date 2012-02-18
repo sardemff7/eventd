@@ -32,43 +32,43 @@
 #if ENABLE_SYSTEMD
 #include <sys/socket.h>
 #include <systemd/sd-daemon.h>
-
-static gint nfds = 0;
 #endif /* ENABLE_SYSTEMD */
 
 GSocket *
-eventd_sockets_get_inet_socket(guint16 port)
+eventd_sockets_get_inet_socket(GList **sockets, guint16 port)
 {
     GSocket *socket = NULL;
     GError *error = NULL;
     GInetAddress *inet_address = NULL;
     GSocketAddress *address = NULL;
-#if ENABLE_SYSTEMD
-    gint r;
-    gint fd;
-#endif /* ENABLE_SYSTEMD */
+    GList *socket_;
 
     if ( port == 0 )
         goto fail;
-#if ENABLE_SYSTEMD
-    for ( fd = SD_LISTEN_FDS_START ; fd < SD_LISTEN_FDS_START + nfds ; ++fd )
+
+    for ( socket_ = *sockets ; socket_ != NULL ; socket_ = g_list_next(socket_) )
     {
-        r = sd_is_socket_inet(fd, AF_UNSPEC, SOCK_STREAM, 1, port);
-        if ( r < 0 )
+        GSocketFamily family;
+
+        family = g_socket_get_family(socket_->data);
+        if ( ( family != G_SOCKET_FAMILY_IPV4 ) && ( family != G_SOCKET_FAMILY_IPV6 ) )
+            continue;
+
+        address = g_socket_get_local_address(socket_->data, &error);
+        if ( address == NULL )
         {
-            g_warning("Failed to verify systemd socket type: %s", strerror(-r));
+            g_warning("Couldn’t get socket local address: %s", error->message);
             continue;
         }
 
-        if ( r == 0 )
-            continue;
-
-        if ( ( socket = g_socket_new_from_fd(fd, &error) ) == NULL )
-            g_warning("Failed to take a socket from systemd: %s", error->message);
-        else
+        if ( g_inet_socket_address_get_port(G_INET_SOCKET_ADDRESS(address)) == port )
+        {
+            socket = socket_->data;
+            *sockets = g_list_remove_link(*sockets, socket_);
+            g_list_free_1(socket_);
             return socket;
+        }
     }
-#endif /* ENABLE_SYSTEMD */
 
     if ( ( socket = g_socket_new(G_SOCKET_FAMILY_IPV6, G_SOCKET_TYPE_STREAM, 0, &error)  ) == NULL )
     {
@@ -99,43 +99,39 @@ fail:
 }
 
 GSocket *
-eventd_sockets_get_unix_socket(const gchar *path, gboolean take_over_socket, gboolean *created)
+eventd_sockets_get_unix_socket(GList **sockets, const gchar *path, gboolean take_over_socket, gboolean *created)
 {
 #if ENABLE_GIO_UNIX
     GSocket *socket = NULL;
     GError *error = NULL;
     GSocketAddress *address = NULL;
-#if ENABLE_SYSTEMD
-    gint r;
-    gint fd;
-#endif /* ENABLE_SYSTEMD */
+    GList *socket_;
 
     if ( path == NULL )
         goto fail;
 
-#if ENABLE_SYSTEMD
-    for ( fd = SD_LISTEN_FDS_START ; fd < SD_LISTEN_FDS_START + nfds ; ++fd )
+    for ( socket_ = *sockets ; socket_ != NULL ; socket_ = g_list_next(socket_) )
     {
-        r = sd_is_socket_unix(fd, SOCK_STREAM, 1, path, 0);
-        if ( r < 0 )
+        if ( g_socket_get_family(socket_->data) != G_SOCKET_FAMILY_UNIX )
+            continue;
+
+        address = g_socket_get_local_address(socket_->data, &error);
+        if ( address == NULL )
         {
-            g_warning("Failed to verify systemd socket type: %s", strerror(-r));
+            g_warning("Couldn’t get socket local address: %s", error->message);
             continue;
         }
 
-        if ( r == 0 )
-            continue;
-
-        if ( ( socket = g_socket_new_from_fd(fd, &error) ) == NULL )
-            g_warning("Failed to take a socket from systemd: %s", error->message);
-        else
+        if ( g_strcmp0(path, g_unix_socket_address_get_path(G_UNIX_SOCKET_ADDRESS(address))) == 0 )
         {
+            socket = socket_->data;
+            *sockets = g_list_remove_link(*sockets, socket_);
+            g_list_free_1(socket_);
             if ( created != NULL )
                 *created = FALSE;
             return socket;
         }
     }
-#endif /* ENABLE_SYSTEMD */
 
     if ( ( socket = g_socket_new(G_SOCKET_FAMILY_UNIX, G_SOCKET_TYPE_STREAM, 0, &error)  ) == NULL )
     {
@@ -179,62 +175,43 @@ fail:
 }
 
 GList *
-eventd_sockets_get_all(
-    const gchar *run_dir,
-    guint16 bind_port,
-    gchar **unix_socket,
-    gboolean take_over_socket)
+eventd_sockets_get_list()
 {
     GList *sockets = NULL;
-    GSocket *socket = NULL;
-#if ENABLE_GIO_UNIX
-    gboolean created;
-
 #if ENABLE_SYSTEMD
-    nfds = sd_listen_fds(TRUE);
-    if ( nfds < 0 )
-        g_warning("Failed to acquire systemd sockets: %s", strerror(-nfds));
-#endif /* ENABLE_SYSTEMD */
+    GError *error = NULL;
+    GSocket *socket;
+    gint n;
+    gint r;
+    gint fd;
 
-    if ( run_dir == NULL )
-        goto no_run_dir;
+    n = sd_listen_fds(TRUE);
+    if ( n < 0 )
+        g_warning("Failed to acquire systemd sockets: %s", strerror(-n));
 
-    if ( ( *unix_socket != NULL ) && ( **unix_socket == 0 ) )
+    for ( fd = SD_LISTEN_FDS_START ; fd < SD_LISTEN_FDS_START + n ; ++fd )
     {
-        g_free(*unix_socket);
-        *unix_socket = NULL;
-    }
-    else
-    {
-        if ( *unix_socket == NULL )
-            *unix_socket = g_build_filename(run_dir, UNIX_SOCKET, NULL);
-
-        if ( ( socket = eventd_sockets_get_unix_socket(*unix_socket, take_over_socket, &created) ) != NULL )
-            sockets = g_list_prepend(sockets, socket);
-        if ( ( socket == NULL ) || ( ! created ) )
+        r = sd_is_socket(fd, AF_UNSPEC, SOCK_STREAM, 1);
+        if ( r < 0 )
         {
-            g_free(*unix_socket);
-            *unix_socket = NULL;
+            g_warning("Failed to verify systemd socket type: %s", strerror(-r));
+            continue;
         }
+
+        if ( r == 0 )
+            continue;
+
+        if ( ( socket = g_socket_new_from_fd(fd, &error) ) == NULL )
+            g_warning("Failed to take a socket from systemd: %s", error->message);
+        else
+            sockets = g_list_prepend(sockets, socket);
     }
-
-no_run_dir:
-#endif /* ENABLE_GIO_UNIX */
-
-    if ( ( bind_port > 0 ) && ( ( socket = eventd_sockets_get_inet_socket(bind_port) ) != NULL ) )
-        sockets = g_list_prepend(sockets, socket);
-
+#endif /* ENABLE_SYSTEMD */
     return sockets;
 }
 
 void
-eventd_sockets_free_all(GList *sockets, gchar *unix_socket)
+eventd_sockets_free_all(GList *sockets)
 {
     g_list_free_full(sockets, g_object_unref);
-
-    if ( unix_socket != NULL )
-    {
-        g_unlink(unix_socket);
-        g_free(unix_socket);
-    }
 }
