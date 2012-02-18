@@ -55,12 +55,6 @@ _eventd_service_client_disconnect(gpointer data)
     g_object_unref(cancellable);
 }
 
-void
-eventd_service_quit(EventdService *service)
-{
-    g_slist_free_full(service->clients, _eventd_service_client_disconnect);
-}
-
 static void
 _eventd_service_send_data(gpointer key, gpointer value, gpointer user_data)
 {
@@ -303,10 +297,8 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
 }
 
 EventdService *
-eventd_service_new(EventdConfig *config, EventdQueue *queue, GList *sockets, gboolean no_avahi)
+eventd_service_new(EventdConfig *config, EventdQueue *queue)
 {
-    GError *error = NULL;
-    GList *socket = NULL;
     EventdService *service;
 
     service = g_new0(EventdService, 1);
@@ -314,6 +306,21 @@ eventd_service_new(EventdConfig *config, EventdQueue *queue, GList *sockets, gbo
     service->config = config;
 
     service->queue = queue;
+
+    return service;
+}
+
+void
+eventd_service_free(EventdService *service)
+{
+    g_free(service);
+}
+
+void
+eventd_service_start(EventdService *service, GList *sockets, gboolean no_avahi)
+{
+    GError *error = NULL;
+    GList *socket = NULL;
 
     service->service = g_threaded_socket_service_new(eventd_config_get_max_clients(service->config));
 
@@ -328,15 +335,16 @@ eventd_service_new(EventdConfig *config, EventdQueue *queue, GList *sockets, gbo
 
     if ( ! no_avahi )
         service->avahi = eventd_avahi_start(service->config, g_list_first(sockets));
-
-    return service;
 }
 
 void
-eventd_service_free(EventdService *service)
+eventd_service_stop(EventdService *service)
 {
     eventd_avahi_stop(service->avahi);
 
+    g_slist_free_full(service->clients, _eventd_service_client_disconnect);
+
     g_socket_service_stop(service->service);
     g_socket_listener_close(G_SOCKET_LISTENER(service->service));
+    g_object_unref(service->service);
 }
