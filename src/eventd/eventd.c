@@ -90,6 +90,12 @@ eventd_core_push_event(EventdCoreContext *context, EventdEvent *event)
 }
 
 void
+eventd_core_event_pong(EventdCoreContext *context, EventdEvent *event)
+{
+    eventd_plugins_event_pong_all(event);
+}
+
+void
 eventd_core_config_reload(EventdCoreContext *context)
 {
     eventd_plugins_stop_all();

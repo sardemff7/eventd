@@ -176,7 +176,7 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
                             eventd_core_push_event(service->core, event);
                         break;
                         case MODE_PING_PONG:
-                            eventd_plugins_event_pong_all(event);
+                            eventd_core_event_pong(service->core, event);
                             if ( ! g_data_output_stream_put_string(output, "EVENT\n", NULL, &error) )
                                 break;
                             pong = eventd_event_get_pong_data(event);
