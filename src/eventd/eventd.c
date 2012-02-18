@@ -32,8 +32,6 @@ main(int argc, char *argv[])
 {
     guint16 bind_port = DEFAULT_BIND_PORT;
 
-    gboolean no_network = FALSE;
-    gboolean no_unix = FALSE;
     gchar *private_socket = NULL;
     gchar *unix_socket = NULL;
     gboolean take_over_socket = FALSE;
@@ -49,8 +47,6 @@ main(int argc, char *argv[])
     {
         { "port", 'p', 0, G_OPTION_ARG_INT, &bind_port, "Port to listen for inbound connections", "P" },
 #if ENABLE_GIO_UNIX
-        { "no-network", 'N', 0, G_OPTION_ARG_NONE, &no_network, "Disable the network bind", NULL },
-        { "no-unix", 'U', 0, G_OPTION_ARG_NONE, &no_unix, "Disable the UNIX socket bind", NULL },
         { "private-socket", 'i', 0, G_OPTION_ARG_FILENAME, &private_socket, "UNIX socket to listen for internal control", "SOCKET_FILE" },
         { "socket", 's', 0, G_OPTION_ARG_FILENAME, &unix_socket, "UNIX socket to listen for inbound connections", "SOCKET_FILE" },
         { "take-over", 't', 0, G_OPTION_ARG_NONE, &take_over_socket, "Take over socket", NULL },
@@ -99,7 +95,7 @@ main(int argc, char *argv[])
         sockets = eventd_sockets_get_systemd(&private_socket, &unix_socket);
     else
 #endif /* ENABLE_SYSTEMD */
-        sockets = eventd_sockets_get_all(bind_port, no_network, no_unix, &private_socket, &unix_socket, take_over_socket);
+        sockets = eventd_sockets_get_all(bind_port, &private_socket, &unix_socket, take_over_socket);
 
     retval = eventd_service(sockets, no_avahi);
 

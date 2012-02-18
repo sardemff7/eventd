@@ -181,9 +181,6 @@ fail:
 GList *
 eventd_sockets_get_all(
     guint16 bind_port,
-
-    gboolean no_network,
-    gboolean no_unix,
     gchar **private_socket,
     gchar **unix_socket,
     gboolean take_over_socket)
@@ -200,6 +197,11 @@ eventd_sockets_get_all(
         goto no_run_dir;
     }
 
+    if ( ( *private_socket != NULL ) && ( **private_socket == 0 ) )
+    {
+        g_free(*private_socket);
+        *private_socket = NULL;
+    }
     if ( *private_socket == NULL )
         *private_socket = g_build_filename(run_dir, "private", NULL);
     if ( ( socket = _eventd_sockets_get_unix_socket(*private_socket, take_over_socket) ) != NULL )
@@ -207,7 +209,7 @@ eventd_sockets_get_all(
     else
         g_warning("Couldn’t create private socket");
 
-    if ( no_unix )
+    if ( ( *unix_socket != NULL ) && ( **unix_socket == 0 ) )
     {
         g_free(*unix_socket);
         *unix_socket = NULL;
@@ -228,9 +230,6 @@ eventd_sockets_get_all(
 
 no_run_dir:
     g_free(run_dir);
-
-    if ( no_network )
-        bind_port = 0;
 #endif /* ENABLE_GIO_UNIX */
 
     if ( ( bind_port > 0 ) && ( ( socket = _eventd_socketsget_inet_socket(bind_port) ) != NULL ) )
