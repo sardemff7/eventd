@@ -133,6 +133,9 @@ eventd_avahi_start(EventdConfig *config, GList *sockets)
     EventdAvahiContext *context;
     int error;
 
+    if ( sockets == NULL )
+        return NULL;
+
     avahi_set_allocator(avahi_glib_allocator());
 
     context = g_new0(EventdAvahiContext, 1);
