@@ -40,6 +40,9 @@ include src/libeventd-event/libeventd-event.mk
 include src/libeventd/libeventd.mk
 include src/eventd/eventd.mk
 include src/eventdctl/eventdctl.mk
+if ENABLE_DBUS
+include src/plugins/dbus/dbus.mk
+endif
 if ENABLE_SNDFILE
 include src/plugins/sndfile/sndfile.mk
 endif

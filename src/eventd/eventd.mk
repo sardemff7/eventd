@@ -20,7 +20,6 @@ eventd_SOURCES = \
 	src/eventd/sockets.h \
 	src/eventd/sockets.c \
 	src/eventd/avahi.h \
-	src/eventd/dbus.h \
 	src/eventd/service.h \
 	src/eventd/service.c \
 	src/eventd/eventd.c
@@ -51,17 +50,4 @@ eventd_SOURCES += \
 else
 eventd_SOURCES += \
 	src/eventd/avahi-dummy.c
-endif
-
-if ENABLE_DBUS
-eventd_SOURCES += \
-	src/eventd/dbus.c
-else
-eventd_SOURCES += \
-	src/eventd/dbus-dummy.c
-endif
-
-if ENABLE_DBUS
-dist_pkgdata_DATA += \
-	data/libnotify.conf
 endif

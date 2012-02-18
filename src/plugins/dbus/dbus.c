@@ -25,32 +25,28 @@
 #include <gio/gio.h>
 
 #include <libeventd-event.h>
+#include <eventd-core-interface.h>
 #include <eventd-plugin.h>
-
-#include "types.h"
-
-#include "eventd.h"
-#include "config.h"
-
-#include "dbus.h"
 
 #define NOTIFICATION_BUS_NAME      "org.freedesktop.Notifications"
 #define NOTIFICATION_BUS_PATH      "/org/freedesktop/Notifications"
 
 #define NOTIFICATION_SPEC_VERSION  "1.2"
 
-struct _EventdDbusContext {
+struct _EventdPluginContext {
     EventdCoreContext *core;
+    EventdCoreInterface *core_interface;
     GDBusNodeInfo *introspection_data;
     gboolean disabled;
     guint id;
     GDBusConnection *connection;
     guint32 count;
+    GHashTable *events;
     GHashTable *notifications;
 };
 
 typedef struct {
-    EventdDbusContext *context;
+    EventdPluginContext *context;
     guint32 id;
     gchar *sender;
     EventdEvent *event;
@@ -78,7 +74,7 @@ _eventd_dbus_notification_free(gpointer user_data)
     g_free(notification);
 }
 static void
-_eventd_dbus_notification_new(EventdDbusContext *context, const gchar *sender, guint32 id, EventdEvent *event)
+_eventd_dbus_notification_new(EventdPluginContext *context, const gchar *sender, guint32 id, EventdEvent *event)
 {
     EventdDbusNotification *notification;
 
@@ -93,7 +89,7 @@ _eventd_dbus_notification_new(EventdDbusContext *context, const gchar *sender, g
 }
 
 static void
-_eventd_dbus_notify(EventdDbusContext *context, const gchar *sender, GVariant *parameters, GDBusMethodInvocation *invocation)
+_eventd_dbus_notify(EventdPluginContext *context, const gchar *sender, GVariant *parameters, GDBusMethodInvocation *invocation)
 {
     const gchar *app_name;
     guint32 id;
@@ -213,13 +209,13 @@ _eventd_dbus_notify(EventdDbusContext *context, const gchar *sender, GVariant *p
     eventd_event_set_timeout(event, ( timeout > -1 ) ? timeout : ( urgency > -1 ) ? ( 3000 + urgency * 2000 ) : -1);
 
     _eventd_dbus_notification_new(context, sender, id, event);
-    eventd_core_push_event(context->core, event);
+    context->core_interface->push_event(context->core, event);
 
     g_dbus_method_invocation_return_value(invocation, g_variant_new("(u)", id));
 }
 
 static void
-_eventd_dbus_close_notification(EventdDbusContext *context, GVariant *parameters, GDBusMethodInvocation *invocation)
+_eventd_dbus_close_notification(EventdPluginContext *context, GVariant *parameters, GDBusMethodInvocation *invocation)
 {
     guint32 id;
     EventdEvent *event;
@@ -291,7 +287,7 @@ _eventd_dbus_method(GDBusConnection       *connection,
                     GDBusMethodInvocation *invocation,
                     gpointer               user_data)
 {
-    EventdDbusContext *context = user_data;
+    EventdPluginContext *context = user_data;
 
     if ( g_strcmp0(method_name, "Notify") == 0 )
         _eventd_dbus_notify(context, sender, parameters, invocation);
@@ -339,7 +335,7 @@ static GDBusInterfaceVTable interface_vtable = {
 static void
 _eventd_dbus_on_bus_acquired(GDBusConnection *connection, const gchar *name, gpointer user_data)
 {
-    EventdDbusContext *context = user_data;
+    EventdPluginContext *context = user_data;
     GError *error = NULL;
     guint object_id;
 
@@ -356,7 +352,9 @@ _eventd_dbus_on_bus_acquired(GDBusConnection *connection, const gchar *name, gpo
 static void
 _eventd_dbus_on_name_acquired(GDBusConnection *connection, const gchar *name, gpointer user_data)
 {
+#if DEBUG
     g_debug("Acquired the name %s on the session bus\n", name);
+#endif /* DEBUG */
 }
 
 static void
@@ -365,10 +363,10 @@ _eventd_dbus_on_name_lost(GDBusConnection *connection, const gchar *name, gpoint
     g_warning("Lost DBus name");
 }
 
-EventdDbusContext *
-eventd_dbus_new(EventdCoreContext *core)
+static EventdPluginContext *
+_eventd_dbus_init(EventdCoreContext *core, EventdCoreInterface *core_interface)
 {
-    EventdDbusContext *context;
+    EventdPluginContext *context;
     GError *error = NULL;
     GDBusNodeInfo *introspection_data;
 
@@ -380,19 +378,20 @@ eventd_dbus_new(EventdCoreContext *core)
         return NULL;
     }
 
-    context = g_new0(EventdDbusContext, 1);
+    context = g_new0(EventdPluginContext, 1);
 
     context->introspection_data = introspection_data;
 
     context->core = core;
+    context->core_interface = core_interface;
 
     context->notifications = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, _eventd_dbus_notification_free);
 
     return context;
 }
 
-void
-eventd_dbus_start(EventdDbusContext *context)
+static void
+_eventd_dbus_start(EventdPluginContext *context)
 {
     if ( ( context == NULL ) || context->disabled )
         return;
@@ -400,8 +399,8 @@ eventd_dbus_start(EventdDbusContext *context)
     context->id = g_bus_own_name(G_BUS_TYPE_SESSION, NOTIFICATION_BUS_NAME, G_BUS_NAME_OWNER_FLAGS_NONE, _eventd_dbus_on_bus_acquired, _eventd_dbus_on_name_acquired, _eventd_dbus_on_name_lost, context, NULL);
 }
 
-void
-eventd_dbus_stop(EventdDbusContext *context)
+static void
+_eventd_dbus_stop(EventdPluginContext *context)
 {
     if ( ( context == NULL ) || context->disabled )
         return;
@@ -409,8 +408,8 @@ eventd_dbus_stop(EventdDbusContext *context)
     g_bus_unown_name(context->id);
 }
 
-void
-eventd_dbus_free(EventdDbusContext *context)
+static void
+_eventd_dbus_uninit(EventdPluginContext *context)
 {
     if ( context == NULL )
         return;
@@ -420,8 +419,8 @@ eventd_dbus_free(EventdDbusContext *context)
     g_free(context);
 }
 
-GOptionGroup *
-eventd_dbus_get_option_group(EventdDbusContext *context)
+static GOptionGroup *
+_eventd_dbus_get_option_group(EventdPluginContext *context)
 {
     GOptionGroup *option_group;
     GOptionEntry entries[] =
@@ -434,4 +433,16 @@ eventd_dbus_get_option_group(EventdDbusContext *context)
     g_option_group_set_translation_domain(option_group, GETTEXT_PACKAGE);
     g_option_group_add_entries(option_group, entries);
     return option_group;
+}
+
+void
+eventd_plugin_get_info(EventdPlugin *plugin)
+{
+    plugin->init = _eventd_dbus_init;
+    plugin->uninit = _eventd_dbus_uninit;
+
+    plugin->get_option_group = _eventd_dbus_get_option_group;
+
+    plugin->start = _eventd_dbus_start;
+    plugin->stop = _eventd_dbus_stop;
 }

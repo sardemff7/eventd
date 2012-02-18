@@ -41,7 +41,6 @@
 #include "queue.h"
 #include "sockets.h"
 #include "service.h"
-#include "dbus.h"
 
 #include "eventd.h"
 
@@ -50,7 +49,6 @@ struct _EventdCoreContext {
     EventdControl *control;
     EventdQueue *queue;
     EventdService *service;
-    EventdDbusContext *dbus;
     GList *sockets;
     gchar *runtime_dir;
     gboolean take_over_socket;
@@ -182,7 +180,6 @@ main(int argc, char *argv[])
     context->queue = eventd_queue_new(context->config);
 
     context->service = eventd_service_new(context, context->config);
-    context->dbus = eventd_dbus_new(context);
 
 
     option_context = g_option_context_new("- small daemon to act on remote or local events");
@@ -194,7 +191,6 @@ main(int argc, char *argv[])
     g_option_context_set_main_group(option_context, option_group);
 
     eventd_plugins_add_option_group_all(option_context);
-    g_option_context_add_group(option_context, eventd_dbus_get_option_group(context->dbus));
     g_option_context_add_group(option_context, eventd_service_get_option_group(context->service));
 
     if ( ! g_option_context_parse(option_context, &argc, &argv, &error) )
@@ -232,7 +228,6 @@ main(int argc, char *argv[])
     eventd_plugins_start_all();
 
     eventd_service_start(context->service);
-    eventd_dbus_start(context->dbus);
 
     eventd_sockets_free_all(context->sockets);
 
@@ -240,11 +235,8 @@ main(int argc, char *argv[])
     g_main_loop_run(context->loop);
     g_main_loop_unref(context->loop);
 
-    eventd_dbus_stop(context->dbus);
-
     g_free(context->runtime_dir);
 end:
-    eventd_dbus_free(context->dbus);
     eventd_service_free(context->service);
 
     eventd_queue_free(context->queue);
