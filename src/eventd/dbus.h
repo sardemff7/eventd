@@ -23,10 +23,12 @@
 #ifndef __EVENTD_DBUS_H__
 #define __EVENTD_DBUS_H__
 
-EventdDbusContext *eventd_dbus_new(EventdCoreContext *core, EventdConfig *config);
+EventdDbusContext *eventd_dbus_new(EventdCoreContext *core);
 void eventd_dbus_free(EventdDbusContext *context);
 
 void eventd_dbus_start(EventdDbusContext *context);
 void eventd_dbus_stop(EventdDbusContext *context);
+
+GOptionGroup *eventd_dbus_get_option_group(EventdDbusContext *context);
 
 #endif /* __EVENTD_DBUS_H__ */

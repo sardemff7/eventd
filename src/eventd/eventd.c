@@ -182,7 +182,7 @@ main(int argc, char *argv[])
     context->queue = eventd_queue_new(context->config);
 
     context->service = eventd_service_new(context, context->config);
-    context->dbus = eventd_dbus_new(context, context->config);
+    context->dbus = eventd_dbus_new(context);
 
 
     option_context = g_option_context_new("- small daemon to act on remote or local events");
@@ -194,6 +194,7 @@ main(int argc, char *argv[])
     g_option_context_set_main_group(option_context, option_group);
 
     eventd_plugins_add_option_group_all(option_context);
+    g_option_context_add_group(option_context, eventd_dbus_get_option_group(context->dbus));
     g_option_context_add_group(option_context, eventd_service_get_option_group(context->service));
 
     if ( ! g_option_context_parse(option_context, &argc, &argv, &error) )

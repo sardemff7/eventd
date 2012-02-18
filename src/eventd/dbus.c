@@ -41,8 +41,8 @@
 
 struct _EventdDbusContext {
     EventdCoreContext *core;
-    EventdConfig *config;
     GDBusNodeInfo *introspection_data;
+    gboolean disabled;
     guint id;
     GDBusConnection *connection;
     guint32 count;
@@ -166,13 +166,6 @@ _eventd_dbus_notify(EventdDbusContext *context, const gchar *sender, GVariant *p
         id = ++context->count;
     event = eventd_event_new(event_name);
     eventd_event_set_category(event, "libnotify");
-
-    if ( eventd_config_event_get_disable(context->config, event) )
-    {
-        g_dbus_method_invocation_return_dbus_error(invocation, NOTIFICATION_BUS_NAME ".Disabled", "Notification type disabled");
-        g_object_unref(event);
-        return;
-    }
 
     eventd_event_add_data(event, g_strdup("client-name"), g_strdup(app_name));
 
@@ -373,7 +366,7 @@ _eventd_dbus_on_name_lost(GDBusConnection *connection, const gchar *name, gpoint
 }
 
 EventdDbusContext *
-eventd_dbus_new(EventdCoreContext *core, EventdConfig *config)
+eventd_dbus_new(EventdCoreContext *core)
 {
     EventdDbusContext *context;
     GError *error = NULL;
@@ -392,7 +385,6 @@ eventd_dbus_new(EventdCoreContext *core, EventdConfig *config)
     context->introspection_data = introspection_data;
 
     context->core = core;
-    context->config = config;
 
     context->notifications = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, _eventd_dbus_notification_free);
 
@@ -402,7 +394,7 @@ eventd_dbus_new(EventdCoreContext *core, EventdConfig *config)
 void
 eventd_dbus_start(EventdDbusContext *context)
 {
-    if ( context == NULL )
+    if ( ( context == NULL ) || context->disabled )
         return;
 
     context->id = g_bus_own_name(G_BUS_TYPE_SESSION, NOTIFICATION_BUS_NAME, G_BUS_NAME_OWNER_FLAGS_NONE, _eventd_dbus_on_bus_acquired, _eventd_dbus_on_name_acquired, _eventd_dbus_on_name_lost, context, NULL);
@@ -411,7 +403,7 @@ eventd_dbus_start(EventdDbusContext *context)
 void
 eventd_dbus_stop(EventdDbusContext *context)
 {
-    if ( context == NULL )
+    if ( ( context == NULL ) || context->disabled )
         return;
 
     g_bus_unown_name(context->id);
@@ -426,4 +418,20 @@ eventd_dbus_free(EventdDbusContext *context)
     g_hash_table_unref(context->notifications);
 
     g_free(context);
+}
+
+GOptionGroup *
+eventd_dbus_get_option_group(EventdDbusContext *context)
+{
+    GOptionGroup *option_group;
+    GOptionEntry entries[] =
+    {
+        { "no-dbus", 'D', 0, G_OPTION_ARG_NONE, &context->disabled, "Disable D-Bus interface", NULL },
+        { NULL }
+    };
+
+    option_group = g_option_group_new("dbus", "D-Bus plugin options", "Show D-Bus plugin help options", NULL, NULL);
+    g_option_group_set_translation_domain(option_group, GETTEXT_PACKAGE);
+    g_option_group_add_entries(option_group, entries);
+    return option_group;
 }
