@@ -25,7 +25,7 @@
 
 typedef struct _EventdSndfilePulseaudioContext EventdSndfilePulseaudioContext;
 
-EventdSndfilePulseaudioContext *eventd_sndfile_pulseaudio_init();
+EventdSndfilePulseaudioContext *eventd_sndfile_pulseaudio_init(void);
 void eventd_sndfile_pulseaudio_uninit(EventdSndfilePulseaudioContext *context);
 
 void eventd_sndfile_pulseaudio_start(EventdSndfilePulseaudioContext *context);

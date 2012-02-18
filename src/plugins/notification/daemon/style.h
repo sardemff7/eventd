@@ -23,7 +23,7 @@
 #ifndef __EVENTD_ND_STYLE_H__
 #define __EVENTD_ND_STYLE_H__
 
-EventdNdStyle *eventd_nd_style_new();
+EventdNdStyle *eventd_nd_style_new(void);
 void eventd_nd_style_free(EventdNdStyle *style);
 
 #endif /* __EVENTD_ND_STYLE_H__ */

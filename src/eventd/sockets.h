@@ -26,7 +26,7 @@
 GSocket *eventd_sockets_get_inet_socket(GList **sockets, guint16 port);
 GSocket *eventd_sockets_get_unix_socket(GList **sockets, const gchar *path, gboolean take_over, gboolean *created);
 
-GList *eventd_sockets_get_list();
+GList *eventd_sockets_get_list(void);
 void eventd_sockets_free_all(GList *sockets);
 
 #endif /* __EVENTD_SOCKETS_H__ */

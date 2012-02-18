@@ -23,8 +23,8 @@
 #ifndef __EVENTD_PLUGINS_NOTIFICATION_NOTIFY_H__
 #define __EVENTD_PLUGINS_NOTIFICATION_NOTIFY_H__
 
-void eventd_notification_notify_init();
-void eventd_notification_notify_uninit();
+void eventd_notification_notify_init(void);
+void eventd_notification_notify_uninit(void);
 void eventd_notification_notify_event_action(EventdNotificationNotification *notification, guint64 timeout, gdouble scale);
 
 #endif /* __EVENTD_PLUGINS_NOTIFICATION_NOTIFY_H__ */

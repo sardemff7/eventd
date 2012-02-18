@@ -33,7 +33,7 @@ void eventd_espeak_pulseaudio_stop(EventdEspeakPulseaudioContext *context);
 
 void eventd_espeak_pulseaudio_play_data(gshort *wav, gint numsamples, espeak_EVENT *event);
 
-gpointer eventd_espeak_pulseaudio_pa_data_new();
+gpointer eventd_espeak_pulseaudio_pa_data_new(EventdEspeakPulseaudioContext *context);
 void eventd_espeak_pulseaudio_pa_data_free(gpointer pa_data);
 
 #endif /* __EVENTD_PLUGINS_SOUND_ESPEAK_PULSEAUDIO_H__ */

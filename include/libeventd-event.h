@@ -27,8 +27,8 @@
 
 G_BEGIN_DECLS
 
-GType eventd_event_get_type();
-GType eventd_event_end_reason_get_type();
+GType eventd_event_get_type(void);
+GType eventd_event_end_reason_get_type(void);
 
 #define EVENTD_TYPE_EVENT            (eventd_event_get_type())
 #define EVENTD_EVENT(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), EVENTD_TYPE_EVENT, EventdEvent))

@@ -23,7 +23,7 @@
 #ifndef __EVENTD_EVENTS_H__
 #define __EVENTD_EVENTS_H__
 
-EventdConfig *eventd_config_new();
+EventdConfig *eventd_config_new(void);
 void eventd_config_parse(EventdConfig *config);
 void eventd_config_free(EventdConfig *config);
 

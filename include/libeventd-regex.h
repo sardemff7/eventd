@@ -23,8 +23,8 @@
 #ifndef __LIBEVENTD_REGEX_H__
 #define __LIBEVENTD_REGEX_H__
 
-void libeventd_regex_init();
-void libeventd_regex_clean();
+void libeventd_regex_init(void);
+void libeventd_regex_clean(void);
 
 gchar *libeventd_regex_replace_event_data(const gchar *target, GHashTable *event_data, GRegexEvalCallback callback);
 

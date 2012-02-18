@@ -25,7 +25,7 @@
 
 typedef struct _EventdNdContext EventdNdContext;
 
-EventdNdContext *eventd_nd_init();
+EventdNdContext *eventd_nd_init(void);
 void eventd_nd_uninit(EventdNdContext *context);
 void eventd_nd_control_command(EventdNdContext *context, const gchar *command);
 void eventd_nd_event_action(EventdNdContext *context, EventdEvent *event, EventdNotificationNotification *notification);

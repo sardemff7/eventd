@@ -24,16 +24,16 @@
 #define __EVENTD_PLUGINS_H__
 
 void eventd_plugins_load(EventdCoreContext *core, EventdCoreInterface *interface);
-void eventd_plugins_unload();
+void eventd_plugins_unload(void);
 
 void eventd_plugins_add_option_group_all(GOptionContext *option_context);
 
-void eventd_plugins_start_all();
-void eventd_plugins_stop_all();
+void eventd_plugins_start_all(void);
+void eventd_plugins_stop_all(void);
 
 void eventd_plugins_control_command_all(gchar *command);
 
-void eventd_plugins_config_reset_all();
+void eventd_plugins_config_reset_all(void);
 
 void eventd_plugins_global_parse_all(GKeyFile *config_file);
 void eventd_plugins_event_parse_all(const gchar *type, const gchar *event, GKeyFile *config_file);
