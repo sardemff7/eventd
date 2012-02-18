@@ -180,6 +180,7 @@ fail:
 
 GList *
 eventd_sockets_get_all(
+    const gchar *run_dir,
     guint16 bind_port,
     gchar **private_socket,
     gchar **unix_socket,
@@ -188,7 +189,6 @@ eventd_sockets_get_all(
     GList *sockets = NULL;
     GSocket *socket = NULL;
 #if ENABLE_GIO_UNIX
-    gchar *run_dir = NULL;
     gboolean created;
 
 #if ENABLE_SYSTEMD
@@ -197,12 +197,8 @@ eventd_sockets_get_all(
         g_warning("Failed to acquire systemd sockets: %s", strerror(-nfds));
 #endif /* ENABLE_SYSTEMD */
 
-    run_dir = g_build_filename(g_get_user_runtime_dir(), PACKAGE_NAME, NULL);
-    if ( ( ! g_file_test(run_dir, G_FILE_TEST_IS_DIR) ) && ( g_mkdir_with_parents(run_dir, 0755) < 0 ) )
-    {
-        g_warning("Couldn’t create the run dir '%s': %s", run_dir, strerror(errno));
+    if ( run_dir == NULL )
         goto no_run_dir;
-    }
 
     if ( ( *private_socket != NULL ) && ( **private_socket == 0 ) )
     {
@@ -241,7 +237,6 @@ eventd_sockets_get_all(
     }
 
 no_run_dir:
-    g_free(run_dir);
 #endif /* ENABLE_GIO_UNIX */
 
     if ( ( bind_port > 0 ) && ( ( socket = _eventd_sockets_get_inet_socket(bind_port) ) != NULL ) )

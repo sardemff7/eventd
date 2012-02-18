@@ -20,6 +20,9 @@
  *
  */
 
+#include <errno.h>
+#include <string.h>
+
 #include <glib.h>
 #include <glib-object.h>
 #include <glib/gprintf.h>
@@ -45,6 +48,7 @@ struct _EventdCoreContext {
     EventdQueue *queue;
     EventdService *service;
     EventdDbusContext *dbus;
+    gchar *runtime_dir;
     GMainLoop *loop;
 };
 
@@ -166,6 +170,14 @@ main(int argc, char *argv[])
     }
 
 
+    context->runtime_dir = g_build_filename(g_get_user_runtime_dir(), PACKAGE_NAME, NULL);
+    if ( ( ! g_file_test(context->runtime_dir, G_FILE_TEST_IS_DIR) ) && ( g_mkdir_with_parents(context->runtime_dir, 0755) < 0 ) )
+    {
+        g_warning("Couldn’t create the run dir '%s': %s", context->runtime_dir, strerror(errno));
+        g_free(context->runtime_dir);
+        context->runtime_dir = NULL;
+    }
+
 #ifdef G_OS_UNIX
     g_unix_signal_add(SIGTERM, _eventd_core_quit, context);
     g_unix_signal_add(SIGINT, _eventd_core_quit, context);
@@ -173,7 +185,7 @@ main(int argc, char *argv[])
 
     eventd_config_parse(context->config);
 
-    sockets = eventd_sockets_get_all(bind_port, &private_socket, &unix_socket, take_over_socket);
+    sockets = eventd_sockets_get_all(context->runtime_dir, bind_port, &private_socket, &unix_socket, take_over_socket);
 
     eventd_control_start(context->control, &sockets);
 
@@ -192,6 +204,7 @@ main(int argc, char *argv[])
 
     eventd_sockets_free_all(sockets, unix_socket, private_socket);
 
+    g_free(context->runtime_dir);
 end:
     eventd_dbus_free(context->dbus);
     eventd_service_free(context->service);
