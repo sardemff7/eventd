@@ -28,25 +28,24 @@
 #endif /* ENABLE_GIO_UNIX */
 
 #include <libeventd-event.h>
+#include <eventd-core-interface.h>
+#include <eventd-plugin.h>
+#include <libeventd-config.h>
 
-#include "types.h"
-
-#include "eventd.h"
-#include "config.h"
-#include "plugins.h"
 #include "avahi.h"
 
-#include "service.h"
-
-struct _EventdService {
+struct _EventdPluginContext {
     EventdCoreContext *core;
-    EventdAvahiContext *avahi;
-    EventdConfig *config;
+    EventdCoreInterface *core_interface;
+    EventdEvpAvahiContext *avahi;
+    gint64 max_clients;
     guint16 bind_port;
     gchar *unix_socket;
     gboolean no_avahi;
+    gchar *avahi_name;
     GSocketService *service;
     GSList *clients;
+    GHashTable *events;
 };
 
 static void
@@ -109,7 +108,7 @@ typedef enum {
 static gboolean
 _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSocketConnection *connection, GObject *source_object, gpointer user_data)
 {
-    EventdService *service = user_data;
+    EventdPluginContext *service = user_data;
 
     GCancellable *cancellable;
     GDataInputStream *input = NULL;
@@ -165,7 +164,7 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
                 else
                 {
 
-                    if ( ! eventd_config_event_get_disable(service->config, event) )
+                    if ( ! GPOINTER_TO_UINT(libeventd_config_events_get_event(service->events, eventd_event_get_category(event), eventd_event_get_name(event))) )
                     {
                         GHashTable *pong = NULL;
 
@@ -173,10 +172,10 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
                         {
                         case MODE_NORMAL:
                         case MODE_RELAY:
-                            eventd_core_push_event(service->core, event);
+                            service->core_interface->push_event(service->core, event);
                         break;
                         case MODE_PING_PONG:
-                            eventd_core_event_pong(service->core, event);
+                             service->core_interface->event_pong(service->core, event);
                             if ( ! g_data_output_stream_put_string(output, "EVENT\n", NULL, &error) )
                                 break;
                             pong = eventd_event_get_pong_data(event);
@@ -298,31 +297,41 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
     return TRUE;
 }
 
-EventdService *
-eventd_service_new(EventdCoreContext *core, EventdConfig *config)
+static EventdPluginContext *
+_eventd_evp_init(EventdCoreContext *core, EventdCoreInterface *core_interface)
 {
-    EventdService *service;
+    EventdPluginContext *service;
 
-    service = g_new0(EventdService, 1);
+    service = g_new0(EventdPluginContext, 1);
 
     service->core = core;
-    service->config = config;
+    service->core_interface= core_interface;
+
+    service->max_clients = -1;
 
     service->bind_port = DEFAULT_BIND_PORT;
+
+    service->avahi_name = g_strdup(PACKAGE_NAME);
+
+    service->events = libeventd_config_events_new(NULL);
 
     return service;
 }
 
-void
-eventd_service_free(EventdService *service)
+static void
+_eventd_evp_uninit(EventdPluginContext *service)
 {
+    g_hash_table_unref(service->events);
+
+    g_free(service->avahi_name);
+
     g_free(service->unix_socket);
 
     g_free(service);
 }
 
-void
-eventd_service_start(EventdService *service)
+static void
+_eventd_evp_start(EventdPluginContext *service)
 {
     GError *error = NULL;
     GList *sockets = NULL;
@@ -332,11 +341,11 @@ eventd_service_start(EventdService *service)
     gboolean created = FALSE;
 #endif /* ENABLE_GIO_UNIX */
 
-    service->service = g_threaded_socket_service_new(eventd_config_get_max_clients(service->config));
+    service->service = g_threaded_socket_service_new(service->max_clients);
 
     if ( service->bind_port > 0 )
     {
-        socket = eventd_core_get_inet_socket(service->core, service->bind_port);
+        socket = service->core_interface->get_inet_socket(service->core, service->bind_port);
         sockets = g_list_prepend(sockets, socket);
     }
     if ( socket != NULL )
@@ -352,7 +361,7 @@ eventd_service_start(EventdService *service)
         socket = NULL;
     }
     else
-        socket = eventd_core_get_unix_socket(service->core, service->unix_socket, UNIX_SOCKET, &used_path, &created);
+        socket = service->core_interface->get_unix_socket(service->core, service->unix_socket, UNIX_SOCKET, &used_path, &created);
     if ( used_path != NULL )
     {
         g_free(service->unix_socket);
@@ -374,14 +383,20 @@ eventd_service_start(EventdService *service)
 
     g_signal_connect(service->service, "run", G_CALLBACK(_eventd_service_connection_handler), service);
 
+#if ENABLE_AVAHI
     if ( ! service->no_avahi )
-        service->avahi = eventd_avahi_start(service->config, sockets);
+        service->avahi = eventd_evp_avahi_start(service->avahi_name, sockets);
+    else
+#endif /* ENABLE_AVAHI */
+        g_list_free_full(sockets, g_object_unref);
 }
 
-void
-eventd_service_stop(EventdService *service)
+static void
+_eventd_evp_stop(EventdPluginContext *service)
 {
-    eventd_avahi_stop(service->avahi);
+#if ENABLE_AVAHI
+    eventd_evp_avahi_stop(service->avahi);
+#endif /* ENABLE_AVAHI */
 
     g_slist_free_full(service->clients, _eventd_service_client_disconnect);
 
@@ -395,8 +410,8 @@ eventd_service_stop(EventdService *service)
 #endif /* ENABLE_GIO_UNIX */
 }
 
-GOptionGroup *
-eventd_service_get_option_group(EventdService *context)
+static GOptionGroup *
+_eventd_evp_get_option_group(EventdPluginContext *context)
 {
     GOptionGroup *option_group;
     GOptionEntry entries[] =
@@ -415,4 +430,75 @@ eventd_service_get_option_group(EventdService *context)
     g_option_group_set_translation_domain(option_group, GETTEXT_PACKAGE);
     g_option_group_add_entries(option_group, entries);
     return option_group;
+}
+
+static void
+_eventd_evp_config_reset(EventdPluginContext *context)
+{
+    g_hash_table_remove_all(context->events);
+}
+
+static void
+_eventd_evp_global_parse(EventdPluginContext *context, GKeyFile *config_file)
+{
+    Int integer;
+    gchar *avahi_name;
+
+    if ( ! g_key_file_has_group(config_file, "server") )
+        return;
+
+    if ( libeventd_config_key_file_get_int(config_file, "server", "max-clients", &integer) < 0 )
+        return;
+    if ( integer.set )
+        context->max_clients = integer.value;
+
+    if ( libeventd_config_key_file_get_string(config_file, "server", "avahi-name", &avahi_name) < 0 )
+        return;
+    if ( avahi_name != NULL )
+    {
+        g_free(context->avahi_name);
+        context->avahi_name = avahi_name;
+    }
+}
+
+static void
+_eventd_evp_event_parse(EventdPluginContext *context, const gchar *event_category, const gchar *event_name, GKeyFile *config_file)
+{
+    gboolean disable;
+    gint8 r;
+    gchar *name = NULL;
+    gboolean parent = FALSE;
+
+    if ( ! g_key_file_has_group(config_file, "event") )
+        return;
+
+    r = libeventd_config_key_file_get_boolean(config_file, "event", "disable", &disable);
+    if ( r < 0 )
+        return;
+
+    name = libeventd_config_events_get_name(event_category, event_name);
+    if ( event_name != NULL )
+        parent = GPOINTER_TO_UINT(g_hash_table_lookup(context->events, event_category));
+
+    if ( disable && ( ! parent ) )
+        g_hash_table_insert(context->events, name, GUINT_TO_POINTER(disable));
+    else if ( ( r == 0 ) && ( ! disable ) && parent )
+        g_hash_table_insert(context->events, name, GUINT_TO_POINTER(disable));
+}
+
+void
+eventd_plugin_get_info(EventdPlugin *plugin)
+{
+    plugin->init = _eventd_evp_init;
+    plugin->uninit = _eventd_evp_uninit;
+
+    plugin->get_option_group = _eventd_evp_get_option_group;
+
+    plugin->start = _eventd_evp_start;
+    plugin->stop = _eventd_evp_stop;
+
+    plugin->config_reset = _eventd_evp_config_reset;
+
+    plugin->global_parse = _eventd_evp_global_parse;
+    plugin->event_parse = _eventd_evp_event_parse;
 }

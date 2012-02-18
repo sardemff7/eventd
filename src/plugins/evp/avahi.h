@@ -20,10 +20,12 @@
  *
  */
 
-#ifndef __EVENTD_AVAHI_H__
-#define __EVENTD_AVAHI_H__
+#ifndef __EVENTD_EVP_AVAHI_H__
+#define __EVENTD_EVP_AVAHI_H__
 
-EventdAvahiContext *eventd_avahi_start(EventdConfig *config, GList *sockets);
-void eventd_avahi_stop(EventdAvahiContext *context);
+typedef struct _EventdEvpAvahiContext EventdEvpAvahiContext;
 
-#endif /* __EVENTD_AVAHI_H__ */
+EventdEvpAvahiContext *eventd_evp_avahi_start(const gchar *name, GList *sockets);
+void eventd_evp_avahi_stop(EventdEvpAvahiContext *context);
+
+#endif /* __EVENTD_EVP_AVAHI_H__ */

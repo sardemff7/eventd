@@ -40,7 +40,6 @@
 #include "control.h"
 #include "queue.h"
 #include "sockets.h"
-#include "service.h"
 
 #include "eventd.h"
 
@@ -48,7 +47,6 @@ struct _EventdCoreContext {
     EventdConfig *config;
     EventdControl *control;
     EventdQueue *queue;
-    EventdService *service;
     GList *sockets;
     gchar *runtime_dir;
     gboolean take_over_socket;
@@ -107,8 +105,6 @@ void
 eventd_core_quit(EventdCoreContext *context)
 {
     eventd_queue_stop(context->queue);
-
-    eventd_service_stop(context->service);
 
     eventd_plugins_stop_all();
 
@@ -179,8 +175,6 @@ main(int argc, char *argv[])
     context->config = eventd_config_new();
     context->queue = eventd_queue_new(context->config);
 
-    context->service = eventd_service_new(context, context->config);
-
 
     option_context = g_option_context_new("- small daemon to act on remote or local events");
 
@@ -191,7 +185,6 @@ main(int argc, char *argv[])
     g_option_context_set_main_group(option_context, option_group);
 
     eventd_plugins_add_option_group_all(option_context);
-    g_option_context_add_group(option_context, eventd_service_get_option_group(context->service));
 
     if ( ! g_option_context_parse(option_context, &argc, &argv, &error) )
         g_error("Option parsing failed: %s\n", error->message);
@@ -227,8 +220,6 @@ main(int argc, char *argv[])
 
     eventd_plugins_start_all();
 
-    eventd_service_start(context->service);
-
     eventd_sockets_free_all(context->sockets);
 
     context->loop = g_main_loop_new(NULL, FALSE);
@@ -237,8 +228,6 @@ main(int argc, char *argv[])
 
     g_free(context->runtime_dir);
 end:
-    eventd_service_free(context->service);
-
     eventd_queue_free(context->queue);
     eventd_config_free(context->config);
 

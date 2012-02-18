@@ -19,9 +19,6 @@ eventd_SOURCES = \
 	src/eventd/control.c \
 	src/eventd/sockets.h \
 	src/eventd/sockets.c \
-	src/eventd/avahi.h \
-	src/eventd/service.h \
-	src/eventd/service.c \
 	src/eventd/eventd.c
 
 eventd_CFLAGS = \
@@ -43,11 +40,3 @@ eventd_LDADD = \
 	$(GTHREAD_LIBS) \
 	$(GIO_LIBS) \
 	$(GLIB_LIBS)
-
-if ENABLE_AVAHI
-eventd_SOURCES += \
-	src/eventd/avahi.c
-else
-eventd_SOURCES += \
-	src/eventd/avahi-dummy.c
-endif

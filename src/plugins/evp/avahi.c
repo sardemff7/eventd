@@ -28,13 +28,9 @@
 #include <avahi-glib/glib-watch.h>
 #include <avahi-glib/glib-malloc.h>
 
-#include "types.h"
-
-#include "config.h"
-
 #include "avahi.h"
 
-struct _EventdAvahiContext {
+struct _EventdEvpAvahiContext {
     const gchar *name;
     GList *sockets;
     AvahiGLibPoll *glib_poll;
@@ -43,17 +39,17 @@ struct _EventdAvahiContext {
 };
 
 static void
-_eventd_avahi_group_callback(AvahiEntryGroup *g, AvahiEntryGroupState state, void *user_data)
+_eventd_evp_avahi_group_callback(AvahiEntryGroup *g, AvahiEntryGroupState state, void *user_data)
 {
 }
 
 static void
-_eventd_avahi_create_group(EventdAvahiContext *context, AvahiClient *client)
+_eventd_evp_avahi_create_group(EventdEvpAvahiContext *context, AvahiClient *client)
 {
     GList *socket;
     int error;
 
-    context->group = avahi_entry_group_new(client, _eventd_avahi_group_callback, context);
+    context->group = avahi_entry_group_new(client, _eventd_evp_avahi_group_callback, context);
     if ( context->group == NULL )
     {
         g_warning("Couldn’t create avahi entry group: %s", avahi_strerror(avahi_client_errno(client)));
@@ -108,14 +104,14 @@ fail:
 }
 
 static void
-_eventd_avahi_client_callback(AvahiClient *client, AvahiClientState state, void *user_data)
+_eventd_evp_avahi_client_callback(AvahiClient *client, AvahiClientState state, void *user_data)
 {
-    EventdAvahiContext *context = user_data;
+    EventdEvpAvahiContext *context = user_data;
 
     switch ( state )
     {
     case AVAHI_CLIENT_S_RUNNING:
-        _eventd_avahi_create_group(context, client);
+        _eventd_evp_avahi_create_group(context, client);
     case AVAHI_CLIENT_S_REGISTERING:
     break;
     case AVAHI_CLIENT_FAILURE:
@@ -127,10 +123,10 @@ _eventd_avahi_client_callback(AvahiClient *client, AvahiClientState state, void 
     }
 }
 
-EventdAvahiContext *
-eventd_avahi_start(EventdConfig *config, GList *sockets)
+EventdEvpAvahiContext *
+eventd_evp_avahi_start(const gchar *name, GList *sockets)
 {
-    EventdAvahiContext *context;
+    EventdEvpAvahiContext *context;
     int error;
 
     if ( sockets == NULL )
@@ -138,17 +134,17 @@ eventd_avahi_start(EventdConfig *config, GList *sockets)
 
     avahi_set_allocator(avahi_glib_allocator());
 
-    context = g_new0(EventdAvahiContext, 1);
+    context = g_new0(EventdEvpAvahiContext, 1);
 
-    context->name = eventd_config_get_avahi_name(config);
+    context->name = name;
     context->sockets = sockets;
     context->glib_poll = avahi_glib_poll_new(NULL, G_PRIORITY_DEFAULT);
-    context->client = avahi_client_new(avahi_glib_poll_get(context->glib_poll), 0, _eventd_avahi_client_callback, context, &error);
+    context->client = avahi_client_new(avahi_glib_poll_get(context->glib_poll), 0, _eventd_evp_avahi_client_callback, context, &error);
 
     if ( context->client == NULL )
     {
         g_warning("Couldn’t initialize Avahi: %s", avahi_strerror(error));
-        eventd_avahi_stop(context);
+        eventd_evp_avahi_stop(context);
         return NULL;
     }
 
@@ -156,7 +152,7 @@ eventd_avahi_start(EventdConfig *config, GList *sockets)
 }
 
 void
-eventd_avahi_stop(EventdAvahiContext *context)
+eventd_evp_avahi_stop(EventdEvpAvahiContext *context)
 {
     if ( context == NULL )
         return;

@@ -27,9 +27,7 @@
 #include <eventd-plugin.h>
 
 typedef struct _EventdQueue EventdQueue;
-typedef struct _EventdService EventdService;
 typedef struct _EventdControl EventdControl;
-typedef struct _EventdAvahiContext EventdAvahiContext;
 typedef struct _EventdConfig EventdConfig;
 
 #endif /* __EVENTD_TYPES_H__ */
