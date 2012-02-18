@@ -127,7 +127,6 @@ main(int argc, char *argv[])
 
     guint16 bind_port = DEFAULT_BIND_PORT;
 
-    gchar *private_socket = NULL;
     gchar *unix_socket = NULL;
 
     gboolean no_avahi = FALSE;
@@ -158,7 +157,6 @@ main(int argc, char *argv[])
     {
         { "port", 'p', 0, G_OPTION_ARG_INT, &bind_port, "Port to listen for inbound connections", "P" },
 #if ENABLE_GIO_UNIX
-        { "private-socket", 'i', 0, G_OPTION_ARG_FILENAME, &private_socket, "UNIX socket to listen for internal control", "SOCKET_FILE" },
         { "socket", 's', 0, G_OPTION_ARG_FILENAME, &unix_socket, "UNIX socket to listen for inbound connections", "SOCKET_FILE" },
         { "take-over", 't', 0, G_OPTION_ARG_NONE, &context->take_over_socket, "Take over socket", NULL },
 #endif /* ENABLE_GIO_UNIX */
@@ -186,6 +184,7 @@ main(int argc, char *argv[])
     option_group = g_option_group_new(NULL, NULL, NULL, NULL, NULL);
     g_option_group_set_translation_domain(option_group, GETTEXT_PACKAGE);
     g_option_group_add_entries(option_group, entries);
+    eventd_control_add_option_entry(context->control, option_group);
     g_option_context_set_main_group(option_context, option_group);
 
     if ( ! g_option_context_parse(option_context, &argc, &argv, &error) )
@@ -214,9 +213,9 @@ main(int argc, char *argv[])
 
     eventd_config_parse(context->config);
 
-    sockets = eventd_sockets_get_all(context->runtime_dir, bind_port, &private_socket, &unix_socket, context->take_over_socket);
+    sockets = eventd_sockets_get_all(context->runtime_dir, bind_port, &unix_socket, context->take_over_socket);
 
-    eventd_control_start(context->control, &sockets);
+    eventd_control_start(context->control);
 
     eventd_queue_start(context->queue);
 
@@ -231,7 +230,7 @@ main(int argc, char *argv[])
 
     eventd_dbus_stop(context->dbus);
 
-    eventd_sockets_free_all(sockets, unix_socket, private_socket);
+    eventd_sockets_free_all(sockets, unix_socket);
 
     g_free(context->runtime_dir);
 end:

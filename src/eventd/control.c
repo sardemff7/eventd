@@ -38,6 +38,7 @@
 
 struct _EventdControl {
     EventdCoreContext *core;
+    gchar *socket_path;
     GSocketService *socket_service;
 };
 
@@ -108,24 +109,45 @@ eventd_control_new(EventdCoreContext *core)
 void
 eventd_control_free(EventdControl *control)
 {
+    g_free(control->socket_path);
+
     g_free(control);
 }
 
 void
-eventd_control_start(EventdControl *control, GList **sockets)
+eventd_control_start(EventdControl *control)
 {
     GError *error = NULL;
-    GList *socket = NULL;
+    GSocket *socket;
+    gboolean created;
+    gchar *used_path = NULL;
 
     control->socket_service = g_threaded_socket_service_new(-1);
 
-    socket = g_list_last(*sockets);
+    if ( ( control->socket_path != NULL ) && ( *control->socket_path == 0 ) )
+    {
+        g_free(control->socket_path);
+        control->socket_path = NULL;
+    }
 
-    *sockets = g_list_remove_link(*sockets, socket);
-    if ( ! g_socket_listener_add_socket(G_SOCKET_LISTENER(control->socket_service), socket->data, NULL, &error) )
+    socket = eventd_core_get_unix_socket(control->core, control->socket_path, "private", &used_path, &created);
+    if ( used_path != NULL )
+    {
+        g_free(control->socket_path);
+        control->socket_path = used_path;
+    }
+    if ( ! created )
+    {
+        g_free(control->socket_path);
+        control->socket_path = NULL;
+    }
+    if ( socket == NULL )
+        return;
+
+    if ( ! g_socket_listener_add_socket(G_SOCKET_LISTENER(control->socket_service), socket, NULL, &error) )
         g_warning("Unable to add private socket: %s", error->message);
     g_clear_error(&error);
-    g_list_free_full(socket, g_object_unref);
+    g_object_unref(socket);
 
     g_signal_connect(control->socket_service, "run", G_CALLBACK(_eventd_service_private_connection_handler), control);
 
@@ -137,6 +159,20 @@ eventd_control_stop(EventdControl *control)
     g_socket_service_stop(control->socket_service);
     g_socket_listener_close(G_SOCKET_LISTENER(control->socket_service));
     g_object_unref(control->socket_service);
+
+    if ( control->socket_path != NULL )
+        g_unlink(control->socket_path);
+}
+
+void
+eventd_control_add_option_entry(EventdControl *control, GOptionGroup *option_group)
+{
+    GOptionEntry entries[] =
+    {
+        { "private-socket", 'i', 0, G_OPTION_ARG_FILENAME, &control->socket_path, "UNIX socket to listen for internal control", "<socket>" },
+        { NULL }
+    };
+    g_option_group_add_entries(option_group, entries);
 }
 
 #else /* ! ENABLE_GIO_UNIX */
@@ -148,7 +184,9 @@ eventd_control_stop(EventdControl *control)
 EventdControl *eventd_control_start(EventdCoreContext *service) { return NULL; }
 void eventd_control_free(EventdControl *control) {}
 
-void eventd_control_start(EventdControl *control, GList **sockets) {}
+void eventd_control_start(EventdControl *control) {}
 void eventd_control_stop(EventdControl *control) {}
+
+void eventd_control_add_option_entry(EventdControl *control, GOptionGroup *option_group) {}
 
 #endif /* ! ENABLE_GIO_UNIX */

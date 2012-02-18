@@ -182,7 +182,6 @@ GList *
 eventd_sockets_get_all(
     const gchar *run_dir,
     guint16 bind_port,
-    gchar **private_socket,
     gchar **unix_socket,
     gboolean take_over_socket)
 {
@@ -199,23 +198,6 @@ eventd_sockets_get_all(
 
     if ( run_dir == NULL )
         goto no_run_dir;
-
-    if ( ( *private_socket != NULL ) && ( **private_socket == 0 ) )
-    {
-        g_free(*private_socket);
-        *private_socket = NULL;
-    }
-    if ( *private_socket == NULL )
-        *private_socket = g_build_filename(run_dir, "private", NULL);
-    if ( ( socket = eventd_sockets_get_unix_socket(*private_socket, take_over_socket, &created) ) != NULL )
-        sockets = g_list_prepend(sockets, socket);
-    else
-        g_warning("Couldn’t create private socket");
-    if ( ( socket == NULL ) || ( ! created ) )
-    {
-        g_free(*private_socket);
-        *private_socket = NULL;
-    }
 
     if ( ( *unix_socket != NULL ) && ( **unix_socket == 0 ) )
     {
@@ -246,7 +228,7 @@ no_run_dir:
 }
 
 void
-eventd_sockets_free_all(GList *sockets, gchar *private_socket, gchar *unix_socket)
+eventd_sockets_free_all(GList *sockets, gchar *unix_socket)
 {
     g_list_free_full(sockets, g_object_unref);
 
@@ -254,11 +236,5 @@ eventd_sockets_free_all(GList *sockets, gchar *private_socket, gchar *unix_socke
     {
         g_unlink(unix_socket);
         g_free(unix_socket);
-    }
-
-    if ( private_socket != NULL )
-    {
-        g_unlink(private_socket);
-        g_free(private_socket);
     }
 }
