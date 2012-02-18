@@ -173,6 +173,28 @@ _eventd_plugins_foreach(GFunc func, gpointer user_data)
 }
 
 static void
+_eventd_plugins_add_option_group(gpointer data, gpointer user_data)
+{
+    EventdPlugin *plugin = data;
+    GOptionContext *option_context = user_data;
+
+    if ( plugin->get_option_group != NULL )
+    {
+        GOptionGroup *option_group;
+
+        option_group = plugin->get_option_group(plugin->context);
+        if ( option_group != NULL )
+            g_option_context_add_group(option_context, option_group);
+    }
+}
+
+void
+eventd_plugins_add_option_group_all(GOptionContext *option_context)
+{
+    _eventd_plugins_foreach(_eventd_plugins_add_option_group, option_context);
+}
+
+static void
 _eventd_plugins_start(gpointer data, gpointer user_data)
 {
     EventdPlugin *plugin = data;
