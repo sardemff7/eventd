@@ -237,7 +237,10 @@ _eventd_config_load_dir(EventdConfig *config, const gchar *base_dir)
         if ( ! g_key_file_load_from_file(config_file, config_file_name, G_KEY_FILE_NONE, &error) )
             g_warning("Can't read the configuration file '%s': %s", config_file_name, error->message);
         else
+        {
             _eventd_config_parse_server(config, config_file);
+            eventd_plugins_global_parse_all(config_file);
+        }
         g_clear_error(&error);
         g_key_file_free(config_file);
     }

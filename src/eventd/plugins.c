@@ -254,6 +254,21 @@ eventd_plugins_config_reset_all()
     _eventd_plugins_foreach(_eventd_plugins_config_reset, NULL);
 }
 
+static void
+_eventd_plugins_global_parse(gpointer data, gpointer user_data)
+{
+    EventdPlugin *plugin = data;
+    GKeyFile *config_file = user_data;
+    if ( plugin->global_parse != NULL )
+        plugin->global_parse(plugin->context, config_file);
+}
+
+void
+eventd_plugins_global_parse_all(GKeyFile *config_file)
+{
+    _eventd_plugins_foreach(_eventd_plugins_global_parse, config_file);
+}
+
 typedef struct {
     const gchar *type;
     const gchar *event;
