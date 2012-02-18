@@ -28,24 +28,21 @@
 typedef struct _EventdPluginContext EventdPluginContext;
 
 typedef EventdPluginContext *(*EventdPluginInitFunc)(gpointer user_data);
-typedef void (*EventdPluginUninitFunc)(EventdPluginContext *context);
-typedef void (*EventdPluginStartFunc)(EventdPluginContext *context);
-typedef void (*EventdPluginStopFunc)(EventdPluginContext *context);
+typedef void (*EventdPluginFunc)(EventdPluginContext *context);
 typedef void (*EventdPluginControlCommandFunc)(EventdPluginContext *context, const gchar *command);
-typedef void (*EventdPluginConfigResetFunc)(EventdPluginContext *context);
 typedef void (*EventdPluginEventParseFunc)(EventdPluginContext *context, const gchar *, const gchar *, GKeyFile *);
 typedef void (*EventdPluginEventDispatchFunc)(EventdPluginContext *context, EventdEvent *event);
 
 typedef struct {
     EventdPluginInitFunc init;
-    EventdPluginUninitFunc uninit;
+    EventdPluginFunc uninit;
 
-    EventdPluginStartFunc start;
-    EventdPluginStopFunc stop;
+    EventdPluginFunc start;
+    EventdPluginFunc stop;
 
     EventdPluginControlCommandFunc control_command;
 
-    EventdPluginConfigResetFunc config_reset;
+    EventdPluginFunc config_reset;
 
     EventdPluginEventParseFunc event_parse;
     EventdPluginEventDispatchFunc event_action;
@@ -56,6 +53,6 @@ typedef struct {
     EventdPluginContext *context;
 } EventdPlugin;
 
-typedef EventdPlugin *(*EventdPluginGetInfoFunc)(EventdPlugin *plugin);
+typedef void (*EventdPluginGetInfoFunc)(EventdPlugin *plugin);
 
 #endif /* __EVENTD_EVENTD_PLUGIN_H__ */
