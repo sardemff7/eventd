@@ -25,9 +25,12 @@
 
 #include <libeventd-event-types.h>
 
+typedef struct _EventdCoreContext EventdCoreContext;
+typedef struct _EventdCoreInterface EventdCoreInterface;
+
 typedef struct _EventdPluginContext EventdPluginContext;
 
-typedef EventdPluginContext *(*EventdPluginInitFunc)();
+typedef EventdPluginContext *(*EventdPluginInitFunc)(EventdCoreContext *core, EventdCoreInterface *interface);
 typedef void (*EventdPluginFunc)(EventdPluginContext *context);
 typedef GOptionGroup *(*EventdPluginGetOptionGroupFunc)(EventdPluginContext *context);
 typedef void (*EventdPluginControlCommandFunc)(EventdPluginContext *context, const gchar *command);

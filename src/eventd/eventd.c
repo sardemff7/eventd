@@ -31,6 +31,8 @@
 #endif /* G_OS_UNIX */
 #include <gio/gio.h>
 
+#include <eventd-core-interface.h>
+
 #include "types.h"
 
 #include "plugins.h"
@@ -131,6 +133,14 @@ int
 main(int argc, char *argv[])
 {
     EventdCoreContext *context;
+    EventdCoreInterface interface =
+    {
+        .get_unix_socket = eventd_core_get_unix_socket,
+        .get_inet_socket = eventd_core_get_inet_socket,
+
+        .push_event = eventd_core_push_event,
+        .event_pong = eventd_core_event_pong,
+    };
 
 
     gboolean print_version = FALSE;
@@ -166,7 +176,7 @@ main(int argc, char *argv[])
     context->control = eventd_control_new(context);
 
     if ( g_getenv("EVENTD_NO_PLUGINS") == NULL )
-        eventd_plugins_load();
+        eventd_plugins_load(context, &interface);
 
     context->config = eventd_config_new();
     context->queue = eventd_queue_new(context->config);

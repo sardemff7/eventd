@@ -205,7 +205,7 @@ _eventd_sndfile_event_free(gpointer data)
 }
 
 static EventdPluginContext *
-_eventd_sndfile_init(gpointer user_data)
+_eventd_sndfile_init(EventdCoreContext *core, EventdCoreInterface *interface)
 {
     EventdPluginContext *context;
 

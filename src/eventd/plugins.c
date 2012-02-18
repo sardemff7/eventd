@@ -33,7 +33,7 @@
 static GList *plugins = NULL;
 
 static void
-_eventd_plugins_load_dir(const gchar *plugins_dir_name)
+_eventd_plugins_load_dir(EventdCoreContext *core, EventdCoreInterface *interface, const gchar *plugins_dir_name)
 {
     GError *error;
     GDir *plugins_dir;
@@ -89,7 +89,7 @@ _eventd_plugins_load_dir(const gchar *plugins_dir_name)
 
         if ( plugin->init != NULL )
         {
-            plugin->context = plugin->init();
+            plugin->context = plugin->init(core, interface);
             if ( plugin->context == NULL )
             {
                 g_warning("Couldn’t load plugin '%s'", file);
@@ -104,7 +104,7 @@ _eventd_plugins_load_dir(const gchar *plugins_dir_name)
 }
 
 void
-eventd_plugins_load()
+eventd_plugins_load(EventdCoreContext *core, EventdCoreInterface *interface)
 {
     const gchar *env_base_dir;
     gchar *plugins_dir;
@@ -124,23 +124,23 @@ eventd_plugins_load()
             plugins_dir = g_build_filename(env_base_dir,  NULL);
 
         if ( g_file_test(plugins_dir, G_FILE_TEST_IS_DIR) )
-            _eventd_plugins_load_dir(plugins_dir);
+            _eventd_plugins_load_dir(core, interface, plugins_dir);
         g_free(plugins_dir);
     }
 
     plugins_dir = g_build_filename(g_get_user_data_dir(), PACKAGE_NAME, "plugins", NULL);
     if ( g_file_test(plugins_dir, G_FILE_TEST_IS_DIR) )
-        _eventd_plugins_load_dir(plugins_dir);
+        _eventd_plugins_load_dir(core, interface, plugins_dir);
     g_free(plugins_dir);
 
     plugins_dir = g_build_filename(DATADIR, PACKAGE_NAME, "plugins", NULL);
     if ( g_file_test(plugins_dir, G_FILE_TEST_IS_DIR) )
-        _eventd_plugins_load_dir(plugins_dir);
+        _eventd_plugins_load_dir(core, interface, plugins_dir);
     g_free(plugins_dir);
 
     plugins_dir = g_build_filename(LIBDIR, PACKAGE_NAME, "plugins", NULL);
     if ( g_file_test(plugins_dir, G_FILE_TEST_IS_DIR) )
-        _eventd_plugins_load_dir(plugins_dir);
+        _eventd_plugins_load_dir(core, interface, plugins_dir);
     g_free(plugins_dir);
 }
 

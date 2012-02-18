@@ -26,8 +26,6 @@
 #include <libeventd-event-types.h>
 #include <eventd-plugin.h>
 
-typedef struct _EventdCoreContext EventdCoreContext;
-
 typedef struct _EventdQueue EventdQueue;
 typedef struct _EventdService EventdService;
 typedef struct _EventdControl EventdControl;

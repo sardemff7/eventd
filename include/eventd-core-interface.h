@@ -20,16 +20,22 @@
  *
  */
 
-#ifndef __EVENTD_CONTROL_H__
-#define __EVENTD_CONTROL_H__
+#ifndef __EVENTD_EVENTD_CORE_INTERFACE_H__
+#define __EVENTD_EVENTD_CORE_INTERFACE_H__
 
-GSocket *eventd_core_get_unix_socket(EventdCoreContext *context, const gchar *path, const gchar *default_path, gchar **used_path, gboolean *created);
-GSocket *eventd_core_get_inet_socket(EventdCoreContext *context, gint16 port);
+#include <eventd-plugin.h>
 
-void eventd_core_push_event(EventdCoreContext *context, EventdEvent *event);
-void eventd_core_event_pong(EventdCoreContext *context, EventdEvent *event);
+typedef GSocket *(*EventdCoreGetUnixSocketFunc)(EventdCoreContext *context, const gchar *path, const gchar *default_path, gchar **used_path, gboolean *created);
+typedef GSocket *(*EventdCoreGetInetSocketFunc)(EventdCoreContext *context, gint16 port);
 
-void eventd_core_config_reload(EventdCoreContext *context);
-void eventd_core_quit(EventdCoreContext *context);
+typedef void (*EventdCoreDispatchEventFunc)(EventdCoreContext *context, EventdEvent *event);
 
-#endif /* __EVENTD_CONTROL_H__ */
+struct _EventdCoreInterface {
+    EventdCoreGetUnixSocketFunc get_unix_socket;
+    EventdCoreGetInetSocketFunc get_inet_socket;
+
+    EventdCoreDispatchEventFunc push_event;
+    EventdCoreDispatchEventFunc event_pong;
+};
+
+#endif /* __EVENTD_EVENTD_CORE_INTERFACE_H__ */

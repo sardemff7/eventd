@@ -3,6 +3,7 @@ bin_PROGRAMS += \
 	eventd
 
 pkginclude_HEADERS += \
+	include/eventd-core-interface.h \
 	include/eventd-plugin.h
 
 eventd_SOURCES = \

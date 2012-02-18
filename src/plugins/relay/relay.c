@@ -48,7 +48,7 @@ _eventd_relay_server_list_free(gpointer data)
 }
 
 static EventdPluginContext *
-_eventd_relay_init(gpointer user_data)
+_eventd_relay_init(EventdCoreContext *core, EventdCoreInterface *interface)
 {
     EventdPluginContext *context;
 

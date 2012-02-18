@@ -138,7 +138,7 @@ uri_callback(int type, const char *uri, const char *base)
 }
 
 static EventdPluginContext *
-_eventd_espeak_init(gpointer user_data)
+_eventd_espeak_init(EventdCoreContext *core, EventdCoreInterface *interface)
 {
     gint sample_rate;
     EventdPluginContext *context;

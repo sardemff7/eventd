@@ -221,7 +221,7 @@ _eventd_notification_notification_free(EventdNotificationNotification *notificat
 }
 
 static EventdPluginContext *
-_eventd_notification_start(gpointer user_data)
+_eventd_notification_start(EventdCoreContext *core, EventdCoreInterface *interface)
 {
     EventdPluginContext *context;
 
