@@ -37,6 +37,7 @@
 
 struct _EventdConfig {
     gboolean loaded;
+    gint64 timeout;
     GHashTable *events;
 };
 
@@ -97,7 +98,7 @@ eventd_config_event_get_timeout(EventdConfig *config, EventdEvent *event)
     config_event = libeventd_config_events_get_event(config->events, eventd_event_get_category(event), eventd_event_get_name(event));
 
     if ( config_event == NULL )
-        return -1;
+        return config->timeout;
     else
         return config_event->timeout;
 }
@@ -106,11 +107,27 @@ eventd_config_event_get_timeout(EventdConfig *config, EventdEvent *event)
 static void
 _eventd_config_defaults(EventdConfig *config)
 {
+    config->timeout = 3000;
 }
 
 static void
-_eventd_config_parse_server(EventdConfig *config, GKeyFile *config_file)
+_eventd_config_parse_event(EventdConfig *config, GKeyFile *config_file)
 {
+    Int integer;
+
+    if ( ! g_key_file_has_group(config_file, "event") )
+        return;
+
+    if ( libeventd_config_key_file_get_int(config_file, "event", "timeout", &integer) < 0 )
+        return;
+    if ( integer.set )
+        config->timeout = integer.value;
+}
+
+static void
+_eventd_config_parse_global(EventdConfig *config, GKeyFile *config_file)
+{
+    _eventd_config_parse_event(config, config_file);
 }
 
 static void
@@ -216,7 +233,7 @@ _eventd_config_load_dir(EventdConfig *config, const gchar *base_dir)
             g_warning("Can't read the configuration file '%s': %s", config_file_name, error->message);
         else
         {
-            _eventd_config_parse_server(config, config_file);
+            _eventd_config_parse_global(config, config_file);
             eventd_plugins_global_parse_all(config_file);
         }
         g_clear_error(&error);

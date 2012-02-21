@@ -149,12 +149,7 @@ eventd_queue_push(EventdQueue *queue, EventdEvent *event)
 
     timeout = eventd_event_get_timeout(event);
     if ( timeout < 0 )
-    {
         timeout = eventd_config_event_get_timeout(queue->config, event);
-
-        if ( timeout < 0 )
-            timeout = 3000;
-    }
     eventd_event_set_timeout(event, timeout);
 
     g_async_queue_push_unlocked(queue->queue, queue_event);
