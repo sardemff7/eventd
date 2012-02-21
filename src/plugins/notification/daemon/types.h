@@ -28,13 +28,6 @@ typedef struct _EventdNdDisplay EventdNdDisplay;
 typedef struct _EventdNdSurface EventdNdSurface;
 typedef struct _EventdNdBubble EventdNdBubble;
 
-typedef struct {
-    gdouble r;
-    gdouble g;
-    gdouble b;
-    gdouble a;
-} Colour;
-
 typedef enum {
     EVENTD_ND_STYLE_ANCHOR_TOP_LEFT,
     EVENTD_ND_STYLE_ANCHOR_TOP_RIGHT,

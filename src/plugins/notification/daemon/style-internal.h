@@ -23,6 +23,13 @@
 #ifndef __EVENTD_ND_STYLE_INTERNAL_H__
 #define __EVENTD_ND_STYLE_INTERNAL_H__
 
+typedef struct {
+    gdouble r;
+    gdouble g;
+    gdouble b;
+    gdouble a;
+} Colour;
+
 struct _EventdNdStyle {
     gint bubble_margin;
     EventdNdStyleAnchor bubble_anchor;
