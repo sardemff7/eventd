@@ -35,29 +35,33 @@
 
 #include "queue.h"
 
-typedef struct {
-    EventdEvent *event;
-    guint timeout_id;
-} EventdQueueEvent;
-
 struct _EventdQueue {
     EventdConfig *config;
     GAsyncQueue *queue;
     GThread *thread;
-    EventdQueueEvent *current;
+    GSList *current;
+    guint64 current_count;
 };
+
+typedef struct {
+    EventdQueue *queue;
+    EventdEvent *event;
+    guint timeout_id;
+} EventdQueueEvent;
 
 static void
 _eventd_queue_event_ended(GObject *object, gint reason, gpointer user_data)
 {
-    EventdQueue *queue = user_data;
-    EventdQueueEvent *event = queue->current;
+    EventdQueueEvent *event = user_data;
+    EventdQueue *queue = event->queue;
+    guint64 stack = eventd_config_get_stack(queue->config);
 
     if ( event->timeout_id > 0 )
         g_source_remove(event->timeout_id);
 
-    queue->current = NULL;
-    g_async_queue_unlock(queue->queue);
+    queue->current = g_slist_remove(queue->current, event);
+    if ( ( stack > 0 ) && ( --queue->current_count < stack ) )
+        g_async_queue_unlock(queue->queue);
 
     g_object_unref(event->event);
     g_free(event);
@@ -84,12 +88,14 @@ _eventd_queue_source_dispatch(gpointer user_data)
 
     while ( ( event = g_async_queue_pop(queue->queue) ) && ( event->event != NULL ) )
     {
-        g_async_queue_lock(queue->queue);
-        queue->current = event;
+        guint64 stack = eventd_config_get_stack(queue->config);
+        if ( ( stack > 0 ) && ( ++queue->current_count >= stack ) )
+            g_async_queue_lock(queue->queue);
+        queue->current = g_slist_prepend(queue->current, event);
 
         eventd_plugins_event_action_all(event->event);
 
-        g_signal_connect(event->event, "ended", G_CALLBACK(_eventd_queue_event_ended), queue);
+        g_signal_connect(event->event, "ended", G_CALLBACK(_eventd_queue_event_ended), event);
         timeout = eventd_event_get_timeout(event->event);
         if ( timeout > 0 )
             event->timeout_id = g_timeout_add(timeout, _eventd_queue_event_timeout, event);
@@ -123,7 +129,14 @@ void
 eventd_queue_stop(EventdQueue *queue)
 {
     if ( queue->current != NULL )
-        eventd_event_end(queue->current->event, EVENTD_EVENT_END_REASON_RESERVED);
+    {
+        GSList *current;
+        for ( current = queue->current ; current != NULL ; current = g_slist_next(current) )
+        {
+            EventdQueueEvent *event = current->data;
+            eventd_event_end(event->event, EVENTD_EVENT_END_REASON_RESERVED);
+        }
+    }
 
     g_async_queue_push(queue->queue, g_new0(EventdQueueEvent, 1));
 
@@ -145,6 +158,7 @@ eventd_queue_push(EventdQueue *queue, EventdEvent *event)
     gint64 timeout;
 
     queue_event = g_new0(EventdQueueEvent, 1);
+    queue_event->queue = queue;
     queue_event->event = g_object_ref(event);
 
     timeout = eventd_event_get_timeout(event);

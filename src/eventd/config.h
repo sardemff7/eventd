@@ -30,4 +30,6 @@ void eventd_config_free(EventdConfig *config);
 gboolean eventd_config_event_get_disable(EventdConfig *config, EventdEvent *event);
 gint64 eventd_config_event_get_timeout(EventdConfig *config, EventdEvent *event);
 
+guint64 eventd_config_get_stack(EventdConfig *config);
+
 #endif /* __EVENTD_EVENTS_H__ */

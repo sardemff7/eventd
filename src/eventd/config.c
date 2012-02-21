@@ -37,6 +37,7 @@
 
 struct _EventdConfig {
     gboolean loaded;
+    guint64 stack;
     gint64 timeout;
     GHashTable *events;
 };
@@ -107,6 +108,7 @@ eventd_config_event_get_timeout(EventdConfig *config, EventdEvent *event)
 static void
 _eventd_config_defaults(EventdConfig *config)
 {
+    config->stack = 1;
     config->timeout = 3000;
 }
 
@@ -117,6 +119,11 @@ _eventd_config_parse_event(EventdConfig *config, GKeyFile *config_file)
 
     if ( ! g_key_file_has_group(config_file, "event") )
         return;
+
+    if ( libeventd_config_key_file_get_int(config_file, "event", "stack", &integer) < 0 )
+        return;
+    if ( integer.set )
+        config->stack = integer.value;
 
     if ( libeventd_config_key_file_get_int(config_file, "event", "timeout", &integer) < 0 )
         return;
@@ -340,4 +347,10 @@ eventd_config_free(EventdConfig *config)
     g_hash_table_unref(config->events);
 
     g_free(config);
+}
+
+guint64
+eventd_config_get_stack(EventdConfig *config)
+{
+    return config->stack;
 }
