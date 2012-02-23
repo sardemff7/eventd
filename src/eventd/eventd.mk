@@ -19,6 +19,7 @@ eventd_SOURCES = \
 	src/eventd/control.c \
 	src/eventd/sockets.h \
 	src/eventd/sockets.c \
+	src/eventd/eventd.h \
 	src/eventd/eventd.c
 
 eventd_CFLAGS = \
