@@ -34,7 +34,7 @@
 #include <pango/pango.h>
 
 #include "../types.h"
-#include "../style-internal.h"
+#include "../style.h"
 
 #include "fb.h"
 
@@ -57,7 +57,7 @@ struct _EventdNdSurface {
 };
 
 EventdNdDisplay *
-eventd_nd_fb_display_new(const gchar *target, EventdNdStyle *style)
+eventd_nd_fb_display_new(const gchar *target, EventdNdStyleAnchor anchor, gint margin)
 {
     EventdNdDisplay *context;
     struct fb_fix_screeninfo finfo;
@@ -87,23 +87,23 @@ eventd_nd_fb_display_new(const gchar *target, EventdNdStyle *style)
     context->channels = vinfo.bits_per_pixel >> 3;
     context->stride = finfo.line_length;
 
-    switch ( style->bubble_anchor )
+    switch ( anchor )
     {
     case EVENTD_ND_STYLE_ANCHOR_TOP_LEFT:
-        context->x = style->bubble_margin;
-        context->y = style->bubble_margin;
+        context->x = margin;
+        context->y = margin;
     break;
     case EVENTD_ND_STYLE_ANCHOR_TOP_RIGHT:
-        context->x = - vinfo.xres + style->bubble_margin;
-        context->y = style->bubble_margin;
+        context->x = - vinfo.xres + margin;
+        context->y = margin;
     break;
     case EVENTD_ND_STYLE_ANCHOR_BOTTOM_LEFT:
-        context->x = style->bubble_margin;
-        context->y = - vinfo.yres + style->bubble_margin;
+        context->x = margin;
+        context->y = - vinfo.yres + margin;
     break;
     case EVENTD_ND_STYLE_ANCHOR_BOTTOM_RIGHT:
-        context->x = - vinfo.xres + style->bubble_margin;
-        context->y = - vinfo.yres + style->bubble_margin;
+        context->x = - vinfo.xres + margin;
+        context->y = - vinfo.yres + margin;
     break;
     }
 

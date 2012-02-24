@@ -30,7 +30,7 @@
 #include <xcb/shape.h>
 
 #include "../types.h"
-#include "../style-internal.h"
+#include "../style.h"
 
 #include "graphical.h"
 
@@ -70,7 +70,7 @@ get_root_visual_type(xcb_screen_t *s)
 }
 
 EventdNdDisplay *
-eventd_nd_graphical_display_new(const gchar *target, EventdNdStyle *style)
+eventd_nd_graphical_display_new(const gchar *target, EventdNdStyleAnchor anchor, gint margin)
 {
     EventdNdDisplay *context;
     xcb_connection_t *c;
@@ -95,23 +95,23 @@ eventd_nd_graphical_display_new(const gchar *target, EventdNdStyle *style)
     else
         context->shape = TRUE;
 
-    switch ( style->bubble_anchor )
+    switch ( anchor )
     {
     case EVENTD_ND_STYLE_ANCHOR_TOP_LEFT:
-        context->x = style->bubble_margin;
-        context->y = style->bubble_margin;
+        context->x = margin;
+        context->y = margin;
     break;
     case EVENTD_ND_STYLE_ANCHOR_TOP_RIGHT:
-        context->x = - context->screen->width_in_pixels + style->bubble_margin;
-        context->y = style->bubble_margin;
+        context->x = - context->screen->width_in_pixels + margin;
+        context->y = margin;
     break;
     case EVENTD_ND_STYLE_ANCHOR_BOTTOM_LEFT:
-        context->x = style->bubble_margin;
-        context->y = - context->screen->height_in_pixels + style->bubble_margin;
+        context->x = margin;
+        context->y = - context->screen->height_in_pixels + margin;
     break;
     case EVENTD_ND_STYLE_ANCHOR_BOTTOM_RIGHT:
-        context->x = - context->screen->width_in_pixels + style->bubble_margin;
-        context->y = - context->screen->height_in_pixels + style->bubble_margin;
+        context->x = - context->screen->width_in_pixels + margin;
+        context->y = - context->screen->height_in_pixels + margin;
     break;
     }
 

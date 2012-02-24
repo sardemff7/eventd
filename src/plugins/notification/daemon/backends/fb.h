@@ -23,7 +23,7 @@
 #ifndef __EVENTD_PLUGINS_NOTIFICATION_DAEMON_FRAMEBUFFER_BACKEND_H__
 #define __EVENTD_PLUGINS_NOTIFICATION_DAEMON_FRAMEBUFFER_BACKEND_H__
 
-EventdNdDisplay *eventd_nd_fb_display_new(const gchar *target, EventdNdStyle *style);
+EventdNdDisplay *eventd_nd_fb_display_new(const gchar *target, EventdNdStyleAnchor anchor, gint margin);
 void eventd_nd_fb_display_free(gpointer data);
 
 EventdNdSurface *eventd_nd_fb_surface_new(EventdNdDisplay *display, gint width, gint height, cairo_surface_t *bubble, cairo_surface_t *shape);

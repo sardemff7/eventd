@@ -100,7 +100,7 @@ eventd_nd_control_command(EventdNdContext *context, const gchar *command)
 #if ! DISABLE_FRAMEBUFFER_BACKENDS
     if ( g_str_has_prefix(target, FRAMEBUFFER_TARGET_PREFIX) )
     {
-        display = eventd_nd_fb_display_new(target, context->style);
+        display = eventd_nd_fb_display_new(target, eventd_nd_style_get_bubble_anchor(context->style), eventd_nd_style_get_bubble_margin(context->style));
         if ( display == NULL )
             g_warning("Couldn’t initialize framebuffer display for '%s'", target);
         else
@@ -110,7 +110,7 @@ eventd_nd_control_command(EventdNdContext *context, const gchar *command)
 #endif /* ! DISABLE_FRAMEBUFFER_BACKENDS */
     {
 #if ! DISABLE_GRAPHICAL_BACKENDS
-        display = eventd_nd_graphical_display_new(target, context->style);
+        display = eventd_nd_graphical_display_new(target, eventd_nd_style_get_bubble_anchor(context->style), eventd_nd_style_get_bubble_margin(context->style));
         if ( display == NULL )
             g_warning("Couldn’t initialize graphical display for '%s'", target);
         else

@@ -28,11 +28,4 @@ typedef struct _EventdNdDisplay EventdNdDisplay;
 typedef struct _EventdNdSurface EventdNdSurface;
 typedef struct _EventdNdBubble EventdNdBubble;
 
-typedef enum {
-    EVENTD_ND_STYLE_ANCHOR_TOP_LEFT,
-    EVENTD_ND_STYLE_ANCHOR_TOP_RIGHT,
-    EVENTD_ND_STYLE_ANCHOR_BOTTOM_LEFT,
-    EVENTD_ND_STYLE_ANCHOR_BOTTOM_RIGHT
-} EventdNdStyleAnchor;
-
 #endif /* __EVENTD_ND_TYPES_H__ */

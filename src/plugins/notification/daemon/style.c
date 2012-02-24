@@ -266,3 +266,15 @@ eventd_nd_style_free(EventdNdStyle *style)
 
     g_free(style);
 }
+
+EventdNdStyleAnchor
+eventd_nd_style_get_bubble_anchor(EventdNdStyle *style)
+{
+    return style->bubble_anchor;
+}
+
+gint
+eventd_nd_style_get_bubble_margin(EventdNdStyle *style)
+{
+    return style->bubble_margin;
+}
