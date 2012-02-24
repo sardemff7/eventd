@@ -42,6 +42,7 @@ if ENABLE_NOTIFICATION_DAEMON
 notification_la_SOURCES += \
 	src/plugins/notification/daemon/backends/fb.h \
 	src/plugins/notification/daemon/backends/graphical.h \
+	src/plugins/notification/daemon/backends/backend.h \
 	src/plugins/notification/daemon/style-internal.h \
 	src/plugins/notification/daemon/style.h \
 	src/plugins/notification/daemon/style.c \
