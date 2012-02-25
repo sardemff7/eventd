@@ -37,6 +37,7 @@
 struct _EventdRelayServer {
     EventdRelayAvahiServer *avahi;
     EventcConnection *connection;
+    gboolean avahi_connected;
     guint64 tries;
     guint connection_timeout_id;
 };
@@ -51,6 +52,10 @@ _eventd_relay_server_create_eventc(EventdRelayServer *server, const gchar *host,
 void
 eventd_relay_server_avahi_connect(EventdRelayServer *server, const gchar *host, guint16 port)
 {
+    if ( server->avahi_connected )
+        return;
+    server->avahi_connected = TRUE;
+
     _eventd_relay_server_create_eventc(server, host, port);
     eventd_relay_server_start(server);
 }
@@ -160,13 +165,18 @@ eventd_relay_server_stop(EventdRelayServer *server)
     if ( server->connection == NULL )
         return;
 
+    if ( ! server->avahi_connected )
+        return;
+    server->avahi_connected = FALSE;
+
     if ( server->connection_timeout_id > 0 )
     {
         g_source_remove(server->connection_timeout_id);
         server->connection_timeout_id = 0;
     }
 
-    eventc_connection_close(server->connection, _eventd_relay_close_handler, NULL);
+    if ( eventc_connection_is_connected(server->connection) )
+        eventc_connection_close(server->connection, _eventd_relay_close_handler, NULL);
 }
 
 static void
