@@ -26,7 +26,7 @@
 void eventd_nd_bubble_init(void);
 void eventd_nd_bubble_uninit(void);
 
-EventdNdBubble *eventd_nd_bubble_new(EventdNotificationNotification *notification, EventdNdStyle *style, GList *graphical_displays, GList *framebuffer_displays);
+EventdNdBubble *eventd_nd_bubble_new(EventdNotificationNotification *notification, EventdNdStyle *style, GList *displays, GList *graphical_displays, GList *framebuffer_displays);
 void eventd_nd_bubble_free(gpointer data);
 
 void eventd_nd_bubble_show(EventdNdBubble *bubble);

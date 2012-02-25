@@ -40,6 +40,7 @@
 
 #include "style.h"
 #include "style-internal.h"
+#include "backends/backend.h"
 
 #if ! DISABLE_GRAPHICAL_BACKENDS
 #include "backends/graphical.h"
@@ -95,6 +96,7 @@ typedef struct {
 } EventdNdTextLine;
 
 struct _EventdNdBubble {
+    GList *surfaces;
     GList *graphical_surfaces;
     GList *framebuffer_surfaces;
 };
@@ -588,7 +590,7 @@ _eventd_nd_bubble_icon_draw(cairo_t *cr, cairo_surface_t *icon, gint x, gint y)
 }
 
 EventdNdBubble *
-eventd_nd_bubble_new(EventdNotificationNotification *notification, EventdNdStyle *style, GList *graphical_displays, GList *framebuffer_displays)
+eventd_nd_bubble_new(EventdNotificationNotification *notification, EventdNdStyle *style, GList *displays, GList *graphical_displays, GList *framebuffer_displays)
 {
     gint padding;
     gint min_width, max_width;
@@ -647,6 +649,23 @@ eventd_nd_bubble_new(EventdNotificationNotification *notification, EventdNdStyle
     _eventd_nd_bubble_shape_draw(cr, style->bubble_radius, width, height);
     cairo_destroy(cr);
 
+    for ( display = displays ; display != NULL ; display = g_list_next(display) )
+    {
+        EventdNdDisplayContext *display_ = display->data;
+        EventdNdSurface *surface;
+        surface = display_->backend->surface_new(display_->display, width, height, bubble, shape);
+        if ( surface != NULL )
+        {
+            EventdNdSurfaceContext *surface_context;
+
+            surface_context = g_new(EventdNdSurfaceContext, 1);
+            surface_context->backend = display_->backend;
+            surface_context->surface = surface;
+
+            bubble_surfaces->surfaces = g_list_prepend(bubble_surfaces->surfaces, surface_context);
+        }
+    }
+
 #if ! DISABLE_GRAPHICAL_BACKENDS
     for ( display = g_list_first(graphical_displays) ; display != NULL ; display = g_list_next(display) )
     {
@@ -677,6 +696,11 @@ eventd_nd_bubble_show(EventdNdBubble *bubble)
 {
     GList *surface;
 
+    for ( surface = bubble->surfaces ; surface != NULL ; surface = g_list_next(surface) )
+    {
+        EventdNdSurfaceContext *surface_ = surface->data;
+        surface_->backend->surface_show(surface_->surface);
+    }
 #if ! DISABLE_GRAPHICAL_BACKENDS
     for ( surface = g_list_first(bubble->graphical_surfaces) ; surface != NULL ; surface = g_list_next(surface) )
         eventd_nd_graphical_surface_show(surface->data);
@@ -692,6 +716,11 @@ eventd_nd_bubble_hide(EventdNdBubble *bubble)
 {
     GList *surface;
 
+    for ( surface = bubble->surfaces ; surface != NULL ; surface = g_list_next(surface) )
+    {
+        EventdNdSurfaceContext *surface_ = surface->data;
+        surface_->backend->surface_hide(surface_->surface);
+    }
 #if ! DISABLE_GRAPHICAL_BACKENDS
     for ( surface = g_list_first(bubble->graphical_surfaces) ; surface != NULL ; surface = g_list_next(surface) )
         eventd_nd_graphical_surface_hide(surface->data);
@@ -702,10 +731,23 @@ eventd_nd_bubble_hide(EventdNdBubble *bubble)
 #endif /* ! DISABLE_FRAMEBUFFER_BACKENDS */
 }
 
+static void
+_eventd_nd_bubble_surface_free(gpointer data)
+{
+    EventdNdSurfaceContext *surface = data;
+
+    surface->backend->surface_free(surface->surface);
+
+    g_free(surface);
+}
+
 void
 eventd_nd_bubble_free(gpointer data)
 {
     EventdNdBubble *bubble = data;
+
+    g_list_free_full(bubble->surfaces, _eventd_nd_bubble_surface_free);
+
 #if ! DISABLE_GRAPHICAL_BACKENDS
     g_list_free_full(bubble->graphical_surfaces, eventd_nd_graphical_surface_free);
 #endif /* ! DISABLE_GRAPHICAL_BACKENDS */
