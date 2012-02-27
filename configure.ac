@@ -163,38 +163,31 @@ if test x$enable_libnotify = xyes; then
 fi
 AM_CONDITIONAL(ENABLE_NOTIFY, [test x$enable_libnotify = xyes])
 
+# Backends switches
+AC_ARG_ENABLE(xcb, AS_HELP_STRING([--disable-xcb], [Disable xcb graphical backend]), enable_xcb=$enableval, enable_xcb=yes)
+AC_ARG_ENABLE(linux-framebuffer, AS_HELP_STRING([--disable-linux-framebuffer], [Disable linux framebuffer backend]), enable_linux_fb=$enableval, enable_linux_fb=yes)
 
-
-#
-# notification-daemon
-#
-
-AC_ARG_ENABLE(graphical-backend, AS_HELP_STRING([--disable-graphical-backend@<:@=BACKEND@:>@], [Disable notification graphical backend @<:@default=xcb@:>@]), enable_graphical_backend=$enableval, enable_graphical_backend=xcb)
-AC_ARG_ENABLE(framebuffer-backend, AS_HELP_STRING([--disable-framebuffer-backend@<:@=BACKEND@:>@], [Disable notificaton framebuffer backend @<:@default=linux@:>@]), enable_framebuffer_backend=$enableval, enable_framebuffer_backend=linux)
-if test x$enable_graphical_backend != xno -o x$enable_framebuffer_backend != xno; then
+# Common
+if test x$enable_xcb = xyes -o x$enable_linux_fb = xyes; then
     if test x$enable_gdk_pixbuf = xno; then
         AC_MSG_ERROR([*** notification-daemon requested but not gdk-pixbuf support])
     fi
-    case "$enable_graphical_backend" in
-        xcb|yes)
-            PKG_CHECK_MODULES(XCB, [cairo-xcb xcb xcb-shape])
-        ;;
-        no) ;;
-        *) AC_MSG_ERROR([*** Unknow graphical backend for notification]) ;;
-    esac
-    case "$enable_framebuffer_backend" in
-        linux|yes)
-            AC_CHECK_HEADER([linux/fb.h])
-        ;;
-        no) ;;
-        *) AC_MSG_ERROR([*** Unknow framebuffer backend for notification]) ;;
-    esac
     PKG_CHECK_MODULES(CAIRO, [cairo])
     PKG_CHECK_MODULES(PANGO, [pango pangocairo])
 fi
-AM_CONDITIONAL(ENABLE_XCB, [test x$enable_graphical_backend = xxcb])
-AM_CONDITIONAL(ENABLE_LINUX_FB, [test x$enable_framebuffer_backend = xlinux])
-AM_CONDITIONAL(ENABLE_NOTIFICATION_DAEMON, [test x$enable_graphical_backend != xno -o x$enable_framebuffer_backend != xno])
+AM_CONDITIONAL(ENABLE_NOTIFICATION_DAEMON, [test x$enable_xcb = xyes -o x$enable_linux_fb = xyes])
+
+# XCB backend
+if test x$enable_xcb = xyes; then
+    PKG_CHECK_MODULES(XCB, [cairo-xcb xcb xcb-shape])
+fi
+AM_CONDITIONAL(ENABLE_XCB, [test x$enable_xcb = xyes])
+
+# Linux framebuffer backend
+if test x$enable_linux_fb = xyes; then
+    AC_CHECK_HEADER([linux/fb.h])
+fi
+AM_CONDITIONAL(ENABLE_LINUX_FB, [test x$enable_linux_fb = xyes])
 
 #
 # Client
