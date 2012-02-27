@@ -42,10 +42,6 @@
 #include "style-internal.h"
 #include "backends/backend.h"
 
-#if ! DISABLE_FRAMEBUFFER_BACKENDS
-#include "backends/fb.h"
-#endif /* ! DISABLE_FRAMEBUFFER_BACKENDS */
-
 #include "bubble.h"
 
 static GRegex *regex_amp = NULL;
@@ -663,16 +659,6 @@ eventd_nd_bubble_new(EventdNotificationNotification *notification, EventdNdStyle
         }
     }
 
-#if ! DISABLE_FRAMEBUFFER_BACKENDS
-    for ( display = g_list_first(framebuffer_displays) ; display != NULL ; display = g_list_next(display) )
-    {
-        EventdNdSurface *surface;
-        surface = eventd_nd_fb_surface_new(display->data, width, height, bubble, shape);
-        if ( surface != NULL )
-            bubble_surfaces->framebuffer_surfaces = g_list_prepend(bubble_surfaces->framebuffer_surfaces, surface);
-    }
-#endif /* ! DISABLE_FRAMEBUFFER_BACKENDS */
-
     cairo_surface_destroy(shape);
     cairo_surface_destroy(bubble);
 
@@ -689,10 +675,6 @@ eventd_nd_bubble_show(EventdNdBubble *bubble)
         EventdNdSurfaceContext *surface_ = surface->data;
         surface_->backend->surface_show(surface_->surface);
     }
-#if ! DISABLE_FRAMEBUFFER_BACKENDS
-    for ( surface = g_list_first(bubble->framebuffer_surfaces) ; surface != NULL ; surface = g_list_next(surface) )
-        eventd_nd_fb_surface_show(surface->data);
-#endif /* ! DISABLE_FRAMEBUFFER_BACKENDS */
 }
 
 void
@@ -705,10 +687,6 @@ eventd_nd_bubble_hide(EventdNdBubble *bubble)
         EventdNdSurfaceContext *surface_ = surface->data;
         surface_->backend->surface_hide(surface_->surface);
     }
-#if ! DISABLE_FRAMEBUFFER_BACKENDS
-    for ( surface = g_list_first(bubble->framebuffer_surfaces) ; surface != NULL ; surface = g_list_next(surface) )
-        eventd_nd_fb_surface_hide(surface->data);
-#endif /* ! DISABLE_FRAMEBUFFER_BACKENDS */
 }
 
 static void
@@ -728,8 +706,5 @@ eventd_nd_bubble_free(gpointer data)
 
     g_list_free_full(bubble->surfaces, _eventd_nd_bubble_surface_free);
 
-#if ! DISABLE_FRAMEBUFFER_BACKENDS
-    g_list_free_full(bubble->framebuffer_surfaces, eventd_nd_fb_surface_free);
-#endif /* ! DISABLE_FRAMEBUFFER_BACKENDS */
     g_free(bubble);
 }

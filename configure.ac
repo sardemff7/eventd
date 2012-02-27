@@ -185,7 +185,6 @@ if test x$enable_graphical_backend != xno -o x$enable_framebuffer_backend != xno
     case "$enable_framebuffer_backend" in
         linux|yes)
             AC_CHECK_HEADER([linux/fb.h])
-            AC_DEFINE([FRAMEBUFFER_TARGET_PREFIX], ["/dev/tty"], [Linux framebuffer target prefix])
         ;;
         no) AC_DEFINE([DISABLE_FRAMEBUFFER_BACKENDS], [1], [No framebuffer support]) ;;
         *) AC_MSG_ERROR([*** Unknow framebuffer backend for notification]) ;;

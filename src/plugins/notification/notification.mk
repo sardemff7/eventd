@@ -38,7 +38,6 @@ notification_la_LIBADD = \
 
 if ENABLE_NOTIFICATION_DAEMON
 notification_la_SOURCES += \
-	src/plugins/notification/daemon/backends/fb.h \
 	src/plugins/notification/daemon/backends/backend.h \
 	src/plugins/notification/daemon/style-internal.h \
 	src/plugins/notification/daemon/style.h \
@@ -57,8 +56,7 @@ include src/plugins/notification/daemon/backends/xcb.mk
 endif
 
 if ENABLE_LINUX_FB
-notification_la_SOURCES += \
-	src/plugins/notification/daemon/backends/linux.c
+include src/plugins/notification/daemon/backends/linux.mk
 endif
 
 #

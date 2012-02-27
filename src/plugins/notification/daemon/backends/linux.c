@@ -31,12 +31,13 @@
 #include <glib.h>
 #include <glib/gstdio.h>
 #include <cairo.h>
-#include <pango/pango.h>
 
 #include "../types.h"
 #include "../style.h"
 
-#include "fb.h"
+#include "backend.h"
+
+#define FRAMEBUFFER_TARGET_PREFIX "/dev/tty"
 
 struct _EventdNdDisplay {
     gint fd;
@@ -56,8 +57,14 @@ struct _EventdNdSurface {
     gint channels;
 };
 
-EventdNdDisplay *
-eventd_nd_fb_display_new(const gchar *target, EventdNdStyleAnchor anchor, gint margin)
+static gboolean
+_eventd_nd_linux_display_test(const gchar *target)
+{
+    return g_str_has_prefix(target, FRAMEBUFFER_TARGET_PREFIX);
+}
+
+static EventdNdDisplay *
+_eventd_nd_linux_display_new(const gchar *target, EventdNdStyleAnchor anchor, gint margin)
 {
     EventdNdDisplay *context;
     struct fb_fix_screeninfo finfo;
@@ -124,11 +131,9 @@ fail:
     return NULL;
 }
 
-void
-eventd_nd_fb_display_free(gpointer data)
+static void
+_eventd_nd_linux_display_free(EventdNdDisplay *display)
 {
-    EventdNdDisplay *display = data;
-
     munmap(display->buffer, display->screensize);
     close(display->fd);
 
@@ -152,8 +157,8 @@ alpha_div(guchar c, guchar a)
     }
 }
 
-EventdNdSurface *
-eventd_nd_fb_surface_new(EventdNdDisplay *display, gint width, gint height, cairo_surface_t *bubble, cairo_surface_t *shape)
+static EventdNdSurface *
+_eventd_nd_linux_surface_new(EventdNdDisplay *display, gint width, gint height, cairo_surface_t *bubble, cairo_surface_t *shape)
 {
     EventdNdSurface *self;
     gint x, y;
@@ -178,8 +183,8 @@ eventd_nd_fb_surface_new(EventdNdDisplay *display, gint width, gint height, cair
     return self;
 }
 
-void
-eventd_nd_fb_surface_show(EventdNdSurface *self)
+static void
+_eventd_nd_linux_surface_show(EventdNdSurface *self)
 {
     guchar *spixels, *sline;
     gint sstride;
@@ -230,8 +235,8 @@ eventd_nd_fb_surface_show(EventdNdSurface *self)
     }
 }
 
-void
-eventd_nd_fb_surface_hide(EventdNdSurface *self)
+static void
+_eventd_nd_linux_surface_hide(EventdNdSurface *self)
 {
     guchar *pixels, *line;
     const guchar *spixels, *spixels_end, *sline, *sline_end;
@@ -265,14 +270,25 @@ eventd_nd_fb_surface_hide(EventdNdSurface *self)
     }
 }
 
-void
-eventd_nd_fb_surface_free(gpointer data)
+static void
+_eventd_nd_linux_surface_free(EventdNdSurface *self)
 {
-    EventdNdSurface *self = data;
-
     cairo_surface_destroy(self->bubble);
 
     g_free(self->save);
 
     g_free(self);
+}
+
+void
+eventd_nd_backend_init(EventdNdBackend *backend)
+{
+    backend->display_test = _eventd_nd_linux_display_test;
+    backend->display_new = _eventd_nd_linux_display_new;
+    backend->display_free = _eventd_nd_linux_display_free;
+
+    backend->surface_new = _eventd_nd_linux_surface_new;
+    backend->surface_free = _eventd_nd_linux_surface_free;
+    backend->surface_show = _eventd_nd_linux_surface_show;
+    backend->surface_hide = _eventd_nd_linux_surface_hide;
 }

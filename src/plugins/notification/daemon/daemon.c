@@ -33,9 +33,6 @@
 #include "bubble.h"
 #include "style.h"
 #include "backends/backend.h"
-#if ! DISABLE_FRAMEBUFFER_BACKENDS
-#include "backends/fb.h"
-#endif /* ! DISABLE_FRAMEBUFFER_BACKENDS */
 
 #include "daemon.h"
 
@@ -196,10 +193,6 @@ eventd_nd_uninit(EventdNdContext *context)
 
     g_list_free_full(context->displays, _eventd_nd_backend_display_free);
 
-#if ! DISABLE_FRAMEBUFFER_BACKENDS
-    g_list_free_full(context->framebuffer_displays, eventd_nd_fb_display_free);
-#endif /* ! DISABLE_FRAMEBUFFER_BACKENDS */
-
     eventd_nd_style_free(context->style);
 
     g_list_free_full(context->backends, _eventd_nd_backend_free);
@@ -213,27 +206,13 @@ void
 eventd_nd_control_command(EventdNdContext *context, const gchar *command)
 {
     const gchar *target = command+20;
-    EventdNdDisplay *display = NULL;
+    EventdNdDisplay *display;
     GList *backend_;
 
     if ( context == NULL )
         return;
 
     if ( ! g_str_has_prefix(command, "notification-daemon ") )
-        return;
-
-#if ! DISABLE_FRAMEBUFFER_BACKENDS
-    if ( g_str_has_prefix(target, FRAMEBUFFER_TARGET_PREFIX) )
-    {
-        display = eventd_nd_fb_display_new(target, eventd_nd_style_get_bubble_anchor(context->style), eventd_nd_style_get_bubble_margin(context->style));
-        if ( display == NULL )
-            g_warning("Couldn’t initialize framebuffer display for '%s'", target);
-        else
-            context->framebuffer_displays = g_list_prepend(context->framebuffer_displays, display);
-    }
-#endif /* ! DISABLE_FRAMEBUFFER_BACKENDS */
-
-    if ( display != NULL )
         return;
 
     for ( backend_ = context->backends ; backend_ != NULL ; backend_ = g_list_next(backend_) )
