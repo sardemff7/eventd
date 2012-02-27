@@ -123,21 +123,15 @@ main(int argc, char *argv[])
             _eventd_eventdctl_send_command(output, "reload");
         else if ( g_strcmp0(argv[1], "notification-daemon") == 0 )
         {
-            const gchar *target = ( argc > 2 ) ? argv[2] : NULL;
-
-            if ( target == NULL )
-                target = g_getenv("DISPLAY");
-
-#if ! DISABLE_FRAMEBUFFER_BACKENDS
-            if ( target == NULL )
-                target = ttyname(1);
-#endif /* ! DISABLE_FRAMEBUFFER_BACKENDS */
-
-            if ( target != NULL )
+            if ( argc > 2 )
             {
-                gchar *command = g_strconcat("notification-daemon ", target, NULL);
+                gchar *command = g_strconcat("notification-daemon ", argv[2], NULL);
                 _eventd_eventdctl_send_command(output, command);
                 g_free(command);
+            }
+            else
+            {
+                g_warning("You must specify a target");
             }
         }
 

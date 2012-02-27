@@ -179,14 +179,14 @@ if test x$enable_graphical_backend != xno -o x$enable_framebuffer_backend != xno
         xcb|yes)
             PKG_CHECK_MODULES(XCB, [cairo-xcb xcb xcb-shape])
         ;;
-        no) AC_DEFINE([DISABLE_GRAPHICAL_BACKENDS], [1], [No graphical support]) ;;
+        no) ;;
         *) AC_MSG_ERROR([*** Unknow graphical backend for notification]) ;;
     esac
     case "$enable_framebuffer_backend" in
         linux|yes)
             AC_CHECK_HEADER([linux/fb.h])
         ;;
-        no) AC_DEFINE([DISABLE_FRAMEBUFFER_BACKENDS], [1], [No framebuffer support]) ;;
+        no) ;;
         *) AC_MSG_ERROR([*** Unknow framebuffer backend for notification]) ;;
     esac
     PKG_CHECK_MODULES(CAIRO, [cairo])
