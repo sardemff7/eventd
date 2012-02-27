@@ -41,8 +41,6 @@ struct _EventdNdContext {
     GHashTable *bubbles;
     GList *backends;
     GList *displays;
-    GList *graphical_displays;
-    GList *framebuffer_displays;
 };
 
 void
@@ -263,7 +261,7 @@ eventd_nd_event_action(EventdNdContext *context, EventdEvent *event, EventdNotif
     /*
      * TODO: Update an existing bubble
      */
-    bubble = eventd_nd_bubble_new(notification, context->style, context->displays, context->graphical_displays, context->framebuffer_displays);
+    bubble = eventd_nd_bubble_new(notification, context->style, context->displays);
 
     eventd_nd_bubble_show(bubble);
     g_hash_table_insert(context->bubbles, g_object_ref(event), bubble);

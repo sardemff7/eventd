@@ -90,8 +90,6 @@ typedef struct {
 
 struct _EventdNdBubble {
     GList *surfaces;
-    GList *graphical_surfaces;
-    GList *framebuffer_surfaces;
 };
 
 static EventdNdTextLine *
@@ -583,7 +581,7 @@ _eventd_nd_bubble_icon_draw(cairo_t *cr, cairo_surface_t *icon, gint x, gint y)
 }
 
 EventdNdBubble *
-eventd_nd_bubble_new(EventdNotificationNotification *notification, EventdNdStyle *style, GList *displays, GList *graphical_displays, GList *framebuffer_displays)
+eventd_nd_bubble_new(EventdNotificationNotification *notification, EventdNdStyle *style, GList *displays)
 {
     gint padding;
     gint min_width, max_width;
@@ -668,24 +666,24 @@ eventd_nd_bubble_new(EventdNotificationNotification *notification, EventdNdStyle
 void
 eventd_nd_bubble_show(EventdNdBubble *bubble)
 {
-    GList *surface;
+    GList *surface_;
 
-    for ( surface = bubble->surfaces ; surface != NULL ; surface = g_list_next(surface) )
+    for ( surface_ = bubble->surfaces ; surface_ != NULL ; surface_ = g_list_next(surface_) )
     {
-        EventdNdSurfaceContext *surface_ = surface->data;
-        surface_->backend->surface_show(surface_->surface);
+        EventdNdSurfaceContext *surface = surface_->data;
+        surface->backend->surface_show(surface->surface);
     }
 }
 
 void
 eventd_nd_bubble_hide(EventdNdBubble *bubble)
 {
-    GList *surface;
+    GList *surface_;
 
-    for ( surface = bubble->surfaces ; surface != NULL ; surface = g_list_next(surface) )
+    for ( surface_ = bubble->surfaces ; surface_ != NULL ; surface_ = g_list_next(surface_) )
     {
-        EventdNdSurfaceContext *surface_ = surface->data;
-        surface_->backend->surface_hide(surface_->surface);
+        EventdNdSurfaceContext *surface = surface_->data;
+        surface->backend->surface_hide(surface->surface);
     }
 }
 
