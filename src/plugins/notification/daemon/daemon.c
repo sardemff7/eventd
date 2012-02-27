@@ -33,9 +33,6 @@
 #include "bubble.h"
 #include "style.h"
 #include "backends/backend.h"
-#if ! DISABLE_GRAPHICAL_BACKENDS
-#include "backends/graphical.h"
-#endif /* ! DISABLE_GRAPHICAL_BACKENDS */
 #if ! DISABLE_FRAMEBUFFER_BACKENDS
 #include "backends/fb.h"
 #endif /* ! DISABLE_FRAMEBUFFER_BACKENDS */
@@ -199,9 +196,6 @@ eventd_nd_uninit(EventdNdContext *context)
 
     g_list_free_full(context->displays, _eventd_nd_backend_display_free);
 
-#if ! DISABLE_GRAPHICAL_BACKENDS
-    g_list_free_full(context->graphical_displays, eventd_nd_graphical_display_free);
-#endif /* ! DISABLE_GRAPHICAL_BACKENDS */
 #if ! DISABLE_FRAMEBUFFER_BACKENDS
     g_list_free_full(context->framebuffer_displays, eventd_nd_fb_display_free);
 #endif /* ! DISABLE_FRAMEBUFFER_BACKENDS */
@@ -219,7 +213,7 @@ void
 eventd_nd_control_command(EventdNdContext *context, const gchar *command)
 {
     const gchar *target = command+20;
-    EventdNdDisplay *display;
+    EventdNdDisplay *display = NULL;
     GList *backend_;
 
     if ( context == NULL )
@@ -237,17 +231,7 @@ eventd_nd_control_command(EventdNdContext *context, const gchar *command)
         else
             context->framebuffer_displays = g_list_prepend(context->framebuffer_displays, display);
     }
-    else
 #endif /* ! DISABLE_FRAMEBUFFER_BACKENDS */
-    {
-#if ! DISABLE_GRAPHICAL_BACKENDS
-        display = eventd_nd_graphical_display_new(target, eventd_nd_style_get_bubble_anchor(context->style), eventd_nd_style_get_bubble_margin(context->style));
-        if ( display == NULL )
-            g_warning("Couldn’t initialize graphical display for '%s'", target);
-        else
-            context->graphical_displays = g_list_prepend(context->graphical_displays, display);
-#endif /* ! DISABLE_GRAPHICAL_BACKENDS */
-    }
 
     if ( display != NULL )
         return;

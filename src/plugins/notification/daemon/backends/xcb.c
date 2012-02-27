@@ -20,10 +20,10 @@
  *
  */
 
+#include <stdlib.h>
 #include <glib.h>
 
 #include <cairo.h>
-#include <pango/pango.h>
 
 #include <cairo-xcb.h>
 #include <xcb/xcb.h>
@@ -32,7 +32,7 @@
 #include "../types.h"
 #include "../style.h"
 
-#include "graphical.h"
+#include "backend.h"
 
 struct _EventdNdDisplay {
     xcb_connection_t *xcb_connection;
@@ -47,7 +47,7 @@ struct _EventdNdSurface {
     xcb_window_t window;
 };
 
-xcb_visualtype_t *
+static xcb_visualtype_t *
 get_root_visual_type(xcb_screen_t *s)
 {
     xcb_visualtype_t *visual_type = NULL;
@@ -69,8 +69,24 @@ get_root_visual_type(xcb_screen_t *s)
     return visual_type;
 }
 
-EventdNdDisplay *
-eventd_nd_graphical_display_new(const gchar *target, EventdNdStyleAnchor anchor, gint margin)
+static gboolean
+_eventd_nd_xcb_display_test(const gchar *target)
+{
+    gint r;
+    gchar *host;
+    gint display;
+
+    r = xcb_parse_display(target, &host, &display, NULL);
+    if ( r == 0 )
+        return FALSE;
+
+    free(host);
+
+    return TRUE;
+}
+
+static EventdNdDisplay *
+_eventd_nd_xcb_display_new(const gchar *target, EventdNdStyleAnchor anchor, gint margin)
 {
     EventdNdDisplay *context;
     xcb_connection_t *c;
@@ -118,16 +134,15 @@ eventd_nd_graphical_display_new(const gchar *target, EventdNdStyleAnchor anchor,
     return context;
 }
 
-void
-eventd_nd_graphical_display_free(gpointer data)
+static void
+_eventd_nd_xcb_display_free(EventdNdDisplay *context)
 {
-    EventdNdDisplay *context = data;
     xcb_disconnect(context->xcb_connection);
     g_free(context);
 }
 
-EventdNdSurface *
-eventd_nd_graphical_surface_new(EventdNdDisplay *context, gint width, gint height, cairo_surface_t *bubble, cairo_surface_t *shape)
+static EventdNdSurface *
+_eventd_nd_xcb_surface_new(EventdNdDisplay *context, gint width, gint height, cairo_surface_t *bubble, cairo_surface_t *shape)
 {
     guint32 selmask = XCB_CW_OVERRIDE_REDIRECT;
     guint32 selval[] = { 1 };
@@ -194,25 +209,23 @@ eventd_nd_graphical_surface_new(EventdNdDisplay *context, gint width, gint heigh
     return surface;
 }
 
-void
-eventd_nd_graphical_surface_show(EventdNdSurface *surface)
+static void
+_eventd_nd_xcb_surface_show(EventdNdSurface *surface)
 {
     xcb_map_window(surface->xcb_connection, surface->window);
     xcb_flush(surface->xcb_connection);
 }
 
-void
-eventd_nd_graphical_surface_hide(EventdNdSurface *surface)
+static void
+_eventd_nd_xcb_surface_hide(EventdNdSurface *surface)
 {
     xcb_unmap_window(surface->xcb_connection, surface->window);
     xcb_flush(surface->xcb_connection);
 }
 
-void
-eventd_nd_graphical_surface_free(gpointer data)
+static void
+_eventd_nd_xcb_surface_free(EventdNdSurface *surface)
 {
-    EventdNdSurface *surface = data;
-
     if ( surface == NULL )
         return;
 
@@ -220,4 +233,17 @@ eventd_nd_graphical_surface_free(gpointer data)
     xcb_flush(surface->xcb_connection);
 
     g_free(surface);
+}
+
+void
+eventd_nd_backend_init(EventdNdBackend *backend)
+{
+    backend->display_test = _eventd_nd_xcb_display_test;
+    backend->display_new = _eventd_nd_xcb_display_new;
+    backend->display_free = _eventd_nd_xcb_display_free;
+
+    backend->surface_new = _eventd_nd_xcb_surface_new;
+    backend->surface_free = _eventd_nd_xcb_surface_free;
+    backend->surface_show = _eventd_nd_xcb_surface_show;
+    backend->surface_hide = _eventd_nd_xcb_surface_hide;
 }

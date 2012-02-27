@@ -18,7 +18,6 @@ notification_la_CFLAGS = \
 	-D LIBDIR=\"$(libdir)\" \
 	-D DATADIR=\"$(datadir)\" \
 	$(NOTIFY_CFLAGS) \
-	$(XCB_CFLAGS) \
 	$(CAIRO_CFLAGS) \
 	$(PANGO_CFLAGS) \
 	$(GDK_PIXBUF_CFLAGS) \
@@ -32,7 +31,6 @@ notification_la_LIBADD = \
 	libeventd-event.la \
 	libeventd.la \
 	$(NOTIFY_LIBS) \
-	$(XCB_LIBS) \
 	$(CAIRO_LIBS) \
 	$(PANGO_LIBS) \
 	$(GDK_PIXBUF_LIBS) \
@@ -41,7 +39,6 @@ notification_la_LIBADD = \
 if ENABLE_NOTIFICATION_DAEMON
 notification_la_SOURCES += \
 	src/plugins/notification/daemon/backends/fb.h \
-	src/plugins/notification/daemon/backends/graphical.h \
 	src/plugins/notification/daemon/backends/backend.h \
 	src/plugins/notification/daemon/style-internal.h \
 	src/plugins/notification/daemon/style.h \
@@ -51,15 +48,37 @@ notification_la_SOURCES += \
 	src/plugins/notification/daemon/types.h \
 	src/plugins/notification/daemon/daemon.c
 
+notificationbackendsdir = $(pluginsdir)/notification
+
+notificationbackends_LTLIBRARIES =
+
 if ENABLE_XCB
-notification_la_SOURCES += \
-	src/plugins/notification/daemon/backends/xcb.c
+include src/plugins/notification/daemon/backends/xcb.mk
 endif
 
 if ENABLE_LINUX_FB
 notification_la_SOURCES += \
 	src/plugins/notification/daemon/backends/linux.c
 endif
+
+#
+# Hooks
+#
+
+install-data-hook la-files-install-hook: notification-la-files-install-hook
+uninstall-hook la-files-uninstall-hook: notification-la-files-uninstall-hook
+
+# *.la files cleanup
+notification-la-files-install-hook:
+	cd $(DESTDIR)/$(notificationbackendsdir) && \
+		rm $(notificationbackends_LTLIBRARIES)
+
+# Remove *.so files at uninstall since
+# we remove *.la files at install
+notification-la-files-uninstall-hook:
+	cd $(DESTDIR)/$(notificationbackendsdir) && \
+		rm $(notificationbackends_LTLIBRARIES:.la=.so)
+	rmdir $(DESTDIR)/$(notificationbackendsdir)
 
 else
 notification_la_SOURCES += \
