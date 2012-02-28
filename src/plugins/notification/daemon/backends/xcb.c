@@ -47,7 +47,7 @@ struct _EventdNdDisplay {
 };
 
 struct _EventdNdSurface {
-    xcb_connection_t *xcb_connection;
+    EventdNdDisplay *display;
     xcb_window_t window;
 };
 
@@ -179,7 +179,7 @@ _eventd_nd_xcb_surface_new(EventdNdDisplay *display, gint width, gint height, ca
 
     surface = g_new0(EventdNdSurface, 1);
 
-    surface->xcb_connection = display->xcb_connection;
+    surface->display = display;
 
     x = display->x;
     y = display->y;
@@ -238,15 +238,15 @@ _eventd_nd_xcb_surface_new(EventdNdDisplay *display, gint width, gint height, ca
 static void
 _eventd_nd_xcb_surface_show(EventdNdSurface *surface)
 {
-    xcb_map_window(surface->xcb_connection, surface->window);
-    xcb_flush(surface->xcb_connection);
+    xcb_map_window(surface->display->xcb_connection, surface->window);
+    xcb_flush(surface->display->xcb_connection);
 }
 
 static void
 _eventd_nd_xcb_surface_hide(EventdNdSurface *surface)
 {
-    xcb_unmap_window(surface->xcb_connection, surface->window);
-    xcb_flush(surface->xcb_connection);
+    xcb_unmap_window(surface->display->xcb_connection, surface->window);
+    xcb_flush(surface->display->xcb_connection);
 }
 
 static void
@@ -255,8 +255,8 @@ _eventd_nd_xcb_surface_free(EventdNdSurface *surface)
     if ( surface == NULL )
         return;
 
-    xcb_destroy_window(surface->xcb_connection, surface->window);
-    xcb_flush(surface->xcb_connection);
+    xcb_destroy_window(surface->display->xcb_connection, surface->window);
+    xcb_flush(surface->display->xcb_connection);
 
     g_free(surface);
 }
