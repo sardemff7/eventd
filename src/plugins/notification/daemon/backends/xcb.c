@@ -34,6 +34,10 @@
 
 #include "backend.h"
 
+struct _EventdNdBackendContext {
+    GSList *displays;
+};
+
 struct _EventdNdDisplay {
     xcb_connection_t *xcb_connection;
     xcb_screen_t *screen;
@@ -50,12 +54,19 @@ struct _EventdNdSurface {
 static EventdNdBackendContext *
 _eventd_nd_xcb_init()
 {
-    return NULL;
+    EventdNdBackendContext *context;
+
+    context = g_new0(EventdNdBackendContext, 1);
+
+    return context;
 }
 
 static void
 _eventd_nd_xcb_uninit(EventdNdBackendContext *context)
 {
+    g_slist_free_full(context->displays, g_free);
+
+    g_free(context);
 }
 
 static xcb_visualtype_t *
@@ -90,8 +101,10 @@ _eventd_nd_xcb_display_test(EventdNdBackendContext *context, const gchar *target
     r = xcb_parse_display(target, &host, &display, NULL);
     if ( r == 0 )
         return FALSE;
-
     free(host);
+
+    if ( g_slist_find_custom(context->displays, target, g_str_equal) != NULL )
+        return FALSE;
 
     return TRUE;
 }
@@ -109,6 +122,8 @@ _eventd_nd_xcb_display_new(EventdNdBackendContext *context, const gchar *target,
         xcb_disconnect(c);
         return NULL;
     }
+
+    context->displays = g_slist_prepend(context->displays, g_strdup(target));
 
     display = g_new0(EventdNdDisplay, 1);
 
