@@ -25,14 +25,22 @@
 
 #include "../types.h"
 
-typedef gboolean (*EventdNdDisplayTestFunc)(const gchar *target);
-typedef EventdNdDisplay *(*EventdNdDisplayNewFunc)(const gchar *target, EventdNdStyleAnchor anchor, gint margin);
+typedef struct _EventdNdBackendContext EventdNdBackendContext;
+
+typedef EventdNdBackendContext *(*EventdNdBackendInitFunc)();
+typedef void (*EventdNdBackendUninitFunc)(EventdNdBackendContext *context);
+
+typedef gboolean (*EventdNdDisplayTestFunc)(EventdNdBackendContext *context, const gchar *target);
+typedef EventdNdDisplay *(*EventdNdDisplayNewFunc)(EventdNdBackendContext *context, const gchar *target, EventdNdStyleAnchor anchor, gint margin);
 typedef void (*EventdNdDisplayFunc)(EventdNdDisplay *display);
 
 typedef EventdNdSurface *(*EventdNdSurfaceNew)(EventdNdDisplay *display, gint width, gint height, cairo_surface_t *bubble, cairo_surface_t *shape);
 typedef void (*EventdNdSurfaceFunc)(EventdNdSurface *surface);
 
 typedef struct {
+    EventdNdBackendInitFunc init;
+    EventdNdBackendUninitFunc uninit;
+
     EventdNdDisplayTestFunc display_test;
     EventdNdDisplayNewFunc display_new;
     EventdNdDisplayFunc display_free;
@@ -44,6 +52,7 @@ typedef struct {
 
     /* private */
     gpointer module;
+    EventdNdBackendContext *context;
 } EventdNdBackend;
 
 typedef struct {
@@ -56,6 +65,6 @@ typedef struct {
     EventdNdSurface *surface;
 } EventdNdSurfaceContext;
 
-typedef void (*EventdNdBackendInitFunc)(EventdNdBackend *backend);
+typedef void (*EventdNdBackendGetInfoFunc)(EventdNdBackend *backend);
 
 #endif /* __EVENTD_ND_BACKEND_H__ */

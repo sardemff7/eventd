@@ -57,77 +57,88 @@ struct _EventdNdSurface {
     gint channels;
 };
 
+static EventdNdBackendContext *
+_eventd_nd_linux_init()
+{
+    return NULL;
+}
+
+static void
+_eventd_nd_linux_uninit(EventdNdBackendContext *context)
+{
+}
+
 static gboolean
-_eventd_nd_linux_display_test(const gchar *target)
+_eventd_nd_linux_display_test(EventdNdBackendContext *context, const gchar *target)
 {
     return g_str_has_prefix(target, FRAMEBUFFER_TARGET_PREFIX);
 }
 
 static EventdNdDisplay *
-_eventd_nd_linux_display_new(const gchar *target, EventdNdStyleAnchor anchor, gint margin)
+_eventd_nd_linux_display_new(EventdNdBackendContext *context, const gchar *target, EventdNdStyleAnchor anchor, gint margin)
 {
-    EventdNdDisplay *context;
+    EventdNdDisplay *display;
     struct fb_fix_screeninfo finfo;
     struct fb_var_screeninfo vinfo;
 
-    context = g_new0(EventdNdDisplay, 1);
+    display = g_new0(EventdNdDisplay, 1);
 
-    context->fd = g_open("/dev/fb0", O_RDWR);
-    if ( context->fd == -1 )
+    display->fd = g_open("/dev/fb0", O_RDWR);
+    if ( display->fd == -1 )
     {
         g_warning("Couldn’t open framebuffer device: %s", strerror(errno));
         goto fail;
     }
 
-    if ( ioctl(context->fd, FBIOGET_FSCREENINFO, &finfo) == -1 )
+    if ( ioctl(display->fd, FBIOGET_FSCREENINFO, &finfo) == -1 )
     {
         g_warning("Couldn’t get framebuffer fixed info: %s", strerror(errno));
         goto fail;
     }
 
-    if ( ioctl(context->fd, FBIOGET_VSCREENINFO, &vinfo) == -1 )
+    if ( ioctl(display->fd, FBIOGET_VSCREENINFO, &vinfo) == -1 )
     {
         g_warning("Couldn’t get framebuffer variable info: %s", strerror(errno));
         goto fail;
     }
 
-    context->channels = vinfo.bits_per_pixel >> 3;
-    context->stride = finfo.line_length;
+    display->channels = vinfo.bits_per_pixel >> 3;
+    display->stride = finfo.line_length;
 
     switch ( anchor )
     {
     case EVENTD_ND_STYLE_ANCHOR_TOP_LEFT:
-        context->x = margin;
-        context->y = margin;
+        display->x = margin;
+        display->y = margin;
     break;
     case EVENTD_ND_STYLE_ANCHOR_TOP_RIGHT:
-        context->x = - vinfo.xres + margin;
-        context->y = margin;
+        display->x = - vinfo.xres + margin;
+        display->y = margin;
     break;
     case EVENTD_ND_STYLE_ANCHOR_BOTTOM_LEFT:
-        context->x = margin;
-        context->y = - vinfo.yres + margin;
+        display->x = margin;
+        display->y = - vinfo.yres + margin;
     break;
     case EVENTD_ND_STYLE_ANCHOR_BOTTOM_RIGHT:
-        context->x = - vinfo.xres + margin;
-        context->y = - vinfo.yres + margin;
+        display->x = - vinfo.xres + margin;
+        display->y = - vinfo.yres + margin;
     break;
     }
 
-    context->screensize = ( vinfo.xoffset * ( vinfo.yres - 1 ) + vinfo.xres * vinfo.yres ) * context->channels;
+    display->screensize = ( vinfo.xoffset * ( vinfo.yres - 1 ) + vinfo.xres * vinfo.yres ) * display->channels;
 
-    context->buffer = mmap(NULL, context->screensize, PROT_READ|PROT_WRITE, MAP_SHARED, context->fd, ( vinfo.xoffset ) * context->channels + ( vinfo.yoffset ) * context->stride);
-    if ( context->buffer == (void *)-1 )
+    display->buffer = mmap(NULL, display->screensize, PROT_READ|PROT_WRITE, MAP_SHARED, display->fd, ( vinfo.xoffset ) * display->channels + ( vinfo.yoffset ) * display->stride);
+    if ( display->buffer == (void *)-1 )
     {
         g_warning("Couldn’t map framebuffer device to memory: %s", strerror(errno));
         goto fail;
     }
 
 
-    return context;
+    return display;
 
 fail:
-    g_free(context);
+    g_free(display);
     return NULL;
 }
 
@@ -283,6 +294,9 @@ _eventd_nd_linux_surface_free(EventdNdSurface *self)
 void
 eventd_nd_backend_init(EventdNdBackend *backend)
 {
+    backend->init = _eventd_nd_linux_init;
+    backend->uninit = _eventd_nd_linux_uninit;
+
     backend->display_test = _eventd_nd_linux_display_test;
     backend->display_new = _eventd_nd_linux_display_new;
     backend->display_free = _eventd_nd_linux_display_free;

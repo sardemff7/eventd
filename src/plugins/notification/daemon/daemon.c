@@ -67,7 +67,7 @@ _eventd_nd_backends_load_dir(EventdNdContext *context, const gchar *backends_dir
     {
         gchar *full_filename;
         EventdNdBackend *backend;
-        EventdNdBackendInitFunc init_backend;
+        EventdNdBackendGetInfoFunc backend_get_info;
         GModule *module;
 
         full_filename = g_build_filename(backends_dir_name, file, NULL);
@@ -87,7 +87,7 @@ _eventd_nd_backends_load_dir(EventdNdContext *context, const gchar *backends_dir
         }
         g_free(full_filename);
 
-        if ( ! g_module_symbol(module, "eventd_nd_backend_init", (void **)&init_backend) )
+        if ( ! g_module_symbol(module, "eventd_nd_backend_init", (void **)&backend_get_info) )
             continue;
 
 #if DEBUG
@@ -96,7 +96,9 @@ _eventd_nd_backends_load_dir(EventdNdContext *context, const gchar *backends_dir
 
         backend = g_new0(EventdNdBackend, 1);
         backend->module = module;
-        init_backend(backend);
+        backend_get_info(backend);
+
+        backend->context = backend->init();
 
         context->backends = g_list_prepend(context->backends, backend);
     }
@@ -166,6 +168,8 @@ _eventd_nd_backend_free(gpointer data)
 {
     EventdNdBackend *backend = data;
 
+    backend->uninit(backend->context);
+
     g_module_close(backend->module);
 
     g_free(backend);
@@ -217,10 +221,10 @@ eventd_nd_control_command(EventdNdContext *context, const gchar *command)
     {
         EventdNdBackend *backend = backend_->data;
 
-        if ( ! backend->display_test(target) )
+        if ( ! backend->display_test(backend->context, target) )
             continue;
 
-        display = backend->display_new(target, eventd_nd_style_get_bubble_anchor(context->style), eventd_nd_style_get_bubble_margin(context->style));
+        display = backend->display_new(backend->context, target, eventd_nd_style_get_bubble_anchor(context->style), eventd_nd_style_get_bubble_margin(context->style));
         if ( display == NULL )
             g_warning("Couldn’t initialize display for '%s'", target);
         else

@@ -47,6 +47,17 @@ struct _EventdNdSurface {
     xcb_window_t window;
 };
 
+static EventdNdBackendContext *
+_eventd_nd_xcb_init()
+{
+    return NULL;
+}
+
+static void
+_eventd_nd_xcb_uninit(EventdNdBackendContext *context)
+{
+}
+
 static xcb_visualtype_t *
 get_root_visual_type(xcb_screen_t *s)
 {
@@ -70,7 +81,7 @@ get_root_visual_type(xcb_screen_t *s)
 }
 
 static gboolean
-_eventd_nd_xcb_display_test(const gchar *target)
+_eventd_nd_xcb_display_test(EventdNdBackendContext *context, const gchar *target)
 {
     gint r;
     gchar *host;
@@ -86,9 +97,9 @@ _eventd_nd_xcb_display_test(const gchar *target)
 }
 
 static EventdNdDisplay *
-_eventd_nd_xcb_display_new(const gchar *target, EventdNdStyleAnchor anchor, gint margin)
+_eventd_nd_xcb_display_new(EventdNdBackendContext *context, const gchar *target, EventdNdStyleAnchor anchor, gint margin)
 {
-    EventdNdDisplay *context;
+    EventdNdDisplay *display;
     xcb_connection_t *c;
     const xcb_query_extension_reply_t *shape_query;
 
@@ -99,39 +110,39 @@ _eventd_nd_xcb_display_new(const gchar *target, EventdNdStyleAnchor anchor, gint
         return NULL;
     }
 
-    context = g_new0(EventdNdDisplay, 1);
+    display = g_new0(EventdNdDisplay, 1);
 
-    context->xcb_connection = c;
+    display->xcb_connection = c;
 
-    context->screen = xcb_setup_roots_iterator(xcb_get_setup(context->xcb_connection)).data;
+    display->screen = xcb_setup_roots_iterator(xcb_get_setup(display->xcb_connection)).data;
 
-    shape_query = xcb_get_extension_data(context->xcb_connection, &xcb_shape_id);
+    shape_query = xcb_get_extension_data(display->xcb_connection, &xcb_shape_id);
     if ( ! shape_query->present )
         g_warning("No Shape extension");
     else
-        context->shape = TRUE;
+        display->shape = TRUE;
 
     switch ( anchor )
     {
     case EVENTD_ND_STYLE_ANCHOR_TOP_LEFT:
-        context->x = margin;
-        context->y = margin;
+        display->x = margin;
+        display->y = margin;
     break;
     case EVENTD_ND_STYLE_ANCHOR_TOP_RIGHT:
-        context->x = - context->screen->width_in_pixels + margin;
-        context->y = margin;
+        display->x = - display->screen->width_in_pixels + margin;
+        display->y = margin;
     break;
     case EVENTD_ND_STYLE_ANCHOR_BOTTOM_LEFT:
-        context->x = margin;
-        context->y = - context->screen->height_in_pixels + margin;
+        display->x = margin;
+        display->y = - display->screen->height_in_pixels + margin;
     break;
     case EVENTD_ND_STYLE_ANCHOR_BOTTOM_RIGHT:
-        context->x = - context->screen->width_in_pixels + margin;
-        context->y = - context->screen->height_in_pixels + margin;
+        display->x = - display->screen->width_in_pixels + margin;
+        display->y = - display->screen->height_in_pixels + margin;
     break;
     }
 
-    return context;
+    return display;
 }
 
 static void
@@ -238,6 +249,9 @@ _eventd_nd_xcb_surface_free(EventdNdSurface *surface)
 void
 eventd_nd_backend_init(EventdNdBackend *backend)
 {
+    backend->init = _eventd_nd_xcb_init;
+    backend->uninit = _eventd_nd_xcb_uninit;
+
     backend->display_test = _eventd_nd_xcb_display_test;
     backend->display_new = _eventd_nd_xcb_display_new;
     backend->display_free = _eventd_nd_xcb_display_free;
