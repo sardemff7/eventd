@@ -168,7 +168,7 @@ _eventd_nd_xcb_display_free(EventdNdDisplay *context)
 }
 
 static EventdNdSurface *
-_eventd_nd_xcb_surface_new(EventdNdDisplay *context, gint width, gint height, cairo_surface_t *bubble, cairo_surface_t *shape)
+_eventd_nd_xcb_surface_new(EventdNdDisplay *display, gint width, gint height, cairo_surface_t *bubble, cairo_surface_t *shape)
 {
     guint32 selmask = XCB_CW_OVERRIDE_REDIRECT;
     guint32 selval[] = { 1 };
@@ -179,30 +179,30 @@ _eventd_nd_xcb_surface_new(EventdNdDisplay *context, gint width, gint height, ca
 
     surface = g_new0(EventdNdSurface, 1);
 
-    surface->xcb_connection = context->xcb_connection;
+    surface->xcb_connection = display->xcb_connection;
 
-    x = context->x;
-    y = context->y;
+    x = display->x;
+    y = display->y;
 
     if ( x < 0 )
         x = - x - width;
     if ( y < 0 )
         y = - y - height;
 
-    surface->window = xcb_generate_id(surface->xcb_connection);
-    xcb_create_window(surface->xcb_connection,
-                      context->screen->root_depth,   /* depth         */
+    surface->window = xcb_generate_id(display->xcb_connection);
+    xcb_create_window(display->xcb_connection,
+                      display->screen->root_depth,   /* depth         */
                       surface->window,
-                      context->screen->root,         /* parent window */
+                      display->screen->root,         /* parent window */
                       x, y,                          /* x, y          */
                       width, height,                 /* width, height */
                       0,                             /* border_width  */
                       XCB_WINDOW_CLASS_INPUT_OUTPUT, /* class         */
-                      context->screen->root_visual,  /* visual        */
+                      display->screen->root_visual,  /* visual        */
                       selmask, selval);              /* masks         */
-    xcb_map_window(surface->xcb_connection, surface->window);
+    xcb_map_window(display->xcb_connection, surface->window);
 
-    cs = cairo_xcb_surface_create(context->xcb_connection, surface->window, get_root_visual_type(context->screen), width, height);
+    cs = cairo_xcb_surface_create(display->xcb_connection, surface->window, get_root_visual_type(display->screen), width, height);
     cr = cairo_create(cs);
     cairo_set_source_surface(cr, bubble, 0, 0);
     cairo_rectangle(cr, 0, 0, width, height);
@@ -210,26 +210,26 @@ _eventd_nd_xcb_surface_new(EventdNdDisplay *context, gint width, gint height, ca
     cairo_destroy(cr);
     cairo_surface_destroy(cs);
 
-    if ( context->shape )
+    if ( display->shape )
     {
         xcb_pixmap_t shape_id;
         xcb_gcontext_t gc;
 
-        shape_id = xcb_generate_id(surface->xcb_connection);
-        xcb_create_pixmap(surface->xcb_connection, 1,
-                          shape_id, context->screen->root,
+        shape_id = xcb_generate_id(display->xcb_connection);
+        xcb_create_pixmap(display->xcb_connection, 1,
+                          shape_id, display->screen->root,
                           width, height);
 
-        gc = xcb_generate_id(surface->xcb_connection);
-        xcb_create_gc(surface->xcb_connection, gc, shape_id, 0, NULL);
-        xcb_put_image(surface->xcb_connection, XCB_IMAGE_FORMAT_Z_PIXMAP, shape_id, gc, width, height, 0, 0, 0, 1, cairo_image_surface_get_stride(shape) * height, cairo_image_surface_get_data(shape));
-        xcb_free_gc(surface->xcb_connection, gc);
+        gc = xcb_generate_id(display->xcb_connection);
+        xcb_create_gc(display->xcb_connection, gc, shape_id, 0, NULL);
+        xcb_put_image(display->xcb_connection, XCB_IMAGE_FORMAT_Z_PIXMAP, shape_id, gc, width, height, 0, 0, 0, 1, cairo_image_surface_get_stride(shape) * height, cairo_image_surface_get_data(shape));
+        xcb_free_gc(display->xcb_connection, gc);
 
-        xcb_shape_mask(surface->xcb_connection,
+        xcb_shape_mask(display->xcb_connection,
                        XCB_SHAPE_SO_INTERSECT, XCB_SHAPE_SK_BOUNDING,
                        surface->window, 0, 0, shape_id);
 
-        xcb_free_pixmap(surface->xcb_connection, shape_id);
+        xcb_free_pixmap(display->xcb_connection, shape_id);
     }
 
     return surface;
