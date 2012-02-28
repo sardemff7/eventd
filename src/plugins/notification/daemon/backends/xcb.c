@@ -46,6 +46,9 @@ struct _EventdNdDisplay {
     gint x;
     gint y;
     gboolean shape;
+    gboolean anchor_bottom;
+    gint margin;
+    GList *bubbles;
 };
 
 struct _EventdNdSurface {
@@ -55,6 +58,7 @@ struct _EventdNdSurface {
     gint width;
     gint height;
     cairo_surface_t *bubble;
+    GList *bubble_;
 };
 
 static EventdNdBackendContext *
@@ -141,6 +145,8 @@ _eventd_nd_xcb_display_new(EventdNdBackendContext *context, const gchar *target,
     else
         display->shape = TRUE;
 
+    display->margin = margin;
+
     switch ( anchor )
     {
     case EVENTD_ND_STYLE_ANCHOR_TOP_LEFT:
@@ -152,12 +158,14 @@ _eventd_nd_xcb_display_new(EventdNdBackendContext *context, const gchar *target,
         display->y = margin;
     break;
     case EVENTD_ND_STYLE_ANCHOR_BOTTOM_LEFT:
+        display->anchor_bottom = TRUE;
         display->x = margin;
-        display->y = - display->screen->height_in_pixels + margin;
+        display->y = display->screen->height_in_pixels - margin;
     break;
     case EVENTD_ND_STYLE_ANCHOR_BOTTOM_RIGHT:
+        display->anchor_bottom = TRUE;
         display->x = - display->screen->width_in_pixels + margin;
-        display->y = - display->screen->height_in_pixels + margin;
+        display->y = display->screen->height_in_pixels - margin;
     break;
     }
 
@@ -192,7 +200,7 @@ _eventd_nd_xcb_surface_new(EventdNdDisplay *display, gint width, gint height, ca
 {
     guint32 selmask = XCB_CW_OVERRIDE_REDIRECT | XCB_CW_EVENT_MASK;
     guint32 selval[] = { 1, XCB_EVENT_MASK_EXPOSURE };
-    gint x = 0, y = 0;
+    gint x = 0;
     EventdNdSurface *surface;
 
     surface = g_new0(EventdNdSurface, 1);
@@ -203,17 +211,13 @@ _eventd_nd_xcb_surface_new(EventdNdDisplay *display, gint width, gint height, ca
     surface->bubble = cairo_surface_reference(bubble);
 
     x = display->x;
-    y = display->y;
-
     if ( x < 0 )
         x = - x - width;
-    if ( y < 0 )
-        y = - y - height;
 
     surface->window = g_xcb_window_new(display->source,
                                        display->screen->root_depth,   /* depth         */
                                        display->screen->root,         /* parent window */
-                                       x, y,                          /* x, y          */
+                                       x, 0,                          /* x, y          */
                                        width, height,                 /* width, height */
                                        0,                             /* border_width  */
                                        XCB_WINDOW_CLASS_INPUT_OUTPUT, /* class         */
@@ -249,17 +253,48 @@ _eventd_nd_xcb_surface_new(EventdNdDisplay *display, gint width, gint height, ca
 }
 
 static void
+_eventd_nd_xcb_update_bubbles(EventdNdDisplay *display)
+{
+    GList *surface_;
+    guint16 mask = XCB_CONFIG_WINDOW_Y;
+    guint32 vals[] = { 0 };
+    vals[0] = display->y;
+
+    if ( display->anchor_bottom )
+    {
+        for ( surface_ = display->bubbles ; surface_ != NULL ; surface_ = g_list_next(surface_) )
+        {
+            EventdNdSurface *surface = surface_->data;
+            vals[0] -= surface->height;
+            xcb_configure_window(display->xcb_connection, surface->window_id, mask, vals);
+            vals[0] -= display->margin;
+        }
+    }
+    else
+    {
+        for ( surface_ = display->bubbles ; surface_ != NULL ; surface_ = g_list_next(surface_) )
+        {
+            EventdNdSurface *surface = surface_->data;
+            xcb_configure_window(display->xcb_connection, surface->window_id, mask, vals);
+            vals[0] += surface->height + display->margin;
+        }
+    }
+    xcb_flush(display->xcb_connection);
+}
+static void
 _eventd_nd_xcb_surface_show(EventdNdSurface *surface)
 {
+    surface->bubble_ = surface->display->bubbles = g_list_prepend(surface->display->bubbles, surface);
     xcb_map_window(surface->display->xcb_connection, surface->window_id);
-    xcb_flush(surface->display->xcb_connection);
+    _eventd_nd_xcb_update_bubbles(surface->display);
 }
 
 static void
 _eventd_nd_xcb_surface_hide(EventdNdSurface *surface)
 {
+    surface->display->bubbles = g_list_delete_link(surface->display->bubbles, surface->bubble_);
     xcb_unmap_window(surface->display->xcb_connection, surface->window_id);
-    xcb_flush(surface->display->xcb_connection);
+    _eventd_nd_xcb_update_bubbles(surface->display);
 }
 
 static void
