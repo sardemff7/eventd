@@ -27,6 +27,7 @@
 
 #include <cairo-xcb.h>
 #include <xcb/xcb.h>
+#include <libxcb-glib.h>
 #include <xcb/shape.h>
 
 #include "../types.h"
@@ -39,6 +40,7 @@ struct _EventdNdBackendContext {
 };
 
 struct _EventdNdDisplay {
+    GXcbSource *source;
     xcb_connection_t *xcb_connection;
     xcb_screen_t *screen;
     gint x;
@@ -113,21 +115,19 @@ static EventdNdDisplay *
 _eventd_nd_xcb_display_new(EventdNdBackendContext *context, const gchar *target, EventdNdStyleAnchor anchor, gint margin)
 {
     EventdNdDisplay *display;
-    xcb_connection_t *c;
+    GXcbSource *source;
     const xcb_query_extension_reply_t *shape_query;
 
-    c = xcb_connect(target, NULL);
-    if ( xcb_connection_has_error(c) )
-    {
-        xcb_disconnect(c);
+    source = g_xcb_source_new(NULL, target, NULL);
+    if ( source == NULL )
         return NULL;
-    }
 
     context->displays = g_slist_prepend(context->displays, g_strdup(target));
 
     display = g_new0(EventdNdDisplay, 1);
 
-    display->xcb_connection = c;
+    display->source = source;
+    display->xcb_connection = g_xcb_source_get_connection(source);
 
     display->screen = xcb_setup_roots_iterator(xcb_get_setup(display->xcb_connection)).data;
 
@@ -163,7 +163,7 @@ _eventd_nd_xcb_display_new(EventdNdBackendContext *context, const gchar *target,
 static void
 _eventd_nd_xcb_display_free(EventdNdDisplay *context)
 {
-    xcb_disconnect(context->xcb_connection);
+    g_xcb_source_unref(context->source);
     g_free(context);
 }
 

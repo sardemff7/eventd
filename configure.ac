@@ -179,7 +179,7 @@ AM_CONDITIONAL(ENABLE_NOTIFICATION_DAEMON, [test x$enable_xcb = xyes -o x$enable
 
 # XCB backend
 if test x$enable_xcb = xyes; then
-    PKG_CHECK_MODULES(XCB, [cairo-xcb xcb xcb-shape])
+    PKG_CHECK_MODULES(XCB, [cairo-xcb xcb libxcb-glib xcb-shape])
 fi
 AM_CONDITIONAL(ENABLE_XCB, [test x$enable_xcb = xyes])
 
