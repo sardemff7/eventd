@@ -171,15 +171,29 @@ _eventd_nd_xcb_display_free(EventdNdDisplay *context)
     g_free(context);
 }
 
+static void
+_eventd_nd_xcb_surface_expose_event_callback(GXcbWindow *window, xcb_expose_event_t *event, gpointer user_data)
+{
+    EventdNdSurface *self = user_data;
+    cairo_surface_t *cs;
+    cairo_t *cr;
+
+    cs = cairo_xcb_surface_create(self->display->xcb_connection, self->window_id, get_root_visual_type(self->display->screen), self->width, self->height);
+    cr = cairo_create(cs);
+    cairo_set_source_surface(cr, self->bubble, 0, 0);
+    cairo_rectangle(cr,  event->x, event->y, event->width, event->height);
+    cairo_fill(cr);
+    cairo_destroy(cr);
+    cairo_surface_destroy(cs);
+}
+
 static EventdNdSurface *
 _eventd_nd_xcb_surface_new(EventdNdDisplay *display, gint width, gint height, cairo_surface_t *bubble, cairo_surface_t *shape)
 {
-    guint32 selmask = XCB_CW_OVERRIDE_REDIRECT;
-    guint32 selval[] = { 1 };
+    guint32 selmask = XCB_CW_OVERRIDE_REDIRECT | XCB_CW_EVENT_MASK;
+    guint32 selval[] = { 1, XCB_EVENT_MASK_EXPOSURE };
     gint x = 0, y = 0;
     EventdNdSurface *surface;
-    cairo_surface_t *cs;
-    cairo_t *cr;
 
     surface = g_new0(EventdNdSurface, 1);
 
@@ -207,15 +221,7 @@ _eventd_nd_xcb_surface_new(EventdNdDisplay *display, gint width, gint height, ca
                                        selmask, selval,               /* masks         */
                                        surface);
     surface->window_id = g_xcb_window_get_window(surface->window);
-    xcb_map_window(display->xcb_connection, surface->window_id);
-
-    cs = cairo_xcb_surface_create(display->xcb_connection, surface->window_id, get_root_visual_type(display->screen), width, height);
-    cr = cairo_create(cs);
-    cairo_set_source_surface(cr, bubble, 0, 0);
-    cairo_rectangle(cr, 0, 0, width, height);
-    cairo_fill(cr);
-    cairo_destroy(cr);
-    cairo_surface_destroy(cs);
+    g_xcb_window_set_expose_event_callback(surface->window, _eventd_nd_xcb_surface_expose_event_callback);
 
     if ( display->shape )
     {
