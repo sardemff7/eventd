@@ -50,7 +50,8 @@ struct _EventdNdDisplay {
 
 struct _EventdNdSurface {
     EventdNdDisplay *display;
-    xcb_window_t window;
+    GXcbWindow *window;
+    xcb_window_t window_id;
 };
 
 static EventdNdBackendContext *
@@ -189,20 +190,20 @@ _eventd_nd_xcb_surface_new(EventdNdDisplay *display, gint width, gint height, ca
     if ( y < 0 )
         y = - y - height;
 
-    surface->window = xcb_generate_id(display->xcb_connection);
-    xcb_create_window(display->xcb_connection,
-                      display->screen->root_depth,   /* depth         */
-                      surface->window,
-                      display->screen->root,         /* parent window */
-                      x, y,                          /* x, y          */
-                      width, height,                 /* width, height */
-                      0,                             /* border_width  */
-                      XCB_WINDOW_CLASS_INPUT_OUTPUT, /* class         */
-                      display->screen->root_visual,  /* visual        */
-                      selmask, selval);              /* masks         */
-    xcb_map_window(display->xcb_connection, surface->window);
+    surface->window = g_xcb_window_new(display->source,
+                                       display->screen->root_depth,   /* depth         */
+                                       display->screen->root,         /* parent window */
+                                       x, y,                          /* x, y          */
+                                       width, height,                 /* width, height */
+                                       0,                             /* border_width  */
+                                       XCB_WINDOW_CLASS_INPUT_OUTPUT, /* class         */
+                                       display->screen->root_visual,  /* visual        */
+                                       selmask, selval,               /* masks         */
+                                       surface);
+    surface->window_id = g_xcb_window_get_window(surface->window);
+    xcb_map_window(display->xcb_connection, surface->window_id);
 
-    cs = cairo_xcb_surface_create(display->xcb_connection, surface->window, get_root_visual_type(display->screen), width, height);
+    cs = cairo_xcb_surface_create(display->xcb_connection, surface->window_id, get_root_visual_type(display->screen), width, height);
     cr = cairo_create(cs);
     cairo_set_source_surface(cr, bubble, 0, 0);
     cairo_rectangle(cr, 0, 0, width, height);
@@ -227,7 +228,7 @@ _eventd_nd_xcb_surface_new(EventdNdDisplay *display, gint width, gint height, ca
 
         xcb_shape_mask(display->xcb_connection,
                        XCB_SHAPE_SO_INTERSECT, XCB_SHAPE_SK_BOUNDING,
-                       surface->window, 0, 0, shape_id);
+                       surface->window_id, 0, 0, shape_id);
 
         xcb_free_pixmap(display->xcb_connection, shape_id);
     }
@@ -238,14 +239,14 @@ _eventd_nd_xcb_surface_new(EventdNdDisplay *display, gint width, gint height, ca
 static void
 _eventd_nd_xcb_surface_show(EventdNdSurface *surface)
 {
-    xcb_map_window(surface->display->xcb_connection, surface->window);
+    xcb_map_window(surface->display->xcb_connection, surface->window_id);
     xcb_flush(surface->display->xcb_connection);
 }
 
 static void
 _eventd_nd_xcb_surface_hide(EventdNdSurface *surface)
 {
-    xcb_unmap_window(surface->display->xcb_connection, surface->window);
+    xcb_unmap_window(surface->display->xcb_connection, surface->window_id);
     xcb_flush(surface->display->xcb_connection);
 }
 
@@ -255,7 +256,7 @@ _eventd_nd_xcb_surface_free(EventdNdSurface *surface)
     if ( surface == NULL )
         return;
 
-    xcb_destroy_window(surface->display->xcb_connection, surface->window);
+    g_xcb_window_free(surface->window);
     xcb_flush(surface->display->xcb_connection);
 
     g_free(surface);
