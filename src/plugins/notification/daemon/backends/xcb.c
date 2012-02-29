@@ -52,6 +52,9 @@ struct _EventdNdSurface {
     EventdNdDisplay *display;
     GXcbWindow *window;
     xcb_window_t window_id;
+    gint width;
+    gint height;
+    cairo_surface_t *bubble;
 };
 
 static EventdNdBackendContext *
@@ -181,6 +184,9 @@ _eventd_nd_xcb_surface_new(EventdNdDisplay *display, gint width, gint height, ca
     surface = g_new0(EventdNdSurface, 1);
 
     surface->display = display;
+    surface->width = width;
+    surface->height = height;
+    surface->bubble = cairo_surface_reference(bubble);
 
     x = display->x;
     y = display->y;
@@ -258,6 +264,7 @@ _eventd_nd_xcb_surface_free(EventdNdSurface *surface)
 
     g_xcb_window_free(surface->window);
     xcb_flush(surface->display->xcb_connection);
+    cairo_surface_destroy(surface->bubble);
 
     g_free(surface);
 }
