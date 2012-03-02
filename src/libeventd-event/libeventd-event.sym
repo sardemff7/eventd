@@ -21,6 +21,7 @@ global:
     eventd_event_set_category;
     eventd_event_set_id;
     eventd_event_set_timeout;
+    eventd_event_update;
 local:
     *;
 };

@@ -63,6 +63,7 @@ struct _EventdEventPrivate {
 
 
 enum {
+    SIGNAL_UPDATED,
     SIGNAL_ANSWERED,
     SIGNAL_ENDED,
     LAST_SIGNAL
@@ -83,6 +84,16 @@ eventd_event_class_init(EventdEventClass *klass)
     eventd_event_parent_class = g_type_class_peek_parent(klass);
 
     object_class->finalize = _eventd_event_finalize;
+
+    _eventd_event_signals[SIGNAL_UPDATED] =
+        g_signal_new("updated",
+                     G_TYPE_FROM_CLASS(object_class),
+                     G_SIGNAL_RUN_FIRST,
+                     G_STRUCT_OFFSET(EventdEventClass, updated),
+                     NULL, NULL,
+                     g_cclosure_marshal_VOID__VOID,
+                     G_TYPE_NONE,
+                     0);
 
     _eventd_event_signals[SIGNAL_ANSWERED] =
         g_signal_new("answered",
@@ -138,6 +149,20 @@ _eventd_event_finalize(GObject *object)
     g_free(priv->name);
 
     G_OBJECT_CLASS(eventd_event_parent_class)->finalize(object);
+}
+
+void
+eventd_event_update(EventdEvent *self, const gchar *name)
+{
+    g_return_if_fail(EVENTD_IS_EVENT(self));
+
+    if ( name != NULL )
+    {
+        g_free(self->priv->name);
+        self->priv->name = g_strdup(name);
+    }
+
+    g_signal_emit(self, _eventd_event_signals[SIGNAL_UPDATED], 0);
 }
 
 void
