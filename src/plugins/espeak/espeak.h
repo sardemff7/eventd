@@ -25,7 +25,6 @@
 
 typedef struct {
     guint ref_count;
-    gboolean pong_mode;
     gpointer data;
 } EventdEspeakCallbackData;
 

@@ -56,53 +56,9 @@ _eventd_service_client_disconnect(gpointer data)
     g_object_unref(cancellable);
 }
 
-static void
-_eventd_service_send_data(gpointer key, gpointer value, gpointer user_data)
-{
-    const gchar *name = key;
-    const gchar *content = value;
-    GDataOutputStream *output = user_data;
-
-#if DEBUG
-    g_debug("Send back data: %s", name);
-#endif /* DEBUG */
-
-    if ( g_utf8_strchr(content, -1, '\n') == NULL )
-    {
-        gchar *msg;
-        msg = g_strconcat("DATAL ", name, " ", content, "\n", NULL);
-        g_data_output_stream_put_string(output, msg, NULL, NULL);
-        g_free(msg);
-    }
-    else
-    {
-        gchar *msg;
-        gchar **line;
-        gchar **lines;
-
-        msg = g_strconcat("DATA ", name, "\n", NULL);
-        g_data_output_stream_put_string(output, msg, NULL, NULL);
-
-        lines = g_strsplit(content, "\n", 0);
-
-        for ( line = lines ; line != NULL ; ++line )
-        {
-            if ( (*line)[0] == '.' )
-                g_data_output_stream_put_byte(output, '.', NULL, NULL);
-            g_data_output_stream_put_string(output, *line, NULL, NULL);
-            g_data_output_stream_put_byte(output, '\n', NULL, NULL);
-        }
-
-        g_strfreev(lines);
-
-        g_data_output_stream_put_string(output, ".\n", NULL, NULL);
-    }
-}
-
 typedef enum {
     MODE_NORMAL = 0,
-    MODE_RELAY,
-    MODE_PING_PONG,
+    MODE_RELAY
 } EventdClientMode;
 
 static gboolean
@@ -166,24 +122,11 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
 
                     if ( ! GPOINTER_TO_UINT(libeventd_config_events_get_event(service->events, eventd_event_get_category(event), eventd_event_get_name(event))) )
                     {
-                        GHashTable *pong = NULL;
-
                         switch ( mode )
                         {
                         case MODE_NORMAL:
                         case MODE_RELAY:
                             service->core_interface->push_event(service->core, event);
-                        break;
-                        case MODE_PING_PONG:
-                             service->core_interface->event_pong(service->core, event);
-                            if ( ! g_data_output_stream_put_string(output, "EVENT\n", NULL, &error) )
-                                break;
-                            pong = eventd_event_get_pong_data(event);
-                            if ( pong != NULL )
-                                g_hash_table_foreach(pong, _eventd_service_send_data, output);
-                            if ( ! g_data_output_stream_put_string(output, ".\n", NULL, &error) )
-                                break;
-                            eventd_event_end(event, EVENTD_EVENT_END_REASON_RESERVED);
                         break;
                         }
                         if ( error != NULL )
@@ -258,8 +201,6 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
 
             if ( g_ascii_strcasecmp(line+5, "relay") == 0 )
                 mode = MODE_RELAY;
-            else if ( g_ascii_strcasecmp(line+5, "ping-pong") == 0 )
-                mode = MODE_PING_PONG;
         }
         else if ( g_ascii_strncasecmp(line, "HELLO ", 6) == 0 )
         {

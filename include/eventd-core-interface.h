@@ -35,7 +35,6 @@ struct _EventdCoreInterface {
     EventdCoreGetInetSocketFunc get_inet_socket;
 
     EventdCoreDispatchEventFunc push_event;
-    EventdCoreDispatchEventFunc event_pong;
 };
 
 #endif /* __EVENTD_EVENTD_CORE_INTERFACE_H__ */

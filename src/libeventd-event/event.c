@@ -56,7 +56,6 @@ struct _EventdEventPrivate {
     gchar *name;
     gint64 timeout;
     GHashTable *data;
-    GHashTable *pong_data;
 };
 
 
@@ -118,8 +117,6 @@ _eventd_event_finalize(GObject *object)
     EventdEvent *self = (EventdEvent *)object;
     EventdEventPrivate *priv = self->priv;
 
-    if ( priv->pong_data != NULL )
-        g_hash_table_unref(priv->pong_data);
     if ( priv->data != NULL )
         g_hash_table_unref(priv->data);
     g_free(priv->name);
@@ -139,14 +136,6 @@ eventd_event_add_data(EventdEvent *self, gchar *name, gchar *content)
     if ( self->priv->data == NULL )
         self->priv->data = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
     g_hash_table_insert(self->priv->data, name, content);
-}
-
-void
-eventd_event_add_pong_data(EventdEvent *self, gchar *name, gchar *content)
-{
-    if ( self->priv->pong_data == NULL )
-        self->priv->pong_data = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-    g_hash_table_insert(self->priv->pong_data, name, content);
 }
 
 void
@@ -186,10 +175,3 @@ eventd_event_get_data(EventdEvent *self)
 {
     return self->priv->data;
 }
-
-GHashTable *
-eventd_event_get_pong_data(EventdEvent *self)
-{
-    return self->priv->pong_data;
-}
-

@@ -49,8 +49,7 @@ namespace Eventc
         public enum Mode {
             UNKNOWN = -1,
             NORMAL = 0,
-            RELAY,
-            PING_PONG
+            RELAY
         }
 
         private GLib.Mutex mutex;
@@ -230,9 +229,6 @@ namespace Eventc
             case Mode.RELAY:
                 mode = "relay";
             break;
-            case Mode.PING_PONG:
-                mode = "ping-pong";
-            break;
             default:
                 throw new EventcError.MODE("Please specify a mode");
             }
@@ -302,43 +298,6 @@ namespace Eventc
                     throw e;
             }
             this.send(".");
-
-            string line = null;
-            string data_name = null;
-            string data_content = null;
-            switch ( this.mode )
-            {
-            case Mode.PING_PONG:
-                while ( ( line = yield this.receive() ) != null )
-                {
-                    if ( line == "EVENT" )
-                    {}
-                    else if ( line == "." )
-                    {
-                        if ( data_name != null )
-                            event.add_pong_data((owned)data_name, (owned)data_content);
-                        else
-                            break;
-                    }
-                    else if ( line.ascii_ncasecmp("DATAL ", 6) == 0 )
-                    {
-                        var data_line = line.substring(6).split(" ", 2);
-                        event.add_pong_data(data_line[0], data_line[1]);
-                    }
-                    else if ( line.ascii_ncasecmp("DATA ", 5) == 0 )
-                    {
-                        data_name = line.substring(5);
-                        data_content = "";
-                    }
-                    else if ( data_name != null )
-                    {
-                        data_content += line;
-                    }
-                }
-            break;
-            default:
-            break;
-            }
 
             }
             finally

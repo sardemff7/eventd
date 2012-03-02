@@ -312,21 +312,3 @@ eventd_plugins_event_action_all(EventdEvent *event)
 {
     _eventd_plugins_foreach(_eventd_plugins_event_action, event);
 }
-
-static void
-_eventd_plugins_event_pong(gpointer data, gpointer user_data)
-{
-    EventdPlugin *plugin = data;
-    EventdEvent *event = user_data;
-
-    if ( plugin->event_pong == NULL )
-        return;
-
-    plugin->event_pong(plugin->context, event);
-}
-
-void
-eventd_plugins_event_pong_all(EventdEvent *event)
-{
-    _eventd_plugins_foreach(_eventd_plugins_event_pong, event);
-}

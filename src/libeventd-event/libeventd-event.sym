@@ -1,12 +1,10 @@
 LIBEVENTD_EVENT {
 global:
     eventd_event_add_data;
-    eventd_event_add_pong_data;
     eventd_event_end;
     eventd_event_get_category;
     eventd_event_get_data;
     eventd_event_get_name;
-    eventd_event_get_pong_data;
     eventd_event_get_timeout;
     eventd_event_get_type;
     eventd_event_new;

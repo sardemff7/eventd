@@ -88,12 +88,6 @@ eventd_core_push_event(EventdCoreContext *context, EventdEvent *event)
 }
 
 void
-eventd_core_event_pong(EventdCoreContext *context, EventdEvent *event)
-{
-    eventd_plugins_event_pong_all(event);
-}
-
-void
 eventd_core_config_reload(EventdCoreContext *context)
 {
     eventd_plugins_stop_all();
@@ -133,7 +127,6 @@ main(int argc, char *argv[])
         .get_inet_socket = eventd_core_get_inet_socket,
 
         .push_event = eventd_core_push_event,
-        .event_pong = eventd_core_event_pong,
     };
 
 

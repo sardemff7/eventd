@@ -48,24 +48,9 @@ typedef struct {
 #define BUFFER_SIZE 2000
 
 static void
-_eventd_espeak_callback_data_ref(EventdEspeakCallbackData *data)
-{
-    ++data->ref_count;
-}
-
-static void
 _eventd_espeak_callback_data_free(EventdEspeakCallbackData *data)
 {
-    EventdEspeakSoundData *sound_data;
-
-    if ( data->pong_mode )
-    {
-        sound_data = data->data;
-        g_free(sound_data->data);
-        g_free(sound_data);
-    }
-    else
-        eventd_espeak_pulseaudio_pa_data_free(data->data);
+    eventd_espeak_pulseaudio_pa_data_free(data->data);
 
     g_free(data);
 }
@@ -80,24 +65,14 @@ _eventd_espeak_callback_data_unref(EventdEspeakCallbackData *data)
 }
 
 static EventdEspeakCallbackData *
-_eventd_espeak_callback_data_new(EventdPluginContext *context, gboolean pong_mode)
+_eventd_espeak_callback_data_new(EventdPluginContext *context)
 {
     EventdEspeakCallbackData *data;
-    EventdEspeakSoundData *sound_data;
 
     data = g_new0(EventdEspeakCallbackData, 1);
 
     data->ref_count = 1;
-    data->pong_mode = pong_mode;
-    if ( pong_mode )
-    {
-        _eventd_espeak_callback_data_ref(data);
-        sound_data = g_new0(EventdEspeakSoundData, 1);
-        sound_data->data = g_malloc0_n(0, sizeof(guchar));
-        data->data = sound_data;
-    }
-    else
-        data->data = eventd_espeak_pulseaudio_pa_data_new(context->pulseaudio);
+    data->data = eventd_espeak_pulseaudio_pa_data_new(context->pulseaudio);
 
     return data;
 }
@@ -105,25 +80,7 @@ _eventd_espeak_callback_data_new(EventdPluginContext *context, gboolean pong_mod
 static int
 synth_callback(gshort *wav, gint numsamples, espeak_EVENT *event)
 {
-    EventdEspeakCallbackData *data;
-    data = event->user_data;
-
-    if ( data->pong_mode )
-    {
-        if ( wav != NULL )
-        {
-            EventdEspeakSoundData *sound_data;
-            gsize base;
-
-            sound_data = data->data;
-            base = sound_data->length;
-            sound_data->length += numsamples * sizeof(gshort);
-            sound_data->data = g_realloc_n(sound_data->data, sound_data->length, sizeof(guchar));
-            memcpy(sound_data->data+base, wav, numsamples*sizeof(gshort));
-        }
-    }
-    else
-        eventd_espeak_pulseaudio_play_data(wav, numsamples, event);
+    eventd_espeak_pulseaudio_play_data(wav, numsamples, event);
 
     if ( ( wav == NULL ) && ( event->type == espeakEVENT_LIST_TERMINATED ) )
         _eventd_espeak_callback_data_unref(event->user_data);
@@ -273,7 +230,7 @@ _eventd_espeak_event_action(EventdPluginContext *context, EventdEvent *event)
 
     msg = libeventd_regex_replace_event_data(message, eventd_event_get_data(event), _eventd_espeak_regex_event_data_cb);
 
-    data = _eventd_espeak_callback_data_new(context, FALSE);
+    data = _eventd_espeak_callback_data_new(context);
     error = espeak_Synth(msg, strlen(msg)+1, 0, POS_CHARACTER, 0, espeakCHARS_UTF8|espeakSSML, NULL, data);
 
     switch ( error )
@@ -291,48 +248,6 @@ _eventd_espeak_event_action(EventdPluginContext *context, EventdEvent *event)
 fail:
     g_free(msg);
 }
-
-static void
-_eventd_espeak_event_pong(EventdPluginContext *context, EventdEvent *event)
-{
-    gchar *message;
-    gchar *msg;
-    espeak_ERROR error;
-    EventdEspeakCallbackData *data;
-    EventdEspeakSoundData *sound_data;
-
-    message = libeventd_config_events_get_event(context->events, eventd_event_get_category(event), eventd_event_get_name(event));
-    if ( message == NULL )
-        return;
-
-    msg = libeventd_regex_replace_event_data(message, eventd_event_get_data(event), _eventd_espeak_regex_event_data_cb);
-
-    data = _eventd_espeak_callback_data_new(context, TRUE);
-    error = espeak_Synth(msg, strlen(msg)+1, 0, POS_CHARACTER, 0, espeakCHARS_UTF8|espeakSSML, NULL, data);
-
-    switch ( error )
-    {
-    case EE_INTERNAL_ERROR:
-        g_warning("Couldn’t synthetise text");
-        _eventd_espeak_callback_data_free(data);
-        goto fail;
-    case EE_BUFFER_FULL:
-    case EE_OK:
-    default:
-    break;
-    }
-
-    espeak_Synchronize();
-    sound_data = data->data;
-    eventd_event_add_pong_data(event, g_strdup("espeak-message"), msg);
-    msg = NULL;
-    eventd_event_add_pong_data(event, g_strdup("espeak-audio-data"), g_base64_encode(sound_data->data, sound_data->length));
-    _eventd_espeak_callback_data_unref(data);
-
-fail:
-    g_free(msg);
-}
-
 static void
 _eventd_espeak_config_reset(EventdPluginContext *context)
 {
@@ -352,5 +267,4 @@ eventd_plugin_get_info(EventdPlugin *plugin)
 
     plugin->event_parse = _eventd_espeak_event_parse;
     plugin->event_action = _eventd_espeak_event_action;
-    plugin->event_pong = _eventd_espeak_event_pong;
 }

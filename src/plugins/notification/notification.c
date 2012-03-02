@@ -198,18 +198,6 @@ _eventd_notification_notification_new(GHashTable *data, EventdNotificationEvent 
 
 
 static void
-_eventd_notification_notification_add_pong_data(EventdEvent *event, EventdNotificationNotification *notification)
-{
-    eventd_event_add_pong_data(event, g_strdup("notification-title"), g_strdup(notification->title));
-    eventd_event_add_pong_data(event, g_strdup("notification-message"), g_strdup(notification->message));
-
-    if ( notification->icon != NULL )
-        eventd_event_add_pong_data(event, g_strdup("notification-icon"), g_base64_encode(notification->icon, notification->icon_length));
-    if ( notification->overlay_icon != NULL )
-        eventd_event_add_pong_data(event, g_strdup("notification-overlay-icon"), g_base64_encode(notification->overlay_icon, notification->overlay_icon_length));
-}
-
-static void
 _eventd_notification_notification_free(EventdNotificationNotification *notification)
 {
     g_free(notification->overlay_icon);
@@ -278,26 +266,6 @@ _eventd_notification_event_action(EventdPluginContext *context, EventdEvent *eve
 }
 
 static void
-_eventd_notification_event_pong(EventdPluginContext *context, EventdEvent *event)
-{
-    EventdNotificationEvent *notification_event;
-    EventdNotificationNotification *notification;
-
-    notification_event = libeventd_config_events_get_event(context->events, eventd_event_get_category(event), eventd_event_get_name(event));
-    if ( notification_event == NULL )
-        return;
-
-    if ( notification_event->disable )
-        return;
-
-    notification = _eventd_notification_notification_new(eventd_event_get_data(event), notification_event);
-
-    _eventd_notification_notification_add_pong_data(event, notification);
-
-    _eventd_notification_notification_free(notification);
-}
-
-static void
 _eventd_notification_config_reset(EventdPluginContext *context)
 {
     g_hash_table_remove_all(context->events);
@@ -315,6 +283,5 @@ eventd_plugin_get_info(EventdPlugin *plugin)
 
     plugin->event_parse = _eventd_notification_event_parse;
     plugin->event_action = _eventd_notification_event_action;
-    plugin->event_pong = _eventd_notification_event_pong;
 }
 

@@ -55,7 +55,6 @@ typedef struct {
     EventdPluginEventParseFunc event_parse;
 
     EventdPluginEventDispatchFunc event_action;
-    EventdPluginEventDispatchFunc event_pong;
 
     /* Private stuff */
     void *module;

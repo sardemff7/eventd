@@ -23,7 +23,6 @@
 namespace Eventc
 {
     static string type;
-    static string mode;
     static string event_name;
     static string[] event_data_name;
     static string[] event_data_content;
@@ -43,7 +42,6 @@ namespace Eventc
     static const GLib.OptionEntry[] entries =
     {
         { "name", 'n', 0, GLib.OptionArg.STRING, out event_name, N_("Event name to send"), "<name>" },
-        { "mode", 0, 0, GLib.OptionArg.STRING, out mode, N_("Mode of the client"), "{normal|ping-pong}" },
         { "data-name", 'd', 0, GLib.OptionArg.STRING_ARRAY, out event_data_name, N_("Event data name to send"), "<name>" },
         { "data-content", 'c', 0, GLib.OptionArg.STRING_ARRAY, out event_data_content, N_("Event data content to send (must be after a data-name)"), "<content>" },
         { "host", 'h', 0, GLib.OptionArg.STRING, out host, N_("Host to connect to"), "<host>" },
@@ -101,7 +99,6 @@ namespace Eventc
             try
             {
                 client.event.end(res);
-                print_pong_data(event);
             }
             catch ( EventcError e )
             {
@@ -109,37 +106,6 @@ namespace Eventc
             }
             disconnect();
         });
-    }
-
-    private static void
-    print_pong_data_each(string name, string content)
-    {
-        if ( content.index_of_char('\n') == -1 )
-            stdout.puts(@"DATAL $name $content\n");
-        else
-        {
-            stdout.puts(@"DATA $name\n");
-            var datas = content.split("\n");
-            foreach ( var line in datas )
-            {
-                if ( line[0] == '.' )
-                    stdout.puts(".");
-                stdout.puts(line);
-                stdout.puts("\n");
-            }
-            stdout.puts(".\n");
-        }
-    }
-
-    private static void
-    print_pong_data(Eventd.Event event)
-    {
-        unowned GLib.HashTable<string, string>? ret_data = event.get_pong_data();
-        if ( ret_data == null )
-            return;
-
-        ret_data.foreach((GLib.HFunc<string, string>)print_pong_data_each);
-        stdout.puts(".\n");
     }
 
     private static void
@@ -209,17 +175,6 @@ namespace Eventc
         if ( unix_socket != null )
             client.host_is_socket = true;
         #endif
-
-        switch ( mode )
-        {
-        case "ping-pong":
-            client.mode = Connection.Mode.PING_PONG;
-        break;
-        case "normal":
-        default:
-            client.mode = Connection.Mode.NORMAL;
-        break;
-        }
 
         tries = 0;
         connect();

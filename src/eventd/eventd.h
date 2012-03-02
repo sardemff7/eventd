@@ -27,7 +27,6 @@ GSocket *eventd_core_get_unix_socket(EventdCoreContext *context, const gchar *pa
 GSocket *eventd_core_get_inet_socket(EventdCoreContext *context, gint16 port);
 
 void eventd_core_push_event(EventdCoreContext *context, EventdEvent *event);
-void eventd_core_event_pong(EventdCoreContext *context, EventdEvent *event);
 
 void eventd_core_config_reload(EventdCoreContext *context);
 void eventd_core_quit(EventdCoreContext *context);

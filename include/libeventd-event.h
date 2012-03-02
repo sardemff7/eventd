@@ -64,13 +64,11 @@ void eventd_event_end(EventdEvent *event, EventdEventEndReason reason);
 void eventd_event_set_category(EventdEvent *event, const gchar *category);
 void eventd_event_set_timeout(EventdEvent *event, gint64 timeout);
 void eventd_event_add_data(EventdEvent *event, gchar *name, gchar *content);
-void eventd_event_add_pong_data(EventdEvent *event, gchar *name, gchar *content);
 
 const gchar *eventd_event_get_category(EventdEvent *event);
 const gchar *eventd_event_get_name(EventdEvent *event);
 gint64 eventd_event_get_timeout(EventdEvent *event);
 GHashTable *eventd_event_get_data(EventdEvent *event);
-GHashTable *eventd_event_get_pong_data(EventdEvent *event);
 
 G_END_DECLS
 
