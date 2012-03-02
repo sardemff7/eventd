@@ -51,6 +51,9 @@ if ENABLE_ESPEAK
 include src/plugins/espeak/espeak.mk
 endif
 include src/plugins/notification/notification.mk
+if ENABLE_NOTIFY
+include src/plugins/notify/notify.mk
+endif
 include src/plugins/relay/relay.mk
 include src/libeventc/libeventc.mk
 include src/eventc/eventc.mk

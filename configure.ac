@@ -153,9 +153,12 @@ if test x$enable_espeak = xyes; then
 fi
 AM_CONDITIONAL(ENABLE_ESPEAK, test x$enable_espeak = xyes)
 
-# notification plugin
+# libnotify plugin
 AC_ARG_ENABLE(libnotify, AS_HELP_STRING([--enable-libnotify], [Enable libnotify support (client side)]), enable_libnotify=$enableval, enable_libnotify=no)
 if test x$enable_libnotify = xyes; then
+    if test x$enable_dbus = xyes; then
+        AC_MSG_ERROR([*** You can’t activate both org.freedesktop.Notifications server and libnotify client at the same time])
+    fi
     if test x$enable_gdk_pixbuf = xno; then
         AC_MSG_ERROR([*** libnotify support requested but not gdk-pixbuf support])
     fi
@@ -163,7 +166,7 @@ if test x$enable_libnotify = xyes; then
 fi
 AM_CONDITIONAL(ENABLE_NOTIFY, [test x$enable_libnotify = xyes])
 
-# Backends switches
+# notification plugin
 AC_ARG_ENABLE(xcb, AS_HELP_STRING([--disable-xcb], [Disable xcb graphical backend]), enable_xcb=$enableval, enable_xcb=yes)
 AC_ARG_ENABLE(linux-framebuffer, AS_HELP_STRING([--disable-linux-framebuffer], [Disable linux framebuffer backend]), enable_linux_fb=$enableval, enable_linux_fb=yes)
 

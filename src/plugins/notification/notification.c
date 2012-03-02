@@ -31,7 +31,6 @@
 
 #include "notification.h"
 #include "daemon/daemon.h"
-#include "notify.h"
 
 
 struct _EventdPluginContext {
@@ -218,7 +217,6 @@ _eventd_notification_start(EventdCoreContext *core, EventdCoreInterface *interfa
     context->events = libeventd_config_events_new(_eventd_notification_event_free);
 
     context->daemon = eventd_nd_init();
-    eventd_notification_notify_init();
 
     libeventd_regex_init();
 
@@ -230,7 +228,6 @@ _eventd_notification_stop(EventdPluginContext *context)
 {
     libeventd_regex_clean();
 
-    eventd_notification_notify_uninit();
     eventd_nd_uninit(context->daemon);
 
     g_hash_table_unref(context->events);
@@ -260,7 +257,6 @@ _eventd_notification_event_action(EventdPluginContext *context, EventdEvent *eve
     notification = _eventd_notification_notification_new(event, notification_event);
 
     eventd_nd_event_action(context->daemon, event, notification);
-    eventd_notification_notify_event_action(notification, eventd_event_get_timeout(event), notification_event->scale);
 
     _eventd_notification_notification_free(notification);
 }

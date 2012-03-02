@@ -3,8 +3,6 @@ plugins_LTLIBRARIES += \
 	notification.la
 
 notification_la_SOURCES = \
-	src/plugins/notification/libnotify-compat.h \
-	src/plugins/notification/notify.h \
 	src/plugins/notification/icon.h \
 	src/plugins/notification/icon.c \
 	src/plugins/notification/daemon/daemon.h \
@@ -81,13 +79,4 @@ notification-la-files-uninstall-hook:
 else
 notification_la_SOURCES += \
 	src/plugins/notification/daemon/dummy.c
-endif
-
-
-if ENABLE_NOTIFY
-notification_la_SOURCES += \
-	src/plugins/notification/notify.c
-else
-notification_la_SOURCES += \
-	src/plugins/notification/notify-dummy.c
 endif

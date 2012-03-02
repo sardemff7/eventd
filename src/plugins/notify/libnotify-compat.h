@@ -20,11 +20,13 @@
  *
  */
 
-#ifndef __EVENTD_PLUGINS_NOTIFICATION_NOTIFY_H__
-#define __EVENTD_PLUGINS_NOTIFICATION_NOTIFY_H__
+#ifndef __EVENTD_LIBNOTIFY_LIBNOTIFY_COMPAT_H__
+#define __EVENTD_LIBNOTIFY_LIBNOTIFY_COMPAT_H__
 
-void eventd_notification_notify_init(void);
-void eventd_notification_notify_uninit(void);
-void eventd_notification_notify_event_action(EventdNotificationNotification *notification, guint64 timeout, gdouble scale);
+#if ! NOTIFY_CHECK_VERSION(0,7,0)
 
-#endif /* __EVENTD_PLUGINS_NOTIFICATION_NOTIFY_H__ */
+#define notify_notification_new(summary, body, icon) notify_notification_new(summary, body, icon, NULL)
+
+#endif /* ! NOTIFY_CHECK_VERSION(0,7,0) */
+
+#endif /* __EVENTD_LIBNOTIFY_LIBNOTIFY_COMPAT_H__ */
