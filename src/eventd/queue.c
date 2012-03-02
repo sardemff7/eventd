@@ -48,6 +48,46 @@ typedef struct {
     guint timeout_id;
 } EventdQueueEvent;
 
+
+static gint64
+_eventd_queue_event_set_timeout(EventdQueue *queue, EventdEvent *event)
+{
+    gint64 timeout;
+
+    timeout = eventd_event_get_timeout(event);
+    if ( timeout < 0 )
+        timeout = eventd_config_event_get_timeout(queue->config, event);
+    eventd_event_set_timeout(event, timeout);
+
+    return timeout;
+}
+
+static gboolean
+_eventd_queue_event_timeout(gpointer user_data)
+{
+    EventdQueueEvent *event = user_data;
+
+    event->timeout_id = 0;
+
+    eventd_event_end(event->event, EVENTD_EVENT_END_REASON_TIMEOUT);
+
+    return FALSE;
+}
+
+static void
+_eventd_queue_event_updated(GObject *object, gpointer user_data)
+{
+    EventdQueueEvent *event = user_data;
+    gint64 timeout;
+
+    g_source_remove(event->timeout_id);
+
+    timeout = _eventd_queue_event_set_timeout(event->queue, event->event);
+
+    if ( timeout > 0 )
+        event->timeout_id = g_timeout_add(timeout, _eventd_queue_event_timeout, event);
+}
+
 static void
 _eventd_queue_event_ended(GObject *object, gint reason, gpointer user_data)
 {
@@ -66,18 +106,6 @@ _eventd_queue_event_ended(GObject *object, gint reason, gpointer user_data)
     g_free(event);
 }
 
-static gboolean
-_eventd_queue_event_timeout(gpointer user_data)
-{
-    EventdQueueEvent *event = user_data;
-
-    event->timeout_id = 0;
-
-    eventd_event_end(event->event, EVENTD_EVENT_END_REASON_TIMEOUT);
-
-    return FALSE;
-}
-
 static gpointer
 _eventd_queue_source_dispatch(gpointer user_data)
 {
@@ -94,8 +122,9 @@ _eventd_queue_source_dispatch(gpointer user_data)
 
         eventd_plugins_event_action_all(event->event);
 
+        g_signal_connect(event->event, "updated", G_CALLBACK(_eventd_queue_event_updated), event);
         g_signal_connect(event->event, "ended", G_CALLBACK(_eventd_queue_event_ended), event);
-        timeout = eventd_event_get_timeout(event->event);
+        timeout = _eventd_queue_event_set_timeout(queue, event->event);
         if ( timeout > 0 )
             event->timeout_id = g_timeout_add(timeout, _eventd_queue_event_timeout, event);
     }
@@ -154,16 +183,10 @@ void
 eventd_queue_push(EventdQueue *queue, EventdEvent *event)
 {
     EventdQueueEvent *queue_event;
-    gint64 timeout;
 
     queue_event = g_new0(EventdQueueEvent, 1);
     queue_event->queue = queue;
     queue_event->event = g_object_ref(event);
-
-    timeout = eventd_event_get_timeout(event);
-    if ( timeout < 0 )
-        timeout = eventd_config_event_get_timeout(queue->config, event);
-    eventd_event_set_timeout(event, timeout);
 
     g_async_queue_push_unlocked(queue->queue, queue_event);
 }
