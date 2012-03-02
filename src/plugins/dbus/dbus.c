@@ -74,18 +74,20 @@ _eventd_dbus_notification_free(gpointer user_data)
     g_free(notification);
 }
 static void
-_eventd_dbus_notification_new(EventdPluginContext *context, const gchar *sender, guint32 id, EventdEvent *event)
+_eventd_dbus_notification_new(EventdPluginContext *context, const gchar *sender, EventdEvent *event)
 {
     EventdDbusNotification *notification;
 
     notification = g_new0(EventdDbusNotification, 1);
     notification->context = context;
-    notification->id = id;
+    notification->id = ++context->count;
     notification->sender = g_strdup(sender);
     notification->event = event;
 
     g_hash_table_insert(context->notifications, GUINT_TO_POINTER(notification->id), notification);
     g_signal_connect(event, "ended", G_CALLBACK(_eventd_dbus_event_ended), notification);
+
+    context->core_interface->push_event(context->core, event);
 }
 
 static void
@@ -154,13 +156,19 @@ _eventd_dbus_notify(EventdPluginContext *context, const gchar *sender, GVariant 
 
     if ( id > 0 )
     {
-        /*
-         * TODO: Update the notification
-         */
+        EventdDbusNotification *notification;
+
+        notification = g_hash_table_lookup(context->notifications, GUINT_TO_POINTER(id));
+        if ( notification == NULL )
+        {
+            g_dbus_method_invocation_return_dbus_error(invocation, NOTIFICATION_BUS_NAME ".InvalidId", "Invalid notification identifier");
+            return;
+        }
+        event = notification->event;
     }
     else
-        id = ++context->count;
-    event = eventd_event_new(event_name);
+        event = eventd_event_new(event_name);
+
     eventd_event_set_category(event, "libnotify");
 
     eventd_event_add_data(event, g_strdup("client-name"), g_strdup(app_name));
@@ -208,8 +216,10 @@ _eventd_dbus_notify(EventdPluginContext *context, const gchar *sender, GVariant 
 
     eventd_event_set_timeout(event, ( timeout > -1 ) ? timeout : ( urgency > -1 ) ? ( 3000 + urgency * 2000 ) : -1);
 
-    _eventd_dbus_notification_new(context, sender, id, event);
-    context->core_interface->push_event(context->core, event);
+    if ( id > 0 )
+        eventd_event_update(event, NULL);
+    else
+        _eventd_dbus_notification_new(context, sender, event);
 
     g_dbus_method_invocation_return_value(invocation, g_variant_new("(u)", id));
 }
