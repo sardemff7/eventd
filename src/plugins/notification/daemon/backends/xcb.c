@@ -30,6 +30,8 @@
 #include <libxcb-glib.h>
 #include <xcb/shape.h>
 
+#include <libeventd-event-types.h>
+
 #include "../types.h"
 #include "../style.h"
 
@@ -196,7 +198,7 @@ _eventd_nd_xcb_surface_expose_event_callback(GXcbWindow *window, xcb_expose_even
 }
 
 static EventdNdSurface *
-_eventd_nd_xcb_surface_new(EventdNdDisplay *display, gint width, gint height, cairo_surface_t *bubble, cairo_surface_t *shape)
+_eventd_nd_xcb_surface_new(EventdEvent *event, EventdNdDisplay *display, gint width, gint height, cairo_surface_t *bubble, cairo_surface_t *shape)
 {
     guint32 selmask = XCB_CW_OVERRIDE_REDIRECT | XCB_CW_EVENT_MASK;
     guint32 selval[] = { 1, XCB_EVENT_MASK_EXPOSURE };

@@ -32,6 +32,8 @@
 #include <glib/gstdio.h>
 #include <cairo.h>
 
+#include <libeventd-event-types.h>
+
 #include "../types.h"
 #include "../style.h"
 
@@ -169,7 +171,7 @@ alpha_div(guchar c, guchar a)
 }
 
 static EventdNdSurface *
-_eventd_nd_linux_surface_new(EventdNdDisplay *display, gint width, gint height, cairo_surface_t *bubble, cairo_surface_t *shape)
+_eventd_nd_linux_surface_new(EventdEvent *event, EventdNdDisplay *display, gint width, gint height, cairo_surface_t *bubble, cairo_surface_t *shape)
 {
     EventdNdSurface *self;
     gint x, y;

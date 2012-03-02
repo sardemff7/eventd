@@ -581,7 +581,7 @@ _eventd_nd_bubble_icon_draw(cairo_t *cr, cairo_surface_t *icon, gint x, gint y)
 }
 
 EventdNdBubble *
-eventd_nd_bubble_new(EventdNotificationNotification *notification, EventdNdStyle *style, GList *displays)
+eventd_nd_bubble_new(EventdEvent *event, EventdNotificationNotification *notification, EventdNdStyle *style, GList *displays)
 {
     gint padding;
     gint min_width, max_width;
@@ -644,7 +644,7 @@ eventd_nd_bubble_new(EventdNotificationNotification *notification, EventdNdStyle
     {
         EventdNdDisplayContext *display_ = display->data;
         EventdNdSurface *surface;
-        surface = display_->backend->surface_new(display_->display, width, height, bubble, shape);
+        surface = display_->backend->surface_new(event, display_->display, width, height, bubble, shape);
         if ( surface != NULL )
         {
             EventdNdSurfaceContext *surface_context;
