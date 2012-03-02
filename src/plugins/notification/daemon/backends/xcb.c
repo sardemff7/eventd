@@ -22,6 +22,7 @@
 
 #include <stdlib.h>
 #include <glib.h>
+#include <glib-object.h>
 
 #include <cairo.h>
 
@@ -30,7 +31,7 @@
 #include <libxcb-glib.h>
 #include <xcb/shape.h>
 
-#include <libeventd-event-types.h>
+#include <libeventd-event.h>
 
 #include "../types.h"
 #include "../style.h"
@@ -54,6 +55,7 @@ struct _EventdNdDisplay {
 };
 
 struct _EventdNdSurface {
+    EventdEvent *event;
     EventdNdDisplay *display;
     GXcbWindow *window;
     xcb_window_t window_id;
@@ -197,15 +199,25 @@ _eventd_nd_xcb_surface_expose_event_callback(GXcbWindow *window, xcb_expose_even
     cairo_surface_destroy(cs);
 }
 
+static void
+_eventd_nd_xcb_surface_button_release_event_callback(GXcbWindow *window, xcb_button_release_event_t *event, gpointer user_data)
+{
+    EventdNdSurface *self = user_data;
+
+    eventd_event_end(self->event, EVENTD_EVENT_END_REASON_USER_DISMISS);
+}
+
 static EventdNdSurface *
 _eventd_nd_xcb_surface_new(EventdEvent *event, EventdNdDisplay *display, gint width, gint height, cairo_surface_t *bubble, cairo_surface_t *shape)
 {
     guint32 selmask = XCB_CW_OVERRIDE_REDIRECT | XCB_CW_EVENT_MASK;
-    guint32 selval[] = { 1, XCB_EVENT_MASK_EXPOSURE };
+    guint32 selval[] = { 1, XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_BUTTON_RELEASE };
     gint x = 0;
     EventdNdSurface *surface;
 
     surface = g_new0(EventdNdSurface, 1);
+
+    surface->event = g_object_ref(event);
 
     surface->display = display;
     surface->width = width;
@@ -228,6 +240,7 @@ _eventd_nd_xcb_surface_new(EventdEvent *event, EventdNdDisplay *display, gint wi
                                        surface);
     surface->window_id = g_xcb_window_get_window(surface->window);
     g_xcb_window_set_expose_event_callback(surface->window, _eventd_nd_xcb_surface_expose_event_callback);
+    g_xcb_window_set_button_release_event_callback(surface->window, _eventd_nd_xcb_surface_button_release_event_callback);
 
     if ( display->shape )
     {
