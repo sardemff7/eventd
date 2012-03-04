@@ -30,7 +30,6 @@
 #include "types.h"
 
 #include "plugins.h"
-
 #include "config.h"
 
 #include "queue.h"

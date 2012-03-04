@@ -30,7 +30,6 @@
 #include <libeventd-regex.h>
 #include <libeventd-config.h>
 
-#include "sndfile-internal.h"
 #include "pulseaudio.h"
 
 
@@ -38,6 +37,12 @@ struct _EventdPluginContext {
     GHashTable *events;
     EventdSndfilePulseaudioContext *pulseaudio;
 };
+
+typedef struct {
+    gboolean disable;
+    gchar *sound;
+} EventdSndfileEvent;
+
 
 typedef sf_count_t (*sndfile_readf_t)(SNDFILE *sndfile, void *ptr, sf_count_t frames);
 

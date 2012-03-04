@@ -26,8 +26,6 @@
 
 #include <eventd-plugin.h>
 
-#include "types.h"
-
 #include "plugins.h"
 
 static GList *plugins = NULL;

@@ -29,8 +29,6 @@
 
 #include <libeventd-event.h>
 
-#include "sndfile-internal.h"
-
 #include "pulseaudio.h"
 
 struct _EventdSndfilePulseaudioContext {

@@ -36,7 +36,6 @@
 #include "../icon.h"
 
 #include "types.h"
-#include "daemon.h"
 
 #include "style.h"
 #include "style-internal.h"
