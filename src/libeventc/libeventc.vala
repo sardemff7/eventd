@@ -267,7 +267,7 @@ namespace Eventc
             if ( ( this.mode == Mode.RELAY ) && ( this._category != event.get_category() ) )
                 this.send("CLIENT " + event.get_category());
 
-            unowned GLib.HashTable<string, string> data = event.get_data();
+            unowned GLib.HashTable<string, string> data = event.get_all_data();
             if ( data != null )
             {
                 EventcError e = null;

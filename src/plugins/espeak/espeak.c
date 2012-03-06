@@ -157,7 +157,7 @@ _eventd_espeak_event_action(EventdPluginContext *context, EventdEvent *event)
     if ( message == NULL )
         return;
 
-    msg = libeventd_regex_replace_event_data(message, eventd_event_get_data(event), _eventd_espeak_regex_event_data_cb);
+    msg = libeventd_regex_replace_event_data(message, eventd_event_get_all_data(event), _eventd_espeak_regex_event_data_cb);
 
     error = espeak_Synth(msg, strlen(msg)+1, 0, POS_CHARACTER, 0, espeakCHARS_UTF8|espeakSSML, NULL, NULL);
 

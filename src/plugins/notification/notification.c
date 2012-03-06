@@ -257,7 +257,7 @@ _eventd_notification_event_action(EventdPluginContext *context, EventdEvent *eve
     if ( notification_event->disable )
         return;
 
-    notification = _eventd_notification_notification_new(eventd_event_get_data(event), notification_event);
+    notification = _eventd_notification_notification_new(eventd_event_get_all_data(event), notification_event);
 
     eventd_nd_event_action(context->daemon, event, notification);
     eventd_notification_notify_event_action(notification, eventd_event_get_timeout(event), notification_event->scale);

@@ -31,6 +31,7 @@ namespace Eventd
 
 		public unowned string get_category();
 		public unowned string get_name();
-		public unowned GLib.HashTable<string, string> get_data();
+		public unowned string get_data(string name);
+		public unowned GLib.HashTable<string, string> get_all_data();
 	}
 }

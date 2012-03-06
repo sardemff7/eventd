@@ -170,8 +170,14 @@ eventd_event_get_timeout(EventdEvent *self)
     return self->priv->timeout;
 }
 
+const gchar *
+eventd_event_get_data(EventdEvent *self, const gchar *name)
+{
+    return g_hash_table_lookup(self->priv->data, name);
+}
+
 GHashTable *
-eventd_event_get_data(EventdEvent *self)
+eventd_event_get_all_data(EventdEvent *self)
 {
     return self->priv->data;
 }
