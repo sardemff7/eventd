@@ -11,7 +11,7 @@ relay_la_SOURCES = \
 
 relay_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	-D G_LOG_DOMAIN=\"relay\" \
+	-D G_LOG_DOMAIN=\"eventd-relay\" \
 	$(AVAHI_CFLAGS) \
 	$(GIO_CFLAGS) \
 	$(GLIB_CFLAGS)

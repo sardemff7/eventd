@@ -8,7 +8,7 @@ sndfile_la_SOURCES = \
 
 sndfile_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	-D G_LOG_DOMAIN=\"sndfile\" \
+	-D G_LOG_DOMAIN=\"eventd-sndfile\" \
 	$(SNDFILE_CFLAGS) \
 	$(PULSEAUDIO_CFLAGS) \
 	$(GLIB_CFLAGS)

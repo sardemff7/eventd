@@ -7,7 +7,7 @@ evp_la_SOURCES = \
 
 evp_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	-D G_LOG_DOMAIN=\"evp\" \
+	-D G_LOG_DOMAIN=\"eventd-evp\" \
 	$(AVAHI_CFLAGS) \
 	$(GIO_CFLAGS) \
 	$(GLIB_CFLAGS)

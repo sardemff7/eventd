@@ -7,7 +7,7 @@ espeak_la_SOURCES = \
 
 espeak_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	-D G_LOG_DOMAIN=\"espeak\" \
+	-D G_LOG_DOMAIN=\"eventd-espeak\" \
 	$(ESPEAK_CFLAGS) \
 	$(GLIB_CFLAGS)
 

@@ -7,7 +7,7 @@ dbus_la_SOURCES = \
 
 dbus_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	-D G_LOG_DOMAIN=\"dbus\" \
+	-D G_LOG_DOMAIN=\"eventd-dbus\" \
 	$(GIO_CFLAGS) \
 	$(GLIB_CFLAGS)
 
