@@ -4,7 +4,6 @@ plugins_LTLIBRARIES += \
 
 sndfile_la_SOURCES = \
 	src/plugins/sndfile/pulseaudio.h \
-	src/plugins/sndfile/sndfile-internal.h \
 	src/plugins/sndfile/sndfile.c
 
 sndfile_la_CFLAGS = \
