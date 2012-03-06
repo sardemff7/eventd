@@ -1,5 +1,5 @@
 # XCP framebuffer backend
-notificationbackends_LTLIBRARIES += \
+ndbackends_LTLIBRARIES += \
 	xcb.la
 
 xcb_la_SOURCES = \

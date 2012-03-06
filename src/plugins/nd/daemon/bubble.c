@@ -32,7 +32,7 @@
 
 #include <libeventd-event-types.h>
 
-#include "../notification.h"
+#include "../nd.h"
 #include "../icon.h"
 
 #include "types.h"
@@ -151,7 +151,7 @@ fallback:
 }
 
 static GList *
-_eventd_nd_bubble_text_split(EventdNotificationNotification *notification, EventdNdStyle *style)
+_eventd_nd_bubble_text_split(EventdNdNotification *notification, EventdNdStyle *style)
 {
     GList *lines = NULL;
     gchar *escaped_title;
@@ -203,7 +203,7 @@ _eventd_nd_bubble_text_process_line(EventdNdTextLine *line, PangoContext *pango_
 }
 
 static GList *
-_eventd_nd_bubble_text_process(EventdNotificationNotification *notification, EventdNdStyle *style, gint *text_height, gint *text_width)
+_eventd_nd_bubble_text_process(EventdNdNotification *notification, EventdNdStyle *style, gint *text_height, gint *text_width)
 {
     GList *ret;
     GList *lines = NULL;
@@ -370,7 +370,7 @@ _eventd_nd_bubble_get_icon_surface(const guchar *data, gsize length, const gchar
     }
     else
     {
-        pixbuf = eventd_notification_icon_get_pixbuf_from_data(data, length, 0);
+        pixbuf = eventd_nd_icon_get_pixbuf_from_data(data, length, 0);
         if ( pixbuf == NULL )
             return NULL;
 
@@ -581,7 +581,7 @@ _eventd_nd_bubble_icon_draw(cairo_t *cr, cairo_surface_t *icon, gint x, gint y)
 }
 
 EventdNdBubble *
-eventd_nd_bubble_new(EventdEvent *event, EventdNotificationNotification *notification, EventdNdStyle *style, GList *displays)
+eventd_nd_bubble_new(EventdEvent *event, EventdNdNotification *notification, EventdNdStyle *style, GList *displays)
 {
     gint padding;
     gint min_width, max_width;

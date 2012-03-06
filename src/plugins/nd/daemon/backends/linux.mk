@@ -1,5 +1,5 @@
 # Linux framebuffer backend
-notificationbackends_LTLIBRARIES += \
+ndbackends_LTLIBRARIES += \
 	linux.la
 
 linux_la_SOURCES = \

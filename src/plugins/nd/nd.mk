@@ -1,8 +1,8 @@
 # notification plugin
 plugins_LTLIBRARIES += \
-	notification.la
+	nd.la
 
-notification_la_SOURCES = \
+nd_la_SOURCES = \
 	src/plugins/nd/icon.h \
 	src/plugins/nd/icon.c \
 	src/plugins/nd/daemon/backends/backend.h \
@@ -14,10 +14,10 @@ notification_la_SOURCES = \
 	src/plugins/nd/daemon/types.h \
 	src/plugins/nd/daemon/daemon.h \
 	src/plugins/nd/daemon/daemon.c \
-	src/plugins/nd/notification.h \
-	src/plugins/nd/notification.c
+	src/plugins/nd/nd.h \
+	src/plugins/nd/nd.c
 
-notification_la_CFLAGS = \
+nd_la_CFLAGS = \
 	$(AM_CFLAGS) \
 	-D G_LOG_DOMAIN=\"eventd-nd\" \
 	-D SYSCONFDIR=\"$(sysconfdir)\" \
@@ -29,11 +29,11 @@ notification_la_CFLAGS = \
 	$(GDK_PIXBUF_CFLAGS) \
 	$(GLIB_CFLAGS)
 
-notification_la_LDFLAGS = \
+nd_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
 	-avoid-version -module -export-symbols-regex eventd_plugin_get_info
 
-notification_la_LIBADD = \
+nd_la_LIBADD = \
 	libeventd-event.la \
 	libeventd.la \
 	$(NOTIFY_LIBS) \
@@ -42,9 +42,9 @@ notification_la_LIBADD = \
 	$(GDK_PIXBUF_LIBS) \
 	$(GLIB_LIBS)
 
-notificationbackendsdir = $(pluginsdir)/notification
+ndbackendsdir = $(pluginsdir)/nd
 
-notificationbackends_LTLIBRARIES =
+ndbackends_LTLIBRARIES =
 
 if ENABLE_XCB
 include src/plugins/nd/daemon/backends/xcb.mk
@@ -58,18 +58,18 @@ endif
 # Hooks
 #
 
-install-data-hook la-files-install-hook: notification-la-files-install-hook
-uninstall-hook la-files-uninstall-hook: notification-la-files-uninstall-hook
+install-data-hook la-files-install-hook: nd-la-files-install-hook
+uninstall-hook la-files-uninstall-hook: nd-la-files-uninstall-hook
 
 # *.la files cleanup
-notification-la-files-install-hook:
-	cd $(DESTDIR)/$(notificationbackendsdir) && \
-		rm $(notificationbackends_LTLIBRARIES)
+nd-la-files-install-hook:
+	cd $(DESTDIR)/$(ndbackendsdir) && \
+		rm $(ndbackends_LTLIBRARIES)
 
 # Remove *.so files at uninstall since
 # we remove *.la files at install
-notification-la-files-uninstall-hook:
-	cd $(DESTDIR)/$(notificationbackendsdir) && \
-		rm $(notificationbackends_LTLIBRARIES:.la=.so)
-	rmdir $(DESTDIR)/$(notificationbackendsdir)
+nd-la-files-uninstall-hook:
+	cd $(DESTDIR)/$(ndbackendsdir) && \
+		rm $(ndbackends_LTLIBRARIES:.la=.so)
+	rmdir $(DESTDIR)/$(ndbackendsdir)
 

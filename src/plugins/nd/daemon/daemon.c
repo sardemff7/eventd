@@ -27,7 +27,7 @@
 
 #include <libeventd-event.h>
 
-#include "../notification.h"
+#include "../nd.h"
 
 #include "types.h"
 #include "bubble.h"
@@ -129,17 +129,17 @@ _eventd_nd_backend_load(EventdNdContext *context)
         g_free(plugins_dir);
     }
 
-    plugins_dir = g_build_filename(g_get_user_data_dir(), PACKAGE_NAME, "plugins", "notification", NULL);
+    plugins_dir = g_build_filename(g_get_user_data_dir(), PACKAGE_NAME, "plugins", "nd", NULL);
     if ( g_file_test(plugins_dir, G_FILE_TEST_IS_DIR) )
         _eventd_nd_backends_load_dir(context, plugins_dir);
     g_free(plugins_dir);
 
-    plugins_dir = g_build_filename(DATADIR, PACKAGE_NAME, "plugins", "notification", NULL);
+    plugins_dir = g_build_filename(DATADIR, PACKAGE_NAME, "plugins", "nd", NULL);
     if ( g_file_test(plugins_dir, G_FILE_TEST_IS_DIR) )
         _eventd_nd_backends_load_dir(context, plugins_dir);
     g_free(plugins_dir);
 
-    plugins_dir = g_build_filename(LIBDIR, PACKAGE_NAME, "plugins", "notification", NULL);
+    plugins_dir = g_build_filename(LIBDIR, PACKAGE_NAME, "plugins", "nd", NULL);
     if ( g_file_test(plugins_dir, G_FILE_TEST_IS_DIR) )
         _eventd_nd_backends_load_dir(context, plugins_dir);
     g_free(plugins_dir);
@@ -253,7 +253,7 @@ _eventd_nd_event_ended(EventdEvent *event, EventdEventEndReason reason, EventdNd
 }
 
 void
-eventd_nd_event_action(EventdNdContext *context, EventdEvent *event, EventdNotificationNotification *notification)
+eventd_nd_event_action(EventdNdContext *context, EventdEvent *event, EventdNdNotification *notification)
 {
     EventdNdBubble *bubble;
 

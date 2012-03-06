@@ -28,7 +28,7 @@
 #include "icon.h"
 
 GdkPixbuf *
-eventd_notification_icon_get_pixbuf_from_data(const guchar *data, gsize length, guint size)
+eventd_nd_icon_get_pixbuf_from_data(const guchar *data, gsize length, guint size)
 {
     GError *error = NULL;
     GdkPixbufLoader *loader;

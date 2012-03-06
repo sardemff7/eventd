@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef __EVENTD_PLUGINS_NOTIFICATION_NOTIFICATION_H__
-#define __EVENTD_PLUGINS_NOTIFICATION_NOTIFICATION_H__
+#ifndef __EVENTD_ND_EVENT_H__
+#define __EVENTD_ND_EVENT_H__
 
 typedef struct {
     gboolean disable;
@@ -30,7 +30,7 @@ typedef struct {
     gchar *icon;
     gchar *overlay_icon;
     gdouble scale;
-} EventdNotificationEvent;
+} EventdNdEvent;
 
 typedef struct {
     gchar *title;
@@ -41,6 +41,6 @@ typedef struct {
     guchar *overlay_icon;
     gsize overlay_icon_length;
     const gchar *overlay_icon_format;
-} EventdNotificationNotification;
+} EventdNdNotification;
 
-#endif /* __EVENTD_PLUGINS_NOTIFICATION_NOTIFICATION_H__ */
+#endif /* __EVENTD_ND_EVENT_H__ */

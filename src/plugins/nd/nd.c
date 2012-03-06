@@ -29,7 +29,7 @@
 #include <libeventd-config.h>
 #include <libeventd-regex.h>
 
-#include "notification.h"
+#include "nd.h"
 #include "daemon/daemon.h"
 
 
@@ -39,7 +39,7 @@ struct _EventdPluginContext {
 };
 
 static void
-_eventd_notification_event_update(EventdNotificationEvent *event, gboolean disable, const char *title, const char *message, const char *icon, const char *overlay_icon, Int *scale)
+_eventd_nd_event_update(EventdNdEvent *event, gboolean disable, const char *title, const char *message, const char *icon, const char *overlay_icon, Int *scale)
 {
     event->disable = disable;
     if ( title != NULL )
@@ -66,10 +66,10 @@ _eventd_notification_event_update(EventdNotificationEvent *event, gboolean disab
         event->scale = (gdouble)scale->value / 100.;
 }
 
-static EventdNotificationEvent *
-_eventd_notification_event_new(gboolean disable, const char *title, const char *message, const char *icon, const char *overlay_icon, Int *scale, EventdNotificationEvent *parent)
+static EventdNdEvent *
+_eventd_nd_event_new(gboolean disable, const char *title, const char *message, const char *icon, const char *overlay_icon, Int *scale, EventdNdEvent *parent)
 {
-    EventdNotificationEvent *event = NULL;
+    EventdNdEvent *event = NULL;
 
     title = ( title != NULL ) ? title : ( parent != NULL ) ? parent->title : "$client-name - $name";
     message = ( message != NULL ) ? message : ( parent != NULL ) ? parent->message : "$text";
@@ -78,17 +78,17 @@ _eventd_notification_event_new(gboolean disable, const char *title, const char *
     scale->value = scale->set ? scale->value : ( parent != NULL ) ? parent->scale * 100 : 50;
     scale->set = TRUE;
 
-    event = g_new0(EventdNotificationEvent, 1);
+    event = g_new0(EventdNdEvent, 1);
 
-    _eventd_notification_event_update(event, disable, title, message, icon, overlay_icon, scale);
+    _eventd_nd_event_update(event, disable, title, message, icon, overlay_icon, scale);
 
     return event;
 }
 
 static void
-_eventd_notification_event_free(gpointer data)
+_eventd_nd_event_free(gpointer data)
 {
-    EventdNotificationEvent *event = data;
+    EventdNdEvent *event = data;
 
     g_free(event->icon);
     g_free(event->overlay_icon);
@@ -98,7 +98,7 @@ _eventd_notification_event_free(gpointer data)
 }
 
 static void
-_eventd_notification_event_parse(EventdPluginContext *context, const gchar *event_category, const gchar *event_name, GKeyFile *config_file)
+_eventd_nd_event_parse(EventdPluginContext *context, const gchar *event_category, const gchar *event_name, GKeyFile *config_file)
 {
     gboolean disable;
     gchar *name = NULL;
@@ -107,7 +107,7 @@ _eventd_notification_event_parse(EventdPluginContext *context, const gchar *even
     gchar *icon = NULL;
     gchar *overlay_icon = NULL;
     Int scale;
-    EventdNotificationEvent *event;
+    EventdNdEvent *event;
 
     if ( ! g_key_file_has_group(config_file, "notification") )
         return;
@@ -129,9 +129,9 @@ _eventd_notification_event_parse(EventdPluginContext *context, const gchar *even
 
     event = g_hash_table_lookup(context->events, name);
     if ( event != NULL )
-        _eventd_notification_event_update(event, disable, title, message, icon, overlay_icon, &scale);
+        _eventd_nd_event_update(event, disable, title, message, icon, overlay_icon, &scale);
     else
-        g_hash_table_insert(context->events, name, _eventd_notification_event_new(disable, title, message, icon, overlay_icon, &scale, g_hash_table_lookup(context->events, event_category)));
+        g_hash_table_insert(context->events, name, _eventd_nd_event_new(disable, title, message, icon, overlay_icon, &scale, g_hash_table_lookup(context->events, event_category)));
 
 skip:
     g_free(overlay_icon);
@@ -141,7 +141,7 @@ skip:
 }
 
 static void
-_eventd_notification_notification_icon_data_from_file(gchar *path, guchar **data, gsize *length)
+_eventd_nd_notification_icon_data_from_file(gchar *path, guchar **data, gsize *length)
 {
     GError *error = NULL;
 
@@ -156,7 +156,7 @@ _eventd_notification_notification_icon_data_from_file(gchar *path, guchar **data
 }
 
 static void
-_eventd_notification_notification_icon_data_from_base64(EventdEvent *event, const gchar *name, guchar **data, gsize *length, const gchar **format)
+_eventd_nd_notification_icon_data_from_base64(EventdEvent *event, const gchar *name, guchar **data, gsize *length, const gchar **format)
 {
     const gchar *base64;
     gchar *format_name;
@@ -170,34 +170,34 @@ _eventd_notification_notification_icon_data_from_base64(EventdEvent *event, cons
     g_free(format_name);
 }
 
-static EventdNotificationNotification *
-_eventd_notification_notification_new(EventdEvent *event, EventdNotificationEvent *notification_event)
+static EventdNdNotification *
+_eventd_nd_notification_new(EventdEvent *event, EventdNdEvent *nd_event)
 {
-    EventdNotificationNotification *notification;
+    EventdNdNotification *notification;
     gchar *icon;
 
-    notification = g_new0(EventdNotificationNotification, 1);
+    notification = g_new0(EventdNdNotification, 1);
 
-    notification->title = libeventd_regex_replace_event_data(notification_event->title, event, NULL, NULL);
+    notification->title = libeventd_regex_replace_event_data(nd_event->title, event, NULL, NULL);
 
-    notification->message = libeventd_regex_replace_event_data(notification_event->message, event, NULL, NULL);
+    notification->message = libeventd_regex_replace_event_data(nd_event->message, event, NULL, NULL);
 
-    if ( ( icon = libeventd_config_get_filename(notification_event->icon, event, "icons") ) != NULL )
-        _eventd_notification_notification_icon_data_from_file(icon, &notification->icon, &notification->icon_length);
+    if ( ( icon = libeventd_config_get_filename(nd_event->icon, event, "icons") ) != NULL )
+        _eventd_nd_notification_icon_data_from_file(icon, &notification->icon, &notification->icon_length);
     else
-        _eventd_notification_notification_icon_data_from_base64(event, notification_event->icon, &notification->icon, &notification->icon_length, &notification->icon_format);
+        _eventd_nd_notification_icon_data_from_base64(event, nd_event->icon, &notification->icon, &notification->icon_length, &notification->icon_format);
 
-    if ( ( icon = libeventd_config_get_filename(notification_event->overlay_icon, event, "icons") ) != NULL )
-        _eventd_notification_notification_icon_data_from_file(icon, &notification->overlay_icon, &notification->overlay_icon_length);
+    if ( ( icon = libeventd_config_get_filename(nd_event->overlay_icon, event, "icons") ) != NULL )
+        _eventd_nd_notification_icon_data_from_file(icon, &notification->overlay_icon, &notification->overlay_icon_length);
     else
-        _eventd_notification_notification_icon_data_from_base64(event, notification_event->overlay_icon, &notification->overlay_icon, &notification->overlay_icon_length, &notification->overlay_icon_format);
+        _eventd_nd_notification_icon_data_from_base64(event, nd_event->overlay_icon, &notification->overlay_icon, &notification->overlay_icon_length, &notification->overlay_icon_format);
 
     return notification;
 }
 
 
 static void
-_eventd_notification_notification_free(EventdNotificationNotification *notification)
+_eventd_nd_notification_free(EventdNdNotification *notification)
 {
     g_free(notification->overlay_icon);
     g_free(notification->icon);
@@ -208,13 +208,13 @@ _eventd_notification_notification_free(EventdNotificationNotification *notificat
 }
 
 static EventdPluginContext *
-_eventd_notification_start(EventdCoreContext *core, EventdCoreInterface *interface)
+_eventd_nd_init(EventdCoreContext *core, EventdCoreInterface *interface)
 {
     EventdPluginContext *context;
 
     context = g_new0(EventdPluginContext, 1);
 
-    context->events = libeventd_config_events_new(_eventd_notification_event_free);
+    context->events = libeventd_config_events_new(_eventd_nd_event_free);
 
     context->daemon = eventd_nd_init();
 
@@ -224,7 +224,7 @@ _eventd_notification_start(EventdCoreContext *core, EventdCoreInterface *interfa
 }
 
 static void
-_eventd_notification_stop(EventdPluginContext *context)
+_eventd_nd_uninit(EventdPluginContext *context)
 {
     libeventd_regex_clean();
 
@@ -236,33 +236,33 @@ _eventd_notification_stop(EventdPluginContext *context)
 }
 
 static void
-_eventd_notification_control_command(EventdPluginContext *context, const gchar *command)
+_eventd_nd_control_command(EventdPluginContext *context, const gchar *command)
 {
     eventd_nd_control_command(context->daemon, command);
 }
 
 static void
-_eventd_notification_event_action(EventdPluginContext *context, EventdEvent *event)
+_eventd_nd_event_action(EventdPluginContext *context, EventdEvent *event)
 {
-    EventdNotificationEvent *notification_event;
-    EventdNotificationNotification *notification;
+    EventdNdEvent *nd_event;
+    EventdNdNotification *notification;
 
-    notification_event = libeventd_config_events_get_event(context->events, eventd_event_get_category(event), eventd_event_get_name(event));
-    if ( notification_event == NULL )
+    nd_event = libeventd_config_events_get_event(context->events, eventd_event_get_category(event), eventd_event_get_name(event));
+    if ( nd_event == NULL )
         return;
 
-    if ( notification_event->disable )
+    if ( nd_event->disable )
         return;
 
-    notification = _eventd_notification_notification_new(event, notification_event);
+    notification = _eventd_nd_notification_new(event, nd_event);
 
     eventd_nd_event_action(context->daemon, event, notification);
 
-    _eventd_notification_notification_free(notification);
+    _eventd_nd_notification_free(notification);
 }
 
 static void
-_eventd_notification_config_reset(EventdPluginContext *context)
+_eventd_nd_config_reset(EventdPluginContext *context)
 {
     g_hash_table_remove_all(context->events);
 }
@@ -270,14 +270,14 @@ _eventd_notification_config_reset(EventdPluginContext *context)
 void
 eventd_plugin_get_info(EventdPlugin *plugin)
 {
-    plugin->init = _eventd_notification_start;
-    plugin->uninit = _eventd_notification_stop;
+    plugin->init = _eventd_nd_init;
+    plugin->uninit = _eventd_nd_uninit;
 
-    plugin->control_command = _eventd_notification_control_command;
+    plugin->control_command = _eventd_nd_control_command;
 
-    plugin->config_reset = _eventd_notification_config_reset;
+    plugin->config_reset = _eventd_nd_config_reset;
 
-    plugin->event_parse = _eventd_notification_event_parse;
-    plugin->event_action = _eventd_notification_event_action;
+    plugin->event_parse = _eventd_nd_event_parse;
+    plugin->event_action = _eventd_nd_event_action;
 }
 

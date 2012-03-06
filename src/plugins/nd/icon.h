@@ -20,9 +20,9 @@
  *
  */
 
-#ifndef __EVENTD_PLUGINS_NOTIFICATION_ICON_H__
-#define __EVENTD_PLUGINS_NOTIFICATION_ICON_H__
+#ifndef __EVENTD_ND_ICON_H__
+#define __EVENTD_ND_ICON_H__
 
-GdkPixbuf *eventd_notification_icon_get_pixbuf_from_data(const guchar *data, gsize length, guint size);
+GdkPixbuf *eventd_nd_icon_get_pixbuf_from_data(const guchar *data, gsize length, guint size);
 
-#endif /* __EVENTD_PLUGINS_NOTIFICATION_ICON_H__ */
+#endif /* __EVENTD_ND_ICON_H__ */

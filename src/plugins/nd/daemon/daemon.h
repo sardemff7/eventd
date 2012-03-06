@@ -20,14 +20,14 @@
  *
  */
 
-#ifndef __EVENTD_PLUGINS_NOTIFICATION_DAEMON_H__
-#define __EVENTD_PLUGINS_NOTIFICATION_DAEMON_H__
+#ifndef __EVENTD_ND_DAEMON_H__
+#define __EVENTD_ND_DAEMON_H__
 
 typedef struct _EventdNdContext EventdNdContext;
 
 EventdNdContext *eventd_nd_init(void);
 void eventd_nd_uninit(EventdNdContext *context);
 void eventd_nd_control_command(EventdNdContext *context, const gchar *command);
-void eventd_nd_event_action(EventdNdContext *context, EventdEvent *event, EventdNotificationNotification *notification);
+void eventd_nd_event_action(EventdNdContext *context, EventdEvent *event, EventdNdNotification *notification);
 
-#endif /* __EVENTD_PLUGINS_NOTIFICATION_DAEMON_H__ */
+#endif /* __EVENTD_ND_DAEMON_H__ */
