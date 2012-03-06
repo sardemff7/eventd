@@ -23,6 +23,8 @@
 #ifndef __LIBEVENTD_CONFIG_H__
 #define __LIBEVENTD_CONFIG_H__
 
+#include <libeventd-event-types.h>
+
 GHashTable *libeventd_config_events_new(GDestroyNotify value_destroy_func);
 gchar *libeventd_config_events_get_name(const gchar *event_category, const gchar *event_type);
 gpointer libeventd_config_events_get_event(GHashTable *events, const gchar *event_category, const gchar *event_type);
@@ -37,6 +39,6 @@ gint8 libeventd_config_key_file_get_string(GKeyFile *config_file, const gchar *g
 gint8 libeventd_config_key_file_get_int(GKeyFile *config_file, const gchar *group, const gchar *key, Int *value);
 gint8 libeventd_config_key_file_get_string_list(GKeyFile *config_file, const gchar *group, const gchar *key, gchar ***value, gsize *length);
 
-gchar *libeventd_config_get_filename(const gchar *filename, GHashTable *data, const gchar *subdir);
+gchar *libeventd_config_get_filename(const gchar *filename, EventdEvent *event, const gchar *subdir);
 
 #endif /* __LIBEVENTD_CONFIG_H__ */

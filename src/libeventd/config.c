@@ -21,7 +21,9 @@
  */
 
 #include <glib.h>
+#include <glib-object.h>
 
+#include <libeventd-event.h>
 #include <libeventd-regex.h>
 
 #include <libeventd-config.h>
@@ -118,20 +120,20 @@ libeventd_config_key_file_get_string_list(GKeyFile *config_file, const gchar *gr
 }
 
 gchar *
-libeventd_config_get_filename(const gchar *filename, GHashTable *event_data, const gchar *subdir)
+libeventd_config_get_filename(const gchar *filename, EventdEvent *event, const gchar *subdir)
 {
     gchar *real_filename;
 
     if ( ! g_str_has_prefix(filename, "file://") )
     {
-        filename = g_hash_table_lookup(event_data, filename);
+        filename = eventd_event_get_data(event, filename);
         if ( ( filename != NULL ) && g_str_has_prefix(filename, "file://") )
             real_filename = g_strdup(filename+7);
         else
             return NULL;
     }
     else
-        real_filename = libeventd_regex_replace_event_data(filename+7, event_data, NULL, NULL);
+        real_filename = libeventd_regex_replace_event_data(filename+7, eventd_event_get_all_data(event), NULL, NULL);
 
     if ( ! g_path_is_absolute(real_filename) )
     {

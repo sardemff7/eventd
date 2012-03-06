@@ -349,7 +349,7 @@ _eventd_nd_bubble_get_icon_surface_from_data(gint width, gint height, const guch
 }
 
 static cairo_surface_t *
-_eventd_nd_bubble_get_icon_surface(const guchar *data, gsize length, gchar *format)
+_eventd_nd_bubble_get_icon_surface(const guchar *data, gsize length, const gchar *format)
 {
     GdkPixbuf *pixbuf = NULL;
     cairo_surface_t *r;
@@ -360,10 +360,11 @@ _eventd_nd_bubble_get_icon_surface(const guchar *data, gsize length, gchar *form
 
     if ( format != NULL )
     {
-        width = g_ascii_strtoll(format, &format, 16);
-        height = g_ascii_strtoll(format+1, &format, 16);
-        stride = g_ascii_strtoll(format+1, &format, 16);
-        alpha = g_ascii_strtoll(format+1, &format, 16);
+        gchar *f;
+        width = g_ascii_strtoll(format, &f, 16);
+        height = g_ascii_strtoll(f+1, &f, 16);
+        stride = g_ascii_strtoll(f+1, &f, 16);
+        alpha = g_ascii_strtoll(f+1, &f, 16);
 
         pixels = data;
     }

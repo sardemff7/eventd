@@ -134,7 +134,7 @@ _eventd_sndfile_event_action(EventdPluginContext *context, EventdEvent *event)
         return;
 
 
-    if ( ( file = libeventd_config_get_filename(sndfile_event->sound, eventd_event_get_all_data(event), "sounds") ) != NULL )
+    if ( ( file = libeventd_config_get_filename(sndfile_event->sound, event, "sounds") ) != NULL )
         _eventd_sndfile_read_file(file, &data, &length, &format, &rate, &channels);
     // TODO: using event data
 
