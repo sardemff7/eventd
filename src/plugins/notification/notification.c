@@ -179,9 +179,9 @@ _eventd_notification_notification_new(GHashTable *data, EventdNotificationEvent 
 
     notification = g_new0(EventdNotificationNotification, 1);
 
-    notification->title = libeventd_regex_replace_event_data(notification_event->title, data, NULL);
+    notification->title = libeventd_regex_replace_event_data(notification_event->title, data, NULL, NULL);
 
-    notification->message = libeventd_regex_replace_event_data(notification_event->message, data, NULL);
+    notification->message = libeventd_regex_replace_event_data(notification_event->message, data, NULL, NULL);
 
     if ( ( icon = libeventd_config_get_filename(notification_event->icon, data, "icons") ) != NULL )
         _eventd_notification_notification_icon_data_from_file(icon, &notification->icon, &notification->icon_length);

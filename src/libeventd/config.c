@@ -131,7 +131,7 @@ libeventd_config_get_filename(const gchar *filename, GHashTable *event_data, con
             return NULL;
     }
     else
-        real_filename = libeventd_regex_replace_event_data(filename+7, event_data, NULL);
+        real_filename = libeventd_regex_replace_event_data(filename+7, event_data, NULL, NULL);
 
     if ( ! g_path_is_absolute(real_filename) )
     {

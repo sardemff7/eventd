@@ -22,7 +22,7 @@
 
 #include <glib.h>
 
-#include <libeventd-config.h>
+#include <libeventd-regex.h>
 
 static guint64 regex_refcount = 0;
 
@@ -50,8 +50,14 @@ libeventd_regex_clean()
     g_regex_unref(regex_event_data);
 }
 
-static gboolean
-_libeventd_regex_event_data_cb(const GMatchInfo *info, GString *r, gpointer event_data)
+typedef struct {
+    GHashTable *event_data;
+    LibeventdRegexReplaceCallback callback;
+    gpointer user_data;
+} LibeventdRegexReplaceData;
+
+static gchar *
+_libeventd_regex_replace_cb(const GMatchInfo *info, GHashTable *event_data)
 {
     gchar *name;
     gchar *data = NULL;
@@ -59,19 +65,43 @@ _libeventd_regex_event_data_cb(const GMatchInfo *info, GString *r, gpointer even
     name = g_match_info_fetch(info, 1);
     if ( event_data != NULL )
         data = g_hash_table_lookup(event_data, name);
-    g_string_append(r, ( data != NULL ) ? data : "");
     g_free(name);
+
+    return g_strdup(( data != NULL ) ? data : "");
+}
+
+static gboolean
+_libeventd_regex_replace_event_data_cb(const GMatchInfo *info, GString *r, gpointer user_data)
+{
+    gchar *data = NULL;
+    LibeventdRegexReplaceData *replace_data = user_data;
+
+    if ( replace_data->callback != NULL )
+        data = replace_data->callback(info, replace_data->event_data, replace_data->user_data);
+    else
+        data = _libeventd_regex_replace_cb(info, replace_data->event_data);
+
+    if ( data == NULL )
+        return TRUE;
+
+    g_string_append(r, data);
+    g_free(data);
 
     return FALSE;
 }
 
 gchar *
-libeventd_regex_replace_event_data(const gchar *target, GHashTable *event_data, GRegexEvalCallback callback)
+libeventd_regex_replace_event_data(const gchar *target, GHashTable *event_data, LibeventdRegexReplaceCallback callback, gpointer user_data)
 {
     GError *error = NULL;
     gchar *r;
+    LibeventdRegexReplaceData data;
 
-    r = g_regex_replace_eval(regex_event_data, target, -1, 0, 0, ( callback != NULL ) ? callback : _libeventd_regex_event_data_cb, event_data, &error);
+    data.event_data = event_data;
+    data.callback = callback;
+    data.user_data = user_data;
+
+    r = g_regex_replace_eval(regex_event_data, target, -1, 0, 0, _libeventd_regex_replace_event_data_cb, &data, &error);
     if ( r == NULL )
     {
         r = g_strdup(target);
