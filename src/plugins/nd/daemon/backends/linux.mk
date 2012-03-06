@@ -3,7 +3,7 @@ notificationbackends_LTLIBRARIES += \
 	linux.la
 
 linux_la_SOURCES = \
-	src/plugins/notification/daemon/backends/linux.c
+	src/plugins/nd/daemon/backends/linux.c
 
 linux_la_CFLAGS = \
 	$(AM_CFLAGS) \

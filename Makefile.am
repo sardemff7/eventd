@@ -50,7 +50,9 @@ endif
 if ENABLE_ESPEAK
 include src/plugins/espeak/espeak.mk
 endif
-include src/plugins/notification/notification.mk
+if ENABLE_NOTIFICATION_DAEMON
+include src/plugins/nd/nd.mk
+endif
 if ENABLE_NOTIFY
 include src/plugins/notify/notify.mk
 endif

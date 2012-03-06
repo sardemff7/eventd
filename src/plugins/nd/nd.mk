@@ -3,15 +3,23 @@ plugins_LTLIBRARIES += \
 	notification.la
 
 notification_la_SOURCES = \
-	src/plugins/notification/icon.h \
-	src/plugins/notification/icon.c \
-	src/plugins/notification/daemon/daemon.h \
-	src/plugins/notification/notification.h \
-	src/plugins/notification/notification.c
+	src/plugins/nd/icon.h \
+	src/plugins/nd/icon.c \
+	src/plugins/nd/daemon/backends/backend.h \
+	src/plugins/nd/daemon/style-internal.h \
+	src/plugins/nd/daemon/style.h \
+	src/plugins/nd/daemon/style.c \
+	src/plugins/nd/daemon/bubble.h \
+	src/plugins/nd/daemon/bubble.c \
+	src/plugins/nd/daemon/types.h \
+	src/plugins/nd/daemon/daemon.h \
+	src/plugins/nd/daemon/daemon.c \
+	src/plugins/nd/notification.h \
+	src/plugins/nd/notification.c
 
 notification_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	-D G_LOG_DOMAIN=\"notification\" \
+	-D G_LOG_DOMAIN=\"nd\" \
 	-D SYSCONFDIR=\"$(sysconfdir)\" \
 	-D LIBDIR=\"$(libdir)\" \
 	-D DATADIR=\"$(datadir)\" \
@@ -34,27 +42,16 @@ notification_la_LIBADD = \
 	$(GDK_PIXBUF_LIBS) \
 	$(GLIB_LIBS)
 
-if ENABLE_NOTIFICATION_DAEMON
-notification_la_SOURCES += \
-	src/plugins/notification/daemon/backends/backend.h \
-	src/plugins/notification/daemon/style-internal.h \
-	src/plugins/notification/daemon/style.h \
-	src/plugins/notification/daemon/style.c \
-	src/plugins/notification/daemon/bubble.h \
-	src/plugins/notification/daemon/bubble.c \
-	src/plugins/notification/daemon/types.h \
-	src/plugins/notification/daemon/daemon.c
-
 notificationbackendsdir = $(pluginsdir)/notification
 
 notificationbackends_LTLIBRARIES =
 
 if ENABLE_XCB
-include src/plugins/notification/daemon/backends/xcb.mk
+include src/plugins/nd/daemon/backends/xcb.mk
 endif
 
 if ENABLE_LINUX_FB
-include src/plugins/notification/daemon/backends/linux.mk
+include src/plugins/nd/daemon/backends/linux.mk
 endif
 
 #
@@ -76,7 +73,3 @@ notification-la-files-uninstall-hook:
 		rm $(notificationbackends_LTLIBRARIES:.la=.so)
 	rmdir $(DESTDIR)/$(notificationbackendsdir)
 
-else
-notification_la_SOURCES += \
-	src/plugins/notification/daemon/dummy.c
-endif

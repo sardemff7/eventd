@@ -3,7 +3,7 @@ notificationbackends_LTLIBRARIES += \
 	xcb.la
 
 xcb_la_SOURCES = \
-	src/plugins/notification/daemon/backends/xcb.c
+	src/plugins/nd/daemon/backends/xcb.c
 
 xcb_la_CFLAGS = \
 	$(AM_CFLAGS) \
