@@ -23,11 +23,13 @@
 #ifndef __LIBEVENTD_REGEX_H__
 #define __LIBEVENTD_REGEX_H__
 
-typedef gchar *(*LibeventdRegexReplaceCallback)(const GMatchInfo *info, GHashTable *event_data, gpointer user_data);
+#include <libeventd-event-types.h>
+
+typedef gchar *(*LibeventdRegexReplaceCallback)(const GMatchInfo *info, EventdEvent *event, gpointer user_data);
 
 void libeventd_regex_init(void);
 void libeventd_regex_clean(void);
 
-gchar *libeventd_regex_replace_event_data(const gchar *target, GHashTable *event_data, LibeventdRegexReplaceCallback callback, gpointer user_data);
+gchar *libeventd_regex_replace_event_data(const gchar *target, EventdEvent *event, LibeventdRegexReplaceCallback callback, gpointer user_data);
 
 #endif /* __LIBEVENTD_REGEX_H__ */

@@ -179,9 +179,9 @@ _eventd_notification_notification_new(EventdEvent *event, EventdNotificationEven
 
     notification = g_new0(EventdNotificationNotification, 1);
 
-    notification->title = libeventd_regex_replace_event_data(notification_event->title, eventd_event_get_all_data(event), NULL, NULL);
+    notification->title = libeventd_regex_replace_event_data(notification_event->title, event, NULL, NULL);
 
-    notification->message = libeventd_regex_replace_event_data(notification_event->message, eventd_event_get_all_data(event), NULL, NULL);
+    notification->message = libeventd_regex_replace_event_data(notification_event->message, event, NULL, NULL);
 
     if ( ( icon = libeventd_config_get_filename(notification_event->icon, event, "icons") ) != NULL )
         _eventd_notification_notification_icon_data_from_file(icon, &notification->icon, &notification->icon_length);

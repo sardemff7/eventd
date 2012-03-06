@@ -133,7 +133,7 @@ libeventd_config_get_filename(const gchar *filename, EventdEvent *event, const g
             return NULL;
     }
     else
-        real_filename = libeventd_regex_replace_event_data(filename+7, eventd_event_get_all_data(event), NULL, NULL);
+        real_filename = libeventd_regex_replace_event_data(filename+7, event, NULL, NULL);
 
     if ( ! g_path_is_absolute(real_filename) )
     {

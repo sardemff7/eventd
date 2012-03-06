@@ -112,22 +112,22 @@ _eventd_espeak_event_parse(EventdPluginContext *context, const gchar *event_cate
 }
 
 static gchar *
-_eventd_espeak_regex_event_data_cb(const GMatchInfo *info, GHashTable *event_data, gpointer user_data)
+_eventd_espeak_regex_event_data_cb(const GMatchInfo *info, EventdEvent *event, gpointer user_data)
 {
     gchar *name;
-    gchar *data = NULL;
+    const gchar *data;
     gchar *ret;
 
     name = g_match_info_fetch(info, 1);
-    if ( event_data != NULL )
+    data = eventd_event_get_data(event, name);
+    g_free(name);
+    if ( data != NULL )
     {
         gchar *lang_name;
-        gchar *lang_data = NULL;
-
-        data = g_hash_table_lookup(event_data, name);
+        const gchar *lang_data;
 
         lang_name = g_strconcat(name, "-lang", NULL);
-        lang_data = g_hash_table_lookup(event_data, lang_name);
+        lang_data = eventd_event_get_data(event, lang_name);
         g_free(lang_name);
 
         if ( lang_data != NULL )
@@ -139,7 +139,6 @@ _eventd_espeak_regex_event_data_cb(const GMatchInfo *info, GHashTable *event_dat
     }
     else
         ret = g_strdup("");
-    g_free(name);
 
     return ret;
 }
@@ -155,7 +154,7 @@ _eventd_espeak_event_action(EventdPluginContext *context, EventdEvent *event)
     if ( message == NULL )
         return;
 
-    msg = libeventd_regex_replace_event_data(message, eventd_event_get_all_data(event), _eventd_espeak_regex_event_data_cb, NULL);
+    msg = libeventd_regex_replace_event_data(message, event, _eventd_espeak_regex_event_data_cb, NULL);
 
     error = espeak_Synth(msg, strlen(msg)+1, 0, POS_CHARACTER, 0, espeakCHARS_UTF8|espeakSSML, NULL, NULL);
 

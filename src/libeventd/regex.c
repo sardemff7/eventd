@@ -21,6 +21,9 @@
  */
 
 #include <glib.h>
+#include <glib-object.h>
+
+#include <libeventd-event.h>
 
 #include <libeventd-regex.h>
 
@@ -51,20 +54,19 @@ libeventd_regex_clean()
 }
 
 typedef struct {
-    GHashTable *event_data;
+    EventdEvent *event;
     LibeventdRegexReplaceCallback callback;
     gpointer user_data;
 } LibeventdRegexReplaceData;
 
 static gchar *
-_libeventd_regex_replace_cb(const GMatchInfo *info, GHashTable *event_data)
+_libeventd_regex_replace_cb(const GMatchInfo *info, EventdEvent *event)
 {
     gchar *name;
-    gchar *data = NULL;
+    const gchar *data;
 
     name = g_match_info_fetch(info, 1);
-    if ( event_data != NULL )
-        data = g_hash_table_lookup(event_data, name);
+    data = eventd_event_get_data(event, name);
     g_free(name);
 
     return g_strdup(( data != NULL ) ? data : "");
@@ -77,9 +79,9 @@ _libeventd_regex_replace_event_data_cb(const GMatchInfo *info, GString *r, gpoin
     LibeventdRegexReplaceData *replace_data = user_data;
 
     if ( replace_data->callback != NULL )
-        data = replace_data->callback(info, replace_data->event_data, replace_data->user_data);
+        data = replace_data->callback(info, replace_data->event, replace_data->user_data);
     else
-        data = _libeventd_regex_replace_cb(info, replace_data->event_data);
+        data = _libeventd_regex_replace_cb(info, replace_data->event);
 
     if ( data == NULL )
         return TRUE;
@@ -91,13 +93,13 @@ _libeventd_regex_replace_event_data_cb(const GMatchInfo *info, GString *r, gpoin
 }
 
 gchar *
-libeventd_regex_replace_event_data(const gchar *target, GHashTable *event_data, LibeventdRegexReplaceCallback callback, gpointer user_data)
+libeventd_regex_replace_event_data(const gchar *target, EventdEvent *event, LibeventdRegexReplaceCallback callback, gpointer user_data)
 {
     GError *error = NULL;
     gchar *r;
     LibeventdRegexReplaceData data;
 
-    data.event_data = event_data;
+    data.event = event;
     data.callback = callback;
     data.user_data = user_data;
 
