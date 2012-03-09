@@ -20,8 +20,6 @@
  *
  */
 
-#if ENABLE_GDK_PIXBUF
-
 #include <glib.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
@@ -62,5 +60,3 @@ fail:
     g_object_unref(loader);
     return pixbuf;
 }
-
-#endif /* ENABLE_GDK_PIXBUF */
