@@ -82,12 +82,6 @@ GIO_VALAFLAGS="--pkg gio-2.0 $gio_unix_vala"
 AC_SUBST(gio_unix)
 AC_SUBST(GIO_VALAFLAGS)
 
-AC_ARG_ENABLE(gdk-pixbuf, AS_HELP_STRING([--disable-gdk-pixbuf], [Disable icon support through gdk-pixbuf]), enable_gdk_pixbuf=$enableval, enable_gdk_pixbuf=yes)
-if test x$enable_gdk_pixbuf = xyes; then
-    PKG_CHECK_MODULES(GDK_PIXBUF, [gdk-pixbuf-2.0])
-    AC_DEFINE([ENABLE_GDK_PIXBUF], [1], [Enable gdk-pixbuf support])
-fi
-
 AC_ARG_ENABLE(avahi, AS_HELP_STRING([--disable-avahi], [Disable Avahi support]), enable_avahi=$enableval, enable_avahi=yes)
 if test x$enable_avahi = xyes; then
     PKG_CHECK_MODULES(AVAHI, [avahi-client avahi-glib])
@@ -123,17 +117,11 @@ if test x$enable_eventdctl = xyes; then
 fi
 AM_CONDITIONAL(ENABLE_EVENTDCTL, test x$enable_eventdctl = xyes)
 
-# sound plugin
-AC_ARG_ENABLE(pulseaudio, AS_HELP_STRING([--disable-pulseaudio], [Disable PulseAudio support]), enable_pulseaudio=$enableval, enable_pulseaudio=yes)
-if test x$enable_pulseaudio = xyes; then
-    PKG_CHECK_MODULES(PULSEAUDIO, [libpulse >= $libpulse_min_version libpulse-mainloop-glib])
-fi
-AM_CONDITIONAL(ENABLE_PULSEAUDIO, test x$enable_pulseaudio = xyes)
-
 # sndfile plugin
 AC_ARG_ENABLE(sndfile, AS_HELP_STRING([--disable-sndfile], [Disable libsndfile support]), enable_sndfile=$enableval, enable_sndfile=yes)
 if test x$enable_sndfile = xyes; then
     PKG_CHECK_MODULES(SNDFILE, [sndfile])
+    PKG_CHECK_MODULES(PULSEAUDIO, [libpulse >= $libpulse_min_version libpulse-mainloop-glib])
 fi
 AM_CONDITIONAL(ENABLE_SNDFILE, test x$enable_sndfile = xyes)
 
@@ -159,10 +147,8 @@ if test x$enable_libnotify = xyes; then
     if test x$enable_dbus = xyes; then
         AC_MSG_ERROR([*** You can’t activate both org.freedesktop.Notifications server and libnotify client at the same time])
     fi
-    if test x$enable_gdk_pixbuf = xno; then
-        AC_MSG_ERROR([*** libnotify support requested but not gdk-pixbuf support])
-    fi
     PKG_CHECK_MODULES(NOTIFY, [libnotify >= $libnotify_min_version])
+    PKG_CHECK_MODULES(GDK_PIXBUF, [gdk-pixbuf-2.0])
 fi
 AM_CONDITIONAL(ENABLE_NOTIFY, [test x$enable_libnotify = xyes])
 
@@ -172,11 +158,9 @@ AC_ARG_ENABLE(linux-framebuffer, AS_HELP_STRING([--disable-linux-framebuffer], [
 
 # Common
 if test x$enable_xcb = xyes -o x$enable_linux_fb = xyes; then
-    if test x$enable_gdk_pixbuf = xno; then
-        AC_MSG_ERROR([*** notification-daemon requested but not gdk-pixbuf support])
-    fi
     PKG_CHECK_MODULES(CAIRO, [cairo])
     PKG_CHECK_MODULES(PANGO, [pango pangocairo])
+    PKG_CHECK_MODULES(GDK_PIXBUF, [gdk-pixbuf-2.0])
 fi
 AM_CONDITIONAL(ENABLE_NOTIFICATION_DAEMON, [test x$enable_xcb = xyes -o x$enable_linux_fb = xyes])
 

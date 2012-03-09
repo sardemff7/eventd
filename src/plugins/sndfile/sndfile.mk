@@ -4,6 +4,7 @@ plugins_LTLIBRARIES += \
 
 sndfile_la_SOURCES = \
 	src/plugins/sndfile/pulseaudio.h \
+	src/plugins/sndfile/pulseaudio.c \
 	src/plugins/sndfile/sndfile.c
 
 sndfile_la_CFLAGS = \
@@ -23,11 +24,3 @@ sndfile_la_LIBADD = \
 	$(SNDFILE_LIBS) \
 	$(PULSEAUDIO_LIBS) \
 	$(GLIB_LIBS)
-
-if ENABLE_PULSEAUDIO
-sndfile_la_SOURCES += \
-	src/plugins/sndfile/pulseaudio.c
-else
-sndfile_la_SOURCES += \
-	src/plugins/sndfile/pulseaudio-dummy.c
-endif
