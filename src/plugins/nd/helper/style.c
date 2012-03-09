@@ -20,8 +20,7 @@
  *
  */
 
-#include <cairo.h>
-#include <pango/pango.h>
+#include <glib.h>
 
 #include <libeventd-config.h>
 
@@ -40,17 +39,13 @@ struct _EventdNdStyle {
     gint icon_spacing;
     gdouble overlay_scale;
 
-    PangoContext *pango_context;
-
-    PangoFontDescription *title_font;
+    gchar *title_font;
     Colour title_colour;
-    gchar *title_font_string;
 
     gint message_spacing;
     guint8 message_max_lines;
-    PangoFontDescription *message_font;
+    gchar *message_font;
     Colour message_colour;
-    gchar *message_font_string;
 };
 
 static gboolean
@@ -104,11 +99,8 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
     style->icon_spacing    = 10;
     style->overlay_scale   = 0.5;
 
-    /* fonts */
-    style->pango_context = pango_context_new();
-
     /* title */
-    style->title_font_string = g_strdup("Linux Libertine O Bold 9");
+    style->title_font = g_strdup("Linux Libertine O Bold 9");
     style->title_colour.r    = 0.9;
     style->title_colour.g    = 0.9;
     style->title_colour.b    = 0.9;
@@ -117,7 +109,7 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
     /* message */
     style->message_spacing     = 5;
     style->message_max_lines   = 10;
-    style->message_font_string = g_strdup("Linux Libertine O 9");
+    style->message_font = g_strdup("Linux Libertine O 9");
     style->message_colour.r    = 0.9;
     style->message_colour.g    = 0.9;
     style->message_colour.b    = 0.9;
@@ -173,8 +165,8 @@ _eventd_nd_style_load_dir(EventdNdStyle *style, const gchar *base_dir)
     {
         if ( libeventd_config_key_file_get_string(config_file, "title", "font", &string) == 0 )
         {
-            g_free(style->title_font_string);
-            style->title_font_string = string;
+            g_free(style->title_font);
+            style->title_font = string;
         }
 
         if ( ( libeventd_config_key_file_get_string(config_file, "title", "colour", &string) == 0 ) && _eventd_nd_style_parse_colour(string, &colour) )
@@ -194,8 +186,8 @@ _eventd_nd_style_load_dir(EventdNdStyle *style, const gchar *base_dir)
 
         if ( libeventd_config_key_file_get_string(config_file, "message", "font", &string) == 0 )
         {
-            g_free(style->message_font_string);
-            style->message_font_string = string;
+            g_free(style->message_font);
+            style->message_font = string;
         }
 
         if ( ( libeventd_config_key_file_get_string(config_file, "message", "colour", &string) == 0 ) && _eventd_nd_style_parse_colour(string, &colour) )
@@ -226,14 +218,6 @@ fail:
     g_clear_error(&error);
 }
 
-static void
-_eventd_nd_style_process_fonts(EventdNdStyle *style)
-{
-    style->title_font = pango_font_description_from_string(style->title_font_string);
-    style->message_font = pango_font_description_from_string(style->message_font_string);
-}
-
-
 EventdNdStyle *
 eventd_nd_style_new()
 {
@@ -247,8 +231,6 @@ eventd_nd_style_new()
     _eventd_nd_style_load_dir(style, SYSCONFDIR);
     _eventd_nd_style_load_dir(style, g_get_user_config_dir());
 
-    _eventd_nd_style_process_fonts(style);
-
     return style;
 }
 
@@ -258,13 +240,8 @@ eventd_nd_style_free(EventdNdStyle *style)
     if ( style == NULL )
         return;
 
-    pango_font_description_free(style->message_font);
-    pango_font_description_free(style->title_font);
-
-    g_free(style->title_font_string);
-    g_free(style->message_font_string);
-
-    g_object_unref(style->pango_context);
+    g_free(style->title_font);
+    g_free(style->message_font);
 
     g_free(style);
 }
@@ -323,13 +300,7 @@ eventd_nd_style_get_overlay_scale(EventdNdStyle *self)
     return self->overlay_scale;
 }
 
-PangoContext *
-eventd_nd_style_get_pango_context(EventdNdStyle *self)
-{
-    return self->pango_context;
-}
-
-PangoFontDescription *
+const gchar *
 eventd_nd_style_get_title_font(EventdNdStyle *self)
 {
     return self->title_font;
@@ -339,12 +310,6 @@ Colour
 eventd_nd_style_get_title_colour(EventdNdStyle *self)
 {
     return self->title_colour;
-}
-
-const gchar *
-eventd_nd_style_get_title_font_string(EventdNdStyle *self)
-{
-    return self->title_font_string;
 }
 
 gint
@@ -359,7 +324,7 @@ eventd_nd_style_get_message_max_lines(EventdNdStyle *self)
     return self->message_max_lines;
 }
 
-PangoFontDescription *
+const gchar *
 eventd_nd_style_get_message_font(EventdNdStyle *self)
 {
     return self->message_font;
@@ -370,10 +335,3 @@ eventd_nd_style_get_message_colour(EventdNdStyle *self)
 {
     return self->message_colour;
 }
-
-const gchar *
-eventd_nd_style_get_message_font_string(EventdNdStyle *self)
-{
-    return self->message_font_string;
-}
-

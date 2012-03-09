@@ -17,8 +17,6 @@ libeventd_nd_la_CFLAGS = \
 	-D SYSCONFDIR=\"$(sysconfdir)\" \
 	-D LIBDIR=\"$(libdir)\" \
 	-D DATADIR=\"$(datadir)\" \
-	$(CAIRO_CFLAGS) \
-	$(PANGO_CFLAGS) \
 	$(GLIB_CFLAGS)
 
 libeventd_nd_la_LDFLAGS = \
@@ -28,6 +26,4 @@ libeventd_nd_la_LDFLAGS = \
 
 libeventd_nd_la_LIBADD = \
 	libeventd.la \
-	$(CAIRO_LIBS) \
-	$(PANGO_LIBS) \
 	$(GLIB_LIBS)

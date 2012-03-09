@@ -47,16 +47,12 @@ gint eventd_nd_style_get_icon_max_height(EventdNdStyle *style);
 gint eventd_nd_style_get_icon_spacing(EventdNdStyle *style);
 gdouble eventd_nd_style_get_overlay_scale(EventdNdStyle *style);
 
-PangoContext *eventd_nd_style_get_pango_context(EventdNdStyle *style);
-
-PangoFontDescription *eventd_nd_style_get_title_font(EventdNdStyle *style);
+const gchar *eventd_nd_style_get_title_font(EventdNdStyle *style);
 Colour eventd_nd_style_get_title_colour(EventdNdStyle *style);
-const gchar *eventd_nd_style_get_title_font_string(EventdNdStyle *style);
 
 gint eventd_nd_style_get_message_spacing(EventdNdStyle *style);
 guint8 eventd_nd_style_get_message_max_lines(EventdNdStyle *style);
-PangoFontDescription *eventd_nd_style_get_message_font(EventdNdStyle *style);
+const gchar *eventd_nd_style_get_message_font(EventdNdStyle *style);
 Colour eventd_nd_style_get_message_colour(EventdNdStyle *style);
-const gchar *eventd_nd_style_get_message_font_string(EventdNdStyle *style);
 
 #endif /* __EVENTD_ND_STYLE_H__ */

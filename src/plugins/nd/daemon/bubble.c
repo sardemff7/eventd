@@ -205,33 +205,38 @@ _eventd_nd_bubble_text_process(EventdNdNotification *notification, EventdNdStyle
     GList *lines = NULL;
     EventdNdTextLine *line;
     PangoContext *pango_context;
+    PangoFontDescription *font;
 
     lines = _eventd_nd_bubble_text_split(notification, style);
 
     *text_height = 0;
     *text_width = 0;
 
-    pango_context = eventd_nd_style_get_pango_context(style);
+    pango_context = pango_context_new();
     pango_context_set_font_map(pango_context, pango_cairo_font_map_get_default());
 
     ret = g_list_first(lines);
     line = lines->data;
-    _eventd_nd_bubble_text_process_line(line, pango_context, eventd_nd_style_get_title_font(style), text_height, text_width);
+    font = pango_font_description_from_string(eventd_nd_style_get_title_font(style));
+    _eventd_nd_bubble_text_process_line(line, pango_context, font, text_height, text_width);
+    pango_font_description_free(font);
 
     lines = g_list_next(lines);
     if ( lines != NULL )
     {
         gint spacing;
-        PangoFontDescription *font;
 
         spacing = eventd_nd_style_get_message_spacing(style);
         line->height += spacing;
         *text_height += spacing;
 
-        font = eventd_nd_style_get_message_font(style);
+        font = pango_font_description_from_string(eventd_nd_style_get_message_font(style));
         for ( ; lines != NULL ; lines = g_list_next(lines) )
             _eventd_nd_bubble_text_process_line(lines->data, pango_context, font, text_height, text_width);
+        pango_font_description_free(font);
     }
+
+    g_object_unref(pango_context);
 
     return ret;
 }
