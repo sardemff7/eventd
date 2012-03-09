@@ -37,9 +37,6 @@
 
 #include "../types.h"
 
-#include "style.h"
-#include "style-internal.h"
-
 #include "bubble.h"
 
 static GRegex *regex_amp = NULL;
@@ -165,7 +162,7 @@ _eventd_nd_bubble_text_split(EventdNdNotification *notification, EventdNdStyle *
 
     message_lines = _eventd_nd_bubble_message_escape_and_split(notification->message);
 
-    max = style->message_max_lines;
+    max = eventd_nd_style_get_message_max_lines(style);
     size = g_strv_length(message_lines);
 
     if ( size > max )
@@ -214,12 +211,12 @@ _eventd_nd_bubble_text_process(EventdNdNotification *notification, EventdNdStyle
     *text_height = 0;
     *text_width = 0;
 
-    pango_context = style->pango_context;
+    pango_context = eventd_nd_style_get_pango_context(style);
     pango_context_set_font_map(pango_context, pango_cairo_font_map_get_default());
 
     ret = g_list_first(lines);
     line = lines->data;
-    _eventd_nd_bubble_text_process_line(line, pango_context, style->title_font, text_height, text_width);
+    _eventd_nd_bubble_text_process_line(line, pango_context, eventd_nd_style_get_title_font(style), text_height, text_width);
 
     lines = g_list_next(lines);
     if ( lines != NULL )
@@ -227,11 +224,11 @@ _eventd_nd_bubble_text_process(EventdNdNotification *notification, EventdNdStyle
         gint spacing;
         PangoFontDescription *font;
 
-        spacing = style->message_spacing;
+        spacing = eventd_nd_style_get_message_spacing(style);
         line->height += spacing;
         *text_height += spacing;
 
-        font = style->message_font;
+        font = eventd_nd_style_get_message_font(style);
         for ( ; lines != NULL ; lines = g_list_next(lines) )
             _eventd_nd_bubble_text_process_line(lines->data, pango_context, font, text_height, text_width);
     }
@@ -245,8 +242,8 @@ _eventd_nd_bubble_limit_icon_size(EventdNdStyle *style, gint width, gint height,
     gdouble max_width, max_height;
     gdouble s = 1.0;
 
-    max_width = style->icon_max_width;
-    max_height = style->icon_max_height;
+    max_width = eventd_nd_style_get_icon_max_width(style);
+    max_height = eventd_nd_style_get_icon_max_height(style);
 
     if ( ( width > max_width ) && ( height > max_height ) )
     {
@@ -440,7 +437,7 @@ _eventd_nd_bubble_icon_process(EventdNdStyle *style, cairo_surface_t *icon, cair
     if ( overlay_icon != NULL )
     {
         gdouble overlay_scale;
-        overlay_scale = style->overlay_scale;
+        overlay_scale = eventd_nd_style_get_overlay_scale(style);
 
         w = cairo_image_surface_get_width(overlay_icon);
         h = cairo_image_surface_get_height(overlay_icon);
@@ -480,7 +477,7 @@ _eventd_nd_bubble_icon_process(EventdNdStyle *style, cairo_surface_t *icon, cair
         cairo_surface_destroy(icon);
     }
 
-    *icon_width += style->icon_spacing;
+    *icon_width += eventd_nd_style_get_icon_spacing(style);
 
     return surface;
 }
@@ -552,13 +549,13 @@ _eventd_nd_bubble_text_draw(cairo_t *cr, GList *lines, EventdNdStyle *style, gin
 {
     Colour colour;
 
-    colour = style->title_colour;
+    colour = eventd_nd_style_get_title_colour(style);
     cairo_set_source_rgba(cr, colour.r, colour.g, colour.b, colour.a);
 
     lines = g_list_first(lines);
     _eventd_nd_bubble_text_draw_line(lines->data, cr, offset_x, &offset_y);
 
-    colour = style->message_colour;
+    colour = eventd_nd_style_get_message_colour(style);
     cairo_set_source_rgba(cr, colour.r, colour.g, colour.b, colour.a);
     for ( lines = g_list_next(lines) ; lines != NULL ; lines = g_list_next(lines) )
         _eventd_nd_bubble_text_draw_line(lines->data, cr, offset_x, &offset_y);
@@ -612,9 +609,9 @@ eventd_nd_bubble_new(EventdEvent *event, EventdNdNotification *notification, Eve
                                           &icon_width, &icon_height);
 
     /* compute the bubble size */
-    padding = style->bubble_padding;
-    min_width = style->bubble_min_width;
-    max_width = style->bubble_max_width;
+    padding = eventd_nd_style_get_bubble_padding(style);
+    min_width = eventd_nd_style_get_bubble_min_width(style);
+    max_width = eventd_nd_style_get_bubble_max_width(style);
 
     width = 2 * padding + icon_width + text_width;
 
@@ -628,7 +625,7 @@ eventd_nd_bubble_new(EventdEvent *event, EventdNdNotification *notification, Eve
     /* draw the bubble */
     bubble = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
     cr = cairo_create(bubble);
-    _eventd_nd_bubble_bubble_draw(cr, style->bubble_colour, width, height);
+    _eventd_nd_bubble_bubble_draw(cr, eventd_nd_style_get_bubble_colour(style), width, height);
     _eventd_nd_bubble_text_draw(cr, lines, style, padding + icon_width, padding);
     _eventd_nd_bubble_icon_draw(cr, icon, padding, padding);
     cairo_destroy(cr);
@@ -636,7 +633,7 @@ eventd_nd_bubble_new(EventdEvent *event, EventdNdNotification *notification, Eve
     shape = cairo_image_surface_create(CAIRO_FORMAT_A1, width, height);
     cr = cairo_create(shape);
     cairo_set_source_rgba(cr, 0, 0, 0, 1);
-    _eventd_nd_bubble_shape_draw(cr, style->bubble_radius, width, height);
+    _eventd_nd_bubble_shape_draw(cr, eventd_nd_style_get_bubble_radius(style), width, height);
     cairo_destroy(cr);
 
     for ( display = displays ; display != NULL ; display = g_list_next(display) )

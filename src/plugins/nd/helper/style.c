@@ -25,10 +25,33 @@
 
 #include <libeventd-config.h>
 
-#include "../types.h"
+#include <eventd-nd-style.h>
 
-#include "style.h"
-#include "style-internal.h"
+struct _EventdNdStyle {
+    gint bubble_min_width;
+    gint bubble_max_width;
+
+    gint bubble_padding;
+    gint bubble_radius;
+    Colour bubble_colour;
+
+    gint icon_max_width;
+    gint icon_max_height;
+    gint icon_spacing;
+    gdouble overlay_scale;
+
+    PangoContext *pango_context;
+
+    PangoFontDescription *title_font;
+    Colour title_colour;
+    gchar *title_font_string;
+
+    gint message_spacing;
+    guint8 message_max_lines;
+    PangoFontDescription *message_font;
+    Colour message_colour;
+    gchar *message_font_string;
+};
 
 static gboolean
 _eventd_nd_style_parse_colour(const gchar *string, Colour *colour)
@@ -245,3 +268,112 @@ eventd_nd_style_free(EventdNdStyle *style)
 
     g_free(style);
 }
+
+gint
+eventd_nd_style_get_bubble_min_width(EventdNdStyle *self)
+{
+    return self->bubble_min_width;
+}
+
+gint
+eventd_nd_style_get_bubble_max_width(EventdNdStyle *self)
+{
+    return self->bubble_max_width;
+}
+
+gint
+eventd_nd_style_get_bubble_padding(EventdNdStyle *self)
+{
+    return self->bubble_padding;
+}
+
+gint
+eventd_nd_style_get_bubble_radius(EventdNdStyle *self)
+{
+    return self->bubble_radius;
+}
+
+Colour
+eventd_nd_style_get_bubble_colour(EventdNdStyle *self)
+{
+    return self->bubble_colour;
+}
+
+gint
+eventd_nd_style_get_icon_max_width(EventdNdStyle *self)
+{
+    return self->icon_max_width;
+}
+
+gint
+eventd_nd_style_get_icon_max_height(EventdNdStyle *self)
+{
+    return self->icon_max_height;
+}
+
+gint
+eventd_nd_style_get_icon_spacing(EventdNdStyle *self)
+{
+    return self->icon_spacing;
+}
+
+gdouble
+eventd_nd_style_get_overlay_scale(EventdNdStyle *self)
+{
+    return self->overlay_scale;
+}
+
+PangoContext *
+eventd_nd_style_get_pango_context(EventdNdStyle *self)
+{
+    return self->pango_context;
+}
+
+PangoFontDescription *
+eventd_nd_style_get_title_font(EventdNdStyle *self)
+{
+    return self->title_font;
+}
+
+Colour
+eventd_nd_style_get_title_colour(EventdNdStyle *self)
+{
+    return self->title_colour;
+}
+
+const gchar *
+eventd_nd_style_get_title_font_string(EventdNdStyle *self)
+{
+    return self->title_font_string;
+}
+
+gint
+eventd_nd_style_get_message_spacing(EventdNdStyle *self)
+{
+    return self->message_spacing;
+}
+
+guint8
+eventd_nd_style_get_message_max_lines(EventdNdStyle *self)
+{
+    return self->message_max_lines;
+}
+
+PangoFontDescription *
+eventd_nd_style_get_message_font(EventdNdStyle *self)
+{
+    return self->message_font;
+}
+
+Colour
+eventd_nd_style_get_message_colour(EventdNdStyle *self)
+{
+    return self->message_colour;
+}
+
+const gchar *
+eventd_nd_style_get_message_font_string(EventdNdStyle *self)
+{
+    return self->message_font_string;
+}
+

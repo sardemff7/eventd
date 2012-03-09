@@ -24,6 +24,7 @@
 #include <glib-object.h>
 #include <gmodule.h>
 #include <cairo.h>
+#include <pango/pango.h>
 
 #include <libeventd-event.h>
 
@@ -31,7 +32,6 @@
 
 #include "../types.h"
 #include "bubble.h"
-#include "style.h"
 
 #include "daemon.h"
 

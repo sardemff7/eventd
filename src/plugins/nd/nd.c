@@ -25,6 +25,7 @@
 #include <gio/gio.h>
 
 #include <cairo.h>
+#include <pango/pango.h>
 
 #include <eventd-plugin.h>
 #include <libeventd-event.h>

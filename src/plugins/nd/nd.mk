@@ -9,9 +9,6 @@ nd_la_SOURCES = \
 	src/plugins/nd/icon.h \
 	src/plugins/nd/icon.c \
 	src/plugins/nd/daemon/backends/backend.h \
-	src/plugins/nd/daemon/style-internal.h \
-	src/plugins/nd/daemon/style.h \
-	src/plugins/nd/daemon/style.c \
 	src/plugins/nd/daemon/bubble.h \
 	src/plugins/nd/daemon/bubble.c \
 	src/plugins/nd/daemon/daemon.h \
@@ -39,11 +36,14 @@ nd_la_LDFLAGS = \
 nd_la_LIBADD = \
 	libeventd-event.la \
 	libeventd.la \
+	libeventd-nd.la \
 	$(NOTIFY_LIBS) \
 	$(CAIRO_LIBS) \
 	$(PANGO_LIBS) \
 	$(GDK_PIXBUF_LIBS) \
 	$(GLIB_LIBS)
+
+include src/plugins/nd/helper/libeventd-nd.mk
 
 ndbackendsdir = $(pluginsdir)/nd
 
