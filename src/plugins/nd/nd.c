@@ -24,18 +24,24 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 
+#include <cairo.h>
+
 #include <eventd-plugin.h>
 #include <libeventd-event.h>
 #include <libeventd-config.h>
 #include <libeventd-regex.h>
 
-#include "nd.h"
+#include "types.h"
 #include "daemon/daemon.h"
+
+#include "nd.h"
 
 
 struct _EventdPluginContext {
     GHashTable *events;
     EventdNdContext *daemon;
+    EventdNdStyleAnchor bubble_anchor;
+    gint bubble_margin;
 };
 
 static void
@@ -220,6 +226,10 @@ _eventd_nd_init(EventdCoreContext *core, EventdCoreInterface *interface)
 
     libeventd_regex_init();
 
+    /* default bubble position */
+    context->bubble_anchor    = EVENTD_ND_STYLE_ANCHOR_TOP_RIGHT;
+    context->bubble_margin    = 13;
+
     return context;
 }
 
@@ -238,7 +248,35 @@ _eventd_nd_uninit(EventdPluginContext *context)
 static void
 _eventd_nd_control_command(EventdPluginContext *context, const gchar *command)
 {
-    eventd_nd_control_command(context->daemon, command);
+    eventd_nd_control_command(context->daemon, command, context->bubble_anchor, context->bubble_margin);
+}
+
+static void
+_eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
+{
+    if ( g_key_file_has_group(config_file, "nd") )
+    {
+        Int integer;
+        gchar *string;
+
+        if ( libeventd_config_key_file_get_string(config_file, "nd", "anchor", &string) == 0 )
+        {
+            if ( g_strcmp0(string, "top left") == 0 )
+                context->bubble_anchor = EVENTD_ND_STYLE_ANCHOR_TOP_LEFT;
+            else if ( g_strcmp0(string, "top right") == 0 )
+                context->bubble_anchor = EVENTD_ND_STYLE_ANCHOR_TOP_RIGHT;
+            else if ( g_strcmp0(string, "bottom left") == 0 )
+                context->bubble_anchor = EVENTD_ND_STYLE_ANCHOR_BOTTOM_LEFT;
+            else if ( g_strcmp0(string, "bottom right") == 0 )
+                context->bubble_anchor = EVENTD_ND_STYLE_ANCHOR_BOTTOM_RIGHT;
+            else
+                g_warning("Wrong anchor value '%s'", string);
+            g_free(string);
+        }
+
+        if ( libeventd_config_key_file_get_int(config_file, "nd", "margin", &integer) == 0 )
+            context->bubble_margin = integer.value;
+    }
 }
 
 static void
@@ -277,6 +315,7 @@ eventd_plugin_get_info(EventdPlugin *plugin)
 
     plugin->config_reset = _eventd_nd_config_reset;
 
+    plugin->global_parse = _eventd_nd_global_parse;
     plugin->event_parse = _eventd_nd_event_parse;
     plugin->event_action = _eventd_nd_event_action;
 }

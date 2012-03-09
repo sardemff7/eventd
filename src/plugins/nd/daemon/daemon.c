@@ -204,7 +204,7 @@ eventd_nd_uninit(EventdNdContext *context)
 }
 
 void
-eventd_nd_control_command(EventdNdContext *context, const gchar *command)
+eventd_nd_control_command(EventdNdContext *context, const gchar *command, EventdNdStyleAnchor anchor, gint margin)
 {
     const gchar *target = command+20;
     EventdNdDisplay *display;
@@ -223,7 +223,7 @@ eventd_nd_control_command(EventdNdContext *context, const gchar *command)
         if ( ! backend->display_test(backend->context, target) )
             continue;
 
-        display = backend->display_new(backend->context, target, eventd_nd_style_get_bubble_anchor(context->style), eventd_nd_style_get_bubble_margin(context->style));
+        display = backend->display_new(backend->context, target, anchor, margin);
         if ( display == NULL )
             g_warning("Couldn’t initialize display for '%s'", target);
         else

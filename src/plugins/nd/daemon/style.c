@@ -63,10 +63,6 @@ _eventd_nd_style_parse_colour(const gchar *string, Colour *colour)
 static void
 _eventd_nd_style_init_defaults(EventdNdStyle *style)
 {
-    /* bubble position */
-    style->bubble_margin    = 13;
-    style->bubble_anchor    = EVENTD_ND_STYLE_ANCHOR_TOP_RIGHT;
-
     /* bubble geometry */
     style->bubble_min_width = 200;
     style->bubble_max_width = -1;
@@ -131,24 +127,6 @@ _eventd_nd_style_load_dir(EventdNdStyle *style, const gchar *base_dir)
 
     if ( g_key_file_has_group(config_file, "bubble") )
     {
-        if ( libeventd_config_key_file_get_int(config_file, "bubble", "margin", &integer) == 0 )
-            style->bubble_margin = integer.value;
-
-        if ( libeventd_config_key_file_get_string(config_file, "bubble", "anchor", &string) == 0 )
-        {
-            if ( g_strcmp0(string, "top left") == 0 )
-                style->bubble_anchor = EVENTD_ND_STYLE_ANCHOR_TOP_LEFT;
-            else if ( g_strcmp0(string, "top right") == 0 )
-                style->bubble_anchor = EVENTD_ND_STYLE_ANCHOR_TOP_RIGHT;
-            else if ( g_strcmp0(string, "bottom left") == 0 )
-                style->bubble_anchor = EVENTD_ND_STYLE_ANCHOR_BOTTOM_LEFT;
-            else if ( g_strcmp0(string, "bottom right") == 0 )
-                style->bubble_anchor = EVENTD_ND_STYLE_ANCHOR_BOTTOM_RIGHT;
-            else
-                g_warning("Wrong anchor value '%s'", string);
-            g_free(string);
-        }
-
         if ( libeventd_config_key_file_get_int(config_file, "bubble", "min-width", &integer) == 0 )
             style->bubble_min_width = integer.value;
 
@@ -266,16 +244,4 @@ eventd_nd_style_free(EventdNdStyle *style)
     g_object_unref(style->pango_context);
 
     g_free(style);
-}
-
-EventdNdStyleAnchor
-eventd_nd_style_get_bubble_anchor(EventdNdStyle *style)
-{
-    return style->bubble_anchor;
-}
-
-gint
-eventd_nd_style_get_bubble_margin(EventdNdStyle *style)
-{
-    return style->bubble_margin;
 }

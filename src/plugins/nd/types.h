@@ -37,5 +37,6 @@ typedef struct {
 
 typedef struct _EventdNdStyle EventdNdStyle;
 typedef struct _EventdNdBubble EventdNdBubble;
+typedef struct _EventdNdNotification EventdNdNotification;
 
 #endif /* __EVENTD_ND_TYPES_H__ */

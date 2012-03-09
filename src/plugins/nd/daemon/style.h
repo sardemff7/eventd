@@ -27,7 +27,4 @@
 EventdNdStyle *eventd_nd_style_new(void);
 void eventd_nd_style_free(EventdNdStyle *style);
 
-EventdNdStyleAnchor eventd_nd_style_get_bubble_anchor(EventdNdStyle *style);
-gint eventd_nd_style_get_bubble_margin(EventdNdStyle *style);
-
 #endif /* __EVENTD_ND_STYLE_H__ */

@@ -31,9 +31,6 @@ typedef struct {
 } Colour;
 
 struct _EventdNdStyle {
-    gint bubble_margin;
-    EventdNdStyleAnchor bubble_anchor;
-
     gint bubble_min_width;
     gint bubble_max_width;
 
