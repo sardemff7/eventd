@@ -20,11 +20,12 @@
  *
  */
 
+#include <cairo.h>
 #include <pango/pango.h>
 
 #include <libeventd-config.h>
 
-#include "types.h"
+#include "../types.h"
 
 #include "style.h"
 #include "style-internal.h"

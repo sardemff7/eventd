@@ -23,8 +23,17 @@
 #ifndef __EVENTD_ND_BACKEND_H__
 #define __EVENTD_ND_BACKEND_H__
 
-#include "../types.h"
+#include <libeventd-event-types.h>
 
+typedef enum {
+    EVENTD_ND_STYLE_ANCHOR_TOP_LEFT,
+    EVENTD_ND_STYLE_ANCHOR_TOP_RIGHT,
+    EVENTD_ND_STYLE_ANCHOR_BOTTOM_LEFT,
+    EVENTD_ND_STYLE_ANCHOR_BOTTOM_RIGHT
+} EventdNdStyleAnchor;
+
+typedef struct _EventdNdDisplay EventdNdDisplay;
+typedef struct _EventdNdSurface EventdNdSurface;
 typedef struct _EventdNdBackendContext EventdNdBackendContext;
 
 typedef EventdNdBackendContext *(*EventdNdBackendInitFunc)();
@@ -54,16 +63,6 @@ typedef struct {
     gpointer module;
     EventdNdBackendContext *context;
 } EventdNdBackend;
-
-typedef struct {
-    EventdNdBackend *backend;
-    EventdNdDisplay *display;
-} EventdNdDisplayContext;
-
-typedef struct {
-    EventdNdBackend *backend;
-    EventdNdSurface *surface;
-} EventdNdSurfaceContext;
 
 typedef void (*EventdNdBackendGetInfoFunc)(EventdNdBackend *backend);
 

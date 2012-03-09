@@ -33,10 +33,7 @@
 
 #include <libeventd-event.h>
 
-#include "../types.h"
-#include "../style.h"
-
-#include "backend.h"
+#include <eventd-nd-backend.h>
 
 struct _EventdNdBackendContext {
     GSList *displays;

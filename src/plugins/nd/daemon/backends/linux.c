@@ -32,12 +32,7 @@
 #include <glib/gstdio.h>
 #include <cairo.h>
 
-#include <libeventd-event-types.h>
-
-#include "../types.h"
-#include "../style.h"
-
-#include "backend.h"
+#include <eventd-nd-backend.h>
 
 #define FRAMEBUFFER_TARGET_PREFIX "/dev/tty"
 

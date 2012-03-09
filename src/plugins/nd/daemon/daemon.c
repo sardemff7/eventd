@@ -29,10 +29,9 @@
 
 #include "../nd.h"
 
-#include "types.h"
+#include "../types.h"
 #include "bubble.h"
 #include "style.h"
-#include "backends/backend.h"
 
 #include "daemon.h"
 

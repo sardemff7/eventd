@@ -2,6 +2,9 @@
 plugins_LTLIBRARIES += \
 	nd.la
 
+pkginclude_HEADERS += \
+	include/eventd-nd-backend.h
+
 nd_la_SOURCES = \
 	src/plugins/nd/icon.h \
 	src/plugins/nd/icon.c \
@@ -11,9 +14,9 @@ nd_la_SOURCES = \
 	src/plugins/nd/daemon/style.c \
 	src/plugins/nd/daemon/bubble.h \
 	src/plugins/nd/daemon/bubble.c \
-	src/plugins/nd/daemon/types.h \
 	src/plugins/nd/daemon/daemon.h \
 	src/plugins/nd/daemon/daemon.c \
+	src/plugins/nd/types.h \
 	src/plugins/nd/nd.h \
 	src/plugins/nd/nd.c
 

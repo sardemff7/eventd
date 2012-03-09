@@ -23,12 +23,6 @@
 #ifndef __EVENTD_ND_STYLE_H__
 #define __EVENTD_ND_STYLE_H__
 
-typedef enum {
-    EVENTD_ND_STYLE_ANCHOR_TOP_LEFT,
-    EVENTD_ND_STYLE_ANCHOR_TOP_RIGHT,
-    EVENTD_ND_STYLE_ANCHOR_BOTTOM_LEFT,
-    EVENTD_ND_STYLE_ANCHOR_BOTTOM_RIGHT
-} EventdNdStyleAnchor;
 
 EventdNdStyle *eventd_nd_style_new(void);
 void eventd_nd_style_free(EventdNdStyle *style);

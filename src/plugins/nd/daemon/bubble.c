@@ -35,11 +35,10 @@
 #include "../nd.h"
 #include "../icon.h"
 
-#include "types.h"
+#include "../types.h"
 
 #include "style.h"
 #include "style-internal.h"
-#include "backends/backend.h"
 
 #include "bubble.h"
 

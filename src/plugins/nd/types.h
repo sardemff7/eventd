@@ -23,9 +23,19 @@
 #ifndef __EVENTD_ND_TYPES_H__
 #define __EVENTD_ND_TYPES_H__
 
+#include <eventd-nd-backend.h>
+
+typedef struct {
+    EventdNdBackend *backend;
+    EventdNdDisplay *display;
+} EventdNdDisplayContext;
+
+typedef struct {
+    EventdNdBackend *backend;
+    EventdNdSurface *surface;
+} EventdNdSurfaceContext;
+
 typedef struct _EventdNdStyle EventdNdStyle;
-typedef struct _EventdNdDisplay EventdNdDisplay;
-typedef struct _EventdNdSurface EventdNdSurface;
 typedef struct _EventdNdBubble EventdNdBubble;
 
 #endif /* __EVENTD_ND_TYPES_H__ */
