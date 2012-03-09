@@ -30,7 +30,9 @@ AC_DEFINE_UNQUOTED([DEFAULT_BIND_PORT], [$DEFAULT_BIND_PORT], [Default TCP port 
 AC_DEFINE_UNQUOTED([UNIX_SOCKET], ["$UNIX_SOCKET"], [Default UNIX socket name])
 
 # Common dependencies
-glib_min_version="2.28.0"
+glib_min_major="2"
+glib_min_minor="28"
+glib_min_version="${glib_min_major}.${glib_min_minor}"
 gio_min_version="$glib_min_version"
 
 # Server dependencies
@@ -60,6 +62,7 @@ fi
 PKG_CHECK_MODULES(GLIB, [glib-2.0 >= $glib_min_version])
 GLIB_VALAFLAGS="--pkg glib-2.0 --pkg glib-local-2.0"
 AC_SUBST(GLIB_VALAFLAGS)
+AC_DEFINE_UNQUOTED([GLIB_VERSION_MIN_REQUIRED], [(G_ENCODE_VERSION(${glib_min_major},${glib_min_minor}))], [The lower GLib version supported])
 
 PKG_CHECK_MODULES(GOBJECT, [gobject-2.0])
 GOBJECT_VALAFLAGS="--pkg gobject-2.0"
