@@ -38,12 +38,6 @@ struct _EventdPluginContext {
     EventdSndfilePulseaudioContext *pulseaudio;
 };
 
-typedef struct {
-    gboolean disable;
-    gchar *sound;
-} EventdSndfileEvent;
-
-
 typedef sf_count_t (*sndfile_readf_t)(SNDFILE *sndfile, void *ptr, sf_count_t frames);
 
 static void
@@ -118,7 +112,7 @@ out:
 static void
 _eventd_sndfile_event_action(EventdPluginContext *context, EventdEvent *event)
 {
-    EventdSndfileEvent *sndfile_event = NULL;
+    gchar *sound;
     gchar *file;
     gpointer data = NULL;
     gsize length = 0;
@@ -126,45 +120,15 @@ _eventd_sndfile_event_action(EventdPluginContext *context, EventdEvent *event)
     guint32 rate = 0;
     guint8 channels = 0;
 
-    sndfile_event = libeventd_config_events_get_event(context->events, eventd_event_get_category(event), eventd_event_get_name(event));
-    if ( sndfile_event == NULL )
+    sound = libeventd_config_events_get_event(context->events, eventd_event_get_category(event), eventd_event_get_name(event));
+    if ( sound == NULL )
         return;
 
-    if ( sndfile_event->disable )
-        return;
-
-
-    if ( ( file = libeventd_config_get_filename(sndfile_event->sound, event, "sounds") ) != NULL )
+    if ( ( file = libeventd_config_get_filename(sound, event, "sounds") ) != NULL )
         _eventd_sndfile_read_file(file, &data, &length, &format, &rate, &channels);
     // TODO: using event data
 
     eventd_sndfile_pulseaudio_play_data(context->pulseaudio, data, length, format, rate, channels);
-}
-
-static void
-_eventd_sndfile_event_update(EventdSndfileEvent *event, gboolean disable, const gchar *sound)
-{
-    event->disable = disable;
-
-    if ( sound != NULL )
-    {
-        g_free(event->sound);
-        event->sound = g_strdup(sound);
-    }
-}
-
-static EventdSndfileEvent *
-_eventd_sndfile_event_new(gboolean disable, const gchar *sound, EventdSndfileEvent *parent)
-{
-    EventdSndfileEvent *event = NULL;
-
-    sound = ( sound != NULL ) ? sound : ( parent != NULL ) ? parent->sound : "sound";
-
-    event = g_new0(EventdSndfileEvent, 1);
-
-    _eventd_sndfile_event_update(event, disable, sound);
-
-    return event;
 }
 
 static void
@@ -173,40 +137,28 @@ _eventd_sndfile_event_parse(EventdPluginContext *context, const gchar *event_cat
     gboolean disable;
     gchar *sound = NULL;
 
-    EventdSndfileEvent *event = NULL;
-    gchar *name;
-
     if ( ! g_key_file_has_group(config_file, "sound") )
         return;
 
     if ( libeventd_config_key_file_get_boolean(config_file, "sound", "disable", &disable) < 0 )
-        goto skip;
-    if ( libeventd_config_key_file_get_string(config_file, "sound", "sound", &sound) < 0 )
-        goto skip;
+        return;
 
-    name = libeventd_config_events_get_name(event_category, event_name);
-
-    event = g_hash_table_lookup(context->events, name);
-    if ( event != NULL )
+    if ( ! disable )
     {
-        _eventd_sndfile_event_update(event, disable, sound);
-        g_free(name);
+        if ( libeventd_config_key_file_get_string(config_file, "sound", "sound", &sound) < 0 )
+            return;
+        if ( sound == NULL )
+        {
+            gchar *parent = NULL;
+
+            if ( event_name != NULL )
+                parent = g_hash_table_lookup(context->events, event_category);
+
+            sound = g_strdup(( parent != NULL ) ? parent : "$text");
+        }
     }
-    else
-        g_hash_table_insert(context->events, name, _eventd_sndfile_event_new(disable, sound, g_hash_table_lookup(context->events, event_category)));
 
-skip:
-    g_free(sound);
-}
-
-static void
-_eventd_sndfile_event_free(gpointer data)
-{
-    EventdSndfileEvent *event = data;
-
-    g_free(event->sound);
-
-    g_free(event);
+    g_hash_table_insert(context->events, libeventd_config_events_get_name(event_category, event_name), sound);
 }
 
 static EventdPluginContext *
@@ -216,7 +168,7 @@ _eventd_sndfile_init(EventdCoreContext *core, EventdCoreInterface *interface)
 
     context = g_new0(EventdPluginContext, 1);
 
-    context->events = libeventd_config_events_new(_eventd_sndfile_event_free);
+    context->events = libeventd_config_events_new(g_free);
 
     context->pulseaudio = eventd_sndfile_pulseaudio_init();
 

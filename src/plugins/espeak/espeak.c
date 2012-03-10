@@ -102,7 +102,7 @@ _eventd_espeak_event_parse(EventdPluginContext *context, const gchar *event_cate
             if ( event_name != NULL )
                 parent = g_hash_table_lookup(context->events, event_category);
 
-            message = g_strdup(( parent != NULL ) ? parent : "$text");
+            message = g_strdup(( parent != NULL ) ? parent : "sound");
         }
     }
 
