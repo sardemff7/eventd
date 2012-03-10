@@ -33,7 +33,6 @@
 #include "daemon.h"
 
 struct _EventdNdContext {
-    EventdNdStyle *style;
     GHashTable *bubbles;
     GList *backends;
     GList *displays;
@@ -168,8 +167,6 @@ eventd_nd_init()
 
     _eventd_nd_backend_load(context);
 
-    context->style = eventd_nd_style_new(NULL);
-
     context->bubbles = g_hash_table_new_full(g_direct_hash, g_direct_equal, g_object_unref, _eventd_nd_surface_hide_all);
 
     return context;
@@ -206,8 +203,6 @@ eventd_nd_uninit(EventdNdContext *context)
     g_hash_table_unref(context->bubbles);
 
     g_list_free_full(context->displays, _eventd_nd_backend_display_free);
-
-    eventd_nd_style_free(context->style);
 
     g_list_free_full(context->backends, _eventd_nd_backend_free);
 
@@ -257,7 +252,7 @@ _eventd_nd_event_ended(EventdEvent *event, EventdEventEndReason reason, EventdNd
 }
 
 void
-eventd_nd_event_action(EventdNdContext *context, EventdEvent *event, EventdNdNotification *notification)
+eventd_nd_event_action(EventdNdContext *context, EventdEvent *event, EventdNdNotification *notification, EventdNdStyle *style)
 {
     GList *display_;
     GList *surfaces = NULL;
@@ -268,7 +263,7 @@ eventd_nd_event_action(EventdNdContext *context, EventdEvent *event, EventdNdNot
     {
         EventdNdDisplayContext *display = display_->data;
         EventdNdSurface *surface;
-        surface = display->backend->surface_show(event, display->display, notification, context->style);
+        surface = display->backend->surface_show(event, display->display, notification, style);
         if ( surface != NULL )
         {
             EventdNdSurfaceContext *surface_context;

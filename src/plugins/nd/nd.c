@@ -41,6 +41,7 @@ struct _EventdPluginContext {
     EventdNdContext *daemon;
     EventdNdStyleAnchor bubble_anchor;
     gint bubble_margin;
+    EventdNdStyle *style;
 };
 
 static void
@@ -162,12 +163,16 @@ _eventd_nd_init(EventdCoreContext *core, EventdCoreInterface *interface)
     context->bubble_anchor    = EVENTD_ND_STYLE_ANCHOR_TOP_RIGHT;
     context->bubble_margin    = 13;
 
+    context->style = eventd_nd_style_new(NULL);
+
     return context;
 }
 
 static void
 _eventd_nd_uninit(EventdPluginContext *context)
 {
+    eventd_nd_style_free(context->style);
+
     eventd_nd_notification_uninit();
 
     eventd_nd_uninit(context->daemon);
@@ -226,7 +231,7 @@ _eventd_nd_event_action(EventdPluginContext *context, EventdEvent *event)
 
     notification = eventd_nd_notification_new(event, nd_event->title, nd_event->message, nd_event->icon, nd_event->overlay_icon);
 
-    eventd_nd_event_action(context->daemon, event, notification);
+    eventd_nd_event_action(context->daemon, event, notification, context->style);
 
     eventd_nd_notification_free(notification);
 }
