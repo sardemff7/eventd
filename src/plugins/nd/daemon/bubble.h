@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef __EVENTD_ND_NOTIFICATION_H__
-#define __EVENTD_ND_NOTIFICATION_H__
+#ifndef __EVENTD_ND_BUBBLE_H__
+#define __EVENTD_ND_BUBBLE_H__
 
 void eventd_nd_bubble_init(void);
 void eventd_nd_bubble_uninit(void);
@@ -29,4 +29,4 @@ void eventd_nd_bubble_uninit(void);
 EventdNdBubble *eventd_nd_bubble_show(EventdEvent *event, EventdNdNotification *notification, EventdNdStyle *style, GList *displays);
 void eventd_nd_bubble_hide(gpointer bubble);
 
-#endif /* __EVENTD_ND_NOTIFICATION_H__ */
+#endif /* __EVENTD_ND_BUBBLE_H__ */

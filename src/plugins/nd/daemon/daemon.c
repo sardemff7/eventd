@@ -28,7 +28,7 @@
 
 #include <libeventd-event.h>
 
-#include "../nd.h"
+#include <eventd-nd-notification.h>
 
 #include "../types.h"
 #include "bubble.h"

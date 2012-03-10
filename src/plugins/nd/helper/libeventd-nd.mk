@@ -3,13 +3,15 @@ pkglib_LTLIBRARIES += \
 	libeventd-nd.la
 
 pkginclude_HEADERS += \
-	include/eventd-nd-style.h
+	include/eventd-nd-style.h \
+	include/eventd-nd-notification.h
 
 EXTRA_DIST += \
 	src/plugins/nd/helper/libeventd-nd.sym
 
 libeventd_nd_la_SOURCES = \
-	src/plugins/nd/helper/style.c
+	src/plugins/nd/helper/style.c \
+	src/plugins/nd/helper/notification.c
 
 libeventd_nd_la_CFLAGS = \
 	$(AM_CFLAGS) \

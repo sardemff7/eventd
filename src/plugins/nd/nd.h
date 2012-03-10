@@ -32,15 +32,4 @@ typedef struct {
     gdouble scale;
 } EventdNdEvent;
 
-struct _EventdNdNotification {
-    gchar *title;
-    gchar *message;
-    guchar *icon;
-    gsize icon_length;
-    const gchar *icon_format;
-    guchar *overlay_icon;
-    gsize overlay_icon_length;
-    const gchar *overlay_icon_format;
-};
-
 #endif /* __EVENTD_ND_EVENT_H__ */

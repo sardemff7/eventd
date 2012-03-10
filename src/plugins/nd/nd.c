@@ -30,7 +30,8 @@
 #include <eventd-plugin.h>
 #include <libeventd-event.h>
 #include <libeventd-config.h>
-#include <libeventd-regex.h>
+
+#include <eventd-nd-notification.h>
 
 #include "types.h"
 #include "daemon/daemon.h"
@@ -147,73 +148,6 @@ skip:
     g_free(title);
 }
 
-static void
-_eventd_nd_notification_icon_data_from_file(gchar *path, guchar **data, gsize *length)
-{
-    GError *error = NULL;
-
-    if ( *path == 0 )
-        return;
-
-    if ( ! g_file_get_contents(path, (gchar **)data, length, &error) )
-        g_warning("Couldn’t load file '%s': %s", path, error->message);
-    g_clear_error(&error);
-
-    g_free(path);
-}
-
-static void
-_eventd_nd_notification_icon_data_from_base64(EventdEvent *event, const gchar *name, guchar **data, gsize *length, const gchar **format)
-{
-    const gchar *base64;
-    gchar *format_name;
-
-    base64 = eventd_event_get_data(event, name);
-    if ( base64 != NULL )
-        *data = g_base64_decode(base64, length);
-
-    format_name = g_strconcat(name, "-format", NULL);
-    *format = eventd_event_get_data(event, format_name);
-    g_free(format_name);
-}
-
-static EventdNdNotification *
-_eventd_nd_notification_new(EventdEvent *event, EventdNdEvent *nd_event)
-{
-    EventdNdNotification *notification;
-    gchar *icon;
-
-    notification = g_new0(EventdNdNotification, 1);
-
-    notification->title = libeventd_regex_replace_event_data(nd_event->title, event, NULL, NULL);
-
-    notification->message = libeventd_regex_replace_event_data(nd_event->message, event, NULL, NULL);
-
-    if ( ( icon = libeventd_config_get_filename(nd_event->icon, event, "icons") ) != NULL )
-        _eventd_nd_notification_icon_data_from_file(icon, &notification->icon, &notification->icon_length);
-    else
-        _eventd_nd_notification_icon_data_from_base64(event, nd_event->icon, &notification->icon, &notification->icon_length, &notification->icon_format);
-
-    if ( ( icon = libeventd_config_get_filename(nd_event->overlay_icon, event, "icons") ) != NULL )
-        _eventd_nd_notification_icon_data_from_file(icon, &notification->overlay_icon, &notification->overlay_icon_length);
-    else
-        _eventd_nd_notification_icon_data_from_base64(event, nd_event->overlay_icon, &notification->overlay_icon, &notification->overlay_icon_length, &notification->overlay_icon_format);
-
-    return notification;
-}
-
-
-static void
-_eventd_nd_notification_free(EventdNdNotification *notification)
-{
-    g_free(notification->overlay_icon);
-    g_free(notification->icon);
-    g_free(notification->message);
-    g_free(notification->title);
-
-    g_free(notification);
-}
-
 static EventdPluginContext *
 _eventd_nd_init(EventdCoreContext *core, EventdCoreInterface *interface)
 {
@@ -225,7 +159,7 @@ _eventd_nd_init(EventdCoreContext *core, EventdCoreInterface *interface)
 
     context->daemon = eventd_nd_init();
 
-    libeventd_regex_init();
+    eventd_nd_notification_init();
 
     /* default bubble position */
     context->bubble_anchor    = EVENTD_ND_STYLE_ANCHOR_TOP_RIGHT;
@@ -237,7 +171,7 @@ _eventd_nd_init(EventdCoreContext *core, EventdCoreInterface *interface)
 static void
 _eventd_nd_uninit(EventdPluginContext *context)
 {
-    libeventd_regex_clean();
+    eventd_nd_notification_uninit();
 
     eventd_nd_uninit(context->daemon);
 
@@ -293,11 +227,11 @@ _eventd_nd_event_action(EventdPluginContext *context, EventdEvent *event)
     if ( nd_event->disable )
         return;
 
-    notification = _eventd_nd_notification_new(event, nd_event);
+    notification = eventd_nd_notification_new(event, nd_event->title, nd_event->message, nd_event->icon, nd_event->overlay_icon);
 
     eventd_nd_event_action(context->daemon, event, notification);
 
-    _eventd_nd_notification_free(notification);
+    eventd_nd_notification_free(notification);
 }
 
 static void

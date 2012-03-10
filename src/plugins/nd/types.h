@@ -25,6 +25,7 @@
 
 #include <eventd-nd-backend.h>
 #include <eventd-nd-style.h>
+#include <eventd-nd-notification.h>
 
 typedef struct {
     EventdNdBackend *backend;
@@ -37,6 +38,5 @@ typedef struct {
 } EventdNdSurfaceContext;
 
 typedef struct _EventdNdBubble EventdNdBubble;
-typedef struct _EventdNdNotification EventdNdNotification;
 
 #endif /* __EVENTD_ND_TYPES_H__ */

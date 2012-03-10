@@ -32,7 +32,8 @@
 
 #include <libeventd-event-types.h>
 
-#include "../nd.h"
+#include <eventd-nd-notification.h>
+
 #include "../icon.h"
 
 #include "../types.h"
@@ -156,11 +157,11 @@ _eventd_nd_bubble_text_split(EventdNdNotification *notification, EventdNdStyle *
     guint8 max;
     guint size;
 
-    escaped_title = g_markup_escape_text(notification->title, -1);
+    escaped_title = g_markup_escape_text(eventd_nd_notification_get_title(notification), -1);
     lines = g_list_prepend(lines, _eventd_nd_bubble_text_line_new(escaped_title));
     g_free(escaped_title);
 
-    message_lines = _eventd_nd_bubble_message_escape_and_split(notification->message);
+    message_lines = _eventd_nd_bubble_message_escape_and_split(eventd_nd_notification_get_message(notification));
 
     max = eventd_nd_style_get_message_max_lines(style);
     size = g_strv_length(message_lines);
@@ -590,6 +591,13 @@ eventd_nd_bubble_show(EventdEvent *event, EventdNdNotification *notification, Ev
     gint width;
     gint height;
 
+    const guchar *icon_data;
+    gsize icon_length;
+    const gchar *icon_format;
+    const guchar *overlay_icon_data;
+    gsize overlay_icon_length;
+    const gchar *overlay_icon_format;
+
     cairo_surface_t *icon = NULL;
 
     GList *lines = NULL;
@@ -608,9 +616,11 @@ eventd_nd_bubble_show(EventdEvent *event, EventdNdNotification *notification, Ev
     /* proccess data */
     lines = _eventd_nd_bubble_text_process(notification, style, &text_height, &text_width);
 
+    eventd_nd_notification_get_icon(notification, &icon_data, &icon_length, &icon_format);
+    eventd_nd_notification_get_overlay_icon(notification, &overlay_icon_data, &overlay_icon_length, &overlay_icon_format);
     icon = _eventd_nd_bubble_icon_process(style,
-                                          _eventd_nd_bubble_get_icon_surface(notification->icon, notification->icon_length, notification->icon_format),
-                                          _eventd_nd_bubble_get_icon_surface(notification->overlay_icon, notification->overlay_icon_length, notification->overlay_icon_format),
+                                          _eventd_nd_bubble_get_icon_surface(icon_data, icon_length, icon_format),
+                                          _eventd_nd_bubble_get_icon_surface(overlay_icon_data, overlay_icon_length, overlay_icon_format),
                                           &icon_width, &icon_height);
 
     /* compute the bubble size */
