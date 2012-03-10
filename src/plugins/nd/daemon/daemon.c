@@ -168,7 +168,7 @@ eventd_nd_init()
 
     _eventd_nd_backend_load(context);
 
-    context->style = eventd_nd_style_new();
+    context->style = eventd_nd_style_new(NULL);
 
     context->bubbles = g_hash_table_new_full(g_direct_hash, g_direct_equal, g_object_unref, _eventd_nd_surface_hide_all);
 

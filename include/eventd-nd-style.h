@@ -32,7 +32,7 @@ typedef struct {
 
 typedef struct _EventdNdStyle EventdNdStyle;
 
-EventdNdStyle *eventd_nd_style_new(void);
+EventdNdStyle *eventd_nd_style_new(EventdNdStyle *parent);
 void eventd_nd_style_free(EventdNdStyle *style);
 
 gint eventd_nd_style_get_bubble_min_width(EventdNdStyle *style);

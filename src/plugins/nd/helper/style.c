@@ -117,6 +117,35 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
 }
 
 static void
+_eventd_nd_style_init_parent(EventdNdStyle *self, EventdNdStyle *parent)
+{
+    /* bubble geometry */
+    self->bubble_min_width = parent->bubble_min_width;
+    self->bubble_max_width = parent->bubble_max_width;
+
+    /* bubble style */
+    self->bubble_padding = parent->bubble_padding;
+    self->bubble_radius  = parent->bubble_radius;
+    self->bubble_colour  = parent->bubble_colour;
+
+    /* icon */
+    self->icon_max_width  = parent->icon_max_width;
+    self->icon_max_height = parent->icon_max_height;
+    self->icon_spacing    = parent->icon_spacing;
+    self->overlay_scale   = parent->overlay_scale;
+
+    /* title */
+    self->title_font   = g_strdup(parent->title_font);
+    self->title_colour = parent->title_colour;
+
+    /* message */
+    self->message_spacing   = parent->message_spacing;
+    self->message_max_lines = parent->message_max_lines;
+    self->message_font      = g_strdup(parent->message_font);
+    self->message_colour    = parent->message_colour;
+}
+
+static void
 _eventd_nd_style_load_dir(EventdNdStyle *style, const gchar *base_dir)
 {
     GError *error = NULL;
@@ -219,13 +248,16 @@ fail:
 }
 
 EventdNdStyle *
-eventd_nd_style_new()
+eventd_nd_style_new(EventdNdStyle *parent)
 {
     EventdNdStyle *style;
 
     style = g_new0(EventdNdStyle, 1);
 
-    _eventd_nd_style_init_defaults(style);
+    if ( parent == NULL )
+        _eventd_nd_style_init_defaults(style);
+    else
+        _eventd_nd_style_init_parent(style, parent);
 
     _eventd_nd_style_load_dir(style, DATADIR);
     _eventd_nd_style_load_dir(style, SYSCONFDIR);
