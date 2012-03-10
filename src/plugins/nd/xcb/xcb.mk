@@ -3,7 +3,7 @@ ndbackends_LTLIBRARIES += \
 	xcb.la
 
 xcb_la_SOURCES = \
-	src/plugins/nd/daemon/backends/xcb.c
+	src/plugins/nd/xcb/xcb.c
 
 xcb_la_CFLAGS = \
 	$(AM_CFLAGS) \

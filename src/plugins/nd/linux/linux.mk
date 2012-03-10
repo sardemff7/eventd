@@ -3,7 +3,7 @@ ndbackends_LTLIBRARIES += \
 	linux.la
 
 linux_la_SOURCES = \
-	src/plugins/nd/daemon/backends/linux.c
+	src/plugins/nd/linux/linux.c
 
 linux_la_CFLAGS = \
 	$(AM_CFLAGS) \

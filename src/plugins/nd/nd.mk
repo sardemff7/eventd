@@ -39,11 +39,11 @@ ndbackendsdir = $(pluginsdir)/nd
 ndbackends_LTLIBRARIES =
 
 if ENABLE_XCB
-include src/plugins/nd/daemon/backends/xcb.mk
+include src/plugins/nd/xcb/xcb.mk
 endif
 
 if ENABLE_LINUX_FB
-include src/plugins/nd/daemon/backends/linux.mk
+include src/plugins/nd/linux/linux.mk
 endif
 
 #
