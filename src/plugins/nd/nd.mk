@@ -6,7 +6,6 @@ pkginclude_HEADERS += \
 	include/eventd-nd-backend.h
 
 nd_la_SOURCES = \
-	src/plugins/nd/daemon/backends/backend.h \
 	src/plugins/nd/daemon/daemon.h \
 	src/plugins/nd/daemon/daemon.c \
 	src/plugins/nd/types.h \
