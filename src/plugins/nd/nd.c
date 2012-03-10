@@ -39,6 +39,7 @@ struct _EventdPluginContext {
     EventdNdStyleAnchor bubble_anchor;
     gint bubble_margin;
     EventdNdStyle *style;
+    GHashTable *surfaces;
 };
 
 typedef struct {
@@ -141,6 +142,24 @@ _eventd_nd_event_parse(EventdPluginContext *context, const gchar *event_category
     g_hash_table_insert(context->events, libeventd_config_events_get_name(event_category, event_name), event);
 }
 
+static void
+_eventd_nd_surface_hide(gpointer data)
+{
+    EventdNdSurfaceContext *surface = data;
+
+    surface->backend->surface_hide(surface->surface);
+
+    g_free(surface);
+}
+
+static void
+_eventd_nd_surface_hide_all(gpointer data)
+{
+    GList *surfaces = data;
+
+    g_list_free_full(surfaces, _eventd_nd_surface_hide);
+}
+
 static EventdPluginContext *
 _eventd_nd_init(EventdCoreContext *core, EventdCoreInterface *interface)
 {
@@ -149,6 +168,7 @@ _eventd_nd_init(EventdCoreContext *core, EventdCoreInterface *interface)
     context = g_new0(EventdPluginContext, 1);
 
     context->events = libeventd_config_events_new(_eventd_nd_event_free);
+    context->surfaces = g_hash_table_new_full(g_direct_hash, g_direct_equal, g_object_unref, _eventd_nd_surface_hide_all);
 
     context->daemon = eventd_nd_init();
 
@@ -172,6 +192,7 @@ _eventd_nd_uninit(EventdPluginContext *context)
 
     eventd_nd_uninit(context->daemon);
 
+    g_hash_table_unref(context->surfaces);
     g_hash_table_unref(context->events);
 
     g_free(context);
@@ -214,10 +235,17 @@ _eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
 }
 
 static void
+_eventd_nd_event_ended(EventdEvent *event, EventdEventEndReason reason, EventdPluginContext *context)
+{
+    g_hash_table_remove(context->surfaces, event);
+}
+
+static void
 _eventd_nd_event_action(EventdPluginContext *context, EventdEvent *event)
 {
     EventdNdEvent *nd_event;
     EventdNdNotification *notification;
+    GList *surface;
 
     nd_event = libeventd_config_events_get_event(context->events, eventd_event_get_category(event), eventd_event_get_name(event));
     if ( nd_event == NULL )
@@ -225,7 +253,18 @@ _eventd_nd_event_action(EventdPluginContext *context, EventdEvent *event)
 
     notification = eventd_nd_notification_new(event, nd_event->title, nd_event->message, nd_event->icon, nd_event->overlay_icon);
 
-    eventd_nd_event_action(context->daemon, event, notification, nd_event->style);
+
+    surface = eventd_nd_event_action(context->daemon, event, notification, nd_event->style);
+    if ( surface != NULL )
+    {
+        g_signal_connect(event, "ended", G_CALLBACK(_eventd_nd_event_ended), context);
+
+        /*
+         * TODO: Update an existing bubble
+         */
+
+        g_hash_table_insert(context->surfaces, g_object_ref(event), surface);
+    }
 
     eventd_nd_notification_free(notification);
 }

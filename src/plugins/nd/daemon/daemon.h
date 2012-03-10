@@ -28,6 +28,6 @@ typedef struct _EventdNdContext EventdNdContext;
 EventdNdContext *eventd_nd_init(void);
 void eventd_nd_uninit(EventdNdContext *context);
 void eventd_nd_control_command(EventdNdContext *context, const gchar *command, EventdNdStyleAnchor anchor, gint margin);
-void eventd_nd_event_action(EventdNdContext *context, EventdEvent *event, EventdNdNotification *notification, EventdNdStyle *style);
+GList *eventd_nd_event_action(EventdNdContext *context, EventdEvent *event, EventdNdNotification *notification, EventdNdStyle *style);
 
 #endif /* __EVENTD_ND_DAEMON_H__ */
