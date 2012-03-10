@@ -84,31 +84,29 @@ _eventd_espeak_event_parse(EventdPluginContext *context, const gchar *event_cate
 {
     gboolean disable;
     gchar *message = NULL;
-    gchar *name = NULL;
-    gchar *parent = NULL;
 
     if ( ! g_key_file_has_group(config_file, "espeak") )
         return;
 
     if ( libeventd_config_key_file_get_boolean(config_file, "espeak", "disable", &disable) < 0 )
         return;
-    if ( libeventd_config_key_file_get_string(config_file, "espeak", "message", &message) < 0 )
-        return;
 
-    name = libeventd_config_events_get_name(event_category, event_name);
-    if ( event_name != NULL )
-        parent = g_hash_table_lookup(context->events, event_category);
-
-    if ( ! message )
-        message = g_strdup((parent != NULL ) ? parent : "$text");
-
-    if ( disable )
+    if ( ! disable )
     {
-        g_free(name);
-        g_free(message);
+        if ( libeventd_config_key_file_get_string(config_file, "espeak", "message", &message) < 0 )
+            return;
+        if ( message == NULL )
+        {
+            gchar *parent = NULL;
+
+            if ( event_name != NULL )
+                parent = g_hash_table_lookup(context->events, event_category);
+
+            message = g_strdup(( parent != NULL ) ? parent : "$text");
+        }
     }
-    else
-        g_hash_table_insert(context->events, name, message);
+
+    g_hash_table_insert(context->events, libeventd_config_events_get_name(event_category, event_name), message);
 }
 
 static gchar *
