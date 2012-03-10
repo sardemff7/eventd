@@ -204,8 +204,38 @@ _eventd_nd_xcb_surface_button_release_event_callback(GXcbWindow *window, xcb_but
     eventd_event_end(self->event, EVENTD_EVENT_END_REASON_USER_DISMISS);
 }
 
+static void
+_eventd_nd_xcb_update_bubbles(EventdNdDisplay *display)
+{
+    GList *surface_;
+    guint16 mask = XCB_CONFIG_WINDOW_Y;
+    guint32 vals[] = { 0 };
+    vals[0] = display->y;
+
+    if ( display->anchor_bottom )
+    {
+        for ( surface_ = display->bubbles ; surface_ != NULL ; surface_ = g_list_next(surface_) )
+        {
+            EventdNdSurface *surface = surface_->data;
+            vals[0] -= surface->height;
+            xcb_configure_window(display->xcb_connection, surface->window_id, mask, vals);
+            vals[0] -= display->margin;
+        }
+    }
+    else
+    {
+        for ( surface_ = display->bubbles ; surface_ != NULL ; surface_ = g_list_next(surface_) )
+        {
+            EventdNdSurface *surface = surface_->data;
+            xcb_configure_window(display->xcb_connection, surface->window_id, mask, vals);
+            vals[0] += surface->height + display->margin;
+        }
+    }
+    xcb_flush(display->xcb_connection);
+}
+
 static EventdNdSurface *
-_eventd_nd_xcb_surface_new(EventdEvent *event, EventdNdDisplay *display, gint width, gint height, cairo_surface_t *bubble, cairo_surface_t *shape)
+_eventd_nd_xcb_surface_show(EventdEvent *event, EventdNdDisplay *display, gint width, gint height, cairo_surface_t *bubble, cairo_surface_t *shape)
 {
     guint32 selmask = XCB_CW_OVERRIDE_REDIRECT | XCB_CW_EVENT_MASK;
     guint32 selval[] = { 1, XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_BUTTON_RELEASE };
@@ -261,59 +291,22 @@ _eventd_nd_xcb_surface_new(EventdEvent *event, EventdNdDisplay *display, gint wi
         xcb_free_pixmap(display->xcb_connection, shape_id);
     }
 
-    return surface;
-}
-
-static void
-_eventd_nd_xcb_update_bubbles(EventdNdDisplay *display)
-{
-    GList *surface_;
-    guint16 mask = XCB_CONFIG_WINDOW_Y;
-    guint32 vals[] = { 0 };
-    vals[0] = display->y;
-
-    if ( display->anchor_bottom )
-    {
-        for ( surface_ = display->bubbles ; surface_ != NULL ; surface_ = g_list_next(surface_) )
-        {
-            EventdNdSurface *surface = surface_->data;
-            vals[0] -= surface->height;
-            xcb_configure_window(display->xcb_connection, surface->window_id, mask, vals);
-            vals[0] -= display->margin;
-        }
-    }
-    else
-    {
-        for ( surface_ = display->bubbles ; surface_ != NULL ; surface_ = g_list_next(surface_) )
-        {
-            EventdNdSurface *surface = surface_->data;
-            xcb_configure_window(display->xcb_connection, surface->window_id, mask, vals);
-            vals[0] += surface->height + display->margin;
-        }
-    }
-    xcb_flush(display->xcb_connection);
-}
-static void
-_eventd_nd_xcb_surface_show(EventdNdSurface *surface)
-{
     surface->bubble_ = surface->display->bubbles = g_list_prepend(surface->display->bubbles, surface);
     xcb_map_window(surface->display->xcb_connection, surface->window_id);
     _eventd_nd_xcb_update_bubbles(surface->display);
+
+    return surface;
 }
 
 static void
 _eventd_nd_xcb_surface_hide(EventdNdSurface *surface)
 {
+    if ( surface == NULL )
+        return;
+
     surface->display->bubbles = g_list_delete_link(surface->display->bubbles, surface->bubble_);
     xcb_unmap_window(surface->display->xcb_connection, surface->window_id);
     _eventd_nd_xcb_update_bubbles(surface->display);
-}
-
-static void
-_eventd_nd_xcb_surface_free(EventdNdSurface *surface)
-{
-    if ( surface == NULL )
-        return;
 
     g_xcb_window_free(surface->window);
     xcb_flush(surface->display->xcb_connection);
@@ -332,8 +325,6 @@ eventd_nd_backend_init(EventdNdBackend *backend)
     backend->display_new = _eventd_nd_xcb_display_new;
     backend->display_free = _eventd_nd_xcb_display_free;
 
-    backend->surface_new = _eventd_nd_xcb_surface_new;
-    backend->surface_free = _eventd_nd_xcb_surface_free;
     backend->surface_show = _eventd_nd_xcb_surface_show;
     backend->surface_hide = _eventd_nd_xcb_surface_hide;
 }

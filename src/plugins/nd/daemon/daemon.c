@@ -157,7 +157,7 @@ eventd_nd_init()
 
     context->style = eventd_nd_style_new();
 
-    context->bubbles = g_hash_table_new_full(g_direct_hash, g_direct_equal, g_object_unref, eventd_nd_bubble_free);
+    context->bubbles = g_hash_table_new_full(g_direct_hash, g_direct_equal, g_object_unref, eventd_nd_bubble_hide);
 
     return context;
 }
@@ -242,12 +242,6 @@ eventd_nd_control_command(EventdNdContext *context, const gchar *command, Eventd
 static void
 _eventd_nd_event_ended(EventdEvent *event, EventdEventEndReason reason, EventdNdContext *context)
 {
-    EventdNdBubble *bubble;
-
-    bubble = g_hash_table_lookup(context->bubbles, event);
-
-    eventd_nd_bubble_hide(bubble);
-
     g_hash_table_remove(context->bubbles, event);
 }
 
@@ -264,8 +258,7 @@ eventd_nd_event_action(EventdNdContext *context, EventdEvent *event, EventdNdNot
     /*
      * TODO: Update an existing bubble
      */
-    bubble = eventd_nd_bubble_new(event, notification, context->style, context->displays);
+    bubble = eventd_nd_bubble_show(event, notification, context->style, context->displays);
 
-    eventd_nd_bubble_show(bubble);
     g_hash_table_insert(context->bubbles, g_object_ref(event), bubble);
 }

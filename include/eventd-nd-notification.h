@@ -23,10 +23,14 @@
 #ifndef __EVENTD_ND_NOTIFICATION_H__
 #define __EVENTD_ND_NOTIFICATION_H__
 
-void eventd_nd_bubble_init(void);
-void eventd_nd_bubble_uninit(void);
+#include <libeventd-event-types.h>
 
-EventdNdBubble *eventd_nd_bubble_show(EventdEvent *event, EventdNdNotification *notification, EventdNdStyle *style, GList *displays);
-void eventd_nd_bubble_hide(gpointer bubble);
+typedef struct _EventdNdNotification EventdNdNotification;
+
+void eventd_nd_notification_init();
+void eventd_nd_notification_uninit();
+
+EventdNdNotification *eventd_nd_notification_new(EventdEvent *event, const gchar *title, const gchar *message, const gchar *icon_name, const gchar *overlay_icon_name);
+void eventd_nd_notification_free(EventdNdNotification *notification);
 
 #endif /* __EVENTD_ND_NOTIFICATION_H__ */

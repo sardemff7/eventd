@@ -582,7 +582,7 @@ _eventd_nd_bubble_icon_draw(cairo_t *cr, cairo_surface_t *icon, gint x, gint y)
 }
 
 EventdNdBubble *
-eventd_nd_bubble_new(EventdEvent *event, EventdNdNotification *notification, EventdNdStyle *style, GList *displays)
+eventd_nd_bubble_show(EventdEvent *event, EventdNdNotification *notification, EventdNdStyle *style, GList *displays)
 {
     gint padding;
     gint min_width, max_width;
@@ -645,7 +645,7 @@ eventd_nd_bubble_new(EventdEvent *event, EventdNdNotification *notification, Eve
     {
         EventdNdDisplayContext *display_ = display->data;
         EventdNdSurface *surface;
-        surface = display_->backend->surface_new(event, display_->display, width, height, bubble, shape);
+        surface = display_->backend->surface_show(event, display_->display, width, height, bubble, shape);
         if ( surface != NULL )
         {
             EventdNdSurfaceContext *surface_context;
@@ -664,46 +664,22 @@ eventd_nd_bubble_new(EventdEvent *event, EventdNdNotification *notification, Eve
     return bubble_surfaces;
 }
 
-void
-eventd_nd_bubble_show(EventdNdBubble *bubble)
-{
-    GList *surface_;
-
-    for ( surface_ = bubble->surfaces ; surface_ != NULL ; surface_ = g_list_next(surface_) )
-    {
-        EventdNdSurfaceContext *surface = surface_->data;
-        surface->backend->surface_show(surface->surface);
-    }
-}
-
-void
-eventd_nd_bubble_hide(EventdNdBubble *bubble)
-{
-    GList *surface_;
-
-    for ( surface_ = bubble->surfaces ; surface_ != NULL ; surface_ = g_list_next(surface_) )
-    {
-        EventdNdSurfaceContext *surface = surface_->data;
-        surface->backend->surface_hide(surface->surface);
-    }
-}
-
 static void
-_eventd_nd_bubble_surface_free(gpointer data)
+_eventd_nd_bubble_surface_hide(gpointer data)
 {
     EventdNdSurfaceContext *surface = data;
 
-    surface->backend->surface_free(surface->surface);
+    surface->backend->surface_hide(surface->surface);
 
     g_free(surface);
 }
 
 void
-eventd_nd_bubble_free(gpointer data)
+eventd_nd_bubble_hide(gpointer data)
 {
     EventdNdBubble *bubble = data;
 
-    g_list_free_full(bubble->surfaces, _eventd_nd_bubble_surface_free);
+    g_list_free_full(bubble->surfaces, _eventd_nd_bubble_surface_hide);
 
     g_free(bubble);
 }

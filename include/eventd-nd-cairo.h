@@ -20,13 +20,13 @@
  *
  */
 
-#ifndef __EVENTD_ND_NOTIFICATION_H__
-#define __EVENTD_ND_NOTIFICATION_H__
+#ifndef __EVENTD_ND_CAIRO_H__
+#define __EVENTD_ND_CAIRO_H__
 
-void eventd_nd_bubble_init(void);
-void eventd_nd_bubble_uninit(void);
+void eventd_nd_cairo_init(void);
+void eventd_nd_cairo_uninit(void);
 
-EventdNdBubble *eventd_nd_bubble_show(EventdEvent *event, EventdNdNotification *notification, EventdNdStyle *style, GList *displays);
-void eventd_nd_bubble_hide(gpointer bubble);
+EventdNdBubble *eventd_nd_cairo_show(EventdEvent *event, EventdNdNotification *notification, EventdNdStyle *style, GList *displays);
+void eventd_nd_cairo_hide(gpointer bubble);
 
-#endif /* __EVENTD_ND_NOTIFICATION_H__ */
+#endif /* __EVENTD_ND_CAIRO_H__ */

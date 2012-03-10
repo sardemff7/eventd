@@ -166,7 +166,7 @@ alpha_div(guchar c, guchar a)
 }
 
 static EventdNdSurface *
-_eventd_nd_linux_surface_new(EventdEvent *event, EventdNdDisplay *display, gint width, gint height, cairo_surface_t *bubble, cairo_surface_t *shape)
+_eventd_nd_linux_surface_show(EventdEvent *event, EventdNdDisplay *display, gint width, gint height, cairo_surface_t *bubble, cairo_surface_t *shape)
 {
     EventdNdSurface *self;
     gint x, y;
@@ -188,12 +188,6 @@ _eventd_nd_linux_surface_new(EventdEvent *event, EventdNdDisplay *display, gint 
 
     self->save = g_malloc(self->channels * cairo_image_surface_get_height(self->bubble) * cairo_image_surface_get_width(self->bubble));
 
-    return self;
-}
-
-static void
-_eventd_nd_linux_surface_show(EventdNdSurface *self)
-{
     guchar *spixels, *sline;
     gint sstride;
     guchar *pixels, *line;
@@ -241,6 +235,8 @@ _eventd_nd_linux_surface_show(EventdNdSurface *self)
         pixels += self->stride;
         cpixels += cstride;
     }
+
+    return self;
 }
 
 static void
@@ -276,11 +272,7 @@ _eventd_nd_linux_surface_hide(EventdNdSurface *self)
         pixels += self->stride;
         spixels += sstride;
     }
-}
 
-static void
-_eventd_nd_linux_surface_free(EventdNdSurface *self)
-{
     cairo_surface_destroy(self->bubble);
 
     g_free(self->save);
@@ -298,8 +290,6 @@ eventd_nd_backend_init(EventdNdBackend *backend)
     backend->display_new = _eventd_nd_linux_display_new;
     backend->display_free = _eventd_nd_linux_display_free;
 
-    backend->surface_new = _eventd_nd_linux_surface_new;
-    backend->surface_free = _eventd_nd_linux_surface_free;
     backend->surface_show = _eventd_nd_linux_surface_show;
     backend->surface_hide = _eventd_nd_linux_surface_hide;
 }
