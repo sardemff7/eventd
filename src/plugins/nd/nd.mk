@@ -6,11 +6,7 @@ pkginclude_HEADERS += \
 	include/eventd-nd-backend.h
 
 nd_la_SOURCES = \
-	src/plugins/nd/icon.h \
-	src/plugins/nd/icon.c \
 	src/plugins/nd/daemon/backends/backend.h \
-	src/plugins/nd/daemon/bubble.h \
-	src/plugins/nd/daemon/bubble.c \
 	src/plugins/nd/daemon/daemon.h \
 	src/plugins/nd/daemon/daemon.c \
 	src/plugins/nd/types.h \
@@ -23,10 +19,6 @@ nd_la_CFLAGS = \
 	-D SYSCONFDIR=\"$(sysconfdir)\" \
 	-D LIBDIR=\"$(libdir)\" \
 	-D DATADIR=\"$(datadir)\" \
-	$(NOTIFY_CFLAGS) \
-	$(CAIRO_CFLAGS) \
-	$(PANGO_CFLAGS) \
-	$(GDK_PIXBUF_CFLAGS) \
 	$(GLIB_CFLAGS)
 
 nd_la_LDFLAGS = \
@@ -37,13 +29,10 @@ nd_la_LIBADD = \
 	libeventd-event.la \
 	libeventd.la \
 	libeventd-nd.la \
-	$(NOTIFY_LIBS) \
-	$(CAIRO_LIBS) \
-	$(PANGO_LIBS) \
-	$(GDK_PIXBUF_LIBS) \
 	$(GLIB_LIBS)
 
 include src/plugins/nd/helper/libeventd-nd.mk
+include src/plugins/nd/cairo/libeventd-nd-cairo.mk
 
 ndbackendsdir = $(pluginsdir)/nd
 

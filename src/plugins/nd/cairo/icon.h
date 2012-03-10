@@ -20,13 +20,9 @@
  *
  */
 
-#ifndef __EVENTD_ND_BUBBLE_H__
-#define __EVENTD_ND_BUBBLE_H__
+#ifndef __EVENTD_ND_CAIRO_ICON_H__
+#define __EVENTD_ND_CAIRO_ICON_H__
 
-void eventd_nd_bubble_init(void);
-void eventd_nd_bubble_uninit(void);
+GdkPixbuf *eventd_nd_icon_get_pixbuf_from_data(const guchar *data, gsize length, guint size);
 
-EventdNdBubble *eventd_nd_bubble_show(EventdEvent *event, EventdNdNotification *notification, EventdNdStyle *style, GList *displays);
-void eventd_nd_bubble_hide(gpointer bubble);
-
-#endif /* __EVENTD_ND_BUBBLE_H__ */
+#endif /* __EVENTD_ND_CAIRO_ICON_H__ */

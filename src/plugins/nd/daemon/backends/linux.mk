@@ -16,5 +16,6 @@ linux_la_LDFLAGS = \
 	-avoid-version -module -export-symbols-regex eventd_nd_backend_init
 
 linux_la_LIBADD = \
+	libeventd-nd-cairo.la \
 	$(CAIRO_LIBS) \
 	$(GLIB_LIBS)

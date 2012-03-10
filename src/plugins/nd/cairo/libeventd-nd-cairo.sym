@@ -1,0 +1,3 @@
+eventd_nd_cairo_get_surfaces
+eventd_nd_cairo_init
+eventd_nd_cairo_uninit

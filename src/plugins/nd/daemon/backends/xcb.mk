@@ -19,6 +19,7 @@ xcb_la_LDFLAGS = \
 
 xcb_la_LIBADD = \
 	libeventd-event.la \
+	libeventd-nd-cairo.la \
 	$(XCB_LIBS) \
 	$(CAIRO_LIBS) \
 	$(GOBJECT_LIBS) \

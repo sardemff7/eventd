@@ -33,7 +33,10 @@
 
 #include <libeventd-event.h>
 
+#include <eventd-nd-style.h>
+#include <eventd-nd-notification.h>
 #include <eventd-nd-backend.h>
+#include <eventd-nd-cairo.h>
 
 struct _EventdNdBackendContext {
     GSList *displays;
@@ -69,6 +72,8 @@ _eventd_nd_xcb_init()
 
     context = g_new0(EventdNdBackendContext, 1);
 
+    eventd_nd_cairo_init();
+
     return context;
 }
 
@@ -76,6 +81,8 @@ static void
 _eventd_nd_xcb_uninit(EventdNdBackendContext *context)
 {
     g_slist_free_full(context->displays, g_free);
+
+    eventd_nd_cairo_uninit();
 
     g_free(context);
 }
@@ -235,12 +242,23 @@ _eventd_nd_xcb_update_bubbles(EventdNdDisplay *display)
 }
 
 static EventdNdSurface *
-_eventd_nd_xcb_surface_show(EventdEvent *event, EventdNdDisplay *display, gint width, gint height, cairo_surface_t *bubble, cairo_surface_t *shape)
+_eventd_nd_xcb_surface_show(EventdEvent *event, EventdNdDisplay *display, EventdNdNotification *notification, EventdNdStyle *style)
 {
     guint32 selmask = XCB_CW_OVERRIDE_REDIRECT | XCB_CW_EVENT_MASK;
     guint32 selval[] = { 1, XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_BUTTON_RELEASE };
     gint x = 0;
     EventdNdSurface *surface;
+
+    cairo_surface_t *bubble;
+    cairo_surface_t *shape;
+
+    gint width;
+    gint height;
+
+    eventd_nd_cairo_get_surfaces(event, notification, style, &bubble, &shape);
+
+    width = cairo_image_surface_get_width(bubble);
+    height = cairo_image_surface_get_height(bubble);
 
     surface = g_new0(EventdNdSurface, 1);
 

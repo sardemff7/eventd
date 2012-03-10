@@ -32,19 +32,18 @@
 
 #include <libeventd-event-types.h>
 
+#include <eventd-nd-style.h>
 #include <eventd-nd-notification.h>
 
-#include "../icon.h"
+#include "icon.h"
 
-#include "../types.h"
-
-#include "bubble.h"
+#include <eventd-nd-cairo.h>
 
 static GRegex *regex_amp = NULL;
 static GRegex *regex_markup = NULL;
 
 void
-eventd_nd_bubble_init()
+eventd_nd_cairo_init()
 {
     GError *error = NULL;
 
@@ -70,7 +69,7 @@ eventd_nd_bubble_init()
 }
 
 void
-eventd_nd_bubble_uninit()
+eventd_nd_cairo_uninit()
 {
     if ( regex_markup != NULL )
         g_regex_unref(regex_markup);
@@ -89,7 +88,7 @@ struct _EventdNdBubble {
 };
 
 static EventdNdTextLine *
-_eventd_nd_bubble_text_line_new(const gchar *text)
+_eventd_nd_cairo_text_line_new(const gchar *text)
 {
     EventdNdTextLine *line;
 
@@ -100,7 +99,7 @@ _eventd_nd_bubble_text_line_new(const gchar *text)
 }
 
 static void
-_eventd_nd_bubble_text_line_free(gpointer data)
+_eventd_nd_cairo_text_line_free(gpointer data)
 {
     EventdNdTextLine *line = data;
 
@@ -111,7 +110,7 @@ _eventd_nd_bubble_text_line_free(gpointer data)
 }
 
 static gchar **
-_eventd_nd_bubble_message_escape_and_split(const gchar *message)
+_eventd_nd_cairo_message_escape_and_split(const gchar *message)
 {
     GError *error = NULL;
     gchar *escaped, *tmp = NULL;
@@ -148,7 +147,7 @@ fallback:
 }
 
 static GList *
-_eventd_nd_bubble_text_split(EventdNdNotification *notification, EventdNdStyle *style)
+_eventd_nd_cairo_text_split(EventdNdNotification *notification, EventdNdStyle *style)
 {
     GList *lines = NULL;
     gchar *escaped_title;
@@ -158,25 +157,25 @@ _eventd_nd_bubble_text_split(EventdNdNotification *notification, EventdNdStyle *
     guint size;
 
     escaped_title = g_markup_escape_text(eventd_nd_notification_get_title(notification), -1);
-    lines = g_list_prepend(lines, _eventd_nd_bubble_text_line_new(escaped_title));
+    lines = g_list_prepend(lines, _eventd_nd_cairo_text_line_new(escaped_title));
     g_free(escaped_title);
 
-    message_lines = _eventd_nd_bubble_message_escape_and_split(eventd_nd_notification_get_message(notification));
+    message_lines = _eventd_nd_cairo_message_escape_and_split(eventd_nd_notification_get_message(notification));
 
     max = eventd_nd_style_get_message_max_lines(style);
     size = g_strv_length(message_lines);
 
     if ( size > max )
     {
-        lines = g_list_prepend(lines, _eventd_nd_bubble_text_line_new(*message_lines));
-        lines = g_list_prepend(lines, _eventd_nd_bubble_text_line_new("[…]"));
+        lines = g_list_prepend(lines, _eventd_nd_cairo_text_line_new(*message_lines));
+        lines = g_list_prepend(lines, _eventd_nd_cairo_text_line_new("[…]"));
         message_line = message_lines + size - ( max - 2 );
     }
     else
         message_line = message_lines;
 
     for ( ; *message_line != NULL ; ++message_line )
-        lines = g_list_prepend(lines, _eventd_nd_bubble_text_line_new(*message_line));
+        lines = g_list_prepend(lines, _eventd_nd_cairo_text_line_new(*message_line));
 
     g_strfreev(message_lines);
 
@@ -184,7 +183,7 @@ _eventd_nd_bubble_text_split(EventdNdNotification *notification, EventdNdStyle *
 }
 
 static void
-_eventd_nd_bubble_text_process_line(EventdNdTextLine *line, PangoContext *pango_context, PangoFontDescription *font, gint *text_height, gint *text_width)
+_eventd_nd_cairo_text_process_line(EventdNdTextLine *line, PangoContext *pango_context, PangoFontDescription *font, gint *text_height, gint *text_width)
 {
     gint w;
 
@@ -200,7 +199,7 @@ _eventd_nd_bubble_text_process_line(EventdNdTextLine *line, PangoContext *pango_
 }
 
 static GList *
-_eventd_nd_bubble_text_process(EventdNdNotification *notification, EventdNdStyle *style, gint *text_height, gint *text_width)
+_eventd_nd_cairo_text_process(EventdNdNotification *notification, EventdNdStyle *style, gint *text_height, gint *text_width)
 {
     GList *ret;
     GList *lines = NULL;
@@ -208,7 +207,7 @@ _eventd_nd_bubble_text_process(EventdNdNotification *notification, EventdNdStyle
     PangoContext *pango_context;
     PangoFontDescription *font;
 
-    lines = _eventd_nd_bubble_text_split(notification, style);
+    lines = _eventd_nd_cairo_text_split(notification, style);
 
     *text_height = 0;
     *text_width = 0;
@@ -219,7 +218,7 @@ _eventd_nd_bubble_text_process(EventdNdNotification *notification, EventdNdStyle
     ret = g_list_first(lines);
     line = lines->data;
     font = pango_font_description_from_string(eventd_nd_style_get_title_font(style));
-    _eventd_nd_bubble_text_process_line(line, pango_context, font, text_height, text_width);
+    _eventd_nd_cairo_text_process_line(line, pango_context, font, text_height, text_width);
     pango_font_description_free(font);
 
     lines = g_list_next(lines);
@@ -233,7 +232,7 @@ _eventd_nd_bubble_text_process(EventdNdNotification *notification, EventdNdStyle
 
         font = pango_font_description_from_string(eventd_nd_style_get_message_font(style));
         for ( ; lines != NULL ; lines = g_list_next(lines) )
-            _eventd_nd_bubble_text_process_line(lines->data, pango_context, font, text_height, text_width);
+            _eventd_nd_cairo_text_process_line(lines->data, pango_context, font, text_height, text_width);
         pango_font_description_free(font);
     }
 
@@ -243,7 +242,7 @@ _eventd_nd_bubble_text_process(EventdNdNotification *notification, EventdNdStyle
 }
 
 static gdouble
-_eventd_nd_bubble_limit_icon_size(EventdNdStyle *style, gint width, gint height, gint *r_width, gint *r_height)
+_eventd_nd_cairo_limit_icon_size(EventdNdStyle *style, gint width, gint height, gint *r_width, gint *r_height)
 {
     gdouble max_width, max_height;
     gdouble s = 1.0;
@@ -270,7 +269,7 @@ _eventd_nd_bubble_limit_icon_size(EventdNdStyle *style, gint width, gint height,
 }
 
 /*
- * _eventd_nd_bubble_get_icon_surface and alpha_mult
+ * _eventd_nd_cairo_get_icon_surface and alpha_mult
  * are inspired by gdk_cairo_set_source_pixbuf
  * GDK is:
  *     Copyright (C) 2005 Red Hat, Inc.
@@ -304,7 +303,7 @@ alpha_mult(guchar c, guchar a)
 }
 
 static cairo_surface_t *
-_eventd_nd_bubble_get_icon_surface_from_data(gint width, gint height, const guchar *pixels, gint stride, gboolean alpha)
+_eventd_nd_cairo_get_icon_surface_from_data(gint width, gint height, const guchar *pixels, gint stride, gboolean alpha)
 {
     cairo_surface_t *surface = NULL;
 
@@ -351,7 +350,7 @@ _eventd_nd_bubble_get_icon_surface_from_data(gint width, gint height, const guch
 }
 
 static cairo_surface_t *
-_eventd_nd_bubble_get_icon_surface(const guchar *data, gsize length, const gchar *format)
+_eventd_nd_cairo_get_icon_surface(const guchar *data, gsize length, const gchar *format)
 {
     GdkPixbuf *pixbuf = NULL;
     cairo_surface_t *r;
@@ -383,7 +382,7 @@ _eventd_nd_bubble_get_icon_surface(const guchar *data, gsize length, const gchar
         alpha = gdk_pixbuf_get_has_alpha(pixbuf);
     }
 
-    r = _eventd_nd_bubble_get_icon_surface_from_data(width, height, pixels, stride, alpha);
+    r = _eventd_nd_cairo_get_icon_surface_from_data(width, height, pixels, stride, alpha);
     if ( pixbuf != NULL )
         g_object_unref(pixbuf);
 
@@ -391,7 +390,7 @@ _eventd_nd_bubble_get_icon_surface(const guchar *data, gsize length, const gchar
 }
 
 static cairo_surface_t *
-_eventd_nd_bubble_icon_process(EventdNdStyle *style, cairo_surface_t *icon, cairo_surface_t *overlay_icon, gint *icon_width, gint *icon_height)
+_eventd_nd_cairo_icon_process(EventdNdStyle *style, cairo_surface_t *icon, cairo_surface_t *overlay_icon, gint *icon_width, gint *icon_height)
 {
     gint w, h;
 
@@ -409,13 +408,13 @@ _eventd_nd_bubble_icon_process(EventdNdStyle *style, cairo_surface_t *icon, cair
         if ( overlay_icon == NULL )
             return NULL;
         else
-            return _eventd_nd_bubble_icon_process(style, overlay_icon, NULL, icon_width, icon_height);
+            return _eventd_nd_cairo_icon_process(style, overlay_icon, NULL, icon_width, icon_height);
     }
 
     w = cairo_image_surface_get_width(icon);
     h = cairo_image_surface_get_height(icon);
 
-    scale = _eventd_nd_bubble_limit_icon_size(style, w, h, icon_width, icon_height);
+    scale = _eventd_nd_cairo_limit_icon_size(style, w, h, icon_width, icon_height);
 
     if ( scale != 1.0 )
     {
@@ -490,7 +489,7 @@ _eventd_nd_bubble_icon_process(EventdNdStyle *style, cairo_surface_t *icon, cair
 
 
 static void
-_eventd_nd_bubble_shape_draw(cairo_t *cr, gint radius, gint width, gint height)
+_eventd_nd_cairo_shape_draw(cairo_t *cr, gint radius, gint width, gint height)
 {
     gint limit;
 
@@ -527,7 +526,7 @@ _eventd_nd_bubble_shape_draw(cairo_t *cr, gint radius, gint width, gint height)
 }
 
 static void
-_eventd_nd_bubble_bubble_draw(cairo_t *cr, Colour colour, gint width, gint height)
+_eventd_nd_cairo_bubble_draw(cairo_t *cr, Colour colour, gint width, gint height)
 {
     cairo_set_source_rgba(cr, colour.r, colour.g, colour.b, colour.a);
 
@@ -537,7 +536,7 @@ _eventd_nd_bubble_bubble_draw(cairo_t *cr, Colour colour, gint width, gint heigh
 }
 
 static void
-_eventd_nd_bubble_text_draw_line(EventdNdTextLine *line, cairo_t *cr, gint offset_x, gint *offset_y)
+_eventd_nd_cairo_text_draw_line(EventdNdTextLine *line, cairo_t *cr, gint offset_x, gint *offset_y)
 {
     cairo_new_path(cr);
 
@@ -551,7 +550,7 @@ _eventd_nd_bubble_text_draw_line(EventdNdTextLine *line, cairo_t *cr, gint offse
 }
 
 static void
-_eventd_nd_bubble_text_draw(cairo_t *cr, GList *lines, EventdNdStyle *style, gint offset_x, gint offset_y)
+_eventd_nd_cairo_text_draw(cairo_t *cr, GList *lines, EventdNdStyle *style, gint offset_x, gint offset_y)
 {
     Colour colour;
 
@@ -559,18 +558,18 @@ _eventd_nd_bubble_text_draw(cairo_t *cr, GList *lines, EventdNdStyle *style, gin
     cairo_set_source_rgba(cr, colour.r, colour.g, colour.b, colour.a);
 
     lines = g_list_first(lines);
-    _eventd_nd_bubble_text_draw_line(lines->data, cr, offset_x, &offset_y);
+    _eventd_nd_cairo_text_draw_line(lines->data, cr, offset_x, &offset_y);
 
     colour = eventd_nd_style_get_message_colour(style);
     cairo_set_source_rgba(cr, colour.r, colour.g, colour.b, colour.a);
     for ( lines = g_list_next(lines) ; lines != NULL ; lines = g_list_next(lines) )
-        _eventd_nd_bubble_text_draw_line(lines->data, cr, offset_x, &offset_y);
+        _eventd_nd_cairo_text_draw_line(lines->data, cr, offset_x, &offset_y);
 
-    g_list_free_full(lines, _eventd_nd_bubble_text_line_free);
+    g_list_free_full(lines, _eventd_nd_cairo_text_line_free);
 }
 
 static void
-_eventd_nd_bubble_icon_draw(cairo_t *cr, cairo_surface_t *icon, gint x, gint y)
+_eventd_nd_cairo_icon_draw(cairo_t *cr, cairo_surface_t *icon, gint x, gint y)
 {
     if ( icon == NULL )
         return;
@@ -582,8 +581,8 @@ _eventd_nd_bubble_icon_draw(cairo_t *cr, cairo_surface_t *icon, gint x, gint y)
     cairo_surface_destroy(icon);
 }
 
-EventdNdBubble *
-eventd_nd_bubble_show(EventdEvent *event, EventdNdNotification *notification, EventdNdStyle *style, GList *displays)
+void
+eventd_nd_cairo_get_surfaces(EventdEvent *event, EventdNdNotification *notification, EventdNdStyle *style, cairo_surface_t **bubble, cairo_surface_t **shape)
 {
     gint padding;
     gint min_width, max_width;
@@ -604,23 +603,16 @@ eventd_nd_bubble_show(EventdEvent *event, EventdNdNotification *notification, Ev
     gint text_width = 0, text_height = 0;
     gint icon_width = 0, icon_height = 0;
 
-    cairo_surface_t *bubble;
-    cairo_surface_t *shape;
     cairo_t *cr;
 
-    EventdNdBubble *bubble_surfaces;
-    GList *display;
-
-    bubble_surfaces = g_new0(EventdNdBubble, 1);
-
     /* proccess data */
-    lines = _eventd_nd_bubble_text_process(notification, style, &text_height, &text_width);
+    lines = _eventd_nd_cairo_text_process(notification, style, &text_height, &text_width);
 
     eventd_nd_notification_get_icon(notification, &icon_data, &icon_length, &icon_format);
     eventd_nd_notification_get_overlay_icon(notification, &overlay_icon_data, &overlay_icon_length, &overlay_icon_format);
-    icon = _eventd_nd_bubble_icon_process(style,
-                                          _eventd_nd_bubble_get_icon_surface(icon_data, icon_length, icon_format),
-                                          _eventd_nd_bubble_get_icon_surface(overlay_icon_data, overlay_icon_length, overlay_icon_format),
+    icon = _eventd_nd_cairo_icon_process(style,
+                                          _eventd_nd_cairo_get_icon_surface(icon_data, icon_length, icon_format),
+                                          _eventd_nd_cairo_get_icon_surface(overlay_icon_data, overlay_icon_length, overlay_icon_format),
                                           &icon_width, &icon_height);
 
     /* compute the bubble size */
@@ -638,58 +630,16 @@ eventd_nd_bubble_show(EventdEvent *event, EventdNdNotification *notification, Ev
     height = 2 * padding + MAX(icon_height, text_height);
 
     /* draw the bubble */
-    bubble = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
-    cr = cairo_create(bubble);
-    _eventd_nd_bubble_bubble_draw(cr, eventd_nd_style_get_bubble_colour(style), width, height);
-    _eventd_nd_bubble_text_draw(cr, lines, style, padding + icon_width, padding);
-    _eventd_nd_bubble_icon_draw(cr, icon, padding, padding);
+    *bubble = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
+    cr = cairo_create(*bubble);
+    _eventd_nd_cairo_bubble_draw(cr, eventd_nd_style_get_bubble_colour(style), width, height);
+    _eventd_nd_cairo_text_draw(cr, lines, style, padding + icon_width, padding);
+    _eventd_nd_cairo_icon_draw(cr, icon, padding, padding);
     cairo_destroy(cr);
 
-    shape = cairo_image_surface_create(CAIRO_FORMAT_A1, width, height);
-    cr = cairo_create(shape);
+    *shape = cairo_image_surface_create(CAIRO_FORMAT_A1, width, height);
+    cr = cairo_create(*shape);
     cairo_set_source_rgba(cr, 0, 0, 0, 1);
-    _eventd_nd_bubble_shape_draw(cr, eventd_nd_style_get_bubble_radius(style), width, height);
+    _eventd_nd_cairo_shape_draw(cr, eventd_nd_style_get_bubble_radius(style), width, height);
     cairo_destroy(cr);
-
-    for ( display = displays ; display != NULL ; display = g_list_next(display) )
-    {
-        EventdNdDisplayContext *display_ = display->data;
-        EventdNdSurface *surface;
-        surface = display_->backend->surface_show(event, display_->display, width, height, bubble, shape);
-        if ( surface != NULL )
-        {
-            EventdNdSurfaceContext *surface_context;
-
-            surface_context = g_new(EventdNdSurfaceContext, 1);
-            surface_context->backend = display_->backend;
-            surface_context->surface = surface;
-
-            bubble_surfaces->surfaces = g_list_prepend(bubble_surfaces->surfaces, surface_context);
-        }
-    }
-
-    cairo_surface_destroy(shape);
-    cairo_surface_destroy(bubble);
-
-    return bubble_surfaces;
-}
-
-static void
-_eventd_nd_bubble_surface_hide(gpointer data)
-{
-    EventdNdSurfaceContext *surface = data;
-
-    surface->backend->surface_hide(surface->surface);
-
-    g_free(surface);
-}
-
-void
-eventd_nd_bubble_hide(gpointer data)
-{
-    EventdNdBubble *bubble = data;
-
-    g_list_free_full(bubble->surfaces, _eventd_nd_bubble_surface_hide);
-
-    g_free(bubble);
 }

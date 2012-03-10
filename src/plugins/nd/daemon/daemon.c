@@ -23,15 +23,12 @@
 #include <glib.h>
 #include <glib-object.h>
 #include <gmodule.h>
-#include <cairo.h>
-#include <pango/pango.h>
 
 #include <libeventd-event.h>
 
 #include <eventd-nd-notification.h>
 
 #include "../types.h"
-#include "bubble.h"
 
 #include "daemon.h"
 
@@ -144,6 +141,24 @@ _eventd_nd_backend_load(EventdNdContext *context)
     g_free(plugins_dir);
 }
 
+static void
+_eventd_nd_surface_hide(gpointer data)
+{
+    EventdNdSurfaceContext *surface = data;
+
+    surface->backend->surface_hide(surface->surface);
+
+    g_free(surface);
+}
+
+static void
+_eventd_nd_surface_hide_all(gpointer data)
+{
+    GList *surfaces = data;
+
+    g_list_free_full(surfaces, _eventd_nd_surface_hide);
+}
+
 EventdNdContext *
 eventd_nd_init()
 {
@@ -151,13 +166,11 @@ eventd_nd_init()
 
     context = g_new0(EventdNdContext, 1);
 
-    eventd_nd_bubble_init();
-
     _eventd_nd_backend_load(context);
 
     context->style = eventd_nd_style_new();
 
-    context->bubbles = g_hash_table_new_full(g_direct_hash, g_direct_equal, g_object_unref, eventd_nd_bubble_hide);
+    context->bubbles = g_hash_table_new_full(g_direct_hash, g_direct_equal, g_object_unref, _eventd_nd_surface_hide_all);
 
     return context;
 }
@@ -197,8 +210,6 @@ eventd_nd_uninit(EventdNdContext *context)
     eventd_nd_style_free(context->style);
 
     g_list_free_full(context->backends, _eventd_nd_backend_free);
-
-    eventd_nd_bubble_uninit();
 
     g_free(context);
 }
@@ -248,9 +259,29 @@ _eventd_nd_event_ended(EventdEvent *event, EventdEventEndReason reason, EventdNd
 void
 eventd_nd_event_action(EventdNdContext *context, EventdEvent *event, EventdNdNotification *notification)
 {
-    EventdNdBubble *bubble;
+    GList *display_;
+    GList *surfaces = NULL;
 
     if ( context == NULL )
+        return;
+    for ( display_ = context->displays ; display_ != NULL ; display_ = g_list_next(display_) )
+    {
+        EventdNdDisplayContext *display = display_->data;
+        EventdNdSurface *surface;
+        surface = display->backend->surface_show(event, display->display, notification, context->style);
+        if ( surface != NULL )
+        {
+            EventdNdSurfaceContext *surface_context;
+
+            surface_context = g_new(EventdNdSurfaceContext, 1);
+            surface_context->backend = display->backend;
+            surface_context->surface = surface;
+
+            surfaces = g_list_prepend(surfaces, surface_context);
+        }
+    }
+
+    if ( surfaces == NULL )
         return;
 
     g_signal_connect(event, "ended", G_CALLBACK(_eventd_nd_event_ended), context);
@@ -258,7 +289,6 @@ eventd_nd_event_action(EventdNdContext *context, EventdEvent *event, EventdNdNot
     /*
      * TODO: Update an existing bubble
      */
-    bubble = eventd_nd_bubble_show(event, notification, context->style, context->displays);
 
-    g_hash_table_insert(context->bubbles, g_object_ref(event), bubble);
+    g_hash_table_insert(context->bubbles, g_object_ref(event), surfaces);
 }

@@ -32,7 +32,10 @@
 #include <glib/gstdio.h>
 #include <cairo.h>
 
+#include <eventd-nd-style.h>
+#include <eventd-nd-notification.h>
 #include <eventd-nd-backend.h>
+#include <eventd-nd-cairo.h>
 
 #define FRAMEBUFFER_TARGET_PREFIX "/dev/tty"
 
@@ -57,12 +60,14 @@ struct _EventdNdSurface {
 static EventdNdBackendContext *
 _eventd_nd_linux_init()
 {
+    eventd_nd_cairo_init();
     return NULL;
 }
 
 static void
 _eventd_nd_linux_uninit(EventdNdBackendContext *context)
 {
+    eventd_nd_cairo_uninit();
 }
 
 static gboolean
@@ -166,10 +171,21 @@ alpha_div(guchar c, guchar a)
 }
 
 static EventdNdSurface *
-_eventd_nd_linux_surface_show(EventdEvent *event, EventdNdDisplay *display, gint width, gint height, cairo_surface_t *bubble, cairo_surface_t *shape)
+_eventd_nd_linux_surface_show(EventdEvent *event, EventdNdDisplay *display, EventdNdNotification *notification, EventdNdStyle *style)
 {
     EventdNdSurface *self;
     gint x, y;
+
+    cairo_surface_t *bubble;
+    cairo_surface_t *shape;
+
+    gint width;
+    gint height;
+
+    eventd_nd_cairo_get_surfaces(event, notification, style, &bubble, &shape);
+
+    width = cairo_image_surface_get_width(bubble);
+    height = cairo_image_surface_get_height(bubble);
 
     x = display->x;
     y = display->y;

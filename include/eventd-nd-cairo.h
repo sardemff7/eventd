@@ -26,7 +26,6 @@
 void eventd_nd_cairo_init(void);
 void eventd_nd_cairo_uninit(void);
 
-EventdNdBubble *eventd_nd_cairo_show(EventdEvent *event, EventdNdNotification *notification, EventdNdStyle *style, GList *displays);
-void eventd_nd_cairo_hide(gpointer bubble);
+void eventd_nd_cairo_get_surfaces(EventdEvent *event, EventdNdNotification *notification, EventdNdStyle *style, cairo_surface_t **bubble, cairo_surface_t **shape);
 
 #endif /* __EVENTD_ND_CAIRO_H__ */

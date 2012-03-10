@@ -43,7 +43,7 @@ typedef gboolean (*EventdNdDisplayTestFunc)(EventdNdBackendContext *context, con
 typedef EventdNdDisplay *(*EventdNdDisplayNewFunc)(EventdNdBackendContext *context, const gchar *target, EventdNdStyleAnchor anchor, gint margin);
 typedef void (*EventdNdDisplayFunc)(EventdNdDisplay *display);
 
-typedef EventdNdSurface *(*EventdNdSurfaceShowFunc)(EventdEvent *event, EventdNdDisplay *display, gint width, gint height, cairo_surface_t *bubble, cairo_surface_t *shape);
+typedef EventdNdSurface *(*EventdNdSurfaceShowFunc)(EventdEvent *event, EventdNdDisplay *display, EventdNdNotification *notification, EventdNdStyle *style);
 typedef void (*EventdNdSurfaceHideFunc)(EventdNdSurface *surface);
 
 typedef struct {
