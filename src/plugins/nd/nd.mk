@@ -9,7 +9,6 @@ nd_la_SOURCES = \
 	src/plugins/nd/daemon/daemon.h \
 	src/plugins/nd/daemon/daemon.c \
 	src/plugins/nd/types.h \
-	src/plugins/nd/nd.h \
 	src/plugins/nd/nd.c
 
 nd_la_CFLAGS = \
