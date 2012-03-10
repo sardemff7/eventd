@@ -69,6 +69,8 @@ _eventd_nd_style_parse_colour(const gchar *string, Colour *colour)
             hex[0] = string[7]; hex[1] = string[8];
             colour->a = g_ascii_strtoll(hex, NULL, 16) / 255.;
         }
+        else
+            colour->a = 1.0;
 
         return TRUE;
     }
