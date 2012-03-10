@@ -145,29 +145,27 @@ _eventd_nd_style_init_parent(EventdNdStyle *self, EventdNdStyle *parent)
     self->message_colour    = parent->message_colour;
 }
 
-static void
-_eventd_nd_style_load_dir(EventdNdStyle *style, const gchar *base_dir)
+EventdNdStyle *
+eventd_nd_style_new(EventdNdStyle *parent)
 {
-    GError *error = NULL;
-    gchar *config_file_name;
-    GKeyFile *config_file;
+    EventdNdStyle *style;
+
+    style = g_new0(EventdNdStyle, 1);
+
+    if ( parent == NULL )
+        _eventd_nd_style_init_defaults(style);
+    else
+        _eventd_nd_style_init_parent(style, parent);
+
+    return style;
+}
+
+void
+eventd_nd_style_update(EventdNdStyle *style, GKeyFile *config_file)
+{
     gchar *string;
     Int integer;
     Colour colour;
-
-    config_file_name = g_build_filename(base_dir, PACKAGE_NAME, "notification-daemon.conf", NULL);
-    if ( ! g_file_test(config_file_name, G_FILE_TEST_IS_REGULAR) )
-    {
-        g_free(config_file_name);
-        return;
-    }
-
-    config_file = g_key_file_new();
-    if ( ! g_key_file_load_from_file(config_file, config_file_name, G_KEY_FILE_NONE, &error) )
-    {
-        g_warning("Can't read the configuration file '%s': %s", config_file_name, error->message);
-        goto fail;
-    }
 
     if ( g_key_file_has_group(config_file, "bubble") )
     {
@@ -240,30 +238,6 @@ _eventd_nd_style_load_dir(EventdNdStyle *style, const gchar *base_dir)
         if ( libeventd_config_key_file_get_int(config_file, "icon", "spacing", &integer) == 0 )
             style->icon_spacing = integer.value;
     }
-
-
-fail:
-    g_key_file_free(config_file);
-    g_clear_error(&error);
-}
-
-EventdNdStyle *
-eventd_nd_style_new(EventdNdStyle *parent)
-{
-    EventdNdStyle *style;
-
-    style = g_new0(EventdNdStyle, 1);
-
-    if ( parent == NULL )
-        _eventd_nd_style_init_defaults(style);
-    else
-        _eventd_nd_style_init_parent(style, parent);
-
-    _eventd_nd_style_load_dir(style, DATADIR);
-    _eventd_nd_style_load_dir(style, SYSCONFDIR);
-    _eventd_nd_style_load_dir(style, g_get_user_config_dir());
-
-    return style;
 }
 
 void

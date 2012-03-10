@@ -214,6 +214,8 @@ _eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
         if ( libeventd_config_key_file_get_int(config_file, "nd", "margin", &integer) == 0 )
             context->bubble_margin = integer.value;
     }
+
+    eventd_nd_style_update(context->style, config_file);
 }
 
 static void

@@ -16,9 +16,6 @@ libeventd_nd_la_SOURCES = \
 libeventd_nd_la_CFLAGS = \
 	$(AM_CFLAGS) \
 	-D G_LOG_DOMAIN=\"libeventd-nd\" \
-	-D SYSCONFDIR=\"$(sysconfdir)\" \
-	-D LIBDIR=\"$(libdir)\" \
-	-D DATADIR=\"$(datadir)\" \
 	$(GLIB_CFLAGS)
 
 libeventd_nd_la_LDFLAGS = \

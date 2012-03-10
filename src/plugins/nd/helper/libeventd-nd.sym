@@ -24,3 +24,4 @@ eventd_nd_style_get_pango_context
 eventd_nd_style_get_title_colour
 eventd_nd_style_get_title_font
 eventd_nd_style_new
+eventd_nd_style_update
