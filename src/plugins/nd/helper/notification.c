@@ -23,6 +23,8 @@
 #include <glib.h>
 #include <glib-object.h>
 
+#include <gdk-pixbuf/gdk-pixbuf.h>
+
 #include <libeventd-event.h>
 #include <libeventd-config.h>
 #include <libeventd-regex.h>
@@ -32,12 +34,8 @@
 struct _EventdNdNotification {
     gchar *title;
     gchar *message;
-    guchar *image;
-    gsize image_length;
-    const gchar *image_format;
-    guchar *icon;
-    gsize icon_length;
-    const gchar *icon_format;
+    GdkPixbuf *image;
+    GdkPixbuf *icon;
 };
 
 void
@@ -52,41 +50,97 @@ eventd_nd_notification_uninit()
     libeventd_regex_clean();
 }
 
-static void
-_eventd_nd_notification_icon_data_from_file(gchar *path, guchar **data, gsize *length)
+static GdkPixbuf *
+_eventd_nd_notification_pixbuf_from_file(const gchar *path)
 {
     GError *error = NULL;
+    GdkPixbuf *pixbuf;
 
     if ( *path == 0 )
-        return;
+        return NULL;
 
-    if ( ! g_file_get_contents(path, (gchar **)data, length, &error) )
+    if ( ( pixbuf = gdk_pixbuf_new_from_file(path, &error) ) == NULL )
         g_warning("Couldn’t load file '%s': %s", path, error->message);
     g_clear_error(&error);
 
-    g_free(path);
+    return pixbuf;
 }
 
 static void
-_eventd_nd_notification_icon_data_from_base64(EventdEvent *event, const gchar *name, guchar **data, gsize *length, const gchar **format)
+_eventd_nd_notification_pixbuf_data_free(guchar *pixels, gpointer data)
 {
+    g_free(pixels);
+}
+
+static GdkPixbuf *
+_eventd_nd_notification_pixbuf_from_base64(EventdEvent *event, const gchar *name)
+{
+    GdkPixbuf *pixbuf = NULL;
     const gchar *base64;
+    guchar *data;
+    gsize length;
+    const gchar *format;
     gchar *format_name;
 
     base64 = eventd_event_get_data(event, name);
-    if ( base64 != NULL )
-        *data = g_base64_decode(base64, length);
+    if ( base64 == NULL )
+        return NULL;
+    data = g_base64_decode(base64, &length);
 
     format_name = g_strconcat(name, "-format", NULL);
-    *format = eventd_event_get_data(event, format_name);
+    format = eventd_event_get_data(event, format_name);
     g_free(format_name);
+
+    if ( format != NULL )
+    {
+        gint width, height;
+        gint stride;
+        gboolean alpha;
+        gchar *f;
+
+        width = g_ascii_strtoll(format, &f, 16);
+        height = g_ascii_strtoll(f+1, &f, 16);
+        stride = g_ascii_strtoll(f+1, &f, 16);
+        alpha = g_ascii_strtoll(f+1, &f, 16);
+
+        pixbuf = gdk_pixbuf_new_from_data(data, GDK_COLORSPACE_RGB, alpha, alpha ? 4 : 3, width, height, stride, _eventd_nd_notification_pixbuf_data_free, NULL);
+    }
+    else
+    {
+        GError *error = NULL;
+        GdkPixbufLoader *loader;
+
+        loader = gdk_pixbuf_loader_new();
+
+        if ( ! gdk_pixbuf_loader_write(loader, data, length, &error) )
+        {
+            g_warning("Couldn’t write image data: %s", error->message);
+            g_clear_error(&error);
+            goto error;
+        }
+
+        if ( ! gdk_pixbuf_loader_close(loader, &error) )
+        {
+            g_warning("Couldn’t load image data: %s", error->message);
+            g_clear_error(&error);
+            goto error;
+        }
+
+        pixbuf = g_object_ref(gdk_pixbuf_loader_get_pixbuf(loader));
+
+    error:
+        g_object_unref(loader);
+        g_free(data);
+    }
+
+    return pixbuf;
 }
 
 EventdNdNotification *
 eventd_nd_notification_new(EventdEvent *event, const gchar *title, const gchar *message, const gchar *image_name, const gchar *icon_name)
 {
     EventdNdNotification *self;
-    gchar *icon;
+    gchar *path;
 
     self = g_new0(EventdNdNotification, 1);
 
@@ -94,15 +148,21 @@ eventd_nd_notification_new(EventdEvent *event, const gchar *title, const gchar *
 
     self->message = libeventd_regex_replace_event_data(message, event, NULL, NULL);
 
-    if ( ( icon = libeventd_config_get_filename(image_name, event, "icons") ) != NULL )
-        _eventd_nd_notification_icon_data_from_file(icon, &self->image, &self->image_length);
+    if ( ( path = libeventd_config_get_filename(image_name, event, "icons") ) != NULL )
+    {
+        self->image = _eventd_nd_notification_pixbuf_from_file(path);
+        g_free(path);
+    }
     else
-        _eventd_nd_notification_icon_data_from_base64(event, image_name, &self->image, &self->image_length, &self->image_format);
+       self->image =  _eventd_nd_notification_pixbuf_from_base64(event, image_name);
 
-    if ( ( icon = libeventd_config_get_filename(icon_name, event, "icons") ) != NULL )
-        _eventd_nd_notification_icon_data_from_file(icon, &self->icon, &self->icon_length);
+    if ( ( path = libeventd_config_get_filename(icon_name, event, "icons") ) != NULL )
+    {
+        self->icon = _eventd_nd_notification_pixbuf_from_file(path);
+        g_free(path);
+    }
     else
-        _eventd_nd_notification_icon_data_from_base64(event, icon_name, &self->icon, &self->icon_length, &self->icon_format);
+        self->icon = _eventd_nd_notification_pixbuf_from_base64(event, icon_name);
 
     return self;
 }
@@ -130,19 +190,15 @@ eventd_nd_notification_get_message(EventdNdNotification *self)
     return self->message;
 }
 
-void
-eventd_nd_notification_get_image(EventdNdNotification *self, const guchar **data, gsize *length, const gchar **format)
+GdkPixbuf *
+eventd_nd_notification_get_image(EventdNdNotification *self)
 {
-    *data = self->image;
-    *length = self->image_length;
-    *format = self->image_format;
+    return self->image;
 }
 
-void
-eventd_nd_notification_get_icon(EventdNdNotification *self, const guchar **data, gsize *length, const gchar **format)
+GdkPixbuf *
+eventd_nd_notification_get_icon(EventdNdNotification *self)
 {
-    *data = self->icon;
-    *length = self->icon_length;
-    *format = self->icon_format;
+    return self->icon;
 }
 

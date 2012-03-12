@@ -9,8 +9,6 @@ EXTRA_DIST += \
 	src/plugins/nd/cairo/libeventd-nd-cairo.sym
 
 libeventd_nd_cairo_la_SOURCES = \
-	src/plugins/nd/cairo/icon.h \
-	src/plugins/nd/cairo/icon.c \
 	src/plugins/nd/cairo/cairo.c
 
 libeventd_nd_cairo_la_CFLAGS = \

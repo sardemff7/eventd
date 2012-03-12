@@ -35,8 +35,6 @@
 #include <eventd-nd-style.h>
 #include <eventd-nd-notification.h>
 
-#include "icon.h"
-
 #include <eventd-nd-cairo.h>
 
 static GRegex *regex_amp = NULL;
@@ -303,8 +301,22 @@ alpha_mult(guchar c, guchar a)
 }
 
 static cairo_surface_t *
-_eventd_nd_cairo_get_icon_surface_from_data(gint width, gint height, const guchar *pixels, gint stride, gboolean alpha)
+_eventd_nd_cairo_get_icon_surface(GdkPixbuf *pixbuf)
 {
+    gint width, height;
+    const guchar *pixels;
+    gint stride;
+    gboolean alpha;
+
+    if ( pixbuf == NULL )
+        return NULL;
+
+    width = gdk_pixbuf_get_width(pixbuf);
+    height = gdk_pixbuf_get_height(pixbuf);
+    pixels = gdk_pixbuf_get_pixels(pixbuf);
+    stride = gdk_pixbuf_get_rowstride(pixbuf);
+    alpha = gdk_pixbuf_get_has_alpha(pixbuf);
+
     cairo_surface_t *surface = NULL;
 
     gint cstride;
@@ -346,47 +358,9 @@ _eventd_nd_cairo_get_icon_surface_from_data(gint width, gint height, const gucha
     }
     cairo_surface_mark_dirty(surface);
 
+    g_object_unref(pixbuf);
+
     return surface;
-}
-
-static cairo_surface_t *
-_eventd_nd_cairo_get_icon_surface(const guchar *data, gsize length, const gchar *format)
-{
-    GdkPixbuf *pixbuf = NULL;
-    cairo_surface_t *r;
-    gint width, height;
-    const guchar *pixels;
-    gint stride;
-    gboolean alpha;
-
-    if ( format != NULL )
-    {
-        gchar *f;
-        width = g_ascii_strtoll(format, &f, 16);
-        height = g_ascii_strtoll(f+1, &f, 16);
-        stride = g_ascii_strtoll(f+1, &f, 16);
-        alpha = g_ascii_strtoll(f+1, &f, 16);
-
-        pixels = data;
-    }
-    else
-    {
-        pixbuf = eventd_nd_icon_get_pixbuf_from_data(data, length, 0);
-        if ( pixbuf == NULL )
-            return NULL;
-
-        width = gdk_pixbuf_get_width(pixbuf);
-        height = gdk_pixbuf_get_height(pixbuf);
-        pixels = gdk_pixbuf_get_pixels(pixbuf);
-        stride = gdk_pixbuf_get_rowstride(pixbuf);
-        alpha = gdk_pixbuf_get_has_alpha(pixbuf);
-    }
-
-    r = _eventd_nd_cairo_get_icon_surface_from_data(width, height, pixels, stride, alpha);
-    if ( pixbuf != NULL )
-        g_object_unref(pixbuf);
-
-    return r;
 }
 
 static cairo_surface_t *
@@ -590,13 +564,6 @@ eventd_nd_cairo_get_surfaces(EventdEvent *event, EventdNdNotification *notificat
     gint width;
     gint height;
 
-    const guchar *image_data;
-    gsize image_length;
-    const gchar *image_format;
-    const guchar *icon_data;
-    gsize icon_length;
-    const gchar *icon_format;
-
     cairo_surface_t *icon = NULL;
 
     GList *lines = NULL;
@@ -608,11 +575,9 @@ eventd_nd_cairo_get_surfaces(EventdEvent *event, EventdNdNotification *notificat
     /* proccess data */
     lines = _eventd_nd_cairo_text_process(notification, style, &text_height, &text_width);
 
-    eventd_nd_notification_get_image(notification, &image_data, &image_length, &image_format);
-    eventd_nd_notification_get_icon(notification, &icon_data, &icon_length, &icon_format);
     icon = _eventd_nd_cairo_icon_process(style,
-                                          _eventd_nd_cairo_get_icon_surface(image_data, image_length, image_format),
-                                          _eventd_nd_cairo_get_icon_surface(icon_data, icon_length, icon_format),
+                                          _eventd_nd_cairo_get_icon_surface(eventd_nd_notification_get_image(notification)),
+                                          _eventd_nd_cairo_get_icon_surface(eventd_nd_notification_get_icon(notification)),
                                           &icon_width, &icon_height);
 
     /* compute the bubble size */

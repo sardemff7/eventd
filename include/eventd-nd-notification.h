@@ -34,7 +34,7 @@ void eventd_nd_notification_free(EventdNdNotification *notification);
 
 const gchar *eventd_nd_notification_get_title(EventdNdNotification *notification);
 const gchar *eventd_nd_notification_get_message(EventdNdNotification *notification);
-void eventd_nd_notification_get_image(EventdNdNotification *notification, const guchar **data, gsize *length, const gchar **format);
-void eventd_nd_notification_get_icon(EventdNdNotification *notification, const guchar **data, gsize *length, const gchar **format);
+GdkPixbuf *eventd_nd_notification_get_image(EventdNdNotification *self);
+GdkPixbuf *eventd_nd_notification_get_icon(EventdNdNotification *self);
 
 #endif /* __EVENTD_ND_NOTIFICATION_H__ */

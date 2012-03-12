@@ -14,6 +14,7 @@ nd_la_CFLAGS = \
 	-D SYSCONFDIR=\"$(sysconfdir)\" \
 	-D LIBDIR=\"$(libdir)\" \
 	-D DATADIR=\"$(datadir)\" \
+	$(GDK_PIXBUF_CFLAGS) \
 	$(GLIB_CFLAGS)
 
 nd_la_LDFLAGS = \

@@ -17,6 +17,7 @@ libeventd_nd_la_SOURCES = \
 libeventd_nd_la_CFLAGS = \
 	$(AM_CFLAGS) \
 	-D G_LOG_DOMAIN=\"libeventd-nd\" \
+	$(GDK_PIXBUF_CFLAGS) \
 	$(GLIB_CFLAGS)
 
 libeventd_nd_la_LDFLAGS = \
@@ -26,4 +27,5 @@ libeventd_nd_la_LDFLAGS = \
 
 libeventd_nd_la_LIBADD = \
 	libeventd.la \
+	$(GDK_PIXBUF_LIBS) \
 	$(GLIB_LIBS)
