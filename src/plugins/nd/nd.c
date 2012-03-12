@@ -45,8 +45,8 @@ struct _EventdPluginContext {
 typedef struct {
     gchar *title;
     gchar *message;
+    gchar *image;
     gchar *icon;
-    gchar *overlay_icon;
     EventdNdStyle *style;
 } EventdNdEvent;
 
@@ -157,8 +157,8 @@ _eventd_nd_event_update(EventdNdEvent *event, GKeyFile *config_file)
 {
     gchar *title = NULL;
     gchar *message = NULL;
+    gchar *image = NULL;
     gchar *icon = NULL;
-    gchar *overlay_icon = NULL;
 
     if ( libeventd_config_key_file_get_string(config_file, "notification", "title", &title) == 0 )
     {
@@ -170,15 +170,15 @@ _eventd_nd_event_update(EventdNdEvent *event, GKeyFile *config_file)
         g_free(event->message);
         event->message = message;
     }
+    if ( libeventd_config_key_file_get_string(config_file, "notification", "image", &image) == 0 )
+    {
+        g_free(event->image);
+        event->image = image;
+    }
     if ( libeventd_config_key_file_get_string(config_file, "notification", "icon", &icon) == 0 )
     {
         g_free(event->icon);
         event->icon = icon;
-    }
-    if ( libeventd_config_key_file_get_string(config_file, "notification", "overlay-icon", &overlay_icon) == 0 )
-    {
-        g_free(event->overlay_icon);
-        event->overlay_icon = overlay_icon;
     }
 
     eventd_nd_style_update(event->style, config_file);
@@ -195,16 +195,16 @@ _eventd_nd_event_new(EventdPluginContext *context, EventdNdEvent *parent)
     {
         event->title = g_strdup("$name");
         event->message = g_strdup("$text");
+        event->image = g_strdup("image");
         event->icon = g_strdup("icon");
-        event->overlay_icon = g_strdup("overlay-icon");
         event->style = eventd_nd_style_new(context->style);
     }
     else
     {
         event->title = g_strdup(parent->title);
         event->message = g_strdup(parent->message);
+        event->image = g_strdup(parent->image);
         event->icon = g_strdup(parent->icon);
-        event->overlay_icon = g_strdup(parent->overlay_icon);
         event->style = eventd_nd_style_new(parent->style);
     }
 
@@ -216,8 +216,8 @@ _eventd_nd_event_free(gpointer data)
 {
     EventdNdEvent *event = data;
 
+    g_free(event->image);
     g_free(event->icon);
-    g_free(event->overlay_icon);
     g_free(event->message);
     g_free(event->title);
     g_free(event);
@@ -405,7 +405,7 @@ _eventd_nd_event_action(EventdPluginContext *context, EventdEvent *event)
     if ( nd_event == NULL )
         return;
 
-    notification = eventd_nd_notification_new(event, nd_event->title, nd_event->message, nd_event->icon, nd_event->overlay_icon);
+    notification = eventd_nd_notification_new(event, nd_event->title, nd_event->message, nd_event->image, nd_event->icon);
 
     for ( display_ = context->displays ; display_ != NULL ; display_ = g_list_next(display_) )
     {

@@ -32,12 +32,12 @@
 struct _EventdNdNotification {
     gchar *title;
     gchar *message;
+    guchar *image;
+    gsize image_length;
+    const gchar *image_format;
     guchar *icon;
     gsize icon_length;
     const gchar *icon_format;
-    guchar *overlay_icon;
-    gsize overlay_icon_length;
-    const gchar *overlay_icon_format;
 };
 
 void
@@ -83,7 +83,7 @@ _eventd_nd_notification_icon_data_from_base64(EventdEvent *event, const gchar *n
 }
 
 EventdNdNotification *
-eventd_nd_notification_new(EventdEvent *event, const gchar *title, const gchar *message, const gchar *icon_name, const gchar *overlay_icon_name)
+eventd_nd_notification_new(EventdEvent *event, const gchar *title, const gchar *message, const gchar *image_name, const gchar *icon_name)
 {
     EventdNdNotification *self;
     gchar *icon;
@@ -94,15 +94,15 @@ eventd_nd_notification_new(EventdEvent *event, const gchar *title, const gchar *
 
     self->message = libeventd_regex_replace_event_data(message, event, NULL, NULL);
 
+    if ( ( icon = libeventd_config_get_filename(image_name, event, "icons") ) != NULL )
+        _eventd_nd_notification_icon_data_from_file(icon, &self->image, &self->image_length);
+    else
+        _eventd_nd_notification_icon_data_from_base64(event, image_name, &self->image, &self->image_length, &self->image_format);
+
     if ( ( icon = libeventd_config_get_filename(icon_name, event, "icons") ) != NULL )
         _eventd_nd_notification_icon_data_from_file(icon, &self->icon, &self->icon_length);
     else
         _eventd_nd_notification_icon_data_from_base64(event, icon_name, &self->icon, &self->icon_length, &self->icon_format);
-
-    if ( ( icon = libeventd_config_get_filename(overlay_icon_name, event, "icons") ) != NULL )
-        _eventd_nd_notification_icon_data_from_file(icon, &self->overlay_icon, &self->overlay_icon_length);
-    else
-        _eventd_nd_notification_icon_data_from_base64(event, overlay_icon_name, &self->overlay_icon, &self->overlay_icon_length, &self->overlay_icon_format);
 
     return self;
 }
@@ -110,8 +110,8 @@ eventd_nd_notification_new(EventdEvent *event, const gchar *title, const gchar *
 void
 eventd_nd_notification_free(EventdNdNotification *self)
 {
-    g_free(self->overlay_icon);
     g_free(self->icon);
+    g_free(self->image);
     g_free(self->message);
     g_free(self->title);
 
@@ -131,18 +131,18 @@ eventd_nd_notification_get_message(EventdNdNotification *self)
 }
 
 void
+eventd_nd_notification_get_image(EventdNdNotification *self, const guchar **data, gsize *length, const gchar **format)
+{
+    *data = self->image;
+    *length = self->image_length;
+    *format = self->image_format;
+}
+
+void
 eventd_nd_notification_get_icon(EventdNdNotification *self, const guchar **data, gsize *length, const gchar **format)
 {
     *data = self->icon;
     *length = self->icon_length;
     *format = self->icon_format;
-}
-
-void
-eventd_nd_notification_get_overlay_icon(EventdNdNotification *self, const guchar **data, gsize *length, const gchar **format)
-{
-    *data = self->overlay_icon;
-    *length = self->overlay_icon_length;
-    *format = self->overlay_icon_format;
 }
 
