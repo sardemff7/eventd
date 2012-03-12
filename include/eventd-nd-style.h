@@ -23,14 +23,14 @@
 #ifndef __EVENTD_ND_STYLE_H__
 #define __EVENTD_ND_STYLE_H__
 
+#include <eventd-nd-types.h>
+
 typedef struct {
     gdouble r;
     gdouble g;
     gdouble b;
     gdouble a;
 } Colour;
-
-typedef struct _EventdNdStyle EventdNdStyle;
 
 EventdNdStyle *eventd_nd_style_new(EventdNdStyle *parent);
 void eventd_nd_style_free(EventdNdStyle *style);

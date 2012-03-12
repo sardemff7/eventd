@@ -24,8 +24,7 @@
 #define __EVENTD_ND_NOTIFICATION_H__
 
 #include <libeventd-event-types.h>
-
-typedef struct _EventdNdNotification EventdNdNotification;
+#include <eventd-nd-types.h>
 
 void eventd_nd_notification_init();
 void eventd_nd_notification_uninit();

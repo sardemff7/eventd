@@ -4,7 +4,8 @@ pkglib_LTLIBRARIES += \
 
 pkginclude_HEADERS += \
 	include/eventd-nd-style.h \
-	include/eventd-nd-notification.h
+	include/eventd-nd-notification.h \
+	include/eventd-nd-types.h
 
 EXTRA_DIST += \
 	src/plugins/nd/helper/libeventd-nd.sym

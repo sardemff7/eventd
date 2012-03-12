@@ -24,6 +24,7 @@
 #define __EVENTD_ND_BACKEND_H__
 
 #include <libeventd-event-types.h>
+#include <eventd-nd-types.h>
 
 typedef enum {
     EVENTD_ND_STYLE_ANCHOR_TOP_LEFT,

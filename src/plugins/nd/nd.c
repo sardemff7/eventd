@@ -28,9 +28,10 @@
 #include <libeventd-event.h>
 #include <libeventd-config.h>
 
+#include <eventd-nd-types.h>
+#include <eventd-nd-backend.h>
 #include <eventd-nd-notification.h>
-
-#include "types.h"
+#include <eventd-nd-style.h>
 
 struct _EventdPluginContext {
     GHashTable *events;
@@ -41,6 +42,16 @@ struct _EventdPluginContext {
     GList *displays;
     GHashTable *surfaces;
 };
+
+typedef struct {
+    EventdNdBackend *backend;
+    EventdNdDisplay *display;
+} EventdNdDisplayContext;
+
+typedef struct {
+    EventdNdBackend *backend;
+    EventdNdSurface *surface;
+} EventdNdSurfaceContext;
 
 typedef struct {
     gchar *title;

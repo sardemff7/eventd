@@ -32,8 +32,8 @@
 #include <glib/gstdio.h>
 #include <cairo.h>
 
+#include <eventd-nd-types.h>
 #include <eventd-nd-style.h>
-#include <eventd-nd-notification.h>
 #include <eventd-nd-backend.h>
 #include <eventd-nd-cairo.h>
 
