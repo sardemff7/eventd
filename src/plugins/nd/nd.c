@@ -155,30 +155,27 @@ _eventd_nd_backend_load(EventdPluginContext *context)
 static void
 _eventd_nd_event_update(EventdNdEvent *event, GKeyFile *config_file)
 {
-    gchar *title = NULL;
-    gchar *message = NULL;
-    gchar *image = NULL;
-    gchar *icon = NULL;
+    gchar *string;
 
-    if ( libeventd_config_key_file_get_string(config_file, "notification", "title", &title) == 0 )
+    if ( libeventd_config_key_file_get_string(config_file, "notification", "title", &string) == 0 )
     {
         g_free(event->title);
-        event->title = title;
+        event->title = string;
     }
-    if ( libeventd_config_key_file_get_string(config_file, "notification", "message", &message) == 0 )
+    if ( libeventd_config_key_file_get_string(config_file, "notification", "message", &string) == 0 )
     {
         g_free(event->message);
-        event->message = message;
+        event->message = string;
     }
-    if ( libeventd_config_key_file_get_string(config_file, "notification", "image", &image) == 0 )
+    if ( libeventd_config_key_file_get_string(config_file, "notification", "image", &string) == 0 )
     {
         g_free(event->image);
-        event->image = image;
+        event->image = string;
     }
-    if ( libeventd_config_key_file_get_string(config_file, "notification", "icon", &icon) == 0 )
+    if ( libeventd_config_key_file_get_string(config_file, "notification", "icon", &string) == 0 )
     {
         g_free(event->icon);
-        event->icon = icon;
+        event->icon = string;
     }
 
     eventd_nd_style_update(event->style, config_file);
