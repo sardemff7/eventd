@@ -44,6 +44,10 @@ connection_test(GLib.DataInputStream input, GLib.DataOutputStream output) throws
     output.put_string(@"DATAL file $filename\n");
     output.put_string(@"DATAL test $message\n");
     output.put_string(".\n");
+    r = input.read_upto("\n", -1, null);
+    input.read_byte(null);
+    if ( r != "OK" )
+        return 1;
 
     GLib.Thread.usleep(100000);
 

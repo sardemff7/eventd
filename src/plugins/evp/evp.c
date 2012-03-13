@@ -120,6 +120,8 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
                 }
                 else
                 {
+                    if ( ! g_data_output_stream_put_string(output, "OK\n", NULL, &error) )
+                        break;
 
                     if ( ! GPOINTER_TO_UINT(libeventd_config_events_get_event(service->events, eventd_event_get_category(event), eventd_event_get_name(event))) )
                     {

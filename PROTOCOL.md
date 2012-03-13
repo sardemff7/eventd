@@ -61,6 +61,10 @@ DATAL <name> <data>
     Inform the server of the end of the
     EVENT message
 
+[Server]
+OK
+    Acknowledge the event
+
 
 Closing the connection
 ----------------------

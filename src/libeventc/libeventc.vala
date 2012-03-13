@@ -298,6 +298,9 @@ namespace Eventc
                     throw e;
             }
             this.send(".");
+            var r = yield this.receive();
+            if ( r != "OK" )
+                throw new EventcError.EVENT("Got a wrong event acknowledge message: %s", r);
 
             }
             finally
