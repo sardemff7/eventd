@@ -105,7 +105,7 @@ namespace Eventc
         private GLib.DataInputStream input;
         private GLib.DataOutputStream output;
 
-        private bool hello_received;
+        private bool handshake_passed;
 
         public
         Connection(string host, uint16 port, string category)
@@ -122,7 +122,7 @@ namespace Eventc
         public bool
         is_connected()
         {
-            return ( ( this.connection != null ) && ( ! this.connection.is_closed() ) && this.hello_received );
+            return ( ( this.connection != null ) && ( ! this.connection.is_closed() ) && this.handshake_passed );
         }
 
         private void
@@ -162,13 +162,13 @@ namespace Eventc
         {
             if ( this.connection != null )
             {
-                if ( this.hello_received )
+                if ( this.handshake_passed )
                     throw new EventcError.ALREADY_CONNECTED("Already connected, you must disconnect first");
                 else
                     yield this.close();
             }
 
-            this.hello_received = false;
+            this.handshake_passed = false;
 
             while ( ! this.mutex.trylock() )
             {
@@ -212,7 +212,7 @@ namespace Eventc
             if ( r != "HELLO" )
                 throw new EventcError.HELLO("Got a wrong hello message: %s", r);
             else
-                this.hello_received = true;
+                this.handshake_passed = true;
 
             yield this.send_mode();
         }
@@ -320,6 +320,7 @@ namespace Eventc
             }
             catch ( GLib.Error e )
             {
+                this.handshake_passed = false;
                 throw new EventcError.RECEIVE("Failed to receive message: %s", e.message);
             }
             return r;
@@ -334,6 +335,7 @@ namespace Eventc
             }
             catch ( GLib.Error e )
             {
+                this.handshake_passed = false;
                 throw new EventcError.SEND("Couldn’t send message \"%s\": %s", msg, e.message);
             }
         }
@@ -347,7 +349,7 @@ namespace Eventc
                 yield;
             }
 
-            if ( ( this.hello_received ) && ( ! this.connection.is_closed() ) )
+            if ( ( this.handshake_passed ) && ( ! this.connection.is_closed() ) )
             {
                 try
                 {
