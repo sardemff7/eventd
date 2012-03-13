@@ -1,9 +1,12 @@
-This file describes the EVENTD protocol
+This file describes the EVENT protocol
 
 
-* Client messages
 
-HELLO <type> [<name>]
+Handshake
+---------------
+
+[Client]
+HELLO <type>
     Initiate the connection by giving
     the client application type
     this type will be used to search for
@@ -11,12 +14,26 @@ HELLO <type> [<name>]
     The client may specify a name what
     will be used to display events
 
+[Server]
+HELLO
+    Answer to the client HELLO message
+
+[Client]
 MODE <mode>
     Inform the server of the mode used
     by the client. You can omit this message
     for now (compatibility with the old
     protocol)
 
+[Server]
+MODE
+    Answer to the client MODE message
+
+
+Eventd dispatching
+------------------
+
+[Client]
 EVENT <type>
     Inform the server that an event happened
     The type must contain only the characters
@@ -25,8 +42,8 @@ EVENT <type>
     http://freedesktop.org/wiki/Specifications/desktop-entry-spec
     After the event, the client may specify data using
     one or more DATA message
-    An EVENT message end with a line containing "."
 
+[Client]
 DATA <name>
     This message is followed by the corresponding data
     Data end with a line containing "."
@@ -35,20 +52,23 @@ DATA <name>
     On server side, ".." at the beginning of a line
     has to be replaced by "."
 
+[Client]
 DATAL <name> <data>
     Simple data in one line, up to "\n"
 
+[Client]
+.
+    Inform the server of the end of the
+    EVENT message
+
+
+Closing the connection
+----------------------
+
+[Client]
 BYE
     Close the connection
 
-
-* Server messages
-
-HELLO
-    Answer to the client HELLO message
-
-MODE
-    Answer to the client MODE message
-
+[Server]
 BYE
-    Answer to the client BYE message
+    Answer to the BYE message
