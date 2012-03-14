@@ -31,7 +31,7 @@
 static GList *plugins = NULL;
 
 static void
-_eventd_plugins_load_dir(EventdCoreContext *core, EventdCoreInterface *interface, const gchar *plugins_dir_name)
+_eventd_plugins_load_dir(EventdCoreContext *core, EventdCoreInterface *interface, const gchar *plugins_dir_name,  gchar **whitelist,  gchar **blacklist)
 {
     GError *error;
     GDir *plugins_dir;
@@ -56,6 +56,38 @@ _eventd_plugins_load_dir(EventdCoreContext *core, EventdCoreInterface *interface
         EventdPlugin *plugin;
         EventdPluginGetInfoFunc get_info;
         void *module;
+
+        if ( whitelist != NULL )
+        {
+            gboolean whitelisted = FALSE;
+            gchar **wname;
+            for ( wname = whitelist ; wname != NULL ; ++wname )
+            {
+                if ( g_str_has_prefix(file, *wname) )
+                {
+                    whitelisted = TRUE;
+                    break;
+                }
+            }
+            if ( ! whitelisted )
+                return;
+        }
+
+        if ( blacklist != NULL )
+        {
+            gboolean blacklisted = FALSE;
+            gchar **bname;
+            for ( bname = blacklist ; bname != NULL ; ++bname )
+            {
+                if ( g_str_has_prefix(file, *bname) )
+                {
+                    blacklisted = TRUE;
+                    break;
+                }
+            }
+            if ( blacklisted )
+                return;
+        }
 
         full_filename = g_build_filename(plugins_dir_name, file, NULL);
 
@@ -104,7 +136,11 @@ _eventd_plugins_load_dir(EventdCoreContext *core, EventdCoreInterface *interface
 void
 eventd_plugins_load(EventdCoreContext *core, EventdCoreInterface *interface)
 {
+    const gchar *env_whitelist;
+    const gchar *env_blacklist;
     const gchar *env_base_dir;
+    gchar **whitelist = NULL;
+    gchar **blacklist = NULL;
     gchar *plugins_dir;
 
     if ( ! g_module_supported() )
@@ -112,6 +148,14 @@ eventd_plugins_load(EventdCoreContext *core, EventdCoreInterface *interface)
         g_warning("Couldn’t load plugins: %s", g_module_error());
         return;
     }
+
+    env_whitelist = g_getenv("EVENTD_PLUGINS_WHITELIST");
+    if ( env_whitelist != NULL )
+        whitelist = g_strsplit(env_whitelist, ",", 0);
+
+    env_blacklist = g_getenv("EVENTD_PLUGINS_WHITELIST");
+    if ( env_blacklist != NULL )
+        blacklist = g_strsplit(env_blacklist, ",", 0);
 
     env_base_dir = g_getenv("EVENTD_PLUGINS_DIR");
     if ( env_base_dir != NULL )
@@ -122,24 +166,27 @@ eventd_plugins_load(EventdCoreContext *core, EventdCoreInterface *interface)
             plugins_dir = g_build_filename(env_base_dir,  NULL);
 
         if ( g_file_test(plugins_dir, G_FILE_TEST_IS_DIR) )
-            _eventd_plugins_load_dir(core, interface, plugins_dir);
+            _eventd_plugins_load_dir(core, interface, plugins_dir, whitelist, blacklist);
         g_free(plugins_dir);
     }
 
     plugins_dir = g_build_filename(g_get_user_data_dir(), PACKAGE_NAME, "plugins", NULL);
     if ( g_file_test(plugins_dir, G_FILE_TEST_IS_DIR) )
-        _eventd_plugins_load_dir(core, interface, plugins_dir);
+        _eventd_plugins_load_dir(core, interface, plugins_dir, whitelist, blacklist);
     g_free(plugins_dir);
 
     plugins_dir = g_build_filename(DATADIR, PACKAGE_NAME, "plugins", NULL);
     if ( g_file_test(plugins_dir, G_FILE_TEST_IS_DIR) )
-        _eventd_plugins_load_dir(core, interface, plugins_dir);
+        _eventd_plugins_load_dir(core, interface, plugins_dir, whitelist, blacklist);
     g_free(plugins_dir);
 
     plugins_dir = g_build_filename(LIBDIR, PACKAGE_NAME, "plugins", NULL);
     if ( g_file_test(plugins_dir, G_FILE_TEST_IS_DIR) )
-        _eventd_plugins_load_dir(core, interface, plugins_dir);
+        _eventd_plugins_load_dir(core, interface, plugins_dir, whitelist, blacklist);
     g_free(plugins_dir);
+
+    g_strfreev(blacklist);
+    g_strfreev(whitelist);
 }
 
 static void
