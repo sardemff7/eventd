@@ -24,7 +24,7 @@ libeventd_la_CFLAGS = \
 libeventd_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
 	-avoid-version \
-	-export-symbols $(top_srcdir)/src/libeventd/libeventd.sym
+	-export-symbols $(srcdir)/src/libeventd/libeventd.sym
 
 libeventd_la_LIBADD = \
 	libeventd-event.la \

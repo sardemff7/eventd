@@ -19,17 +19,16 @@ dist_vapi_DATA =
 dist_pkgdata_DATA =
 
 EXTRA_DIST =
-CLEANFILES =
 
 AM_CFLAGS += \
 	-D LOCALEDIR=\"$(localedir)\" \
 	--include config.h \
-	-I $(top_srcdir)/include/ \
-	-I $(top_builddir)/include/
+	-I $(srcdir)/include/ \
+	-I $(builddir)/include/
 
 AM_VALAFLAGS += \
-	--vapidir $(top_srcdir)/vapi/ \
-	--vapidir $(top_builddir)/vapi/ \
+	--vapidir $(srcdir)/vapi/ \
+	--vapidir $(builddir)/vapi/ \
 	--pkg config
 
 EXTRA_DIST += \

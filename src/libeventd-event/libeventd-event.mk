@@ -27,15 +27,15 @@ libeventd_event_la_CFLAGS = \
 libeventd_event_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
 	-version-info $(LIBEVENTD_EVENT_CURRENT):$(LIBEVENTD_EVENT_REVISION):$(LIBEVENTD_EVENT_AGE) \
-	-Wl,--version-script=$(top_srcdir)/src/libeventd-event/libeventd-event.sym
+	-Wl,--version-script=$(srcdir)/src/libeventd-event/libeventd-event.sym
 
 libeventd_event_la_LIBADD = \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS)
 
 pkgconfig_DATA += \
-	$(top_builddir)/data/libeventd-event.pc
+	data/libeventd-event.pc
 
 dist_vapi_DATA += \
-	$(top_builddir)/vapi/libeventd-event.deps \
+	vapi/libeventd-event.deps \
 	vapi/libeventd-event.vapi

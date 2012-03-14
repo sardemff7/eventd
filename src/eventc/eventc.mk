@@ -26,8 +26,3 @@ eventc_LDADD = \
 	$(GIO_LIBS) \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS)
-
-CLEANFILES += \
-	$(eventc_SOURCES:.vala=.c)
-
-eventc_vala.stamp: $(top_builddir)/vapi/libeventc.vapi

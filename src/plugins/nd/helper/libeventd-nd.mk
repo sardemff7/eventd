@@ -23,7 +23,7 @@ libeventd_nd_la_CFLAGS = \
 libeventd_nd_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
 	-avoid-version \
-	-export-symbols $(top_srcdir)/src/plugins/nd/helper/libeventd-nd.sym
+	-export-symbols $(srcdir)/src/plugins/nd/helper/libeventd-nd.sym
 
 libeventd_nd_la_LIBADD = \
 	libeventd.la \

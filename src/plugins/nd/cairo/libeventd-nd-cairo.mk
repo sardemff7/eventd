@@ -25,7 +25,7 @@ libeventd_nd_cairo_la_CFLAGS = \
 libeventd_nd_cairo_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
 	-avoid-version \
-	-export-symbols $(top_srcdir)/src/plugins/nd/cairo/libeventd-nd-cairo.sym
+	-export-symbols $(srcdir)/src/plugins/nd/cairo/libeventd-nd-cairo.sym
 
 libeventd_nd_cairo_la_LIBADD = \
 	libeventd.la \

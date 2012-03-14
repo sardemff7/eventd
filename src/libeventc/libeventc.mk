@@ -15,8 +15,9 @@ EXTRA_DIST += \
 libeventc_la_VALAFLAGS = \
 	$(AM_VALAFLAGS) \
 	--pkg libeventd-event \
-	--library $(top_builddir)/vapi/libeventc \
-	-H $(top_builddir)/include/libeventc.h \
+	--library libeventc \
+	--vapi vapi/libeventc.vapi \
+	--header include/libeventc.h \
 	$(GIO_VALAFLAGS) \
 	$(GOBJECT_VALAFLAGS) \
 	$(GLIB_VALAFLAGS)
@@ -33,7 +34,7 @@ libeventc_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
 	-shared \
 	-version-info $(LIBEVENTC_CURRENT):$(LIBEVENTC_REVISION):$(LIBEVENTC_AGE) \
-	-Wl,--version-script=$(top_srcdir)/src/libeventc/libeventc.sym
+	-Wl,--version-script=$(srcdir)/src/libeventc/libeventc.sym
 
 libeventc_la_LIBADD = \
 	libeventd-event.la \
@@ -42,19 +43,11 @@ libeventc_la_LIBADD = \
 	$(GLIB_LIBS)
 
 pkginclude_HEADERS += \
-	$(top_builddir)/include/libeventc.h
+	include/libeventc.h
 
 pkgconfig_DATA += \
-	$(top_builddir)/data/libeventc.pc
+	data/libeventc.pc
 
 dist_vapi_DATA += \
-	$(top_builddir)/vapi/libeventc.deps \
-	$(top_builddir)/vapi/libeventc.vapi
-
-CLEANFILES += \
-	$(top_builddir)/include/libeventc.h \
-	$(top_builddir)/vapi/libeventc.vapi \
-	$(top_builddir)/vapi/libeventc.deps \
-	$(libeventc_la_SOURCES:.vala=.c)
-
-$(top_builddir)/vapi/libeventc.vapi: libeventc.la
+	vapi/libeventc.deps \
+	vapi/libeventc.vapi
