@@ -185,6 +185,14 @@ AM_CONDITIONAL(ENABLE_LINUX_FB, [test x$enable_linux_fb = xyes])
 AM_PROG_VALAC([$vala_min_version])
 
 
+
+#
+# Tests
+#
+AC_ARG_ENABLE(tests, AS_HELP_STRING([--enable-tests], [Build tests]), enable_tests=$enableval, enable_tests=yes)
+AM_CONDITIONAL(ENABLE_TESTS, [test x$enable_tests = xyes])
+
+
 # Debug flags
 AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug], [Enable debug]), enable_debug=$enableval, enable_debug=no)
 if test x$enable_debug = xyes; then

@@ -58,6 +58,9 @@ endif
 include src/plugins/relay/relay.mk
 include src/libeventc/libeventc.mk
 include src/eventc/eventc.mk
+if ENABLE_TESTS
+include tests/tests.mk
+endif
 
 
 #

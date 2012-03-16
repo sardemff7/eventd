@@ -13,3 +13,4 @@
 /eventd
 /eventdctl
 /eventc
+*.test
