@@ -96,6 +96,8 @@ eventd_event_new(const gchar *name)
 {
     EventdEvent *event;
 
+    g_return_val_if_fail(name != NULL, NULL);
+
     event = g_object_new(EVENTD_TYPE_EVENT, NULL);
 
     event->priv->name = g_strdup(name);
@@ -114,7 +116,7 @@ eventd_event_init(EventdEvent *self)
 static void
 _eventd_event_finalize(GObject *object)
 {
-    EventdEvent *self = (EventdEvent *)object;
+    EventdEvent *self = EVENTD_EVENT(object);
     EventdEventPrivate *priv = self->priv;
 
     if ( priv->data != NULL )
@@ -127,12 +129,19 @@ _eventd_event_finalize(GObject *object)
 void
 eventd_event_end(EventdEvent *self, EventdEventEndReason reason)
 {
+    g_return_if_fail(EVENTD_IS_EVENT(self));
+    g_return_if_fail(reason > EVENTD_EVENT_END_REASON_NONE);
+
     g_signal_emit(self, _eventd_event_signals[SIGNAL_ENDED], 0, reason);
 }
 
 void
 eventd_event_add_data(EventdEvent *self, gchar *name, gchar *content)
 {
+    g_return_if_fail(EVENTD_IS_EVENT(self));
+    g_return_if_fail(name != NULL);
+    g_return_if_fail(content != NULL);
+
     if ( self->priv->data == NULL )
         self->priv->data = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
     g_hash_table_insert(self->priv->data, name, content);
@@ -141,12 +150,18 @@ eventd_event_add_data(EventdEvent *self, gchar *name, gchar *content)
 void
 eventd_event_set_timeout(EventdEvent *self, gint64 timeout)
 {
+    g_return_if_fail(EVENTD_IS_EVENT(self));
+    g_return_if_fail(timeout >= -1);
+
     self->priv->timeout = timeout;
 }
 
 void
 eventd_event_set_category(EventdEvent *self, const gchar *category)
 {
+    g_return_if_fail(EVENTD_IS_EVENT(self));
+    g_return_if_fail(category != NULL);
+
     g_free(self->priv->category);
     self->priv->category = g_strdup(category);
 }
@@ -155,29 +170,42 @@ eventd_event_set_category(EventdEvent *self, const gchar *category)
 const gchar *
 eventd_event_get_category(EventdEvent *self)
 {
+    g_return_val_if_fail(EVENTD_IS_EVENT(self), NULL);
+
     return self->priv->category;
 }
 
 const gchar *
 eventd_event_get_name(EventdEvent *self)
 {
+    g_return_val_if_fail(EVENTD_IS_EVENT(self), NULL);
+
     return self->priv->name;
 }
 
 gint64
 eventd_event_get_timeout(EventdEvent *self)
 {
+    g_return_val_if_fail(EVENTD_IS_EVENT(self), G_MININT64);
+
     return self->priv->timeout;
 }
 
 const gchar *
 eventd_event_get_data(EventdEvent *self, const gchar *name)
 {
+    g_return_val_if_fail(EVENTD_IS_EVENT(self), NULL);
+
+    if ( self->priv->data == NULL )
+        return NULL;
+
     return g_hash_table_lookup(self->priv->data, name);
 }
 
 GHashTable *
 eventd_event_get_all_data(EventdEvent *self)
 {
+    g_return_val_if_fail(EVENTD_IS_EVENT(self), NULL);
+
     return self->priv->data;
 }
