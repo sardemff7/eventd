@@ -147,5 +147,5 @@ libeventd_config_get_filename(const gchar *filename, EventdEvent *event, const g
         return real_filename;
 
     g_free(real_filename);
-    return "";
+    return g_strdup("");
 }
