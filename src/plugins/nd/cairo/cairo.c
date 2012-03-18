@@ -358,8 +358,6 @@ _eventd_nd_cairo_get_icon_surface(GdkPixbuf *pixbuf)
     }
     cairo_surface_mark_dirty(surface);
 
-    g_object_unref(pixbuf);
-
     return surface;
 }
 

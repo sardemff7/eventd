@@ -170,8 +170,10 @@ eventd_nd_notification_new(EventdEvent *event, const gchar *title, const gchar *
 void
 eventd_nd_notification_free(EventdNdNotification *self)
 {
-    g_free(self->icon);
-    g_free(self->image);
+    if ( self->icon != NULL )
+        g_object_unref(self->icon);
+    if ( self->image != NULL )
+        g_object_unref(self->image);
     g_free(self->message);
     g_free(self->title);
 
