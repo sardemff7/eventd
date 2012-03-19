@@ -55,7 +55,7 @@ struct _EventdCoreContext {
 
 
 GSocket *
-eventd_core_get_unix_socket(EventdCoreContext *context, const gchar *path, const gchar *default_path, gchar **ret_used_path)
+eventd_core_get_unix_socket(EventdCoreContext *context, const gchar *path, const gchar *default_path)
 {
     GSocket *socket;
     gchar *used_path = NULL;
@@ -68,9 +68,7 @@ eventd_core_get_unix_socket(EventdCoreContext *context, const gchar *path, const
     }
 
     socket = eventd_sockets_get_unix_socket(context->sockets, ( path != NULL ) ? path : used_path, context->take_over_socket);
-
-    if ( ret_used_path != NULL )
-        *ret_used_path = used_path;
+    g_free(used_path);
 
     return socket;
 }

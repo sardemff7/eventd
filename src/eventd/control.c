@@ -119,7 +119,6 @@ eventd_control_start(EventdControl *control)
 {
     GError *error = NULL;
     GSocket *socket;
-    gchar *used_path = NULL;
 
     control->socket_service = g_threaded_socket_service_new(-1);
 
@@ -129,12 +128,7 @@ eventd_control_start(EventdControl *control)
         control->socket_path = NULL;
     }
 
-    socket = eventd_core_get_unix_socket(control->core, control->socket_path, "private", &used_path);
-    if ( used_path != NULL )
-    {
-        g_free(control->socket_path);
-        control->socket_path = used_path;
-    }
+    socket = eventd_core_get_unix_socket(control->core, control->socket_path, "private");
     g_free(control->socket_path);
     if ( socket == NULL )
         return;

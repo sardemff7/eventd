@@ -275,9 +275,6 @@ _eventd_evp_start(EventdPluginContext *service)
     GError *error = NULL;
     GList *sockets = NULL;
     GSocket *socket = NULL;
-#if ENABLE_GIO_UNIX
-    gchar *used_path = NULL;
-#endif /* ENABLE_GIO_UNIX */
 
     service->service = g_threaded_socket_service_new(service->max_clients);
 
@@ -299,12 +296,7 @@ _eventd_evp_start(EventdPluginContext *service)
         socket = NULL;
     }
     else
-        socket = service->core_interface->get_unix_socket(service->core, service->unix_socket, UNIX_SOCKET, &used_path);
-    if ( used_path != NULL )
-    {
-        g_free(service->unix_socket);
-        service->unix_socket = used_path;
-    }
+        socket = service->core_interface->get_unix_socket(service->core, service->unix_socket, UNIX_SOCKET);
     g_free(service->unix_socket);
     if ( socket != NULL )
     {
