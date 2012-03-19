@@ -47,7 +47,7 @@ struct _EventdCoreContext {
     EventdConfig *config;
     EventdControl *control;
     EventdQueue *queue;
-    GList *sockets;
+    EventdSockets *sockets;
     gchar *runtime_dir;
     gboolean take_over_socket;
     GMainLoop *loop;
@@ -67,7 +67,7 @@ eventd_core_get_unix_socket(EventdCoreContext *context, const gchar *path, const
         used_path = g_build_filename(context->runtime_dir, default_path, NULL);
     }
 
-    socket = eventd_sockets_get_unix_socket(&context->sockets, ( path != NULL ) ? path : used_path, context->take_over_socket, created);
+    socket = eventd_sockets_get_unix_socket(context->sockets, ( path != NULL ) ? path : used_path, context->take_over_socket, created);
 
     if ( ret_used_path != NULL )
         *ret_used_path = used_path;
@@ -78,7 +78,7 @@ eventd_core_get_unix_socket(EventdCoreContext *context, const gchar *path, const
 GSocket *
 eventd_core_get_inet_socket(EventdCoreContext *context, gint16 port)
 {
-    return eventd_sockets_get_inet_socket(&context->sockets, port);
+    return eventd_sockets_get_inet_socket(context->sockets, port);
 }
 
 void
@@ -205,7 +205,7 @@ main(int argc, char *argv[])
 
     eventd_config_parse(context->config);
 
-    context->sockets = eventd_sockets_get_list();
+    context->sockets = eventd_sockets_new();
 
     eventd_control_start(context->control);
 
@@ -213,11 +213,11 @@ main(int argc, char *argv[])
 
     eventd_plugins_start_all();
 
-    eventd_sockets_free_all(context->sockets);
-
     context->loop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(context->loop);
     g_main_loop_unref(context->loop);
+
+    eventd_sockets_free(context->sockets);
 
     g_free(context->runtime_dir);
 end:

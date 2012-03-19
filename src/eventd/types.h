@@ -29,5 +29,6 @@
 typedef struct _EventdQueue EventdQueue;
 typedef struct _EventdControl EventdControl;
 typedef struct _EventdConfig EventdConfig;
+typedef struct _EventdSockets EventdSockets;
 
 #endif /* __EVENTD_TYPES_H__ */

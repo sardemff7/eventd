@@ -34,8 +34,16 @@
 #include <systemd/sd-daemon.h>
 #endif /* ENABLE_SYSTEMD */
 
+#include "types.h"
+
+#include "sockets.h"
+
+struct _EventdSockets {
+    GList *list;
+};
+
 GSocket *
-eventd_sockets_get_inet_socket(GList **sockets, guint16 port)
+eventd_sockets_get_inet_socket(EventdSockets *sockets, guint16 port)
 {
     GSocket *socket = NULL;
     GError *error = NULL;
@@ -46,7 +54,7 @@ eventd_sockets_get_inet_socket(GList **sockets, guint16 port)
     if ( port == 0 )
         goto fail;
 
-    for ( socket_ = *sockets ; socket_ != NULL ; socket_ = g_list_next(socket_) )
+    for ( socket_ = sockets->list ; socket_ != NULL ; socket_ = g_list_next(socket_) )
     {
         GSocketFamily family;
 
@@ -64,8 +72,7 @@ eventd_sockets_get_inet_socket(GList **sockets, guint16 port)
         if ( g_inet_socket_address_get_port(G_INET_SOCKET_ADDRESS(address)) == port )
         {
             socket = socket_->data;
-            *sockets = g_list_remove_link(*sockets, socket_);
-            g_list_free_1(socket_);
+            sockets->list = g_list_delete_link(sockets->list, socket_);
             return socket;
         }
     }
@@ -99,7 +106,7 @@ fail:
 }
 
 GSocket *
-eventd_sockets_get_unix_socket(GList **sockets, const gchar *path, gboolean take_over_socket, gboolean *created)
+eventd_sockets_get_unix_socket(EventdSockets *sockets, const gchar *path, gboolean take_over_socket, gboolean *created)
 {
 #if ENABLE_GIO_UNIX
     GSocket *socket = NULL;
@@ -110,7 +117,7 @@ eventd_sockets_get_unix_socket(GList **sockets, const gchar *path, gboolean take
     if ( path == NULL )
         goto fail;
 
-    for ( socket_ = *sockets ; socket_ != NULL ; socket_ = g_list_next(socket_) )
+    for ( socket_ = sockets->list ; socket_ != NULL ; socket_ = g_list_next(socket_) )
     {
         if ( g_socket_get_family(socket_->data) != G_SOCKET_FAMILY_UNIX )
             continue;
@@ -125,7 +132,7 @@ eventd_sockets_get_unix_socket(GList **sockets, const gchar *path, gboolean take
         if ( g_strcmp0(path, g_unix_socket_address_get_path(G_UNIX_SOCKET_ADDRESS(address))) == 0 )
         {
             socket = socket_->data;
-            *sockets = g_list_remove_link(*sockets, socket_);
+            sockets->list = g_list_remove_link(sockets->list, socket_);
             g_list_free_1(socket_);
             if ( created != NULL )
                 *created = FALSE;
@@ -174,17 +181,22 @@ fail:
     return NULL;
 }
 
-GList *
-eventd_sockets_get_list()
+EventdSockets *
+eventd_sockets_new()
 {
-    GList *sockets = NULL;
+    EventdSockets *sockets;
+
 #if ENABLE_SYSTEMD
     GError *error = NULL;
     GSocket *socket;
     gint n;
     gint r;
     gint fd;
+#endif /* ENABLE_SYSTEMD */
 
+    sockets = g_new0(EventdSockets, 1);
+
+#if ENABLE_SYSTEMD
     n = sd_listen_fds(TRUE);
     if ( n < 0 )
         g_warning("Failed to acquire systemd sockets: %s", strerror(-n));
@@ -204,14 +216,17 @@ eventd_sockets_get_list()
         if ( ( socket = g_socket_new_from_fd(fd, &error) ) == NULL )
             g_warning("Failed to take a socket from systemd: %s", error->message);
         else
-            sockets = g_list_prepend(sockets, socket);
+            sockets->list = g_list_prepend(sockets->list, socket);
     }
 #endif /* ENABLE_SYSTEMD */
+
     return sockets;
 }
 
 void
-eventd_sockets_free_all(GList *sockets)
+eventd_sockets_free_all(EventdSockets *sockets)
 {
-    g_list_free_full(sockets, g_object_unref);
+    g_list_free_full(sockets->list, g_object_unref);
+
+    g_free(sockets);
 }

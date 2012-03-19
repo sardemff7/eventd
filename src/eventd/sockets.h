@@ -23,10 +23,10 @@
 #ifndef __EVENTD_SOCKETS_H__
 #define __EVENTD_SOCKETS_H__
 
-GSocket *eventd_sockets_get_inet_socket(GList **sockets, guint16 port);
-GSocket *eventd_sockets_get_unix_socket(GList **sockets, const gchar *path, gboolean take_over, gboolean *created);
+GSocket *eventd_sockets_get_inet_socket(EventdSockets *sockets, guint16 port);
+GSocket *eventd_sockets_get_unix_socket(EventdSockets *sockets, const gchar *path, gboolean take_over, gboolean *created);
 
-GList *eventd_sockets_get_list(void);
-void eventd_sockets_free_all(GList *sockets);
+EventdSockets *eventd_sockets_new(void);
+void eventd_sockets_free(EventdSockets *sockets);
 
 #endif /* __EVENTD_SOCKETS_H__ */
