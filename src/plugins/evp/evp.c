@@ -266,8 +266,6 @@ _eventd_evp_uninit(EventdPluginContext *service)
 
     g_free(service->avahi_name);
 
-    g_free(service->unix_socket);
-
     g_free(service);
 }
 
@@ -279,7 +277,6 @@ _eventd_evp_start(EventdPluginContext *service)
     GSocket *socket = NULL;
 #if ENABLE_GIO_UNIX
     gchar *used_path = NULL;
-    gboolean created = FALSE;
 #endif /* ENABLE_GIO_UNIX */
 
     service->service = g_threaded_socket_service_new(service->max_clients);
@@ -302,17 +299,13 @@ _eventd_evp_start(EventdPluginContext *service)
         socket = NULL;
     }
     else
-        socket = service->core_interface->get_unix_socket(service->core, service->unix_socket, UNIX_SOCKET, &used_path, &created);
+        socket = service->core_interface->get_unix_socket(service->core, service->unix_socket, UNIX_SOCKET, &used_path);
     if ( used_path != NULL )
     {
         g_free(service->unix_socket);
         service->unix_socket = used_path;
     }
-    if ( ! created )
-    {
-        g_free(service->unix_socket);
-        service->unix_socket = NULL;
-    }
+    g_free(service->unix_socket);
     if ( socket != NULL )
     {
         sockets = g_list_prepend(sockets, socket);
@@ -344,11 +337,6 @@ _eventd_evp_stop(EventdPluginContext *service)
     g_socket_service_stop(service->service);
     g_socket_listener_close(G_SOCKET_LISTENER(service->service));
     g_object_unref(service->service);
-
-#if ENABLE_GIO_UNIX
-    if ( service->unix_socket != NULL )
-        g_unlink(service->unix_socket);
-#endif /* ENABLE_GIO_UNIX */
 }
 
 static GOptionGroup *

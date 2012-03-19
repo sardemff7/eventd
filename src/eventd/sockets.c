@@ -40,6 +40,7 @@
 
 struct _EventdSockets {
     GList *list;
+    GSList *created;
 };
 
 GSocket *
@@ -106,7 +107,7 @@ fail:
 }
 
 GSocket *
-eventd_sockets_get_unix_socket(EventdSockets *sockets, const gchar *path, gboolean take_over_socket, gboolean *created)
+eventd_sockets_get_unix_socket(EventdSockets *sockets, const gchar *path, gboolean take_over_socket)
 {
 #if ENABLE_GIO_UNIX
     GSocket *socket = NULL;
@@ -132,10 +133,7 @@ eventd_sockets_get_unix_socket(EventdSockets *sockets, const gchar *path, gboole
         if ( g_strcmp0(path, g_unix_socket_address_get_path(G_UNIX_SOCKET_ADDRESS(address))) == 0 )
         {
             socket = socket_->data;
-            sockets->list = g_list_remove_link(sockets->list, socket_);
-            g_list_free_1(socket_);
-            if ( created != NULL )
-                *created = FALSE;
+            sockets->list = g_list_delete_link(sockets->list, socket_);
             return socket;
         }
     }
@@ -167,8 +165,7 @@ eventd_sockets_get_unix_socket(EventdSockets *sockets, const gchar *path, gboole
         goto fail;
     }
 
-    if ( created != NULL )
-        *created = TRUE;
+    sockets->created = g_slist_prepend(sockets->created, g_strdup(path));
     return socket;
 
 fail:
@@ -176,8 +173,6 @@ fail:
         g_object_unref(socket);
     g_clear_error(&error);
 #endif /* ENABLE_GIO_UNIX */
-    if ( created != NULL )
-        *created = FALSE;
     return NULL;
 }
 
@@ -223,10 +218,24 @@ eventd_sockets_new()
     return sockets;
 }
 
+#if ENABLE_GIO_UNIX
+static void
+_eventd_sockets_unix_socket_free(gpointer data)
+{
+    gchar *path = data;
+    g_unlink(path);
+    g_free(path);
+}
+#endif /* ENABLE_GIO_UNIX */
+
 void
-eventd_sockets_free_all(EventdSockets *sockets)
+eventd_sockets_free(EventdSockets *sockets)
 {
     g_list_free_full(sockets->list, g_object_unref);
+
+#if ENABLE_GIO_UNIX
+    g_slist_free_full(sockets->created, _eventd_sockets_unix_socket_free);
+#endif /* ENABLE_GIO_UNIX */
 
     g_free(sockets);
 }

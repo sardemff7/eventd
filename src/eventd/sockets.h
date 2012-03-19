@@ -24,7 +24,7 @@
 #define __EVENTD_SOCKETS_H__
 
 GSocket *eventd_sockets_get_inet_socket(EventdSockets *sockets, guint16 port);
-GSocket *eventd_sockets_get_unix_socket(EventdSockets *sockets, const gchar *path, gboolean take_over, gboolean *created);
+GSocket *eventd_sockets_get_unix_socket(EventdSockets *sockets, const gchar *path, gboolean take_over);
 
 EventdSockets *eventd_sockets_new(void);
 void eventd_sockets_free(EventdSockets *sockets);

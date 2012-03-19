@@ -23,7 +23,7 @@
 #ifndef __EVENTD_CONTROL_H__
 #define __EVENTD_CONTROL_H__
 
-GSocket *eventd_core_get_unix_socket(EventdCoreContext *context, const gchar *path, const gchar *default_path, gchar **used_path, gboolean *created);
+GSocket *eventd_core_get_unix_socket(EventdCoreContext *context, const gchar *path, const gchar *default_path, gchar **used_path);
 GSocket *eventd_core_get_inet_socket(EventdCoreContext *context, gint16 port);
 
 void eventd_core_push_event(EventdCoreContext *context, EventdEvent *event);
