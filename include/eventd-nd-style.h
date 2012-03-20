@@ -44,10 +44,12 @@ gint eventd_nd_style_get_bubble_padding(EventdNdStyle *style);
 gint eventd_nd_style_get_bubble_radius(EventdNdStyle *style);
 Colour eventd_nd_style_get_bubble_colour(EventdNdStyle *style);
 
+gint eventd_nd_style_get_image_max_width(EventdNdStyle *style);
+gint eventd_nd_style_get_image_max_height(EventdNdStyle *style);
+gint eventd_nd_style_get_image_margin(EventdNdStyle *style);
+
 gint eventd_nd_style_get_icon_max_width(EventdNdStyle *style);
 gint eventd_nd_style_get_icon_max_height(EventdNdStyle *style);
-gint eventd_nd_style_get_icon_spacing(EventdNdStyle *style);
-gdouble eventd_nd_style_get_overlay_scale(EventdNdStyle *style);
 
 const gchar *eventd_nd_style_get_title_font(EventdNdStyle *style);
 Colour eventd_nd_style_get_title_colour(EventdNdStyle *style);

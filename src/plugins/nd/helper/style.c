@@ -34,10 +34,12 @@ struct _EventdNdStyle {
     gint bubble_radius;
     Colour bubble_colour;
 
+    gint image_max_width;
+    gint image_max_height;
+    gint image_margin;
+
     gint icon_max_width;
     gint icon_max_height;
-    gint icon_spacing;
-    gdouble overlay_scale;
 
     gchar *title_font;
     Colour title_colour;
@@ -95,11 +97,14 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
     style->bubble_colour.b = 0.15;
     style->bubble_colour.a = 1.0;
 
+    /* image */
+    style->image_max_width  = 50;
+    style->image_max_height = 50;
+    style->image_margin     = 10;
+
     /* icon */
-    style->icon_max_width  = 50;
-    style->icon_max_height = 50;
-    style->icon_spacing    = 10;
-    style->overlay_scale   = 0.5;
+    style->icon_max_width  = 25;
+    style->icon_max_height = 25;
 
     /* title */
     style->title_font = g_strdup("Linux Libertine O Bold 9");
@@ -130,11 +135,14 @@ _eventd_nd_style_init_parent(EventdNdStyle *self, EventdNdStyle *parent)
     self->bubble_radius  = parent->bubble_radius;
     self->bubble_colour  = parent->bubble_colour;
 
+    /* image */
+    self->image_max_width  = parent->image_max_width;
+    self->image_max_height = parent->image_max_height;
+    self->image_margin     = parent->image_margin;
+
     /* icon */
     self->icon_max_width  = parent->icon_max_width;
     self->icon_max_height = parent->icon_max_height;
-    self->icon_spacing    = parent->icon_spacing;
-    self->overlay_scale   = parent->overlay_scale;
 
     /* title */
     self->title_font   = g_strdup(parent->title_font);
@@ -226,6 +234,18 @@ eventd_nd_style_update(EventdNdStyle *style, GKeyFile *config_file)
         }
     }
 
+    if ( g_key_file_has_group(config_file, "image") )
+    {
+        if ( libeventd_config_key_file_get_int(config_file, "image", "max-width", &integer) == 0 )
+            style->image_max_width = integer.value;
+
+        if ( libeventd_config_key_file_get_int(config_file, "image", "max-height", &integer) == 0 )
+            style->image_max_height = integer.value;
+
+        if ( libeventd_config_key_file_get_int(config_file, "image", "margin", &integer) == 0 )
+            style->image_margin = integer.value;
+    }
+
     if ( g_key_file_has_group(config_file, "icon") )
     {
         if ( libeventd_config_key_file_get_int(config_file, "icon", "max-width", &integer) == 0 )
@@ -234,11 +254,6 @@ eventd_nd_style_update(EventdNdStyle *style, GKeyFile *config_file)
         if ( libeventd_config_key_file_get_int(config_file, "icon", "max-height", &integer) == 0 )
             style->icon_max_height = integer.value;
 
-        if ( libeventd_config_key_file_get_int(config_file, "icon", "overlay-scale", &integer) == 0 )
-            style->overlay_scale = (gdouble)integer.value / 100.;
-
-        if ( libeventd_config_key_file_get_int(config_file, "icon", "spacing", &integer) == 0 )
-            style->icon_spacing = integer.value;
     }
 }
 
@@ -285,6 +300,24 @@ eventd_nd_style_get_bubble_colour(EventdNdStyle *self)
 }
 
 gint
+eventd_nd_style_get_image_max_width(EventdNdStyle *self)
+{
+    return self->image_max_width;
+}
+
+gint
+eventd_nd_style_get_image_max_height(EventdNdStyle *self)
+{
+    return self->image_max_height;
+}
+
+gint
+eventd_nd_style_get_image_margin(EventdNdStyle *self)
+{
+    return self->image_margin;
+}
+
+gint
 eventd_nd_style_get_icon_max_width(EventdNdStyle *self)
 {
     return self->icon_max_width;
@@ -294,18 +327,6 @@ gint
 eventd_nd_style_get_icon_max_height(EventdNdStyle *self)
 {
     return self->icon_max_height;
-}
-
-gint
-eventd_nd_style_get_icon_spacing(EventdNdStyle *self)
-{
-    return self->icon_spacing;
-}
-
-gdouble
-eventd_nd_style_get_overlay_scale(EventdNdStyle *self)
-{
-    return self->overlay_scale;
 }
 
 const gchar *

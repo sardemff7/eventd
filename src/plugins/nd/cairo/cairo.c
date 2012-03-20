@@ -239,31 +239,52 @@ _eventd_nd_cairo_text_process(EventdNdNotification *notification, EventdNdStyle 
     return ret;
 }
 
-static gdouble
-_eventd_nd_cairo_limit_icon_size(EventdNdStyle *style, gint width, gint height, gint *r_width, gint *r_height)
+static cairo_surface_t *
+_eventd_nd_cairo_limit_size(cairo_surface_t *source, gint max_width, gint max_height)
 {
-    gdouble max_width, max_height;
     gdouble s = 1.0;
+    gint width, height;
+    cairo_surface_t *surface;
+    cairo_t *cr;
+    cairo_pattern_t *pattern;
+    cairo_matrix_t matrix;
 
-    max_width = eventd_nd_style_get_icon_max_width(style);
-    max_height = eventd_nd_style_get_icon_max_height(style);
+    width = cairo_image_surface_get_width(source);
+    height = cairo_image_surface_get_height(source);
 
     if ( ( width > max_width ) && ( height > max_height ) )
     {
         if ( width > height )
-            s = max_width / width;
+            s = (gdouble) max_width / (gdouble) width;
         else
-            s = max_height / height;
+            s = (gdouble) max_height / (gdouble) height;
     }
     else if ( width > max_width )
-        s = max_width / width;
+        s = (gdouble) max_width / (gdouble) width;
     else if ( height > max_height )
-        s = max_height / height;
+        s = (gdouble) max_height / (gdouble) height;
+    else
+        return source;
 
-    (*r_width) = width * s;
-    (*r_height) = height * s;
+    width *= s;
+    height *= s;
 
-    return s;
+    surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
+    cr = cairo_create(surface);
+
+    cairo_matrix_init_scale(&matrix, 1. / s, 1. / s);
+
+    pattern = cairo_pattern_create_for_surface(source);
+    cairo_pattern_set_matrix(pattern, &matrix);
+
+    cairo_set_source(cr, pattern);
+    cairo_paint(cr);
+
+    cairo_pattern_destroy(pattern);
+    cairo_destroy(cr);
+    cairo_surface_destroy(source);
+
+    return surface;
 }
 
 /*
@@ -301,7 +322,7 @@ alpha_mult(guchar c, guchar a)
 }
 
 static cairo_surface_t *
-_eventd_nd_cairo_get_icon_surface(GdkPixbuf *pixbuf)
+_eventd_nd_cairo_get_surface_from_pixbuf(GdkPixbuf *pixbuf)
 {
     gint width, height;
     const guchar *pixels;
@@ -362,103 +383,57 @@ _eventd_nd_cairo_get_icon_surface(GdkPixbuf *pixbuf)
 }
 
 static cairo_surface_t *
-_eventd_nd_cairo_icon_process(EventdNdStyle *style, cairo_surface_t *image, cairo_surface_t *icon, gint *icon_width, gint *icon_height)
+_eventd_nd_cairo_image_process(EventdNdNotification *notification, EventdNdStyle *style, gint *width, gint *height)
 {
-    gint w, h;
+    GdkPixbuf *pixbuf;
+    cairo_surface_t *image;
 
-    gdouble scale;
-    cairo_surface_t *surface;
-    cairo_t *cr;
-    cairo_pattern_t *pattern;
-    cairo_matrix_t matrix;
+    pixbuf = eventd_nd_notification_get_image(notification);
 
-    *icon_width = 0;
-    *icon_height = 0;
+    if ( ( pixbuf == NULL ) && ( ( pixbuf = eventd_nd_notification_get_icon(notification) ) == NULL ) )
+        return NULL;
 
-    if ( image == NULL )
-    {
-        if ( icon == NULL )
-            return NULL;
-        else
-            return _eventd_nd_cairo_icon_process(style, icon, NULL, icon_width, icon_height);
-    }
+    image = _eventd_nd_cairo_limit_size(_eventd_nd_cairo_get_surface_from_pixbuf(pixbuf),
+                                        eventd_nd_style_get_image_max_width(style),
+                                        eventd_nd_style_get_image_max_height(style));
 
-    w = cairo_image_surface_get_width(image);
-    h = cairo_image_surface_get_height(image);
+    *width = cairo_image_surface_get_width(image);
+    *height = cairo_image_surface_get_height(image);
 
-    scale = _eventd_nd_cairo_limit_icon_size(style, w, h, icon_width, icon_height);
-
-    if ( scale != 1.0 )
-    {
-        surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, w, h);
-        cr = cairo_create(surface);
-
-        cairo_matrix_init_scale(&matrix, 1. / scale, 1. / scale);
-
-        pattern = cairo_pattern_create_for_surface(image);
-        cairo_pattern_set_matrix(pattern, &matrix);
-
-        cairo_set_source(cr, pattern);
-        cairo_rectangle(cr, 0, 0, w, h);
-        cairo_fill(cr);
-
-        cairo_pattern_destroy(pattern);
-        cairo_destroy(cr);
-        cairo_surface_destroy(image);
-
-        image = surface;
-    }
-    else
-        surface = image;
-
-    if ( icon != NULL )
-    {
-        gdouble overlay_scale;
-        overlay_scale = eventd_nd_style_get_overlay_scale(style);
-
-        w = cairo_image_surface_get_width(icon);
-        h = cairo_image_surface_get_height(icon);
-        if ( w > h )
-            scale = ( ( (gdouble) *icon_width * overlay_scale ) / (gdouble) w );
-        else
-            scale = ( ( (gdouble) *icon_height * overlay_scale ) / (gdouble) h );
-
-        w *= scale;
-        h *= scale;
-
-        *icon_width +=  w / 2;
-        *icon_height += h / 2;
-
-        surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, *icon_width, *icon_height);
-
-        cr = cairo_create(surface);
-
-        cairo_set_source_surface(cr, image, w / 4, h / 4);
-        cairo_rectangle(cr, w / 4, h / 4, *icon_width, *icon_height);
-        cairo_fill(cr);
-
-        cairo_matrix_init_scale(&matrix, 1. / scale, 1. / scale);
-        cairo_matrix_translate(&matrix, - *icon_width + w, - *icon_height + h);
-
-        pattern = cairo_pattern_create_for_surface(icon);
-        cairo_pattern_set_matrix(pattern, &matrix);
-
-        cairo_set_source(cr, pattern);
-        cairo_rectangle(cr, 0, 0, *icon_width, *icon_height);
-        cairo_fill(cr);
-
-        cairo_pattern_destroy(pattern);
-        cairo_destroy(cr);
-
-        cairo_surface_destroy(icon);
-        cairo_surface_destroy(image);
-    }
-
-    *icon_width += eventd_nd_style_get_icon_spacing(style);
-
-    return surface;
+    return image;
 }
 
+static cairo_surface_t *
+_eventd_nd_cairo_icon_process_overlay(EventdNdNotification *notification, EventdNdStyle *style, gint *width, gint *height)
+{
+    GdkPixbuf *pixbuf;
+    cairo_surface_t *icon;
+    gint w, h;
+
+    if ( ( eventd_nd_notification_get_image(notification) == NULL ) || ( ( pixbuf = eventd_nd_notification_get_icon(notification) ) == NULL ) )
+        return NULL;
+
+    icon = _eventd_nd_cairo_limit_size(_eventd_nd_cairo_get_surface_from_pixbuf(pixbuf),
+                                        eventd_nd_style_get_icon_max_width(style),
+                                        eventd_nd_style_get_icon_max_height(style));
+
+    w = cairo_image_surface_get_width(icon);
+    h = cairo_image_surface_get_height(icon);
+
+    *width += ( w / 2 );
+    *height += ( h / 2 );
+
+    return icon;
+}
+
+static void
+_eventd_nd_cairo_image_and_icon_process(EventdNdNotification *notification, EventdNdStyle *style, cairo_surface_t **image, cairo_surface_t **icon, gint *text_margin, gint *width, gint *height)
+{
+    *image = _eventd_nd_cairo_image_process(notification, style, width, height);
+    *icon = _eventd_nd_cairo_icon_process_overlay(notification, style, width, height);
+    if ( *image != NULL )
+        *text_margin = *width + eventd_nd_style_get_image_margin(style);
+}
 
 static void
 _eventd_nd_cairo_shape_draw(cairo_t *cr, gint radius, gint width, gint height)
@@ -541,16 +516,43 @@ _eventd_nd_cairo_text_draw(cairo_t *cr, GList *lines, EventdNdStyle *style, gint
 }
 
 static void
-_eventd_nd_cairo_icon_draw(cairo_t *cr, cairo_surface_t *icon, gint x, gint y)
+_eventd_nd_cairo_surface_draw(cairo_t *cr, cairo_surface_t *surface, gint x, gint y)
 {
-    if ( icon == NULL )
+    cairo_set_source_surface(cr, surface, x, y);
+    cairo_rectangle(cr, x, y, cairo_image_surface_get_width(surface), cairo_image_surface_get_height(surface));
+    cairo_fill(cr);
+    cairo_surface_destroy(surface);
+}
+
+static void
+_eventd_nd_cairo_image_and_icon_draw(cairo_t *cr, cairo_surface_t *image, cairo_surface_t *icon, EventdNdStyle *style)
+{
+    if ( image == NULL )
         return;
 
-    cairo_set_source_surface(cr, icon, x, y);
-    cairo_rectangle(cr, x, y, cairo_image_surface_get_width(icon), cairo_image_surface_get_height(icon));
-    cairo_fill(cr);
+    gint padding;
 
-    cairo_surface_destroy(icon);
+    padding = eventd_nd_style_get_bubble_padding(style);
+
+    if ( icon == NULL )
+        _eventd_nd_cairo_surface_draw(cr, image, padding, padding);
+    else
+    {
+        gint image_x, image_y;
+        gint icon_x, icon_y;
+        gint w, h;
+
+        w = cairo_image_surface_get_width(icon);
+        h =  cairo_image_surface_get_height(icon);
+
+        image_x = padding + w / 4;
+        image_y = padding + h / 4;
+        icon_x = padding + cairo_image_surface_get_width(image) - ( w / 2 );
+        icon_y = padding + cairo_image_surface_get_height(image) - ( h / 2 );
+
+        _eventd_nd_cairo_surface_draw(cr, image, image_x, image_y);
+        _eventd_nd_cairo_surface_draw(cr, icon, icon_x, icon_y);
+    }
 }
 
 void
@@ -562,42 +564,41 @@ eventd_nd_cairo_get_surfaces(EventdEvent *event, EventdNdNotification *notificat
     gint width;
     gint height;
 
+    cairo_surface_t *image = NULL;
     cairo_surface_t *icon = NULL;
 
     GList *lines = NULL;
     gint text_width = 0, text_height = 0;
-    gint icon_width = 0, icon_height = 0;
+    gint text_margin = 0;
+    gint image_width = 0, image_height = 0;
 
     cairo_t *cr;
 
     /* proccess data */
     lines = _eventd_nd_cairo_text_process(notification, style, &text_height, &text_width);
 
-    icon = _eventd_nd_cairo_icon_process(style,
-                                          _eventd_nd_cairo_get_icon_surface(eventd_nd_notification_get_image(notification)),
-                                          _eventd_nd_cairo_get_icon_surface(eventd_nd_notification_get_icon(notification)),
-                                          &icon_width, &icon_height);
+    _eventd_nd_cairo_image_and_icon_process(notification, style, &image, &icon, &text_margin, &image_width, &image_height);
 
     /* compute the bubble size */
     padding = eventd_nd_style_get_bubble_padding(style);
     min_width = eventd_nd_style_get_bubble_min_width(style);
     max_width = eventd_nd_style_get_bubble_max_width(style);
 
-    width = 2 * padding + icon_width + text_width;
+    width = 2 * padding + image_width + text_width;
 
     if ( min_width > -1 )
         width = MAX(width, min_width);
     if ( max_width > -1 )
         width = MIN(width, max_width);
 
-    height = 2 * padding + MAX(icon_height, text_height);
+    height = 2 * padding + MAX(image_height, text_height);
 
     /* draw the bubble */
     *bubble = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
     cr = cairo_create(*bubble);
     _eventd_nd_cairo_bubble_draw(cr, eventd_nd_style_get_bubble_colour(style), width, height);
-    _eventd_nd_cairo_text_draw(cr, lines, style, padding + icon_width, padding);
-    _eventd_nd_cairo_icon_draw(cr, icon, padding, padding);
+    _eventd_nd_cairo_image_and_icon_draw(cr, image, icon, style);
+    _eventd_nd_cairo_text_draw(cr, lines, style, padding + text_margin, padding);
     cairo_destroy(cr);
 
     *shape = cairo_image_surface_create(CAIRO_FORMAT_A1, width, height);
