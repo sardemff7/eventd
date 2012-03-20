@@ -32,6 +32,11 @@ typedef struct {
     gdouble a;
 } Colour;
 
+typedef enum {
+    EVENTD_ND_STYLE_ICON_PLACEMENT_OVERLAY,
+    EVENTD_ND_STYLE_ICON_PLACEMENT_FOREGROUND
+} EventdNdStyleIconPlacement;
+
 EventdNdStyle *eventd_nd_style_new(EventdNdStyle *parent);
 void eventd_nd_style_free(EventdNdStyle *style);
 
@@ -48,8 +53,11 @@ gint eventd_nd_style_get_image_max_width(EventdNdStyle *style);
 gint eventd_nd_style_get_image_max_height(EventdNdStyle *style);
 gint eventd_nd_style_get_image_margin(EventdNdStyle *style);
 
+EventdNdStyleIconPlacement eventd_nd_style_get_icon_placement(EventdNdStyle *style);
+EventdNdAnchor eventd_nd_style_get_icon_anchor(EventdNdStyle *style);
 gint eventd_nd_style_get_icon_max_width(EventdNdStyle *style);
 gint eventd_nd_style_get_icon_max_height(EventdNdStyle *style);
+gint eventd_nd_style_get_icon_margin(EventdNdStyle *style);
 
 const gchar *eventd_nd_style_get_title_font(EventdNdStyle *style);
 Colour eventd_nd_style_get_title_colour(EventdNdStyle *style);

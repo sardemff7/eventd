@@ -38,8 +38,11 @@ struct _EventdNdStyle {
     gint image_max_height;
     gint image_margin;
 
+    EventdNdStyleIconPlacement icon_placement;
+    EventdNdAnchor icon_anchor;
     gint icon_max_width;
     gint icon_max_height;
+    gint icon_margin;
 
     gchar *title_font;
     Colour title_colour;
@@ -103,8 +106,11 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
     style->image_margin     = 10;
 
     /* icon */
+    style->icon_placement  = EVENTD_ND_STYLE_ICON_PLACEMENT_OVERLAY;
+    style->icon_anchor     = EVENTD_ND_ANCHOR_VCENTER;
     style->icon_max_width  = 25;
     style->icon_max_height = 25;
+    style->icon_margin     = 10;
 
     /* title */
     style->title_font = g_strdup("Linux Libertine O Bold 9");
@@ -141,8 +147,11 @@ _eventd_nd_style_init_parent(EventdNdStyle *self, EventdNdStyle *parent)
     self->image_margin     = parent->image_margin;
 
     /* icon */
+    self->icon_placement  = parent->icon_placement;
+    self->icon_anchor     = parent->icon_anchor;
     self->icon_max_width  = parent->icon_max_width;
     self->icon_max_height = parent->icon_max_height;
+    self->icon_margin     = parent->icon_margin;
 
     /* title */
     self->title_font   = g_strdup(parent->title_font);
@@ -248,12 +257,38 @@ eventd_nd_style_update(EventdNdStyle *style, GKeyFile *config_file)
 
     if ( g_key_file_has_group(config_file, "icon") )
     {
+        if ( libeventd_config_key_file_get_string(config_file, "icon", "placement", &string) == 0 )
+        {
+            if ( g_strcmp0(string, "overlay") == 0 )
+                style->icon_placement = EVENTD_ND_STYLE_ICON_PLACEMENT_OVERLAY;
+            else if ( g_strcmp0(string, "foreground") == 0 )
+                style->icon_placement = EVENTD_ND_STYLE_ICON_PLACEMENT_FOREGROUND;
+            else
+                g_warning("Wrong placement value '%s'", string);
+            g_free(string);
+        }
+
+        if ( libeventd_config_key_file_get_string(config_file, "icon", "anchor", &string) == 0 )
+        {
+            if ( g_strcmp0(string, "top") == 0 )
+                style->icon_anchor = EVENTD_ND_ANCHOR_TOP;
+            else if ( g_strcmp0(string, "bottom") == 0 )
+                style->icon_anchor = EVENTD_ND_ANCHOR_BOTTOM;
+            else if ( g_strcmp0(string, "center") == 0 )
+                style->icon_anchor = EVENTD_ND_ANCHOR_VCENTER;
+            else
+                g_warning("Wrong anchor value '%s'", string);
+            g_free(string);
+        }
+
         if ( libeventd_config_key_file_get_int(config_file, "icon", "max-width", &integer) == 0 )
             style->icon_max_width = integer.value;
 
         if ( libeventd_config_key_file_get_int(config_file, "icon", "max-height", &integer) == 0 )
             style->icon_max_height = integer.value;
 
+        if ( libeventd_config_key_file_get_int(config_file, "icon", "margin", &integer) == 0 )
+            style->icon_margin = integer.value;
     }
 }
 
@@ -317,6 +352,18 @@ eventd_nd_style_get_image_margin(EventdNdStyle *self)
     return self->image_margin;
 }
 
+EventdNdStyleIconPlacement
+eventd_nd_style_get_icon_placement(EventdNdStyle *self)
+{
+    return self->icon_placement;
+}
+
+EventdNdAnchor
+eventd_nd_style_get_icon_anchor(EventdNdStyle *self)
+{
+    return self->icon_anchor;
+}
+
 gint
 eventd_nd_style_get_icon_max_width(EventdNdStyle *self)
 {
@@ -327,6 +374,12 @@ gint
 eventd_nd_style_get_icon_max_height(EventdNdStyle *self)
 {
     return self->icon_max_height;
+}
+
+gint
+eventd_nd_style_get_icon_margin(EventdNdStyle *self)
+{
+    return self->icon_margin;
 }
 
 const gchar *
