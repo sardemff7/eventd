@@ -77,7 +77,7 @@ _eventd_nd_linux_display_test(EventdNdBackendContext *context, const gchar *targ
 }
 
 static EventdNdDisplay *
-_eventd_nd_linux_display_new(EventdNdBackendContext *context, const gchar *target, EventdNdStyleAnchor anchor, gint margin)
+_eventd_nd_linux_display_new(EventdNdBackendContext *context, const gchar *target, EventdNdCornerAnchor anchor, gint margin)
 {
     EventdNdDisplay *display;
     struct fb_fix_screeninfo finfo;
@@ -109,19 +109,19 @@ _eventd_nd_linux_display_new(EventdNdBackendContext *context, const gchar *targe
 
     switch ( anchor )
     {
-    case EVENTD_ND_STYLE_ANCHOR_TOP_LEFT:
+    case EVENTD_ND_ANCHOR_TOP_LEFT:
         display->x = margin;
         display->y = margin;
     break;
-    case EVENTD_ND_STYLE_ANCHOR_TOP_RIGHT:
+    case EVENTD_ND_ANCHOR_TOP_RIGHT:
         display->x = - vinfo.xres + margin;
         display->y = margin;
     break;
-    case EVENTD_ND_STYLE_ANCHOR_BOTTOM_LEFT:
+    case EVENTD_ND_ANCHOR_BOTTOM_LEFT:
         display->x = margin;
         display->y = - vinfo.yres + margin;
     break;
-    case EVENTD_ND_STYLE_ANCHOR_BOTTOM_RIGHT:
+    case EVENTD_ND_ANCHOR_BOTTOM_RIGHT:
         display->x = - vinfo.xres + margin;
         display->y = - vinfo.yres + margin;
     break;

@@ -37,7 +37,7 @@
 
 struct _EventdPluginContext {
     GHashTable *events;
-    EventdNdStyleAnchor bubble_anchor;
+    EventdNdCornerAnchor bubble_anchor;
     gint bubble_margin;
     EventdNdStyle *style;
     GList *backends;
@@ -287,7 +287,7 @@ _eventd_nd_init(EventdCoreContext *core, EventdCoreInterface *interface)
     eventd_nd_notification_init();
 
     /* default bubble position */
-    context->bubble_anchor    = EVENTD_ND_STYLE_ANCHOR_TOP_RIGHT;
+    context->bubble_anchor    = EVENTD_ND_ANCHOR_TOP_RIGHT;
     context->bubble_margin    = 13;
 
     context->style = eventd_nd_style_new(NULL);
@@ -378,13 +378,13 @@ _eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
         if ( libeventd_config_key_file_get_string(config_file, "nd", "anchor", &string) == 0 )
         {
             if ( g_strcmp0(string, "top left") == 0 )
-                context->bubble_anchor = EVENTD_ND_STYLE_ANCHOR_TOP_LEFT;
+                context->bubble_anchor = EVENTD_ND_ANCHOR_TOP_LEFT;
             else if ( g_strcmp0(string, "top right") == 0 )
-                context->bubble_anchor = EVENTD_ND_STYLE_ANCHOR_TOP_RIGHT;
+                context->bubble_anchor = EVENTD_ND_ANCHOR_TOP_RIGHT;
             else if ( g_strcmp0(string, "bottom left") == 0 )
-                context->bubble_anchor = EVENTD_ND_STYLE_ANCHOR_BOTTOM_LEFT;
+                context->bubble_anchor = EVENTD_ND_ANCHOR_BOTTOM_LEFT;
             else if ( g_strcmp0(string, "bottom right") == 0 )
-                context->bubble_anchor = EVENTD_ND_STYLE_ANCHOR_BOTTOM_RIGHT;
+                context->bubble_anchor = EVENTD_ND_ANCHOR_BOTTOM_RIGHT;
             else
                 g_warning("Wrong anchor value '%s'", string);
             g_free(string);

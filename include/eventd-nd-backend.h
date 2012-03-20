@@ -26,13 +26,6 @@
 #include <libeventd-event-types.h>
 #include <eventd-nd-types.h>
 
-typedef enum {
-    EVENTD_ND_STYLE_ANCHOR_TOP_LEFT,
-    EVENTD_ND_STYLE_ANCHOR_TOP_RIGHT,
-    EVENTD_ND_STYLE_ANCHOR_BOTTOM_LEFT,
-    EVENTD_ND_STYLE_ANCHOR_BOTTOM_RIGHT
-} EventdNdStyleAnchor;
-
 typedef struct _EventdNdDisplay EventdNdDisplay;
 typedef struct _EventdNdSurface EventdNdSurface;
 typedef struct _EventdNdBackendContext EventdNdBackendContext;
@@ -41,7 +34,7 @@ typedef EventdNdBackendContext *(*EventdNdBackendInitFunc)();
 typedef void (*EventdNdBackendUninitFunc)(EventdNdBackendContext *context);
 
 typedef gboolean (*EventdNdDisplayTestFunc)(EventdNdBackendContext *context, const gchar *target);
-typedef EventdNdDisplay *(*EventdNdDisplayNewFunc)(EventdNdBackendContext *context, const gchar *target, EventdNdStyleAnchor anchor, gint margin);
+typedef EventdNdDisplay *(*EventdNdDisplayNewFunc)(EventdNdBackendContext *context, const gchar *target, EventdNdCornerAnchor anchor, gint margin);
 typedef void (*EventdNdDisplayFunc)(EventdNdDisplay *display);
 
 typedef EventdNdSurface *(*EventdNdSurfaceShowFunc)(EventdEvent *event, EventdNdDisplay *display, EventdNdNotification *notification, EventdNdStyle *style);

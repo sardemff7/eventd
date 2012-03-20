@@ -128,7 +128,7 @@ _eventd_nd_xcb_display_test(EventdNdBackendContext *context, const gchar *target
 }
 
 static EventdNdDisplay *
-_eventd_nd_xcb_display_new(EventdNdBackendContext *context, const gchar *target, EventdNdStyleAnchor anchor, gint margin)
+_eventd_nd_xcb_display_new(EventdNdBackendContext *context, const gchar *target, EventdNdCornerAnchor anchor, gint margin)
 {
     EventdNdDisplay *display;
     GXcbSource *source;
@@ -157,20 +157,20 @@ _eventd_nd_xcb_display_new(EventdNdBackendContext *context, const gchar *target,
 
     switch ( anchor )
     {
-    case EVENTD_ND_STYLE_ANCHOR_TOP_LEFT:
+    case EVENTD_ND_ANCHOR_TOP_LEFT:
         display->x = margin;
         display->y = margin;
     break;
-    case EVENTD_ND_STYLE_ANCHOR_TOP_RIGHT:
+    case EVENTD_ND_ANCHOR_TOP_RIGHT:
         display->x = - display->screen->width_in_pixels + margin;
         display->y = margin;
     break;
-    case EVENTD_ND_STYLE_ANCHOR_BOTTOM_LEFT:
+    case EVENTD_ND_ANCHOR_BOTTOM_LEFT:
         display->anchor_bottom = TRUE;
         display->x = margin;
         display->y = display->screen->height_in_pixels - margin;
     break;
-    case EVENTD_ND_STYLE_ANCHOR_BOTTOM_RIGHT:
+    case EVENTD_ND_ANCHOR_BOTTOM_RIGHT:
         display->anchor_bottom = TRUE;
         display->x = - display->screen->width_in_pixels + margin;
         display->y = display->screen->height_in_pixels - margin;
