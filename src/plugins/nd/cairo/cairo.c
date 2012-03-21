@@ -383,15 +383,9 @@ _eventd_nd_cairo_get_surface_from_pixbuf(GdkPixbuf *pixbuf)
 }
 
 static cairo_surface_t *
-_eventd_nd_cairo_image_process(EventdNdNotification *notification, EventdNdStyle *style, gint *width, gint *height)
+_eventd_nd_cairo_image_process(GdkPixbuf *pixbuf, EventdNdStyle *style, gint *width, gint *height)
 {
-    GdkPixbuf *pixbuf;
     cairo_surface_t *image;
-
-    pixbuf = eventd_nd_notification_get_image(notification);
-
-    if ( ( pixbuf == NULL ) && ( ( pixbuf = eventd_nd_notification_get_icon(notification) ) == NULL ) )
-        return NULL;
 
     image = _eventd_nd_cairo_limit_size(_eventd_nd_cairo_get_surface_from_pixbuf(pixbuf),
                                         eventd_nd_style_get_image_max_width(style),
@@ -404,14 +398,10 @@ _eventd_nd_cairo_image_process(EventdNdNotification *notification, EventdNdStyle
 }
 
 static cairo_surface_t *
-_eventd_nd_cairo_icon_process_overlay(EventdNdNotification *notification, EventdNdStyle *style, gint *width, gint *height)
+_eventd_nd_cairo_icon_process_overlay(GdkPixbuf *pixbuf, EventdNdStyle *style, gint *width, gint *height)
 {
-    GdkPixbuf *pixbuf;
     cairo_surface_t *icon;
     gint w, h;
-
-    if ( ( eventd_nd_notification_get_image(notification) == NULL ) || ( ( pixbuf = eventd_nd_notification_get_icon(notification) ) == NULL ) )
-        return NULL;
 
     icon = _eventd_nd_cairo_limit_size(_eventd_nd_cairo_get_surface_from_pixbuf(pixbuf),
                                         eventd_nd_style_get_icon_max_width(style),
@@ -427,15 +417,9 @@ _eventd_nd_cairo_icon_process_overlay(EventdNdNotification *notification, Eventd
 }
 
 static cairo_surface_t *
-_eventd_nd_cairo_icon_process_foreground(EventdNdNotification *notification, EventdNdStyle *style, gint *width, gint *height)
+_eventd_nd_cairo_icon_process_foreground(GdkPixbuf *pixbuf, EventdNdStyle *style, gint *width, gint *height)
 {
-    GdkPixbuf *pixbuf;
     cairo_surface_t *icon;
-
-    pixbuf = eventd_nd_notification_get_icon(notification);
-
-    if ( ( eventd_nd_notification_get_image(notification) == NULL ) || ( ( pixbuf = eventd_nd_notification_get_icon(notification) ) == NULL ) )
-        return NULL;
 
     icon = _eventd_nd_cairo_limit_size(_eventd_nd_cairo_get_surface_from_pixbuf(pixbuf),
                                         eventd_nd_style_get_icon_max_width(style),
@@ -453,19 +437,34 @@ _eventd_nd_cairo_icon_process_foreground(EventdNdNotification *notification, Eve
 static void
 _eventd_nd_cairo_image_and_icon_process(EventdNdNotification *notification, EventdNdStyle *style, cairo_surface_t **image, cairo_surface_t **icon, gint *text_margin, gint *width, gint *height)
 {
+    GdkPixbuf *image_pixbuf;
+    GdkPixbuf *icon_pixbuf;
+
+    image_pixbuf = eventd_nd_notification_get_image(notification);
+    icon_pixbuf = eventd_nd_notification_get_icon(notification);
+
     switch ( eventd_nd_style_get_icon_placement(style) )
     {
     case EVENTD_ND_STYLE_ICON_PLACEMENT_OVERLAY:
-        *image = _eventd_nd_cairo_image_process(notification, style, width, height);
-        *icon = _eventd_nd_cairo_icon_process_overlay(notification, style, width, height);
+        if ( image_pixbuf != NULL )
+        {
+            *image = _eventd_nd_cairo_image_process(image_pixbuf, style, width, height);
+            if ( icon_pixbuf != NULL )
+                *icon = _eventd_nd_cairo_icon_process_overlay(icon_pixbuf, style, width, height);
+        }
+        else if ( icon_pixbuf != NULL )
+            *image = _eventd_nd_cairo_image_process(icon_pixbuf, style, width, height);
         if ( *image != NULL )
             *text_margin = *width + eventd_nd_style_get_image_margin(style);
     break;
     case EVENTD_ND_STYLE_ICON_PLACEMENT_FOREGROUND:
-        *image = _eventd_nd_cairo_image_process(notification, style, width, height);
-        if ( *image != NULL )
+        if ( image_pixbuf != NULL )
+        {
+            *image = _eventd_nd_cairo_image_process(image_pixbuf, style, width, height);
             *text_margin = *width + eventd_nd_style_get_image_margin(style);
-        *icon = _eventd_nd_cairo_icon_process_foreground(notification, style, width, height);
+        }
+        if ( icon_pixbuf != NULL )
+            *icon = _eventd_nd_cairo_icon_process_foreground(icon_pixbuf, style, width, height);
     break;
     }
 }
