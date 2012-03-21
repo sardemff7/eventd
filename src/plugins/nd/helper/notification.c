@@ -51,15 +51,21 @@ eventd_nd_notification_uninit()
 }
 
 static GdkPixbuf *
-_eventd_nd_notification_pixbuf_from_file(const gchar *path)
+_eventd_nd_notification_pixbuf_from_file(const gchar *path, gint width, gint height)
 {
     GError *error = NULL;
+    GdkPixbufFormat *format;
     GdkPixbuf *pixbuf;
 
     if ( *path == 0 )
         return NULL;
 
-    if ( ( pixbuf = gdk_pixbuf_new_from_file(path, &error) ) == NULL )
+    if ( ( ( width > 0 ) || ( height > 0 ) ) && ( ( format = gdk_pixbuf_get_file_info(path, NULL, NULL) ) != NULL ) && gdk_pixbuf_format_is_scalable(format) )
+        pixbuf = gdk_pixbuf_new_from_file_at_size(path, width, height, &error);
+    else
+        pixbuf = gdk_pixbuf_new_from_file(path, &error);
+
+    if ( pixbuf == NULL )
         g_warning("Couldn’t load file '%s': %s", path, error->message);
     g_clear_error(&error);
 
@@ -137,7 +143,7 @@ _eventd_nd_notification_pixbuf_from_base64(EventdEvent *event, const gchar *name
 }
 
 EventdNdNotification *
-eventd_nd_notification_new(EventdEvent *event, const gchar *title, const gchar *message, const gchar *image_name, const gchar *icon_name)
+eventd_nd_notification_new(EventdEvent *event, const gchar *title, const gchar *message, const gchar *image_name, const gchar *icon_name, gint width, gint height)
 {
     EventdNdNotification *self;
     gchar *path;
@@ -150,7 +156,7 @@ eventd_nd_notification_new(EventdEvent *event, const gchar *title, const gchar *
 
     if ( ( path = libeventd_config_get_filename(image_name, event, "icons") ) != NULL )
     {
-        self->image = _eventd_nd_notification_pixbuf_from_file(path);
+        self->image = _eventd_nd_notification_pixbuf_from_file(path, width, height);
         g_free(path);
     }
     else
@@ -158,7 +164,7 @@ eventd_nd_notification_new(EventdEvent *event, const gchar *title, const gchar *
 
     if ( ( path = libeventd_config_get_filename(icon_name, event, "icons") ) != NULL )
     {
-        self->icon = _eventd_nd_notification_pixbuf_from_file(path);
+        self->icon = _eventd_nd_notification_pixbuf_from_file(path, width, height);
         g_free(path);
     }
     else

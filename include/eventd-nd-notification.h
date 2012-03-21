@@ -29,7 +29,7 @@
 void eventd_nd_notification_init();
 void eventd_nd_notification_uninit();
 
-EventdNdNotification *eventd_nd_notification_new(EventdEvent *event, const gchar *title, const gchar *message, const gchar *icon_name, const gchar *overlay_icon_name);
+EventdNdNotification *eventd_nd_notification_new(EventdEvent *event, const gchar *title, const gchar *message, const gchar *icon_name, const gchar *overlay_icon_name, gint width, gint height);
 void eventd_nd_notification_free(EventdNdNotification *notification);
 
 const gchar *eventd_nd_notification_get_title(EventdNdNotification *notification);

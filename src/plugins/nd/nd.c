@@ -39,6 +39,8 @@ struct _EventdPluginContext {
     GHashTable *events;
     EventdNdCornerAnchor bubble_anchor;
     gint bubble_margin;
+    gint max_width;
+    gint max_height;
     EventdNdStyle *style;
     GList *backends;
     GList *displays;
@@ -166,6 +168,27 @@ _eventd_nd_backend_load(EventdPluginContext *context)
 }
 
 static void
+_eventd_nd_get_max_width_and_height(gint width, gint height, EventdNdStyle *style, gint *new_width, gint *new_height)
+{
+    gint w, h;
+
+    w = eventd_nd_style_get_image_max_width(style);
+    h = eventd_nd_style_get_image_max_height(style);
+
+    width = MAX(width, w);
+    height = MAX(height, h);
+
+    w = eventd_nd_style_get_icon_max_width(style);
+    h = eventd_nd_style_get_icon_max_height(style);
+
+    width = MAX(width, w);
+    height = MAX(height, h);
+
+    *new_width = width;
+    *new_height = height;
+}
+
+static void
 _eventd_nd_event_update(EventdNdEvent *event, GKeyFile *config_file)
 {
     gchar *string;
@@ -249,6 +272,7 @@ _eventd_nd_event_parse(EventdPluginContext *context, const gchar *event_category
     {
         event = _eventd_nd_event_new(context, ( event_name != NULL ) ? g_hash_table_lookup(context->events, event_category) : NULL);
         _eventd_nd_event_update(event, config_file);
+        _eventd_nd_get_max_width_and_height(context->max_width, context->max_height, event->style, &context->max_width, &context->max_height);
     }
 
     g_hash_table_insert(context->events, libeventd_config_events_get_name(event_category, event_name), event);
@@ -395,6 +419,7 @@ _eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
     }
 
     eventd_nd_style_update(context->style, config_file);
+    _eventd_nd_get_max_width_and_height(context->max_width, context->max_height, context->style, &context->max_width, &context->max_height);
 }
 
 static void
@@ -415,7 +440,7 @@ _eventd_nd_event_action(EventdPluginContext *context, EventdEvent *event)
     if ( nd_event == NULL )
         return;
 
-    notification = eventd_nd_notification_new(event, nd_event->title, nd_event->message, nd_event->image, nd_event->icon);
+    notification = eventd_nd_notification_new(event, nd_event->title, nd_event->message, nd_event->image, nd_event->icon, context->max_width, context->max_height);
 
     for ( display_ = context->displays ; display_ != NULL ; display_ = g_list_next(display_) )
     {
