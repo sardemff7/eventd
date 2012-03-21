@@ -457,6 +457,7 @@ _eventd_nd_cairo_image_and_icon_process(EventdNdNotification *notification, Even
         if ( *image != NULL )
             *text_margin = *width + eventd_nd_style_get_image_margin(style);
     break;
+    case EVENTD_ND_STYLE_ICON_PLACEMENT_BACKGROUND:
     case EVENTD_ND_STYLE_ICON_PLACEMENT_FOREGROUND:
         if ( image_pixbuf != NULL )
         {
@@ -630,6 +631,7 @@ _eventd_nd_cairo_image_and_icon_draw(cairo_t *cr, cairo_surface_t *image, cairo_
     case EVENTD_ND_STYLE_ICON_PLACEMENT_OVERLAY:
         _eventd_nd_cairo_image_and_icon_draw_overlay(cr, image, icon, style);
     break;
+    case EVENTD_ND_STYLE_ICON_PLACEMENT_BACKGROUND:
     case EVENTD_ND_STYLE_ICON_PLACEMENT_FOREGROUND:
         _eventd_nd_cairo_image_and_icon_draw_foreground(cr, image, icon, style, width, height);
     break;

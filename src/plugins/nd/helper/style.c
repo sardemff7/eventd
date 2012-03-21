@@ -43,6 +43,7 @@ struct _EventdNdStyle {
     gint icon_max_width;
     gint icon_max_height;
     gint icon_margin;
+    gdouble icon_fade_width;
 
     gchar *title_font;
     Colour title_colour;
@@ -106,11 +107,12 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
     style->image_margin     = 10;
 
     /* icon */
-    style->icon_placement  = EVENTD_ND_STYLE_ICON_PLACEMENT_OVERLAY;
+    style->icon_placement  = EVENTD_ND_STYLE_ICON_PLACEMENT_BACKGROUND;
     style->icon_anchor     = EVENTD_ND_ANCHOR_VCENTER;
-    style->icon_max_width  = 25;
-    style->icon_max_height = 25;
+    style->icon_max_width  = 50;
+    style->icon_max_height = 50;
     style->icon_margin     = 10;
+    style->icon_fade_width = 0.75;
 
     /* title */
     style->title_font = g_strdup("Linux Libertine O Bold 9");
@@ -152,6 +154,7 @@ _eventd_nd_style_init_parent(EventdNdStyle *self, EventdNdStyle *parent)
     self->icon_max_width  = parent->icon_max_width;
     self->icon_max_height = parent->icon_max_height;
     self->icon_margin     = parent->icon_margin;
+    self->icon_fade_width = parent->icon_fade_width;
 
     /* title */
     self->title_font   = g_strdup(parent->title_font);
@@ -259,7 +262,9 @@ eventd_nd_style_update(EventdNdStyle *style, GKeyFile *config_file)
     {
         if ( libeventd_config_key_file_get_string(config_file, "icon", "placement", &string) == 0 )
         {
-            if ( g_strcmp0(string, "overlay") == 0 )
+            if ( g_strcmp0(string, "background") == 0 )
+                style->icon_placement = EVENTD_ND_STYLE_ICON_PLACEMENT_BACKGROUND;
+            else if ( g_strcmp0(string, "overlay") == 0 )
                 style->icon_placement = EVENTD_ND_STYLE_ICON_PLACEMENT_OVERLAY;
             else if ( g_strcmp0(string, "foreground") == 0 )
                 style->icon_placement = EVENTD_ND_STYLE_ICON_PLACEMENT_FOREGROUND;
@@ -289,6 +294,14 @@ eventd_nd_style_update(EventdNdStyle *style, GKeyFile *config_file)
 
         if ( libeventd_config_key_file_get_int(config_file, "icon", "margin", &integer) == 0 )
             style->icon_margin = integer.value;
+
+        if ( libeventd_config_key_file_get_int(config_file, "icon", "fade-width", &integer) == 0 )
+        {
+            if ( ( integer.value < 0 ) || ( integer.value > 100 ) )
+                g_warning("Wrong percentage value '%jd'", integer.value);
+            else
+                style->icon_fade_width = (gdouble) integer.value / 100.;
+        }
     }
 }
 
@@ -380,6 +393,12 @@ gint
 eventd_nd_style_get_icon_margin(EventdNdStyle *self)
 {
     return self->icon_margin;
+}
+
+gdouble
+eventd_nd_style_get_icon_fade_width(EventdNdStyle *self)
+{
+    return self->icon_fade_width;
 }
 
 const gchar *
