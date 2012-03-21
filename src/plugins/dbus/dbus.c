@@ -177,7 +177,7 @@ _eventd_dbus_notify(EventdPluginContext *context, const gchar *sender, GVariant 
 #endif /* DEBUG */
 
         if ( g_str_has_prefix(icon, "file://") )
-            eventd_event_add_data(event, g_strdup("overlay-icon"), g_strdup(icon));
+            eventd_event_add_data(event, g_strdup("icon"), g_strdup(icon));
         else
         {
             /*
@@ -194,15 +194,15 @@ _eventd_dbus_notify(EventdPluginContext *context, const gchar *sender, GVariant 
         gchar *format;
 
         g_variant_get(image_data, "(iiibii@ay)", &w, &h, &s, &a, &b, &n, &data);
-        eventd_event_add_data(event, g_strdup("icon"), g_base64_encode(g_variant_get_data(data), g_variant_get_size(data)));
+        eventd_event_add_data(event, g_strdup("image"), g_base64_encode(g_variant_get_data(data), g_variant_get_size(data)));
 
         format = g_strdup_printf("%x %x %x %x", w, h, s, a);
-        eventd_event_add_data(event, g_strdup("icon-format"), format);
+        eventd_event_add_data(event, g_strdup("image-format"), format);
     }
     else if ( image_path != NULL )
     {
         if ( g_str_has_prefix(image_path, "file://") )
-            eventd_event_add_data(event, g_strdup("icon"), g_strdup(image_path));
+            eventd_event_add_data(event, g_strdup("image"), g_strdup(image_path));
     }
 
 
