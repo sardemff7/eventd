@@ -103,7 +103,7 @@ _eventd_nd_notification_pixbuf_from_base64(EventdEvent *event, const gchar *name
         stride = g_ascii_strtoll(f+1, &f, 16);
         alpha = g_ascii_strtoll(f+1, &f, 16);
 
-        pixbuf = gdk_pixbuf_new_from_data(data, GDK_COLORSPACE_RGB, alpha, alpha ? 4 : 3, width, height, stride, _eventd_nd_notification_pixbuf_data_free, NULL);
+        pixbuf = gdk_pixbuf_new_from_data(data, GDK_COLORSPACE_RGB, alpha, 8, width, height, stride, _eventd_nd_notification_pixbuf_data_free, NULL);
     }
     else
     {
