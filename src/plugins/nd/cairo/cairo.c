@@ -426,13 +426,48 @@ _eventd_nd_cairo_icon_process_overlay(EventdNdNotification *notification, Eventd
     return icon;
 }
 
+static cairo_surface_t *
+_eventd_nd_cairo_icon_process_foreground(EventdNdNotification *notification, EventdNdStyle *style, gint *width, gint *height)
+{
+    GdkPixbuf *pixbuf;
+    cairo_surface_t *icon;
+
+    pixbuf = eventd_nd_notification_get_icon(notification);
+
+    if ( ( eventd_nd_notification_get_image(notification) == NULL ) || ( ( pixbuf = eventd_nd_notification_get_icon(notification) ) == NULL ) )
+        return NULL;
+
+    icon = _eventd_nd_cairo_limit_size(_eventd_nd_cairo_get_surface_from_pixbuf(pixbuf),
+                                        eventd_nd_style_get_icon_max_width(style),
+                                        eventd_nd_style_get_icon_max_height(style));
+
+    gint h;
+
+    *width += cairo_image_surface_get_width(icon) + eventd_nd_style_get_icon_margin(style);
+    h = cairo_image_surface_get_height(icon);
+    *height = MAX(*height, h);
+
+    return icon;
+}
+
 static void
 _eventd_nd_cairo_image_and_icon_process(EventdNdNotification *notification, EventdNdStyle *style, cairo_surface_t **image, cairo_surface_t **icon, gint *text_margin, gint *width, gint *height)
 {
-    *image = _eventd_nd_cairo_image_process(notification, style, width, height);
-    *icon = _eventd_nd_cairo_icon_process_overlay(notification, style, width, height);
-    if ( *image != NULL )
-        *text_margin = *width + eventd_nd_style_get_image_margin(style);
+    switch ( eventd_nd_style_get_icon_placement(style) )
+    {
+    case EVENTD_ND_STYLE_ICON_PLACEMENT_OVERLAY:
+        *image = _eventd_nd_cairo_image_process(notification, style, width, height);
+        *icon = _eventd_nd_cairo_icon_process_overlay(notification, style, width, height);
+        if ( *image != NULL )
+            *text_margin = *width + eventd_nd_style_get_image_margin(style);
+    break;
+    case EVENTD_ND_STYLE_ICON_PLACEMENT_FOREGROUND:
+        *image = _eventd_nd_cairo_image_process(notification, style, width, height);
+        if ( *image != NULL )
+            *text_margin = *width + eventd_nd_style_get_image_margin(style);
+        *icon = _eventd_nd_cairo_icon_process_foreground(notification, style, width, height);
+    break;
+    }
 }
 
 static void
@@ -525,7 +560,7 @@ _eventd_nd_cairo_surface_draw(cairo_t *cr, cairo_surface_t *surface, gint x, gin
 }
 
 static void
-_eventd_nd_cairo_image_and_icon_draw(cairo_t *cr, cairo_surface_t *image, cairo_surface_t *icon, EventdNdStyle *style)
+_eventd_nd_cairo_image_and_icon_draw_overlay(cairo_t *cr, cairo_surface_t *image, cairo_surface_t *icon, EventdNdStyle *style)
 {
     if ( image == NULL )
         return;
@@ -552,6 +587,53 @@ _eventd_nd_cairo_image_and_icon_draw(cairo_t *cr, cairo_surface_t *image, cairo_
 
         _eventd_nd_cairo_surface_draw(cr, image, image_x, image_y);
         _eventd_nd_cairo_surface_draw(cr, icon, icon_x, icon_y);
+    }
+}
+
+static void
+_eventd_nd_cairo_image_and_icon_draw_foreground(cairo_t *cr, cairo_surface_t *image, cairo_surface_t *icon, EventdNdStyle *style, gint width, gint height)
+{
+    gint padding;
+
+    padding = eventd_nd_style_get_bubble_padding(style);
+
+    if ( image != NULL )
+        _eventd_nd_cairo_surface_draw(cr, image, padding, padding);
+
+    if ( icon != NULL )
+    {
+        gint x, y;
+
+        x = width - padding - cairo_image_surface_get_width(icon);
+        switch ( eventd_nd_style_get_icon_anchor(style) )
+        {
+        case EVENTD_ND_ANCHOR_TOP:
+            y = padding;
+        break;
+        case EVENTD_ND_ANCHOR_VCENTER:
+            y = ( height / 2 ) - (cairo_image_surface_get_height(icon) / 2);
+        break;
+        case EVENTD_ND_ANCHOR_BOTTOM:
+            y = height - padding - cairo_image_surface_get_height(icon);
+        break;
+        default:
+            g_assert_not_reached();
+        }
+        _eventd_nd_cairo_surface_draw(cr, icon, x, y);
+    }
+}
+
+static void
+_eventd_nd_cairo_image_and_icon_draw(cairo_t *cr, cairo_surface_t *image, cairo_surface_t *icon, EventdNdStyle *style, gint width, gint height)
+{
+    switch ( eventd_nd_style_get_icon_placement(style) )
+    {
+    case EVENTD_ND_STYLE_ICON_PLACEMENT_OVERLAY:
+        _eventd_nd_cairo_image_and_icon_draw_overlay(cr, image, icon, style);
+    break;
+    case EVENTD_ND_STYLE_ICON_PLACEMENT_FOREGROUND:
+        _eventd_nd_cairo_image_and_icon_draw_foreground(cr, image, icon, style, width, height);
+    break;
     }
 }
 
@@ -597,7 +679,7 @@ eventd_nd_cairo_get_surfaces(EventdEvent *event, EventdNdNotification *notificat
     *bubble = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
     cr = cairo_create(*bubble);
     _eventd_nd_cairo_bubble_draw(cr, eventd_nd_style_get_bubble_colour(style), width, height);
-    _eventd_nd_cairo_image_and_icon_draw(cr, image, icon, style);
+    _eventd_nd_cairo_image_and_icon_draw(cr, image, icon, style, width, height);
     _eventd_nd_cairo_text_draw(cr, lines, style, padding + text_margin, padding);
     cairo_destroy(cr);
 
