@@ -109,8 +109,6 @@ eventd_control_new(EventdCoreContext *core)
 void
 eventd_control_free(EventdControl *control)
 {
-    g_free(control->socket_path);
-
     g_free(control);
 }
 
@@ -139,7 +137,6 @@ eventd_control_start(EventdControl *control)
     g_object_unref(socket);
 
     g_signal_connect(control->socket_service, "run", G_CALLBACK(_eventd_service_private_connection_handler), control);
-
 }
 
 void
@@ -148,9 +145,6 @@ eventd_control_stop(EventdControl *control)
     g_socket_service_stop(control->socket_service);
     g_socket_listener_close(G_SOCKET_LISTENER(control->socket_service));
     g_object_unref(control->socket_service);
-
-    if ( control->socket_path != NULL )
-        g_unlink(control->socket_path);
 }
 
 void
