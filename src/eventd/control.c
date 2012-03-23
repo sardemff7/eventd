@@ -116,25 +116,41 @@ void
 eventd_control_start(EventdControl *control)
 {
     GError *error = NULL;
-    GSocket *socket;
+    GList *sockets = NULL;
+    GList *socket_;
 
     control->socket_service = g_threaded_socket_service_new(-1);
 
-    if ( ( control->socket_path != NULL ) && ( *control->socket_path == 0 ) )
+    const gchar *binds[] = { NULL, NULL };
+
+    if ( control->socket_path != NULL )
     {
+        gchar *bind;
+
+        bind = g_strconcat("unix:", control->socket_path, NULL);
+        binds[0] = bind;
+        sockets = eventd_core_get_sockets(control->core, binds);
+
+        g_free(bind);
         g_free(control->socket_path);
-        control->socket_path = NULL;
     }
 
-    socket = eventd_core_get_unix_socket(control->core, control->socket_path, "private");
-    g_free(control->socket_path);
-    if ( socket == NULL )
+    if ( sockets == NULL )
+    {
+        binds[0] = "unix-runtime:private";
+        sockets = eventd_core_get_sockets(control->core, binds);
+    }
+
+    if ( sockets == NULL )
         return;
 
-    if ( ! g_socket_listener_add_socket(G_SOCKET_LISTENER(control->socket_service), socket, NULL, &error) )
-        g_warning("Unable to add private socket: %s", error->message);
-    g_clear_error(&error);
-    g_object_unref(socket);
+    for ( socket_ = sockets ; socket_ != NULL ; socket_ = g_list_next(socket_) )
+    {
+        if ( ! g_socket_listener_add_socket(G_SOCKET_LISTENER(control->socket_service), socket_->data, NULL, &error) )
+            g_warning("Unable to add private socket: %s", error->message);
+        g_clear_error(&error);
+    }
+    g_list_free_full(sockets, g_object_unref);
 
     g_signal_connect(control->socket_service, "run", G_CALLBACK(_eventd_service_private_connection_handler), control);
 }
