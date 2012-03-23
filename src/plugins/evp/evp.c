@@ -39,8 +39,9 @@ struct _EventdPluginContext {
     EventdCoreInterface *core_interface;
     EventdEvpAvahiContext *avahi;
     gint64 max_clients;
-    guint16 bind_port;
-    gchar *unix_socket;
+    gboolean default_bind;
+    gboolean default_unix;
+    gchar **binds;
     gboolean no_avahi;
     gchar *avahi_name;
     GSocketService *service;
@@ -250,8 +251,6 @@ _eventd_evp_init(EventdCoreContext *core, EventdCoreInterface *core_interface)
 
     service->max_clients = -1;
 
-    service->bind_port = DEFAULT_BIND_PORT;
-
     service->avahi_name = g_strdup(PACKAGE_NAME);
 
     service->events = libeventd_config_events_new(NULL);
@@ -269,41 +268,55 @@ _eventd_evp_uninit(EventdPluginContext *service)
     g_free(service);
 }
 
+static GList *
+_eventd_evp_add_socket(GList *used_sockets, EventdPluginContext *context, const gchar * const *binds)
+{
+    GList *sockets = NULL;
+    GList *socket_;
+
+    sockets = context->core_interface->get_sockets(context->core, binds);
+
+    for ( socket_ = sockets ; socket_ != NULL ; socket_ = g_list_next(socket_) )
+    {
+        GError *error = NULL;
+
+        if ( ! g_socket_listener_add_socket(G_SOCKET_LISTENER(context->service), socket_->data, NULL, &error) )
+        {
+            g_warning("Unable to add socket: %s", error->message);
+            g_clear_error(&error);
+        }
+        else
+            sockets = g_list_prepend(used_sockets, g_object_ref(socket_->data));
+    }
+    g_list_free_full(sockets, g_object_unref);
+
+    return used_sockets;
+}
+
 static void
 _eventd_evp_start(EventdPluginContext *service)
 {
-    GError *error = NULL;
     GList *sockets = NULL;
-    GSocket *socket = NULL;
 
     service->service = g_threaded_socket_service_new(service->max_clients);
 
-    if ( service->bind_port > 0 )
+    if ( service->binds != NULL )
     {
-        socket = service->core_interface->get_inet_socket(service->core, service->bind_port);
-        sockets = g_list_prepend(sockets, socket);
+        sockets = _eventd_evp_add_socket(sockets, service, (const gchar * const *)service->binds);
+        g_strfreev(service->binds);
     }
-    if ( socket != NULL )
+
+    if ( service->default_bind )
     {
-        if ( ! g_socket_listener_add_socket(G_SOCKET_LISTENER(service->service), socket, NULL, &error) )
-            g_warning("Unable to add socket: %s", error->message);
-        g_clear_error(&error);
+        const gchar *binds[] = { "tcp:" DEFAULT_BIND_PORT_STR, NULL };
+        sockets = _eventd_evp_add_socket(sockets, service, binds);
     }
 
 #if ENABLE_GIO_UNIX
-    if ( ( service->unix_socket != NULL ) && ( *service->unix_socket == 0 ) )
+    if ( service->default_unix )
     {
-        socket = NULL;
-    }
-    else
-        socket = service->core_interface->get_unix_socket(service->core, service->unix_socket, UNIX_SOCKET);
-    g_free(service->unix_socket);
-    if ( socket != NULL )
-    {
-        sockets = g_list_prepend(sockets, socket);
-        if ( ! g_socket_listener_add_socket(G_SOCKET_LISTENER(service->service), socket, NULL, &error) )
-            g_warning("Unable to add socket: %s", error->message);
-        g_clear_error(&error);
+        const gchar *binds[] = { "unix-runtime:" UNIX_SOCKET, NULL };
+        sockets = _eventd_evp_add_socket(sockets, service, binds);
     }
 #endif /* ENABLE_GIO_UNIX */
 
@@ -337,9 +350,10 @@ _eventd_evp_get_option_group(EventdPluginContext *context)
     GOptionGroup *option_group;
     GOptionEntry entries[] =
     {
-        { "port", 'p', 0, G_OPTION_ARG_INT, &context->bind_port, "Port to listen for inbound connections", "<port>" },
+        { "listen-default", 'L', 0, G_OPTION_ARG_NONE, &context->default_bind, "Listen on default interface", NULL },
+        { "listen", 'l', 0, G_OPTION_ARG_STRING_ARRAY, &context->binds, "Add a socket to listen to", "<socket>" },
 #if ENABLE_GIO_UNIX
-        { "socket", 's', 0, G_OPTION_ARG_FILENAME, &context->unix_socket, "UNIX socket to listen for inbound connections", "<socket>" },
+        { "listen-default-unix", 'u', 0, G_OPTION_ARG_NONE, &context->default_unix, "Listen on default UNIX socket", NULL },
 #endif /* ENABLE_GIO_UNIX */
 #if ENABLE_AVAHI
         { "no-avahi", 'A', 0, G_OPTION_ARG_NONE, &context->no_avahi, "Disable avahi publishing", NULL },
