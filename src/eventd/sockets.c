@@ -86,6 +86,7 @@ eventd_sockets_get_inet_socket(EventdSockets *sockets, guint16 port)
 
     inet_address = g_inet_address_new_any(G_SOCKET_FAMILY_IPV6);
     address = g_inet_socket_address_new(inet_address, port);
+    g_object_unref(inet_address);
     if ( ! g_socket_bind(socket, address, TRUE, &error) )
     {
         g_warning("Unable to bind the IPv6 socket: %s", error->message);
@@ -101,7 +102,10 @@ eventd_sockets_get_inet_socket(EventdSockets *sockets, guint16 port)
     return socket;
 
 fail:
-    g_free(socket);
+    if ( socket != NULL )
+        g_object_unref(socket);
+    if ( address != NULL )
+        g_object_unref(address);
     g_clear_error(&error);
     return NULL;
 }
@@ -127,6 +131,7 @@ eventd_sockets_get_unix_socket(EventdSockets *sockets, const gchar *path, gboole
         if ( address == NULL )
         {
             g_warning("Couldn’t get socket local address: %s", error->message);
+            g_clear_error(&error);
             continue;
         }
 
@@ -138,18 +143,18 @@ eventd_sockets_get_unix_socket(EventdSockets *sockets, const gchar *path, gboole
         }
     }
 
-    if ( ( socket = g_socket_new(G_SOCKET_FAMILY_UNIX, G_SOCKET_TYPE_STREAM, 0, &error)  ) == NULL )
-    {
-        g_warning("Unable to create an UNIX socket: %s", error->message);
-        goto fail;
-    }
-
     if ( g_file_test(path, G_FILE_TEST_EXISTS) && ( ! g_file_test(path, G_FILE_TEST_IS_DIR|G_FILE_TEST_IS_REGULAR) ) )
     {
         if ( take_over_socket )
             g_unlink(path);
         else
-            goto fail;
+            return NULL;
+    }
+
+    if ( ( socket = g_socket_new(G_SOCKET_FAMILY_UNIX, G_SOCKET_TYPE_STREAM, 0, &error)  ) == NULL )
+    {
+        g_warning("Unable to create an UNIX socket: %s", error->message);
+        goto fail;
     }
 
     address = g_unix_socket_address_new(path);
