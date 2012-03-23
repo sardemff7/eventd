@@ -23,7 +23,7 @@
 #ifndef __EVENTD_SOCKETS_H__
 #define __EVENTD_SOCKETS_H__
 
-GSocket *eventd_sockets_get_inet_socket(EventdSockets *sockets, guint16 port);
+GList *eventd_sockets_get_inet_sockets(EventdSockets *sockets, const gchar *address, guint16 port);
 GSocket *eventd_sockets_get_unix_socket(EventdSockets *sockets, const gchar *path, gboolean take_over);
 
 EventdSockets *eventd_sockets_new(void);

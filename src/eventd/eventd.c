@@ -81,12 +81,12 @@ eventd_core_get_sockets(EventdCoreContext *context, const gchar * const *binds)
             port = CLAMP(parsed_value, 0, 65535);
             if ( port > 0 )
             {
-                GSocket *socket;
+                GList *inet_sockets;
 
-                socket = eventd_sockets_get_inet_socket(context->sockets, port);
+                inet_sockets = eventd_sockets_get_inet_sockets(context->sockets, NULL, port);
 
-                if ( socket != NULL )
-                    sockets = g_list_prepend(sockets, socket);
+                if ( inet_sockets != NULL )
+                    sockets = g_list_concat(sockets, inet_sockets);
             }
         }
 #if ENABLE_GIO_UNIX

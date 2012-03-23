@@ -43,17 +43,13 @@ struct _EventdSockets {
     GSList *created;
 };
 
-GSocket *
-eventd_sockets_get_inet_socket(EventdSockets *sockets, guint16 port)
+static GSocket *
+_eventd_sockets_get_inet_socket(EventdSockets *sockets, GInetAddress *inet_address, guint16 port)
 {
     GSocket *socket = NULL;
     GError *error = NULL;
-    GInetAddress *inet_address = NULL;
     GSocketAddress *address = NULL;
     GList *socket_;
-
-    if ( port == 0 )
-        goto fail;
 
     for ( socket_ = sockets->list ; socket_ != NULL ; socket_ = g_list_next(socket_) )
     {
@@ -70,7 +66,8 @@ eventd_sockets_get_inet_socket(EventdSockets *sockets, guint16 port)
             continue;
         }
 
-        if ( g_inet_socket_address_get_port(G_INET_SOCKET_ADDRESS(address)) == port )
+        if ( ( g_inet_address_equal(g_inet_socket_address_get_address(G_INET_SOCKET_ADDRESS(address)), inet_address) )
+             && ( g_inet_socket_address_get_port(G_INET_SOCKET_ADDRESS(address)) == port ) )
         {
             socket = socket_->data;
             sockets->list = g_list_delete_link(sockets->list, socket_);
@@ -78,24 +75,22 @@ eventd_sockets_get_inet_socket(EventdSockets *sockets, guint16 port)
         }
     }
 
-    if ( ( socket = g_socket_new(G_SOCKET_FAMILY_IPV6, G_SOCKET_TYPE_STREAM, 0, &error)  ) == NULL )
+    if ( ( socket = g_socket_new(g_inet_address_get_family(inet_address), G_SOCKET_TYPE_STREAM, 0, &error)  ) == NULL )
     {
-        g_warning("Unable to create an IPv6 socket: %s", error->message);
+        g_warning("Unable to create an IP socket: %s", error->message);
         goto fail;
     }
 
-    inet_address = g_inet_address_new_any(G_SOCKET_FAMILY_IPV6);
     address = g_inet_socket_address_new(inet_address, port);
-    g_object_unref(inet_address);
     if ( ! g_socket_bind(socket, address, TRUE, &error) )
     {
-        g_warning("Unable to bind the IPv6 socket: %s", error->message);
+        g_warning("Unable to bind the IP socket: %s", error->message);
         goto fail;
     }
 
     if ( ! g_socket_listen(socket, &error) )
     {
-        g_warning("Unable to listen with the IPv6 socket: %s", error->message);
+        g_warning("Unable to listen with the IP socket: %s", error->message);
         goto fail;
     }
 
@@ -108,6 +103,58 @@ fail:
         g_object_unref(address);
     g_clear_error(&error);
     return NULL;
+}
+
+GList *
+eventd_sockets_get_inet_sockets(EventdSockets *sockets, const gchar *address, guint16 port)
+{
+    GSocket *socket;
+    GInetAddress *inet_address;
+
+    if ( address == NULL )
+    {
+        inet_address = g_inet_address_new_any(G_SOCKET_FAMILY_IPV6);
+        socket = _eventd_sockets_get_inet_socket(sockets, inet_address, port);
+        g_object_unref(inet_address);
+    }
+    else if ( g_strcmp0(address, "localhost") == 0 )
+    {
+        inet_address = g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV6);
+        socket = _eventd_sockets_get_inet_socket(sockets, inet_address, port);
+        g_object_unref(inet_address);
+    }
+    else
+    {
+        GList *ret_sockets = NULL;
+        GResolver *resolver;
+        GList *inet_addresses;
+        GError *error = NULL;
+
+        resolver = g_resolver_get_default();
+        inet_addresses = g_resolver_lookup_by_name(resolver, address, NULL, &error);
+        if ( inet_addresses == NULL )
+        {
+            g_warning("Couldn’t resolve '%s' to an address: %s", address, error->message);
+            g_clear_error(&error);
+            return NULL;
+        }
+
+        GList *inet_address_;
+
+        for ( inet_address_ = inet_addresses ; inet_address_ != NULL ; inet_address_ = g_list_next(inet_address_) )
+        {
+            socket = _eventd_sockets_get_inet_socket(sockets, inet_address_->data, port);
+            if ( socket != NULL )
+                ret_sockets = g_list_prepend(ret_sockets, socket);
+        }
+
+        g_resolver_free_addresses(inet_addresses);
+
+        return ret_sockets;
+    }
+    if ( socket == NULL )
+        return NULL;
+    return g_list_prepend(NULL, socket);
 }
 
 GSocket *
