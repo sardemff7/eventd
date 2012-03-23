@@ -24,8 +24,6 @@
 #define __EVENTD_CONTROL_H__
 
 GList *eventd_core_get_sockets(EventdCoreContext *context, const gchar * const *binds);
-GSocket *eventd_core_get_unix_socket(EventdCoreContext *context, const gchar *path, const gchar *default_path);
-GSocket *eventd_core_get_inet_socket(EventdCoreContext *context, gint16 port);
 
 void eventd_core_push_event(EventdCoreContext *context, EventdEvent *event);
 

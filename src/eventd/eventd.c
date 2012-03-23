@@ -123,31 +123,6 @@ eventd_core_get_sockets(EventdCoreContext *context, const gchar * const *binds)
     return sockets;
 }
 
-GSocket *
-eventd_core_get_unix_socket(EventdCoreContext *context, const gchar *path, const gchar *default_path)
-{
-    GSocket *socket;
-    gchar *used_path = NULL;
-
-    if ( path == NULL )
-    {
-        if ( default_path == NULL )
-            return NULL;
-        used_path = g_build_filename(context->runtime_dir, default_path, NULL);
-    }
-
-    socket = eventd_sockets_get_unix_socket(context->sockets, ( path != NULL ) ? path : used_path, context->take_over_socket);
-    g_free(used_path);
-
-    return socket;
-}
-
-GSocket *
-eventd_core_get_inet_socket(EventdCoreContext *context, gint16 port)
-{
-    return eventd_sockets_get_inet_socket(context->sockets, port);
-}
-
 void
 eventd_core_push_event(EventdCoreContext *context, EventdEvent *event)
 {
@@ -191,8 +166,6 @@ main(int argc, char *argv[])
     EventdCoreInterface interface =
     {
         .get_sockets = eventd_core_get_sockets,
-        .get_unix_socket = eventd_core_get_unix_socket,
-        .get_inet_socket = eventd_core_get_inet_socket,
 
         .push_event = eventd_core_push_event,
     };
