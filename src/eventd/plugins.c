@@ -57,11 +57,14 @@ _eventd_plugins_load_dir(EventdCoreContext *core, EventdCoreInterface *interface
         EventdPluginGetInfoFunc get_info;
         void *module;
 
+        if ( ! g_str_has_suffix(file, G_MODULE_SUFFIX) )
+            continue;
+
         if ( whitelist != NULL )
         {
             gboolean whitelisted = FALSE;
             gchar **wname;
-            for ( wname = whitelist ; wname != NULL ; ++wname )
+            for ( wname = whitelist ; *wname != NULL ; ++wname )
             {
                 if ( g_str_has_prefix(file, *wname) )
                 {
@@ -70,14 +73,14 @@ _eventd_plugins_load_dir(EventdCoreContext *core, EventdCoreInterface *interface
                 }
             }
             if ( ! whitelisted )
-                return;
+                continue;
         }
 
         if ( blacklist != NULL )
         {
             gboolean blacklisted = FALSE;
             gchar **bname;
-            for ( bname = blacklist ; bname != NULL ; ++bname )
+            for ( bname = blacklist ; *bname != NULL ; ++bname )
             {
                 if ( g_str_has_prefix(file, *bname) )
                 {
@@ -86,7 +89,7 @@ _eventd_plugins_load_dir(EventdCoreContext *core, EventdCoreInterface *interface
                 }
             }
             if ( blacklisted )
-                return;
+                continue;
         }
 
         full_filename = g_build_filename(plugins_dir_name, file, NULL);
@@ -153,7 +156,7 @@ eventd_plugins_load(EventdCoreContext *core, EventdCoreInterface *interface)
     if ( env_whitelist != NULL )
         whitelist = g_strsplit(env_whitelist, ",", 0);
 
-    env_blacklist = g_getenv("EVENTD_PLUGINS_WHITELIST");
+    env_blacklist = g_getenv("EVENTD_PLUGINS_BLACKLIST");
     if ( env_blacklist != NULL )
         blacklist = g_strsplit(env_blacklist, ",", 0);
 
