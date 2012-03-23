@@ -53,6 +53,42 @@ struct _EventdCoreContext {
     GMainLoop *loop;
 };
 
+static gboolean
+_eventd_core_get_inet_address(const gchar *bind, gchar **address, guint16 *port)
+{
+    const gchar *address_port;
+
+    address_port = g_strrstr(bind, ":");
+    if ( address_port != NULL )
+        ++address_port;
+    else
+        address_port = bind;
+
+    gint64 parsed_value;
+
+    parsed_value = g_ascii_strtoll(address_port, NULL, 10);
+    *port = CLAMP(parsed_value, 0, 65535);
+
+    if ( *port == 0 )
+        return FALSE;
+
+    if ( bind[0] == '[' )
+    {
+        /*
+         * This is an IPv6 address
+         * we remove the enclosing square bracets
+         */
+        ++bind;
+        --address_port;
+    }
+    if ( --address_port > bind )
+        *address = g_strndup(bind, address_port - bind);
+    else
+        *address = NULL;
+
+    return TRUE;
+}
+
 GList *
 eventd_core_get_sockets(EventdCoreContext *context, const gchar * const *binds)
 {
@@ -73,21 +109,19 @@ eventd_core_get_sockets(EventdCoreContext *context, const gchar * const *binds)
         {
             if ( bind[4] == 0 )
                 continue;
-
-            gint64 parsed_value;
+            gchar *address;
             guint16 port;
 
-            parsed_value = g_ascii_strtoll(bind+4, NULL, 10);
-            port = CLAMP(parsed_value, 0, 65535);
-            if ( port > 0 )
-            {
-                GList *inet_sockets;
+            if ( ! _eventd_core_get_inet_address(bind+4, &address, &port) )
+                continue;
 
-                inet_sockets = eventd_sockets_get_inet_sockets(context->sockets, NULL, port);
+            GList *inet_sockets;
 
-                if ( inet_sockets != NULL )
-                    sockets = g_list_concat(sockets, inet_sockets);
-            }
+            inet_sockets = eventd_sockets_get_inet_sockets(context->sockets, address, port);
+            g_free(address);
+
+            if ( inet_sockets != NULL )
+                sockets = g_list_concat(sockets, inet_sockets);
         }
 #if ENABLE_GIO_UNIX
         else if ( g_str_has_prefix(bind, "unix:") )
