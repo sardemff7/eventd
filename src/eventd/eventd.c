@@ -53,6 +53,75 @@ struct _EventdCoreContext {
     GMainLoop *loop;
 };
 
+GList *
+eventd_core_get_sockets(EventdCoreContext *context, const gchar * const *binds)
+{
+    GList *sockets = NULL;
+    const gchar * const * bind_;
+
+    if ( binds == NULL )
+        return NULL;
+
+    for ( bind_ = binds ; *bind_ != NULL ; ++bind_ )
+    {
+        const gchar *bind = *bind_;
+
+        if ( *bind == 0 )
+            continue;
+
+        if ( g_str_has_prefix(bind, "tcp:") )
+        {
+            if ( bind[4] == 0 )
+                continue;
+
+            gint64 parsed_value;
+            guint16 port;
+
+            parsed_value = g_ascii_strtoll(bind+4, NULL, 10);
+            port = CLAMP(parsed_value, 0, 65535);
+            if ( port > 0 )
+            {
+                GSocket *socket;
+
+                socket = eventd_sockets_get_inet_socket(context->sockets, port);
+
+                if ( socket != NULL )
+                    sockets = g_list_prepend(sockets, socket);
+            }
+        }
+#if ENABLE_GIO_UNIX
+        else if ( g_str_has_prefix(bind, "unix:") )
+        {
+            if ( bind[5] == 0 )
+                continue;
+
+            GSocket *socket;
+
+            socket = eventd_sockets_get_unix_socket(context->sockets, bind+5, context->take_over_socket);
+
+            if ( socket != NULL )
+                sockets = g_list_prepend(sockets, socket);
+        }
+        else if ( g_str_has_prefix(bind, "unix-runtime:") )
+        {
+            if ( bind[13] == 0 )
+                continue;
+
+            GSocket *socket;
+            gchar *path;
+
+            path = g_build_filename(context->runtime_dir, bind+13, NULL);
+            socket = eventd_sockets_get_unix_socket(context->sockets, path, context->take_over_socket);
+            g_free(path);
+
+            if ( socket != NULL )
+                sockets = g_list_prepend(sockets, socket);
+        }
+#endif /* ENABLE_GIO_UNIX */
+    }
+
+    return sockets;
+}
 
 GSocket *
 eventd_core_get_unix_socket(EventdCoreContext *context, const gchar *path, const gchar *default_path)
@@ -121,6 +190,7 @@ main(int argc, char *argv[])
     EventdCoreContext *context;
     EventdCoreInterface interface =
     {
+        .get_sockets = eventd_core_get_sockets,
         .get_unix_socket = eventd_core_get_unix_socket,
         .get_inet_socket = eventd_core_get_inet_socket,
 

@@ -25,12 +25,14 @@
 
 #include <eventd-plugin.h>
 
+typedef GList *(*EventdCoreGetSocketsFunc)(EventdCoreContext *context, const gchar * const *binds);
 typedef GSocket *(*EventdCoreGetUnixSocketFunc)(EventdCoreContext *context, const gchar *path, const gchar *default_path);
 typedef GSocket *(*EventdCoreGetInetSocketFunc)(EventdCoreContext *context, gint16 port);
 
 typedef void (*EventdCoreDispatchEventFunc)(EventdCoreContext *context, EventdEvent *event);
 
 struct _EventdCoreInterface {
+    EventdCoreGetSocketsFunc get_sockets;
     EventdCoreGetUnixSocketFunc get_unix_socket;
     EventdCoreGetInetSocketFunc get_inet_socket;
 
