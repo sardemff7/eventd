@@ -24,6 +24,7 @@
 #include <string.h>
 
 #include <glib.h>
+#include <gio/gio.h>
 #if ENABLE_GIO_UNIX
 #include <gio/gunixsocketaddress.h>
 #include <glib/gstdio.h>
