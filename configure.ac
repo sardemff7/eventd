@@ -116,9 +116,6 @@ fi
 AC_ARG_ENABLE(dbus, AS_HELP_STRING([--disable-dbus], [Disable DBus support (org.freedesktop.Notifications interface)]), enable_dbus=$enableval, enable_dbus=yes)
 AM_CONDITIONAL(ENABLE_DBUS, test x$enable_dbus = xyes)
 
-AC_ARG_ENABLE(eventdctl, AS_HELP_STRING([--disable-eventdctl], [Disable eventdctl]), enable_eventdctl=$enableval, enable_eventdctl=yes)
-AM_CONDITIONAL(ENABLE_EVENTDCTL, test x$enable_eventdctl = xyes)
-
 # sndfile plugin
 AC_ARG_ENABLE(sndfile, AS_HELP_STRING([--disable-sndfile], [Disable libsndfile support]), enable_sndfile=$enableval, enable_sndfile=yes)
 if test x$enable_sndfile = xyes; then

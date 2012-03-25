@@ -1,5 +1,4 @@
 # eventdctl
-if ENABLE_EVENTDCTL
 bin_PROGRAMS += \
 	eventdctl
 
@@ -14,4 +13,3 @@ eventdctl_CFLAGS = \
 eventdctl_LDADD = \
 	$(GIO_LIBS) \
 	$(GLIB_LIBS)
-endif
