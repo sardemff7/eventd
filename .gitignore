@@ -13,4 +13,9 @@
 /eventd
 /eventdctl
 /eventc
+
 *.test
+/tests/integration/*.h
+/tests/integration/*.vapi
+!/tests/integration/tests.vapi
+/tests/integration/libtest/*.c
