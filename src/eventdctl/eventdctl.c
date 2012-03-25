@@ -20,15 +20,10 @@
  *
  */
 
-#if ENABLE_FRAMEBUFFER
-#include <unistd.h>
-#endif /* ENABLE_FRAMEBUFFER */
-
 #include <glib.h>
 #include <glib/gstdio.h>
 #include <gio/gio.h>
 #include <gio/gunixsocketaddress.h>
-#include <glib/gstdio.h>
 
 static void
 _eventd_eventdctl_send_command(GDataOutputStream *output, const gchar *command)

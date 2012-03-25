@@ -26,8 +26,6 @@
 
 #include <glib-object.h>
 #include <gio/gio.h>
-#include <gio/gunixsocketaddress.h>
-#include <glib/gstdio.h>
 
 #include "types.h"
 
