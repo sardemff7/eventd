@@ -19,3 +19,4 @@
 /tests/integration/*.vapi
 !/tests/integration/tests.vapi
 /tests/integration/libtest/*.c
+/tests/integration/evp/*.c

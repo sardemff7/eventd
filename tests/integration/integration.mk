@@ -11,3 +11,4 @@ AM_TESTS_INTEGRATION_VALAFLAGS = \
 
 include tests/integration/libtest/libtest.mk
 include tests/integration/plugin/test-plugin.mk
+include tests/integration/evp/evp.mk
