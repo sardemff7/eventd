@@ -25,9 +25,12 @@ dnl IT_PROG_INTLTOOL([0.40.0])
 AC_PROG_INSTALL
 
 DEFAULT_BIND_PORT="7100"
+DEFAULT_CONTROL_PORT="7101"
 UNIX_SOCKET="sock"
 AC_DEFINE_UNQUOTED([DEFAULT_BIND_PORT], [$DEFAULT_BIND_PORT], [Default TCP port to bind])
 AC_DEFINE_UNQUOTED([DEFAULT_BIND_PORT_STR], ["$DEFAULT_BIND_PORT"], [Default TCP port to bind])
+AC_DEFINE_UNQUOTED([DEFAULT_CONTROL_PORT], [$DEFAULT_CONTROL_PORT], [Default TCP port for the control interface])
+AC_DEFINE_UNQUOTED([DEFAULT_CONTROL_PORT_STR], ["$DEFAULT_CONTROL_PORT"], [Default TCP port for the control interface])
 AC_DEFINE_UNQUOTED([UNIX_SOCKET], ["$UNIX_SOCKET"], [Default UNIX socket name])
 
 # Common dependencies
@@ -114,11 +117,6 @@ AC_ARG_ENABLE(dbus, AS_HELP_STRING([--disable-dbus], [Disable DBus support (org.
 AM_CONDITIONAL(ENABLE_DBUS, test x$enable_dbus = xyes)
 
 AC_ARG_ENABLE(eventdctl, AS_HELP_STRING([--disable-eventdctl], [Disable eventdctl]), enable_eventdctl=$enableval, enable_eventdctl=yes)
-if test x$enable_eventdctl = xyes; then
-    if test x$enable_gio_unix = xno; then
-        AC_MSG_ERROR([*** eventdctl requested but not UNIX GIO support])
-    fi
-fi
 AM_CONDITIONAL(ENABLE_EVENTDCTL, test x$enable_eventdctl = xyes)
 
 # sndfile plugin

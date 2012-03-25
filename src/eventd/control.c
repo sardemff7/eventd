@@ -21,9 +21,6 @@
  */
 
 #include <glib.h>
-
-#if ENABLE_GIO_UNIX
-
 #include <glib-object.h>
 #include <gio/gio.h>
 
@@ -36,7 +33,7 @@
 
 struct _EventdControl {
     EventdCoreContext *core;
-    gchar *socket_path;
+    gchar *socket;
     GSocketService *socket_service;
 };
 
@@ -122,21 +119,29 @@ eventd_control_start(EventdControl *control)
 
     const gchar *binds[] = { NULL, NULL };
 
-    if ( control->socket_path != NULL )
+    if ( control->socket != NULL )
     {
         gchar *bind;
 
-        bind = g_strconcat("unix:", control->socket_path, NULL);
+#if ENABLE_GIO_UNIX
+        bind = g_strconcat("unix:", control->socket, NULL);
+#else /* ! ENABLE_GIO_UNIX */
+        bind = g_strconcat("tcp:localhost:", control->socket, NULL);
+#endif /* ! ENABLE_GIO_UNIX */
         binds[0] = bind;
         sockets = eventd_core_get_sockets(control->core, binds);
 
         g_free(bind);
-        g_free(control->socket_path);
+        g_free(control->socket);
     }
 
     if ( sockets == NULL )
     {
+#if ENABLE_GIO_UNIX
         binds[0] = "unix-runtime:private";
+#else /* ! ENABLE_GIO_UNIX */
+        binds[0] = "tcp:localhost:" DEFAULT_CONTROL_PORT_STR;
+#endif /* ! ENABLE_GIO_UNIX */
         sockets = eventd_core_get_sockets(control->core, binds);
     }
 
@@ -174,24 +179,8 @@ eventd_control_add_option_entry(EventdControl *control, GOptionGroup *option_gro
 {
     GOptionEntry entries[] =
     {
-        { "private-socket", 'i', 0, G_OPTION_ARG_FILENAME, &control->socket_path, "UNIX socket to listen for internal control", "<socket>" },
+        { "private-socket", 'i', 0, G_OPTION_ARG_FILENAME, &control->socket, "socket to listen for internal control", "<socket>" },
         { NULL }
     };
     g_option_group_add_entries(option_group, entries);
 }
-
-#else /* ! ENABLE_GIO_UNIX */
-
-#include "types.h"
-
-#include "control.h"
-
-EventdControl *eventd_control_start(EventdCoreContext *service) { return NULL; }
-void eventd_control_free(EventdControl *control) {}
-
-gboolean eventd_control_start(EventdControl *control) { return TRUE; }
-void eventd_control_stop(EventdControl *control) {}
-
-void eventd_control_add_option_entry(EventdControl *control, GOptionGroup *option_group) {}
-
-#endif /* ! ENABLE_GIO_UNIX */
