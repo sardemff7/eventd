@@ -230,7 +230,9 @@ main(int argc, char *argv[])
     {
 #if ENABLE_GIO_UNIX
         { "take-over", 't', 0, G_OPTION_ARG_NONE, &context->take_over_socket, "Take over socket", NULL },
-#endif /* ENABLE_GIO_UNIX */
+#else /* ! ENABLE_GIO_UNIX */
+        { "take-over", 't', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &context->take_over_socket, NULL, NULL },
+#endif /* ! ENABLE_GIO_UNIX */
         { "version", 'V', 0, G_OPTION_ARG_NONE, &print_version, "Print version", NULL },
         { NULL }
     };
