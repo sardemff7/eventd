@@ -10,3 +10,4 @@ AM_TESTS_INTEGRATION_VALAFLAGS = \
 	--vapidir $(builddir)/tests/integration/
 
 include tests/integration/libtest/libtest.mk
+include tests/integration/plugin/test-plugin.mk
