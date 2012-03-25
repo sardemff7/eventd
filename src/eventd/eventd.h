@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef __EVENTD_CONTROL_H__
-#define __EVENTD_CONTROL_H__
+#ifndef __EVENTD_CORE_H__
+#define __EVENTD_CORE_H__
 
 GList *eventd_core_get_sockets(EventdCoreContext *context, const gchar * const *binds);
 
@@ -30,4 +30,4 @@ void eventd_core_push_event(EventdCoreContext *context, EventdEvent *event);
 void eventd_core_config_reload(EventdCoreContext *context);
 void eventd_core_quit(EventdCoreContext *context);
 
-#endif /* __EVENTD_CONTROL_H__ */
+#endif /* __EVENTD_CORE_H__ */
