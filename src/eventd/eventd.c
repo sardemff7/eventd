@@ -282,7 +282,8 @@ main(int argc, char *argv[])
 
     context->sockets = eventd_sockets_new();
 
-    eventd_control_start(context->control);
+    if ( ! eventd_control_start(context->control) )
+        goto no_control;
 
     eventd_queue_start(context->queue);
 
@@ -292,6 +293,7 @@ main(int argc, char *argv[])
     g_main_loop_run(context->loop);
     g_main_loop_unref(context->loop);
 
+no_control:
     eventd_sockets_free(context->sockets);
 
     g_free(context->runtime_dir);

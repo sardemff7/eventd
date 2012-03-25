@@ -112,9 +112,10 @@ eventd_control_free(EventdControl *control)
     g_free(control);
 }
 
-void
+gboolean
 eventd_control_start(EventdControl *control)
 {
+    gboolean ret = FALSE;
     GError *error = NULL;
     GList *sockets = NULL;
     GList *socket_;
@@ -142,17 +143,24 @@ eventd_control_start(EventdControl *control)
     }
 
     if ( sockets == NULL )
-        return;
+        return ret;
 
     for ( socket_ = sockets ; socket_ != NULL ; socket_ = g_list_next(socket_) )
     {
         if ( ! g_socket_listener_add_socket(G_SOCKET_LISTENER(control->socket_service), socket_->data, NULL, &error) )
             g_warning("Unable to add private socket: %s", error->message);
+        else
+            ret = TRUE;
         g_clear_error(&error);
     }
     g_list_free_full(sockets, g_object_unref);
 
-    g_signal_connect(control->socket_service, "run", G_CALLBACK(_eventd_service_private_connection_handler), control);
+    if ( ret )
+        g_signal_connect(control->socket_service, "run", G_CALLBACK(_eventd_service_private_connection_handler), control);
+    else
+       eventd_control_stop(control);
+
+    return ret;
 }
 
 void
@@ -183,7 +191,7 @@ eventd_control_add_option_entry(EventdControl *control, GOptionGroup *option_gro
 EventdControl *eventd_control_start(EventdCoreContext *service) { return NULL; }
 void eventd_control_free(EventdControl *control) {}
 
-void eventd_control_start(EventdControl *control) {}
+gboolean eventd_control_start(EventdControl *control) { return TRUE; }
 void eventd_control_stop(EventdControl *control) {}
 
 void eventd_control_add_option_entry(EventdControl *control, GOptionGroup *option_group) {}
