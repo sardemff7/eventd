@@ -46,6 +46,7 @@ _eventd_test_event_action(EventdPluginContext *context, EventdEvent *event)
     g_clear_error(&error);
 }
 
+const gchar *eventd_plugin_id = "eventd-test-plugin";
 void
 eventd_plugin_get_info(EventdPlugin *plugin)
 {

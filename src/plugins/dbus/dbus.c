@@ -435,6 +435,7 @@ _eventd_dbus_get_option_group(EventdPluginContext *context)
     return option_group;
 }
 
+const gchar *eventd_plugin_id = "eventd-dbus";
 void
 eventd_plugin_get_info(EventdPlugin *plugin)
 {

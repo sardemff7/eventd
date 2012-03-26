@@ -479,6 +479,7 @@ _eventd_nd_config_reset(EventdPluginContext *context)
     g_hash_table_remove_all(context->events);
 }
 
+const gchar *eventd_plugin_id = "eventd-nd";
 void
 eventd_plugin_get_info(EventdPlugin *plugin)
 {

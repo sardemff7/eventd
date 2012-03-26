@@ -423,6 +423,7 @@ _eventd_evp_event_parse(EventdPluginContext *context, const gchar *event_categor
         g_hash_table_insert(context->events, name, GUINT_TO_POINTER(disable));
 }
 
+const gchar *eventd_plugin_id = "eventd-evp";
 void
 eventd_plugin_get_info(EventdPlugin *plugin)
 {

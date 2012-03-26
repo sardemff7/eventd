@@ -28,7 +28,8 @@
 
 #include "plugins.h"
 
-static GList *plugins = NULL;
+static GHashTable *plugins = NULL;
+
 
 static void
 _eventd_plugins_load_dir(EventdCoreContext *core, EventdCoreInterface *interface, const gchar *plugins_dir_name,  gchar **whitelist,  gchar **blacklist)
@@ -54,6 +55,7 @@ _eventd_plugins_load_dir(EventdCoreContext *core, EventdCoreInterface *interface
     {
         gchar *full_filename;
         EventdPlugin *plugin;
+        const gchar **id;
         EventdPluginGetInfoFunc get_info;
         void *module;
 
@@ -109,6 +111,23 @@ _eventd_plugins_load_dir(EventdCoreContext *core, EventdCoreInterface *interface
         }
         g_free(full_filename);
 
+        if ( ! g_module_symbol(module, "eventd_plugin_id", (void **)&id) )
+            continue;
+
+        if ( id == NULL )
+        {
+            g_warning("Plugin '%s' must define eventd_plugin_id", file);
+            continue;
+        }
+
+        if ( g_hash_table_lookup(plugins, *id) != NULL )
+        {
+#if DEBUG
+            g_debug("Plugin '%s' with id '%s' already loaded", file, *id);
+#endif /* ! DEBUG */
+            continue;
+        }
+
         if ( ! g_module_symbol(module, "eventd_plugin_get_info", (void **)&get_info) )
             continue;
 
@@ -132,8 +151,19 @@ _eventd_plugins_load_dir(EventdCoreContext *core, EventdCoreInterface *interface
             }
         }
 
-        plugins = g_list_prepend(plugins, plugin);
+        g_hash_table_insert(plugins, *id, plugin);
     }
+}
+
+static void
+_eventd_plugins_plugin_free(gpointer data)
+{
+    EventdPlugin *plugin = data;
+
+    if ( plugin->uninit != NULL )
+        plugin->uninit(plugin->context);
+    g_module_close(plugin->module);
+    g_free(plugin);
 }
 
 void
@@ -151,6 +181,8 @@ eventd_plugins_load(EventdCoreContext *core, EventdCoreInterface *interface)
         g_warning("Couldn’t load plugins: %s", g_module_error());
         return;
     }
+
+    plugins = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, _eventd_plugins_plugin_free);
 
     env_whitelist = g_getenv("EVENTD_PLUGINS_WHITELIST");
     if ( env_whitelist != NULL )
@@ -192,171 +224,129 @@ eventd_plugins_load(EventdCoreContext *core, EventdCoreInterface *interface)
     g_strfreev(whitelist);
 }
 
-static void
-_eventd_plugins_plugin_free(gpointer data)
-{
-    EventdPlugin *plugin = data;
-
-    if ( plugin->uninit != NULL )
-        plugin->uninit(plugin->context);
-    g_module_close(plugin->module);
-    g_free(plugin);
-}
-
 void
 eventd_plugins_unload()
 {
     if ( plugins == NULL )
         return;
-    g_list_free_full(plugins, _eventd_plugins_plugin_free);
+    g_hash_table_unref(plugins);
     plugins = NULL;
-}
-
-static void
-_eventd_plugins_foreach(GFunc func, gpointer user_data)
-{
-    if ( plugins == NULL )
-        return;
-    g_list_foreach(plugins, func, user_data);
-}
-
-static void
-_eventd_plugins_add_option_group(gpointer data, gpointer user_data)
-{
-    EventdPlugin *plugin = data;
-    GOptionContext *option_context = user_data;
-
-    if ( plugin->get_option_group != NULL )
-    {
-        GOptionGroup *option_group;
-
-        option_group = plugin->get_option_group(plugin->context);
-        if ( option_group != NULL )
-            g_option_context_add_group(option_context, option_group);
-    }
 }
 
 void
 eventd_plugins_add_option_group_all(GOptionContext *option_context)
 {
-    _eventd_plugins_foreach(_eventd_plugins_add_option_group, option_context);
-}
+    GHashTableIter iter;
+    gchar *id;
+    EventdPlugin *plugin;
+    g_hash_table_iter_init(&iter, plugins);
+    while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&plugin) )
+    {
+        if ( plugin->get_option_group != NULL )
+        {
+            GOptionGroup *option_group;
 
-static void
-_eventd_plugins_start(gpointer data, gpointer user_data)
-{
-    EventdPlugin *plugin = data;
-
-    if ( plugin->start != NULL )
-        plugin->start(plugin->context);
+            option_group = plugin->get_option_group(plugin->context);
+            if ( option_group != NULL )
+                g_option_context_add_group(option_context, option_group);
+        }
+    }
 }
 
 void
 eventd_plugins_start_all()
 {
-    _eventd_plugins_foreach(_eventd_plugins_start, NULL);
-}
-
-static void
-_eventd_plugins_stop(gpointer data, gpointer user_data)
-{
-    EventdPlugin *plugin = data;
-
-    if ( plugin->stop != NULL )
-        plugin->stop(plugin->context);
+    GHashTableIter iter;
+    gchar *id;
+    EventdPlugin *plugin;
+    g_hash_table_iter_init(&iter, plugins);
+    while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&plugin) )
+    {
+        if ( plugin->start != NULL )
+            plugin->start(plugin->context);
+    }
 }
 
 void
 eventd_plugins_stop_all()
 {
-    _eventd_plugins_foreach(_eventd_plugins_stop, NULL);
-}
-
-static void
-_eventd_plugins_control_command(gpointer data, gpointer user_data)
-{
-    EventdPlugin *plugin = data;
-
-    if ( plugin->control_command != NULL )
-        plugin->control_command(plugin->context, user_data);
+    GHashTableIter iter;
+    gchar *id;
+    EventdPlugin *plugin;
+    g_hash_table_iter_init(&iter, plugins);
+    while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&plugin) )
+    {
+        if ( plugin->stop != NULL )
+            plugin->stop(plugin->context);
+    }
 }
 
 void
-eventd_plugins_control_command_all(gchar *command)
+eventd_plugins_control_command_all(const gchar *command)
 {
-    _eventd_plugins_foreach(_eventd_plugins_control_command, command);
-}
-
-static void
-_eventd_plugins_config_reset(gpointer data, gpointer user_data)
-{
-    EventdPlugin *plugin = data;
-
-    if ( plugin->config_reset != NULL )
-        plugin->config_reset(plugin->context);
+    GHashTableIter iter;
+    gchar *id;
+    EventdPlugin *plugin;
+    g_hash_table_iter_init(&iter, plugins);
+    while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&plugin) )
+    {
+        if ( plugin->control_command != NULL )
+            plugin->control_command(plugin->context, command);
+    }
 }
 
 void
 eventd_plugins_config_reset_all()
 {
-    _eventd_plugins_foreach(_eventd_plugins_config_reset, NULL);
-}
-
-static void
-_eventd_plugins_global_parse(gpointer data, gpointer user_data)
-{
-    EventdPlugin *plugin = data;
-    GKeyFile *config_file = user_data;
-    if ( plugin->global_parse != NULL )
-        plugin->global_parse(plugin->context, config_file);
+    GHashTableIter iter;
+    gchar *id;
+    EventdPlugin *plugin;
+    g_hash_table_iter_init(&iter, plugins);
+    while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&plugin) )
+    {
+        if ( plugin->config_reset != NULL )
+            plugin->config_reset(plugin->context);
+    }
 }
 
 void
 eventd_plugins_global_parse_all(GKeyFile *config_file)
 {
-    _eventd_plugins_foreach(_eventd_plugins_global_parse, config_file);
-}
-
-typedef struct {
-    const gchar *type;
-    const gchar *event;
-    GKeyFile *config_file;
-} EventdEventParseData;
-
-static void
-_eventd_plugins_event_parse(gpointer data, gpointer user_data)
-{
-    EventdPlugin *plugin = data;
-    EventdEventParseData *parse_data = user_data;
-    if ( plugin->event_parse != NULL )
-        plugin->event_parse(plugin->context, parse_data->type, parse_data->event, parse_data->config_file);
+    GHashTableIter iter;
+    gchar *id;
+    EventdPlugin *plugin;
+    g_hash_table_iter_init(&iter, plugins);
+    while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&plugin) )
+    {
+        if ( plugin->global_parse != NULL )
+            plugin->global_parse(plugin->context, config_file);
+    }
 }
 
 void
 eventd_plugins_event_parse_all(const gchar *type, const gchar *event, GKeyFile *config_file)
 {
-    EventdEventParseData data = {
-        .type = type,
-        .event = event,
-        .config_file = config_file,
-    };
-    _eventd_plugins_foreach(_eventd_plugins_event_parse, &data);
-}
-
-static void
-_eventd_plugins_event_action(gpointer data, gpointer user_data)
-{
-    EventdPlugin *plugin = data;
-    EventdEvent *event = user_data;
-
-    if ( plugin->event_action == NULL )
-        return;
-
-    plugin->event_action(plugin->context, event);
+    GHashTableIter iter;
+    gchar *id;
+    EventdPlugin *plugin;
+    g_hash_table_iter_init(&iter, plugins);
+    while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&plugin) )
+    {
+        if ( plugin->event_parse != NULL )
+            plugin->event_parse(plugin->context, type, event, config_file);
+    }
 }
 
 void
 eventd_plugins_event_action_all(EventdEvent *event)
 {
-    _eventd_plugins_foreach(_eventd_plugins_event_action, event);
+    GHashTableIter iter;
+    gchar *id;
+    EventdPlugin *plugin;
+    g_hash_table_iter_init(&iter, plugins);
+    while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&plugin) )
+    {
+        if ( plugin->event_action != NULL )
+            plugin->event_action(plugin->context, event);
+    }
 }

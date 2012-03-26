@@ -193,6 +193,7 @@ _eventd_relay_event_action(EventdPluginContext *context, EventdEvent *event)
         eventd_relay_server_event(server->data, event);
 }
 
+const gchar *eventd_plugin_id = "eventd-relay";
 void
 eventd_plugin_get_info(EventdPlugin *plugin)
 {

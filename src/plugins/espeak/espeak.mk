@@ -13,7 +13,7 @@ espeak_la_CFLAGS = \
 
 espeak_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
-	-avoid-version -module -export-symbols-regex eventd_plugin_get_info
+	-avoid-version -module -export-symbols-regex 'eventd_plugin_(id|get_info)'
 
 espeak_la_LIBADD = \
 	libeventd-event.la \
