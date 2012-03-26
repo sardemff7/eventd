@@ -86,3 +86,10 @@ la-files-uninstall-hook:
 		rm $(plugins_LTLIBRARIES:.la=.so)
 	rmdir $(DESTDIR)/$(pluginsdir)
 	rmdir $(DESTDIR)/$(pkglibdir)
+
+ ifeq ($(dist_pkgdata_DATA),)
+install-data-hook: empty-pkgdatadir-install-hook
+
+empty-pkgdatadir-install-hook:
+	rmdir $(DESTDIR)/$(pkgdatadir)
+ endif
