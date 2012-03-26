@@ -39,7 +39,7 @@ namespace Eventd.Tests
                                  0,
                                  null,
                                  out pid);
-        GLib.Thread.usleep(100000);
+        GLib.Thread.usleep(1000000);
     }
 
     public static void
