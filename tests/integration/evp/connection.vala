@@ -84,7 +84,7 @@ main(string[] args)
     try
     {
         var client = new GLib.SocketClient();
-        var address = new GLib.InetSocketAddress(new GLib.InetAddress.loopback(GLib.SocketFamily.IPV6), 9876);
+        var address = new GLib.InetSocketAddress(new GLib.InetAddress.loopback(GLib.SocketFamily.IPV4), 9876);
         var connection = client.connect(address, null);
 
         var input = new GLib.DataInputStream((connection as GLib.IOStream).get_input_stream());
