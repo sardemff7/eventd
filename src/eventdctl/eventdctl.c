@@ -20,6 +20,7 @@
  *
  */
 
+#include <string.h>
 #include <glib.h>
 #include <glib/gstdio.h>
 #include <gio/gio.h>
@@ -27,17 +28,108 @@
 #include <gio/gunixsocketaddress.h>
 #endif /* HAVE_GIO_UNIX */
 
-static void
-_eventd_eventdctl_send_command(GDataOutputStream *output, const gchar *command)
+static GSocketConnection *
+_eventd_eventdctl_get_connection(const gchar *private_socket, GError **error)
 {
+    GSocketAddress *address;
+    GSocketClient *client;
+    GSocketConnection *connection;
+
+#if HAVE_GIO_UNIX
+    const gchar *real_socket = private_socket;
+    gchar *default_socket = NULL;
+    if ( private_socket == NULL )
+        real_socket = default_socket = g_build_filename(g_get_user_runtime_dir(), PACKAGE_NAME, "private", NULL);
+
+    if ( ( ! g_file_test(real_socket, G_FILE_TEST_EXISTS) ) || g_file_test(real_socket, G_FILE_TEST_IS_DIR|G_FILE_TEST_IS_REGULAR) )
+    {
+        g_free(default_socket);
+        return NULL;
+    }
+
+    address = g_unix_socket_address_new(real_socket);
+    g_free(default_socket);
+#else /* ! HAVE_GIO_UNIX */
+    GInetAddress *inet_address;
+    guint16 port = DEFAULT_CONTROL_PORT;
+    inet_address = g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV6);
+    if ( private_socket != NULL )
+    {
+        guint64 parsed_port;
+        parsed_port = g_ascii_strtoull(private_socket, NULL, 10);
+        port = CLAMP(parsed_port, 1, 65535);
+    }
+    address = g_inet_socket_address_new(inet_address, port);
+    g_object_unref(inet_address);
+#endif /* ! HAVE_GIO_UNIX */
+
+    client = g_socket_client_new();
+    connection = g_socket_client_connect(client, G_SOCKET_CONNECTABLE(address), NULL, error);
+    g_object_unref(address);
+    g_object_unref(client);
+
+    return connection;
+}
+
+static int
+_eventd_eventdctl_send_command(GIOStream *connection, const gchar *command)
+{
+    int retval = 0;
     GError *error = NULL;
 
-    if ( ! g_data_output_stream_put_string(output, command, NULL, &error) )
+    if ( ! g_output_stream_write_all(g_io_stream_get_output_stream(connection), command, strlen(command) + 1, NULL, NULL, &error) )
+    {
         g_warning("Couldn’t send command '%s'", command);
+        g_clear_error(&error);
+        retval = 1;
+    }
+
+    return retval;
+}
+
+static int
+_eventd_eventdctl_process_command(const gchar *private_socket, int argc, gchar *argv[])
+{
+    if ( argc == 0 )
+    {
+        g_warning("Missing command");
+        return 2;
+    }
+
+    GError *error = NULL;
+    GSocketConnection *connection;
+
+    connection = _eventd_eventdctl_get_connection(private_socket, &error);
+
+    if ( connection == NULL )
+    {
+        g_warning("Couldn’t connect to eventd: %s", error->message);
+        return 1;
+    }
+
+    int retval = 2;
+
+    if ( g_strcmp0(argv[0], "quit") == 0 )
+        retval = _eventd_eventdctl_send_command(G_IO_STREAM(connection), "quit");
+    else if ( g_strcmp0(argv[0], "reload") == 0 )
+        retval =  _eventd_eventdctl_send_command(G_IO_STREAM(connection), "reload");
+    else if ( g_strcmp0(argv[0], "notification-daemon") == 0 )
+    {
+        if ( argc == 1 )
+            g_warning("You must specify a target");
+        else
+        {
+            gchar *command = g_strconcat("notification-daemon ", argv[1], NULL);
+            retval = _eventd_eventdctl_send_command(G_IO_STREAM(connection), command);
+            g_free(command);
+        }
+    }
+
+    if ( ! g_io_stream_close(G_IO_STREAM(connection), NULL, &error) )
+        g_warning("Can't close the stream: %s", error->message);
     g_clear_error(&error);
-    if ( ! g_data_output_stream_put_byte(output, '\0', NULL, &error) )
-        g_warning("Couldn’t send command '%s'", command);
-    g_clear_error(&error);
+
+    return retval;
 }
 
 int
@@ -53,12 +145,8 @@ main(int argc, char *argv[])
         { NULL }
     };
 
-    int retval = 0;
     GError *error = NULL;
     GOptionContext *context = NULL;
-    GSocketAddress *address = NULL;
-    GSocketClient *client = NULL;
-    GSocketConnection *connection = NULL;
 
 #if ENABLE_NLS
     setlocale(LC_ALL, "");
@@ -80,80 +168,10 @@ main(int argc, char *argv[])
         return 0;
     }
 
-#if HAVE_GIO_UNIX
-    if ( private_socket == NULL )
-        private_socket = g_build_filename(g_get_user_runtime_dir(), PACKAGE_NAME, "private", NULL);
+    int retval;
 
-    if ( ( ! g_file_test(private_socket, G_FILE_TEST_EXISTS) ) || g_file_test(private_socket, G_FILE_TEST_IS_DIR|G_FILE_TEST_IS_REGULAR) )
-    {
-        g_free(private_socket);
-        return 1;
-    }
-
-    address = g_unix_socket_address_new(private_socket);
-#else /* ! HAVE_GIO_UNIX */
-    GInetAddress *inet_address;
-    guint16 port = DEFAULT_CONTROL_PORT;
-    inet_address = g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV6);
-    if ( private_socket != NULL )
-    {
-        guint64 parsed_port;
-        parsed_port = g_ascii_strtoull(private_socket, NULL, 10);
-        port = CLAMP(parsed_port, 1, 65535);
-    }
-    address = g_inet_socket_address_new(inet_address, port);
-    g_object_unref(inet_address);
-#endif /* ! HAVE_GIO_UNIX */
+    retval = _eventd_eventdctl_process_command(private_socket, argc-1, argv+1);
     g_free(private_socket);
-
-    client = g_socket_client_new();
-    connection = g_socket_client_connect(client, G_SOCKET_CONNECTABLE(address), NULL, &error);
-    g_object_unref(address);
-
-    if ( connection == NULL )
-    {
-        g_warning("Couldn’t connect to eventd: %s", error->message);
-    }
-    else if ( argc < 2 )
-    {
-        g_warning("Missing command");
-        retval = 2;
-    }
-    else
-    {
-        GDataOutputStream *output = NULL;
-
-        if ( ! g_input_stream_close(g_io_stream_get_input_stream(G_IO_STREAM(connection)), NULL, &error) )
-            g_warning("Can't close the input stream: %s", error->message);
-        g_clear_error(&error);
-
-        output = g_data_output_stream_new(g_io_stream_get_output_stream(G_IO_STREAM(connection)));
-
-        if ( g_strcmp0(argv[1], "quit") == 0 )
-            _eventd_eventdctl_send_command(output, "quit");
-        else if ( g_strcmp0(argv[1], "reload") == 0 )
-            _eventd_eventdctl_send_command(output, "reload");
-        else if ( g_strcmp0(argv[1], "notification-daemon") == 0 )
-        {
-            if ( argc > 2 )
-            {
-                gchar *command = g_strconcat("notification-daemon ", argv[2], NULL);
-                _eventd_eventdctl_send_command(output, command);
-                g_free(command);
-            }
-            else
-            {
-                g_warning("You must specify a target");
-                retval = 2;
-            }
-        }
-
-        if ( ! g_io_stream_close(G_IO_STREAM(connection), NULL, &error) )
-            g_warning("Can't close the stream: %s", error->message);
-        g_clear_error(&error);
-    }
-
-    g_object_unref(client);
 
     return retval;
 }
