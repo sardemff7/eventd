@@ -205,6 +205,7 @@ main(int argc, char *argv[])
     };
 
 
+    gboolean daemonize = FALSE;
     gboolean print_version = FALSE;
 
     int retval = 0;
@@ -233,6 +234,7 @@ main(int argc, char *argv[])
 #else /* ! HAVE_GIO_UNIX */
         { "take-over", 't', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &context->take_over_socket, NULL, NULL },
 #endif /* ! HAVE_GIO_UNIX */
+        { "daemonize", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &daemonize, NULL, NULL },
         { "version", 'V', 0, G_OPTION_ARG_NONE, &print_version, "Print version", NULL },
         { NULL }
     };
@@ -290,6 +292,13 @@ main(int argc, char *argv[])
     eventd_queue_start(context->queue);
 
     eventd_plugins_start_all();
+
+    if ( daemonize )
+    {
+        close(0);
+        close(1);
+        close(2);
+    }
 
     context->loop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(context->loop);

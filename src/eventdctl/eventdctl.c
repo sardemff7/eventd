@@ -28,6 +28,64 @@
 #include <gio/gunixsocketaddress.h>
 #endif /* HAVE_GIO_UNIX */
 
+static gboolean
+_eventd_eventdctl_start_eventd(int argc, gchar *argv[], GError **error)
+{
+    gboolean retval = FALSE;
+    GSpawnFlags flags = 0;
+    GPid pid;
+    gint stdin_fd;
+
+    gchar **args;
+    gchar **current;
+
+    args = g_new(gchar *, argc+3);
+    current = args;
+
+    if ( ( argc > 0 ) && ( g_strcmp0(argv[0], "--argv0") == 0 ) )
+    {
+        ++argv;
+        --argc;
+    }
+    else
+    {
+        flags |= G_SPAWN_SEARCH_PATH;
+        *current = "eventd";
+        ++current;
+    }
+
+    int i;
+    for ( i = 0 ; i < argc ; ++i, ++current )
+        *current = argv[i];
+    *current = "--daemonize";
+    ++current;
+    *current = NULL;
+
+    if ( ! g_spawn_async_with_pipes(NULL, args, NULL, 0, NULL, NULL, &pid, NULL, &stdin_fd, NULL, error) )
+        goto fail;
+
+    GIOChannel *stdin_io;
+
+#ifdef G_OS_UNIX
+    stdin_io = g_io_channel_unix_new(stdin_fd);
+#else /* ! G_OS_UNIX */
+    stdin_io = g_io_channel_win32_new_fd(stdin_fd);
+#endif /* ! G_OS_UNIX */
+
+    gchar *data;
+    gsize length;
+
+    if ( g_io_channel_read_to_end(stdin_io, &data, &length, error) == G_IO_STATUS_NORMAL )
+        g_free(data);
+    g_free(stdin_io);
+
+    retval = TRUE;
+
+fail:
+    g_free(args);
+    return retval;
+}
+
 static GSocketConnection *
 _eventd_eventdctl_get_connection(const gchar *private_socket, GError **error)
 {
@@ -101,13 +159,29 @@ _eventd_eventdctl_process_command(const gchar *private_socket, int argc, gchar *
 
     connection = _eventd_eventdctl_get_connection(private_socket, &error);
 
+    int retval = 0;
+
+    if ( g_strcmp0(argv[0], "start") == 0 )
+    {
+        if ( connection != NULL )
+            goto close;
+        if ( ! _eventd_eventdctl_start_eventd(argc-1, argv+1, &error) )
+        {
+            g_warning("Couldn’t start eventd: %s", error->message);
+            return 3;
+        }
+        connection = _eventd_eventdctl_get_connection(private_socket, &error);
+        if ( connection != NULL )
+            goto close;
+    }
+
     if ( connection == NULL )
     {
         g_warning("Couldn’t connect to eventd: %s", error->message);
         return 1;
     }
 
-    int retval = 2;
+    retval = 2;
 
     if ( g_strcmp0(argv[0], "quit") == 0 )
         retval = _eventd_eventdctl_send_command(G_IO_STREAM(connection), "quit");
@@ -125,6 +199,7 @@ _eventd_eventdctl_process_command(const gchar *private_socket, int argc, gchar *
         }
     }
 
+close:
     if ( ! g_io_stream_close(G_IO_STREAM(connection), NULL, &error) )
         g_warning("Can't close the stream: %s", error->message);
     g_clear_error(&error);
@@ -158,6 +233,7 @@ main(int argc, char *argv[])
 
     context = g_option_context_new("<command> [<command arguments>]- control utility for eventd");
     g_option_context_add_main_entries(context, entries, GETTEXT_PACKAGE);
+    g_option_context_set_ignore_unknown_options(context, TRUE);
     if ( ! g_option_context_parse(context, &argc, &argv, &error) )
         g_error("Option parsing failed: %s\n", error->message);
     g_option_context_free(context);
