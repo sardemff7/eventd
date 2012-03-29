@@ -44,6 +44,29 @@ struct _EventdSockets {
     GSList *created;
 };
 
+static gboolean
+_eventd_sockets_inet_address_equal(GInetSocketAddress *socket_address1, GInetAddress *address2, guint16 port)
+{
+    if ( g_inet_socket_address_get_port(socket_address1) != port )
+        return FALSE;
+
+    GInetAddress *address1 = g_inet_socket_address_get_address(socket_address1);
+
+#if GLIB_CHECK_VERSION(2,30,0)
+    return g_inet_address_equal(address1, address2);
+#else /* ! GLIB_CHECK_VERSION(2,30,0) */
+    /*
+     * Backport from gio 2.30 which is:
+     *     Copyright (C) 2008 Christian Kellner, Samuel Cormier-Iijima
+     */
+    if ( g_inet_address_get_family(address1) != g_inet_address_get_family(address2) )
+        return FALSE;
+    if ( memcmp(g_inet_address_to_bytes(address1), g_inet_address_to_bytes(address2), g_inet_address_get_native_size(address1)) != 0 )
+        return FALSE;
+    return TRUE;
+#endif /* ! GLIB_CHECK_VERSION(2,30,0) */
+}
+
 static GSocket *
 _eventd_sockets_get_inet_socket(EventdSockets *sockets, GInetAddress *inet_address, guint16 port)
 {
@@ -67,8 +90,7 @@ _eventd_sockets_get_inet_socket(EventdSockets *sockets, GInetAddress *inet_addre
             continue;
         }
 
-        if ( ( g_inet_address_equal(g_inet_socket_address_get_address(G_INET_SOCKET_ADDRESS(address)), inet_address) )
-             && ( g_inet_socket_address_get_port(G_INET_SOCKET_ADDRESS(address)) == port ) )
+        if ( _eventd_sockets_inet_address_equal(G_INET_SOCKET_ADDRESS(address), inet_address, port) )
         {
             socket = socket_->data;
             sockets->list = g_list_delete_link(sockets->list, socket_);
