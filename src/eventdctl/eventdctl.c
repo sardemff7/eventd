@@ -177,7 +177,8 @@ _eventd_eventdctl_process_command(const gchar *private_socket, int argc, gchar *
 
     if ( connection == NULL )
     {
-        g_warning("Couldn’t connect to eventd: %s", error->message);
+        if ( error != NULL )
+            g_warning("Couldn’t connect to eventd: %s", error->message);
         return 1;
     }
 
