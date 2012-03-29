@@ -146,7 +146,7 @@ _eventd_eventdctl_send_command(GIOStream *connection, const gchar *command)
 }
 
 static int
-_eventd_eventdctl_process_command(const gchar *private_socket, int argc, gchar *argv[])
+_eventd_eventdctl_process_command(const gchar *private_socket, gboolean autospawn, int argc, gchar *argv[])
 {
     if ( argc == 0 )
     {
@@ -173,6 +173,24 @@ _eventd_eventdctl_process_command(const gchar *private_socket, int argc, gchar *
         connection = _eventd_eventdctl_get_connection(private_socket, &error);
         if ( connection != NULL )
             goto close;
+    }
+
+    if ( ( connection == NULL ) && autospawn )
+    {
+        int a_argc = 0;
+        gchar *a_argv[2];
+        if ( private_socket != NULL )
+        {
+            a_argc = 2;
+            a_argv[0] = "--private-socket";
+            a_argv[1] = (gchar *)private_socket;
+        }
+        if ( ! _eventd_eventdctl_start_eventd(a_argc, a_argv, &error) )
+        {
+            g_warning("Couldn’t start eventd: %s", error->message);
+            return 3;
+        }
+        connection = _eventd_eventdctl_get_connection(private_socket, &error);
     }
 
     if ( connection == NULL )
@@ -212,11 +230,13 @@ int
 main(int argc, char *argv[])
 {
     gchar *private_socket = NULL;
+    gboolean autospawn = FALSE;
     gboolean print_version = FALSE;
 
     GOptionEntry entries[] =
     {
         { "socket", 's', 0, G_OPTION_ARG_FILENAME, &private_socket, "eventd control socket", "<socket>" },
+        { "auto-spawn", 'a', 0, G_OPTION_ARG_NONE, &autospawn, "Spawn eventd if needed", NULL },
         { "version", 'V', 0, G_OPTION_ARG_NONE, &print_version, "Print version", NULL },
         { NULL }
     };
@@ -247,7 +267,7 @@ main(int argc, char *argv[])
 
     int retval;
 
-    retval = _eventd_eventdctl_process_command(private_socket, argc-1, argv+1);
+    retval = _eventd_eventdctl_process_command(private_socket, autospawn, argc-1, argv+1);
     g_free(private_socket);
 
     return retval;
