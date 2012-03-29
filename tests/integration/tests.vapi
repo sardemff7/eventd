@@ -23,4 +23,5 @@
 namespace Eventd.Tests
 {
     public const string BUILD_DIR;
+    public const string EXEEXT;
 }

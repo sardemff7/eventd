@@ -17,6 +17,7 @@ tests_integration_libeventd_test_la_VALAFLAGS = \
 tests_integration_libeventd_test_la_CFLAGS = \
 	$(AM_TESTS_INTEGRATION_CFLAGS) \
 	-D EVENTD_TESTS_BUILD_DIR=\"$(builddir)\" \
+	-D EVENTD_TESTS_EXEEXT=\"$(EXEEXT)\" \
 	$(GIO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS)

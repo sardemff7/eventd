@@ -31,5 +31,7 @@ namespace Eventd
 
         public const uint16 DEFAULT_BIND_PORT;
         public const string UNIX_SOCKET;
+
+        public const string LT_OBJDIR;
     }
 }
