@@ -23,9 +23,9 @@
 namespace Eventd.Tests
 {
     public static void
-    start_eventd(out GLib.Pid pid, string plugins, ...) throws GLib.Error
+    start_eventd(string plugins, ...) throws GLib.Error
     {
-        string[] args = { GLib.Path.build_filename(Eventd.Tests.BUILD_DIR, "eventd"), "--take-over", "--private-socket=9987" };
+        string[] args = { GLib.Path.build_filename(Eventd.Tests.BUILD_DIR, "eventdctl"), "--socket=9987" , "start", "--argv0" , GLib.Path.build_filename(Eventd.Tests.BUILD_DIR, "eventd"), "--take-over", "--private-socket=9987" };
         var l = va_list();
         string arg = null;
         while ( ( arg = l.arg() ) != null )
@@ -33,23 +33,20 @@ namespace Eventd.Tests
         GLib.Environment.set_variable("XDG_RUNTIME_DIR", GLib.Path.build_filename(Eventd.Tests.BUILD_DIR, "tests"), true);
         GLib.Environment.set_variable("EVENTD_PLUGINS_DIR", GLib.Path.build_filename(Eventd.Tests.BUILD_DIR, ".libs"), true);
         GLib.Environment.set_variable("EVENTD_PLUGINS_WHITELIST", plugins, true);
-        GLib.Process.spawn_async(null,
+        GLib.Process.spawn_sync(null,
                                  args,
                                  null,
                                  0,
-                                 null,
-                                 out pid);
-        GLib.Thread.usleep(1000000);
+                                 null);
     }
 
     public static void
-    stop_eventd(GLib.Pid pid) throws GLib.Error
+    stop_eventd() throws GLib.Error
     {
         GLib.Process.spawn_sync(null,
                                 { GLib.Path.build_filename(Eventd.Tests.BUILD_DIR, "eventdctl"), "--socket=9987" , "quit"},
                                 null,
                                 0,
                                 null);
-        GLib.Process.close_pid(pid);
     }
 }

@@ -70,10 +70,9 @@ int
 main(string[] args)
 {
     int r = 0;
-    GLib.Pid pid;
     try
     {
-        Eventd.Tests.start_eventd(out pid, "test-plugin,evp", "--event-listen=tcp:localhost:9876");
+        Eventd.Tests.start_eventd("test-plugin,evp", "--event-listen=tcp:localhost:9876");
     }
     catch ( GLib.Error e )
     {
@@ -102,7 +101,7 @@ main(string[] args)
 
     try
     {
-        Eventd.Tests.stop_eventd(pid);
+        Eventd.Tests.stop_eventd();
     }
     catch ( GLib.Error e )
     {
