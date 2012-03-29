@@ -72,24 +72,24 @@ uninstall-hook: la-files-uninstall-hook
 
 # *.la files cleanup
 la-files-install-hook:
-	cd $(DESTDIR)/$(pkglibdir) && \
+	cd $(DESTDIR)$(pkglibdir) && \
 		rm $(pkglib_LTLIBRARIES)
-	cd $(DESTDIR)/$(pluginsdir) && \
+	cd $(DESTDIR)$(pluginsdir) && \
 		rm $(plugins_LTLIBRARIES)
 
-# Remove *.so files at uninstall since
+# Remove shared object files at uninstall since
 # we remove *.la files at install
 la-files-uninstall-hook:
-	cd $(DESTDIR)/$(pkglibdir) && \
-		rm $(pkglib_LTLIBRARIES:.la=.so)
-	cd $(DESTDIR)/$(pluginsdir) && \
-		rm $(plugins_LTLIBRARIES:.la=.so)
-	rmdir $(DESTDIR)/$(pluginsdir)
-	rmdir $(DESTDIR)/$(pkglibdir)
+	cd $(DESTDIR)$(pkglibdir) && \
+		rm $(pkglib_LTLIBRARIES:.la=$(shrext_cmds))
+	cd $(DESTDIR)$(pluginsdir) && \
+		rm $(plugins_LTLIBRARIES:.la=$(shrext_cmds))
+	rmdir $(DESTDIR)$(pluginsdir)
+	rmdir $(DESTDIR)$(pkglibdir)
 
  ifeq ($(dist_pkgdata_DATA),)
 install-data-hook: empty-pkgdatadir-install-hook
 
 empty-pkgdatadir-install-hook:
-	rmdir $(DESTDIR)/$(pkgdatadir)
+	rmdir $(DESTDIR)$(pkgdatadir)
  endif

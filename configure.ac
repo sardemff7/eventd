@@ -198,6 +198,7 @@ AC_SUBST(AM_VALA_CFLAGS)
 AC_SUBST(AM_VALAFLAGS)
 
 AM_SUBST_NOTMAKE(LIBS)
+AC_SUBST(shrext_cmds)
 
 AC_CONFIG_FILES([
     data/libeventd-event.pc
