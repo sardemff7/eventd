@@ -353,14 +353,16 @@ static void
 _eventd_dbus_on_name_acquired(GDBusConnection *connection, const gchar *name, gpointer user_data)
 {
 #if DEBUG
-    g_debug("Acquired the name %s on the session bus\n", name);
+    g_debug("Acquired the name %s on the session bus", name);
 #endif /* DEBUG */
 }
 
 static void
 _eventd_dbus_on_name_lost(GDBusConnection *connection, const gchar *name, gpointer user_data)
 {
-    g_warning("Lost DBus name");
+#if DEBUG
+    g_debug("Lost the name %s on the session bus", name);
+#endif /* DEBUG */
 }
 
 static EventdPluginContext *
