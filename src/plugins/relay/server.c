@@ -79,7 +79,7 @@ eventd_relay_server_new(const gchar *uri)
     if ( g_str_has_prefix(host, "[") && g_str_has_suffix(host, "]") )
     {
         gchar *tmp = host;
-        host = g_utf8_substring(tmp, 1, g_utf8_strlen(tmp, -1));
+        host = g_strndup(tmp+1, strlen(tmp) - 2);
         g_free(tmp);
     }
 
