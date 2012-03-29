@@ -151,7 +151,7 @@ _eventd_plugins_load_dir(EventdCoreContext *core, EventdCoreInterface *interface
             }
         }
 
-        g_hash_table_insert(plugins, *id, plugin);
+        g_hash_table_insert(plugins, g_strdup(*id), plugin);
     }
 }
 
@@ -182,7 +182,7 @@ eventd_plugins_load(EventdCoreContext *core, EventdCoreInterface *interface)
         return;
     }
 
-    plugins = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, _eventd_plugins_plugin_free);
+    plugins = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_plugins_plugin_free);
 
     env_whitelist = g_getenv("EVENTD_PLUGINS_WHITELIST");
     if ( env_whitelist != NULL )
