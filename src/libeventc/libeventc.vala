@@ -92,7 +92,7 @@ namespace Eventc
             }
         }
 
-        #if ENABLE_GIO_UNIX
+        #if HAVE_GIO_UNIX
         public bool host_is_socket { get; set; default = false; }
         #endif
 
@@ -131,7 +131,7 @@ namespace Eventc
             if ( this.address != null )
                 return;
 
-            #if ENABLE_GIO_UNIX
+            #if HAVE_GIO_UNIX
             string path = null;
             if ( this._host == "localhost" )
                 path = GLib.Path.build_filename(GLib.Environment.get_user_runtime_dir(), Eventd.Config.PACKAGE_NAME, Eventd.Config.UNIX_SOCKET);

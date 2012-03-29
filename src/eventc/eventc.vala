@@ -28,7 +28,7 @@ namespace Eventc
     static string[] event_data_content;
     static string host;
     static uint16 port = 0;
-    #if ENABLE_GIO_UNIX
+    #if HAVE_GIO_UNIX
     static string unix_socket;
     #endif
     static GLib.MainLoop loop;
@@ -46,7 +46,7 @@ namespace Eventc
         { "data-content", 'c', 0, GLib.OptionArg.STRING_ARRAY, out event_data_content, N_("Event data content to send (must be after a data-name)"), "<content>" },
         { "host", 'h', 0, GLib.OptionArg.STRING, out host, N_("Host to connect to"), "<host>" },
         { "port", 'p', 0, GLib.OptionArg.INT, ref port, N_("Port to connect to"), "<port>" },
-        #if ENABLE_GIO_UNIX
+        #if HAVE_GIO_UNIX
         { "socket", 's', 0, GLib.OptionArg.FILENAME, out unix_socket, N_("UNIX socket to connect to"), "<socket file>" },
         #endif
         { "max-tries", 'm', 0, GLib.OptionArg.INT, ref max_tries, N_("Maximum connection attempts (0 for infinite)"), "<times>" },
@@ -162,7 +162,7 @@ namespace Eventc
         }
         type = args[1];
 
-        #if ENABLE_GIO_UNIX
+        #if HAVE_GIO_UNIX
         if ( unix_socket != null )
             host = unix_socket;
         #endif
@@ -171,7 +171,7 @@ namespace Eventc
 
         client = new Connection(host, port, type);
         client.timeout = timeout;
-        #if ENABLE_GIO_UNIX
+        #if HAVE_GIO_UNIX
         if ( unix_socket != null )
             client.host_is_socket = true;
         #endif

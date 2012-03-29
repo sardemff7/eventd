@@ -23,9 +23,6 @@
 #include <glib.h>
 #include <glib-object.h>
 #include <gio/gio.h>
-#if ENABLE_GIO_UNIX
-#include <glib/gstdio.h>
-#endif /* ENABLE_GIO_UNIX */
 
 #include <libeventd-event.h>
 #include <eventd-core-interface.h>
@@ -314,13 +311,13 @@ _eventd_evp_start(EventdPluginContext *service)
         sockets = _eventd_evp_add_socket(sockets, service, binds);
     }
 
-#if ENABLE_GIO_UNIX
+#if HAVE_GIO_UNIX
     if ( service->default_unix )
     {
         const gchar *binds[] = { "unix-runtime:" UNIX_SOCKET, NULL };
         sockets = _eventd_evp_add_socket(sockets, service, binds);
     }
-#endif /* ENABLE_GIO_UNIX */
+#endif /* HAVE_GIO_UNIX */
 
     g_signal_connect(service->service, "run", G_CALLBACK(_eventd_service_connection_handler), service);
 
@@ -354,9 +351,9 @@ _eventd_evp_get_option_group(EventdPluginContext *context)
     {
         { "listen-default", 'L', 0, G_OPTION_ARG_NONE, &context->default_bind, "Listen on default interface", NULL },
         { "listen", 'l', 0, G_OPTION_ARG_STRING_ARRAY, &context->binds, "Add a socket to listen to", "<socket>" },
-#if ENABLE_GIO_UNIX
+#if HAVE_GIO_UNIX
         { "listen-default-unix", 'u', 0, G_OPTION_ARG_NONE, &context->default_unix, "Listen on default UNIX socket", NULL },
-#endif /* ENABLE_GIO_UNIX */
+#endif /* HAVE_GIO_UNIX */
 #if ENABLE_AVAHI
         { "no-avahi", 'A', 0, G_OPTION_ARG_NONE, &context->no_avahi, "Disable avahi publishing", NULL },
 #endif /* ENABLE_AVAHI */

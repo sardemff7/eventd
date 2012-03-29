@@ -23,9 +23,9 @@
 #include <glib.h>
 #include <glib/gstdio.h>
 #include <gio/gio.h>
-#if ENABLE_GIO_UNIX
+#if HAVE_GIO_UNIX
 #include <gio/gunixsocketaddress.h>
-#endif /* ENABLE_GIO_UNIX */
+#endif /* HAVE_GIO_UNIX */
 
 static void
 _eventd_eventdctl_send_command(GDataOutputStream *output, const gchar *command)
@@ -80,7 +80,7 @@ main(int argc, char *argv[])
         return 0;
     }
 
-#if ENABLE_GIO_UNIX
+#if HAVE_GIO_UNIX
     if ( private_socket == NULL )
         private_socket = g_build_filename(g_get_user_runtime_dir(), PACKAGE_NAME, "private", NULL);
 
@@ -91,7 +91,7 @@ main(int argc, char *argv[])
     }
 
     address = g_unix_socket_address_new(private_socket);
-#else /* ! ENABLE_GIO_UNIX */
+#else /* ! HAVE_GIO_UNIX */
     GInetAddress *inet_address;
     guint16 port = DEFAULT_CONTROL_PORT;
     inet_address = g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV6);
@@ -103,7 +103,7 @@ main(int argc, char *argv[])
     }
     address = g_inet_socket_address_new(inet_address, port);
     g_object_unref(inet_address);
-#endif /* ! ENABLE_GIO_UNIX */
+#endif /* ! HAVE_GIO_UNIX */
     g_free(private_socket);
 
     client = g_socket_client_new();

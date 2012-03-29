@@ -76,13 +76,12 @@ PKG_CHECK_MODULES(GTHREAD, [gthread-2.0])
 
 gio_unix=
 gio_unix_vala=
-AC_ARG_ENABLE(gio-unix, AS_HELP_STRING([--disable-gio-unix], [Disable UNIX-specific GIO support]), enable_gio_unix=$enableval, enable_gio_unix=yes)
-if test x$enable_gio_unix = xyes; then
+PKG_CHECK_EXISTS([gio-unix-2.0 >= $gio_min_version], have_gio_unix=yes, have_gio_unix=no)
+if test x$have_gio_unix = xyes; then
     gio_unix="gio-unix-2.0"
-    gio_unix_vala="--pkg gio-unix-2.0 -D ENABLE_GIO_UNIX"
-    AC_DEFINE([ENABLE_GIO_UNIX], [1], [Enable UNIX-specific GIO support])
+    gio_unix_vala="--pkg gio-unix-2.0 -D HAVE_GIO_UNIX"
+    AC_DEFINE([HAVE_GIO_UNIX], [1], [UNIX-specific GIO support])
 fi
-AM_CONDITIONAL(ENABLE_GIO_UNIX, test x$enable_gio_unix = xyes)
 
 PKG_CHECK_MODULES(GIO, [gio-2.0 >= $gio_min_version $gio_unix])
 GIO_VALAFLAGS="--pkg gio-2.0 $gio_unix_vala"
@@ -106,9 +105,6 @@ PKG_CHECK_MODULES(GMODULE, [gmodule-2.0 >= $gmodule_min_version])
 
 AC_ARG_ENABLE(systemd, AS_HELP_STRING([--enable-systemd], [Enable systemd activation support]), enable_systemd=$enableval, enable_systemd=no)
 if test x$enable_systemd = xyes; then
-    if test x$enable_gio_unix = xno; then
-        AC_MSG_ERROR([*** It won’t harm to enable UNIX GIO support])
-    fi
     PKG_CHECK_MODULES(SYSTEMD, [libsystemd-daemon])
     AC_DEFINE([ENABLE_SYSTEMD], [1], [Enable systemd activation support])
 fi

@@ -123,7 +123,7 @@ eventd_core_get_sockets(EventdCoreContext *context, const gchar * const *binds)
             if ( inet_sockets != NULL )
                 sockets = g_list_concat(sockets, inet_sockets);
         }
-#if ENABLE_GIO_UNIX
+#if HAVE_GIO_UNIX
         else if ( g_str_has_prefix(bind, "unix:") )
         {
             if ( bind[5] == 0 )
@@ -151,7 +151,7 @@ eventd_core_get_sockets(EventdCoreContext *context, const gchar * const *binds)
             if ( socket != NULL )
                 sockets = g_list_prepend(sockets, socket);
         }
-#endif /* ENABLE_GIO_UNIX */
+#endif /* HAVE_GIO_UNIX */
     }
 
     return sockets;
@@ -228,11 +228,11 @@ main(int argc, char *argv[])
 
     GOptionEntry entries[] =
     {
-#if ENABLE_GIO_UNIX
+#if HAVE_GIO_UNIX
         { "take-over", 't', 0, G_OPTION_ARG_NONE, &context->take_over_socket, "Take over socket", NULL },
-#else /* ! ENABLE_GIO_UNIX */
+#else /* ! HAVE_GIO_UNIX */
         { "take-over", 't', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &context->take_over_socket, NULL, NULL },
-#endif /* ! ENABLE_GIO_UNIX */
+#endif /* ! HAVE_GIO_UNIX */
         { "version", 'V', 0, G_OPTION_ARG_NONE, &print_version, "Print version", NULL },
         { NULL }
     };
