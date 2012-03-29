@@ -22,4 +22,11 @@
 
 #include <glib.h>
 
+#include "types.h"
 #include "avahi.h"
+
+EventdRelayAvahi *eventd_relay_avahi_init(void) { return NULL; }
+void eventd_relay_avahi_uninit(EventdRelayAvahi *context) {}
+
+EventdRelayAvahiServer *eventd_relay_avahi_server_new(EventdRelayAvahi *context, const gchar *name, EventdRelayServer *relay_server) { return NULL; }
+void eventd_relay_avahi_server_free(EventdRelayAvahiServer *server) {}
