@@ -72,7 +72,7 @@ main(string[] args)
     int r = 0;
     try
     {
-        Eventd.Tests.start_eventd("test-plugin,evp", "--event-listen=tcp:localhost:9876");
+        Eventd.Tests.start_eventd("test-plugin,evp", "--event-listen=tcp:localhost:9876", "--no-avahi");
     }
     catch ( GLib.Error e )
     {

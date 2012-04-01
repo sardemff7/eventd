@@ -356,7 +356,9 @@ _eventd_evp_get_option_group(EventdPluginContext *context)
 #endif /* HAVE_GIO_UNIX */
 #if ENABLE_AVAHI
         { "no-avahi", 'A', 0, G_OPTION_ARG_NONE, &context->no_avahi, "Disable avahi publishing", NULL },
-#endif /* ENABLE_AVAHI */
+#else /* ! ENABLE_AVAHI */
+        { "no-avahi", 'A', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &context->no_avahi, NULL, NULL },
+#endif /* ! ENABLE_AVAHI */
         { NULL }
     };
 
