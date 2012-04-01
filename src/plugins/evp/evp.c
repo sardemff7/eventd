@@ -285,7 +285,7 @@ _eventd_evp_add_socket(GList *used_sockets, EventdPluginContext *context, const 
             g_clear_error(&error);
         }
         else
-            sockets = g_list_prepend(used_sockets, g_object_ref(socket_->data));
+            used_sockets = g_list_prepend(used_sockets, g_object_ref(socket_->data));
     }
     g_list_free_full(sockets, g_object_unref);
 
