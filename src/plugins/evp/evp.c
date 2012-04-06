@@ -31,6 +31,12 @@
 
 #include "avahi.h"
 
+#if ENABLE_AVAHI
+#define AVAHI_OPTION_FLAG 0
+#else /* ! ENABLE_AVAHI */
+#define AVAHI_OPTION_FLAG G_OPTION_FLAG_HIDDEN
+#endif /* ! ENABLE_AVAHI */
+
 struct _EventdPluginContext {
     EventdCoreContext *core;
     EventdCoreInterface *core_interface;
@@ -349,16 +355,12 @@ _eventd_evp_get_option_group(EventdPluginContext *context)
     GOptionGroup *option_group;
     GOptionEntry entries[] =
     {
-        { "listen-default", 'L', 0, G_OPTION_ARG_NONE, &context->default_bind, "Listen on default interface", NULL },
-        { "listen", 'l', 0, G_OPTION_ARG_STRING_ARRAY, &context->binds, "Add a socket to listen to", "<socket>" },
+        { "listen-default",      'L', 0,                 G_OPTION_ARG_NONE,         &context->default_bind, "Listen on default interface",   NULL },
+        { "listen",              'l', 0,                 G_OPTION_ARG_STRING_ARRAY, &context->binds,        "Add a socket to listen to",     "<socket>" },
 #if HAVE_GIO_UNIX
-        { "listen-default-unix", 'u', 0, G_OPTION_ARG_NONE, &context->default_unix, "Listen on default UNIX socket", NULL },
+        { "listen-default-unix", 'u', 0,                 G_OPTION_ARG_NONE,         &context->default_unix, "Listen on default UNIX socket", NULL },
 #endif /* HAVE_GIO_UNIX */
-#if ENABLE_AVAHI
-        { "no-avahi", 'A', 0, G_OPTION_ARG_NONE, &context->no_avahi, "Disable avahi publishing", NULL },
-#else /* ! ENABLE_AVAHI */
-        { "no-avahi", 'A', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &context->no_avahi, NULL, NULL },
-#endif /* ! ENABLE_AVAHI */
+        { "no-avahi",            'A', AVAHI_OPTION_FLAG, G_OPTION_ARG_NONE,         &context->no_avahi,     "Disable avahi publishing",      NULL },
         { NULL }
     };
 

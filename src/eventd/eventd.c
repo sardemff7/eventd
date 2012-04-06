@@ -43,6 +43,12 @@
 
 #include "eventd.h"
 
+#if HAVE_GIO_UNIX
+#define GIO_UNIX_OPTION_FLAG 0
+#else /* ! HAVE_GIO_UNIX */
+#define GIO_UNIX_OPTION_FLAG G_OPTION_FLAG_HIDDEN
+#endif /* ! HAVE_GIO_UNIX */
+
 struct _EventdCoreContext {
     EventdConfig *config;
     EventdControl *control;
@@ -229,13 +235,9 @@ main(int argc, char *argv[])
 
     GOptionEntry entries[] =
     {
-#if HAVE_GIO_UNIX
-        { "take-over", 't', 0, G_OPTION_ARG_NONE, &context->take_over_socket, "Take over socket", NULL },
-#else /* ! HAVE_GIO_UNIX */
-        { "take-over", 't', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &context->take_over_socket, NULL, NULL },
-#endif /* ! HAVE_GIO_UNIX */
-        { "daemonize", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &daemonize, NULL, NULL },
-        { "version", 'V', 0, G_OPTION_ARG_NONE, &print_version, "Print version", NULL },
+        { "take-over", 't', GIO_UNIX_OPTION_FLAG, G_OPTION_ARG_NONE, &context->take_over_socket, "Take over socket", NULL },
+        { "daemonize", 0,   G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &daemonize,                 NULL,               NULL },
+        { "version",   'V', 0,                    G_OPTION_ARG_NONE, &print_version,             "Print version",    NULL },
         { NULL }
     };
 

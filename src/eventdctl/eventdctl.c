@@ -235,9 +235,9 @@ main(int argc, char *argv[])
 
     GOptionEntry entries[] =
     {
-        { "socket", 's', 0, G_OPTION_ARG_FILENAME, &private_socket, "eventd control socket", "<socket>" },
-        { "auto-spawn", 'a', 0, G_OPTION_ARG_NONE, &autospawn, "Spawn eventd if needed", NULL },
-        { "version", 'V', 0, G_OPTION_ARG_NONE, &print_version, "Print version", NULL },
+        { "socket",     's', 0, G_OPTION_ARG_FILENAME, &private_socket, "eventd control socket",  "<socket>" },
+        { "auto-spawn", 'a', 0, G_OPTION_ARG_NONE,     &autospawn,      "Spawn eventd if needed", NULL },
+        { "version",    'V', 0, G_OPTION_ARG_NONE,     &print_version,  "Print version",          NULL },
         { NULL }
     };
 

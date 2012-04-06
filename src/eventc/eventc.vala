@@ -41,17 +41,17 @@ namespace Eventc
 
     static const GLib.OptionEntry[] entries =
     {
-        { "name", 'n', 0, GLib.OptionArg.STRING, out event_name, N_("Event name to send"), "<name>" },
-        { "data-name", 'd', 0, GLib.OptionArg.STRING_ARRAY, out event_data_name, N_("Event data name to send"), "<name>" },
+        { "name",         'n', 0, GLib.OptionArg.STRING,       out event_name,         N_("Event name to send"),                                     "<name>" },
+        { "data-name",    'd', 0, GLib.OptionArg.STRING_ARRAY, out event_data_name,    N_("Event data name to send"),                                "<name>" },
         { "data-content", 'c', 0, GLib.OptionArg.STRING_ARRAY, out event_data_content, N_("Event data content to send (must be after a data-name)"), "<content>" },
-        { "host", 'h', 0, GLib.OptionArg.STRING, out host, N_("Host to connect to"), "<host>" },
-        { "port", 'p', 0, GLib.OptionArg.INT, ref port, N_("Port to connect to"), "<port>" },
+        { "host",         'h', 0, GLib.OptionArg.STRING,       out host,               N_("Host to connect to"),                                     "<host>" },
+        { "port",         'p', 0, GLib.OptionArg.INT,          ref port,               N_("Port to connect to"),                                     "<port>" },
         #if HAVE_GIO_UNIX
-        { "socket", 's', 0, GLib.OptionArg.FILENAME, out unix_socket, N_("UNIX socket to connect to"), "<socket file>" },
+        { "socket",       's', 0, GLib.OptionArg.FILENAME,     out unix_socket,        N_("UNIX socket to connect to"),                              "<socket file>" },
         #endif
-        { "max-tries", 'm', 0, GLib.OptionArg.INT, ref max_tries, N_("Maximum connection attempts (0 for infinite)"), "<times>" },
-        { "timeout", 'o', 0, GLib.OptionArg.INT, ref timeout, N_("Connection timeout"), "<seconds>" },
-        { "version", 'V', 0, GLib.OptionArg.NONE, ref print_version, N_("Print version"), null },
+        { "max-tries",    'm', 0, GLib.OptionArg.INT,          ref max_tries,          N_("Maximum connection attempts (0 for infinite)"),           "<times>" },
+        { "timeout",      'o', 0, GLib.OptionArg.INT,          ref timeout,            N_("Connection timeout"),                                     "<seconds>" },
+        { "version",      'V', 0, GLib.OptionArg.NONE,         ref print_version,      N_("Print version"),                                          null },
         { null }
     };
 
