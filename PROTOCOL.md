@@ -64,7 +64,5 @@ Closing the connection
 [Client]
 BYE
     Close the connection
-
-[Server]
-BYE
-    Answer to the BYE message
+    The server must not send any data after this
+    message as the connection is closed

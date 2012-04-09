@@ -52,10 +52,6 @@ connection_test(GLib.DataInputStream input, GLib.DataOutputStream output) throws
         return 1;
 
     output.put_string("BYE\n");
-    r = input.read_upto("\n", -1, null);
-    input.read_byte(null);
-    if ( r != "BYE" )
-        return 1;
 
     return 0;
 }

@@ -161,10 +161,6 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
         }
         else if ( g_ascii_strcasecmp(line, "BYE") == 0 )
         {
-            if ( category == NULL )
-                break;
-
-            g_data_output_stream_put_string(output, "BYE\n", NULL, &error);
             break;
         }
         else if ( g_ascii_strncasecmp(line, "HELLO ", 6) == 0 )
