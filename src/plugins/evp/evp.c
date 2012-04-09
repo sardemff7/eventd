@@ -215,17 +215,6 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
 
             category = g_strdup(line+6);
         }
-        else if ( g_ascii_strncasecmp(line, "RENAME ", 7) == 0 )
-        {
-            if ( category == NULL )
-                break;
-
-            if ( ! g_data_output_stream_put_string(output, "RENAMED\n", NULL, &error) )
-                break;
-
-            g_free(category);
-            category = g_strdup(line+7);
-        }
         else
             g_warning("Unknown message");
 

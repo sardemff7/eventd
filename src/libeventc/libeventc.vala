@@ -56,7 +56,6 @@ namespace Eventc
 
         private string _host;
         private uint16 _port;
-        private string _category;
         public Mode mode;
 
         public string host
@@ -83,14 +82,7 @@ namespace Eventc
             }
         }
 
-        public string category
-        {
-            set
-            {
-                if ( this._category != value )
-                    this._category = value;
-            }
-        }
+        private string category;
 
         #if HAVE_GIO_UNIX
         public bool host_is_socket { get; set; default = false; }
@@ -113,7 +105,7 @@ namespace Eventc
             this.mutex = new GLib.Mutex();
             this._host = host;
             this._port = port;
-            this._category = category;
+            this.category = category;
             this.mode = Mode.UNKNOWN;
 
             this.client = new GLib.SocketClient();
@@ -206,7 +198,7 @@ namespace Eventc
             this.input = new GLib.DataInputStream((this.connection as GLib.IOStream).get_input_stream());
             this.output = new GLib.DataOutputStream((this.connection as GLib.IOStream).get_output_stream());
 
-            this.send("HELLO " + this._category);
+            this.send("HELLO " + this.category);
 
             var r = yield this.receive();
             if ( r != "HELLO" )
@@ -241,15 +233,6 @@ namespace Eventc
         }
 
         public async void
-        rename() throws EventcError
-        {
-            this.send("RENAME " + this._category);
-            var r = yield this.receive();
-            if ( r != "RENAMED" )
-                throw new EventcError.RENAMED("Got a wrong renamed message: %s", r);
-        }
-
-        public async void
         event(Eventd.Event event) throws EventcError
         {
             while ( ! this.mutex.trylock() )
@@ -264,7 +247,7 @@ namespace Eventc
             unowned string name = event.get_name();
             this.send( @"EVENT $name");
 
-            if ( ( this.mode == Mode.RELAY ) && ( this._category != event.get_category() ) )
+            if ( ( this.mode == Mode.RELAY ) && ( this.category != event.get_category() ) )
                 this.send("CLIENT " + event.get_category());
 
             unowned GLib.HashTable<string, string> data = event.get_all_data();
