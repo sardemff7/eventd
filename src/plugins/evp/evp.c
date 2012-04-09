@@ -52,12 +52,167 @@ struct _EventdPluginContext {
     GHashTable *events;
 };
 
+typedef struct {
+    GCancellable *cancellable;
+    GDataInputStream *input;
+    GDataOutputStream *output;
+    gchar *category;
+} EventdEvpClient;
+
 static void
 _eventd_service_client_disconnect(gpointer data)
 {
     GCancellable *cancellable = data;
     g_cancellable_cancel(cancellable);
-    g_object_unref(cancellable);
+}
+
+static gchar *
+_eventd_evp_read_message(EventdEvpClient *client, GError **error)
+{
+    gsize size;
+    gchar *line;
+    line = g_data_input_stream_read_upto(client->input, "\n", -1, &size, client->cancellable, error);
+    if ( line != NULL )
+    {
+        if ( g_data_input_stream_read_byte(client->input, client->cancellable, error) != '\n' )
+            line = (g_free(line), NULL);
+    }
+    return line;
+}
+
+static gboolean
+_eventd_evp_handshake(EventdEvpClient *client, GError **error)
+{
+    gchar *line;
+    gboolean ret = FALSE;
+
+    line =_eventd_evp_read_message(client, error);
+    if ( line == NULL )
+        return FALSE;
+
+    if ( ! g_str_has_prefix(line, "HELLO ") )
+        goto fail;
+
+    if ( ! g_data_output_stream_put_string(client->output, "HELLO\n", client->cancellable, error) )
+        goto fail;
+
+    client->category = g_strdup(line+6);
+    ret = TRUE;
+
+fail:
+    g_free(line);
+    return ret;
+}
+
+static gchar *
+_eventd_evp_event_data(EventdEvpClient *client, GError **error)
+{
+    gchar *data = NULL;
+
+    gchar *line;
+
+    while ( ( line =_eventd_evp_read_message(client, error) ) != NULL )
+    {
+        if ( g_strcmp0(line, ".") == 0 )
+        {
+            g_free(line);
+            return data;
+        }
+
+        if ( data == NULL )
+        {
+            if ( line[0] == '.' )
+                data = g_strdup(line+1);
+            else
+            {
+                data = line;
+                line = NULL;
+            }
+        }
+        else
+        {
+            gchar *old = data;
+            data = g_strconcat(old, "\n", ( line[0] == '.' ) ? line+1 : line, NULL);
+            g_free(old);
+        }
+        g_free(line);
+    }
+    g_free(line);
+    g_free(data);
+
+    return NULL;
+}
+
+static gboolean
+_eventd_evp_event(EventdEvpClient *client, EventdEvent *event, GError **error)
+{
+    gboolean ret = TRUE;
+
+    gchar *line;
+
+    while ( ( line =_eventd_evp_read_message(client, error) ) != NULL )
+    {
+        if ( g_strcmp0(line, ".") == 0 )
+        {
+            if ( ! g_data_output_stream_put_string(client->output, "OK\n", client->cancellable, error) )
+                ret = FALSE;
+            break;
+        }
+
+        if ( g_str_has_prefix(line, "DATA ") )
+            eventd_event_add_data(event, g_strdup(line+5), _eventd_evp_event_data(client, error));
+        else if ( g_str_has_prefix(line, "DATAL ") )
+        {
+            gchar **data = NULL;
+
+            data = g_strsplit(line+6, " ", 2);
+            eventd_event_add_data(event, data[0], data[1]);
+            g_free(data);
+        }
+        else if ( g_str_has_prefix(line, "CATEGORY ") )
+            eventd_event_set_category(event, line+9);
+        else
+            g_warning("[EVENT] Unknown message: %s", line);
+
+        g_free(line);
+    }
+    g_free(line);
+
+    if ( ! ret )
+        g_object_unref(event);
+
+    return ret;
+}
+
+static void
+_eventd_evp_main(EventdPluginContext *context, EventdEvpClient *client, GError **error)
+{
+    gchar *line;
+
+    while ( ( line =_eventd_evp_read_message(client, error) ) != NULL )
+    {
+        if ( g_strcmp0(line, "BYE") == 0 )
+            break;
+
+        if ( g_str_has_prefix(line, "EVENT ") )
+        {
+            EventdEvent *event;
+
+            event = eventd_event_new(line+6);
+            eventd_event_set_category(event, client->category);
+            if ( ! _eventd_evp_event(client, event, error) )
+                break;
+
+            if ( ! GPOINTER_TO_UINT(libeventd_config_events_get_event(context->events, eventd_event_get_category(event), eventd_event_get_name(event))) )
+                context->core_interface->push_event(context->core, event);
+            g_object_unref(event);
+        }
+        else
+            g_warning("Unknown message: %s", line);
+
+        g_free(line);
+    }
+    g_free(line);
 }
 
 static gboolean
@@ -65,125 +220,31 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
 {
     EventdPluginContext *service = user_data;
 
-    GCancellable *cancellable;
-    GDataInputStream *input = NULL;
-    GDataOutputStream *output = NULL;
+    EventdEvpClient client = {0};
     GError *error = NULL;
 
-    gchar *category = NULL;
-    EventdEvent *event = NULL;
+    client.cancellable = g_cancellable_new();
 
-    gchar *event_data_name = NULL;
-    gchar *event_data_content = NULL;
+    service->clients = g_slist_prepend(service->clients, client.cancellable);
 
-    gsize size = 0;
-    gchar *line = NULL;
+    client.input = g_data_input_stream_new(g_io_stream_get_input_stream(G_IO_STREAM(connection)));
+    client.output = g_data_output_stream_new(g_io_stream_get_output_stream(G_IO_STREAM(connection)));
 
-    cancellable = g_cancellable_new();
+    if ( _eventd_evp_handshake(&client, &error) )
+        _eventd_evp_main(service, &client, &error);
 
-    service->clients = g_slist_prepend(service->clients, cancellable);
-
-    input = g_data_input_stream_new(g_io_stream_get_input_stream(G_IO_STREAM(connection)));
-    output = g_data_output_stream_new(g_io_stream_get_output_stream(G_IO_STREAM(connection)));
-
-    while ( ( line = g_data_input_stream_read_upto(input, "\n", -1, &size, cancellable, &error) ) != NULL )
-    {
-        g_data_input_stream_read_byte(input, NULL, &error);
-        if ( error != NULL )
-            break;
-#if DEBUG
-        g_debug("Line received: %s", line);
-#endif /* DEBUG */
-
-        if ( event != NULL )
-        {
-            if ( g_ascii_strcasecmp(line, ".") == 0 )
-            {
-                if ( event_data_name != NULL )
-                {
-                    eventd_event_add_data(event, event_data_name, event_data_content);
-                    event_data_name = NULL;
-                    event_data_content = NULL;
-                }
-                else if ( eventd_event_get_category(event) == NULL )
-                {
-                    g_warning("Missing event category, ignoring event");
-                    g_object_unref(event);
-                    event = NULL;
-                }
-                else
-                {
-                    if ( ! g_data_output_stream_put_string(output, "OK\n", NULL, &error) )
-                        break;
-
-                    if ( ! GPOINTER_TO_UINT(libeventd_config_events_get_event(service->events, eventd_event_get_category(event), eventd_event_get_name(event))) )
-                        service->core_interface->push_event(service->core, event);
-
-                    g_object_unref(event);
-                    event = NULL;
-                }
-            }
-            else if ( event_data_content != NULL )
-            {
-                gchar *old = NULL;
-
-                old = event_data_content;
-                event_data_content = g_strjoin("\n", old, ( line[0] == '.' ) ? line+1 : line, NULL);
-
-                g_free(old);
-            }
-            else if ( g_ascii_strncasecmp(line, "DATA ", 5) == 0 )
-            {
-                event_data_name = g_strdup(line+5);
-            }
-            else if ( g_ascii_strncasecmp(line, "DATAL ", 6) == 0 )
-            {
-                gchar **data = NULL;
-
-                data = g_strsplit(line+6, " ", 2);
-                eventd_event_add_data(event, data[0], data[1]);
-                g_free(data);
-            }
-            else if ( g_ascii_strncasecmp(line, "CATEGORY ", 7) == 0 )
-                eventd_event_set_category(event, line+7);
-            else if ( event_data_name != NULL )
-                event_data_content = g_strdup(( line[0] == '.' ) ? line+1 : line);
-            else
-                g_warning("Unknown message");
-        }
-        else if ( g_ascii_strncasecmp(line, "EVENT ", 6) == 0 )
-        {
-            if ( category == NULL )
-                break;
-
-            event = eventd_event_new(line+6);
-            eventd_event_set_category(event, category);
-        }
-        else if ( g_ascii_strcasecmp(line, "BYE") == 0 )
-        {
-            break;
-        }
-        else if ( g_ascii_strncasecmp(line, "HELLO ", 6) == 0 )
-        {
-            if ( ! g_data_output_stream_put_string(output, "HELLO\n", NULL, &error) )
-                break;
-
-            category = g_strdup(line+6);
-        }
-        else
-            g_warning("Unknown message");
-
-        g_free(line);
-    }
-    if ( ( error != NULL ) && ( error->code == G_IO_ERROR_CANCELLED ) )
+    if ( ( error != NULL ) && ( error->code != G_IO_ERROR_CANCELLED ) )
         g_warning("Can't read the socket: %s", error->message);
     g_clear_error(&error);
 
-    g_free(category);
+    g_free(client.category);
 
     if ( ! g_io_stream_close(G_IO_STREAM(connection), NULL, &error) )
         g_warning("Can't close the stream: %s", error->message);
     g_clear_error(&error);
+
+    service->clients = g_slist_remove(service->clients, client.cancellable);
+    g_object_unref(client.cancellable);
 
     return TRUE;
 }
