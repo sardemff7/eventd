@@ -175,7 +175,6 @@ namespace Eventc
         if ( unix_socket != null )
             client.host_is_socket = true;
         #endif
-        client.mode = Connection.Mode.NORMAL;
 
         tries = 0;
         connect();

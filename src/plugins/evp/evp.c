@@ -60,11 +60,6 @@ _eventd_service_client_disconnect(gpointer data)
     g_object_unref(cancellable);
 }
 
-typedef enum {
-    MODE_NORMAL = 0,
-    MODE_RELAY
-} EventdClientMode;
-
 static gboolean
 _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSocketConnection *connection, GObject *source_object, gpointer user_data)
 {
@@ -78,15 +73,11 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
     gchar *category = NULL;
     EventdEvent *event = NULL;
 
-    EventdClientMode mode = MODE_NORMAL;
-
     gchar *event_data_name = NULL;
     gchar *event_data_content = NULL;
 
     gsize size = 0;
     gchar *line = NULL;
-
-    gint32 last_eventd_id = 0;
 
     cancellable = g_cancellable_new();
 
@@ -114,10 +105,9 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
                     event_data_name = NULL;
                     event_data_content = NULL;
                 }
-                else if ( ( mode == MODE_RELAY )
-                          && ( eventd_event_get_category(event) == NULL ) )
+                else if ( eventd_event_get_category(event) == NULL )
                 {
-                    g_warning("Relay client missing real client description");
+                    g_warning("Missing event category, ignoring event");
                     g_object_unref(event);
                     event = NULL;
                 }
@@ -127,17 +117,7 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
                         break;
 
                     if ( ! GPOINTER_TO_UINT(libeventd_config_events_get_event(service->events, eventd_event_get_category(event), eventd_event_get_name(event))) )
-                    {
-                        switch ( mode )
-                        {
-                        case MODE_NORMAL:
-                        case MODE_RELAY:
-                            service->core_interface->push_event(service->core, event);
-                        break;
-                        }
-                        if ( error != NULL )
-                            break;
-                    }
+                        service->core_interface->push_event(service->core, event);
 
                     g_object_unref(event);
                     event = NULL;
@@ -164,8 +144,7 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
                 eventd_event_add_data(event, data[0], data[1]);
                 g_free(data);
             }
-            else if ( ( mode == MODE_RELAY )
-                      && ( g_ascii_strncasecmp(line, "CLIENT ", 7) == 0 ) )
+            else if ( g_ascii_strncasecmp(line, "CATEGORY ", 7) == 0 )
                 eventd_event_set_category(event, line+7);
             else if ( event_data_name != NULL )
                 event_data_content = g_strdup(( line[0] == '.' ) ? line+1 : line);
@@ -178,9 +157,7 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
                 break;
 
             event = eventd_event_new(line+6);
-
-            if ( mode != MODE_RELAY )
-                eventd_event_set_category(event, category);
+            eventd_event_set_category(event, category);
         }
         else if ( g_ascii_strcasecmp(line, "BYE") == 0 )
         {
@@ -189,24 +166,6 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
 
             g_data_output_stream_put_string(output, "BYE\n", NULL, &error);
             break;
-        }
-        else if ( g_ascii_strncasecmp(line, "MODE ", 5) == 0 )
-        {
-            if ( category == NULL )
-                break;
-
-            if ( last_eventd_id > 0 )
-            {
-                g_warning("Can’t change the mode after the first event");
-                g_free(line);
-                continue;
-            }
-
-            if ( ! g_data_output_stream_put_string(output, "MODE\n", NULL, &error) )
-                break;
-
-            if ( g_ascii_strcasecmp(line+5, "relay") == 0 )
-                mode = MODE_RELAY;
         }
         else if ( g_ascii_strncasecmp(line, "HELLO ", 6) == 0 )
         {

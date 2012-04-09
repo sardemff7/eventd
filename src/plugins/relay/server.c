@@ -46,7 +46,6 @@ static void
 _eventd_relay_server_create_eventc(EventdRelayServer *server, const gchar *host, guint16 port)
 {
     server->connection = eventc_connection_new(host, port, PACKAGE_NAME);
-    server->connection->mode = EVENTC_CONNECTION_MODE_RELAY;
 }
 
 void

@@ -31,12 +31,6 @@ connection_test(GLib.DataInputStream input, GLib.DataOutputStream output) throws
     if ( r != "HELLO" )
         return 1;
 
-    output.put_string("MODE normal\n");
-    r = input.read_upto("\n", -1, null);
-    input.read_byte(null);
-    if ( r != "MODE" )
-        return 1;
-
     var filename = GLib.Path.build_filename(GLib.Environment.get_user_runtime_dir(), "some-file");
     var message = "Some message";
 

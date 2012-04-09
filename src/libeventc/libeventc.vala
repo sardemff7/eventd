@@ -46,17 +46,10 @@ namespace Eventc
 
     public class Connection : GLib.Object
     {
-        public enum Mode {
-            UNKNOWN = -1,
-            NORMAL = 0,
-            RELAY
-        }
-
         private GLib.Mutex mutex;
 
         private string _host;
         private uint16 _port;
-        public Mode mode;
 
         public string host
         {
@@ -106,7 +99,6 @@ namespace Eventc
             this._host = host;
             this._port = port;
             this.category = category;
-            this.mode = Mode.UNKNOWN;
 
             this.client = new GLib.SocketClient();
         }
@@ -205,31 +197,6 @@ namespace Eventc
                 throw new EventcError.HELLO("Got a wrong hello message: %s", r);
             else
                 this.handshake_passed = true;
-
-            yield this.send_mode();
-        }
-
-        private async void
-        send_mode() throws EventcError
-        {
-            unowned string mode = null;
-            switch ( this.mode )
-            {
-            case Mode.NORMAL:
-                mode = "normal";
-            break;
-            case Mode.RELAY:
-                mode = "relay";
-            break;
-            default:
-                throw new EventcError.MODE("Please specify a mode");
-            }
-
-            this.send("MODE " + mode);
-
-            var r = yield this.receive();
-            if ( r != "MODE" )
-                throw new EventcError.MODE("Got a wrong mode message: %s", r);
         }
 
         public async void
@@ -247,8 +214,9 @@ namespace Eventc
             unowned string name = event.get_name();
             this.send( @"EVENT $name");
 
-            if ( ( this.mode == Mode.RELAY ) && ( this.category != event.get_category() ) )
-                this.send("CLIENT " + event.get_category());
+            var event_category =  event.get_category();
+            if ( (  event_category != null ) && ( this.category != event_category ) )
+                this.send("CATEGORY " + event.get_category());
 
             unowned GLib.HashTable<string, string> data = event.get_all_data();
             if ( data != null )

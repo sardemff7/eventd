@@ -11,23 +11,10 @@ HELLO <type>
     the client application type
     this type will be used to search for
     a configuration file
-    The client may specify a name what
-    will be used to display events
 
 [Server]
 HELLO
     Answer to the client HELLO message
-
-[Client]
-MODE <mode>
-    Inform the server of the mode used
-    by the client. You can omit this message
-    for now (compatibility with the old
-    protocol)
-
-[Server]
-MODE
-    Answer to the client MODE message
 
 
 Eventd dispatching
@@ -42,6 +29,11 @@ EVENT <type>
     http://freedesktop.org/wiki/Specifications/desktop-entry-spec
     After the event, the client may specify data using
     one or more DATA message
+
+[Client]
+CATEGORY <type>
+    Specify the real client type of the event
+    Mainly targeted for relay clients
 
 [Client]
 DATA <name>
