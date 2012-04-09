@@ -20,7 +20,7 @@
  *
  */
 
-int
+string?
 connection_test(GLib.DataInputStream input, GLib.DataOutputStream output) throws GLib.Error
 {
     string r;
@@ -29,7 +29,7 @@ connection_test(GLib.DataInputStream input, GLib.DataOutputStream output) throws
     r = input.read_upto("\n", -1, null);
     input.read_byte(null);
     if ( r != "HELLO" )
-        return 1;
+        return @"Bad handshake: $r";
 
     var filename = GLib.Path.build_filename(GLib.Environment.get_user_runtime_dir(), "some-file");
     var message = "Some message";
@@ -41,7 +41,7 @@ connection_test(GLib.DataInputStream input, GLib.DataOutputStream output) throws
     r = input.read_upto("\n", -1, null);
     input.read_byte(null);
     if ( r != "OK" )
-        return 1;
+        return @"Bad answer to EVENT: $r";
 
     GLib.Thread.usleep(100000);
 
@@ -49,11 +49,11 @@ connection_test(GLib.DataInputStream input, GLib.DataOutputStream output) throws
     GLib.FileUtils.get_contents(filename, out contents, null);
     GLib.FileUtils.unlink(filename);
     if ( message != contents )
-        return 1;
+        return @"Wrong test file contents: $contents";
 
     output.put_string("BYE\n");
 
-    return 0;
+    return null;
 }
 
 int
@@ -79,7 +79,12 @@ main(string[] args)
         var input = new GLib.DataInputStream((connection as GLib.IOStream).get_input_stream());
         var output = new GLib.DataOutputStream((connection as GLib.IOStream).get_output_stream());
 
-        r = connection_test(input, output);
+        var m = connection_test(input, output);
+        if ( m != null )
+        {
+            r = 1;
+            GLib.warning("Test failed: %s", m);
+        }
 
         connection.close();
     }
