@@ -36,7 +36,7 @@ connection_test(GLib.DataInputStream input, GLib.DataOutputStream output) throws
 
     output.put_string("EVENT test\n");
     output.put_string(@"DATAL file $filename\n");
-    output.put_string(@"DATAL test $message\n");
+    output.put_string(@"DATA test\n$message\n.\n");
     output.put_string(".\n");
     r = input.read_upto("\n", -1, null);
     input.read_byte(null);
