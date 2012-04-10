@@ -40,7 +40,7 @@ connection_test(GLib.DataInputStream input, GLib.DataOutputStream output) throws
     output.put_string(".\n");
     r = input.read_upto("\n", -1, null);
     input.read_byte(null);
-    if ( r != "OK" )
+    if ( r != "EVENT 1" )
         return @"Bad answer to EVENT: $r";
 
     GLib.Thread.usleep(100000);
@@ -92,7 +92,7 @@ connection_fail_test(GLib.DataInputStream input, GLib.DataOutputStream output) t
     output.put_string(".\n");
     r = input.read_upto("\n", -1, null);
     input.read_byte(null);
-    if ( r != "OK" )
+    if ( r != "EVENT 1" )
         return @"Bad answer to EVENT: $r";
 
     output.put_string("BYE\n");
