@@ -165,6 +165,7 @@ _eventd_eventdctl_process_command(const gchar *private_socket, gboolean autospaw
     {
         if ( connection != NULL )
             goto close;
+        g_clear_error(&error);
         if ( ! _eventd_eventdctl_start_eventd(argc-1, argv+1, &error) )
         {
             g_warning("Couldn’t start eventd: %s", error->message);
