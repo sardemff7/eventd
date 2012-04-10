@@ -57,6 +57,7 @@ typedef struct {
     GDataInputStream *input;
     GDataOutputStream *output;
     gchar *category;
+    GHashTable *events;
 } EventdEvpClient;
 
 static void
@@ -194,6 +195,7 @@ static void
 _eventd_evp_main(EventdPluginContext *context, EventdEvpClient *client, GError **error)
 {
     gchar *line;
+    guint id = 0;
 
     while ( ( line =_eventd_evp_read_message(client, error) ) != NULL )
     {
@@ -208,15 +210,21 @@ _eventd_evp_main(EventdPluginContext *context, EventdEvpClient *client, GError *
             eventd_event_set_category(event, client->category);
             if ( _eventd_evp_event(client, event, error) )
             {
-                if ( ! g_data_output_stream_put_string(client->output, "OK\n", client->cancellable, error) )
+                g_free(line);
+                line = g_strdup_printf("EVENT %x\n", ++id);
+                if ( ! g_data_output_stream_put_string(client->output, line, client->cancellable, error) )
                 {
                     g_object_unref(event);
                     break;
                 }
 
                 if ( ! GPOINTER_TO_UINT(libeventd_config_events_get_event(context->events, eventd_event_get_category(event), eventd_event_get_name(event))) )
+                {
+                    g_hash_table_insert(client->events, GUINT_TO_POINTER(id), event);
                     context->core_interface->push_event(context->core, event);
-                g_object_unref(event);
+                }
+                else
+                    g_object_unref(event);
             }
             else
             {
@@ -244,6 +252,7 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
     GError *error = NULL;
 
     client.cancellable = g_cancellable_new();
+    client.events = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_object_unref);
 
     service->clients = g_slist_prepend(service->clients, client.cancellable);
 
@@ -257,6 +266,7 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
         g_warning("Can't read the socket: %s", error->message);
     g_clear_error(&error);
 
+    g_hash_table_unref(client.events);
     g_free(client.category);
 
     if ( ! g_io_stream_close(G_IO_STREAM(connection), NULL, &error) )
