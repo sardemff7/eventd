@@ -84,24 +84,27 @@ static gboolean
 _eventd_evp_handshake(EventdEvpClient *client, GError **error)
 {
     gchar *line;
-    gboolean ret = FALSE;
 
-    line =_eventd_evp_read_message(client, error);
-    if ( line == NULL )
-        return FALSE;
+    while ( ( line =_eventd_evp_read_message(client, error) ) != NULL )
+    {
+        if ( g_str_has_prefix(line, "HELLO ") )
+        {
+            client->category = g_strdup(line+6);
+            g_free(line);
 
-    if ( ! g_str_has_prefix(line, "HELLO ") )
-        goto fail;
+            if ( ! g_data_output_stream_put_string(client->output, "HELLO\n", client->cancellable, error) )
+                break;
 
-    if ( ! g_data_output_stream_put_string(client->output, "HELLO\n", client->cancellable, error) )
-        goto fail;
+            return TRUE;
+        }
 
-    client->category = g_strdup(line+6);
-    ret = TRUE;
+        g_free(line);
 
-fail:
-    g_free(line);
-    return ret;
+        if ( ! g_data_output_stream_put_string(client->output, "ERROR bad-handshake\n", client->cancellable, error) )
+            break;
+    }
+
+    return FALSE;
 }
 
 static gchar *
@@ -154,13 +157,20 @@ _eventd_evp_event(EventdEvpClient *client, EventdEvent *event, GError **error)
     {
         if ( g_strcmp0(line, ".") == 0 )
         {
-            if ( ! g_data_output_stream_put_string(client->output, "OK\n", client->cancellable, error) )
-                ret = FALSE;
-            break;
+            g_free(line);
+            return ret;
         }
 
         if ( g_str_has_prefix(line, "DATA ") )
-            eventd_event_add_data(event, g_strdup(line+5), _eventd_evp_event_data(client, error));
+        {
+            gchar *data;
+
+            data = _eventd_evp_event_data(client, error);
+            if ( data != NULL )
+                eventd_event_add_data(event, g_strdup(line+5), data);
+            else
+                ret = FALSE;
+        }
         else if ( g_str_has_prefix(line, "DATAL ") )
         {
             gchar **data = NULL;
@@ -172,16 +182,12 @@ _eventd_evp_event(EventdEvpClient *client, EventdEvent *event, GError **error)
         else if ( g_str_has_prefix(line, "CATEGORY ") )
             eventd_event_set_category(event, line+9);
         else
-            g_warning("[EVENT] Unknown message: %s", line);
+            ret = FALSE;
 
         g_free(line);
     }
-    g_free(line);
 
-    if ( ! ret )
-        g_object_unref(event);
-
-    return ret;
+    return FALSE;
 }
 
 static void
@@ -200,15 +206,29 @@ _eventd_evp_main(EventdPluginContext *context, EventdEvpClient *client, GError *
 
             event = eventd_event_new(line+6);
             eventd_event_set_category(event, client->category);
-            if ( ! _eventd_evp_event(client, event, error) )
-                break;
+            if ( _eventd_evp_event(client, event, error) )
+            {
+                if ( ! g_data_output_stream_put_string(client->output, "OK\n", client->cancellable, error) )
+                {
+                    g_object_unref(event);
+                    break;
+                }
 
-            if ( ! GPOINTER_TO_UINT(libeventd_config_events_get_event(context->events, eventd_event_get_category(event), eventd_event_get_name(event))) )
-                context->core_interface->push_event(context->core, event);
-            g_object_unref(event);
+                if ( ! GPOINTER_TO_UINT(libeventd_config_events_get_event(context->events, eventd_event_get_category(event), eventd_event_get_name(event))) )
+                    context->core_interface->push_event(context->core, event);
+                g_object_unref(event);
+            }
+            else
+            {
+                g_object_unref(event);
+
+                if ( ( *error != NULL )
+                     || ( ! g_data_output_stream_put_string(client->output, "ERROR bad-event\n", client->cancellable, error) ) )
+                    break;
+            }
         }
-        else
-            g_warning("Unknown message: %s", line);
+        else if ( ! g_data_output_stream_put_string(client->output, "ERROR unknown\n", client->cancellable, error) )
+            break;
 
         g_free(line);
     }
