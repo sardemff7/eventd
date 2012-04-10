@@ -56,6 +56,50 @@ connection_test(GLib.DataInputStream input, GLib.DataOutputStream output) throws
     return null;
 }
 
+string?
+connection_fail_test(GLib.DataInputStream input, GLib.DataOutputStream output) throws GLib.Error
+{
+    string r;
+
+    output.put_string("EVENT test\n");
+    r = input.read_upto("\n", -1, null);
+    input.read_byte(null);
+    if ( r != "ERROR bad-handshake" )
+        return @"Not detecting bad handshake: $r";
+
+    output.put_string("HELLO test\n");
+    r = input.read_upto("\n", -1, null);
+    input.read_byte(null);
+    if ( r != "HELLO" )
+        return @"Bad handshake: $r";;
+
+
+    output.put_string("some crap\n");
+    r = input.read_upto("\n", -1, null);
+    input.read_byte(null);
+    if ( r != "ERROR unknown" )
+        return @"Not detecting unknown message: $r";
+
+    output.put_string("EVENT test\n");
+    output.put_string("some crap\n");
+    output.put_string(".\n");
+    r = input.read_upto("\n", -1, null);
+    input.read_byte(null);
+    if ( r != "ERROR bad-event" )
+        return @"Bad answer to bad EVENT: $r";
+
+    output.put_string("EVENT test\n");
+    output.put_string(".\n");
+    r = input.read_upto("\n", -1, null);
+    input.read_byte(null);
+    if ( r != "OK" )
+        return @"Bad answer to EVENT: $r";
+
+    output.put_string("BYE\n");
+
+    return null;
+}
+
 int
 main(string[] args)
 {
@@ -70,16 +114,39 @@ main(string[] args)
         return 99;
     }
 
+    var client = new GLib.SocketClient();
+    var address = new GLib.InetSocketAddress(new GLib.InetAddress.loopback(GLib.SocketFamily.IPV4), 9876);
+
     try
     {
-        var client = new GLib.SocketClient();
-        var address = new GLib.InetSocketAddress(new GLib.InetAddress.loopback(GLib.SocketFamily.IPV4), 9876);
         var connection = client.connect(address, null);
 
         var input = new GLib.DataInputStream((connection as GLib.IOStream).get_input_stream());
         var output = new GLib.DataOutputStream((connection as GLib.IOStream).get_output_stream());
 
         var m = connection_test(input, output);
+        if ( m != null )
+        {
+            r = 1;
+            GLib.warning("Test failed: %s", m);
+        }
+
+        connection.close();
+    }
+    catch ( GLib.Error e )
+    {
+        GLib.warning("Test failed: %s", e.message);
+        r = 99;
+    }
+
+    try
+    {
+        var connection = client.connect(address, null);
+
+        var input = new GLib.DataInputStream((connection as GLib.IOStream).get_input_stream());
+        var output = new GLib.DataOutputStream((connection as GLib.IOStream).get_output_stream());
+
+        var m = connection_fail_test(input, output);
         if ( m != null )
         {
             r = 1;
