@@ -250,7 +250,7 @@ namespace Eventc
             }
             this.send(".");
             var r = yield this.receive();
-            if ( r != "OK" )
+            if ( ! r.has_prefix("EVENT ") )
                 throw new EventcError.EVENT("Got a wrong event acknowledge message: %s", r);
 
             }
