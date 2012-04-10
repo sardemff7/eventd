@@ -63,8 +63,9 @@ DATAL <name> <data>
     EVENT message
 
 [Server]
-OK
+EVENT <id>
     Acknowledge the event
+    The id may be anything represented as a string
 
 [Server]
 ERROR bad-event
