@@ -22,31 +22,37 @@
 
 namespace Eventd.Tests
 {
+    private static string[] start_args;
+    private static string[] stop_args;
+
     public static void
-    start_eventd(string plugins, ...) throws GLib.Error
+    setup(string plugins, string port, ...)
     {
-        string[] args = { GLib.Path.build_filename(Eventd.Tests.BUILD_DIR, "eventdctl" + Eventd.Tests.EXEEXT), "--socket=9987" , "start", "--argv0" , GLib.Path.build_filename(Eventd.Tests.BUILD_DIR, "eventd" + Eventd.Tests.EXEEXT), "--take-over", "--private-socket=9987" };
+        GLib.Environment.set_variable("XDG_RUNTIME_DIR", GLib.Path.build_filename(BUILD_DIR, "tests"), true);
+        GLib.Environment.set_variable("EVENTD_PLUGINS_DIR", GLib.Path.build_filename(BUILD_DIR, Config.LT_OBJDIR), true);
+        GLib.Environment.set_variable("EVENTD_PLUGINS_WHITELIST", plugins, true);
+
+        var eventd_path = GLib.Path.build_filename(BUILD_DIR, "eventd" + EXEEXT);
+        var eventdctl_path = GLib.Path.build_filename(BUILD_DIR, "eventdctl" + EXEEXT);
+
+        start_args = { eventdctl_path, "--socket", port, "start", "--argv0", eventd_path, "--take-over", "--private-socket", port };
         var l = va_list();
         string arg = null;
         while ( ( arg = l.arg() ) != null )
-            args += arg;
-        GLib.Environment.set_variable("XDG_RUNTIME_DIR", GLib.Path.build_filename(Eventd.Tests.BUILD_DIR, "tests"), true);
-        GLib.Environment.set_variable("EVENTD_PLUGINS_DIR", GLib.Path.build_filename(Eventd.Tests.BUILD_DIR, Eventd.Config.LT_OBJDIR), true);
-        GLib.Environment.set_variable("EVENTD_PLUGINS_WHITELIST", plugins, true);
-        GLib.Process.spawn_sync(null,
-                                 args,
-                                 null,
-                                 0,
-                                 null);
+            start_args += arg;
+
+        stop_args = { eventdctl_path, "--socket", port, "quit" };
+    }
+
+    public static void
+    start_eventd() throws GLib.Error
+    {
+        GLib.Process.spawn_sync(null, start_args, null, 0, null);
     }
 
     public static void
     stop_eventd() throws GLib.Error
     {
-        GLib.Process.spawn_sync(null,
-                                { GLib.Path.build_filename(Eventd.Tests.BUILD_DIR, "eventdctl" + Eventd.Tests.EXEEXT), "--socket=9987" , "quit"},
-                                null,
-                                0,
-                                null);
+        GLib.Process.spawn_sync(null, stop_args, null, 0, null);
     }
 }
