@@ -16,9 +16,18 @@ HELLO <type>
 HELLO
     Answer to the client HELLO message
 
+[Server]
+ERROR bad-handshake
+    Inform the client that the event was rejected
+    due to an erroneous message
+
 
 Eventd dispatching
 ------------------
+
+[Server]
+ERROR unknown
+    Inform the client that this message is unknown
 
 [Client]
 EVENT <type>
@@ -56,6 +65,10 @@ DATAL <name> <data>
 [Server]
 OK
     Acknowledge the event
+
+[Server]
+ERROR bad-event
+    Inform the client that the event message was not valid
 
 
 Closing the connection
