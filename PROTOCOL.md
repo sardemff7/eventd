@@ -22,6 +22,21 @@ ERROR bad-handshake
     due to an erroneous message
 
 
+Data
+----
+
+DATA <name>
+    This message is followed by the corresponding data
+    Data end with a line containing "."
+    If data contain a line with the first character being ".",
+    it has to be replaced by ".."
+    On server side, ".." at the beginning of a line
+    has to be replaced by "."
+
+DATAL <name> <data>
+    Simple data in one line, up to "\n"
+
+
 Eventd dispatching
 ------------------
 
@@ -36,8 +51,7 @@ EVENT <type>
     A-Za-z0-9- as for keys of the
     Desktop Entry Specification files
     http://freedesktop.org/wiki/Specifications/desktop-entry-spec
-    After the event, the client may specify data using
-    one or more DATA message
+    The client may specify data using the corresponding messages
 
 [Client]
 CATEGORY <type>
@@ -45,17 +59,8 @@ CATEGORY <type>
     Mainly targeted for relay clients
 
 [Client]
-DATA <name>
-    This message is followed by the corresponding data
-    Data end with a line containing "."
-    If data contain a line with the first character being ".",
-    it has to be replaced by ".."
-    On server side, ".." at the beginning of a line
-    has to be replaced by "."
-
-[Client]
-DATAL <name> <data>
-    Simple data in one line, up to "\n"
+ANSWER <name>
+    Add a possible answer to the event
 
 [Client]
 .
@@ -70,6 +75,24 @@ EVENT <id>
 [Server]
 ERROR bad-event
     Inform the client that the event message was not valid
+
+
+Event timeout or answer
+-----------------------
+
+[Server]
+ENDED <id> <reason>
+    Inform the client of an event ending
+
+[Server]
+ANSWERED <id> <name>
+    Inform the client of an answer to an event
+    The server may specify data using the corresponding messages
+
+[Server]
+.
+    Inform the server of the end of the
+    ANSWER
 
 
 Closing the connection
