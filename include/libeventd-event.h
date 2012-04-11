@@ -53,23 +53,30 @@ struct _EventdEventClass
         GObjectClass parent_class;
 
         /* Signals */
-        void (*ended) (EventdEvent *event, EventdEventEndReason reason);
+        void (*answered) (EventdEvent *event, const gchar *answer);
+        void (*ended)    (EventdEvent *event, EventdEventEndReason reason);
 };
 
 EventdEvent *eventd_event_new(const gchar *name);
 
+void eventd_event_answer(EventdEvent *event, const gchar *answer);
 void eventd_event_end(EventdEvent *event, EventdEventEndReason reason);
 
 
 void eventd_event_set_category(EventdEvent *event, const gchar *category);
 void eventd_event_set_timeout(EventdEvent *event, gint64 timeout);
 void eventd_event_add_data(EventdEvent *event, gchar *name, gchar *content);
+void eventd_event_add_answer(EventdEvent *event, const gchar *name);
+void eventd_event_add_answer_data(EventdEvent *event, gchar *name, gchar *content);
 
 const gchar *eventd_event_get_category(EventdEvent *event);
 const gchar *eventd_event_get_name(EventdEvent *event);
 gint64 eventd_event_get_timeout(EventdEvent *event);
 const gchar *eventd_event_get_data(EventdEvent *event, const gchar *name);
 GHashTable *eventd_event_get_all_data(EventdEvent *event);
+GList *eventd_event_get_answers(EventdEvent *event);
+const gchar *eventd_event_get_answer_data(EventdEvent *event, const gchar *name);
+GHashTable *eventd_event_get_all_answer_data(EventdEvent *event);
 
 G_END_DECLS
 

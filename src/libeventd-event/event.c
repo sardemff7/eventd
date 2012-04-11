@@ -56,10 +56,13 @@ struct _EventdEventPrivate {
     gchar *name;
     gint64 timeout;
     GHashTable *data;
+    GList *answers;
+    GHashTable *answer_data;
 };
 
 
 enum {
+    SIGNAL_ANSWERED,
     SIGNAL_ENDED,
     LAST_SIGNAL
 };
@@ -79,6 +82,16 @@ eventd_event_class_init(EventdEventClass *klass)
     eventd_event_parent_class = g_type_class_peek_parent(klass);
 
     object_class->finalize = _eventd_event_finalize;
+
+    _eventd_event_signals[SIGNAL_ANSWERED] =
+        g_signal_new("answered",
+                     G_TYPE_FROM_CLASS(object_class),
+                     G_SIGNAL_RUN_FIRST,
+                     G_STRUCT_OFFSET(EventdEventClass, answered),
+                     NULL, NULL,
+                     g_cclosure_marshal_VOID__STRING,
+                     G_TYPE_NONE,
+                     1, G_TYPE_STRING);
 
     _eventd_event_signals[SIGNAL_ENDED] =
         g_signal_new("ended",
@@ -127,6 +140,17 @@ _eventd_event_finalize(GObject *object)
 }
 
 void
+eventd_event_answer(EventdEvent *self, const gchar *answer)
+{
+    g_return_if_fail(EVENTD_IS_EVENT(self));
+    GList *answer_;
+    answer_ = g_list_find_custom(self->priv->answers, answer, (GCompareFunc)g_strcmp0);
+    g_return_if_fail(answer_ != NULL);
+
+    g_signal_emit(self, _eventd_event_signals[SIGNAL_ANSWERED], 0, answer_->data);
+}
+
+void
 eventd_event_end(EventdEvent *self, EventdEventEndReason reason)
 {
     g_return_if_fail(EVENTD_IS_EVENT(self));
@@ -145,6 +169,27 @@ eventd_event_add_data(EventdEvent *self, gchar *name, gchar *content)
     if ( self->priv->data == NULL )
         self->priv->data = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
     g_hash_table_insert(self->priv->data, name, content);
+}
+
+void
+eventd_event_add_answer(EventdEvent *self, const gchar *name)
+{
+    g_return_if_fail(EVENTD_IS_EVENT(self));
+    g_return_if_fail(name != NULL);
+
+    self->priv->answers = g_list_prepend(self->priv->answers, g_strdup(name));
+}
+
+void
+eventd_event_add_answer_data(EventdEvent *self, gchar *name, gchar *content)
+{
+    g_return_if_fail(EVENTD_IS_EVENT(self));
+    g_return_if_fail(name != NULL);
+    g_return_if_fail(content != NULL);
+
+    if ( self->priv->answer_data == NULL )
+        self->priv->answer_data = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+    g_hash_table_insert(self->priv->answer_data, name, content);
 }
 
 void
@@ -208,4 +253,31 @@ eventd_event_get_all_data(EventdEvent *self)
     g_return_val_if_fail(EVENTD_IS_EVENT(self), NULL);
 
     return self->priv->data;
+}
+
+GList *
+eventd_event_get_answers(EventdEvent *self)
+{
+    g_return_val_if_fail(EVENTD_IS_EVENT(self), NULL);
+
+    return self->priv->answers;
+}
+
+const gchar *
+eventd_event_get_answer_data(EventdEvent *self, const gchar *name)
+{
+    g_return_val_if_fail(EVENTD_IS_EVENT(self), NULL);
+
+    if ( self->priv->answer_data == NULL )
+        return NULL;
+
+    return g_hash_table_lookup(self->priv->answer_data, name);
+}
+
+GHashTable *
+eventd_event_get_all_answer_data(EventdEvent *self)
+{
+    g_return_val_if_fail(EVENTD_IS_EVENT(self), NULL);
+
+    return self->priv->answer_data;
 }
