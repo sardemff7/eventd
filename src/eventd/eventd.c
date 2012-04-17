@@ -190,6 +190,53 @@ eventd_core_quit(EventdCoreContext *context)
         g_main_loop_quit(context->loop);
 }
 
+#if DEBUG
+static void
+_eventd_core_debug_log_handler(const gchar *log_domain, GLogLevelFlags log_level, const gchar *message, gpointer user_data)
+{
+    GDataOutputStream *debug_stream = user_data;
+
+    g_log_default_handler(log_domain, log_level, message, NULL);
+
+    gchar *full_message;
+    gchar *log_domain_message = NULL;
+    const gchar *log_level_message = "";
+
+    if ( log_domain != NULL )
+        log_domain_message = g_strconcat(" [", log_domain, "]", NULL);
+
+    switch ( log_level & G_LOG_LEVEL_MASK )
+    {
+        case G_LOG_LEVEL_ERROR:
+            log_level_message = "ERROR";
+        break;
+        case G_LOG_LEVEL_CRITICAL:
+            log_level_message = "CRITICAL";
+        break;
+        case G_LOG_LEVEL_WARNING:
+            log_level_message = "WARNING";
+        break;
+        case G_LOG_LEVEL_MESSAGE:
+            log_level_message = "MESSAGE";
+        break;
+        case G_LOG_LEVEL_INFO:
+            log_level_message = "INFO";
+        break;
+        case G_LOG_LEVEL_DEBUG:
+            log_level_message = "DEBUG";
+        break;
+    }
+
+    full_message = g_strconcat(log_level_message, ( log_domain_message != NULL ) ? log_domain_message : "", ": ", message, "\n", NULL);
+
+    g_data_output_stream_put_string(debug_stream, full_message, NULL, NULL);
+
+    g_free(log_domain_message);
+    g_free(full_message);
+}
+
+#endif /* ! DEBUG */
+
 #ifdef G_OS_UNIX
 static gboolean
 _eventd_core_quit(gpointer user_data)
@@ -230,6 +277,37 @@ main(int argc, char *argv[])
 #endif /* ENABLE_NLS */
 
     g_type_init();
+
+#if DEBUG
+    const gchar *debug_log_filename =  g_getenv("EVENTD_DEBUG_LOG_FILENAME");
+    GDataOutputStream *debug_stream = NULL;
+
+    if ( debug_log_filename != NULL )
+    {
+        GFile *debug_log;
+
+        debug_log = g_file_new_for_path(debug_log_filename);
+
+        GError *error = NULL;
+        GFileOutputStream *debug_log_stream;
+
+        debug_log_stream = g_file_append_to(debug_log, G_FILE_CREATE_NONE, NULL, &error);
+
+        if ( debug_log_stream == NULL )
+        {
+            g_warning("Couldn’t open debug log file: %s", error->message);
+            g_clear_error(&error);
+        }
+        else
+        {
+            debug_stream = g_data_output_stream_new(G_OUTPUT_STREAM(debug_log_stream));
+            g_object_unref(debug_log_stream);
+
+            g_log_set_default_handler(_eventd_core_debug_log_handler, debug_stream);
+        }
+        g_object_unref(debug_log);
+    }
+#endif /* DEBUG */
 
     context = g_new0(EventdCoreContext, 1);
 
@@ -319,6 +397,11 @@ end:
     eventd_control_free(context->control);
 
     g_free(context);
+
+#if DEBUG
+    if ( debug_stream != NULL )
+        g_object_unref(debug_stream);
+#endif /* DEBUG */
 
     return retval;
 }
