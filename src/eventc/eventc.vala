@@ -36,6 +36,7 @@ namespace Eventc
     static int tries;
     static int max_tries = 3;
     static int timeout = 0;
+    static bool wait = false;
 
     static bool print_version = false;
 
@@ -51,6 +52,7 @@ namespace Eventc
         #endif
         { "max-tries",    'm', 0, GLib.OptionArg.INT,          ref max_tries,          N_("Maximum connection attempts (0 for infinite)"),           "<times>" },
         { "timeout",      'o', 0, GLib.OptionArg.INT,          ref timeout,            N_("Connection timeout"),                                     "<seconds>" },
+        { "wait",         'w', 0, GLib.OptionArg.NONE,         ref wait,               N_("Wait the end of the event"),                              null },
         { "version",      'V', 0, GLib.OptionArg.NONE,         ref print_version,      N_("Print version"),                                          null },
         { null }
     };
@@ -95,6 +97,12 @@ namespace Eventc
         for ( uint i = 0 ; i < n_length ; ++i )
             event.add_data(event_data_name[i], event_data_content[i]);
 
+        if ( wait )
+        {
+            event.ended.connect(() => {
+                disconnect();
+            });
+        }
         client.event.begin(event, (source, res) => {
             try
             {
@@ -104,7 +112,8 @@ namespace Eventc
             {
                 GLib.warning("Couldn’t send event '%s': %s", event_name, e.message);
             }
-            disconnect();
+            if ( ! wait )
+                disconnect();
         });
     }
 
