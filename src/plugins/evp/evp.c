@@ -180,6 +180,8 @@ _eventd_evp_event(EventdEvpClient *client, EventdEvent *event, GError **error)
             eventd_event_add_data(event, data[0], data[1]);
             g_free(data);
         }
+        else if ( g_str_has_prefix(line, "ANSWER ") )
+            eventd_event_add_answer(event, line+7);
         else if ( g_str_has_prefix(line, "CATEGORY ") )
             eventd_event_set_category(event, line+9);
         else
@@ -189,6 +191,72 @@ _eventd_evp_event(EventdEvpClient *client, EventdEvent *event, GError **error)
     }
 
     return FALSE;
+}
+
+static void
+_event_evp_event_answered(EventdEvent *event, const gchar *answer, gpointer user_data)
+{
+    EventdEvpClient *client = user_data;
+
+    const gchar *id;
+    id = eventd_event_get_id(event);
+
+    GHashTable *answer_data;
+    answer_data = eventd_event_get_all_answer_data(event);
+
+    gchar **messagev;
+    messagev = g_new(gchar *, g_hash_table_size(answer_data) + 3);
+
+    GHashTableIter iter;
+    gchar *name;
+    gchar *data;
+
+    gsize i = 1;
+
+    messagev[0] = g_strdup_printf("ANSWERED %s %s", id, answer);
+
+    g_hash_table_iter_init(&iter, answer_data);
+    while ( g_hash_table_iter_next(&iter, (gpointer *)&name, (gpointer *)&data) )
+    {
+        if ( g_utf8_strchr(data, -1, '\n') == NULL )
+            messagev[i++] = g_strdup_printf("DATAL %s %s", name, data);
+        else
+        {
+            gchar **datav;
+            gchar **data_;
+
+            datav = g_strsplit(data, "\n", -1);
+            for ( data_ = datav ; *data_ != NULL ; ++data_ )
+            {
+                if ( (*data_)[0] == '.' )
+                {
+                    gchar *tmp = *data_;
+                    *data_ = g_strconcat(".", tmp, NULL);
+                    g_free(tmp);
+                }
+            }
+
+            data = g_strjoinv("\n", datav);
+            g_strfreev(datav);
+
+            messagev[i++] = g_strdup_printf("DATA %s\n%s\n.", name, data);
+        }
+    }
+
+    messagev[i++] = g_strdup(".\n");
+    messagev[i] = NULL;
+
+    gchar *message;
+    message = g_strjoinv("\n", messagev);
+    g_strfreev(messagev);
+
+    GError *error = NULL;
+    if ( ! g_data_output_stream_put_string(client->output, message, client->cancellable, &error) )
+    {
+        g_warning("Couldn’t send ANSWERED message: %s", error->message);
+        g_clear_error(&error);
+    }
+    g_free(message);
 }
 
 static void
@@ -266,6 +334,7 @@ _eventd_evp_main(EventdPluginContext *context, EventdEvpClient *client, GError *
                     tid = g_strdup_printf("%x", id);
                     g_hash_table_insert(client->events, tid, event);
                     eventd_event_set_id(event, tid);
+                    g_signal_connect(event, "answered", G_CALLBACK(_event_evp_event_answered), client);
                     g_signal_connect(event, "ended", G_CALLBACK(_event_evp_event_ended), client);
                     context->core_interface->push_event(context->core, event);
                 }
