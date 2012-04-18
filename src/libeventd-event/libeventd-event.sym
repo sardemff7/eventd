@@ -5,6 +5,7 @@ global:
     eventd_event_add_data;
     eventd_event_answer;
     eventd_event_end;
+    eventd_event_end_reason_get_type;
     eventd_event_get_all_answer_data;
     eventd_event_get_all_data;
     eventd_event_get_answer_data;
