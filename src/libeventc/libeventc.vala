@@ -226,6 +226,13 @@ namespace Eventc
             if ( (  event_category != null ) && ( this.category != event_category ) )
                 this.send("CATEGORY " + event.get_category());
 
+            unowned GLib.List<string> answers = event.get_answers();
+            if ( answers != null )
+            {
+                foreach ( var answer in answers )
+                    this.send(@"ANSWER $answer");
+            }
+
             unowned GLib.HashTable<string, string> data = event.get_all_data();
             if ( data != null )
             {
