@@ -35,6 +35,7 @@ connection_test(GLib.DataInputStream input, GLib.DataOutputStream output) throws
     var message = "Some message";
 
     output.put_string("EVENT test\n");
+    output.put_string("ANSWER test\n");
     output.put_string(@"DATAL file $filename\n");
     output.put_string(@"DATA test\n$message\n.\n");
     output.put_string(".\n");
@@ -42,6 +43,21 @@ connection_test(GLib.DataInputStream input, GLib.DataOutputStream output) throws
     input.read_byte(null);
     if ( r != "EVENT 1" )
         return @"Bad answer to EVENT: $r";
+
+    r = input.read_upto("\n", -1, null);
+    input.read_byte(null);
+    if ( r != "ANSWERED 1 test" )
+        return @"Wrong ANSWER to EVENT 1: $r";
+
+    r = input.read_upto("\n", -1, null);
+    input.read_byte(null);
+    if ( r != @"DATAL test $message" )
+        return @"Wrong ANSWER DATAL to EVENT 1: $r";
+
+    r = input.read_upto("\n", -1, null);
+    input.read_byte(null);
+    if ( r != "." )
+        return @"Wrong ANSWER end to EVENT 1: $r";
 
     r = input.read_upto("\n", -1, null);
     input.read_byte(null);
