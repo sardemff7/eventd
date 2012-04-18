@@ -33,6 +33,13 @@ connection_test(Eventc.Connection client) throws GLib.Error
     event.add_data("file", filename);
     event.add_data("test", message);
 
+    string r = null;
+    event.ended.connect((event, reason) => {
+        GLib.Idle.add(connection_test.callback);
+        if ( reason != Eventd.EventEndReason.RESERVED )
+            r = @"Wrong end reason: $reason";
+    });
+
     yield client.event(event);
 
     GLib.Thread.usleep(100000);
@@ -42,6 +49,11 @@ connection_test(Eventc.Connection client) throws GLib.Error
     GLib.FileUtils.unlink(filename);
     if ( message != contents )
         return @"Wrong test file contents: $contents";
+
+    // Wait the end
+    yield;
+    if ( r != null )
+        return r;
 
     yield client.close();
 
