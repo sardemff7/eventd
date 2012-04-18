@@ -192,6 +192,48 @@ _eventd_evp_event(EventdEvpClient *client, EventdEvent *event, GError **error)
 }
 
 static void
+_event_evp_event_ended(EventdEvent *event, EventdEventEndReason reason, gpointer user_data)
+{
+    EventdEvpClient *client = user_data;
+
+    const gchar *id;
+    id = eventd_event_get_id(event);
+
+    const gchar *reason_text = "";
+    switch ( reason )
+    {
+    case EVENTD_EVENT_END_REASON_NONE:
+        reason_text = "none";
+    break;
+    case EVENTD_EVENT_END_REASON_TIMEOUT:
+        reason_text = "timeout";
+    break;
+    case EVENTD_EVENT_END_REASON_USER_DISMISS:
+        reason_text = "user-dismiss";
+    break;
+    case EVENTD_EVENT_END_REASON_CLIENT_DISMISS:
+        reason_text = "client-dismiss";
+    break;
+    case EVENTD_EVENT_END_REASON_RESERVED:
+        reason_text = "reserved";
+    break;
+    }
+
+    gchar *line;
+    line = g_strdup_printf("ENDED %s %s\n", id, reason_text);
+
+    GError *error = NULL;
+    if ( ! g_data_output_stream_put_string(client->output, line, client->cancellable, &error) )
+    {
+        g_warning("Couldn’t send ENDED message: %s", error->message);
+        g_clear_error(&error);
+    }
+    g_free(line);
+
+    g_hash_table_remove(client->events, id);
+}
+
+static void
 _eventd_evp_main(EventdPluginContext *context, EventdEvpClient *client, GError **error)
 {
     gchar *line;
@@ -220,7 +262,11 @@ _eventd_evp_main(EventdPluginContext *context, EventdEvpClient *client, GError *
 
                 if ( ! GPOINTER_TO_UINT(libeventd_config_events_get_event(context->events, eventd_event_get_category(event), eventd_event_get_name(event))) )
                 {
-                    g_hash_table_insert(client->events, GUINT_TO_POINTER(id), event);
+                    gchar *tid;
+                    tid = g_strdup_printf("%x", id);
+                    g_hash_table_insert(client->events, tid, event);
+                    eventd_event_set_id(event, tid);
+                    g_signal_connect(event, "ended", G_CALLBACK(_event_evp_event_ended), client);
                     context->core_interface->push_event(context->core, event);
                 }
                 else
@@ -252,7 +298,7 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
     GError *error = NULL;
 
     client.cancellable = g_cancellable_new();
-    client.events = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_object_unref);
+    client.events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_object_unref);
 
     service->clients = g_slist_prepend(service->clients, client.cancellable);
 
@@ -265,6 +311,13 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
     if ( ( error != NULL ) && ( error->code != G_IO_ERROR_CANCELLED ) )
         g_warning("Can't read the socket: %s", error->message);
     g_clear_error(&error);
+
+    GHashTableIter iter;
+    gpointer tid;
+    gpointer event;
+    g_hash_table_iter_init(&iter, client.events);
+    while ( g_hash_table_iter_next(&iter, &tid, &event) )
+        g_signal_handlers_disconnect_by_data(event, &client);
 
     g_hash_table_unref(client.events);
     g_free(client.category);
