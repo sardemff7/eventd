@@ -32,6 +32,7 @@ _eventd_test_event_end_earlier(gpointer user_data)
 {
     EventdEvent *event = user_data;
 
+    eventd_event_answer(event, "test");
     eventd_event_end(event, EVENTD_EVENT_END_REASON_RESERVED);
     g_object_unref(event);
 
@@ -55,6 +56,8 @@ _eventd_test_event_action(EventdPluginContext *context, EventdEvent *event)
     if ( ! g_file_set_contents(filename, contents, -1, &error) )
         g_warning("Couldn’t write to file: %s", error->message);
     g_clear_error(&error);
+
+    eventd_event_add_answer_data(event, "test", g_strdup(contents));
 
     g_idle_add(_eventd_test_event_end_earlier, g_object_ref(event));
 }
