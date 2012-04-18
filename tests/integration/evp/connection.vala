@@ -43,7 +43,10 @@ connection_test(GLib.DataInputStream input, GLib.DataOutputStream output) throws
     if ( r != "EVENT 1" )
         return @"Bad answer to EVENT: $r";
 
-    GLib.Thread.usleep(100000);
+    r = input.read_upto("\n", -1, null);
+    input.read_byte(null);
+    if ( r != "ENDED 1 reserved" )
+        return @"No ENDED or bad ENDED to EVENT 1: $r";
 
     string contents;
     GLib.FileUtils.get_contents(filename, out contents, null);
@@ -88,12 +91,6 @@ connection_fail_test(GLib.DataInputStream input, GLib.DataOutputStream output) t
     if ( r != "ERROR bad-event" )
         return @"Bad answer to bad EVENT: $r";
 
-    output.put_string("EVENT test\n");
-    output.put_string(".\n");
-    r = input.read_upto("\n", -1, null);
-    input.read_byte(null);
-    if ( r != "EVENT 1" )
-        return @"Bad answer to EVENT: $r";
 
     output.put_string("BYE\n");
 
