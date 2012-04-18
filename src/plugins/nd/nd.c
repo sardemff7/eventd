@@ -423,6 +423,29 @@ _eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
 }
 
 static void
+_eventd_nd_event_updated(EventdEvent *event, EventdPluginContext *context)
+{
+    EventdNdEvent *nd_event;
+
+    nd_event = libeventd_config_events_get_event(context->events, eventd_event_get_category(event), eventd_event_get_name(event));
+    if ( nd_event == NULL )
+        return;
+
+    EventdNdNotification *notification;
+
+    notification = eventd_nd_notification_new(event, nd_event->title, nd_event->message, nd_event->image, nd_event->icon, context->max_width, context->max_height);
+
+    GList *surfaces = g_hash_table_lookup(context->surfaces, event);
+    for ( ; surfaces != NULL ; surfaces = g_list_next(surfaces) )
+    {
+        EventdNdSurfaceContext *surface = surfaces->data;
+
+        if ( surface->backend->surface_update != NULL )
+            surface->surface = surface->backend->surface_update(surface->surface, notification, nd_event->style);
+    }
+}
+
+static void
 _eventd_nd_event_ended(EventdEvent *event, EventdEventEndReason reason, EventdPluginContext *context)
 {
     g_hash_table_remove(context->surfaces, event);
@@ -461,11 +484,8 @@ _eventd_nd_event_action(EventdPluginContext *context, EventdEvent *event)
 
     if ( surfaces != NULL )
     {
+        g_signal_connect(event, "updated", G_CALLBACK(_eventd_nd_event_updated), context);
         g_signal_connect(event, "ended", G_CALLBACK(_eventd_nd_event_ended), context);
-
-        /*
-         * TODO: Update an existing bubble
-         */
 
         g_hash_table_insert(context->surfaces, g_object_ref(event), surfaces);
     }

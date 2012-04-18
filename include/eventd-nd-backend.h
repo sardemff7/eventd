@@ -38,6 +38,7 @@ typedef EventdNdDisplay *(*EventdNdDisplayNewFunc)(EventdNdBackendContext *conte
 typedef void (*EventdNdDisplayFunc)(EventdNdDisplay *display);
 
 typedef EventdNdSurface *(*EventdNdSurfaceShowFunc)(EventdEvent *event, EventdNdDisplay *display, EventdNdNotification *notification, EventdNdStyle *style);
+typedef EventdNdSurface *(*EventdNdSurfaceUpdateFunc)(EventdNdSurface *old_surface, EventdNdNotification *notification, EventdNdStyle *style);
 typedef void (*EventdNdSurfaceHideFunc)(EventdNdSurface *surface);
 
 typedef struct {
@@ -49,6 +50,7 @@ typedef struct {
     EventdNdDisplayFunc display_free;
 
     EventdNdSurfaceShowFunc surface_show;
+    EventdNdSurfaceUpdateFunc surface_update;
     EventdNdSurfaceHideFunc surface_hide;
 
     /* private */
