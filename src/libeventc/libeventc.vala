@@ -91,6 +91,7 @@ namespace Eventc
         private GLib.DataOutputStream output;
         private GLib.AsyncQueue<string> queue;
         private GLib.Cancellable cancellable;
+        private GLib.HashTable<string, Eventd.Event> events;
 
         private bool handshake_passed;
 
@@ -105,6 +106,7 @@ namespace Eventc
             this.client = new GLib.SocketClient();
             this.queue = new GLib.AsyncQueue<string>();
             this.cancellable = new GLib.Cancellable();
+            this.events = new GLib.HashTable<string, Eventd.Event>(GLib.str_hash, GLib.str_equal);
         }
 
         public bool
@@ -259,6 +261,8 @@ namespace Eventc
             if ( ! r.has_prefix("EVENT ") )
                 throw new EventcError.EVENT("Got a wrong event acknowledge message: %s", r);
 
+            this.events.insert(r.substring(6), event);
+
             }
             finally
             {
@@ -275,7 +279,30 @@ namespace Eventc
                 while ( ( r = yield this.input.read_upto_async("\n", -1, GLib.Priority.DEFAULT, this.cancellable) ) != null )
                 {
                     this.input.read_byte(null);
-                    this.queue.push(r);
+                    if ( r.has_prefix("ENDED ") )
+                    {
+                        var end = r.substring(6).split(" ", 2);
+                        var event = this.events.lookup(end[0]);
+                        Eventd.EventEndReason reason = Eventd.EventEndReason.NONE;
+                        switch ( end[1] )
+                        {
+                        case "timeout":
+                            reason = Eventd.EventEndReason.TIMEOUT;
+                        break;
+                        case "user-dismiss":
+                            reason = Eventd.EventEndReason.USER_DISMISS;
+                        break;
+                        case "client-dissmiss":
+                            reason = Eventd.EventEndReason.CLIENT_DISMISS;
+                        break;
+                        case "reserved":
+                            reason = Eventd.EventEndReason.RESERVED;
+                        break;
+                        }
+                        event.end(reason);
+                    }
+                    else
+                        this.queue.push(r);
                 }
             }
             catch ( GLib.Error e )
@@ -319,6 +346,7 @@ namespace Eventc
                 yield;
             }
 
+            this.events.remove_all();
             this.cancellable.cancel();
             while ( this.queue.try_pop() != null ) ;
 
