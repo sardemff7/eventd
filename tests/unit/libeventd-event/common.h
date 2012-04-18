@@ -29,6 +29,7 @@
 #include <libeventd-event.h>
 
 #define EVENTD_EVENT_TEST_NAME "test-name"
+#define EVENTD_EVENT_TEST_ID "5B41"
 #define EVENTD_EVENT_TEST_CATEGORY "test-category"
 #define EVENTD_EVENT_TEST_TIMEOUT -1
 #define EVENTD_EVENT_TEST_ANSWER "test-answer"
