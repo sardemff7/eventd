@@ -27,6 +27,17 @@
 #include <eventd-plugin.h>
 #include <libeventd-event.h>
 
+static gboolean
+_eventd_test_event_end_earlier(gpointer user_data)
+{
+    EventdEvent *event = user_data;
+
+    eventd_event_end(event, EVENTD_EVENT_END_REASON_RESERVED);
+    g_object_unref(event);
+
+    return FALSE;
+}
+
 static void
 _eventd_test_event_action(EventdPluginContext *context, EventdEvent *event)
 {
@@ -44,6 +55,8 @@ _eventd_test_event_action(EventdPluginContext *context, EventdEvent *event)
     if ( ! g_file_set_contents(filename, contents, -1, &error) )
         g_warning("Couldn’t write to file: %s", error->message);
     g_clear_error(&error);
+
+    g_idle_add(_eventd_test_event_end_earlier, g_object_ref(event));
 }
 
 const gchar *eventd_plugin_id = "eventd-test-plugin";
