@@ -75,6 +75,10 @@ _eventd_evp_read_message(EventdEvpClient *client, GError **error)
     line = g_data_input_stream_read_upto(client->input, "\n", -1, &size, client->cancellable, error);
     if ( line != NULL )
     {
+#if DEBUG
+            g_debug("Received line: %s", line);
+#endif /* DEBUG */
+
         if ( g_data_input_stream_read_byte(client->input, client->cancellable, error) != '\n' )
             line = (g_free(line), NULL);
     }
@@ -95,6 +99,10 @@ _eventd_evp_handshake(EventdEvpClient *client, GError **error)
 
             if ( ! g_data_output_stream_put_string(client->output, "HELLO\n", client->cancellable, error) )
                 break;
+
+#if DEBUG
+            g_debug("Successful handshake, client category: %s", client->category);
+#endif /* DEBUG */
 
             return TRUE;
         }
@@ -328,6 +336,10 @@ _eventd_evp_main(EventdPluginContext *context, EventdEvpClient *client, GError *
                     break;
                 }
 
+#if DEBUG
+                g_debug("Received an event (category: %s): %s", eventd_event_get_category(event), eventd_event_get_name(event));
+#endif /* DEBUG */
+
                 if ( ! GPOINTER_TO_UINT(libeventd_config_events_get_event(context->events, eventd_event_get_category(event), eventd_event_get_name(event))) )
                 {
                     gchar *tid;
@@ -343,6 +355,11 @@ _eventd_evp_main(EventdPluginContext *context, EventdEvpClient *client, GError *
             }
             else
             {
+#if DEBUG
+                if ( *error == NULL )
+                    g_debug("Received a malformed event (category: %s): %s", eventd_event_get_category(event), eventd_event_get_name(event));
+#endif /* DEBUG */
+
                 g_object_unref(event);
 
                 if ( ( *error != NULL )
@@ -352,6 +369,12 @@ _eventd_evp_main(EventdPluginContext *context, EventdEvpClient *client, GError *
         }
         else if ( ! g_data_output_stream_put_string(client->output, "ERROR unknown\n", client->cancellable, error) )
             break;
+        else
+        {
+#if DEBUG
+            g_debug("Unknown message: %s", line);
+#endif /* DEBUG */
+        }
 
         g_free(line);
     }
@@ -380,6 +403,10 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
     if ( ( error != NULL ) && ( error->code != G_IO_ERROR_CANCELLED ) )
         g_warning("Can't read the socket: %s", error->message);
     g_clear_error(&error);
+
+#if DEBUG
+            g_debug("Client connection closde(category: %s)", client.category);
+#endif /* DEBUG */
 
     GHashTableIter iter;
     gpointer tid;
