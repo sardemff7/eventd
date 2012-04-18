@@ -150,7 +150,6 @@ namespace Eventc
         {
             this.proccess_address();
 
-            this.client.set_timeout(this.timeout);
             this.client.set_enable_proxy(this.enable_proxy);
         }
 
@@ -369,15 +368,28 @@ namespace Eventc
         private async string?
         receive() throws EventcError
         {
-            string r = null;
             if ( this.pending_error != null )
             {
                 var e = this.pending_error;
                 this.pending_error = null;
                 throw new EventcError.RECEIVE("Failed to receive message: %s", e.message);
             }
+            bool timedout = false;
+            uint timeout_id = 0;
+            if ( this.timeout > 0 )
+            {
+                timeout_id = GLib.Timeout.add_seconds(this.timeout, () => {
+                    timedout = true;
+                    return false;
+                });
+            }
+            string r = null;
             while ( ( r = this.queue.try_pop() ) == null )
             {
+                if ( timedout )
+                    throw new EventcError.RECEIVE("Failed to receive message: timed out");
+                if ( timeout_id > 0 )
+                    GLib.Source.remove(timeout_id);
                 Idle.add(this.receive.callback);
                 yield;
             }
