@@ -90,6 +90,7 @@ namespace Eventc
         private GLib.DataInputStream input;
         private GLib.DataOutputStream output;
         private GLib.AsyncQueue<string> queue;
+        private GLib.Error pending_error = null;
         private GLib.Cancellable cancellable;
         private GLib.HashTable<string, Eventd.Event> events;
 
@@ -110,8 +111,14 @@ namespace Eventc
         }
 
         public bool
-        is_connected()
+        is_connected() throws EventcError
         {
+            if ( this.pending_error != null )
+            {
+                var e = this.pending_error = null;
+                this.pending_error = null;
+                throw new EventcError.RECEIVE("Failed to receive message: %s", e.message);
+            }
             return ( ( this.connection != null ) && ( ! this.connection.is_closed() ) && this.handshake_passed );
         }
 
@@ -355,6 +362,7 @@ namespace Eventc
             catch ( GLib.Error e )
             {
                 this.handshake_passed = false;
+                this.pending_error = e;
             }
         }
 
@@ -362,6 +370,12 @@ namespace Eventc
         receive() throws EventcError
         {
             string r = null;
+            if ( this.pending_error != null )
+            {
+                var e = this.pending_error;
+                this.pending_error = null;
+                throw new EventcError.RECEIVE("Failed to receive message: %s", e.message);
+            }
             while ( ( r = this.queue.try_pop() ) == null )
             {
                 Idle.add(this.receive.callback);

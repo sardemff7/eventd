@@ -174,7 +174,7 @@ eventd_relay_server_stop(EventdRelayServer *server)
         server->connection_timeout_id = 0;
     }
 
-    if ( eventc_connection_is_connected(server->connection) )
+    if ( eventc_connection_is_connected(server->connection, NULL) )
         eventc_connection_close(server->connection, _eventd_relay_close_handler, NULL);
 }
 
@@ -196,8 +196,17 @@ _eventd_relay_event_handler(GObject *obj, GAsyncResult *res, gpointer user_data)
 void
 eventd_relay_server_event(EventdRelayServer *server, EventdEvent *event)
 {
-    if ( ( server->connection == NULL ) || ( ! eventc_connection_is_connected(server->connection) ) )
+    GError *error = NULL;
+    if ( ( server->connection == NULL ) || ( ! eventc_connection_is_connected(server->connection, &error) ) )
+    {
+        if ( error != NULL )
+        {
+            g_warning("Couldn’t send event: %s", error->message);
+            g_clear_error(&error);
+            server->connection_timeout_id = g_timeout_add_seconds(1, _eventd_relay_reconnect, server);
+        }
         return;
+    }
 
     eventc_connection_event(server->connection, event, _eventd_relay_event_handler, server);
 }
