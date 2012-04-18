@@ -89,6 +89,8 @@ namespace Eventc
         private GLib.SocketConnection connection;
         private GLib.DataInputStream input;
         private GLib.DataOutputStream output;
+        private GLib.AsyncQueue<string> queue;
+        private GLib.Cancellable cancellable;
 
         private bool handshake_passed;
 
@@ -101,6 +103,8 @@ namespace Eventc
             this.category = category;
 
             this.client = new GLib.SocketClient();
+            this.queue = new GLib.AsyncQueue<string>();
+            this.cancellable = new GLib.Cancellable();
         }
 
         public bool
@@ -190,6 +194,8 @@ namespace Eventc
             this.input = new GLib.DataInputStream((this.connection as GLib.IOStream).get_input_stream());
             this.output = new GLib.DataOutputStream((this.connection as GLib.IOStream).get_output_stream());
 
+            this.receive_loop();
+
             this.send("HELLO " + this.category);
 
             var r = yield this.receive();
@@ -260,19 +266,32 @@ namespace Eventc
             }
         }
 
-        private async string?
-        receive() throws EventcError
+        private async void
+        receive_loop()
         {
             string r = null;
             try
             {
-                r = yield this.input.read_upto_async("\n", -1);
-                this.input.read_byte(null);
+                while ( ( r = yield this.input.read_upto_async("\n", -1, GLib.Priority.DEFAULT, this.cancellable) ) != null )
+                {
+                    this.input.read_byte(null);
+                    this.queue.push(r);
+                }
             }
             catch ( GLib.Error e )
             {
                 this.handshake_passed = false;
-                throw new EventcError.RECEIVE("Failed to receive message: %s", e.message);
+            }
+        }
+
+        private async string?
+        receive() throws EventcError
+        {
+            string r = null;
+            while ( ( r = this.queue.try_pop() ) == null )
+            {
+                Idle.add(this.receive.callback);
+                yield;
             }
             return r;
         }
@@ -299,6 +318,9 @@ namespace Eventc
                 Idle.add(this.close.callback);
                 yield;
             }
+
+            this.cancellable.cancel();
+            while ( this.queue.try_pop() != null ) ;
 
             if ( ( this.handshake_passed ) && ( ! this.connection.is_closed() ) )
             {
