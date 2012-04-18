@@ -281,6 +281,7 @@ namespace Eventc
         receive_loop()
         {
             string r = null;
+            Eventd.Event event;
             try
             {
                 while ( ( r = yield this.input.read_upto_async("\n", -1, GLib.Priority.DEFAULT, this.cancellable) ) != null )
@@ -289,7 +290,7 @@ namespace Eventc
                     if ( r.has_prefix("ENDED ") )
                     {
                         var end = r.substring(6).split(" ", 2);
-                        var event = this.events.lookup(end[0]);
+                        event = this.events.lookup(end[0]);
                         Eventd.EventEndReason reason = Eventd.EventEndReason.NONE;
                         switch ( end[1] )
                         {
@@ -307,6 +308,45 @@ namespace Eventc
                         break;
                         }
                         event.end(reason);
+                    }
+                    else if ( r.has_prefix("ANSWERED ") )
+                    {
+                        var answer = r.substring(9).split(" ", 2);
+                        event = this.events.lookup(answer[0]);
+
+                        while ( ( r = yield this.input.read_upto_async("\n", -1, GLib.Priority.DEFAULT, this.cancellable) ) != null )
+                        {
+                            this.input.read_byte(null);
+                            if ( r == "." )
+                                break;
+
+                            if ( r.has_prefix("DATAL ") )
+                            {
+                                var datal = r.substring(6).split(" ", 2);
+                                if ( event != null )
+                                    event.add_answer_data(datal[0], datal[1]);
+                            }
+                            else if ( r.has_prefix("DATA ") )
+                            {
+                                var name = r.substring(5);
+                                string data = null;
+                                while ( ( r = yield this.input.read_upto_async("\n", -1, GLib.Priority.DEFAULT, this.cancellable) ) != null )
+                                {
+                                    this.input.read_byte(null);
+                                    if ( r == "." )
+                                        break;
+
+                                    if ( data == null )
+                                        data = r;
+                                    else
+                                        data = data + "\n" + r;
+                                }
+                                if ( event != null )
+                                    event.add_answer_data(name, data);
+                            }
+                        }
+                        if ( event != null )
+                            event.answer(answer[1]);
                     }
                     else
                         this.queue.push(r);
