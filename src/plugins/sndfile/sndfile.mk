@@ -12,6 +12,7 @@ sndfile_la_CFLAGS = \
 	-D G_LOG_DOMAIN=\"eventd-sndfile\" \
 	$(SNDFILE_CFLAGS) \
 	$(PULSEAUDIO_CFLAGS) \
+	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS)
 
 sndfile_la_LDFLAGS = \
@@ -23,4 +24,5 @@ sndfile_la_LIBADD = \
 	libeventd.la \
 	$(SNDFILE_LIBS) \
 	$(PULSEAUDIO_LIBS) \
+	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS)

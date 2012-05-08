@@ -15,6 +15,7 @@ notify_la_CFLAGS = \
 	-D G_LOG_DOMAIN=\"eventd-notify\" \
 	$(NOTIFY_CFLAGS) \
 	$(GDK_PIXBUF_CFLAGS) \
+	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS)
 
 notify_la_LDFLAGS = \
@@ -26,4 +27,5 @@ notify_la_LIBADD = \
 	libeventd.la \
 	$(NOTIFY_LIBS) \
 	$(GDK_PIXBUF_LIBS) \
+	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS)

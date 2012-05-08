@@ -18,7 +18,7 @@ libeventd_la_SOURCES = \
 libeventd_la_CFLAGS = \
 	$(AM_CFLAGS) \
 	-D G_LOG_DOMAIN=\"eventd-libeventd\" \
-	$(GMODULE_CFLAGS) \
+	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS)
 
 libeventd_la_LDFLAGS = \
@@ -28,5 +28,5 @@ libeventd_la_LDFLAGS = \
 
 libeventd_la_LIBADD = \
 	libeventd-event.la \
-	$(GMODULE_LIBS) \
+	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS)

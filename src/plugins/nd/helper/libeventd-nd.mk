@@ -18,6 +18,7 @@ libeventd_nd_la_CFLAGS = \
 	$(AM_CFLAGS) \
 	-D G_LOG_DOMAIN=\"libeventd-nd\" \
 	$(GDK_PIXBUF_CFLAGS) \
+	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS)
 
 libeventd_nd_la_LDFLAGS = \
@@ -26,6 +27,8 @@ libeventd_nd_la_LDFLAGS = \
 	-export-symbols $(srcdir)/src/plugins/nd/helper/libeventd-nd.sym
 
 libeventd_nd_la_LIBADD = \
+	libeventd-event.la \
 	libeventd.la \
 	$(GDK_PIXBUF_LIBS) \
+	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS)

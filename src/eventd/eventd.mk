@@ -31,6 +31,8 @@ eventd_CFLAGS = \
 	$(AVAHI_CFLAGS) \
 	$(GTHREAD_CFLAGS) \
 	$(GIO_CFLAGS) \
+	$(GOBJECT_CFLAGS) \
+	$(GMODULE_CFLAGS) \
 	$(GLIB_CFLAGS)
 
 eventd_LDADD = \
@@ -40,4 +42,6 @@ eventd_LDADD = \
 	$(AVAHI_LIBS) \
 	$(GTHREAD_LIBS) \
 	$(GIO_LIBS) \
+	$(GOBJECT_LIBS) \
+	$(GMODULE_LIBS) \
 	$(GLIB_LIBS)

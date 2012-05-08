@@ -14,6 +14,7 @@ relay_la_CFLAGS = \
 	-D G_LOG_DOMAIN=\"eventd-relay\" \
 	$(AVAHI_CFLAGS) \
 	$(GIO_CFLAGS) \
+	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS)
 
 relay_la_LDFLAGS = \
@@ -26,6 +27,7 @@ relay_la_LIBADD = \
 	libeventc.la \
 	$(AVAHI_LIBS) \
 	$(GIO_LIBS) \
+	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS)
 
 if ENABLE_AVAHI

@@ -10,6 +10,7 @@ evp_la_CFLAGS = \
 	-D G_LOG_DOMAIN=\"eventd-evp\" \
 	$(AVAHI_CFLAGS) \
 	$(GIO_CFLAGS) \
+	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS)
 
 evp_la_LDFLAGS = \
@@ -21,6 +22,7 @@ evp_la_LIBADD = \
 	libeventd.la \
 	$(AVAHI_LIBS) \
 	$(GIO_LIBS) \
+	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS)
 
 if ENABLE_AVAHI

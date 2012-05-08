@@ -15,6 +15,8 @@ nd_la_CFLAGS = \
 	-D LIBDIR=\"$(libdir)\" \
 	-D DATADIR=\"$(datadir)\" \
 	$(GDK_PIXBUF_CFLAGS) \
+	$(GOBJECT_CFLAGS) \
+	$(GMODULE_CFLAGS) \
 	$(GLIB_CFLAGS)
 
 nd_la_LDFLAGS = \
@@ -25,6 +27,8 @@ nd_la_LIBADD = \
 	libeventd-event.la \
 	libeventd.la \
 	libeventd-nd.la \
+	$(GOBJECT_LIBS) \
+	$(GMODULE_LIBS) \
 	$(GLIB_LIBS)
 
 include src/plugins/nd/helper/libeventd-nd.mk

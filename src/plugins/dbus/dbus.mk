@@ -9,6 +9,7 @@ dbus_la_CFLAGS = \
 	$(AM_CFLAGS) \
 	-D G_LOG_DOMAIN=\"eventd-dbus\" \
 	$(GIO_CFLAGS) \
+	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS)
 
 dbus_la_LDFLAGS = \
@@ -18,6 +19,7 @@ dbus_la_LDFLAGS = \
 dbus_la_LIBADD = \
 	libeventd-event.la \
 	$(GIO_LIBS) \
+	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS)
 
 dist_pkgdata_DATA += \
