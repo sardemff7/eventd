@@ -218,7 +218,7 @@ static void
 _eventd_dbus_close_notification(EventdPluginContext *context, GVariant *parameters, GDBusMethodInvocation *invocation)
 {
     guint32 id;
-    EventdEvent *event;
+    EventdDbusNotification *notification;
 
     g_variant_get(parameters, "(u)", &id);
 
@@ -228,10 +228,10 @@ _eventd_dbus_close_notification(EventdPluginContext *context, GVariant *paramete
         return;
     }
 
-    event = g_hash_table_lookup(context->notifications, GUINT_TO_POINTER(id));
+    notification = g_hash_table_lookup(context->notifications, GUINT_TO_POINTER(id));
 
-    if ( event != NULL )
-        eventd_event_end(event, EVENTD_EVENT_END_REASON_CLIENT_DISMISS);
+    if ( notification != NULL )
+        eventd_event_end(notification->event, EVENTD_EVENT_END_REASON_CLIENT_DISMISS);
 
     g_dbus_method_invocation_return_value(invocation, NULL);
 }
