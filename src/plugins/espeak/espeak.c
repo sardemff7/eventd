@@ -85,15 +85,15 @@ _eventd_espeak_event_parse(EventdPluginContext *context, const gchar *event_cate
     gboolean disable;
     gchar *message = NULL;
 
-    if ( ! g_key_file_has_group(config_file, "espeak") )
+    if ( ! g_key_file_has_group(config_file, "Espeak") )
         return;
 
-    if ( libeventd_config_key_file_get_boolean(config_file, "espeak", "disable", &disable) < 0 )
+    if ( libeventd_config_key_file_get_boolean(config_file, "Espeak", "Disable", &disable) < 0 )
         return;
 
     if ( ! disable )
     {
-        if ( libeventd_config_key_file_get_string(config_file, "espeak", "message", &message) < 0 )
+        if ( libeventd_config_key_file_get_string(config_file, "Espeak", "Message", &message) < 0 )
             return;
         if ( message == NULL )
         {

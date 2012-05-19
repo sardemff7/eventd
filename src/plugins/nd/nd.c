@@ -193,22 +193,22 @@ _eventd_nd_event_update(EventdNdEvent *event, GKeyFile *config_file)
 {
     gchar *string;
 
-    if ( libeventd_config_key_file_get_string(config_file, "notification", "title", &string) == 0 )
+    if ( libeventd_config_key_file_get_string(config_file, "Notification", "Title", &string) == 0 )
     {
         g_free(event->title);
         event->title = string;
     }
-    if ( libeventd_config_key_file_get_string(config_file, "notification", "message", &string) == 0 )
+    if ( libeventd_config_key_file_get_string(config_file, "Notification", "Message", &string) == 0 )
     {
         g_free(event->message);
         event->message = string;
     }
-    if ( libeventd_config_key_file_get_string(config_file, "notification", "image", &string) == 0 )
+    if ( libeventd_config_key_file_get_string(config_file, "Notification", "Image", &string) == 0 )
     {
         g_free(event->image);
         event->image = string;
     }
-    if ( libeventd_config_key_file_get_string(config_file, "notification", "icon", &string) == 0 )
+    if ( libeventd_config_key_file_get_string(config_file, "Notification", "Icon", &string) == 0 )
     {
         g_free(event->icon);
         event->icon = string;
@@ -262,10 +262,10 @@ _eventd_nd_event_parse(EventdPluginContext *context, const gchar *event_category
     gboolean disable;
     EventdNdEvent *event = NULL;
 
-    if ( ! g_key_file_has_group(config_file, "notification") )
+    if ( ! g_key_file_has_group(config_file, "Notification") )
         return;
 
-    if ( libeventd_config_key_file_get_boolean(config_file, "notification", "disable", &disable) < 0 )
+    if ( libeventd_config_key_file_get_boolean(config_file, "Notification", "Disable", &disable) < 0 )
         return;
 
     if ( ! disable )
@@ -394,12 +394,12 @@ _eventd_nd_control_command(EventdPluginContext *context, const gchar *command)
 static void
 _eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
 {
-    if ( g_key_file_has_group(config_file, "nd") )
+    if ( g_key_file_has_group(config_file, "Notification") )
     {
         Int integer;
         gchar *string;
 
-        if ( libeventd_config_key_file_get_string(config_file, "nd", "anchor", &string) == 0 )
+        if ( libeventd_config_key_file_get_string(config_file, "Notification", "Anchor", &string) == 0 )
         {
             if ( g_strcmp0(string, "top left") == 0 )
                 context->bubble_anchor = EVENTD_ND_ANCHOR_TOP_LEFT;
@@ -414,7 +414,7 @@ _eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
             g_free(string);
         }
 
-        if ( libeventd_config_key_file_get_int(config_file, "nd", "margin", &integer) == 0 )
+        if ( libeventd_config_key_file_get_int(config_file, "Notification", "Margin", &integer) == 0 )
             context->bubble_margin = integer.value;
     }
 

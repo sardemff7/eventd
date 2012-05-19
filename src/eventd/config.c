@@ -117,15 +117,15 @@ _eventd_config_parse_event(EventdConfig *config, GKeyFile *config_file)
 {
     Int integer;
 
-    if ( ! g_key_file_has_group(config_file, "event") )
+    if ( ! g_key_file_has_group(config_file, "Event") )
         return;
 
-    if ( libeventd_config_key_file_get_int(config_file, "event", "stack", &integer) < 0 )
+    if ( libeventd_config_key_file_get_int(config_file, "Event", "Stack", &integer) < 0 )
         return;
     if ( integer.set )
         config->stack = integer.value;
 
-    if ( libeventd_config_key_file_get_int(config_file, "event", "timeout", &integer) < 0 )
+    if ( libeventd_config_key_file_get_int(config_file, "Event", "Timeout", &integer) < 0 )
         return;
     if ( integer.set )
         config->timeout = integer.value;
@@ -145,13 +145,13 @@ _eventd_config_parse_client(EventdConfig *config, const gchar *event_category, c
     gboolean disable;
     Int timeout;
 
-    if ( ! g_key_file_has_group(config_file, "event") )
+    if ( ! g_key_file_has_group(config_file, "Event") )
         return;
 
-    if ( libeventd_config_key_file_get_boolean(config_file, "event", "disable", &disable) < 0 )
+    if ( libeventd_config_key_file_get_boolean(config_file, "Event", "Disable", &disable) < 0 )
         goto skip;
 
-    if ( libeventd_config_key_file_get_int(config_file, "event", "timeout", &timeout) < 0 )
+    if ( libeventd_config_key_file_get_int(config_file, "Event", "Timeout", &timeout) < 0 )
         goto skip;
 
     name = libeventd_config_events_get_name(event_category, event_name);

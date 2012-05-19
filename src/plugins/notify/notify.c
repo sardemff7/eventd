@@ -85,20 +85,20 @@ eventd_libnotify_event_parse(EventdPluginContext *context, const gchar *event_ca
     Int scale;
     EventdLibnotifyEvent *event;
 
-    if ( ! g_key_file_has_group(config_file, "libnotify") )
+    if ( ! g_key_file_has_group(config_file, "Libnotify") )
         return;
 
-    if ( libeventd_config_key_file_get_boolean(config_file, "libnotify", "disable", &disable) < 0 )
+    if ( libeventd_config_key_file_get_boolean(config_file, "Libnotify", "Disable", &disable) < 0 )
         goto skip;
-    if ( libeventd_config_key_file_get_string(config_file, "libnotify", "title", &title) < 0 )
+    if ( libeventd_config_key_file_get_string(config_file, "Libnotify", "Title", &title) < 0 )
         goto skip;
-    if ( libeventd_config_key_file_get_string(config_file, "libnotify", "message", &message) < 0 )
+    if ( libeventd_config_key_file_get_string(config_file, "Libnotify", "Message", &message) < 0 )
         goto skip;
-    if ( libeventd_config_key_file_get_string(config_file, "libnotify", "icon", &icon) < 0 )
+    if ( libeventd_config_key_file_get_string(config_file, "Libnotify", "Icon", &icon) < 0 )
         goto skip;
-    if ( libeventd_config_key_file_get_string(config_file, "libnotify", "overlay-icon", &overlay_icon) < 0 )
+    if ( libeventd_config_key_file_get_string(config_file, "Libnotify", "OverlayIcon", &overlay_icon) < 0 )
         goto skip;
-    if ( libeventd_config_key_file_get_int(config_file, "libnotify", "overlay-scale", &scale) < 0 )
+    if ( libeventd_config_key_file_get_int(config_file, "Libnotify", "OverlayScale", &scale) < 0 )
         goto skip;
 
     name = libeventd_config_events_get_name(event_category, event_name);

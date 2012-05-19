@@ -137,15 +137,15 @@ _eventd_sndfile_event_parse(EventdPluginContext *context, const gchar *event_cat
     gboolean disable;
     gchar *sound = NULL;
 
-    if ( ! g_key_file_has_group(config_file, "sound") )
+    if ( ! g_key_file_has_group(config_file, "Sound") )
         return;
 
-    if ( libeventd_config_key_file_get_boolean(config_file, "sound", "disable", &disable) < 0 )
+    if ( libeventd_config_key_file_get_boolean(config_file, "Sound", "Disable", &disable) < 0 )
         return;
 
     if ( ! disable )
     {
-        if ( libeventd_config_key_file_get_string(config_file, "sound", "sound", &sound) < 0 )
+        if ( libeventd_config_key_file_get_string(config_file, "Sound", "Sound", &sound) < 0 )
             return;
         if ( sound == NULL )
         {

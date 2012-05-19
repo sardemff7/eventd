@@ -566,15 +566,15 @@ _eventd_evp_global_parse(EventdPluginContext *context, GKeyFile *config_file)
     Int integer;
     gchar *avahi_name;
 
-    if ( ! g_key_file_has_group(config_file, "server") )
+    if ( ! g_key_file_has_group(config_file, "Server") )
         return;
 
-    if ( libeventd_config_key_file_get_int(config_file, "server", "max-clients", &integer) < 0 )
+    if ( libeventd_config_key_file_get_int(config_file, "Server", "MaxClients", &integer) < 0 )
         return;
     if ( integer.set )
         context->max_clients = integer.value;
 
-    if ( libeventd_config_key_file_get_string(config_file, "server", "avahi-name", &avahi_name) < 0 )
+    if ( libeventd_config_key_file_get_string(config_file, "Server", "AvahiName", &avahi_name) < 0 )
         return;
     if ( avahi_name != NULL )
     {
@@ -591,10 +591,10 @@ _eventd_evp_event_parse(EventdPluginContext *context, const gchar *event_categor
     gchar *name = NULL;
     gboolean parent = FALSE;
 
-    if ( ! g_key_file_has_group(config_file, "event") )
+    if ( ! g_key_file_has_group(config_file, "Event") )
         return;
 
-    r = libeventd_config_key_file_get_boolean(config_file, "event", "disable", &disable);
+    r = libeventd_config_key_file_get_boolean(config_file, "Event", "Disable", &disable);
     if ( r < 0 )
         return;
 

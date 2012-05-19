@@ -91,14 +91,14 @@ _eventd_relay_event_parse(EventdPluginContext *context, const gchar *event_categ
     GList *list = NULL;
     EventdRelayServer *server;
 
-    if ( ! g_key_file_has_group(config_file, "relay") )
+    if ( ! g_key_file_has_group(config_file, "Relay") )
         return;
 
-    if ( libeventd_config_key_file_get_boolean(config_file, "relay", "disable", &disable) < 0 )
+    if ( libeventd_config_key_file_get_boolean(config_file, "Relay", "Disable", &disable) < 0 )
         return;
-    if ( libeventd_config_key_file_get_string_list(config_file, "relay", "servers", &server_uris, NULL) < 0 )
+    if ( libeventd_config_key_file_get_string_list(config_file, "Relay", "Servers", &server_uris, NULL) < 0 )
         goto fail;
-    if ( libeventd_config_key_file_get_string_list(config_file, "relay", "avahi", &avahi_names, NULL) < 0 )
+    if ( libeventd_config_key_file_get_string_list(config_file, "Relay", "Avahi", &avahi_names, NULL) < 0 )
         goto fail;
 
     name = libeventd_config_events_get_name(event_category, event_name);
