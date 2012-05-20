@@ -28,6 +28,7 @@ namespace Eventd.Tests
     public static void
     setup(string plugins, string port, ...)
     {
+        GLib.Environment.set_variable("EVENTD_CONFIG_DIR", GLib.Path.build_filename(BUILD_DIR, "tests"), true);
         GLib.Environment.set_variable("XDG_RUNTIME_DIR", GLib.Path.build_filename(BUILD_DIR, "tests"), true);
         GLib.Environment.set_variable("EVENTD_PLUGINS_DIR", GLib.Path.build_filename(BUILD_DIR, Config.LT_OBJDIR), true);
         GLib.Environment.set_variable("EVENTD_PLUGINS_WHITELIST", plugins, true);
