@@ -54,7 +54,7 @@ _eventd_relay_init(EventdCoreContext *core, EventdCoreInterface *interface)
 
     context = g_new0(EventdPluginContext, 1);
 
-    context->events = libeventd_config_events_new(_eventd_relay_server_list_free);
+    context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_relay_server_list_free);
 
     context->avahi = eventd_relay_avahi_init();
     context->servers = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, eventd_relay_server_free);
@@ -80,14 +80,13 @@ _eventd_relay_config_reset(EventdPluginContext *context)
 }
 
 static void
-_eventd_relay_event_parse(EventdPluginContext *context, const gchar *event_category, const gchar *event_name, GKeyFile *config_file)
+_eventd_relay_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile *config_file)
 {
     gboolean disable;
     gchar **server_uris = NULL;
     gchar **server_uri = NULL;
     gchar **avahi_names = NULL;
     gchar **avahi_name = NULL;
-    gchar *name;
     GList *list = NULL;
     EventdRelayServer *server;
 
@@ -100,8 +99,6 @@ _eventd_relay_event_parse(EventdPluginContext *context, const gchar *event_categ
         goto fail;
     if ( libeventd_config_key_file_get_string_list(config_file, "Relay", "Avahi", &avahi_names, NULL) < 0 )
         goto fail;
-
-    name = libeventd_config_events_get_name(event_category, event_name);
 
     if ( ! disable )
     {
@@ -140,7 +137,7 @@ _eventd_relay_event_parse(EventdPluginContext *context, const gchar *event_categ
         }
     }
 
-    g_hash_table_insert(context->events, name, list);
+    g_hash_table_insert(context->events, g_strdup(id), list);
 
 fail:
     if ( avahi_names != NULL )
@@ -185,7 +182,7 @@ _eventd_relay_event_action(EventdPluginContext *context, EventdEvent *event)
     GList *servers;
     GList *server;
 
-    servers = libeventd_config_events_get_event(context->events, eventd_event_get_category(event), eventd_event_get_name(event));
+    servers = g_hash_table_lookup(context->events, eventd_event_get_config_id(event));
     if ( servers == NULL )
         return;
 

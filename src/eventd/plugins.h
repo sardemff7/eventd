@@ -36,7 +36,7 @@ void eventd_plugins_control_command_all(const gchar *command);
 void eventd_plugins_config_reset_all(void);
 
 void eventd_plugins_global_parse_all(GKeyFile *config_file);
-void eventd_plugins_event_parse_all(const gchar *id, const gchar *parent_id, GKeyFile *config_file);
+void eventd_plugins_event_parse_all(const gchar *id, GKeyFile *config_file);
 
 void eventd_plugins_event_action_all(EventdEvent *event);
 

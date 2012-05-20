@@ -218,28 +218,17 @@ _eventd_nd_event_update(EventdNdEvent *event, GKeyFile *config_file)
 }
 
 static EventdNdEvent *
-_eventd_nd_event_new(EventdPluginContext *context, EventdNdEvent *parent)
+_eventd_nd_event_new(EventdPluginContext *context)
 {
     EventdNdEvent *event = NULL;
 
     event = g_new0(EventdNdEvent, 1);
 
-    if ( parent == NULL )
-    {
-        event->title = g_strdup("$name");
-        event->message = g_strdup("$text");
-        event->image = g_strdup("image");
-        event->icon = g_strdup("icon");
-        event->style = eventd_nd_style_new(context->style);
-    }
-    else
-    {
-        event->title = g_strdup(parent->title);
-        event->message = g_strdup(parent->message);
-        event->image = g_strdup(parent->image);
-        event->icon = g_strdup(parent->icon);
-        event->style = eventd_nd_style_new(parent->style);
-    }
+    event->title = g_strdup("$name");
+    event->message = g_strdup("$text");
+    event->image = g_strdup("image");
+    event->icon = g_strdup("icon");
+    event->style = eventd_nd_style_new(context->style);
 
     return event;
 }
@@ -257,7 +246,7 @@ _eventd_nd_event_free(gpointer data)
 }
 
 static void
-_eventd_nd_event_parse(EventdPluginContext *context, const gchar *event_category, const gchar *event_name, GKeyFile *config_file)
+_eventd_nd_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile *config_file)
 {
     gboolean disable;
     EventdNdEvent *event = NULL;
@@ -270,12 +259,12 @@ _eventd_nd_event_parse(EventdPluginContext *context, const gchar *event_category
 
     if ( ! disable )
     {
-        event = _eventd_nd_event_new(context, ( event_name != NULL ) ? g_hash_table_lookup(context->events, event_category) : NULL);
+        event = _eventd_nd_event_new(context);
         _eventd_nd_event_update(event, config_file);
         _eventd_nd_get_max_width_and_height(context->max_width, context->max_height, event->style, &context->max_width, &context->max_height);
     }
 
-    g_hash_table_insert(context->events, libeventd_config_events_get_name(event_category, event_name), event);
+    g_hash_table_insert(context->events, g_strdup(id), event);
 }
 
 static void
@@ -305,7 +294,7 @@ _eventd_nd_init(EventdCoreContext *core, EventdCoreInterface *interface)
 
     _eventd_nd_backend_load(context);
 
-    context->events = libeventd_config_events_new(_eventd_nd_event_free);
+    context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_nd_event_free);
     context->surfaces = g_hash_table_new_full(g_direct_hash, g_direct_equal, g_object_unref, _eventd_nd_surface_hide_all);
 
     eventd_nd_notification_init();
@@ -427,7 +416,7 @@ _eventd_nd_event_updated(EventdEvent *event, EventdPluginContext *context)
 {
     EventdNdEvent *nd_event;
 
-    nd_event = libeventd_config_events_get_event(context->events, eventd_event_get_category(event), eventd_event_get_name(event));
+    nd_event = g_hash_table_lookup(context->events, eventd_event_get_config_id(event));
     if ( nd_event == NULL )
         return;
 
@@ -459,7 +448,7 @@ _eventd_nd_event_action(EventdPluginContext *context, EventdEvent *event)
     GList *display_;
     GList *surfaces = NULL;
 
-    nd_event = libeventd_config_events_get_event(context->events, eventd_event_get_category(event), eventd_event_get_name(event));
+    nd_event = g_hash_table_lookup(context->events, eventd_event_get_config_id(event));
     if ( nd_event == NULL )
         return;
 

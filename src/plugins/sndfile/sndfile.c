@@ -120,7 +120,7 @@ _eventd_sndfile_event_action(EventdPluginContext *context, EventdEvent *event)
     guint32 rate = 0;
     guint8 channels = 0;
 
-    sound = libeventd_config_events_get_event(context->events, eventd_event_get_category(event), eventd_event_get_name(event));
+    sound = g_hash_table_lookup(context->events, eventd_event_get_config_id(event));
     if ( sound == NULL )
         return;
 
@@ -132,7 +132,7 @@ _eventd_sndfile_event_action(EventdPluginContext *context, EventdEvent *event)
 }
 
 static void
-_eventd_sndfile_event_parse(EventdPluginContext *context, const gchar *event_category, const gchar *event_name, GKeyFile *config_file)
+_eventd_sndfile_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile *config_file)
 {
     gboolean disable;
     gchar *sound = NULL;
@@ -148,17 +148,10 @@ _eventd_sndfile_event_parse(EventdPluginContext *context, const gchar *event_cat
         if ( libeventd_config_key_file_get_string(config_file, "Sound", "Sound", &sound) < 0 )
             return;
         if ( sound == NULL )
-        {
-            gchar *parent = NULL;
-
-            if ( event_name != NULL )
-                parent = g_hash_table_lookup(context->events, event_category);
-
-            sound = g_strdup(( parent != NULL ) ? parent : "$text");
-        }
+            sound = g_strdup("$text");
     }
 
-    g_hash_table_insert(context->events, libeventd_config_events_get_name(event_category, event_name), sound);
+    g_hash_table_insert(context->events, g_strdup(id), sound);
 }
 
 static EventdPluginContext *
@@ -168,7 +161,7 @@ _eventd_sndfile_init(EventdCoreContext *core, EventdCoreInterface *interface)
 
     context = g_new0(EventdPluginContext, 1);
 
-    context->events = libeventd_config_events_new(g_free);
+    context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 
     context->pulseaudio = eventd_sndfile_pulseaudio_init();
 

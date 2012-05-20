@@ -5,8 +5,6 @@ plugins_LTLIBRARIES += \
 notify_la_SOURCES = \
 	src/plugins/notify/icon.h \
 	src/plugins/notify/icon.c \
-	src/plugins/notify/event.h \
-	src/plugins/notify/event.c \
 	src/plugins/notify/libnotify-compat.h \
 	src/plugins/notify/notify.c
 

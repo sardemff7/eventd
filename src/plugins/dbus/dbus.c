@@ -216,6 +216,20 @@ _eventd_dbus_notify(EventdPluginContext *context, const gchar *sender, GVariant 
 
     eventd_event_set_timeout(event, ( timeout > -1 ) ? timeout : ( urgency > -1 ) ? ( 3000 + urgency * 2000 ) : -1);
 
+    const gchar *config_id;
+
+    config_id = context->core_interface->get_event_config_id(context->core, event);
+
+    if ( config_id == NULL )
+    {
+        g_object_unref(event);
+        g_dbus_method_invocation_return_dbus_error(invocation, NOTIFICATION_BUS_NAME ".InvalidNotification", "Invalid notification type");
+        return;
+    }
+
+
+    eventd_event_set_config_id(event, config_id);
+
     if ( id > 0 )
         eventd_event_update(event, NULL);
     else

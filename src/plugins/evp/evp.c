@@ -339,13 +339,17 @@ _eventd_evp_main(EventdPluginContext *context, EventdEvpClient *client, GError *
 #if DEBUG
                 g_debug("Received an event (category: %s): %s", eventd_event_get_category(event), eventd_event_get_name(event));
 #endif /* DEBUG */
+                const gchar *config_id;
 
-                if ( ! GPOINTER_TO_UINT(libeventd_config_events_get_event(context->events, eventd_event_get_category(event), eventd_event_get_name(event))) )
+                config_id = context->core_interface->get_event_config_id(context->core, event);
+                g_debug("Event config id: %s", config_id);
+                if ( ( config_id != NULL ) && ( ! GPOINTER_TO_UINT(g_hash_table_lookup(context->events, config_id)) ) )
                 {
                     gchar *tid;
                     tid = g_strdup_printf("%x", id);
                     g_hash_table_insert(client->events, tid, event);
                     eventd_event_set_id(event, tid);
+                    eventd_event_set_config_id(event, config_id);
                     g_signal_connect(event, "answered", G_CALLBACK(_event_evp_event_answered), client);
                     g_signal_connect(event, "ended", G_CALLBACK(_event_evp_event_ended), client);
                     context->core_interface->push_event(context->core, event);
@@ -442,7 +446,7 @@ _eventd_evp_init(EventdCoreContext *core, EventdCoreInterface *core_interface)
 
     service->avahi_name = g_strdup(PACKAGE_NAME);
 
-    service->events = libeventd_config_events_new(NULL);
+    service->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 
     return service;
 }
@@ -584,12 +588,10 @@ _eventd_evp_global_parse(EventdPluginContext *context, GKeyFile *config_file)
 }
 
 static void
-_eventd_evp_event_parse(EventdPluginContext *context, const gchar *event_category, const gchar *event_name, GKeyFile *config_file)
+_eventd_evp_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile *config_file)
 {
     gboolean disable;
     gint8 r;
-    gchar *name = NULL;
-    gboolean parent = FALSE;
 
     if ( ! g_key_file_has_group(config_file, "Event") )
         return;
@@ -598,14 +600,8 @@ _eventd_evp_event_parse(EventdPluginContext *context, const gchar *event_categor
     if ( r < 0 )
         return;
 
-    name = libeventd_config_events_get_name(event_category, event_name);
-    if ( event_name != NULL )
-        parent = GPOINTER_TO_UINT(g_hash_table_lookup(context->events, event_category));
-
-    if ( disable && ( ! parent ) )
-        g_hash_table_insert(context->events, name, GUINT_TO_POINTER(disable));
-    else if ( ( r == 0 ) && ( ! disable ) && parent )
-        g_hash_table_insert(context->events, name, GUINT_TO_POINTER(disable));
+    if ( disable )
+        g_hash_table_insert(context->events, g_strdup(id), GUINT_TO_POINTER(disable));
 }
 
 const gchar *eventd_plugin_id = "eventd-evp";

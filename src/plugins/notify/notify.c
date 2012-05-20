@@ -33,11 +33,47 @@
 #include <libeventd-config.h>
 
 #include "icon.h"
-#include "event.h"
 
 struct _EventdPluginContext {
     GHashTable *events;
 };
+
+typedef struct {
+    gboolean disable;
+    gchar *title;
+    gchar *message;
+    gchar *icon;
+    gchar *overlay_icon;
+    gdouble scale;
+} EventdLibnotifyEvent;
+
+static EventdLibnotifyEvent *
+_eventd_libnotify_event_new(gboolean disable, const char *title, const char *message, const char *icon, const char *overlay_icon, Int *scale)
+{
+    EventdLibnotifyEvent *event = NULL;
+
+    event = g_new0(EventdLibnotifyEvent, 1);
+
+    event->title = g_strdup(( title != NULL ) ? title : "$client-name - $name");
+    event->message = g_strdup(( message != NULL ) ? message : "$text");
+    event->icon = g_strdup(( icon != NULL ) ? icon : "icon");
+    event->overlay_icon = g_strdup(( overlay_icon != NULL ) ? overlay_icon : "overlay-icon");
+    event->scale = scale->set ? ( scale->value / 100. ) : 0.5;
+
+    return event;
+}
+
+static void
+_eventd_libnotify_event_free(gpointer data)
+{
+    EventdLibnotifyEvent *event = data;
+
+    g_free(event->icon);
+    g_free(event->overlay_icon);
+    g_free(event->message);
+    g_free(event->title);
+    g_free(event);
+}
 
 static EventdPluginContext *
 _eventd_libnotify_init()
@@ -56,7 +92,7 @@ _eventd_libnotify_init()
 
     context = g_new0(EventdPluginContext, 1);
 
-    context->events = libeventd_config_events_new(eventd_libnotify_event_free);
+    context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_libnotify_event_free);
 
     return context;
 }
@@ -74,10 +110,9 @@ _eventd_libnotify_uninit(EventdPluginContext *context)
 }
 
 static void
-eventd_libnotify_event_parse(EventdPluginContext *context, const gchar *event_category, const gchar *event_name, GKeyFile *config_file)
+eventd_libnotify_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile *config_file)
 {
     gboolean disable;
-    gchar *name = NULL;
     gchar *title = NULL;
     gchar *message = NULL;
     gchar *icon = NULL;
@@ -101,13 +136,7 @@ eventd_libnotify_event_parse(EventdPluginContext *context, const gchar *event_ca
     if ( libeventd_config_key_file_get_int(config_file, "Libnotify", "OverlayScale", &scale) < 0 )
         goto skip;
 
-    name = libeventd_config_events_get_name(event_category, event_name);
-
-    event = g_hash_table_lookup(context->events, name);
-    if ( event != NULL )
-        eventd_libnotify_event_update(event, disable, title, message, icon, overlay_icon, &scale);
-    else
-        g_hash_table_insert(context->events, name, eventd_libnotify_event_new(disable, title, message, icon, overlay_icon, &scale, g_hash_table_lookup(context->events, event_category)));
+    g_hash_table_insert(context->events, g_strdup(id), _eventd_libnotify_event_new(disable, title, message, icon, overlay_icon, &scale);
 
 skip:
     g_free(overlay_icon);
@@ -127,7 +156,7 @@ eventd_libnotify_event_action(EventdPluginContext *context, EventdEvent *event)
     NotifyNotification *notification = NULL;
     GdkPixbuf *icon;
 
-    libnotify_event = libeventd_config_events_get_event(context->events, eventd_event_get_category(event), eventd_event_get_name(event));
+    libnotify_event = g_hash_table_lookup(context->events, eventd_event_get_config_id(event));
     if ( libnotify_event == NULL )
         return;
 

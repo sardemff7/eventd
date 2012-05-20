@@ -192,7 +192,7 @@ _eventd_config_parse_event_file(EventdConfig *config, const gchar *id, GKeyFile 
         goto fail;
 
     _eventd_config_parse_client(config, id, config_file);
-    eventd_plugins_event_parse_all(id, NULL, config_file);
+    eventd_plugins_event_parse_all(id, config_file);
 
     gchar *internal_name;
 

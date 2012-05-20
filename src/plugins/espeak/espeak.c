@@ -54,7 +54,7 @@ _eventd_espeak_init(EventdCoreContext *core, EventdCoreInterface *interface)
 
     context = g_new0(EventdPluginContext, 1);
 
-    context->events = libeventd_config_events_new(g_free);
+    context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 
     libeventd_regex_init();
 
@@ -80,7 +80,7 @@ _eventd_espeak_stop(EventdPluginContext *context)
 }
 
 static void
-_eventd_espeak_event_parse(EventdPluginContext *context, const gchar *event_category, const gchar *event_name, GKeyFile *config_file)
+_eventd_espeak_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile *config_file)
 {
     gboolean disable;
     gchar *message = NULL;
@@ -96,17 +96,10 @@ _eventd_espeak_event_parse(EventdPluginContext *context, const gchar *event_cate
         if ( libeventd_config_key_file_get_string(config_file, "Espeak", "Message", &message) < 0 )
             return;
         if ( message == NULL )
-        {
-            gchar *parent = NULL;
-
-            if ( event_name != NULL )
-                parent = g_hash_table_lookup(context->events, event_category);
-
-            message = g_strdup(( parent != NULL ) ? parent : "sound");
-        }
+            message = g_strdup("sound");
     }
 
-    g_hash_table_insert(context->events, libeventd_config_events_get_name(event_category, event_name), message);
+    g_hash_table_insert(context->events, g_strdup(id), message);
 }
 
 static gchar *
@@ -148,7 +141,7 @@ _eventd_espeak_event_action(EventdPluginContext *context, EventdEvent *event)
     gchar *msg;
     espeak_ERROR error;
 
-    message = libeventd_config_events_get_event(context->events, eventd_event_get_category(event), eventd_event_get_name(event));
+    message = g_hash_table_lookup(context->events, eventd_event_get_config_id(event));
     if ( message == NULL )
         return;
 
