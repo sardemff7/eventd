@@ -324,7 +324,7 @@ eventd_plugins_global_parse_all(GKeyFile *config_file)
 }
 
 void
-eventd_plugins_event_parse_all(const gchar *type, const gchar *event, GKeyFile *config_file)
+eventd_plugins_event_parse_all(const gchar *event_id, const gchar *event_parent_id, GKeyFile *config_file)
 {
     GHashTableIter iter;
     gchar *id;
@@ -333,7 +333,7 @@ eventd_plugins_event_parse_all(const gchar *type, const gchar *event, GKeyFile *
     while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&plugin) )
     {
         if ( plugin->event_parse != NULL )
-            plugin->event_parse(plugin->context, type, event, config_file);
+            plugin->event_parse(plugin->context, event_id, event_parent_id, config_file);
     }
 }
 

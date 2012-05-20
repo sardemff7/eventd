@@ -23,4 +23,4 @@ dbus_la_LIBADD = \
 	$(GLIB_LIBS)
 
 dist_pkgdata_DATA += \
-	data/libnotify.conf
+	data/libnotify.event

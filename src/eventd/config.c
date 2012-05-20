@@ -39,6 +39,7 @@ struct _EventdConfig {
     gboolean loaded;
     guint64 stack;
     gint64 timeout;
+    GHashTable *event_ids;
     GHashTable *events;
 };
 
@@ -47,25 +48,48 @@ typedef struct {
     gint64 timeout;
 } EventdConfigEvent;
 
-static void
-_eventd_config_event_update(EventdConfigEvent *event, gboolean disable, Int *timeout)
+static gchar *
+_eventd_config_events_get_name(const gchar *category, const gchar *name)
 {
-    event->disable = disable;
-    if ( timeout->set )
-        event->timeout = timeout->value;
+    if ( category == NULL )
+        return NULL;
+
+    if ( name == NULL )
+        return g_strdup(category);
+
+    return g_strconcat(category, "-", name, NULL);
+}
+
+const gchar *
+eventd_config_get_event_config_id(EventdConfig *config, EventdEvent *event)
+{
+    const gchar *category;
+    gchar *name;
+    const gchar *id;
+
+    category = eventd_event_get_category(event);
+
+    name = _eventd_config_events_get_name(category, eventd_event_get_name(event));
+
+    id = g_hash_table_lookup(config->event_ids, name);
+    if ( id == NULL )
+        id = g_hash_table_lookup(config->event_ids, category);
+
+    return id;
 }
 
 static EventdConfigEvent *
-_eventd_config_event_new(gboolean disable, Int *timeout, EventdConfigEvent *parent)
+_eventd_config_event_new(gboolean disable, Int *timeout)
 {
     EventdConfigEvent *event;
 
-    timeout->value = timeout->set ? timeout->value : ( parent != NULL ) ? parent->timeout : -1;
-    timeout->set = TRUE;
+    if ( ( ! disable ) && ( ! timeout->set ) )
+        return NULL;
 
     event = g_new0(EventdConfigEvent, 1);
 
-    _eventd_config_event_update(event, disable, timeout);
+    event->disable = disable;
+    event->timeout = timeout->set ? timeout->value : -1;
 
     return event;
 }
@@ -83,7 +107,7 @@ eventd_config_event_get_disable(EventdConfig *config, EventdEvent *event)
 {
     EventdConfigEvent *config_event;
 
-    config_event = libeventd_config_events_get_event(config->events, eventd_event_get_category(event), eventd_event_get_name(event));
+    config_event = g_hash_table_lookup(config->events, eventd_event_get_config_id(event));
 
     if ( config_event == NULL )
         return FALSE;
@@ -96,7 +120,7 @@ eventd_config_event_get_timeout(EventdConfig *config, EventdEvent *event)
 {
     EventdConfigEvent *config_event;
 
-    config_event = libeventd_config_events_get_event(config->events, eventd_event_get_category(event), eventd_event_get_name(event));
+    config_event = g_hash_table_lookup(config->events, eventd_event_get_config_id(event));
 
     if ( config_event == NULL )
         return config->timeout;
@@ -113,7 +137,7 @@ _eventd_config_defaults(EventdConfig *config)
 }
 
 static void
-_eventd_config_parse_event(EventdConfig *config, GKeyFile *config_file)
+_eventd_config_parse_global(EventdConfig *config, GKeyFile *config_file)
 {
     Int integer;
 
@@ -132,92 +156,57 @@ _eventd_config_parse_event(EventdConfig *config, GKeyFile *config_file)
 }
 
 static void
-_eventd_config_parse_global(EventdConfig *config, GKeyFile *config_file)
-{
-    _eventd_config_parse_event(config, config_file);
-}
-
-static void
-_eventd_config_parse_client(EventdConfig *config, const gchar *event_category, const gchar *event_name, GKeyFile *config_file)
+_eventd_config_parse_client(EventdConfig *config, const gchar *id, GKeyFile *config_file)
 {
     EventdConfigEvent *event;
-    gchar *name;
     gboolean disable;
     Int timeout;
 
-    if ( ! g_key_file_has_group(config_file, "Event") )
+    if ( libeventd_config_key_file_get_boolean(config_file, "Event", "Disable", &disable) < 0 )
         return;
 
-    if ( libeventd_config_key_file_get_boolean(config_file, "Event", "Disable", &disable) < 0 )
-        goto skip;
+    if ( libeventd_config_key_file_get_int(config_file, "Event", "Timeout", &timeout) >= 0 )
+        return;
 
-    if ( libeventd_config_key_file_get_int(config_file, "Event", "Timeout", &timeout) < 0 )
-        goto skip;
+    event = _eventd_config_event_new(disable, &timeout);
+    if ( event == NULL )
+        return;
 
-    name = libeventd_config_events_get_name(event_category, event_name);
-
-    event = g_hash_table_lookup(config->events, name);
-    if ( event != NULL )
-        _eventd_config_event_update(event, disable, &timeout);
-    else
-        g_hash_table_insert(config->events, name, _eventd_config_event_new(disable, &timeout, g_hash_table_lookup(config->events, event_category)));
-
-skip:
-    {}
+    g_hash_table_insert(config->events, g_strdup(id), event);
 }
 
 static void
-_eventd_config_parse_client_dir(EventdConfig *config, const gchar *type, gchar *config_dir_name)
+_eventd_config_parse_event_file(EventdConfig *config, const gchar *id, GKeyFile *config_file)
 {
-    GError *error = NULL;
-    GDir *config_dir = NULL;
-    const gchar *file = NULL;
-    gchar *config_file_name = NULL;
-    GKeyFile *config_file = NULL;
-
-    config_dir = g_dir_open(config_dir_name, 0, &error);
-    if ( ! config_dir )
-    {
-        g_warning("Can't read the configuration directory '%s': %s", config_dir_name, error->message);
-        g_clear_error(&error);
-        return;
-    }
-
-    while ( ( file = g_dir_read_name(config_dir) ) != NULL )
-    {
-        gchar *event = NULL;
-
-        if ( g_str_has_prefix(file, ".") || ( ! g_str_has_suffix(file, ".conf") ) )
-            continue;
-
-        event = g_strndup(file, strlen(file) - 5);
+    gchar *category = NULL;
+    gchar *name = NULL;
 
 #if DEBUG
-        g_debug("Parsing event '%s' of client type '%s'", event, type);
+    g_debug("Parsing event '%s'", id);
 #endif /* DEBUG */
 
-        config_file_name = g_build_filename(config_dir_name, file, NULL);
-        config_file = g_key_file_new();
-        if ( ! g_key_file_load_from_file(config_file, config_file_name, G_KEY_FILE_NONE, &error) )
-            goto next;
+    if ( libeventd_config_key_file_get_string(config_file, "Event", "Category", &category) < 0 )
+        goto fail;
 
-        _eventd_config_parse_client(config, type, event, config_file);
-        eventd_plugins_event_parse_all(type, event, config_file);
+    if ( libeventd_config_key_file_get_string(config_file, "Event", "Name", &name) < 0 )
+        goto fail;
 
-    next:
-        g_free(event);
-        if ( error != NULL )
-            g_warning("Can't read the configuration file '%s': %s", config_file_name, error->message);
-        g_clear_error(&error);
-        g_key_file_free(config_file);
-        g_free(config_file_name);
-    }
+    _eventd_config_parse_client(config, id, config_file);
+    eventd_plugins_event_parse_all(id, NULL, config_file);
 
-    g_dir_close(config_dir);
+    gchar *internal_name;
+
+    internal_name = _eventd_config_events_get_name(category, name);
+    if ( internal_name != NULL )
+        g_hash_table_insert(config->event_ids, internal_name, g_strdup(id));
+
+fail:
+    g_free(name);
+    g_free(category);
 }
 
 static void
-_eventd_config_load_dir(EventdConfig *config, const gchar *config_dir_name)
+_eventd_config_load_dir(EventdConfig *config, GHashTable *config_files, const gchar *config_dir_name)
 {
     GError *error = NULL;
     GDir *config_dir = NULL;
@@ -251,51 +240,101 @@ _eventd_config_load_dir(EventdConfig *config, const gchar *config_dir_name)
 
     while ( ( file = g_dir_read_name(config_dir) ) != NULL )
     {
-        if ( g_str_has_prefix(file, ".") || ( ! g_str_has_suffix(file, ".conf") ) )
+        if ( g_str_has_prefix(file, ".") || ( ! g_str_has_suffix(file, ".event") ) )
             continue;
 
         config_file_name = g_build_filename(config_dir_name, file, NULL);
 
         if ( g_file_test(config_file_name, G_FILE_TEST_IS_REGULAR) )
         {
-            gchar *type;
-
-            type = g_strndup(file, strlen(file) - 5);
             config_file = g_key_file_new();
-#if DEBUG
-            g_debug("Parsing event defaults of client type '%s'", type);
-#endif /* DEBUG */
             if ( ! g_key_file_load_from_file(config_file, config_file_name, G_KEY_FILE_NONE, &error) )
+            {
                 g_warning("Can't read the defaults file '%s': %s", config_file_name, error->message);
+                g_clear_error(&error);
+                g_key_file_free(config_file);
+            }
+            else if ( ! g_key_file_has_group(config_file, "Event") )
+                g_key_file_free(config_file);
             else
-                eventd_plugins_event_parse_all(type, NULL, config_file);
-            g_clear_error(&error);
-            g_key_file_free(config_file);
-            g_free(type);
+                g_hash_table_insert(config_files, g_strdup(file), config_file);
         }
 
         g_free(config_file_name);
     }
 
-    g_dir_rewind(config_dir);
-    while ( ( file = g_dir_read_name(config_dir) ) != NULL )
-    {
-        if ( g_str_has_prefix(file, ".") )
-            continue;
-
-        config_file_name = g_build_filename(config_dir_name, file, NULL);
-
-        if ( g_file_test(config_file_name, G_FILE_TEST_IS_DIR) )
-            _eventd_config_parse_client_dir(config, file, config_file_name);
-
-        g_free(config_file_name);
-    }
-    g_dir_close(config_dir);
-
 out:
     if ( error != NULL )
         g_warning("Can't read the configuration directory: %s", error->message);
     g_clear_error(&error);
+}
+
+static GKeyFile *
+_eventd_config_process_config_file(GHashTable *config_files, const gchar *id, GKeyFile *config_file)
+{
+    gchar *parent_id;
+
+    switch ( libeventd_config_key_file_get_string(config_file, "Event", "Extends", &parent_id) )
+    {
+    case 1:
+        return config_file;
+    case -1:
+        return NULL;
+    case 0:
+    break;
+    }
+
+    GError *error = NULL;
+    if ( ! g_key_file_remove_key(config_file, "Event", "Extends", &error) )
+    {
+        g_warning("Couldn’t clean event file '%s': %s", id, error->message);
+        g_clear_error(&error);
+        goto fail;
+    }
+
+    GKeyFile *parent;
+    parent = g_hash_table_lookup(config_files, parent_id);
+    if ( parent == NULL )
+    {
+        g_warning("Event file '%s' has no parent file '%s'", id, parent_id);
+        goto fail;
+    }
+
+    if ( ( parent = _eventd_config_process_config_file(config_files, parent_id, parent) ) == NULL )
+        goto fail;
+
+    GString *merged_data;
+    gchar *data;
+
+    data = g_key_file_to_data(parent, NULL, NULL);
+    merged_data = g_string_new(data);
+    g_free(data);
+
+    data = g_key_file_to_data(config_file, NULL, NULL);
+    g_string_append(merged_data, data);
+    g_free(data);
+
+    GKeyFile *new_config_file;
+
+    new_config_file = g_key_file_new();
+    if ( g_key_file_load_from_data(new_config_file, merged_data->str, -1, G_KEY_FILE_NONE, &error) )
+        g_hash_table_insert(config_files, g_strdup(id), new_config_file);
+    else
+    {
+        g_warning("Couldn’t merge '%s' and '%s': %s", id, parent_id, error->message);
+        g_clear_error(&error);
+        g_key_file_free(new_config_file);
+        new_config_file = NULL;
+    }
+
+    g_string_free(merged_data, TRUE);
+    g_free(parent_id);
+
+    return new_config_file;
+
+fail:
+    g_free(parent_id);
+    return NULL;
 }
 
 EventdConfig *
@@ -305,7 +344,8 @@ eventd_config_new()
 
     config = g_new0(EventdConfig, 1);
 
-    config->events = libeventd_config_events_new(_eventd_config_event_free);
+    config->event_ids = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+    config->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_config_event_free);
 
     return config;
 }
@@ -319,6 +359,7 @@ _eventd_config_clean(EventdConfig *config)
     eventd_plugins_config_reset_all();
 
     g_hash_table_remove_all(config->events);
+    g_hash_table_remove_all(config->event_ids);
 }
 
 void
@@ -330,18 +371,33 @@ eventd_config_parse(EventdConfig *config)
 
     _eventd_config_defaults(config);
 
+    GHashTable *config_files;
+
+    config_files = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_key_file_free);
+
     const gchar *env_config_dir;
     env_config_dir = g_getenv("EVENTD_CONFIG_DIR");
     if ( env_config_dir != NULL )
-        _eventd_config_load_dir(config, env_config_dir);
+        _eventd_config_load_dir(config, config_files, env_config_dir);
 
-    _eventd_config_load_dir(config, DATADIR G_DIR_SEPARATOR_S PACKAGE_NAME);
-    _eventd_config_load_dir(config, SYSCONFDIR G_DIR_SEPARATOR_S PACKAGE_NAME);
+    _eventd_config_load_dir(config, config_files, DATADIR G_DIR_SEPARATOR_S PACKAGE_NAME);
+    _eventd_config_load_dir(config, config_files, SYSCONFDIR G_DIR_SEPARATOR_S PACKAGE_NAME);
 
     gchar *user_config_dir;
     user_config_dir = g_build_filename(g_get_user_config_dir(), PACKAGE_NAME, NULL);
-    _eventd_config_load_dir(config, user_config_dir);
+    _eventd_config_load_dir(config, config_files, user_config_dir);
     g_free(user_config_dir);
+
+    GHashTableIter iter;
+    gchar *id;
+    GKeyFile *config_file;
+    g_hash_table_iter_init(&iter, config_files);
+    while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&config_file) )
+    {
+        if ( ( config_file = _eventd_config_process_config_file(config_files, id, config_file) ) != NULL )
+            _eventd_config_parse_event_file(config, id, config_file);
+    }
+    g_hash_table_unref(config_files);
 }
 
 void
@@ -350,6 +406,7 @@ eventd_config_free(EventdConfig *config)
     _eventd_config_clean(config);
 
     g_hash_table_unref(config->events);
+    g_hash_table_unref(config->event_ids);
 
     g_free(config);
 }

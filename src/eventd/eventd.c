@@ -163,6 +163,12 @@ eventd_core_get_sockets(EventdCoreContext *context, const gchar * const *binds)
     return sockets;
 }
 
+const gchar *
+eventd_core_get_event_config_id(EventdCoreContext *context, EventdEvent *event)
+{
+    return eventd_config_get_event_config_id(context->config, event);
+}
+
 void
 eventd_core_push_event(EventdCoreContext *context, EventdEvent *event)
 {
@@ -254,6 +260,7 @@ main(int argc, char *argv[])
     {
         .get_sockets = eventd_core_get_sockets,
 
+        .get_event_config_id = eventd_core_get_event_config_id,
         .push_event = eventd_core_push_event,
     };
 

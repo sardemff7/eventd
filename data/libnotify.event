@@ -1,3 +1,6 @@
+[Event]
+Category = libnotify
+
 [Notification]
 Title = $summary
 Message = $body
