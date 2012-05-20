@@ -28,38 +28,6 @@
 
 #include <libeventd-config.h>
 
-GHashTable *
-libeventd_config_events_new(GDestroyNotify value_destroy_func)
-{
-    return g_hash_table_new_full(g_str_hash, g_str_equal, g_free, value_destroy_func);
-}
-
-gchar *
-libeventd_config_events_get_name(const gchar *event_category, const gchar *event_name)
-{
-    gchar *name;
-    if ( event_name != NULL )
-        name = g_strconcat(event_category, "-", event_name, NULL);
-    else
-        name = g_strdup(event_category);
-    return name;
-}
-
-gpointer
-libeventd_config_events_get_event(GHashTable *events, const gchar *event_category, const gchar *event_name)
-{
-    gpointer ret = NULL;
-    gchar *name;
-
-    name = libeventd_config_events_get_name(event_category, event_name);
-    ret = g_hash_table_lookup(events, name);
-    g_free(name);
-    if ( ret == NULL )
-        ret = g_hash_table_lookup(events, event_category);
-
-    return ret;
-}
-
 static gint8
 _libeventd_config_key_file_error(GError **error, const gchar *group, const gchar *key)
 {
