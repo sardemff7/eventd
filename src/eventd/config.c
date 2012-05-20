@@ -217,17 +217,14 @@ _eventd_config_parse_client_dir(EventdConfig *config, const gchar *type, gchar *
 }
 
 static void
-_eventd_config_load_dir(EventdConfig *config, const gchar *base_dir)
+_eventd_config_load_dir(EventdConfig *config, const gchar *config_dir_name)
 {
     GError *error = NULL;
-    gchar *config_dir_name = NULL;
     GDir *config_dir = NULL;
     const gchar *file = NULL;
     gchar *config_file_name = NULL;
     GKeyFile *config_file = NULL;
 
-
-    config_dir_name = g_build_filename(base_dir, PACKAGE_NAME, NULL);
 
     if ( ! g_file_test(config_dir_name, G_FILE_TEST_IS_DIR) )
         goto out;
@@ -299,7 +296,6 @@ out:
     if ( error != NULL )
         g_warning("Can't read the configuration directory: %s", error->message);
     g_clear_error(&error);
-    g_free(config_dir_name);
 }
 
 EventdConfig *
@@ -334,9 +330,18 @@ eventd_config_parse(EventdConfig *config)
 
     _eventd_config_defaults(config);
 
-    _eventd_config_load_dir(config, DATADIR);
-    _eventd_config_load_dir(config, SYSCONFDIR);
-    _eventd_config_load_dir(config, g_get_user_config_dir());
+    const gchar *env_config_dir;
+    env_config_dir = g_getenv("EVENTD_CONFIG_DIR");
+    if ( env_config_dir != NULL )
+        _eventd_config_load_dir(config, env_config_dir);
+
+    _eventd_config_load_dir(config, DATADIR G_DIR_SEPARATOR_S PACKAGE_NAME);
+    _eventd_config_load_dir(config, SYSCONFDIR G_DIR_SEPARATOR_S PACKAGE_NAME);
+
+    gchar *user_config_dir;
+    user_config_dir = g_build_filename(g_get_user_config_dir(), PACKAGE_NAME, NULL);
+    _eventd_config_load_dir(config, user_config_dir);
+    g_free(user_config_dir);
 }
 
 void
