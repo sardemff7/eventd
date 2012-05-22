@@ -190,7 +190,6 @@ AM_CONDITIONAL(ENABLE_TESTS, [test x$enable_tests = xyes])
 AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug], [Enable debug]), [], enable_debug=no)
 if test x$enable_debug = xyes; then
     AC_DEFINE([DEBUG], [1], [Activate debug mode])
-    AM_CFLAGS="${AM_CFLAGS} -O0 -ggdb3"
     AM_VALAFLAGS="${AM_VALAFLAGS} --debug -D DEBUG"
 fi
 AC_SUBST(AM_CFLAGS)
