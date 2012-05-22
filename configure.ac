@@ -56,7 +56,7 @@ AM_VALA_CFLAGS="-Wno-unused-variable -Wno-unused-function -Wno-unused-but-set-va
 AM_VALAFLAGS=""
 
 
-AC_ARG_ENABLE(git-version, AS_HELP_STRING([--disable-git-version], [Do not append git version information to the version string]), enable_git_version=$enableval, enable_git_version=yes)
+AC_ARG_ENABLE(git-version, AS_HELP_STRING([--disable-git-version], [Do not append git version information to the version string]), [], enable_git_version=yes)
 if test x$enable_git_version = xyes; then
     AC_DEFINE_UNQUOTED([PACKAGE_VERSION], ["${PACKAGE_VERSION} − `git describe --tags --always`, branch `git describe --tags --always --all | sed -e 's:heads/::'`"], [Full version with git information])
 fi
@@ -89,7 +89,7 @@ GIO_VALAFLAGS="--pkg gio-2.0 $gio_unix_vala"
 AC_SUBST(gio_unix)
 AC_SUBST(GIO_VALAFLAGS)
 
-AC_ARG_ENABLE(avahi, AS_HELP_STRING([--disable-avahi], [Disable Avahi support]), enable_avahi=$enableval, enable_avahi=yes)
+AC_ARG_ENABLE(avahi, AS_HELP_STRING([--disable-avahi], [Disable Avahi support]), [], enable_avahi=yes)
 if test x$enable_avahi = xyes; then
     PKG_CHECK_MODULES(AVAHI, [avahi-client avahi-glib])
     AC_DEFINE([ENABLE_AVAHI], [1], [Enable Avahi support])
@@ -104,17 +104,17 @@ AM_CONDITIONAL(ENABLE_AVAHI, test x$enable_avahi = xyes)
 # Server
 PKG_CHECK_MODULES(GMODULE, [gmodule-2.0 >= $gmodule_min_version])
 
-AC_ARG_ENABLE(systemd, AS_HELP_STRING([--enable-systemd], [Enable systemd activation support]), enable_systemd=$enableval, enable_systemd=no)
+AC_ARG_ENABLE(systemd, AS_HELP_STRING([--enable-systemd], [Enable systemd activation support]), [], enable_systemd=no)
 if test x$enable_systemd = xyes; then
     PKG_CHECK_MODULES(SYSTEMD, [libsystemd-daemon])
     AC_DEFINE([ENABLE_SYSTEMD], [1], [Enable systemd activation support])
 fi
 
-AC_ARG_ENABLE(dbus, AS_HELP_STRING([--disable-dbus], [Disable DBus support (org.freedesktop.Notifications interface)]), enable_dbus=$enableval, enable_dbus=yes)
+AC_ARG_ENABLE(dbus, AS_HELP_STRING([--disable-dbus], [Disable DBus support (org.freedesktop.Notifications interface)]), [], enable_dbus=yes)
 AM_CONDITIONAL(ENABLE_DBUS, test x$enable_dbus = xyes)
 
 # sndfile plugin
-AC_ARG_ENABLE(sndfile, AS_HELP_STRING([--disable-sndfile], [Disable libsndfile support]), enable_sndfile=$enableval, enable_sndfile=yes)
+AC_ARG_ENABLE(sndfile, AS_HELP_STRING([--disable-sndfile], [Disable libsndfile support]), [], enable_sndfile=yes)
 if test x$enable_sndfile = xyes; then
     PKG_CHECK_MODULES(SNDFILE, [sndfile])
     PKG_CHECK_MODULES(PULSEAUDIO, [libpulse >= $libpulse_min_version libpulse-mainloop-glib])
@@ -122,7 +122,7 @@ fi
 AM_CONDITIONAL(ENABLE_SNDFILE, test x$enable_sndfile = xyes)
 
 # espeak plugin
-AC_ARG_ENABLE(espeak, AS_HELP_STRING([--enable-espeak], [Enable eSpeak support]), enable_espeak=$enableval, enable_espeak=no)
+AC_ARG_ENABLE(espeak, AS_HELP_STRING([--enable-espeak], [Enable eSpeak support]), [], enable_espeak=no)
 if test x$enable_espeak = xyes; then
     ESPEAK_CFLAGS="-I/usr/include/espeak"
     ESPEAK_LIBS="-lespeak"
@@ -138,7 +138,7 @@ fi
 AM_CONDITIONAL(ENABLE_ESPEAK, test x$enable_espeak = xyes)
 
 # libnotify plugin
-AC_ARG_ENABLE(libnotify, AS_HELP_STRING([--enable-libnotify], [Enable libnotify support (client side)]), enable_libnotify=$enableval, enable_libnotify=no)
+AC_ARG_ENABLE(libnotify, AS_HELP_STRING([--enable-libnotify], [Enable libnotify support (client side)]), [], enable_libnotify=no)
 if test x$enable_libnotify = xyes; then
     if test x$enable_dbus = xyes; then
         AC_MSG_ERROR([*** You can’t activate both org.freedesktop.Notifications server and libnotify client at the same time])
@@ -150,15 +150,15 @@ AM_CONDITIONAL(ENABLE_NOTIFY, [test x$enable_libnotify = xyes])
 
 # notification plugin
 AC_ARG_ENABLE(xcb, AS_HELP_STRING([--disable-xcb], [Disable xcb graphical backend]), enable_xcb=$enableval, enable_xcb=yes)
-AC_ARG_ENABLE(linux-framebuffer, AS_HELP_STRING([--disable-linux-framebuffer], [Disable linux framebuffer backend]), enable_linux_fb=$enableval, enable_linux_fb=yes)
+AC_ARG_ENABLE(linux-framebuffer, AS_HELP_STRING([--disable-linux-framebuffer], [Disable linux framebuffer backend]), [], enable_linux_framebuffer=yes)
 
 # Common
-if test x$enable_xcb = xyes -o x$enable_linux_fb = xyes; then
+if test x$enable_xcb = xyes -o x$enable_linux_framebuffer = xyes; then
     PKG_CHECK_MODULES(CAIRO, [cairo])
     PKG_CHECK_MODULES(PANGO, [pango pangocairo])
     PKG_CHECK_MODULES(GDK_PIXBUF, [gdk-pixbuf-2.0])
 fi
-AM_CONDITIONAL(ENABLE_NOTIFICATION_DAEMON, [test x$enable_xcb = xyes -o x$enable_linux_fb = xyes])
+AM_CONDITIONAL(ENABLE_NOTIFICATION_DAEMON, [test x$enable_xcb = xyes -o x$enable_linux_framebuffer = xyes])
 
 # XCB backend
 if test x$enable_xcb = xyes; then
@@ -167,10 +167,10 @@ fi
 AM_CONDITIONAL(ENABLE_XCB, [test x$enable_xcb = xyes])
 
 # Linux framebuffer backend
-if test x$enable_linux_fb = xyes; then
+if test x$enable_linux_framebuffer = xyes; then
     AC_CHECK_HEADER([linux/fb.h])
 fi
-AM_CONDITIONAL(ENABLE_LINUX_FB, [test x$enable_linux_fb = xyes])
+AM_CONDITIONAL(ENABLE_LINUX_FB, [test x$enable_linux_framebuffer = xyes])
 
 #
 # Client
@@ -182,12 +182,12 @@ AM_PROG_VALAC([$vala_min_version])
 #
 # Tests
 #
-AC_ARG_ENABLE(tests, AS_HELP_STRING([--enable-tests], [Build tests]), enable_tests=$enableval, enable_tests=yes)
+AC_ARG_ENABLE(tests, AS_HELP_STRING([--enable-tests], [Build tests]), [], enable_tests=yes)
 AM_CONDITIONAL(ENABLE_TESTS, [test x$enable_tests = xyes])
 
 
 # Debug flags
-AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug], [Enable debug]), enable_debug=$enableval, enable_debug=no)
+AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug], [Enable debug]), [], enable_debug=no)
 if test x$enable_debug = xyes; then
     AC_DEFINE([DEBUG], [1], [Activate debug mode])
     AM_CFLAGS="${AM_CFLAGS} -O0 -ggdb3"
