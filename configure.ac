@@ -13,6 +13,7 @@ AM_SILENT_RULES([yes])
 AC_PROG_CC
 AC_PROG_CC_C99
 AM_PROG_CC_C_O
+AC_PROG_SED
 AC_DISABLE_STATIC
 LT_INIT
 PKG_PROG_PKG_CONFIG
@@ -33,6 +34,7 @@ AC_DEFINE_UNQUOTED([DEFAULT_BIND_PORT_STR], ["$DEFAULT_BIND_PORT"], [Default TCP
 AC_DEFINE_UNQUOTED([DEFAULT_CONTROL_PORT], [$DEFAULT_CONTROL_PORT], [Default TCP port for the control interface])
 AC_DEFINE_UNQUOTED([DEFAULT_CONTROL_PORT_STR], ["$DEFAULT_CONTROL_PORT"], [Default TCP port for the control interface])
 AC_DEFINE_UNQUOTED([UNIX_SOCKET], ["$UNIX_SOCKET"], [Default UNIX socket name])
+AC_SUBST(UNIX_SOCKET)
 
 # Common dependencies
 glib_min_major="2"
@@ -105,10 +107,18 @@ AM_CONDITIONAL(ENABLE_AVAHI, test x$enable_avahi = xyes)
 PKG_CHECK_MODULES(GMODULE, [gmodule-2.0 >= $gmodule_min_version])
 
 AC_ARG_ENABLE(systemd, AS_HELP_STRING([--enable-systemd], [Enable systemd activation support]), [], enable_systemd=no)
+AC_ARG_WITH(systemduserunitdir, AS_HELP_STRING([--with-systemduserunitdir=DIR], [Directory for systemd service files]), [], with_systemduserunitdir=yes)
 if test x$enable_systemd = xyes; then
+    case "$with_systemduserunitdir" in
+        no|"") AC_MSG_ERROR([*** You must define systemduserunitdir when compiling systemd support]) ;;
+        yes) systemduserunitdir="`$PKG_CONFIG --variable=systemduserunitdir systemd`" ;;
+        *) systemduserunitdir="$with_systemduserunitdir" ;;
+    esac
     PKG_CHECK_MODULES(SYSTEMD, [libsystemd-daemon])
     AC_DEFINE([ENABLE_SYSTEMD], [1], [Enable systemd activation support])
+    AC_SUBST(systemduserunitdir)
 fi
+AM_CONDITIONAL(ENABLE_SYSTEMD, test x$enable_systemd = xyes)
 
 AC_ARG_ENABLE(dbus, AS_HELP_STRING([--disable-dbus], [Disable DBus support (org.freedesktop.Notifications interface)]), [], enable_dbus=yes)
 AM_CONDITIONAL(ENABLE_DBUS, test x$enable_dbus = xyes)

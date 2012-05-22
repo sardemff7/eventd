@@ -1,5 +1,8 @@
 /data/libeventd-event.pc
 /data/libeventc.pc
+/data/units/eventd-control.socket
+/data/units/eventd-evp.socket
+/data/units/eventd.service
 /include/config.h.in
 /include/config.h
 /include/libeventc.h

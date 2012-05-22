@@ -45,3 +45,19 @@ eventd_LDADD = \
 	$(GOBJECT_LIBS) \
 	$(GMODULE_LIBS) \
 	$(GLIB_LIBS)
+
+
+if ENABLE_SYSTEMD
+
+eventd_SYSTEMDUNITS = \
+	data/units/eventd-evp.socket.in \
+	data/units/eventd-control.socket.in \
+	data/units/eventd.service.in
+
+EXTRA_DIST += \
+	$(eventd_SYSTEMDUNITS)
+
+systemduserunit_DATA += \
+	$(eventd_SYSTEMDUNITS:.in=)
+
+endif

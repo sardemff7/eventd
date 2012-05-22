@@ -1,4 +1,5 @@
 AM_DISTCHECK_CONFIGURE_FLAGS = \
+	--with-systemduserunitdir="$$dc_install_base/$(systemduserunitdir)" \
 	--disable-debug \
 	--disable-git-version
 
@@ -17,6 +18,7 @@ pkginclude_HEADERS =
 pkgconfig_DATA =
 dist_vapi_DATA =
 dist_pkgdata_DATA =
+systemduserunit_DATA =
 
 EXTRA_DIST =
 
@@ -61,6 +63,18 @@ include src/eventc/eventc.mk
 if ENABLE_TESTS
 include tests/tests.mk
 endif
+
+
+#
+# Special rules
+#
+
+data/units/%: data/units/%.in Makefile
+	$(AM_V_GEN)$(SED) \
+		-e 's:[@]bindir[@]:$(bindir):g' \
+		-e 's:[@]PACKAGE_NAME[@]:$(PACKAGE_NAME):g' \
+		-e 's:[@]UNIX_SOCKET[@]:$(UNIX_SOCKET):g' \
+		< $< > $@ || rm $@
 
 
 #
