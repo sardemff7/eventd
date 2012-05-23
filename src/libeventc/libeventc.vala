@@ -193,6 +193,7 @@ namespace Eventc
         {
             this.input = new GLib.DataInputStream(this.connection.get_input_stream());
             this.output = new GLib.DataOutputStream(this.connection.get_output_stream());
+            this.cancellable.reset();
 
             this.receive_loop();
 
@@ -350,10 +351,7 @@ namespace Eventc
                         this.queue.push(r);
                 }
             }
-            catch ( GLib.IOError.CANCELLED e )
-            {
-                this.handshake_passed = false;
-            }
+            catch ( GLib.IOError.CANCELLED e ) {}
             catch ( GLib.Error e )
             {
                 this.handshake_passed = false;
@@ -417,6 +415,8 @@ namespace Eventc
             this.events.remove_all();
             this.cancellable.cancel();
             while ( this.queue.try_pop() != null ) ;
+            GLib.Idle.add(this.close.callback);
+            yield;
 
             if ( ( this.handshake_passed ) && ( ! this.connection.is_closed() ) )
             {
@@ -426,6 +426,7 @@ namespace Eventc
                 }
                 catch ( EventcError ee ) {}
             }
+            this.handshake_passed = false;
             try
             {
                 yield this.connection.close_async(GLib.Priority.DEFAULT);
