@@ -26,3 +26,5 @@ eventc_LDADD = \
 	$(GIO_LIBS) \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS)
+
+$(srcdir)/eventc_vala.stamp: $(srcdir)/vapi/libeventc.vapi
