@@ -73,7 +73,7 @@ _eventd_dbus_notification_free(gpointer user_data)
 
     g_free(notification);
 }
-static void
+static guint32
 _eventd_dbus_notification_new(EventdPluginContext *context, const gchar *sender, EventdEvent *event)
 {
     EventdDbusNotification *notification;
@@ -88,6 +88,8 @@ _eventd_dbus_notification_new(EventdPluginContext *context, const gchar *sender,
     g_signal_connect(event, "ended", G_CALLBACK(_eventd_dbus_event_ended), notification);
 
     context->core_interface->push_event(context->core, event);
+
+    return notification->id;
 }
 
 static void
@@ -233,7 +235,7 @@ _eventd_dbus_notify(EventdPluginContext *context, const gchar *sender, GVariant 
     if ( id > 0 )
         eventd_event_update(event, NULL);
     else
-        _eventd_dbus_notification_new(context, sender, event);
+        id = _eventd_dbus_notification_new(context, sender, event);
 
     g_dbus_method_invocation_return_value(invocation, g_variant_new("(u)", id));
 }
