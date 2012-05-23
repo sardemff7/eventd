@@ -85,7 +85,6 @@ namespace Eventc
         public bool enable_proxy { get; set; default = true; }
 
         private GLib.SocketConnectable address;
-        private GLib.SocketClient client;
         private GLib.SocketConnection connection;
         private GLib.DataInputStream input;
         private GLib.DataOutputStream output;
@@ -104,7 +103,6 @@ namespace Eventc
             this._port = port;
             this.category = category;
 
-            this.client = new GLib.SocketClient();
             this.queue = new GLib.AsyncQueue<string>();
             this.cancellable = new GLib.Cancellable();
             this.events = new GLib.HashTable<string, Eventd.Event>(GLib.str_hash, GLib.str_equal);
@@ -144,14 +142,6 @@ namespace Eventc
             }
         }
 
-        private void
-        set_client() throws EventcError
-        {
-            this.proccess_address();
-
-            this.client.set_enable_proxy(this.enable_proxy);
-        }
-
         public new async void
         connect() throws EventcError
         {
@@ -164,6 +154,7 @@ namespace Eventc
             }
 
             this.handshake_passed = false;
+            this.proccess_address();
 
             while ( ! this.mutex.trylock() )
             {
@@ -174,17 +165,19 @@ namespace Eventc
             try
             {
 
-            this.set_client();
+            var client = new GLib.SocketClient();
+            client.set_enable_proxy(this.enable_proxy);
             try
             {
-                this.connection = yield this.client.connect_async(this.address);
+                this.connection = yield client.connect_async(this.address);
+            }
+            catch ( GLib.IOError.CONNECTION_REFUSED e )
+            {
+                throw new EventcError.CONNECTION_REFUSED("Host is not an eventd");
             }
             catch ( GLib.Error e )
             {
-                if ( e is GLib.IOError.CONNECTION_REFUSED )
-                    throw new EventcError.CONNECTION_REFUSED("Host is not an eventd");
-                else
-                    throw new EventcError.CONNECTION_OTHER("Failed to connect: %s", e.message);
+                throw new EventcError.CONNECTION_OTHER("Failed to connect: %s", e.message);
             }
             yield this.hello();
 
@@ -198,8 +191,8 @@ namespace Eventc
         private async void
         hello() throws EventcError
         {
-            this.input = new GLib.DataInputStream((this.connection as GLib.IOStream).get_input_stream());
-            this.output = new GLib.DataOutputStream((this.connection as GLib.IOStream).get_output_stream());
+            this.input = new GLib.DataInputStream(this.connection.get_input_stream());
+            this.output = new GLib.DataOutputStream(this.connection.get_output_stream());
 
             this.receive_loop();
 
@@ -373,8 +366,7 @@ namespace Eventc
         {
             if ( this.pending_error != null )
             {
-                var e = this.pending_error;
-                this.pending_error = null;
+                var e = (owned) this.pending_error;
                 throw new EventcError.RECEIVE("Failed to receive message: %s", e.message);
             }
             bool timedout = false;
