@@ -115,8 +115,7 @@ namespace Eventc
         {
             if ( this.pending_error != null )
             {
-                var e = this.pending_error = null;
-                this.pending_error = null;
+                var e = (owned) this.pending_error;
                 throw new EventcError.RECEIVE("Failed to receive message: %s", e.message);
             }
             return ( ( this.connection != null ) && ( ! this.connection.is_closed() ) && this.handshake_passed );
