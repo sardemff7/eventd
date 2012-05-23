@@ -358,6 +358,10 @@ namespace Eventc
                         this.queue.push(r);
                 }
             }
+            catch ( GLib.IOError.CANCELLED e )
+            {
+                this.handshake_passed = false;
+            }
             catch ( GLib.Error e )
             {
                 this.handshake_passed = false;
