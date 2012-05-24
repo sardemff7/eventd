@@ -171,7 +171,7 @@ namespace Eventc
             {
                 this.connection = yield client.connect_async(this.address);
             }
-            catch ( GLib.IOError.CONNECTION_REFUSED e )
+            catch ( GLib.IOError.CONNECTION_REFUSED ie )
             {
                 throw new EventcError.CONNECTION_REFUSED("Host is not an eventd");
             }
@@ -351,7 +351,7 @@ namespace Eventc
                         this.queue.push(r);
                 }
             }
-            catch ( GLib.IOError.CANCELLED e ) {}
+            catch ( GLib.IOError.CANCELLED ie ) {}
             catch ( GLib.Error e )
             {
                 this.handshake_passed = false;
