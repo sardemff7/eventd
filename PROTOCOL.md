@@ -76,6 +76,20 @@ EVENT <id>
 ERROR bad-event
     Inform the client that the event message was not valid
 
+[Client]
+END <id>
+    Force the end of an event before the timeout
+    Will trigger an ENDED message with "client-dismiss" reason
+
+[Server]
+ENDING <id>
+    Acknowledge the END message
+
+[Server]
+ERROR bad-id
+    Inform the client that no event has this id
+
+
 
 Event timeout or answer
 -----------------------
