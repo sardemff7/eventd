@@ -267,7 +267,9 @@ namespace Eventc
             if ( ! r.has_prefix("EVENT ") )
                 throw new EventcError.EVENT("Got a wrong event acknowledge message: %s", r);
 
-            this.events.insert(r.substring(6), event);
+            string id = r.substring(6);
+            event.set_id(id);
+            this.events.insert(id, event);
 
             }
             finally
