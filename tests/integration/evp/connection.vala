@@ -70,6 +70,24 @@ connection_test(GLib.DataInputStream input, GLib.DataOutputStream output) throws
     if ( message != contents )
         return @"Wrong test file contents: $contents";
 
+    output.put_string("EVENT test\n");
+    output.put_string(".\n");
+    r = input.read_upto("\n", -1, null);
+    input.read_byte(null);
+    if ( r != "EVENT 2" )
+        return @"Bad answer to EVENT: $r";
+
+    output.put_string("END 2\n");
+    r = input.read_upto("\n", -1, null);
+    input.read_byte(null);
+    if ( r != "ENDING 2" )
+        return @"Bad answer to END: $r";
+
+    r = input.read_upto("\n", -1, null);
+    input.read_byte(null);
+    if ( r != "ENDED 2 client-dismiss" )
+        return @"No ENDED or bad ENDED to EVENT 2: $r";
+
     output.put_string("BYE\n");
 
     return null;
@@ -106,6 +124,12 @@ connection_fail_test(GLib.DataInputStream input, GLib.DataOutputStream output) t
     input.read_byte(null);
     if ( r != "ERROR bad-event" )
         return @"Bad answer to bad EVENT: $r";
+
+    output.put_string("END 1\n");
+    r = input.read_upto("\n", -1, null);
+    input.read_byte(null);
+    if ( r != "ERROR bad-id" )
+        return @"Bad answer to bad END: $r";
 
 
     output.put_string("BYE\n");
