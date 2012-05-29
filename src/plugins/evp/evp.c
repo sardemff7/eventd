@@ -371,6 +371,34 @@ _eventd_evp_main(EventdPluginContext *context, EventdEvpClient *client, GError *
                     break;
             }
         }
+        else if ( g_str_has_prefix(line, "END ") )
+        {
+            EventdEvent *event;
+
+            event = g_hash_table_lookup(client->events, line+4);
+            if ( event != NULL )
+            {
+                g_free(line);
+                line = g_strdup_printf("ENDING %s\n", eventd_event_get_id(event));
+                if ( ! g_data_output_stream_put_string(client->output, line, client->cancellable, error) )
+                    break;
+
+#if DEBUG
+                g_debug("Ending event '%s'", eventd_event_get_id(event));
+#endif /* DEBUG */
+
+                eventd_event_end(event, EVENTD_EVENT_END_REASON_CLIENT_DISMISS);
+            }
+            else
+            {
+#if DEBUG
+                g_debug("Received an END message with a bad id '%s'", line+4);
+#endif /* DEBUG */
+
+                if ( ! g_data_output_stream_put_string(client->output, "ERROR bad-id\n", client->cancellable, error) )
+                    break;
+            }
+        }
         else if ( ! g_data_output_stream_put_string(client->output, "ERROR unknown\n", client->cancellable, error) )
             break;
         else
