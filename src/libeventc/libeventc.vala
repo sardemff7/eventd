@@ -299,7 +299,7 @@ namespace Eventc
                         case "user-dismiss":
                             reason = Eventd.EventEndReason.USER_DISMISS;
                         break;
-                        case "client-dissmiss":
+                        case "client-dismiss":
                             reason = Eventd.EventEndReason.CLIENT_DISMISS;
                         break;
                         case "reserved":
