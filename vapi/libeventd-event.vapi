@@ -37,10 +37,12 @@ namespace Eventd
 	{
 		public Event(string name);
 
+		public void set_id(string id);
 		public void add_answer(string answer);
 		public void add_data(owned string name, owned string content);
 		public void add_answer_data(owned string name, owned string content);
 
+		public unowned string get_id();
 		public unowned string get_category();
 		public unowned string get_name();
 		public unowned string get_data(string name);
