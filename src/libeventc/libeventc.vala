@@ -35,6 +35,7 @@ namespace Eventc
         SEND,
         RECEIVE,
         EVENT,
+        END,
         CLOSE
     }
 
@@ -270,6 +271,31 @@ namespace Eventc
             string id = r.substring(6);
             event.set_id(id);
             this.events.insert(id, event);
+
+            }
+            finally
+            {
+            this.mutex.unlock();
+            }
+        }
+
+        public async void
+        event_end(Eventd.Event event) throws EventcError
+        {
+            while ( ! this.mutex.trylock() )
+            {
+                Idle.add(this.event_end.callback);
+                yield;
+            }
+
+            try
+            {
+
+            unowned string id = event.get_id();
+            this.send(@"END $id");
+            var r = yield this.receive();
+            if ( ! r.has_prefix("ENDING ") )
+                throw new EventcError.END("Got a wrong event ending acknowledge message: %s", r);
 
             }
             finally
