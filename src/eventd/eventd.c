@@ -359,7 +359,7 @@ main(int argc, char *argv[])
     context->runtime_dir = g_build_filename(g_get_user_runtime_dir(), PACKAGE_NAME, NULL);
     if ( ( ! g_file_test(context->runtime_dir, G_FILE_TEST_IS_DIR) ) && ( g_mkdir_with_parents(context->runtime_dir, 0755) < 0 ) )
     {
-        g_warning("Couldn’t create the run dir '%s': %s", context->runtime_dir, strerror(errno));
+        g_warning("Couldn’t create the run dir '%s': %s", context->runtime_dir, g_strerror(errno));
         g_free(context->runtime_dir);
         context->runtime_dir = NULL;
     }

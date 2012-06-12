@@ -275,14 +275,14 @@ eventd_sockets_new()
 #if ENABLE_SYSTEMD
     n = sd_listen_fds(TRUE);
     if ( n < 0 )
-        g_warning("Failed to acquire systemd sockets: %s", strerror(-n));
+        g_warning("Failed to acquire systemd sockets: %s", g_strerror(-n));
 
     for ( fd = SD_LISTEN_FDS_START ; fd < SD_LISTEN_FDS_START + n ; ++fd )
     {
         r = sd_is_socket(fd, AF_UNSPEC, SOCK_STREAM, 1);
         if ( r < 0 )
         {
-            g_warning("Failed to verify systemd socket type: %s", strerror(-r));
+            g_warning("Failed to verify systemd socket type: %s", g_strerror(-r));
             continue;
         }
 

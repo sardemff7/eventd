@@ -43,7 +43,7 @@ _eventd_sndfile_pulseaudio_context_state_callback(pa_context *c, void *user_data
     switch ( state )
     {
     case PA_CONTEXT_FAILED:
-        g_warning("Connection to PulseAudio failed: %s", pa_strerror(pa_context_errno(c)));
+        g_warning("Connection to PulseAudio failed: %s", g_strerror(pa_context_errno(c)));
     case PA_CONTEXT_READY:
     case PA_CONTEXT_TERMINATED:
     default:

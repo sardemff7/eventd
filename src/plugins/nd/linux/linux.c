@@ -88,19 +88,19 @@ _eventd_nd_linux_display_new(EventdNdBackendContext *context, const gchar *targe
     display->fd = g_open("/dev/fb0", O_RDWR);
     if ( display->fd == -1 )
     {
-        g_warning("Couldn’t open framebuffer device: %s", strerror(errno));
+        g_warning("Couldn’t open framebuffer device: %s", g_strerror(errno));
         goto fail;
     }
 
     if ( ioctl(display->fd, FBIOGET_FSCREENINFO, &finfo) == -1 )
     {
-        g_warning("Couldn’t get framebuffer fixed info: %s", strerror(errno));
+        g_warning("Couldn’t get framebuffer fixed info: %s", g_strerror(errno));
         goto fail;
     }
 
     if ( ioctl(display->fd, FBIOGET_VSCREENINFO, &vinfo) == -1 )
     {
-        g_warning("Couldn’t get framebuffer variable info: %s", strerror(errno));
+        g_warning("Couldn’t get framebuffer variable info: %s", g_strerror(errno));
         goto fail;
     }
 

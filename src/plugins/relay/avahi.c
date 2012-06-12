@@ -129,7 +129,7 @@ eventd_relay_avahi_init()
 
     if ( context->client == NULL )
     {
-        g_warning("Couldn’t initialize Avahi: %s", avahi_strerror(error));
+        g_warning("Couldn’t initialize Avahi: %s", g_strerror(error));
         eventd_relay_avahi_uninit(context);
         return NULL;
     }
