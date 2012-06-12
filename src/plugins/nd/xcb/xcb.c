@@ -222,6 +222,7 @@ _eventd_nd_xcb_display_new(EventdNdBackendContext *context, const gchar *target,
 static void
 _eventd_nd_xcb_display_free(EventdNdDisplay *context)
 {
+    g_hash_table_unref(context->bubbles);
     g_xcb_source_unref(context->source);
     g_free(context);
 }
