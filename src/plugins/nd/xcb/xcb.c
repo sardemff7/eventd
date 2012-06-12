@@ -52,6 +52,7 @@ struct _EventdNdDisplay {
     gboolean anchor_bottom;
     gint margin;
     GHashTable *bubbles;
+    GQueue *queue;
 };
 
 struct _EventdNdSurface {
@@ -215,6 +216,7 @@ _eventd_nd_xcb_display_new(EventdNdBackendContext *context, const gchar *target,
     }
 
     display->bubbles = g_hash_table_new_full(NULL, NULL, NULL, _eventd_nd_xcb_surface_hide_internal);
+    display->queue = g_queue_new();
 
     return display;
 }
@@ -222,6 +224,7 @@ _eventd_nd_xcb_display_new(EventdNdBackendContext *context, const gchar *target,
 static void
 _eventd_nd_xcb_display_free(EventdNdDisplay *context)
 {
+    g_queue_free(context->queue);
     g_hash_table_unref(context->bubbles);
     g_xcb_source_unref(context->source);
     g_free(context);
@@ -255,14 +258,13 @@ _eventd_nd_xcb_update_bubbles(EventdNdDisplay *display)
     guint32 vals[] = { 0 };
     vals[0] = display->y;
 
-    GHashTableIter iter;
-    xcb_window_t window;
+    GList *surface_;
     EventdNdSurface *surface;
-    g_hash_table_iter_init(&iter, display->bubbles);
     if ( display->anchor_bottom )
     {
-        while ( g_hash_table_iter_next(&iter, (gpointer *)&window, (gpointer *)&surface) )
+        for ( surface_ = g_queue_peek_head_link(display->queue) ; surface_ != NULL ; surface_ = g_list_next(surface_) )
         {
+            surface = surface_->data;
             vals[0] -= surface->height;
             xcb_configure_window(display->xcb_connection, surface->window, mask, vals);
             vals[0] -= display->margin;
@@ -270,8 +272,9 @@ _eventd_nd_xcb_update_bubbles(EventdNdDisplay *display)
     }
     else
     {
-        while ( g_hash_table_iter_next(&iter, (gpointer *)&window, (gpointer *)&surface) )
+        for ( surface_ = g_queue_peek_head_link(display->queue) ; surface_ != NULL ; surface_ = g_list_next(surface_) )
         {
+            surface = surface_->data;
             xcb_configure_window(display->xcb_connection, surface->window, mask, vals);
             vals[0] += surface->height + display->margin;
         }
@@ -372,6 +375,8 @@ _eventd_nd_xcb_surface_show(EventdEvent *event, EventdNdDisplay *display, Eventd
 
     surface = _eventd_nd_xcb_surface_show_internal(event, display, notification, style);
 
+    g_queue_push_head(surface->display->queue, surface);
+    surface->bubble_ = g_queue_peek_head_link(surface->display->queue);
     g_hash_table_insert(surface->display->bubbles, GUINT_TO_POINTER(surface->window), surface);
     _eventd_nd_xcb_update_bubbles(surface->display);
 
@@ -385,6 +390,8 @@ _eventd_nd_xcb_surface_update(EventdNdSurface *old_surface, EventdNdNotification
 
     surface = _eventd_nd_xcb_surface_show_internal(old_surface->event, old_surface->display, notification, style);
 
+    surface->bubble_ = old_surface->bubble_;
+    surface->bubble_->data = surface;
     g_hash_table_insert(surface->display->bubbles, GUINT_TO_POINTER(surface->window), surface);
 
     _eventd_nd_xcb_update_bubbles(surface->display);
@@ -400,6 +407,7 @@ _eventd_nd_xcb_surface_hide(EventdNdSurface *surface)
 
     EventdNdDisplay *display = surface->display;
 
+    g_queue_delete_link(display->queue, surface->bubble_);
     g_hash_table_remove(display->bubbles, GUINT_TO_POINTER(surface->window));
 
     _eventd_nd_xcb_update_bubbles(display);
