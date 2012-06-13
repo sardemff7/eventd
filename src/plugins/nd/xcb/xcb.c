@@ -363,9 +363,12 @@ _eventd_nd_xcb_surface_hide_internal(gpointer data)
 {
     EventdNdSurface *surface = data;
 
-    xcb_unmap_window(surface->display->xcb_connection, surface->window);
+    if ( ! g_source_is_destroyed((GSource *)surface->display->source) )
+    {
+        xcb_unmap_window(surface->display->xcb_connection, surface->window);
+        xcb_flush(surface->display->xcb_connection);
+    }
 
-    xcb_flush(surface->display->xcb_connection);
     cairo_surface_destroy(surface->bubble);
 
     g_object_unref(surface->event);
@@ -376,6 +379,9 @@ _eventd_nd_xcb_surface_hide_internal(gpointer data)
 static EventdNdSurface *
 _eventd_nd_xcb_surface_show(EventdEvent *event, EventdNdDisplay *display, EventdNdNotification *notification, EventdNdStyle *style)
 {
+    if ( g_source_is_destroyed((GSource *)display->source) )
+        return NULL;
+
     EventdNdSurface *surface;
 
     surface = _eventd_nd_xcb_surface_show_internal(event, display, notification, style);
@@ -391,6 +397,9 @@ _eventd_nd_xcb_surface_show(EventdEvent *event, EventdNdDisplay *display, Eventd
 static EventdNdSurface *
 _eventd_nd_xcb_surface_update(EventdNdSurface *old_surface, EventdNdNotification *notification, EventdNdStyle *style)
 {
+    if ( g_source_is_destroyed((GSource *)old_surface->display->source) )
+        return old_surface;
+
     EventdNdSurface *surface;
 
     surface = _eventd_nd_xcb_surface_show_internal(old_surface->event, old_surface->display, notification, style);
