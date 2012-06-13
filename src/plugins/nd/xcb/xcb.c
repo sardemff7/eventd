@@ -45,6 +45,7 @@ struct _EventdNdBackendContext {
 };
 
 struct _EventdNdDisplay {
+    EventdNdBackendContext *context;
     GXcbSource *source;
     xcb_connection_t *xcb_connection;
     xcb_screen_t *screen;
@@ -167,6 +168,13 @@ _eventd_nd_xcb_display_test(EventdNdBackendContext *context, const gchar *target
     return TRUE;
 }
 
+static void
+_eventd_nd_xcb_display_error_callback(gpointer user_data)
+{
+    EventdNdDisplay *display = user_data;
+
+    display->context->nd_interface->remove_display(display->context->nd, display);
+}
 
 static void _eventd_nd_xcb_surface_hide_internal(gpointer surface);
 static EventdNdDisplay *
@@ -183,6 +191,8 @@ _eventd_nd_xcb_display_new(EventdNdBackendContext *context, const gchar *target,
         g_free(display);
         return NULL;
     }
+    display->context = context;
+    g_xcb_source_set_error_callback(display->source, _eventd_nd_xcb_display_error_callback);
 
     context->displays = g_slist_prepend(context->displays, g_strdup(target));
 
