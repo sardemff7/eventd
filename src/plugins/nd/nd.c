@@ -36,6 +36,7 @@
 #include <eventd-nd-style.h>
 
 struct _EventdPluginContext {
+    EventdNdInterface interface;
     GHashTable *events;
     EventdNdCornerAnchor bubble_anchor;
     gint bubble_margin;
@@ -120,7 +121,7 @@ _eventd_nd_backends_load_dir(EventdPluginContext *context, const gchar *backends
         backend->module = module;
         backend_get_info(backend);
 
-        backend->context = backend->init();
+        backend->context = backend->init(context, &context->interface);
 
         context->backends = g_list_prepend(context->backends, backend);
     }

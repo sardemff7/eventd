@@ -39,6 +39,11 @@
 
 #define FRAMEBUFFER_TARGET_PREFIX "/dev/tty"
 
+struct _EventdNdBackendContext {
+    EventdNdContext *nd;
+    EventdNdInterface *nd_interface;
+};
+
 struct _EventdNdDisplay {
     gint fd;
     guchar *buffer;
@@ -58,16 +63,25 @@ struct _EventdNdSurface {
 };
 
 static EventdNdBackendContext *
-_eventd_nd_linux_init()
+_eventd_nd_linux_init(EventdNdContext *nd, EventdNdInterface *nd_interface)
 {
+    EventdNdBackendContext *context;
+
+    context = g_new0(EventdNdBackendContext, 1);
+
+    context->nd = nd;
+    context->nd_interface = nd_interface;
+
     eventd_nd_cairo_init();
-    return NULL;
+
+    return context;
 }
 
 static void
 _eventd_nd_linux_uninit(EventdNdBackendContext *context)
 {
     eventd_nd_cairo_uninit();
+    g_free(context);
 }
 
 static gboolean

@@ -39,6 +39,8 @@
 #include <eventd-nd-cairo.h>
 
 struct _EventdNdBackendContext {
+    EventdNdContext *nd;
+    EventdNdInterface *nd_interface;
     GSList *displays;
 };
 
@@ -66,11 +68,14 @@ struct _EventdNdSurface {
 };
 
 static EventdNdBackendContext *
-_eventd_nd_xcb_init()
+_eventd_nd_xcb_init(EventdNdContext *nd, EventdNdInterface *nd_interface)
 {
     EventdNdBackendContext *context;
 
     context = g_new0(EventdNdBackendContext, 1);
+
+    context->nd = nd;
+    context->nd_interface = nd_interface;
 
     eventd_nd_cairo_init();
 

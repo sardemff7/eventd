@@ -26,11 +26,15 @@
 #include <libeventd-event-types.h>
 #include <eventd-nd-types.h>
 
+typedef struct _EventdPluginContext EventdNdContext;
 typedef struct _EventdNdDisplay EventdNdDisplay;
 typedef struct _EventdNdSurface EventdNdSurface;
 typedef struct _EventdNdBackendContext EventdNdBackendContext;
 
-typedef EventdNdBackendContext *(*EventdNdBackendInitFunc)();
+typedef struct {
+} EventdNdInterface;
+
+typedef EventdNdBackendContext *(*EventdNdBackendInitFunc)(EventdNdContext *nd, EventdNdInterface *nd_interface);
 typedef void (*EventdNdBackendUninitFunc)(EventdNdBackendContext *context);
 
 typedef gboolean (*EventdNdDisplayTestFunc)(EventdNdBackendContext *context, const gchar *target);
