@@ -286,29 +286,6 @@ _eventd_nd_surface_hide_all(gpointer data)
     g_list_free_full(surfaces, _eventd_nd_surface_hide);
 }
 
-static EventdPluginContext *
-_eventd_nd_init(EventdCoreContext *core, EventdCoreInterface *interface)
-{
-    EventdPluginContext *context;
-
-    context = g_new0(EventdPluginContext, 1);
-
-    _eventd_nd_backend_load(context);
-
-    context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_nd_event_free);
-    context->surfaces = g_hash_table_new_full(g_direct_hash, g_direct_equal, g_object_unref, _eventd_nd_surface_hide_all);
-
-    eventd_nd_notification_init();
-
-    /* default bubble position */
-    context->bubble_anchor    = EVENTD_ND_ANCHOR_TOP_RIGHT;
-    context->bubble_margin    = 13;
-
-    context->style = eventd_nd_style_new(NULL);
-
-    return context;
-}
-
 static void
 _eventd_nd_backend_free(gpointer data)
 {
@@ -329,6 +306,48 @@ _eventd_nd_backend_display_free(gpointer data)
     display->backend->display_free(display->display);
 
     g_free(display);
+}
+
+static void
+_eventd_nd_backend_remove_display(EventdNdContext *context, EventdNdDisplay *display)
+{
+    EventdNdDisplayContext *display_context;
+    GList *display_context_;
+    for ( display_context_ = context->displays ; display_context_ != NULL ; display_context_ = g_list_next(display_context_) )
+    {
+        display_context = display_context_->data;
+        if ( display_context->display == display )
+        {
+            _eventd_nd_backend_display_free(display_context);
+            context->displays = g_list_delete_link(context->displays, display_context_);
+            return;
+        }
+    }
+}
+
+static EventdPluginContext *
+_eventd_nd_init(EventdCoreContext *core, EventdCoreInterface *interface)
+{
+    EventdPluginContext *context;
+
+    context = g_new0(EventdPluginContext, 1);
+
+    context->interface.remove_display = _eventd_nd_backend_remove_display;
+
+    _eventd_nd_backend_load(context);
+
+    context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_nd_event_free);
+    context->surfaces = g_hash_table_new_full(g_direct_hash, g_direct_equal, g_object_unref, _eventd_nd_surface_hide_all);
+
+    eventd_nd_notification_init();
+
+    /* default bubble position */
+    context->bubble_anchor    = EVENTD_ND_ANCHOR_TOP_RIGHT;
+    context->bubble_margin    = 13;
+
+    context->style = eventd_nd_style_new(NULL);
+
+    return context;
 }
 
 static void
