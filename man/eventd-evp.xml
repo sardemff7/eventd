@@ -1,0 +1,135 @@
+<?xml version='1.0' ?>
+<!DOCTYPE config SYSTEM "config.dtd">
+
+<!--
+  eventd - Small daemon to act on remote or local events
+
+  Copyright © 2011-2012 Quentin "Sardem FF7" Glidic
+
+  This file is part of eventd.
+
+  eventd is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  eventd is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with eventd. If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<refentry id="eventd-evp">
+    <refentryinfo>
+        <title>&PACKAGE_NAME; Manual</title>
+        <productname>&PACKAGE_NAME;</productname>
+        <productnumber>&PACKAGE_VERSION;</productnumber>
+
+        <authorgroup>
+            <author>
+                <contrib>Developer</contrib>
+                <firstname>Quentin</firstname>
+                <surname>Glidic</surname>
+                <email>sardemff7@eventd.org</email>
+            </author>
+        </authorgroup>
+    </refentryinfo>
+
+    <refmeta>
+        <refentrytitle>eventd-evp</refentrytitle>
+        <manvolnum>1</manvolnum>
+    </refmeta>
+
+    <refnamediv>
+        <refname>eventd-evp</refname>
+        <refpurpose>eventd EVENT protocol plugin</refpurpose>
+    </refnamediv>
+
+    <refsynopsisdiv>
+        <cmdsynopsis>
+            <command>eventd</command>
+            <arg choice="opt" rep="repeat">OPTIONS</arg>
+        </cmdsynopsis>
+    </refsynopsisdiv>
+
+    <refsect1>
+        <title>Description</title>
+        <para>
+            This plugin implements our own EVENT protocol.
+        </para>
+    </refsect1>
+
+    <refsect1>
+        <title>Options</title>
+
+        <variablelist>
+            <varlistentry>
+                <term><option>-L</option></term>
+                <term><option>--listen-default</option></term>
+                <listitem>
+                    <para>Listen on all interfaces using the default port</para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><option>-u</option></term>
+                <term><option>--listen-default-unix</option></term>
+                <listitem>
+                    <para>Listen on default UNIX socket</para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><option>-l</option></term>
+                <term><option>--listen=<replaceable class="parameter">socket</replaceable></option></term>
+                <listitem>
+                    <para>Add a socket to listen to</para>
+                    <para>May be specified multiple times.</para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><option>-A</option></term>
+                <term><option>--no-avahi</option></term>
+                <listitem>
+                    <para>Disable Avahi publishing</para>
+                </listitem>
+            </varlistentry>
+        </variablelist>
+    </refsect1>
+
+    <refsect1>
+        <title>Sockets</title>
+
+        <variablelist>
+            <varlistentry>
+                <term><literal>0.0.0.0:&DEFAULT_BIND_PORT;</literal></term>
+                <listitem>
+                    <para>Default TCP socket.</para>
+                </listitem>
+            </varlistentry>
+        </variablelist>
+
+        <variablelist>
+            <varlistentry>
+                <term><filename><varname>$XDG_RUNTIME_DIR</varname>/&PACKAGE_NAME;/&UNIX_SOCKET;</filename></term>
+                <listitem>
+                    <para>Default UNIX socket.</para>
+                    <para>If <varname>$XDG_RUNTIME_DIR</varname> is not set, we use <varname>$XDG_CACHE_HOME</varname>, with a fallback to <filename>~/.cache</filename>.</para>
+                </listitem>
+            </varlistentry>
+        </variablelist>
+    </refsect1>
+
+    <refsect1>
+        <title>See Also</title>
+        <para>
+            <citerefentry><refentrytitle>eventd-evp.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+            <citerefentry><refentrytitle>eventd-evp.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+            <citerefentry><refentrytitle>eventd</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+        </para>
+    </refsect1>
+</refentry>

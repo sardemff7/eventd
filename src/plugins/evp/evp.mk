@@ -2,6 +2,13 @@
 plugins_LTLIBRARIES += \
 	evp.la
 
+man1_MANS += \
+	man/eventd-evp.1
+
+man5_MANS += \
+	man/eventd-evp.conf.5 \
+	man/eventd-evp.event.5
+
 evp_la_SOURCES = \
 	src/plugins/evp/evp.c
 
