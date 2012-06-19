@@ -129,7 +129,7 @@ _eventd_relay_connection_handler(GObject *obj, GAsyncResult *res, gpointer user_
     eventc_connection_connect_finish(EVENTC_CONNECTION(obj), res, &error);
     if ( error != NULL )
     {
-        g_warning("Couldn’t connect: %s", error->message);
+        g_warning("Couldn't connect: %s", error->message);
         g_clear_error(&error);
         if ( ++server->tries < 4 )
             server->connection_timeout_id = g_timeout_add_seconds(3, _eventd_relay_reconnect, server);
@@ -153,7 +153,7 @@ _eventd_relay_close_handler(GObject *obj, GAsyncResult *res, gpointer user_data)
     eventc_connection_close_finish(EVENTC_CONNECTION(obj), res, &error);
     if ( error != NULL )
     {
-        g_warning("Couldn’t close connection: %s", error->message);
+        g_warning("Couldn't close connection: %s", error->message);
         g_clear_error(&error);
     }
 }
@@ -187,7 +187,7 @@ _eventd_relay_event_handler(GObject *obj, GAsyncResult *res, gpointer user_data)
     eventc_connection_event_finish(EVENTC_CONNECTION(obj), res, &error);
     if ( error != NULL )
     {
-        g_warning("Couldn’t send event: %s", error->message);
+        g_warning("Couldn't send event: %s", error->message);
         g_clear_error(&error);
         server->connection_timeout_id = g_timeout_add_seconds(1, _eventd_relay_reconnect, server);
     }
@@ -201,7 +201,7 @@ eventd_relay_server_event(EventdRelayServer *server, EventdEvent *event)
     {
         if ( error != NULL )
         {
-            g_warning("Couldn’t send event: %s", error->message);
+            g_warning("Couldn't send event: %s", error->message);
             g_clear_error(&error);
             server->connection_timeout_id = g_timeout_add_seconds(1, _eventd_relay_reconnect, server);
         }

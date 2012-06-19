@@ -68,7 +68,7 @@ namespace Eventc
             }
             catch ( EventcError e )
             {
-                GLib.warning("Couldn’t connect to host '%s': %s", host, e.message);
+                GLib.warning("Couldn't connect to host '%s': %s", host, e.message);
                 if ( ( max_tries > 0 ) && ( ++tries >= max_tries ) )
                 {
                     GLib.warning("Too many attempts, aborting");
@@ -110,7 +110,7 @@ namespace Eventc
             }
             catch ( EventcError e )
             {
-                GLib.warning("Couldn’t send event '%s': %s", event_name, e.message);
+                GLib.warning("Couldn't send event '%s': %s", event_name, e.message);
             }
             if ( ! wait )
                 disconnect();
@@ -127,7 +127,7 @@ namespace Eventc
             }
             catch ( EventcError e )
             {
-                GLib.warning("Couldn’t disconnect from event: %s", e.message);
+                GLib.warning("Couldn't disconnect from event: %s", e.message);
             }
             loop.quit();
         });
@@ -147,7 +147,7 @@ namespace Eventc
         }
         catch ( OptionError e )
         {
-            GLib.error("Couldn’t parse the arguments: %s", e.message);
+            GLib.error("Couldn't parse the arguments: %s", e.message);
         }
 
         if ( print_version )

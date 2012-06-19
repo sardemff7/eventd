@@ -59,7 +59,7 @@ AM_VALAFLAGS=""
 
 
 if test -d .git; then
-    PACKAGE_VERSION="${PACKAGE_VERSION} − `git describe --tags --always`, branch `git describe --tags --always --all | sed -e 's:heads/::'`"
+    PACKAGE_VERSION="${PACKAGE_VERSION} - `git describe --tags --always` (`git describe --tags --always --all | sed -e 's:heads/::'`)"
     AC_DEFINE_UNQUOTED([PACKAGE_VERSION], ["$PACKAGE_VERSION"], [Full version with git information])
 fi
 

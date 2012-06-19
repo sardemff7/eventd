@@ -48,7 +48,7 @@ _eventd_espeak_init(EventdCoreContext *core, EventdCoreInterface *interface)
 
     if ( sample_rate == EE_INTERNAL_ERROR )
     {
-        g_warning("Couldn’t initialize eSpeak system");
+        g_warning("Couldn't initialize eSpeak system");
         return NULL;
     }
 
@@ -153,7 +153,7 @@ _eventd_espeak_event_action(EventdPluginContext *context, EventdEvent *event)
     {
     case EE_INTERNAL_ERROR:
     case EE_BUFFER_FULL:
-        g_warning("Couldn’t synthetise text");
+        g_warning("Couldn't synthetise text");
     case EE_OK:
     break;
     case EE_NOT_FOUND:

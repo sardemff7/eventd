@@ -66,7 +66,7 @@ _eventd_nd_notification_pixbuf_from_file(const gchar *path, gint width, gint hei
         pixbuf = gdk_pixbuf_new_from_file(path, &error);
 
     if ( pixbuf == NULL )
-        g_warning("Couldn’t load file '%s': %s", path, error->message);
+        g_warning("Couldn't load file '%s': %s", path, error->message);
     g_clear_error(&error);
 
     return pixbuf;
@@ -120,14 +120,14 @@ _eventd_nd_notification_pixbuf_from_base64(EventdEvent *event, const gchar *name
 
         if ( ! gdk_pixbuf_loader_write(loader, data, length, &error) )
         {
-            g_warning("Couldn’t write image data: %s", error->message);
+            g_warning("Couldn't write image data: %s", error->message);
             g_clear_error(&error);
             goto error;
         }
 
         if ( ! gdk_pixbuf_loader_close(loader, &error) )
         {
-            g_warning("Couldn’t load image data: %s", error->message);
+            g_warning("Couldn't load image data: %s", error->message);
             g_clear_error(&error);
             goto error;
         }

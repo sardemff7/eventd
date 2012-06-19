@@ -37,7 +37,7 @@ _eventd_libnotify_icon_get_pixbuf_from_file(const gchar *filename)
     pixbuf = gdk_pixbuf_new_from_file(filename, &error);
     if ( pixbuf == NULL )
     {
-        g_warning("Couldn’t load icon file: %s", error->message);
+        g_warning("Couldn't load icon file: %s", error->message);
         g_clear_error(&error);
     }
 
@@ -62,14 +62,14 @@ _eventd_libnotify_icon_get_pixbuf_from_base64(const gchar *base64)
 
     if ( ! gdk_pixbuf_loader_write(loader, data, length, &error) )
     {
-        g_warning("Couldn’t write icon data: %s", error->message);
+        g_warning("Couldn't write icon data: %s", error->message);
         g_clear_error(&error);
         goto fail;
     }
 
     if ( ! gdk_pixbuf_loader_close(loader, &error) )
     {
-        g_warning("Couldn’t terminate icon data loading: %s", error->message);
+        g_warning("Couldn't terminate icon data loading: %s", error->message);
         g_clear_error(&error);
         goto fail;
     }

@@ -287,7 +287,7 @@ _eventd_config_process_config_file(GHashTable *config_files, const gchar *id, GK
     GError *error = NULL;
     if ( ! g_key_file_remove_key(config_file, "Event", "Extends", &error) )
     {
-        g_warning("Couldn’t clean event file '%s': %s", id, error->message);
+        g_warning("Couldn't clean event file '%s': %s", id, error->message);
         g_clear_error(&error);
         goto fail;
     }
@@ -321,7 +321,7 @@ _eventd_config_process_config_file(GHashTable *config_files, const gchar *id, GK
         g_hash_table_insert(config_files, g_strdup(id), new_config_file);
     else
     {
-        g_warning("Couldn’t merge '%s' and '%s': %s", id, parent_id, error->message);
+        g_warning("Couldn't merge '%s' and '%s': %s", id, parent_id, error->message);
         g_clear_error(&error);
         g_key_file_free(new_config_file);
         new_config_file = NULL;

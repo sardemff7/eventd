@@ -370,7 +370,7 @@ _eventd_dbus_on_bus_acquired(GDBusConnection *connection, const gchar *name, gpo
     object_id = g_dbus_connection_register_object(connection, NOTIFICATION_BUS_PATH, context->introspection_data->interfaces[0], &interface_vtable, context, NULL, &error);
     if ( object_id == 0 )
     {
-        g_warning("Couldn’t register object: %s", error->message);
+        g_warning("Couldn't register object: %s", error->message);
         g_clear_error(&error);
     }
 }
@@ -401,7 +401,7 @@ _eventd_dbus_init(EventdCoreContext *core, EventdCoreInterface *core_interface)
     introspection_data = g_dbus_node_info_new_for_xml(introspection_xml, &error);
     if ( introspection_data == NULL )
     {
-        g_warning("Couldn’t generate introspection data: %s", error->message);
+        g_warning("Couldn't generate introspection data: %s", error->message);
         g_clear_error(&error);
         return NULL;
     }

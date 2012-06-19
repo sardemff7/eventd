@@ -46,7 +46,7 @@ _eventd_plugins_load_dir(EventdCoreContext *core, EventdCoreInterface *interface
     plugins_dir = g_dir_open(plugins_dir_name, 0, &error);
     if ( ! plugins_dir )
     {
-        g_warning("Can’t read the plugins directory: %s", error->message);
+        g_warning("Couldn't read the plugins directory: %s", error->message);
         g_clear_error(&error);
         return;
     }
@@ -105,7 +105,7 @@ _eventd_plugins_load_dir(EventdCoreContext *core, EventdCoreInterface *interface
         module = g_module_open(full_filename, G_MODULE_BIND_LAZY|G_MODULE_BIND_LOCAL);
         if ( module == NULL )
         {
-            g_warning("Couldn’t load module '%s': %s", file, g_module_error());
+            g_warning("Couldn't load module '%s': %s", file, g_module_error());
             g_free(full_filename);
             continue;
         }
@@ -144,7 +144,7 @@ _eventd_plugins_load_dir(EventdCoreContext *core, EventdCoreInterface *interface
             plugin->context = plugin->init(core, interface);
             if ( plugin->context == NULL )
             {
-                g_warning("Couldn’t load plugin '%s'", file);
+                g_warning("Couldn't load plugin '%s'", file);
                 g_module_close(plugin->module);
                 g_free(plugin);
                 continue;
@@ -178,7 +178,7 @@ eventd_plugins_load(EventdCoreContext *core, EventdCoreInterface *interface)
 
     if ( ! g_module_supported() )
     {
-        g_warning("Couldn’t load plugins: %s", g_module_error());
+        g_warning("Couldn't load plugins: %s", g_module_error());
         return;
     }
 

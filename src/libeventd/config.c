@@ -39,7 +39,7 @@ _libeventd_config_key_file_error(GError **error, const gchar *group, const gchar
     if ( (*error)->code != G_KEY_FILE_ERROR_KEY_NOT_FOUND )
     {
         ret = -1;
-        g_warning("Can’t read the key [%s] '%s': %s", group, key, (*error)->message);
+        g_warning("Couldn't read the key [%s] '%s': %s", group, key, (*error)->message);
     }
     g_clear_error(error);
 

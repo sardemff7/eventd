@@ -49,7 +49,7 @@ eventd_nd_cairo_init()
     {
         regex_amp = g_regex_new("&(?!amp;|quot;|apos;|lt;|gt;)", G_REGEX_OPTIMIZE, 0, &error);
         if ( regex_amp == NULL )
-            g_warning("Couldn’t create amp regex: %s", error->message);
+            g_warning("Couldn't create amp regex: %s", error->message);
         g_clear_error(&error);
     }
     else
@@ -59,7 +59,7 @@ eventd_nd_cairo_init()
     {
         regex_markup = g_regex_new("<(?!/?[biu]>)", G_REGEX_OPTIMIZE, 0, &error);
         if ( regex_markup == NULL )
-            g_warning("Couldn’t create markup regex: %s", error->message);
+            g_warning("Couldn't create markup regex: %s", error->message);
         g_clear_error(&error);
     }
     else
@@ -117,14 +117,14 @@ _eventd_nd_cairo_message_escape_and_split(const gchar *message)
     escaped = g_regex_replace_literal(regex_amp, message, -1, 0, "&amp;" , 0, &error);
     if ( escaped == NULL )
     {
-        g_warning("Couldn’t escape amp: %s", error->message);
+        g_warning("Couldn't escape amp: %s", error->message);
         goto fallback;
     }
 
     escaped = g_regex_replace_literal(regex_markup, tmp = escaped, -1, 0, "&lt;" , 0, &error);
     if ( escaped == NULL )
     {
-        g_warning("Couldn’t escape markup: %s", error->message);
+        g_warning("Couldn't escape markup: %s", error->message);
         goto fallback;
     }
 

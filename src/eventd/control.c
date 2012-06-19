@@ -56,7 +56,7 @@ _eventd_service_private_connection_handler(GThreadedSocketService *socket_servic
     if ( ( line = g_data_input_stream_read_upto(input, "\0", 1, &size, NULL, &error) ) == NULL )
     {
         if ( error != NULL )
-            g_warning("Can’t read the command: %s", error->message);
+            g_warning("Couldn't read the command: %s", error->message);
         g_clear_error(&error);
     }
     else

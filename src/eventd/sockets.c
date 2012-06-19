@@ -86,7 +86,7 @@ _eventd_sockets_get_inet_socket(EventdSockets *sockets, GInetAddress *inet_addre
         address = g_socket_get_local_address(socket_->data, &error);
         if ( address == NULL )
         {
-            g_warning("Couldn’t get socket local address: %s", error->message);
+            g_warning("Couldn't get socket local address: %s", error->message);
             continue;
         }
 
@@ -163,7 +163,7 @@ eventd_sockets_get_inet_sockets(EventdSockets *sockets, const gchar *address, gu
         inet_addresses = g_resolver_lookup_by_name(resolver, address, NULL, &error);
         if ( inet_addresses == NULL )
         {
-            g_warning("Couldn’t resolve '%s' to an address: %s", address, error->message);
+            g_warning("Couldn't resolve '%s' to an address: %s", address, error->message);
             g_clear_error(&error);
             return NULL;
         }
@@ -206,7 +206,7 @@ eventd_sockets_get_unix_socket(EventdSockets *sockets, const gchar *path, gboole
         address = g_socket_get_local_address(socket_->data, &error);
         if ( address == NULL )
         {
-            g_warning("Couldn’t get socket local address: %s", error->message);
+            g_warning("Couldn't get socket local address: %s", error->message);
             g_clear_error(&error);
             continue;
         }

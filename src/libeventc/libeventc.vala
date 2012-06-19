@@ -139,7 +139,7 @@ namespace Eventc
             {
                 this.address = new GLib.NetworkAddress(this._host, ( this._port > 0 ) ? ( this._port ) : ( Eventd.Config.DEFAULT_BIND_PORT ));
                 if ( address == null )
-                    throw new EventcError.HOSTNAME("Couldn’t resolve the hostname");
+                    throw new EventcError.HOSTNAME("Couldn't resolve the hostname");
             }
         }
 
@@ -427,7 +427,7 @@ namespace Eventc
             catch ( GLib.Error e )
             {
                 this.handshake_passed = false;
-                throw new EventcError.SEND("Couldn’t send message \"%s\": %s", msg, e.message);
+                throw new EventcError.SEND("Couldn't send message \"%s\": %s", msg, e.message);
             }
         }
 

@@ -261,7 +261,7 @@ _event_evp_event_answered(EventdEvent *event, const gchar *answer, gpointer user
     GError *error = NULL;
     if ( ! g_data_output_stream_put_string(client->output, message, client->cancellable, &error) )
     {
-        g_warning("Couldn’t send ANSWERED message: %s", error->message);
+        g_warning("Couldn't send ANSWERED message: %s", error->message);
         g_clear_error(&error);
     }
     g_free(message);
@@ -301,7 +301,7 @@ _event_evp_event_ended(EventdEvent *event, EventdEventEndReason reason, gpointer
     GError *error = NULL;
     if ( ! g_data_output_stream_put_string(client->output, line, client->cancellable, &error) )
     {
-        g_warning("Couldn’t send ENDED message: %s", error->message);
+        g_warning("Couldn't send ENDED message: %s", error->message);
         g_clear_error(&error);
     }
     g_free(line);

@@ -162,7 +162,7 @@ eventd_sndfile_pulseaudio_init()
     context->context = pa_context_new(pa_glib_mainloop_get_api(context->pa_loop), PACKAGE_NAME " sndfile plugin");
     if ( context->context == NULL )
     {
-        g_warning("Couldn’t open sound system");
+        g_warning("Couldn't open sound system");
         pa_glib_mainloop_free(context->pa_loop);
         g_free(context);
         return NULL;

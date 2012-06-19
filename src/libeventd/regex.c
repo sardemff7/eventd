@@ -40,7 +40,7 @@ libeventd_regex_init()
 
     regex_event_data = g_regex_new("\\$([\\w-]+)", G_REGEX_OPTIMIZE, 0, &error);
     if ( ! regex_event_data )
-        g_warning("Can’t create $event-data regex: %s", error->message);
+        g_warning("Couldn't create $event-data regex: %s", error->message);
     g_clear_error(&error);
 }
 
@@ -107,7 +107,7 @@ libeventd_regex_replace_event_data(const gchar *target, EventdEvent *event, Libe
     if ( r == NULL )
     {
         r = g_strdup(target);
-        g_warning("Can’t replace event data: %s", error->message);
+        g_warning("Couldn't replace event data: %s", error->message);
     }
     g_clear_error(&error);
 

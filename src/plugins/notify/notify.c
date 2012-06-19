@@ -84,7 +84,7 @@ _eventd_libnotify_init()
 
     if ( ! notify_is_initted() )
     {
-        g_warning("Couldn’t initialize notify system");
+        g_warning("Couldn't initialize notify system");
         return NULL;
     }
 

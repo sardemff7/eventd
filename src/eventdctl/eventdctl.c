@@ -137,7 +137,7 @@ _eventd_eventdctl_send_command(GIOStream *connection, const gchar *command)
 
     if ( ! g_output_stream_write_all(g_io_stream_get_output_stream(connection), command, strlen(command) + 1, NULL, NULL, &error) )
     {
-        g_warning("Couldn’t send command '%s'", command);
+        g_warning("Couldn't send command '%s'", command);
         g_clear_error(&error);
         retval = 1;
     }
@@ -168,7 +168,7 @@ _eventd_eventdctl_process_command(const gchar *private_socket, gboolean autospaw
         g_clear_error(&error);
         if ( ! _eventd_eventdctl_start_eventd(argc-1, argv+1, &error) )
         {
-            g_warning("Couldn’t start eventd: %s", error->message);
+            g_warning("Couldn't start eventd: %s", error->message);
             return 3;
         }
         connection = _eventd_eventdctl_get_connection(private_socket, &error);
@@ -188,7 +188,7 @@ _eventd_eventdctl_process_command(const gchar *private_socket, gboolean autospaw
         }
         if ( ! _eventd_eventdctl_start_eventd(a_argc, a_argv, &error) )
         {
-            g_warning("Couldn’t start eventd: %s", error->message);
+            g_warning("Couldn't start eventd: %s", error->message);
             return 3;
         }
         connection = _eventd_eventdctl_get_connection(private_socket, &error);
@@ -197,7 +197,7 @@ _eventd_eventdctl_process_command(const gchar *private_socket, gboolean autospaw
     if ( connection == NULL )
     {
         if ( error != NULL )
-            g_warning("Couldn’t connect to eventd: %s", error->message);
+            g_warning("Couldn't connect to eventd: %s", error->message);
         return 1;
     }
 
