@@ -18,6 +18,8 @@ pkgconfig_DATA =
 dist_vapi_DATA =
 dist_pkgdata_DATA =
 systemduserunit_DATA =
+man1_MANS =
+man5_MANS =
 
 EXTRA_DIST =
 CLEANFILES =
@@ -32,6 +34,10 @@ AM_VALAFLAGS += \
 	--vapidir $(srcdir)/vapi/ \
 	--vapidir $(builddir)/vapi/ \
 	--pkg config
+
+AM_XSLTPROCFLAGS += \
+	--path "$(srcdir)/man/" \
+	--path "$(builddir)/man/"
 
 EXTRA_DIST += \
 	vapi/glib-local-2.0.vapi \
@@ -64,6 +70,7 @@ if ENABLE_TESTS
 include tests/tests.mk
 endif
 include data/units/units.mk
+include man/man.mk
 
 
 #

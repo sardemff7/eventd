@@ -17,6 +17,10 @@
 /eventdctl
 /eventc
 
+/man/*.1
+/man/*.5
+/man/config.dtd
+
 *.test
 /tests/integration/*.h
 /tests/integration/*.vapi

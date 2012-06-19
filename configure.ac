@@ -18,6 +18,7 @@ AC_PROG_MKDIR_P
 AC_DISABLE_STATIC
 LT_INIT
 PKG_PROG_PKG_CONFIG
+AC_PATH_PROG([XSLTPROC], [xsltproc])
 
 GETTEXT_PACKAGE=$PACKAGE_NAME
 AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE], ["$GETTEXT_PACKAGE"], [Gettext Package])
@@ -58,6 +59,7 @@ AM_CFLAGS="-Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers"
 AM_LDFLAGS="-no-undefined -Wl,--no-undefined"
 AM_VALA_CFLAGS="-Wno-unused-variable -Wno-unused-function -Wno-unused-but-set-variable"
 AM_VALAFLAGS=""
+AM_XSLTPROCFLAGS="--nonet --stringparam man.output.quietly 1 --stringparam funcsynopsis.style ansi"
 
 
 if test -d .git; then
@@ -208,6 +210,7 @@ AC_SUBST(AM_CFLAGS)
 AC_SUBST(AM_LDFLAGS)
 AC_SUBST(AM_VALA_CFLAGS)
 AC_SUBST(AM_VALAFLAGS)
+AC_SUBST(AM_XSLTPROCFLAGS)
 
 AM_SUBST_NOTMAKE(LIBS)
 AC_SUBST(shrext_cmds)
