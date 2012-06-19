@@ -472,7 +472,7 @@ _eventd_evp_init(EventdCoreContext *core, EventdCoreInterface *core_interface)
 
     service->max_clients = -1;
 
-    service->avahi_name = g_strdup(PACKAGE_NAME);
+    service->avahi_name = g_strdup_printf(PACKAGE_NAME " %s", g_get_host_name());
 
     service->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 
