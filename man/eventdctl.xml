@@ -1,0 +1,182 @@
+<?xml version='1.0' ?>
+<!DOCTYPE config SYSTEM "config.dtd">
+
+<!--
+  eventd - Small daemon to act on remote or local events
+
+  Copyright © 2011-2012 Quentin "Sardem FF7" Glidic
+
+  This file is part of eventd.
+
+  eventd is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  eventd is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with eventd. If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<refentry id="eventdctl">
+    <refentryinfo>
+        <title>&PACKAGE_NAME; Manual</title>
+        <productname>&PACKAGE_NAME;</productname>
+        <productnumber>&PACKAGE_VERSION;</productnumber>
+
+        <authorgroup>
+            <author>
+                <contrib>Developer</contrib>
+                <firstname>Quentin</firstname>
+                <surname>Glidic</surname>
+                <email>sardemff7@eventd.org</email>
+            </author>
+        </authorgroup>
+    </refentryinfo>
+
+    <refmeta>
+        <refentrytitle>eventdctl</refentrytitle>
+        <manvolnum>1</manvolnum>
+    </refmeta>
+
+    <refnamediv>
+        <refname>eventdctl</refname>
+        <refpurpose>control utility for eventd</refpurpose>
+    </refnamediv>
+
+    <refsynopsisdiv>
+        <cmdsynopsis>
+            <command>eventdctl</command>
+            <arg choice="opt" rep="repeat">OPTIONS</arg>
+            <arg choice="req"><replaceable class="parameter">command</replaceable></arg>
+            <arg choice="opt" rep="repeat"><replaceable class="option">command arguments</replaceable></arg>
+        </cmdsynopsis>
+    </refsynopsisdiv>
+
+    <refsect1>
+        <title>Description</title>
+
+        <para>
+            <command>eventdctl</command> is the control utility for <citerefentry><refentrytitle>eventd</refentrytitle><manvolnum>1</manvolnum></citerefentry>.
+        </para>
+    </refsect1>
+
+    <refsect1>
+        <title>Options</title>
+        <variablelist>
+            <varlistentry>
+                <term><option>-s</option></term>
+                <term><option>--socket=<replaceable class="parameter">socket</replaceable></option></term>
+                <listitem>
+                    <para>eventd control socket</para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><option>-a</option></term>
+                <term><option>--auto-spawn</option></term>
+                <listitem>
+                    <para>Spawn eventd if needed</para>
+                    <para>It will pass the <option>--private-socket</option> option to eventd with the socket specified to the <command>eventdctl</command> <option>--socket</option> option.</para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><option>-V</option></term>
+                <term><option>--version</option></term>
+                <listitem>
+                    <para>Print version</para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><option>-h</option></term>
+                <term><option>--help</option></term>
+                <listitem>
+                    <para>Show help options</para>
+                </listitem>
+            </varlistentry>
+        </variablelist>
+    </refsect1>
+
+    <refsect1>
+        <title>Commands</title>
+        <variablelist>
+            <varlistentry>
+                <term><parameter class="command">start</parameter></term>
+                <listitem>
+                    <para>Start eventd if needed.</para>
+                    <para>It can take the option <option>--argv0</option> which means that the first argument is the command to call. If not specified, <command>eventdctl</command> will search for <command>eventd</command> in <varname>PATH</varname>.</para>
+                    <para>All the remaining arguments are passed to <command>eventd</command>.</para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><parameter class="command">quit</parameter></term>
+                <listitem>
+                    <para>Quit eventd.</para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><parameter class="command">reload</parameter></term>
+                <listitem>
+                    <para>Make eventd reload its configuration.</para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><parameter class="command">notification-daemon</parameter> <parameter><replaceable class="option">target</replaceable></parameter></term>
+                <listitem>
+                    <para>Tell the nd plugin to link to the specified target.</para>
+                    <para><replaceable class="option">target</replaceable> may be any target recognized by a nd backend. Examples: <literal>:0</literal> (XCB backend) or <filename>/dev/tty1</filename> (Linux framebuffer backend)</para>
+                </listitem>
+            </varlistentry>
+        </variablelist>
+    </refsect1>
+
+    <refsect1>
+            <title>Exit status</title>
+
+            <variablelist>
+                <varlistentry>
+                    <term><literal>0</literal></term>
+                    <listitem>
+                        <para>The command was successful. With the <parameter class="command">start</parameter> command, it will return <literal>0</literal> if eventd is already started.</para>
+                    </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                    <term><literal>1</literal></term>
+                    <listitem>
+                        <para>Impossible to connect to eventd. May be returned if no eventd is started or if our started eventd quitted early.</para>
+                    </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                    <term><literal>2</literal></term>
+                    <listitem>
+                        <para>Command error. No command passed, unknown command or missing command argument.</para>
+                    </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                    <term><literal>3</literal></term>
+                    <listitem>
+                        <para>eventd invocation faild. Either with the <parameter class="command">start</parameter> command, or the <option>--auto-spawn</option> option.</para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+    </refsect1>
+
+    <refsect1>
+        <title>See Also</title>
+        <para>
+            <citerefentry><refentrytitle>eventd</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+        </para>
+    </refsect1>
+</refentry>

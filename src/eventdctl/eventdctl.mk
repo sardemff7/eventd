@@ -2,6 +2,9 @@
 bin_PROGRAMS += \
 	eventdctl
 
+man1_MANS += \
+	man/eventdctl.1
+
 eventdctl_SOURCES = \
 	src/eventdctl/eventdctl.c
 
