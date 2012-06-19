@@ -375,11 +375,6 @@ eventd_config_parse(EventdConfig *config)
 
     config_files = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_key_file_free);
 
-    const gchar *env_config_dir;
-    env_config_dir = g_getenv("EVENTD_CONFIG_DIR");
-    if ( env_config_dir != NULL )
-        _eventd_config_load_dir(config, config_files, env_config_dir);
-
     _eventd_config_load_dir(config, config_files, DATADIR G_DIR_SEPARATOR_S PACKAGE_NAME);
     _eventd_config_load_dir(config, config_files, SYSCONFDIR G_DIR_SEPARATOR_S PACKAGE_NAME);
 
@@ -387,6 +382,11 @@ eventd_config_parse(EventdConfig *config)
     user_config_dir = g_build_filename(g_get_user_config_dir(), PACKAGE_NAME, NULL);
     _eventd_config_load_dir(config, config_files, user_config_dir);
     g_free(user_config_dir);
+
+    const gchar *env_config_dir;
+    env_config_dir = g_getenv("EVENTD_CONFIG_DIR");
+    if ( env_config_dir != NULL )
+        _eventd_config_load_dir(config, config_files, env_config_dir);
 
     GHashTableIter iter;
     gchar *id;
