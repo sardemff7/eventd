@@ -1,0 +1,232 @@
+<?xml version='1.0' ?>
+<!DOCTYPE config SYSTEM "config.dtd">
+
+<!--
+  eventd - Small daemon to act on remote or local events
+
+  Copyright © 2011-2012 Quentin "Sardem FF7" Glidic
+
+  This file is part of eventd.
+
+  eventd is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  eventd is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with eventd. If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<refentry id="eventd">
+    <refentryinfo>
+        <title>&PACKAGE_NAME; Manual</title>
+        <productname>&PACKAGE_NAME;</productname>
+        <productnumber>&PACKAGE_VERSION;</productnumber>
+
+        <authorgroup>
+            <author>
+                <contrib>Developer</contrib>
+                <firstname>Quentin</firstname>
+                <surname>Glidic</surname>
+                <email>sardemff7@eventd.org</email>
+            </author>
+        </authorgroup>
+    </refentryinfo>
+
+    <refmeta>
+        <refentrytitle>eventd</refentrytitle>
+        <manvolnum>1</manvolnum>
+    </refmeta>
+
+    <refnamediv>
+        <refname>eventd</refname>
+        <refpurpose>small daemon to act on remote or local events</refpurpose>
+    </refnamediv>
+
+    <refsynopsisdiv>
+        <cmdsynopsis>
+            <command>eventd</command>
+            <arg choice="opt" rep="repeat">OPTIONS</arg>
+        </cmdsynopsis>
+    </refsynopsisdiv>
+
+    <refsect1>
+        <title>Description</title>
+
+        <para>
+            eventd is a simple daemon to track remote or local events and do actions the user wants to.
+        </para>
+        <para>
+            eventd is composed by a core, the daemon itself, and various plugins.
+            Plugins may be event collecting plugins or action plugins.
+        </para>
+        <para>Two official event collecting plugins are distributed with eventd:</para>
+        <variablelist>
+            <varlistentry>
+                <term><command>evp</command> (see <citerefentry><refentrytitle>eventd-evp</refentrytitle><manvolnum>1</manvolnum></citerefentry>)</term>
+                <listitem><para>which implements our own EVENT protocol</para></listitem>
+            </varlistentry>
+            <varlistentry>
+                <term><command>dbus</command> (see <citerefentry><refentrytitle>eventd-dbus</refentrytitle><manvolnum>1</manvolnum></citerefentry>)</term>
+                <listitem><para>which implements the <ulink url="http://people.gnome.org/~mccann/docs/notification-spec/notification-spec-latest.html">Desktop Notifications Specification</ulink></para></listitem>
+            </varlistentry>
+        </variablelist>
+        <para>Five official action plugins are distributed with eventd:</para>
+        <variablelist>
+            <varlistentry>
+                <term><command>relay</command> (see <citerefentry><refentrytitle>eventd-relay.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
+                <listitem><para>a relay plugin, to relay events to remote eventd</para></listitem>
+            </varlistentry>
+            <varlistentry>
+                <term><command>nd</command> (see <citerefentry><refentrytitle>eventd-nd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry> and <citerefentry><refentrytitle>eventd-nd.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
+                <listitem><para>a notification plugin, aka "bubble" plugin</para></listitem>
+            </varlistentry>
+            <varlistentry>
+                <term><command>notify</command> (see <citerefentry><refentrytitle>eventd-notify.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
+                <listitem><para>a libnotify client plugin</para></listitem>
+            </varlistentry>
+            <varlistentry>
+                <term><command>sndfile</command> (see <citerefentry><refentrytitle>eventd-sndfile.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
+                <listitem><para>a sound file playing plugin</para></listitem>
+            </varlistentry>
+            <varlistentry>
+                <term><command>espeak</command> (see <citerefentry><refentrytitle>eventd-espeak.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
+                <listitem><para>a Text-to-Speech plugin</para></listitem>
+            </varlistentry>
+        </variablelist>
+    </refsect1>
+
+    <refsect1>
+        <title>Options</title>
+
+        <variablelist>
+            <varlistentry>
+                <term><option>-t</option></term>
+                <term><option>--take-over</option></term>
+                <listitem>
+                    <para>Take over socket</para>
+                    <para>If possible, will take the sockets from an already running eventd.</para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><option>-i</option></term>
+                <term><option>--private-socket=<replaceable class="parameter">socket</replaceable></option></term>
+                <listitem>
+                    <para>Socket to listen for internal control</para>
+                    <para>See <citerefentry><refentrytitle>eventdctl</refentrytitle><manvolnum>1</manvolnum></citerefentry></para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><option>-V</option></term>
+                <term><option>--version</option></term>
+                <listitem>
+                    <para>Print version</para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><option>-h</option></term>
+                <term><option>--help</option></term>
+                <listitem>
+                    <para>Show help options</para>
+                </listitem>
+            </varlistentry>
+        </variablelist>
+    </refsect1>
+
+    <refsect1>
+        <title>Examples</title>
+
+        <example>
+            <title>Drop-in replacement for a notification daemon</title>
+
+            <para>
+                With its <command>dbus</command> and <command>nd</command> plugins, eventd can be a drop-in replacement for a notification daemon.
+            </para>
+
+            <para>
+                To use this feature, just add the following line to your <filename>~/.xsession</filename> or equivalent file:
+            </para>
+            <programlisting>eventdctl --auto-spawn notification-daemon ${DISPLAY}</programlisting>
+            <para>
+                See <citerefentry><refentrytitle>eventdctl</refentrytitle><manvolnum>1</manvolnum></citerefentry> for <command>eventdctl</command> call precisions.
+            </para>
+        </example>
+    </refsect1>
+
+    <refsect1>
+        <title>Environment</title>
+
+        <variablelist>
+            <varlistentry>
+                <term><varname>$EVENTD_NO_PLUGINS</varname></term>
+                <listitem>
+                    <para>If this variable is set, eventd will not load any plugin.</para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><varname>$EVENTD_PLUGINS_DIR</varname></term>
+                <listitem>
+                    <para>Additional directory to browse for plugins.</para>
+                    <para>This directory is browsed first, before standard directories.</para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><varname>$EVENTD_PLUGINS_WHITELIST</varname></term>
+                <listitem>
+                    <para>Comma-separated list of filename prefixes</para>
+                    <para>If a plugin does not match (by filename) any prefix, it will not be loaded.</para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><varname>$EVENTD_PLUGINS_BLACKLIST</varname></term>
+                <listitem>
+                    <para>Comma-separated list of filename prefixes</para>
+                    <para>If a plugin matches (by filename) any prefix, it will not be loaded.</para>
+                    <para>This blacklist is tested after the whitelist.</para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><varname>$EVENTD_CONFIG_DIR</varname></term>
+                <listitem>
+                    <para>Additional directory to browse for configuration files.</para>
+                    <para>This directory is browsed last, after standard directories, and override their files.</para>
+                </listitem>
+            </varlistentry>
+        </variablelist>
+    </refsect1>
+
+    <refsect1>
+        <title>Sockets</title>
+
+        <variablelist>
+            <varlistentry>
+                <term><filename><varname>$XDG_RUNTIME_DIR</varname>/&PACKAGE_NAME;/private</filename></term>
+                <listitem>
+                    <para>Used internally by <citerefentry><refentrytitle>eventdctl</refentrytitle><manvolnum>1</manvolnum></citerefentry> to communicate with eventd. This location can be overridden by the <option>--private-socket</option> option.</para>
+                    <para>If <varname>$XDG_RUNTIME_DIR</varname> is not set, we use <varname>$XDG_CACHE_HOME</varname>, with a fallback to <filename>~/.cache</filename>.</para>
+                </listitem>
+            </varlistentry>
+        </variablelist>
+    </refsect1>
+
+    <refsect1>
+        <title>See Also</title>
+        <para>
+            <citerefentry><refentrytitle>eventdctl</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+            <citerefentry><refentrytitle>eventd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+            <citerefentry><refentrytitle>eventd.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+        </para>
+    </refsect1>
+</refentry>

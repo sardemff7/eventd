@@ -1,0 +1,168 @@
+<?xml version='1.0' ?>
+<!DOCTYPE config SYSTEM "config.dtd">
+
+<!--
+  eventd - Small daemon to act on remote or local events
+
+  Copyright © 2011-2012 Quentin "Sardem FF7" Glidic
+
+  This file is part of eventd.
+
+  eventd is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  eventd is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with eventd. If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<refentry id="eventd.event">
+    <refentryinfo>
+        <title>&PACKAGE_NAME; Manual</title>
+        <productname>&PACKAGE_NAME;</productname>
+        <productnumber>&PACKAGE_VERSION;</productnumber>
+
+        <authorgroup>
+            <author>
+                <contrib>Developer</contrib>
+                <firstname>Quentin</firstname>
+                <surname>Glidic</surname>
+                <email>sardemff7@eventd.org</email>
+            </author>
+        </authorgroup>
+    </refentryinfo>
+
+    <refmeta>
+        <refentrytitle>eventd.event</refentrytitle>
+        <manvolnum>5</manvolnum>
+    </refmeta>
+
+    <refnamediv>
+        <refname>eventd.event</refname>
+        <refpurpose>event configuration files</refpurpose>
+    </refnamediv>
+
+    <refsynopsisdiv>
+        <para>The event files are searched in following order:</para>
+        <orderedlist>
+            <listitem><para><filename>&sysconfdir;/&PACKAGE_NAME;/<replaceable>id</replaceable>.event</filename></para></listitem>
+            <listitem><para><filename>&datadir;/&PACKAGE_NAME;/<replaceable>id</replaceable>.event</filename></para></listitem>
+            <listitem><para><filename><varname>$XDG_CONFIG_HOME</varname>/&PACKAGE_NAME;/<replaceable>id</replaceable>.event</filename> (fallback to <filename>~/.config/&PACKAGE_NAME;/<replaceable>id</replaceable>.event</filename>)</para></listitem>
+            <listitem><para><filename><varname>$EVENTD_CONFIG_DIR</varname>/<replaceable>id</replaceable>.event</filename> (see <citerefentry><refentrytitle>eventd</refentrytitle><manvolnum>1</manvolnum></citerefentry>)</para></listitem>
+        </orderedlist>
+        <para>
+            If the same file is found in several places, the last one is used.
+        </para>
+    </refsynopsisdiv>
+
+    <refsect1>
+        <title>Description</title>
+
+        <para>
+            These files are used to configure eventd reaction on a per-event basis.
+            Each file is named using the scheme <filename><replaceable>id</replaceable>.event</filename>.
+            The syntax of these files is described in the <ulink url="http://standards.freedesktop.org/desktop-entry-spec/latest/">XDG Desktop Entry Specification</ulink>.
+        </para>
+        <para>This configuration mechanism is seperated in two steps:</para>
+        <orderedlist>
+            <listitem><para>Define a set of <replaceable>id</replaceable>s with matching and configuration information</para></listitem>
+            <listitem><para>When an event is dispatched, get the best matching <replaceable>id</replaceable> to associate its configuration to the event</para></listitem>
+        </orderedlist>
+        <para>
+            Plugins may parse their own section(s) in this file for their event configuration.
+        </para>
+    </refsect1>
+
+    <refsect1>
+        <title>Sections</title>
+
+        <refsect2>
+            <title>Section <varname>[Event]</varname></title>
+
+            <para>
+                This is the main event configuration section.
+                It contains the core related settings.
+            </para>
+
+            <refsect3>
+                <title>Configuration file related key</title>
+
+                <variablelist>
+                    <varlistentry>
+                        <term>
+                            <varname>Extends=</varname>
+                            (an <type>event id</type>)
+                        </term>
+                        <listitem>
+                            <para>Prepend the configuration of the specified event to this event.</para>
+                        </listitem>
+                    </varlistentry>
+                </variablelist>
+            </refsect3>
+
+            <refsect3>
+                <title>Matching keys</title>
+
+                <variablelist>
+                    <varlistentry>
+                        <term>
+                            <varname>Category=</varname>
+                        </term>
+                        <listitem>
+                            <para>The event category name.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                        <term>
+                            <varname>Name=</varname>
+                        </term>
+                        <listitem>
+                            <para>The event name.</para>
+                        </listitem>
+                    </varlistentry>
+                </variablelist>
+            </refsect3>
+
+            <refsect3>
+                <title>Event configuration keys</title>
+
+                <variablelist>
+                    <varlistentry>
+                        <term>
+                            <varname>Disable=</varname>
+                            (<type>boolean</type>)
+                        </term>
+                        <listitem>
+                            <para>If true, the event is not dispatched.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                        <term>
+                            <varname>Timeout=</varname>
+                            (in <type>milliseconds</type>, defaults to global setting, see <citerefentry><refentrytitle>eventd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>)
+                        </term>
+                        <listitem>
+                            <para>Configures the timeout of the event.</para>
+                        </listitem>
+                    </varlistentry>
+                </variablelist>
+            </refsect3>
+        </refsect2>
+    </refsect1>
+
+    <refsect1>
+        <title>See Also</title>
+        <para>
+            <citerefentry><refentrytitle>eventd</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+            <citerefentry><refentrytitle>eventd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+        </para>
+    </refsect1>
+</refentry>
