@@ -1,7 +1,6 @@
 AM_DISTCHECK_CONFIGURE_FLAGS = \
 	--with-systemduserunitdir="$$dc_install_base/$(systemduserunitdir)" \
-	--disable-debug \
-	--disable-git-version
+	--disable-debug
 
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 AM_MAKEFLAGS = --no-print-directory
