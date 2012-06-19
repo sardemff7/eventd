@@ -49,15 +49,9 @@ eventd_LDADD = \
 
 if ENABLE_SYSTEMD
 
-eventd_SYSTEMDUNITS = \
-	data/units/eventd-evp.socket.in \
-	data/units/eventd-control.socket.in \
-	data/units/eventd.service.in
-
-EXTRA_DIST += \
-	$(eventd_SYSTEMDUNITS)
-
 systemduserunit_DATA += \
-	$(eventd_SYSTEMDUNITS:.in=)
+	data/units/eventd-evp.socket \
+	data/units/eventd-control.socket \
+	data/units/eventd.service
 
 endif

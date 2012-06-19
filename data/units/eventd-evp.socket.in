@@ -4,7 +4,7 @@ Description=eventd EvP Sockets
 [Socket]
 Service=eventd.service
 ListenStream=%t/@PACKAGE_NAME@/@UNIX_SOCKET@
-ListenStream=7100
+ListenStream=@DEFAULT_BIND_PORT@
 
 [Install]
 WantedBy=sockets.target
