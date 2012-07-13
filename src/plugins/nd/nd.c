@@ -67,7 +67,7 @@ typedef struct {
 } EventdNdEvent;
 
 static void
-_eventd_nd_backends_load_dir(EventdPluginContext *context, const gchar *backends_dir_name)
+_eventd_nd_backends_load_dir(EventdPluginContext *context, const gchar *backends_dir_name, gchar **whitelist, gchar **blacklist)
 {
     GError *error;
     GDir *plugins_dir;
@@ -92,6 +92,41 @@ _eventd_nd_backends_load_dir(EventdPluginContext *context, const gchar *backends
         EventdNdBackend *backend;
         EventdNdBackendGetInfoFunc get_info;
         GModule *module;
+
+        if ( ! g_str_has_suffix(file, G_MODULE_SUFFIX) )
+            continue;
+
+        if ( whitelist != NULL )
+        {
+            gboolean whitelisted = FALSE;
+            gchar **wname;
+            for ( wname = whitelist ; *wname != NULL ; ++wname )
+            {
+                if ( g_str_has_prefix(file, *wname) )
+                {
+                    whitelisted = TRUE;
+                    break;
+                }
+            }
+            if ( ! whitelisted )
+                continue;
+        }
+
+        if ( blacklist != NULL )
+        {
+            gboolean blacklisted = FALSE;
+            gchar **bname;
+            for ( bname = blacklist ; *bname != NULL ; ++bname )
+            {
+                if ( g_str_has_prefix(file, *bname) )
+                {
+                    blacklisted = TRUE;
+                    break;
+                }
+            }
+            if ( blacklisted )
+                continue;
+        }
 
         full_filename = g_build_filename(backends_dir_name, file, NULL);
 
@@ -130,7 +165,11 @@ _eventd_nd_backends_load_dir(EventdPluginContext *context, const gchar *backends
 static void
 _eventd_nd_backend_load(EventdPluginContext *context)
 {
+    const gchar *env_whitelist;
+    const gchar *env_blacklist;
     const gchar *env_base_dir;
+    gchar **whitelist = NULL;
+    gchar **blacklist = NULL;
     gchar *plugins_dir;
 
     if ( ! g_module_supported() )
@@ -138,6 +177,14 @@ _eventd_nd_backend_load(EventdPluginContext *context)
         g_warning("Couldn't load plugins: %s", g_module_error());
         return;
     }
+
+    env_whitelist = g_getenv("EVENTD_NOTIFICATION_BACKENDS_WHITELIST");
+    if ( env_whitelist != NULL )
+        whitelist = g_strsplit(env_whitelist, ",", 0);
+
+    env_blacklist = g_getenv("EVENTD_NOTIFICATION_BACKENDS_BLACKLIST");
+    if ( env_blacklist != NULL )
+        blacklist = g_strsplit(env_blacklist, ",", 0);
 
     env_base_dir = g_getenv("EVENTD_NOTIFICATION_BACKENDS_DIR");
     if ( env_base_dir != NULL )
@@ -148,23 +195,23 @@ _eventd_nd_backend_load(EventdPluginContext *context)
             plugins_dir = g_build_filename(env_base_dir,  NULL);
 
         if ( g_file_test(plugins_dir, G_FILE_TEST_IS_DIR) )
-            _eventd_nd_backends_load_dir(context, plugins_dir);
+            _eventd_nd_backends_load_dir(context, plugins_dir, whitelist, blacklist);
         g_free(plugins_dir);
     }
 
     plugins_dir = g_build_filename(g_get_user_data_dir(), PACKAGE_NAME, "plugins", "nd", NULL);
     if ( g_file_test(plugins_dir, G_FILE_TEST_IS_DIR) )
-        _eventd_nd_backends_load_dir(context, plugins_dir);
+        _eventd_nd_backends_load_dir(context, plugins_dir, whitelist, blacklist);
     g_free(plugins_dir);
 
     plugins_dir = g_build_filename(DATADIR, PACKAGE_NAME, "plugins", "nd", NULL);
     if ( g_file_test(plugins_dir, G_FILE_TEST_IS_DIR) )
-        _eventd_nd_backends_load_dir(context, plugins_dir);
+        _eventd_nd_backends_load_dir(context, plugins_dir, whitelist, blacklist);
     g_free(plugins_dir);
 
     plugins_dir = g_build_filename(LIBDIR, PACKAGE_NAME, "plugins", "nd", NULL);
     if ( g_file_test(plugins_dir, G_FILE_TEST_IS_DIR) )
-        _eventd_nd_backends_load_dir(context, plugins_dir);
+        _eventd_nd_backends_load_dir(context, plugins_dir, whitelist, blacklist);
     g_free(plugins_dir);
 }
 
