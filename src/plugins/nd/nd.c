@@ -43,7 +43,7 @@ struct _EventdPluginContext {
     gint max_width;
     gint max_height;
     EventdNdStyle *style;
-    GList *backends;
+    GHashTable *backends;
     GList *displays;
     GHashTable *surfaces;
 };
@@ -90,6 +90,7 @@ _eventd_nd_backends_load_dir(EventdPluginContext *context, const gchar *backends
     {
         gchar *full_filename;
         EventdNdBackend *backend;
+        const gchar **id;
         EventdNdBackendGetInfoFunc get_info;
         GModule *module;
 
@@ -145,11 +146,28 @@ _eventd_nd_backends_load_dir(EventdPluginContext *context, const gchar *backends
         }
         g_free(full_filename);
 
+        if ( ! g_module_symbol(module, "eventd_nd_backend_id", (void **)&id) )
+            continue;
+
+        if ( id == NULL )
+        {
+            g_warning("Backend '%s' must define eventd_nd_backend_id", file);
+            continue;
+        }
+
+        if ( g_hash_table_lookup(context->backends, *id) != NULL )
+        {
+#if DEBUG
+            g_debug("Backend '%s' with id '%s' already loaded", file, *id);
+#endif /* ! DEBUG */
+            continue;
+        }
+
         if ( ! g_module_symbol(module, "eventd_nd_backend_get_info", (void **)&get_info) )
             continue;
 
 #if DEBUG
-        g_debug("Loading backend '%s'", file);
+        g_debug("Loading backend '%s': %s", file, *id);
 #endif /* ! DEBUG */
 
         backend = g_new0(EventdNdBackend, 1);
@@ -158,7 +176,7 @@ _eventd_nd_backends_load_dir(EventdPluginContext *context, const gchar *backends
 
         backend->context = backend->init(context, &context->interface);
 
-        context->backends = g_list_prepend(context->backends, backend);
+        g_hash_table_insert(context->backends, g_strdup(*id), backend);
     }
 }
 
@@ -381,6 +399,8 @@ _eventd_nd_init(EventdCoreContext *core, EventdCoreInterface *interface)
 
     context->interface.remove_display = _eventd_nd_backend_remove_display;
 
+    context->backends = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_nd_backend_free);
+
     _eventd_nd_backend_load(context);
 
     context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_nd_event_free);
@@ -409,7 +429,7 @@ _eventd_nd_uninit(EventdPluginContext *context)
 
     g_list_free_full(context->displays, _eventd_nd_backend_display_free);
 
-    g_list_free_full(context->backends, _eventd_nd_backend_free);
+    g_hash_table_unref(context->backends);
 
     g_free(context);
 }
@@ -419,15 +439,16 @@ _eventd_nd_control_command(EventdPluginContext *context, const gchar *command)
 {
     const gchar *target = command+20;
     EventdNdDisplay *display;
-    GList *backend_;
+    GHashTableIter iter;
+    const gchar *id;
+    EventdNdBackend *backend;
 
     if ( ! g_str_has_prefix(command, "notification-daemon ") )
         return;
 
-    for ( backend_ = context->backends ; backend_ != NULL ; backend_ = g_list_next(backend_) )
+    g_hash_table_iter_init(&iter, context->backends);
+    while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&backend) )
     {
-        EventdNdBackend *backend = backend_->data;
-
         if ( ! backend->display_test(backend->context, target) )
             continue;
 

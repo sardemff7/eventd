@@ -437,6 +437,7 @@ _eventd_nd_xcb_surface_hide(EventdNdSurface *surface)
     _eventd_nd_xcb_update_bubbles(display);
 }
 
+const gchar *eventd_nd_backend_id = "eventd-nd-xcb";
 void
 eventd_nd_backend_get_info(EventdNdBackend *backend)
 {

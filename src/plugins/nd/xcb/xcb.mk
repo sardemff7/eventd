@@ -15,7 +15,7 @@ xcb_la_CFLAGS = \
 
 xcb_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
-	-avoid-version -module -export-symbols-regex eventd_nd_backend_get_info
+	-avoid-version -module -export-symbols-regex 'eventd_nd_backend_(id|get_info)'
 
 xcb_la_LIBADD = \
 	libeventd-event.la \

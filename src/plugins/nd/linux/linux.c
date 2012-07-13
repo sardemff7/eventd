@@ -310,6 +310,7 @@ _eventd_nd_linux_surface_hide(EventdNdSurface *self)
     g_free(self);
 }
 
+const gchar *eventd_nd_backend_id = "eventd-nd-linux";
 void
 eventd_nd_backend_get_info(EventdNdBackend *backend)
 {
