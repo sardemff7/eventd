@@ -57,7 +57,7 @@ _eventd_plugins_load_dir(EventdCoreContext *core, EventdCoreInterface *interface
         EventdPlugin *plugin;
         const gchar **id;
         EventdPluginGetInfoFunc get_info;
-        void *module;
+        GModule *module;
 
         if ( ! g_str_has_suffix(file, G_MODULE_SUFFIX) )
             continue;
@@ -132,7 +132,7 @@ _eventd_plugins_load_dir(EventdCoreContext *core, EventdCoreInterface *interface
             continue;
 
 #if DEBUG
-        g_debug("Loading plugin '%s'", file);
+        g_debug("Loading plugin '%s': %s", file, *id);
 #endif /* ! DEBUG */
 
         plugin = g_new0(EventdPlugin, 1);
