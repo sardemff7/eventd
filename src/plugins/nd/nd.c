@@ -81,7 +81,7 @@ _eventd_nd_backends_load_dir(EventdPluginContext *context, const gchar *backends
     plugins_dir = g_dir_open(backends_dir_name, 0, &error);
     if ( ! plugins_dir )
     {
-        g_warning("Couldn't read the plugins directory: %s", error->message);
+        g_warning("Couldn't read the backends directory: %s", error->message);
         g_clear_error(&error);
         return;
     }
@@ -90,7 +90,7 @@ _eventd_nd_backends_load_dir(EventdPluginContext *context, const gchar *backends
     {
         gchar *full_filename;
         EventdNdBackend *backend;
-        EventdNdBackendGetInfoFunc backend_get_info;
+        EventdNdBackendGetInfoFunc get_info;
         GModule *module;
 
         full_filename = g_build_filename(backends_dir_name, file, NULL);
@@ -110,16 +110,16 @@ _eventd_nd_backends_load_dir(EventdPluginContext *context, const gchar *backends
         }
         g_free(full_filename);
 
-        if ( ! g_module_symbol(module, "eventd_nd_backend_init", (void **)&backend_get_info) )
+        if ( ! g_module_symbol(module, "eventd_nd_backend_get_info", (void **)&get_info) )
             continue;
 
 #if DEBUG
-        g_debug("Loading plugin '%s'", file);
+        g_debug("Loading backend '%s'", file);
 #endif /* ! DEBUG */
 
         backend = g_new0(EventdNdBackend, 1);
         backend->module = module;
-        backend_get_info(backend);
+        get_info(backend);
 
         backend->context = backend->init(context, &context->interface);
 

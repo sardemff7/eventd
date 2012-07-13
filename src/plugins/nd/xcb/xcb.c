@@ -438,7 +438,7 @@ _eventd_nd_xcb_surface_hide(EventdNdSurface *surface)
 }
 
 void
-eventd_nd_backend_init(EventdNdBackend *backend)
+eventd_nd_backend_get_info(EventdNdBackend *backend)
 {
     backend->init = _eventd_nd_xcb_init;
     backend->uninit = _eventd_nd_xcb_uninit;
