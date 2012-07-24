@@ -1,4 +1,4 @@
-# XCP framebuffer backend
+# XCB backend
 ndbackends_LTLIBRARIES += \
 	xcb.la
 

@@ -162,9 +162,13 @@ if test x$enable_libnotify = xyes; then
 fi
 AM_CONDITIONAL(ENABLE_NOTIFY, [test x$enable_libnotify = xyes])
 
-# notification plugin
-AC_ARG_ENABLE(xcb, AS_HELP_STRING([--disable-xcb], [Disable xcb graphical backend]), enable_xcb=$enableval, enable_xcb=yes)
-AC_ARG_ENABLE(linux-framebuffer, AS_HELP_STRING([--disable-linux-framebuffer], [Disable linux framebuffer backend]), [], enable_linux_framebuffer=yes)
+# notification-daemon plugin
+AC_ARG_ENABLE(notification-daemon, AS_HELP_STRING([--disable-notification-daemon], [Disable notification-daemon plugin]), [], enable_notification_daemon=yes)
+AM_CONDITIONAL(ENABLE_NOTIFICATION_DAEMON, [test x$enable_notification_daemon = xyes])
+
+# nd backends
+AC_ARG_ENABLE(xcb, AS_HELP_STRING([--disable-xcb], [Disable XCB graphical backend]), [], enable_xcb=yes)
+AC_ARG_ENABLE(linux-framebuffer, AS_HELP_STRING([--disable-linux-framebuffer], [Disable Linux framebuffer backend]), [], enable_linux_framebuffer=yes)
 
 # Common
 if test x$enable_xcb = xyes -o x$enable_linux_framebuffer = xyes; then
@@ -172,7 +176,7 @@ if test x$enable_xcb = xyes -o x$enable_linux_framebuffer = xyes; then
     PKG_CHECK_MODULES(PANGO, [pango pangocairo])
     PKG_CHECK_MODULES(GDK_PIXBUF, [gdk-pixbuf-2.0])
 fi
-AM_CONDITIONAL(ENABLE_NOTIFICATION_DAEMON, [test x$enable_xcb = xyes -o x$enable_linux_framebuffer = xyes])
+AM_CONDITIONAL(ENABLE_CAIRO_HELPER, [test x$enable_xcb = xyes -o x$enable_linux_framebuffer = xyes])
 
 # XCB backend
 if test x$enable_xcb = xyes; then

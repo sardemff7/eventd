@@ -32,7 +32,9 @@ nd_la_LIBADD = \
 	$(GLIB_LIBS)
 
 include src/plugins/nd/helper/libeventd-nd.mk
+if ENABLE_CAIRO_HELPER
 include src/plugins/nd/cairo/libeventd-nd-cairo.mk
+endif
 
 ndbackendsdir = $(pluginsdir)/nd
 
