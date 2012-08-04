@@ -51,8 +51,8 @@
     <refsynopsisdiv>
         <para>The config files are parsed in following order (if found):</para>
         <orderedlist>
-            <listitem><para><filename>&sysconfdir;/&PACKAGE_NAME;/&PACKAGE_NAME;.conf</filename></para></listitem>
             <listitem><para><filename>&datadir;/&PACKAGE_NAME;/&PACKAGE_NAME;.conf</filename></para></listitem>
+            <listitem><para><filename>&sysconfdir;/&PACKAGE_NAME;/&PACKAGE_NAME;.conf</filename></para></listitem>
             <listitem><para><filename><varname>$XDG_CONFIG_HOME</varname>/&PACKAGE_NAME;/&PACKAGE_NAME;.conf</filename> (fallback to <filename>~/.config/&PACKAGE_NAME;/&PACKAGE_NAME;.conf</filename>)</para></listitem>
             <listitem><para><filename><varname>$EVENTD_CONFIG_DIR</varname>/&PACKAGE_NAME;.conf</filename> (see <citerefentry><refentrytitle>eventd</refentrytitle><manvolnum>1</manvolnum></citerefentry>)</para></listitem>
         </orderedlist>
