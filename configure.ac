@@ -227,3 +227,31 @@ AC_CONFIG_FILES([
     vapi/libeventc.deps
 ])
 AC_OUTPUT
+
+echo
+echo
+echo '    '${PACKAGE_NAME} ${PACKAGE_VERSION}
+echo
+echo '    'Core features:
+echo '        'Avahi support: $enable_avahi
+echo '        'systemd support: $enable_systemd
+echo '        'UNIX sockets support: $have_gio_unix
+echo
+echo '    'Event collecting plugins:
+echo '        'EVENT protocol: yes
+echo '        'org.freedesktop.Notifications interface: $enable_dbus
+echo
+echo '    'Action plugins:
+echo '        'relay: yes
+echo '        'Sound files playing through libsndfile: $enable_sndfile
+echo '        'Text-to-speech through eSpeak: $enable_espeak
+echo '        'libnotify proxy: $enable_libnotify
+echo '        'notification-daemon: $enable_notification_daemon
+echo '          'Backends:
+echo '            'XCB: $enable_xcb
+echo '            'Linux framebuffer: $enable_linux_framebuffer
+echo
+echo '    'Tests: $enable_tests
+echo '    'Debug mode: $enable_debug
+echo
+echo
