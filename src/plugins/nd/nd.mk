@@ -6,6 +6,10 @@ pkginclude_HEADERS += \
 	include/eventd-nd-backend.h
 
 nd_la_SOURCES = \
+	src/plugins/nd/cairo.c \
+	src/plugins/nd/cairo.h \
+	src/plugins/nd/style.c \
+	src/plugins/nd/style.h \
 	src/plugins/nd/nd.c
 
 nd_la_CFLAGS = \
@@ -15,6 +19,8 @@ nd_la_CFLAGS = \
 	-D LIBDIR=\"$(libdir)\" \
 	-D DATADIR=\"$(datadir)\" \
 	$(GDK_PIXBUF_CFLAGS) \
+	$(CAIRO_CFLAGS) \
+	$(PANGO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
 	$(GMODULE_CFLAGS) \
 	$(GLIB_CFLAGS)
@@ -26,15 +32,12 @@ nd_la_LDFLAGS = \
 nd_la_LIBADD = \
 	libeventd-event.la \
 	libeventd.la \
-	libeventd-nd.la \
+	$(GDK_PIXBUF_LIBS) \
+	$(CAIRO_LIBS) \
+	$(PANGO_LIBS) \
 	$(GOBJECT_LIBS) \
 	$(GMODULE_LIBS) \
 	$(GLIB_LIBS)
-
-include src/plugins/nd/helper/libeventd-nd.mk
-if ENABLE_CAIRO_HELPER
-include src/plugins/nd/cairo/libeventd-nd-cairo.mk
-endif
 
 ndbackendsdir = $(pluginsdir)/nd
 

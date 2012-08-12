@@ -39,7 +39,4 @@ typedef enum {
     EVENTD_ND_ANCHOR_BOTTOM_RIGHT = EVENTD_ND_ANCHOR_BOTTOM | EVENTD_ND_ANCHOR_RIGHT
 } EventdNdCornerAnchor;
 
-typedef struct _LibeventdNdNotification LibeventdNdNotification;
-typedef struct _EventdNdStyle EventdNdStyle;
-
 #endif /* __EVENTD_ND_TYPES_H__ */

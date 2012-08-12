@@ -25,6 +25,7 @@
 #include <gio/gio.h>
 
 #include <gdk-pixbuf/gdk-pixbuf.h>
+#include <cairo.h>
 
 #include <eventd-plugin.h>
 #include <libeventd-event.h>
@@ -34,7 +35,9 @@
 
 #include <eventd-nd-types.h>
 #include <eventd-nd-backend.h>
-#include <eventd-nd-style.h>
+
+#include "style.h"
+#include "cairo.h"
 
 struct _EventdPluginContext {
     EventdNdInterface interface;
@@ -374,6 +377,8 @@ _eventd_nd_init(EventdCoreContext *core, EventdCoreInterface *interface)
 
     libeventd_nd_notification_init();
 
+    eventd_nd_cairo_init();
+
     /* default bubble position */
     context->bubble_anchor    = EVENTD_ND_ANCHOR_TOP_RIGHT;
     context->bubble_margin    = 13;
@@ -387,6 +392,8 @@ static void
 _eventd_nd_uninit(EventdPluginContext *context)
 {
     eventd_nd_style_free(context->style);
+
+    eventd_nd_cairo_uninit();
 
     libeventd_nd_notification_uninit();
 
@@ -475,8 +482,11 @@ _eventd_nd_event_updated(EventdEvent *event, EventdPluginContext *context)
         return;
 
     LibeventdNdNotification *notification;
+    cairo_surface_t *bubble;
+    cairo_surface_t *shape;
 
     notification = libeventd_nd_notification_new(nd_event->template, event, context->max_width, context->max_height);
+    eventd_nd_cairo_get_surfaces(event, notification, nd_event->style, &bubble, &shape);
 
     GList *surfaces = g_hash_table_lookup(context->surfaces, event);
     for ( ; surfaces != NULL ; surfaces = g_list_next(surfaces) )
@@ -484,8 +494,11 @@ _eventd_nd_event_updated(EventdEvent *event, EventdPluginContext *context)
         EventdNdSurfaceContext *surface = surfaces->data;
 
         if ( surface->backend->surface_update != NULL )
-            surface->surface = surface->backend->surface_update(surface->surface, notification, nd_event->style);
+            surface->surface = surface->backend->surface_update(surface->surface, bubble, shape);
     }
+
+    cairo_surface_destroy(bubble);
+    cairo_surface_destroy(shape);
 }
 
 static void
@@ -504,7 +517,11 @@ _eventd_nd_event_action(EventdPluginContext *context, EventdEvent *event)
         return;
 
     LibeventdNdNotification *notification;
+    cairo_surface_t *bubble;
+    cairo_surface_t *shape;
+
     notification = libeventd_nd_notification_new(nd_event->template, event, context->max_width, context->max_height);
+    eventd_nd_cairo_get_surfaces(event, notification, nd_event->style, &bubble, &shape);
 
     GList *surfaces = NULL;
 
@@ -513,7 +530,7 @@ _eventd_nd_event_action(EventdPluginContext *context, EventdEvent *event)
     {
         EventdNdDisplayContext *display = display_->data;
         EventdNdSurface *surface;
-        surface = display->backend->surface_show(event, display->display, notification, nd_event->style);
+        surface = display->backend->surface_show(event, display->display, bubble, shape);
         if ( surface != NULL )
         {
             EventdNdSurfaceContext *surface_context;
@@ -525,6 +542,9 @@ _eventd_nd_event_action(EventdPluginContext *context, EventdEvent *event)
             surfaces = g_list_prepend(surfaces, surface_context);
         }
     }
+
+    cairo_surface_destroy(bubble);
+    cairo_surface_destroy(shape);
 
     if ( surfaces != NULL )
     {

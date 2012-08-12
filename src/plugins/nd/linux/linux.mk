@@ -16,6 +16,5 @@ linux_la_LDFLAGS = \
 	-avoid-version -module
 
 linux_la_LIBADD = \
-	libeventd-nd-cairo.la \
 	$(CAIRO_LIBS) \
 	$(GLIB_LIBS)

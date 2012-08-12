@@ -25,6 +25,8 @@
 
 #include <eventd-nd-types.h>
 
+typedef struct _EventdNdStyle EventdNdStyle;
+
 typedef struct {
     gdouble r;
     gdouble g;

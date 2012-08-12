@@ -24,7 +24,7 @@
 
 #include <libeventd-config.h>
 
-#include <eventd-nd-style.h>
+#include "style.h"
 
 struct _EventdNdStyle {
     gint bubble_min_width;
@@ -167,7 +167,6 @@ _eventd_nd_style_init_parent(EventdNdStyle *self, EventdNdStyle *parent)
     self->message_colour    = parent->message_colour;
 }
 
-EVENTD_EXPORT
 EventdNdStyle *
 eventd_nd_style_new(EventdNdStyle *parent)
 {
@@ -183,7 +182,6 @@ eventd_nd_style_new(EventdNdStyle *parent)
     return style;
 }
 
-EVENTD_EXPORT
 void
 eventd_nd_style_update(EventdNdStyle *style, GKeyFile *config_file)
 {
@@ -307,7 +305,6 @@ eventd_nd_style_update(EventdNdStyle *style, GKeyFile *config_file)
     }
 }
 
-EVENTD_EXPORT
 void
 eventd_nd_style_free(EventdNdStyle *style)
 {
@@ -320,140 +317,120 @@ eventd_nd_style_free(EventdNdStyle *style)
     g_free(style);
 }
 
-EVENTD_EXPORT
 gint
 eventd_nd_style_get_bubble_min_width(EventdNdStyle *self)
 {
     return self->bubble_min_width;
 }
 
-EVENTD_EXPORT
 gint
 eventd_nd_style_get_bubble_max_width(EventdNdStyle *self)
 {
     return self->bubble_max_width;
 }
 
-EVENTD_EXPORT
 gint
 eventd_nd_style_get_bubble_padding(EventdNdStyle *self)
 {
     return self->bubble_padding;
 }
 
-EVENTD_EXPORT
 gint
 eventd_nd_style_get_bubble_radius(EventdNdStyle *self)
 {
     return self->bubble_radius;
 }
 
-EVENTD_EXPORT
 Colour
 eventd_nd_style_get_bubble_colour(EventdNdStyle *self)
 {
     return self->bubble_colour;
 }
 
-EVENTD_EXPORT
 gint
 eventd_nd_style_get_image_max_width(EventdNdStyle *self)
 {
     return self->image_max_width;
 }
 
-EVENTD_EXPORT
 gint
 eventd_nd_style_get_image_max_height(EventdNdStyle *self)
 {
     return self->image_max_height;
 }
 
-EVENTD_EXPORT
 gint
 eventd_nd_style_get_image_margin(EventdNdStyle *self)
 {
     return self->image_margin;
 }
 
-EVENTD_EXPORT
 EventdNdStyleIconPlacement
 eventd_nd_style_get_icon_placement(EventdNdStyle *self)
 {
     return self->icon_placement;
 }
 
-EVENTD_EXPORT
 EventdNdAnchor
 eventd_nd_style_get_icon_anchor(EventdNdStyle *self)
 {
     return self->icon_anchor;
 }
 
-EVENTD_EXPORT
 gint
 eventd_nd_style_get_icon_max_width(EventdNdStyle *self)
 {
     return self->icon_max_width;
 }
 
-EVENTD_EXPORT
 gint
 eventd_nd_style_get_icon_max_height(EventdNdStyle *self)
 {
     return self->icon_max_height;
 }
 
-EVENTD_EXPORT
 gint
 eventd_nd_style_get_icon_margin(EventdNdStyle *self)
 {
     return self->icon_margin;
 }
 
-EVENTD_EXPORT
 gdouble
 eventd_nd_style_get_icon_fade_width(EventdNdStyle *self)
 {
     return self->icon_fade_width;
 }
 
-EVENTD_EXPORT
 const gchar *
 eventd_nd_style_get_title_font(EventdNdStyle *self)
 {
     return self->title_font;
 }
 
-EVENTD_EXPORT
 Colour
 eventd_nd_style_get_title_colour(EventdNdStyle *self)
 {
     return self->title_colour;
 }
 
-EVENTD_EXPORT
 gint
 eventd_nd_style_get_message_spacing(EventdNdStyle *self)
 {
     return self->message_spacing;
 }
 
-EVENTD_EXPORT
 guint8
 eventd_nd_style_get_message_max_lines(EventdNdStyle *self)
 {
     return self->message_max_lines;
 }
 
-EVENTD_EXPORT
 const gchar *
 eventd_nd_style_get_message_font(EventdNdStyle *self)
 {
     return self->message_font;
 }
 
-EVENTD_EXPORT
 Colour
 eventd_nd_style_get_message_colour(EventdNdStyle *self)
 {

@@ -168,6 +168,8 @@ AM_CONDITIONAL(ENABLE_NOTIFY, [test x$enable_libnotify = xyes])
 AC_ARG_ENABLE(notification-daemon, AS_HELP_STRING([--disable-notification-daemon], [Disable notification-daemon plugin]), [], enable_notification_daemon=yes)
 if test x$enable_notification_daemon = xyes; then
     PKG_CHECK_MODULES(GDK_PIXBUF, [gdk-pixbuf-2.0])
+    PKG_CHECK_MODULES(CAIRO, [cairo])
+    PKG_CHECK_MODULES(PANGO, [pango pangocairo])
 fi
 AM_CONDITIONAL(ENABLE_NOTIFICATION_DAEMON, [test x$enable_notification_daemon = xyes])
 
@@ -180,10 +182,7 @@ if test x$enable_xcb = xyes -o x$enable_linux_framebuffer = xyes; then
     if test x$enable_notification_daemon = xno; then
         AC_MSG_ERROR([*** XCB or Linux framebuffer backends require but not notification-daemon plugin])
     fi
-    PKG_CHECK_MODULES(CAIRO, [cairo])
-    PKG_CHECK_MODULES(PANGO, [pango pangocairo])
 fi
-AM_CONDITIONAL(ENABLE_CAIRO_HELPER, [test x$enable_xcb = xyes -o x$enable_linux_framebuffer = xyes])
 
 # XCB backend
 if test x$enable_xcb = xyes; then

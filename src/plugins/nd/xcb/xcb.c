@@ -34,9 +34,7 @@
 #include <libeventd-event.h>
 
 #include <eventd-nd-types.h>
-#include <eventd-nd-style.h>
 #include <eventd-nd-backend.h>
-#include <eventd-nd-cairo.h>
 
 struct _EventdNdBackendContext {
     EventdNdContext *nd;
@@ -78,8 +76,6 @@ _eventd_nd_xcb_init(EventdNdContext *nd, EventdNdInterface *nd_interface)
     context->nd = nd;
     context->nd_interface = nd_interface;
 
-    eventd_nd_cairo_init();
-
     return context;
 }
 
@@ -87,8 +83,6 @@ static void
 _eventd_nd_xcb_uninit(EventdNdBackendContext *context)
 {
     g_slist_free_full(context->displays, g_free);
-
-    eventd_nd_cairo_uninit();
 
     g_free(context);
 }
@@ -298,20 +292,15 @@ _eventd_nd_xcb_update_bubbles(EventdNdDisplay *display)
 }
 
 static EventdNdSurface *
-_eventd_nd_xcb_surface_show_internal(EventdEvent *event, EventdNdDisplay *display, LibeventdNdNotification *notification, EventdNdStyle *style)
+_eventd_nd_xcb_surface_show_internal(EventdEvent *event, EventdNdDisplay *display, cairo_surface_t *bubble, cairo_surface_t *shape)
 {
     guint32 selmask = XCB_CW_OVERRIDE_REDIRECT | XCB_CW_EVENT_MASK;
     guint32 selval[] = { 1, XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_BUTTON_RELEASE };
     gint x = 0;
     EventdNdSurface *surface;
 
-    cairo_surface_t *bubble;
-    cairo_surface_t *shape;
-
     gint width;
     gint height;
-
-    eventd_nd_cairo_get_surfaces(event, notification, style, &bubble, &shape);
 
     width = cairo_image_surface_get_width(bubble);
     height = cairo_image_surface_get_height(bubble);
@@ -387,14 +376,14 @@ _eventd_nd_xcb_surface_hide_internal(gpointer data)
 }
 
 static EventdNdSurface *
-_eventd_nd_xcb_surface_show(EventdEvent *event, EventdNdDisplay *display, LibeventdNdNotification *notification, EventdNdStyle *style)
+_eventd_nd_xcb_surface_show(EventdEvent *event, EventdNdDisplay *display, cairo_surface_t *bubble, cairo_surface_t *shape)
 {
     if ( g_source_is_destroyed((GSource *)display->source) )
         return NULL;
 
     EventdNdSurface *surface;
 
-    surface = _eventd_nd_xcb_surface_show_internal(event, display, notification, style);
+    surface = _eventd_nd_xcb_surface_show_internal(event, display, bubble, shape);
 
     g_queue_push_head(surface->display->queue, surface);
     surface->bubble_ = g_queue_peek_head_link(surface->display->queue);
@@ -405,14 +394,14 @@ _eventd_nd_xcb_surface_show(EventdEvent *event, EventdNdDisplay *display, Libeve
 }
 
 static EventdNdSurface *
-_eventd_nd_xcb_surface_update(EventdNdSurface *old_surface, LibeventdNdNotification *notification, EventdNdStyle *style)
+_eventd_nd_xcb_surface_update(EventdNdSurface *old_surface, cairo_surface_t *bubble, cairo_surface_t *shape)
 {
     if ( g_source_is_destroyed((GSource *)old_surface->display->source) )
         return old_surface;
 
     EventdNdSurface *surface;
 
-    surface = _eventd_nd_xcb_surface_show_internal(old_surface->event, old_surface->display, notification, style);
+    surface = _eventd_nd_xcb_surface_show_internal(old_surface->event, old_surface->display, bubble, shape);
 
     surface->bubble_ = old_surface->bubble_;
     surface->bubble_->data = surface;
