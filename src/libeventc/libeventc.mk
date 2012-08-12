@@ -9,9 +9,6 @@ LIBEVENTC_AGE=0
 libeventc_la_SOURCES = \
 	src/libeventc/libeventc.vala
 
-EXTRA_DIST += \
-	src/libeventc/libeventc.sym
-
 libeventc_la_VALAFLAGS = \
 	$(AM_VALAFLAGS) \
 	--pkg libeventd-event \
@@ -33,8 +30,7 @@ libeventc_la_CFLAGS = \
 libeventc_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
 	-shared \
-	-version-info $(LIBEVENTC_CURRENT):$(LIBEVENTC_REVISION):$(LIBEVENTC_AGE) \
-	-Wl,--version-script=$(srcdir)/src/libeventc/libeventc.sym
+	-version-info $(LIBEVENTC_CURRENT):$(LIBEVENTC_REVISION):$(LIBEVENTC_AGE)
 
 libeventc_la_LIBADD = \
 	libeventd-event.la \
