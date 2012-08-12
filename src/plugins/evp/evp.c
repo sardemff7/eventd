@@ -60,13 +60,9 @@ typedef struct {
     GHashTable *events;
 } EventdEvpClient;
 
-static void
-_eventd_service_client_disconnect(gpointer data)
-{
-    GCancellable *cancellable = data;
-    g_cancellable_cancel(cancellable);
-}
-
+/*
+ * Stream reading helper
+ */
 static gchar *
 _eventd_evp_read_message(EventdEvpClient *client, GError **error)
 {
@@ -85,6 +81,10 @@ _eventd_evp_read_message(EventdEvpClient *client, GError **error)
     return line;
 }
 
+/*
+ * Handle the following client messages:
+ *     HELLO
+ */
 static gboolean
 _eventd_evp_handshake(EventdEvpClient *client, GError **error)
 {
@@ -116,6 +116,10 @@ _eventd_evp_handshake(EventdEvpClient *client, GError **error)
     return FALSE;
 }
 
+/*
+ * Handle the following client messages:
+ *         DATA
+ */
 static gchar *
 _eventd_evp_event_data(EventdEvpClient *client, GError **error)
 {
@@ -155,6 +159,16 @@ _eventd_evp_event_data(EventdEvpClient *client, GError **error)
     return NULL;
 }
 
+/*
+ * Retrieve the following client message:
+ *         DATA
+ *
+ * Handle the following client messages:
+ *     EVENT
+ *         DATAL
+ *         ANSWER
+ *         CATEGORY
+ */
 static gboolean
 _eventd_evp_event(EventdEvpClient *client, EventdEvent *event, GError **error)
 {
@@ -201,6 +215,10 @@ _eventd_evp_event(EventdEvpClient *client, EventdEvent *event, GError **error)
     return FALSE;
 }
 
+/*
+ * Handle the following server message:
+ *     ANSWER
+ */
 static void
 _event_evp_event_answered(EventdEvent *event, const gchar *answer, gpointer user_data)
 {
@@ -267,6 +285,10 @@ _event_evp_event_answered(EventdEvent *event, const gchar *answer, gpointer user
     g_free(message);
 }
 
+/*
+ * Handle the following client message:
+ *     END
+ */
 static void
 _event_evp_event_ended(EventdEvent *event, EventdEventEndReason reason, gpointer user_data)
 {
@@ -309,6 +331,14 @@ _event_evp_event_ended(EventdEvent *event, EventdEventEndReason reason, gpointer
     g_hash_table_remove(client->events, id);
 }
 
+/*
+ * Retrieve the following client messages:
+ *     EVENT
+ *     END
+ *
+ * Handle the following client message:
+ *     BYE
+ */
 static void
 _eventd_evp_main(EventdPluginContext *context, EventdEvpClient *client, GError **error)
 {
@@ -413,6 +443,9 @@ _eventd_evp_main(EventdPluginContext *context, EventdEvpClient *client, GError *
     g_free(line);
 }
 
+/*
+ * Callback for the client connection
+ */
 static gboolean
 _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSocketConnection *connection, GObject *source_object, gpointer user_data)
 {
@@ -460,6 +493,11 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
     return TRUE;
 }
 
+
+/*
+ * Initialization interface
+ */
+
 static EventdPluginContext *
 _eventd_evp_init(EventdCoreContext *core, EventdCoreInterface *core_interface)
 {
@@ -488,6 +526,11 @@ _eventd_evp_uninit(EventdPluginContext *service)
 
     g_free(service);
 }
+
+
+/*
+ * Start/Stop interface
+ */
 
 static GList *
 _eventd_evp_add_socket(GList *used_sockets, EventdPluginContext *context, const gchar * const *binds)
@@ -552,6 +595,13 @@ _eventd_evp_start(EventdPluginContext *service)
 }
 
 static void
+_eventd_service_client_disconnect(gpointer data)
+{
+    GCancellable *cancellable = data;
+    g_cancellable_cancel(cancellable);
+}
+
+static void
 _eventd_evp_stop(EventdPluginContext *service)
 {
 #if ENABLE_AVAHI
@@ -564,6 +614,11 @@ _eventd_evp_stop(EventdPluginContext *service)
     g_socket_listener_close(G_SOCKET_LISTENER(service->service));
     g_object_unref(service->service);
 }
+
+
+/*
+ * Command-line options interface
+ */
 
 static GOptionGroup *
 _eventd_evp_get_option_group(EventdPluginContext *context)
@@ -586,11 +641,10 @@ _eventd_evp_get_option_group(EventdPluginContext *context)
     return option_group;
 }
 
-static void
-_eventd_evp_config_reset(EventdPluginContext *context)
-{
-    g_hash_table_remove_all(context->events);
-}
+
+/*
+ * Configuration interface
+ */
 
 static void
 _eventd_evp_global_parse(EventdPluginContext *context, GKeyFile *config_file)
@@ -632,21 +686,31 @@ _eventd_evp_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile 
         g_hash_table_insert(context->events, g_strdup(id), GUINT_TO_POINTER(disable));
 }
 
+static void
+_eventd_evp_config_reset(EventdPluginContext *context)
+{
+    g_hash_table_remove_all(context->events);
+}
+
+
+/*
+ * Plugin interface
+ */
+
 EVENTD_EXPORT const gchar *eventd_plugin_id = "eventd-evp";
 EVENTD_EXPORT
 void
 eventd_plugin_get_info(EventdPlugin *plugin)
 {
-    plugin->init = _eventd_evp_init;
+    plugin->init   = _eventd_evp_init;
     plugin->uninit = _eventd_evp_uninit;
 
     plugin->get_option_group = _eventd_evp_get_option_group;
 
     plugin->start = _eventd_evp_start;
-    plugin->stop = _eventd_evp_stop;
-
-    plugin->config_reset = _eventd_evp_config_reset;
+    plugin->stop  = _eventd_evp_stop;
 
     plugin->global_parse = _eventd_evp_global_parse;
-    plugin->event_parse = _eventd_evp_event_parse;
+    plugin->event_parse  = _eventd_evp_event_parse;
+    plugin->config_reset = _eventd_evp_config_reset;
 }
