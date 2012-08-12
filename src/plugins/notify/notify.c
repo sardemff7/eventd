@@ -47,6 +47,11 @@ typedef struct {
     gdouble scale;
 } EventdLibnotifyEvent;
 
+
+/*
+ * Event contents helper
+ */
+
 static EventdLibnotifyEvent *
 _eventd_libnotify_event_new(gboolean disable, const char *title, const char *message, const char *icon, const char *overlay_icon, Int *scale)
 {
@@ -74,6 +79,11 @@ _eventd_libnotify_event_free(gpointer data)
     g_free(event->title);
     g_free(event);
 }
+
+
+/*
+ * Initialization interface
+ */
 
 static EventdPluginContext *
 _eventd_libnotify_init()
@@ -109,8 +119,13 @@ _eventd_libnotify_uninit(EventdPluginContext *context)
     notify_uninit();
 }
 
+
+/*
+ * Configuration interface
+ */
+
 static void
-eventd_libnotify_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile *config_file)
+_eventd_libnotify_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile *config_file)
 {
     gboolean disable;
     gchar *title = NULL;
@@ -146,7 +161,18 @@ skip:
 }
 
 static void
-eventd_libnotify_event_action(EventdPluginContext *context, EventdEvent *event)
+_eventd_libnotify_config_reset(EventdPluginContext *context)
+{
+    g_hash_table_remove_all(context->events);
+}
+
+
+/*
+ * Event action interface
+ */
+
+static void
+_eventd_libnotify_event_action(EventdPluginContext *context, EventdEvent *event)
 {
     GError *error = NULL;
     EventdLibnotifyEvent *libnotify_event;
@@ -187,23 +213,22 @@ eventd_libnotify_event_action(EventdPluginContext *context, EventdEvent *event)
     g_object_unref(notification);
 }
 
-static void
-_eventd_libnotify_config_reset(EventdPluginContext *context)
-{
-    g_hash_table_remove_all(context->events);
-}
+
+/*
+ * Plugin interface
+ */
 
 EVENTD_EXPORT const gchar *eventd_plugin_id = "eventd-notify";
 EVENTD_EXPORT
 void
 eventd_plugin_get_info(EventdPlugin *plugin)
 {
-    plugin->init = _eventd_libnotify_init;
+    plugin->init   = _eventd_libnotify_init;
     plugin->uninit = _eventd_libnotify_uninit;
 
+    plugin->event_parse  = _eventd_libnotify_event_parse;
     plugin->config_reset = _eventd_libnotify_config_reset;
 
-    plugin->event_parse = eventd_libnotify_event_parse;
-    plugin->event_action = eventd_libnotify_event_action;
+    plugin->event_action = _eventd_libnotify_event_action;
 }
 
