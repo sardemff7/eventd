@@ -13,7 +13,7 @@ linux_la_CFLAGS = \
 
 linux_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
-	-avoid-version -module -export-symbols-regex 'eventd_nd_backend_(id|get_info)'
+	-avoid-version -module
 
 linux_la_LIBADD = \
 	libeventd-nd-cairo.la \
