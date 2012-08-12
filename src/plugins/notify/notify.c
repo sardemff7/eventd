@@ -193,7 +193,8 @@ _eventd_libnotify_config_reset(EventdPluginContext *context)
     g_hash_table_remove_all(context->events);
 }
 
-const gchar *eventd_plugin_id = "eventd-notify";
+EVENTD_EXPORT const gchar *eventd_plugin_id = "eventd-notify";
+EVENTD_EXPORT
 void
 eventd_plugin_get_info(EventdPlugin *plugin)
 {
