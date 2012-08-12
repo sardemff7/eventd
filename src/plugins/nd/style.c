@@ -23,10 +23,13 @@
 #include <glib.h>
 
 #include <libeventd-config.h>
+#include <libeventd-nd-notification-template.h>
 
 #include "style.h"
 
 struct _EventdNdStyle {
+    LibeventdNdNotificationTemplate *template;
+
     struct {
         gint   min_width;
         gint   max_width;
@@ -195,6 +198,8 @@ eventd_nd_style_new(EventdNdStyle *parent)
 void
 eventd_nd_style_update(EventdNdStyle *style, GKeyFile *config_file)
 {
+    style->template = libeventd_nd_notification_template_new(config_file);
+
     gchar *string;
     Int integer;
     Colour colour;
@@ -316,15 +321,25 @@ eventd_nd_style_update(EventdNdStyle *style, GKeyFile *config_file)
 }
 
 void
-eventd_nd_style_free(EventdNdStyle *style)
+eventd_nd_style_free(gpointer data)
 {
+    EventdNdStyle *style = data;
     if ( style == NULL )
         return;
 
     g_free(style->title.font);
     g_free(style->message.font);
 
+    libeventd_nd_notification_template_free(style->template);
+
     g_free(style);
+}
+
+
+LibeventdNdNotificationTemplate *
+eventd_nd_style_get_template(EventdNdStyle *self)
+{
+    return self->template;
 }
 
 gint

@@ -242,6 +242,9 @@ EVENTD_EXPORT
 void
 libeventd_nd_notification_free(LibeventdNdNotification *self)
 {
+    if ( self == NULL )
+        return;
+
     if ( self->icon != NULL )
         g_object_unref(self->icon);
     if ( self->image != NULL )

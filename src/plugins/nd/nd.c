@@ -63,11 +63,6 @@ typedef struct {
     EventdNdSurface *surface;
 } EventdNdSurfaceContext;
 
-typedef struct {
-    LibeventdNdNotificationTemplate *template;
-    EventdNdStyle *style;
-} EventdNdEvent;
-
 static void
 _eventd_nd_get_max_width_and_height(gint width, gint height, EventdNdStyle *style, gint *new_width, gint *new_height)
 {
@@ -89,37 +84,11 @@ _eventd_nd_get_max_width_and_height(gint width, gint height, EventdNdStyle *styl
     *new_height = height;
 }
 
-static EventdNdEvent *
-_eventd_nd_event_new(EventdPluginContext *context, GKeyFile *config_file)
-{
-    EventdNdEvent *event = NULL;
-
-    event = g_new0(EventdNdEvent, 1);
-
-    event->template = libeventd_nd_notification_template_new(config_file);
-
-    event->style = eventd_nd_style_new(context->style);
-    eventd_nd_style_update(event->style, config_file);
-
-    return event;
-}
-
-static void
-_eventd_nd_event_free(gpointer data)
-{
-    EventdNdEvent *event = data;
-
-    eventd_nd_style_free(event->style);
-    libeventd_nd_notification_template_free(event->template);
-
-    g_free(event);
-}
-
 static void
 _eventd_nd_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile *config_file)
 {
     gboolean disable;
-    EventdNdEvent *event = NULL;
+    EventdNdStyle *style = NULL;
 
     if ( ! g_key_file_has_group(config_file, "Notification") )
         return;
@@ -129,11 +98,12 @@ _eventd_nd_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile *
 
     if ( ! disable )
     {
-        event = _eventd_nd_event_new(context, config_file);
-        _eventd_nd_get_max_width_and_height(context->max_width, context->max_height, event->style, &context->max_width, &context->max_height);
+        style = eventd_nd_style_new(context->style);
+        eventd_nd_style_update(style, config_file);
+        _eventd_nd_get_max_width_and_height(context->max_width, context->max_height, style, &context->max_width, &context->max_height);
     }
 
-    g_hash_table_insert(context->events, g_strdup(id), event);
+    g_hash_table_insert(context->events, g_strdup(id), style);
 }
 
 static void
@@ -192,7 +162,7 @@ _eventd_nd_init(EventdCoreContext *core, EventdCoreInterface *interface)
 
     context->backends = eventd_nd_backends_load(context, &context->interface);
 
-    context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_nd_event_free);
+    context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, eventd_nd_style_free);
     context->surfaces = g_hash_table_new_full(g_direct_hash, g_direct_equal, g_object_unref, _eventd_nd_surface_hide_all);
 
     libeventd_nd_notification_init();
@@ -295,18 +265,18 @@ _eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
 static void
 _eventd_nd_event_updated(EventdEvent *event, EventdPluginContext *context)
 {
-    EventdNdEvent *nd_event;
+    EventdNdStyle *style;
 
-    nd_event = g_hash_table_lookup(context->events, eventd_event_get_config_id(event));
-    if ( nd_event == NULL )
+    style = g_hash_table_lookup(context->events, eventd_event_get_config_id(event));
+    if ( style == NULL )
         return;
 
     LibeventdNdNotification *notification;
     cairo_surface_t *bubble;
     cairo_surface_t *shape;
 
-    notification = libeventd_nd_notification_new(nd_event->template, event, context->max_width, context->max_height);
-    eventd_nd_cairo_get_surfaces(event, notification, nd_event->style, &bubble, &shape);
+    notification = libeventd_nd_notification_new(eventd_nd_style_get_template(style), event, context->max_width, context->max_height);
+    eventd_nd_cairo_get_surfaces(event, notification, style, &bubble, &shape);
 
     GList *surfaces = g_hash_table_lookup(context->surfaces, event);
     for ( ; surfaces != NULL ; surfaces = g_list_next(surfaces) )
@@ -330,18 +300,18 @@ _eventd_nd_event_ended(EventdEvent *event, EventdEventEndReason reason, EventdPl
 static void
 _eventd_nd_event_action(EventdPluginContext *context, EventdEvent *event)
 {
-    EventdNdEvent *nd_event;
+    EventdNdStyle *style;
 
-    nd_event = g_hash_table_lookup(context->events, eventd_event_get_config_id(event));
-    if ( nd_event == NULL )
+    style = g_hash_table_lookup(context->events, eventd_event_get_config_id(event));
+    if ( style == NULL )
         return;
 
     LibeventdNdNotification *notification;
     cairo_surface_t *bubble;
     cairo_surface_t *shape;
 
-    notification = libeventd_nd_notification_new(nd_event->template, event, context->max_width, context->max_height);
-    eventd_nd_cairo_get_surfaces(event, notification, nd_event->style, &bubble, &shape);
+    notification = libeventd_nd_notification_new(eventd_nd_style_get_template(style), event, context->max_width, context->max_height);
+    eventd_nd_cairo_get_surfaces(event, notification, style, &bubble, &shape);
 
     GList *surfaces = NULL;
 
