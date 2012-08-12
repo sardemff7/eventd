@@ -29,9 +29,9 @@
 #include <libeventd-config.h>
 #include <libeventd-regex.h>
 
-#include <eventd-nd-notification.h>
+#include <libeventd-nd-notification.h>
 
-struct _EventdNdNotification {
+struct _LibeventdNdNotification {
     gchar *title;
     gchar *message;
     GdkPixbuf *image;
@@ -40,20 +40,20 @@ struct _EventdNdNotification {
 
 EVENTD_EXPORT
 void
-eventd_nd_notification_init()
+libeventd_nd_notification_init()
 {
     libeventd_regex_init();
 }
 
 EVENTD_EXPORT
 void
-eventd_nd_notification_uninit()
+libeventd_nd_notification_uninit()
 {
     libeventd_regex_clean();
 }
 
 static GdkPixbuf *
-_eventd_nd_notification_pixbuf_from_file(const gchar *path, gint width, gint height)
+_libeventd_nd_notification_pixbuf_from_file(const gchar *path, gint width, gint height)
 {
     GError *error = NULL;
     GdkPixbufFormat *format;
@@ -75,13 +75,13 @@ _eventd_nd_notification_pixbuf_from_file(const gchar *path, gint width, gint hei
 }
 
 static void
-_eventd_nd_notification_pixbuf_data_free(guchar *pixels, gpointer data)
+_libeventd_nd_notification_pixbuf_data_free(guchar *pixels, gpointer data)
 {
     g_free(pixels);
 }
 
 static GdkPixbuf *
-_eventd_nd_notification_pixbuf_from_base64(EventdEvent *event, const gchar *name)
+_libeventd_nd_notification_pixbuf_from_base64(EventdEvent *event, const gchar *name)
 {
     GdkPixbuf *pixbuf = NULL;
     const gchar *base64;
@@ -111,7 +111,7 @@ _eventd_nd_notification_pixbuf_from_base64(EventdEvent *event, const gchar *name
         stride = g_ascii_strtoll(f+1, &f, 16);
         alpha = g_ascii_strtoll(f+1, &f, 16);
 
-        pixbuf = gdk_pixbuf_new_from_data(data, GDK_COLORSPACE_RGB, alpha, 8, width, height, stride, _eventd_nd_notification_pixbuf_data_free, NULL);
+        pixbuf = gdk_pixbuf_new_from_data(data, GDK_COLORSPACE_RGB, alpha, 8, width, height, stride, _libeventd_nd_notification_pixbuf_data_free, NULL);
     }
     else
     {
@@ -145,13 +145,13 @@ _eventd_nd_notification_pixbuf_from_base64(EventdEvent *event, const gchar *name
 }
 
 EVENTD_EXPORT
-EventdNdNotification *
-eventd_nd_notification_new(EventdEvent *event, const gchar *title, const gchar *message, const gchar *image_name, const gchar *icon_name, gint width, gint height)
+LibeventdNdNotification *
+libeventd_nd_notification_new(EventdEvent *event, const gchar *title, const gchar *message, const gchar *image_name, const gchar *icon_name, gint width, gint height)
 {
-    EventdNdNotification *self;
+    LibeventdNdNotification *self;
     gchar *path;
 
-    self = g_new0(EventdNdNotification, 1);
+    self = g_new0(LibeventdNdNotification, 1);
 
     self->title = libeventd_regex_replace_event_data(title, event, NULL, NULL);
 
@@ -159,26 +159,26 @@ eventd_nd_notification_new(EventdEvent *event, const gchar *title, const gchar *
 
     if ( ( path = libeventd_config_get_filename(image_name, event, "icons") ) != NULL )
     {
-        self->image = _eventd_nd_notification_pixbuf_from_file(path, width, height);
+        self->image = _libeventd_nd_notification_pixbuf_from_file(path, width, height);
         g_free(path);
     }
     else
-       self->image =  _eventd_nd_notification_pixbuf_from_base64(event, image_name);
+       self->image =  _libeventd_nd_notification_pixbuf_from_base64(event, image_name);
 
     if ( ( path = libeventd_config_get_filename(icon_name, event, "icons") ) != NULL )
     {
-        self->icon = _eventd_nd_notification_pixbuf_from_file(path, width, height);
+        self->icon = _libeventd_nd_notification_pixbuf_from_file(path, width, height);
         g_free(path);
     }
     else
-        self->icon = _eventd_nd_notification_pixbuf_from_base64(event, icon_name);
+        self->icon = _libeventd_nd_notification_pixbuf_from_base64(event, icon_name);
 
     return self;
 }
 
 EVENTD_EXPORT
 void
-eventd_nd_notification_free(EventdNdNotification *self)
+libeventd_nd_notification_free(LibeventdNdNotification *self)
 {
     if ( self->icon != NULL )
         g_object_unref(self->icon);
@@ -192,28 +192,28 @@ eventd_nd_notification_free(EventdNdNotification *self)
 
 EVENTD_EXPORT
 const gchar *
-eventd_nd_notification_get_title(EventdNdNotification *self)
+libeventd_nd_notification_get_title(LibeventdNdNotification *self)
 {
     return self->title;
 }
 
 EVENTD_EXPORT
 const gchar *
-eventd_nd_notification_get_message(EventdNdNotification *self)
+libeventd_nd_notification_get_message(LibeventdNdNotification *self)
 {
     return self->message;
 }
 
 EVENTD_EXPORT
 GdkPixbuf *
-eventd_nd_notification_get_image(EventdNdNotification *self)
+libeventd_nd_notification_get_image(LibeventdNdNotification *self)
 {
     return self->image;
 }
 
 EVENTD_EXPORT
 GdkPixbuf *
-eventd_nd_notification_get_icon(EventdNdNotification *self)
+libeventd_nd_notification_get_icon(LibeventdNdNotification *self)
 {
     return self->icon;
 }

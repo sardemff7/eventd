@@ -31,9 +31,9 @@
 #include <pango/pangocairo.h>
 
 #include <libeventd-event-types.h>
+#include <libeventd-nd-notification.h>
 
 #include <eventd-nd-style.h>
-#include <eventd-nd-notification.h>
 
 #include <eventd-nd-cairo.h>
 
@@ -147,7 +147,7 @@ fallback:
 }
 
 static GList *
-_eventd_nd_cairo_text_split(EventdNdNotification *notification, EventdNdStyle *style)
+_eventd_nd_cairo_text_split(LibeventdNdNotification *notification, EventdNdStyle *style)
 {
     GList *lines = NULL;
     gchar *escaped_title;
@@ -156,11 +156,11 @@ _eventd_nd_cairo_text_split(EventdNdNotification *notification, EventdNdStyle *s
     guint8 max;
     guint size;
 
-    escaped_title = g_markup_escape_text(eventd_nd_notification_get_title(notification), -1);
+    escaped_title = g_markup_escape_text(libeventd_nd_notification_get_title(notification), -1);
     lines = g_list_prepend(lines, _eventd_nd_cairo_text_line_new(escaped_title));
     g_free(escaped_title);
 
-    message_lines = _eventd_nd_cairo_message_escape_and_split(eventd_nd_notification_get_message(notification));
+    message_lines = _eventd_nd_cairo_message_escape_and_split(libeventd_nd_notification_get_message(notification));
 
     max = eventd_nd_style_get_message_max_lines(style);
     size = g_strv_length(message_lines);
@@ -199,7 +199,7 @@ _eventd_nd_cairo_text_process_line(EventdNdTextLine *line, PangoContext *pango_c
 }
 
 static GList *
-_eventd_nd_cairo_text_process(EventdNdNotification *notification, EventdNdStyle *style, gint *text_height, gint *text_width)
+_eventd_nd_cairo_text_process(LibeventdNdNotification *notification, EventdNdStyle *style, gint *text_height, gint *text_width)
 {
     GList *ret;
     GList *lines = NULL;
@@ -449,13 +449,13 @@ _eventd_nd_cairo_icon_process_background(GdkPixbuf *pixbuf, EventdNdStyle *style
 }
 
 static void
-_eventd_nd_cairo_image_and_icon_process(EventdNdNotification *notification, EventdNdStyle *style, cairo_surface_t **image, cairo_surface_t **icon, gint *text_margin, gint *width, gint *height)
+_eventd_nd_cairo_image_and_icon_process(LibeventdNdNotification *notification, EventdNdStyle *style, cairo_surface_t **image, cairo_surface_t **icon, gint *text_margin, gint *width, gint *height)
 {
     GdkPixbuf *image_pixbuf;
     GdkPixbuf *icon_pixbuf;
 
-    image_pixbuf = eventd_nd_notification_get_image(notification);
-    icon_pixbuf = eventd_nd_notification_get_icon(notification);
+    image_pixbuf = libeventd_nd_notification_get_image(notification);
+    icon_pixbuf = libeventd_nd_notification_get_icon(notification);
 
     switch ( eventd_nd_style_get_icon_placement(style) )
     {
@@ -696,7 +696,7 @@ _eventd_nd_cairo_image_and_icon_draw(cairo_t *cr, cairo_surface_t *image, cairo_
 
 EVENTD_EXPORT
 void
-eventd_nd_cairo_get_surfaces(EventdEvent *event, EventdNdNotification *notification, EventdNdStyle *style, cairo_surface_t **bubble, cairo_surface_t **shape)
+eventd_nd_cairo_get_surfaces(EventdEvent *event, LibeventdNdNotification *notification, EventdNdStyle *style, cairo_surface_t **bubble, cairo_surface_t **shape)
 {
     gint padding;
     gint min_width, max_width;

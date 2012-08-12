@@ -185,7 +185,7 @@ alpha_div(guchar c, guchar a)
 }
 
 static EventdNdSurface *
-_eventd_nd_linux_surface_show(EventdEvent *event, EventdNdDisplay *display, EventdNdNotification *notification, EventdNdStyle *style)
+_eventd_nd_linux_surface_show(EventdEvent *event, EventdNdDisplay *display, LibeventdNdNotification *notification, EventdNdStyle *style)
 {
     EventdNdSurface *self;
     gint x, y;

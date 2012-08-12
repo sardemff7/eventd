@@ -29,10 +29,10 @@
 #include <eventd-plugin.h>
 #include <libeventd-event.h>
 #include <libeventd-config.h>
+#include <libeventd-nd-notification.h>
 
 #include <eventd-nd-types.h>
 #include <eventd-nd-backend.h>
-#include <eventd-nd-notification.h>
 #include <eventd-nd-style.h>
 
 struct _EventdPluginContext {
@@ -406,7 +406,7 @@ _eventd_nd_init(EventdCoreContext *core, EventdCoreInterface *interface)
     context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_nd_event_free);
     context->surfaces = g_hash_table_new_full(g_direct_hash, g_direct_equal, g_object_unref, _eventd_nd_surface_hide_all);
 
-    eventd_nd_notification_init();
+    libeventd_nd_notification_init();
 
     /* default bubble position */
     context->bubble_anchor    = EVENTD_ND_ANCHOR_TOP_RIGHT;
@@ -422,7 +422,7 @@ _eventd_nd_uninit(EventdPluginContext *context)
 {
     eventd_nd_style_free(context->style);
 
-    eventd_nd_notification_uninit();
+    libeventd_nd_notification_uninit();
 
     g_hash_table_unref(context->surfaces);
     g_hash_table_unref(context->events);
@@ -508,9 +508,9 @@ _eventd_nd_event_updated(EventdEvent *event, EventdPluginContext *context)
     if ( nd_event == NULL )
         return;
 
-    EventdNdNotification *notification;
+    LibeventdNdNotification *notification;
 
-    notification = eventd_nd_notification_new(event, nd_event->title, nd_event->message, nd_event->image, nd_event->icon, context->max_width, context->max_height);
+    notification = libeventd_nd_notification_new(event, nd_event->title, nd_event->message, nd_event->image, nd_event->icon, context->max_width, context->max_height);
 
     GList *surfaces = g_hash_table_lookup(context->surfaces, event);
     for ( ; surfaces != NULL ; surfaces = g_list_next(surfaces) )
@@ -532,7 +532,7 @@ static void
 _eventd_nd_event_action(EventdPluginContext *context, EventdEvent *event)
 {
     EventdNdEvent *nd_event;
-    EventdNdNotification *notification;
+    LibeventdNdNotification *notification;
     GList *display_;
     GList *surfaces = NULL;
 
@@ -540,7 +540,7 @@ _eventd_nd_event_action(EventdPluginContext *context, EventdEvent *event)
     if ( nd_event == NULL )
         return;
 
-    notification = eventd_nd_notification_new(event, nd_event->title, nd_event->message, nd_event->image, nd_event->icon, context->max_width, context->max_height);
+    notification = libeventd_nd_notification_new(event, nd_event->title, nd_event->message, nd_event->image, nd_event->icon, context->max_width, context->max_height);
 
     for ( display_ = context->displays ; display_ != NULL ; display_ = g_list_next(display_) )
     {
@@ -567,7 +567,7 @@ _eventd_nd_event_action(EventdPluginContext *context, EventdEvent *event)
         g_hash_table_insert(context->surfaces, g_object_ref(event), surfaces);
     }
 
-    eventd_nd_notification_free(notification);
+    libeventd_nd_notification_free(notification);
 }
 
 static void

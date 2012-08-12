@@ -44,8 +44,8 @@ typedef gboolean (*EventdNdDisplayTestFunc)(EventdNdBackendContext *context, con
 typedef EventdNdDisplay *(*EventdNdDisplayNewFunc)(EventdNdBackendContext *context, const gchar *target, EventdNdCornerAnchor anchor, gint margin);
 typedef void (*EventdNdDisplayFunc)(EventdNdDisplay *display);
 
-typedef EventdNdSurface *(*EventdNdSurfaceShowFunc)(EventdEvent *event, EventdNdDisplay *display, EventdNdNotification *notification, EventdNdStyle *style);
-typedef EventdNdSurface *(*EventdNdSurfaceUpdateFunc)(EventdNdSurface *old_surface, EventdNdNotification *notification, EventdNdStyle *style);
+typedef EventdNdSurface *(*EventdNdSurfaceShowFunc)(EventdEvent *event, EventdNdDisplay *display, LibeventdNdNotification *notification, EventdNdStyle *style);
+typedef EventdNdSurface *(*EventdNdSurfaceUpdateFunc)(EventdNdSurface *old_surface, LibeventdNdNotification *notification, EventdNdStyle *style);
 typedef void (*EventdNdSurfaceHideFunc)(EventdNdSurface *surface);
 
 typedef struct {

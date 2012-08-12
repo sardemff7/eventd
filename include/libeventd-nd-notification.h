@@ -20,26 +20,22 @@
  *
  */
 
-#ifndef __EVENTD_ND_TYPES_H__
-#define __EVENTD_ND_TYPES_H__
+#ifndef __LIBEVENTD_ND_NOTIFICATION_H__
+#define __LIBEVENTD_ND_NOTIFICATION_H__
 
-typedef enum {
-    EVENTD_ND_ANCHOR_TOP     = 1<<0,
-    EVENTD_ND_ANCHOR_BOTTOM  = 1<<1,
-    EVENTD_ND_ANCHOR_VCENTER = 3<<0,
-    EVENTD_ND_ANCHOR_LEFT    = 1<<2,
-    EVENTD_ND_ANCHOR_RIGHT   = 1<<3,
-    EVENTD_ND_ANCHOR_HCENTER = 3<<2
-} EventdNdAnchor;
-
-typedef enum {
-    EVENTD_ND_ANCHOR_TOP_LEFT     = EVENTD_ND_ANCHOR_TOP    | EVENTD_ND_ANCHOR_LEFT,
-    EVENTD_ND_ANCHOR_TOP_RIGHT    = EVENTD_ND_ANCHOR_TOP    | EVENTD_ND_ANCHOR_RIGHT,
-    EVENTD_ND_ANCHOR_BOTTOM_LEFT  = EVENTD_ND_ANCHOR_BOTTOM | EVENTD_ND_ANCHOR_LEFT,
-    EVENTD_ND_ANCHOR_BOTTOM_RIGHT = EVENTD_ND_ANCHOR_BOTTOM | EVENTD_ND_ANCHOR_RIGHT
-} EventdNdCornerAnchor;
+#include <libeventd-event-types.h>
 
 typedef struct _LibeventdNdNotification LibeventdNdNotification;
-typedef struct _EventdNdStyle EventdNdStyle;
 
-#endif /* __EVENTD_ND_TYPES_H__ */
+void libeventd_nd_notification_init();
+void libeventd_nd_notification_uninit();
+
+LibeventdNdNotification *libeventd_nd_notification_new(EventdEvent *event, const gchar *title, const gchar *message, const gchar *icon_name, const gchar *overlay_icon_name, gint width, gint height);
+void libeventd_nd_notification_free(LibeventdNdNotification *notification);
+
+const gchar *libeventd_nd_notification_get_title(LibeventdNdNotification *notification);
+const gchar *libeventd_nd_notification_get_message(LibeventdNdNotification *notification);
+GdkPixbuf *libeventd_nd_notification_get_image(LibeventdNdNotification *self);
+GdkPixbuf *libeventd_nd_notification_get_icon(LibeventdNdNotification *self);
+
+#endif /* __LIBEVENTD_ND_NOTIFICATION_H__ */

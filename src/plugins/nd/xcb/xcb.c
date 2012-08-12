@@ -298,7 +298,7 @@ _eventd_nd_xcb_update_bubbles(EventdNdDisplay *display)
 }
 
 static EventdNdSurface *
-_eventd_nd_xcb_surface_show_internal(EventdEvent *event, EventdNdDisplay *display, EventdNdNotification *notification, EventdNdStyle *style)
+_eventd_nd_xcb_surface_show_internal(EventdEvent *event, EventdNdDisplay *display, LibeventdNdNotification *notification, EventdNdStyle *style)
 {
     guint32 selmask = XCB_CW_OVERRIDE_REDIRECT | XCB_CW_EVENT_MASK;
     guint32 selval[] = { 1, XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_BUTTON_RELEASE };
@@ -387,7 +387,7 @@ _eventd_nd_xcb_surface_hide_internal(gpointer data)
 }
 
 static EventdNdSurface *
-_eventd_nd_xcb_surface_show(EventdEvent *event, EventdNdDisplay *display, EventdNdNotification *notification, EventdNdStyle *style)
+_eventd_nd_xcb_surface_show(EventdEvent *event, EventdNdDisplay *display, LibeventdNdNotification *notification, EventdNdStyle *style)
 {
     if ( g_source_is_destroyed((GSource *)display->source) )
         return NULL;
@@ -405,7 +405,7 @@ _eventd_nd_xcb_surface_show(EventdEvent *event, EventdNdDisplay *display, Eventd
 }
 
 static EventdNdSurface *
-_eventd_nd_xcb_surface_update(EventdNdSurface *old_surface, EventdNdNotification *notification, EventdNdStyle *style)
+_eventd_nd_xcb_surface_update(EventdNdSurface *old_surface, LibeventdNdNotification *notification, EventdNdStyle *style)
 {
     if ( g_source_is_destroyed((GSource *)old_surface->display->source) )
         return old_surface;
