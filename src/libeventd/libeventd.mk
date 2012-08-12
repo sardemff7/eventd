@@ -29,7 +29,9 @@ libeventd_la_LIBADD = \
 
 if ENABLE_NOTIFICATION_DAEMON
 pkginclude_HEADERS += \
-	include/libeventd-nd-notification.h
+	include/libeventd-nd-notification-template.h \
+	include/libeventd-nd-notification.h \
+	include/libeventd-nd-notification-types.h
 
 libeventd_la_SOURCES += \
 	src/libeventd/nd-notification.c

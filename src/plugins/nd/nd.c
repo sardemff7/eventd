@@ -30,6 +30,7 @@
 #include <libeventd-event.h>
 #include <libeventd-config.h>
 #include <libeventd-nd-notification.h>
+#include <libeventd-nd-notification-template.h>
 
 #include <eventd-nd-types.h>
 #include <eventd-nd-backend.h>
@@ -59,10 +60,7 @@ typedef struct {
 } EventdNdSurfaceContext;
 
 typedef struct {
-    gchar *title;
-    gchar *message;
-    gchar *image;
-    gchar *icon;
+    LibeventdNdNotificationTemplate *template;
     EventdNdStyle *style;
 } EventdNdEvent;
 
@@ -254,47 +252,17 @@ _eventd_nd_get_max_width_and_height(gint width, gint height, EventdNdStyle *styl
     *new_height = height;
 }
 
-static void
-_eventd_nd_event_update(EventdNdEvent *event, GKeyFile *config_file)
-{
-    gchar *string;
-
-    if ( libeventd_config_key_file_get_string(config_file, "Notification", "Title", &string) == 0 )
-    {
-        g_free(event->title);
-        event->title = string;
-    }
-    if ( libeventd_config_key_file_get_string(config_file, "Notification", "Message", &string) == 0 )
-    {
-        g_free(event->message);
-        event->message = string;
-    }
-    if ( libeventd_config_key_file_get_string(config_file, "Notification", "Image", &string) == 0 )
-    {
-        g_free(event->image);
-        event->image = string;
-    }
-    if ( libeventd_config_key_file_get_string(config_file, "Notification", "Icon", &string) == 0 )
-    {
-        g_free(event->icon);
-        event->icon = string;
-    }
-
-    eventd_nd_style_update(event->style, config_file);
-}
-
 static EventdNdEvent *
-_eventd_nd_event_new(EventdPluginContext *context)
+_eventd_nd_event_new(EventdPluginContext *context, GKeyFile *config_file)
 {
     EventdNdEvent *event = NULL;
 
     event = g_new0(EventdNdEvent, 1);
 
-    event->title = g_strdup("$name");
-    event->message = g_strdup("$text");
-    event->image = g_strdup("image");
-    event->icon = g_strdup("icon");
+    event->template = libeventd_nd_notification_template_new(config_file);
+
     event->style = eventd_nd_style_new(context->style);
+    eventd_nd_style_update(event->style, config_file);
 
     return event;
 }
@@ -304,10 +272,9 @@ _eventd_nd_event_free(gpointer data)
 {
     EventdNdEvent *event = data;
 
-    g_free(event->image);
-    g_free(event->icon);
-    g_free(event->message);
-    g_free(event->title);
+    eventd_nd_style_free(event->style);
+    libeventd_nd_notification_template_free(event->template);
+
     g_free(event);
 }
 
@@ -325,8 +292,7 @@ _eventd_nd_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile *
 
     if ( ! disable )
     {
-        event = _eventd_nd_event_new(context);
-        _eventd_nd_event_update(event, config_file);
+        event = _eventd_nd_event_new(context, config_file);
         _eventd_nd_get_max_width_and_height(context->max_width, context->max_height, event->style, &context->max_width, &context->max_height);
     }
 
@@ -510,7 +476,7 @@ _eventd_nd_event_updated(EventdEvent *event, EventdPluginContext *context)
 
     LibeventdNdNotification *notification;
 
-    notification = libeventd_nd_notification_new(event, nd_event->title, nd_event->message, nd_event->image, nd_event->icon, context->max_width, context->max_height);
+    notification = libeventd_nd_notification_new(nd_event->template, event, context->max_width, context->max_height);
 
     GList *surfaces = g_hash_table_lookup(context->surfaces, event);
     for ( ; surfaces != NULL ; surfaces = g_list_next(surfaces) )
@@ -532,16 +498,17 @@ static void
 _eventd_nd_event_action(EventdPluginContext *context, EventdEvent *event)
 {
     EventdNdEvent *nd_event;
-    LibeventdNdNotification *notification;
-    GList *display_;
-    GList *surfaces = NULL;
 
     nd_event = g_hash_table_lookup(context->events, eventd_event_get_config_id(event));
     if ( nd_event == NULL )
         return;
 
-    notification = libeventd_nd_notification_new(event, nd_event->title, nd_event->message, nd_event->image, nd_event->icon, context->max_width, context->max_height);
+    LibeventdNdNotification *notification;
+    notification = libeventd_nd_notification_new(nd_event->template, event, context->max_width, context->max_height);
 
+    GList *surfaces = NULL;
+
+    GList *display_;
     for ( display_ = context->displays ; display_ != NULL ; display_ = g_list_next(display_) )
     {
         EventdNdDisplayContext *display = display_->data;

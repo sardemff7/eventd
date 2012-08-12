@@ -31,6 +31,13 @@
 
 #include <libeventd-nd-notification.h>
 
+struct _LibeventdNdNotificationTemplate {
+    gchar *title;
+    gchar *message;
+    gchar *image;
+    gchar *icon;
+};
+
 struct _LibeventdNdNotification {
     gchar *title;
     gchar *message;
@@ -51,6 +58,61 @@ libeventd_nd_notification_uninit()
 {
     libeventd_regex_clean();
 }
+
+
+EVENTD_EXPORT
+LibeventdNdNotificationTemplate *
+libeventd_nd_notification_template_new(GKeyFile *config_file)
+{
+    LibeventdNdNotificationTemplate *self;
+
+    self = g_new(LibeventdNdNotificationTemplate, 1);
+
+    if ( ! g_key_file_has_group(config_file, "Notification") )
+    {
+        self->title = g_strdup("$name");
+        self->message = g_strdup("$text");
+        self->image = g_strdup("image");
+        self->icon = g_strdup("icon");
+        return self;
+    }
+
+    gchar *string;
+
+    if ( libeventd_config_key_file_get_string(config_file, "Notification", "Title", &string) == 0 )
+        self->title = string;
+    else
+        self->title = g_strdup("$name");
+
+    if ( libeventd_config_key_file_get_string(config_file, "Notification", "Message", &string) == 0 )
+        self->message = string;
+    else
+        self->message = g_strdup("$text");
+
+    if ( libeventd_config_key_file_get_string(config_file, "Notification", "Image", &string) == 0 )
+        self->image = string;
+    else
+        self->image = g_strdup("image");
+
+    if ( libeventd_config_key_file_get_string(config_file, "Notification", "Icon", &string) == 0 )
+        self->icon = string;
+    else
+        self->icon = g_strdup("icon");
+
+    return self;
+}
+
+EVENTD_EXPORT
+void
+libeventd_nd_notification_template_free(LibeventdNdNotificationTemplate *self)
+{
+    g_free(self->image);
+    g_free(self->icon);
+    g_free(self->message);
+    g_free(self->title);
+    g_free(self);
+}
+
 
 static GdkPixbuf *
 _libeventd_nd_notification_pixbuf_from_file(const gchar *path, gint width, gint height)
@@ -146,32 +208,32 @@ _libeventd_nd_notification_pixbuf_from_base64(EventdEvent *event, const gchar *n
 
 EVENTD_EXPORT
 LibeventdNdNotification *
-libeventd_nd_notification_new(EventdEvent *event, const gchar *title, const gchar *message, const gchar *image_name, const gchar *icon_name, gint width, gint height)
+libeventd_nd_notification_new(LibeventdNdNotificationTemplate *template, EventdEvent *event, gint width, gint height)
 {
     LibeventdNdNotification *self;
     gchar *path;
 
     self = g_new0(LibeventdNdNotification, 1);
 
-    self->title = libeventd_regex_replace_event_data(title, event, NULL, NULL);
+    self->title = libeventd_regex_replace_event_data(template->title, event, NULL, NULL);
 
-    self->message = libeventd_regex_replace_event_data(message, event, NULL, NULL);
+    self->message = libeventd_regex_replace_event_data(template->message, event, NULL, NULL);
 
-    if ( ( path = libeventd_config_get_filename(image_name, event, "icons") ) != NULL )
+    if ( ( path = libeventd_config_get_filename(template->image, event, "icons") ) != NULL )
     {
         self->image = _libeventd_nd_notification_pixbuf_from_file(path, width, height);
         g_free(path);
     }
     else
-       self->image =  _libeventd_nd_notification_pixbuf_from_base64(event, image_name);
+       self->image =  _libeventd_nd_notification_pixbuf_from_base64(event, template->image);
 
-    if ( ( path = libeventd_config_get_filename(icon_name, event, "icons") ) != NULL )
+    if ( ( path = libeventd_config_get_filename(template->icon, event, "icons") ) != NULL )
     {
         self->icon = _libeventd_nd_notification_pixbuf_from_file(path, width, height);
         g_free(path);
     }
     else
-        self->icon = _libeventd_nd_notification_pixbuf_from_base64(event, icon_name);
+        self->icon = _libeventd_nd_notification_pixbuf_from_base64(event, template->icon);
 
     return self;
 }
