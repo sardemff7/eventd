@@ -39,6 +39,8 @@ AC_DEFINE_UNQUOTED([UNIX_SOCKET], ["$UNIX_SOCKET"], [Default UNIX socket name])
 AC_SUBST(DEFAULT_BIND_PORT)
 AC_SUBST(UNIX_SOCKET)
 
+AC_DEFINE([EVENTD_EXPORT], [__attribute__((visibility("default")))], [Export symbol])
+
 # Common dependencies
 glib_min_major="2"
 glib_min_minor="28"
