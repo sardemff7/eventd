@@ -12,7 +12,7 @@ test_plugin_la_CFLAGS = \
 test_plugin_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
 	-rpath $(abs_builddir) \
-	-avoid-version -module -export-symbols-regex 'eventd_plugin_(id|get_info)'
+	-avoid-version -module
 
 test_plugin_la_LIBADD = \
 	libeventd-event.la \

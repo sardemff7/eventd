@@ -62,7 +62,8 @@ _eventd_test_event_action(EventdPluginContext *context, EventdEvent *event)
     g_idle_add(_eventd_test_event_end_earlier, g_object_ref(event));
 }
 
-const gchar *eventd_plugin_id = "eventd-test-plugin";
+EVENTD_EXPORT const gchar *eventd_plugin_id = "eventd-test-plugin";
+EVENTD_EXPORT
 void
 eventd_plugin_get_info(EventdPlugin *plugin)
 {
