@@ -10,6 +10,8 @@ nd_la_SOURCES = \
 	src/plugins/nd/cairo.h \
 	src/plugins/nd/style.c \
 	src/plugins/nd/style.h \
+	src/plugins/nd/backends.c \
+	src/plugins/nd/backends.h \
 	src/plugins/nd/nd.c
 
 nd_la_CFLAGS = \
