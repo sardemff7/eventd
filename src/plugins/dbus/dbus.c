@@ -55,6 +55,10 @@ typedef struct {
 static void
 _eventd_dbus_event_ended(EventdEvent *event, EventdEventEndReason reason, EventdDbusNotification *notification)
 {
+    /*
+     * We have to emit the NotificationClosed signal for our D-Bus client
+     */
+
     g_dbus_connection_emit_signal(notification->context->connection, notification->sender,
                                   NOTIFICATION_BUS_PATH, NOTIFICATION_BUS_NAME,
                                   "NotificationClosed", g_variant_new("(uu)", notification->id, reason),
@@ -62,17 +66,11 @@ _eventd_dbus_event_ended(EventdEvent *event, EventdEventEndReason reason, Eventd
     g_hash_table_remove(notification->context->notifications, GUINT_TO_POINTER(notification->id));
 }
 
-static void
-_eventd_dbus_notification_free(gpointer user_data)
-{
-    EventdDbusNotification *notification = user_data;
 
-    g_object_unref(notification->event);
+/*
+ * Helper functions
+ */
 
-    g_free(notification->sender);
-
-    g_free(notification);
-}
 static guint32
 _eventd_dbus_notification_new(EventdPluginContext *context, const gchar *sender, EventdEvent *event)
 {
@@ -91,6 +89,23 @@ _eventd_dbus_notification_new(EventdPluginContext *context, const gchar *sender,
 
     return notification->id;
 }
+
+static void
+_eventd_dbus_notification_free(gpointer user_data)
+{
+    EventdDbusNotification *notification = user_data;
+
+    g_object_unref(notification->event);
+
+    g_free(notification->sender);
+
+    g_free(notification);
+}
+
+
+/*
+ * D-Bus methods functions
+ */
 
 static void
 _eventd_dbus_notify(EventdPluginContext *context, const gchar *sender, GVariant *parameters, GDBusMethodInvocation *invocation)
@@ -303,6 +318,7 @@ _eventd_dbus_get_server_information(GDBusMethodInvocation *invocation)
     g_dbus_method_invocation_return_value(invocation, g_variant_new("(ssss)", PACKAGE_NAME, "Quentin 'Sardem FF7' Glidic", PACKAGE_VERSION, NOTIFICATION_SPEC_VERSION));
 }
 
+/* D-Bus method callback */
 static void
 _eventd_dbus_method(GDBusConnection       *connection,
                     const char            *sender,
@@ -315,6 +331,10 @@ _eventd_dbus_method(GDBusConnection       *connection,
 {
     EventdPluginContext *context = user_data;
 
+    /*
+     * We check the method name and call our corresponding function
+     */
+
     if ( g_strcmp0(method_name, "Notify") == 0 )
         _eventd_dbus_notify(context, sender, parameters, invocation);
     else if ( g_strcmp0(method_name, "CloseNotification") == 0 )
@@ -324,6 +344,11 @@ _eventd_dbus_method(GDBusConnection       *connection,
     else if ( g_strcmp0(method_name, "GetServerInformation") == 0 )
         _eventd_dbus_get_server_information(invocation);
 }
+
+
+/*
+ * D-Bus interface information
+ */
 
 static const gchar introspection_xml[] =
 "<node>"
@@ -358,6 +383,11 @@ static GDBusInterfaceVTable interface_vtable = {
     .method_call = _eventd_dbus_method
 };
 
+
+/*
+ * D-Bus bus callbacks
+ */
+
 static void
 _eventd_dbus_on_bus_acquired(GDBusConnection *connection, const gchar *name, gpointer user_data)
 {
@@ -391,6 +421,11 @@ _eventd_dbus_on_name_lost(GDBusConnection *connection, const gchar *name, gpoint
 #endif /* DEBUG */
 }
 
+
+/*
+ * Initialization interface
+ */
+
 static EventdPluginContext *
 _eventd_dbus_init(EventdCoreContext *core, EventdCoreInterface *core_interface)
 {
@@ -419,24 +454,6 @@ _eventd_dbus_init(EventdCoreContext *core, EventdCoreInterface *core_interface)
 }
 
 static void
-_eventd_dbus_start(EventdPluginContext *context)
-{
-    if ( ( context == NULL ) || context->disabled )
-        return;
-
-    context->id = g_bus_own_name(G_BUS_TYPE_SESSION, NOTIFICATION_BUS_NAME, G_BUS_NAME_OWNER_FLAGS_NONE, _eventd_dbus_on_bus_acquired, _eventd_dbus_on_name_acquired, _eventd_dbus_on_name_lost, context, NULL);
-}
-
-static void
-_eventd_dbus_stop(EventdPluginContext *context)
-{
-    if ( ( context == NULL ) || context->disabled )
-        return;
-
-    g_bus_unown_name(context->id);
-}
-
-static void
 _eventd_dbus_uninit(EventdPluginContext *context)
 {
     if ( context == NULL )
@@ -446,6 +463,11 @@ _eventd_dbus_uninit(EventdPluginContext *context)
 
     g_free(context);
 }
+
+
+/*
+ * Command-line options interface
+ */
 
 static GOptionGroup *
 _eventd_dbus_get_option_group(EventdPluginContext *context)
@@ -463,16 +485,44 @@ _eventd_dbus_get_option_group(EventdPluginContext *context)
     return option_group;
 }
 
+
+/*
+ * Start/Stop interface
+ */
+
+static void
+_eventd_dbus_start(EventdPluginContext *context)
+{
+    if ( ( context == NULL ) || context->disabled )
+        return;
+
+    context->id = g_bus_own_name(G_BUS_TYPE_SESSION, NOTIFICATION_BUS_NAME, G_BUS_NAME_OWNER_FLAGS_NONE, _eventd_dbus_on_bus_acquired, _eventd_dbus_on_name_acquired, _eventd_dbus_on_name_lost, context, NULL);
+}
+
+static void
+_eventd_dbus_stop(EventdPluginContext *context)
+{
+    if ( ( context == NULL ) || context->disabled )
+        return;
+
+    g_bus_unown_name(context->id);
+}
+
+
+/*
+ * Plugin interface
+ */
+
 EVENTD_EXPORT const gchar *eventd_plugin_id = "eventd-dbus";
 EVENTD_EXPORT
 void
 eventd_plugin_get_info(EventdPlugin *plugin)
 {
-    plugin->init = _eventd_dbus_init;
+    plugin->init   = _eventd_dbus_init;
     plugin->uninit = _eventd_dbus_uninit;
 
     plugin->get_option_group = _eventd_dbus_get_option_group;
 
     plugin->start = _eventd_dbus_start;
-    plugin->stop = _eventd_dbus_stop;
+    plugin->stop  = _eventd_dbus_stop;
 }
