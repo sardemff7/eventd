@@ -31,6 +31,7 @@ static guint64 regex_refcount = 0;
 
 static GRegex *regex_event_data = NULL;
 
+EVENTD_EXPORT
 void
 libeventd_regex_init()
 {
@@ -44,6 +45,7 @@ libeventd_regex_init()
     g_clear_error(&error);
 }
 
+EVENTD_EXPORT
 void
 libeventd_regex_clean()
 {
@@ -92,6 +94,7 @@ _libeventd_regex_replace_event_data_cb(const GMatchInfo *info, GString *r, gpoin
     return FALSE;
 }
 
+EVENTD_EXPORT
 gchar *
 libeventd_regex_replace_event_data(const gchar *target, EventdEvent *event, LibeventdRegexReplaceCallback callback, gpointer user_data)
 {

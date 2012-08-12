@@ -46,6 +46,7 @@ _libeventd_config_key_file_error(GError **error, const gchar *group, const gchar
     return ret;
 }
 
+EVENTD_EXPORT
 gint8
 libeventd_config_key_file_get_boolean(GKeyFile *config_file, const gchar *group, const gchar *key, gboolean *value)
 {
@@ -56,6 +57,7 @@ libeventd_config_key_file_get_boolean(GKeyFile *config_file, const gchar *group,
     return _libeventd_config_key_file_error(&error, group, key);
 }
 
+EVENTD_EXPORT
 gint8
 libeventd_config_key_file_get_int(GKeyFile *config_file, const gchar *group, const gchar *key, Int *value)
 {
@@ -67,6 +69,7 @@ libeventd_config_key_file_get_int(GKeyFile *config_file, const gchar *group, con
     return _libeventd_config_key_file_error(&error, group, key);
 }
 
+EVENTD_EXPORT
 gint8
 libeventd_config_key_file_get_string(GKeyFile *config_file, const gchar *group, const gchar *key, gchar **value)
 {
@@ -77,6 +80,7 @@ libeventd_config_key_file_get_string(GKeyFile *config_file, const gchar *group, 
     return _libeventd_config_key_file_error(&error, group, key);
 }
 
+EVENTD_EXPORT
 gint8
 libeventd_config_key_file_get_string_list(GKeyFile *config_file, const gchar *group, const gchar *key, gchar ***value, gsize *length)
 {
@@ -87,6 +91,7 @@ libeventd_config_key_file_get_string_list(GKeyFile *config_file, const gchar *gr
     return _libeventd_config_key_file_error(&error, group, key);
 }
 
+EVENTD_EXPORT
 gchar *
 libeventd_config_get_filename(const gchar *filename, EventdEvent *event, const gchar *subdir)
 {
