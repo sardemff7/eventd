@@ -38,6 +38,11 @@ struct _EventdPluginContext {
 
 #define BUFFER_SIZE 2000
 
+
+/*
+ * Initialization interface
+ */
+
 static EventdPluginContext *
 _eventd_espeak_init(EventdCoreContext *core, EventdCoreInterface *interface)
 {
@@ -73,11 +78,21 @@ _eventd_espeak_uninit(EventdPluginContext *context)
     g_free(context);
 }
 
+
+/*
+ * Start/Stop interface
+ */
+
 static void
 _eventd_espeak_stop(EventdPluginContext *context)
 {
     espeak_Synchronize();
 }
+
+
+/*
+ * Configuration interface
+ */
 
 static void
 _eventd_espeak_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile *config_file)
@@ -101,6 +116,17 @@ _eventd_espeak_event_parse(EventdPluginContext *context, const gchar *id, GKeyFi
 
     g_hash_table_insert(context->events, g_strdup(id), message);
 }
+
+static void
+_eventd_espeak_config_reset(EventdPluginContext *context)
+{
+    g_hash_table_remove_all(context->events);
+}
+
+
+/*
+ * Event action interface
+ */
 
 static gchar *
 _eventd_espeak_regex_event_data_cb(const GMatchInfo *info, EventdEvent *event, gpointer user_data)
@@ -134,6 +160,7 @@ _eventd_espeak_regex_event_data_cb(const GMatchInfo *info, EventdEvent *event, g
     return ret;
 }
 
+
 static void
 _eventd_espeak_event_action(EventdPluginContext *context, EventdEvent *event)
 {
@@ -162,24 +189,24 @@ _eventd_espeak_event_action(EventdPluginContext *context, EventdEvent *event)
 
     g_free(msg);
 }
-static void
-_eventd_espeak_config_reset(EventdPluginContext *context)
-{
-    g_hash_table_remove_all(context->events);
-}
+
+
+/*
+ * Plugin interface
+ */
 
 EVENTD_EXPORT const gchar *eventd_plugin_id = "eventd-espeak";
 EVENTD_EXPORT
 void
 eventd_plugin_get_info(EventdPlugin *plugin)
 {
-    plugin->init = _eventd_espeak_init;
+    plugin->init   = _eventd_espeak_init;
     plugin->uninit = _eventd_espeak_uninit;
 
     plugin->stop = _eventd_espeak_stop;
 
+    plugin->event_parse  = _eventd_espeak_event_parse;
     plugin->config_reset = _eventd_espeak_config_reset;
 
-    plugin->event_parse = _eventd_espeak_event_parse;
     plugin->event_action = _eventd_espeak_event_action;
 }
