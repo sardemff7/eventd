@@ -57,9 +57,9 @@ gtk_min_version="3.0"
 vala_min_version="0.12"
 
 
-AM_CFLAGS="-Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers"
+AM_CFLAGS="-fvisibility=hidden -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers"
 AM_LDFLAGS="-no-undefined -Wl,--no-undefined"
-AM_VALA_CFLAGS="-Wno-unused-variable -Wno-unused-function -Wno-unused-but-set-variable"
+AM_VALA_CFLAGS="-fvisibility=default -Wno-unused-variable -Wno-unused-function -Wno-unused-but-set-variable"
 AM_VALAFLAGS=""
 AM_XSLTPROCFLAGS="--nonet --stringparam man.output.quietly 1 --stringparam funcsynopsis.style ansi"
 
