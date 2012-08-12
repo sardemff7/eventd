@@ -280,6 +280,9 @@ _eventd_nd_event_action(EventdPluginContext *context, EventdEvent *event)
 {
     EventdNdStyle *style;
 
+    if ( context->displays == NULL )
+        return;
+
     style = g_hash_table_lookup(context->events, eventd_event_get_config_id(event));
     if ( style == NULL )
         return;
@@ -314,13 +317,10 @@ _eventd_nd_event_action(EventdPluginContext *context, EventdEvent *event)
     cairo_surface_destroy(bubble);
     cairo_surface_destroy(shape);
 
-    if ( surfaces != NULL )
-    {
-        g_signal_connect(event, "updated", G_CALLBACK(_eventd_nd_event_updated), context);
-        g_signal_connect(event, "ended", G_CALLBACK(_eventd_nd_event_ended), context);
+    g_signal_connect(event, "updated", G_CALLBACK(_eventd_nd_event_updated), context);
+    g_signal_connect(event, "ended", G_CALLBACK(_eventd_nd_event_ended), context);
 
-        g_hash_table_insert(context->surfaces, g_object_ref(event), surfaces);
-    }
+    g_hash_table_insert(context->surfaces, g_object_ref(event), surfaces);
 
     libeventd_nd_notification_free(notification);
 }
