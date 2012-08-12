@@ -27,8 +27,10 @@
 
 #define EVENTD_EVENT_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), EVENTD_TYPE_EVENT, EventdEventPrivate))
 
+EVENTD_EXPORT GType eventd_event_get_type(void);
 G_DEFINE_TYPE(EventdEvent, eventd_event, G_TYPE_OBJECT)
 
+EVENTD_EXPORT
 GType
 eventd_event_end_reason_get_type()
 {
@@ -117,6 +119,7 @@ eventd_event_class_init(EventdEventClass *klass)
                      1, EVENTD_TYPE_EVENT_END_REASON);
 }
 
+EVENTD_EXPORT
 EventdEvent *
 eventd_event_new(const gchar *name)
 {
@@ -152,6 +155,7 @@ _eventd_event_finalize(GObject *object)
     G_OBJECT_CLASS(eventd_event_parent_class)->finalize(object);
 }
 
+EVENTD_EXPORT
 void
 eventd_event_update(EventdEvent *self, const gchar *name)
 {
@@ -166,6 +170,7 @@ eventd_event_update(EventdEvent *self, const gchar *name)
     g_signal_emit(self, _eventd_event_signals[SIGNAL_UPDATED], 0);
 }
 
+EVENTD_EXPORT
 void
 eventd_event_answer(EventdEvent *self, const gchar *answer)
 {
@@ -177,6 +182,7 @@ eventd_event_answer(EventdEvent *self, const gchar *answer)
     g_signal_emit(self, _eventd_event_signals[SIGNAL_ANSWERED], 0, answer_->data);
 }
 
+EVENTD_EXPORT
 void
 eventd_event_end(EventdEvent *self, EventdEventEndReason reason)
 {
@@ -186,6 +192,7 @@ eventd_event_end(EventdEvent *self, EventdEventEndReason reason)
     g_signal_emit(self, _eventd_event_signals[SIGNAL_ENDED], 0, reason);
 }
 
+EVENTD_EXPORT
 void
 eventd_event_add_data(EventdEvent *self, gchar *name, gchar *content)
 {
@@ -198,6 +205,7 @@ eventd_event_add_data(EventdEvent *self, gchar *name, gchar *content)
     g_hash_table_insert(self->priv->data, name, content);
 }
 
+EVENTD_EXPORT
 void
 eventd_event_add_answer(EventdEvent *self, const gchar *name)
 {
@@ -207,6 +215,7 @@ eventd_event_add_answer(EventdEvent *self, const gchar *name)
     self->priv->answers = g_list_prepend(self->priv->answers, g_strdup(name));
 }
 
+EVENTD_EXPORT
 void
 eventd_event_add_answer_data(EventdEvent *self, gchar *name, gchar *content)
 {
@@ -219,6 +228,7 @@ eventd_event_add_answer_data(EventdEvent *self, gchar *name, gchar *content)
     g_hash_table_insert(self->priv->answer_data, name, content);
 }
 
+EVENTD_EXPORT
 void
 eventd_event_set_timeout(EventdEvent *self, gint64 timeout)
 {
@@ -228,6 +238,7 @@ eventd_event_set_timeout(EventdEvent *self, gint64 timeout)
     self->priv->timeout = timeout;
 }
 
+EVENTD_EXPORT
 void
 eventd_event_set_id(EventdEvent *self, const gchar *id)
 {
@@ -238,6 +249,7 @@ eventd_event_set_id(EventdEvent *self, const gchar *id)
     self->priv->id = g_strdup(id);
 }
 
+EVENTD_EXPORT
 void
 eventd_event_set_config_id(EventdEvent *self, const gchar *config_id)
 {
@@ -248,6 +260,7 @@ eventd_event_set_config_id(EventdEvent *self, const gchar *config_id)
     self->priv->config_id = g_strdup(config_id);
 }
 
+EVENTD_EXPORT
 void
 eventd_event_set_category(EventdEvent *self, const gchar *category)
 {
@@ -259,6 +272,7 @@ eventd_event_set_category(EventdEvent *self, const gchar *category)
 }
 
 
+EVENTD_EXPORT
 const gchar *
 eventd_event_get_id(EventdEvent *self)
 {
@@ -267,6 +281,7 @@ eventd_event_get_id(EventdEvent *self)
     return self->priv->id;
 }
 
+EVENTD_EXPORT
 const gchar *
 eventd_event_get_config_id(EventdEvent *self)
 {
@@ -275,6 +290,7 @@ eventd_event_get_config_id(EventdEvent *self)
     return self->priv->config_id;
 }
 
+EVENTD_EXPORT
 const gchar *
 eventd_event_get_category(EventdEvent *self)
 {
@@ -282,6 +298,8 @@ eventd_event_get_category(EventdEvent *self)
 
     return self->priv->category;
 }
+
+EVENTD_EXPORT
 
 const gchar *
 eventd_event_get_name(EventdEvent *self)
@@ -291,6 +309,7 @@ eventd_event_get_name(EventdEvent *self)
     return self->priv->name;
 }
 
+EVENTD_EXPORT
 gint64
 eventd_event_get_timeout(EventdEvent *self)
 {
@@ -299,6 +318,7 @@ eventd_event_get_timeout(EventdEvent *self)
     return self->priv->timeout;
 }
 
+EVENTD_EXPORT
 const gchar *
 eventd_event_get_data(EventdEvent *self, const gchar *name)
 {
@@ -310,6 +330,7 @@ eventd_event_get_data(EventdEvent *self, const gchar *name)
     return g_hash_table_lookup(self->priv->data, name);
 }
 
+EVENTD_EXPORT
 GHashTable *
 eventd_event_get_all_data(EventdEvent *self)
 {
@@ -318,6 +339,7 @@ eventd_event_get_all_data(EventdEvent *self)
     return self->priv->data;
 }
 
+EVENTD_EXPORT
 GList *
 eventd_event_get_answers(EventdEvent *self)
 {
@@ -326,6 +348,7 @@ eventd_event_get_answers(EventdEvent *self)
     return self->priv->answers;
 }
 
+EVENTD_EXPORT
 const gchar *
 eventd_event_get_answer_data(EventdEvent *self, const gchar *name)
 {
@@ -337,6 +360,7 @@ eventd_event_get_answer_data(EventdEvent *self, const gchar *name)
     return g_hash_table_lookup(self->priv->answer_data, name);
 }
 
+EVENTD_EXPORT
 GHashTable *
 eventd_event_get_all_answer_data(EventdEvent *self)
 {

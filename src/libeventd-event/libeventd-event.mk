@@ -12,9 +12,6 @@ pkginclude_HEADERS += \
 	include/libeventd-event-types.h \
 	include/libeventd-event.h
 
-EXTRA_DIST += \
-	src/libeventd-event/libeventd-event.sym
-
 libeventd_event_la_SOURCES = \
 	src/libeventd-event/event.c
 
@@ -26,8 +23,7 @@ libeventd_event_la_CFLAGS = \
 
 libeventd_event_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
-	-version-info $(LIBEVENTD_EVENT_CURRENT):$(LIBEVENTD_EVENT_REVISION):$(LIBEVENTD_EVENT_AGE) \
-	-Wl,--version-script=$(srcdir)/src/libeventd-event/libeventd-event.sym
+	-version-info $(LIBEVENTD_EVENT_CURRENT):$(LIBEVENTD_EVENT_REVISION):$(LIBEVENTD_EVENT_AGE)
 
 libeventd_event_la_LIBADD = \
 	$(GOBJECT_LIBS) \
