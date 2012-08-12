@@ -27,31 +27,41 @@
 #include "style.h"
 
 struct _EventdNdStyle {
-    gint bubble_min_width;
-    gint bubble_max_width;
+    struct {
+        gint   min_width;
+        gint   max_width;
 
-    gint bubble_padding;
-    gint bubble_radius;
-    Colour bubble_colour;
+        gint   padding;
+        gint   radius;
+        Colour colour;
+    } bubble;
 
-    gint image_max_width;
-    gint image_max_height;
-    gint image_margin;
+    struct {
+        gint max_width;
+        gint max_height;
+        gint margin;
+    } image;
 
-    EventdNdStyleIconPlacement icon_placement;
-    EventdNdAnchor icon_anchor;
-    gint icon_max_width;
-    gint icon_max_height;
-    gint icon_margin;
-    gdouble icon_fade_width;
+    struct {
+        EventdNdStyleIconPlacement placement;
+        EventdNdAnchor             anchor;
+        gint                       max_width;
+        gint                       max_height;
+        gint                       margin;
+        gdouble                    fade_width;
+    } icon;
 
-    gchar *title_font;
-    Colour title_colour;
+    struct {
+        gchar *font;
+        Colour colour;
+    } title;
 
-    gint message_spacing;
-    guint8 message_max_lines;
-    gchar *message_font;
-    Colour message_colour;
+    struct {
+        gint   spacing;
+        guint8 max_lines;
+        gchar *font;
+        Colour colour;
+    } message;
 };
 
 static gboolean
@@ -90,81 +100,81 @@ static void
 _eventd_nd_style_init_defaults(EventdNdStyle *style)
 {
     /* bubble geometry */
-    style->bubble_min_width = 200;
-    style->bubble_max_width = -1;
+    style->bubble.min_width = 200;
+    style->bubble.max_width = -1;
 
     /* bubble style */
-    style->bubble_padding   = 10;
-    style->bubble_radius    = 10;
-    style->bubble_colour.r = 0.15;
-    style->bubble_colour.g = 0.15;
-    style->bubble_colour.b = 0.15;
-    style->bubble_colour.a = 1.0;
+    style->bubble.padding   = 10;
+    style->bubble.radius    = 10;
+    style->bubble.colour.r = 0.15;
+    style->bubble.colour.g = 0.15;
+    style->bubble.colour.b = 0.15;
+    style->bubble.colour.a = 1.0;
 
     /* image */
-    style->image_max_width  = 50;
-    style->image_max_height = 50;
-    style->image_margin     = 10;
+    style->image.max_width  = 50;
+    style->image.max_height = 50;
+    style->image.margin     = 10;
 
     /* icon */
-    style->icon_placement  = EVENTD_ND_STYLE_ICON_PLACEMENT_BACKGROUND;
-    style->icon_anchor     = EVENTD_ND_ANCHOR_VCENTER;
-    style->icon_max_width  = 50;
-    style->icon_max_height = 50;
-    style->icon_margin     = 10;
-    style->icon_fade_width = 0.75;
+    style->icon.placement  = EVENTD_ND_STYLE_ICON_PLACEMENT_BACKGROUND;
+    style->icon.anchor     = EVENTD_ND_ANCHOR_VCENTER;
+    style->icon.max_width  = 50;
+    style->icon.max_height = 50;
+    style->icon.margin     = 10;
+    style->icon.fade_width = 0.75;
 
     /* title */
-    style->title_font = g_strdup("Linux Libertine O Bold 9");
-    style->title_colour.r    = 0.9;
-    style->title_colour.g    = 0.9;
-    style->title_colour.b    = 0.9;
-    style->title_colour.a    = 1.0;
+    style->title.font = g_strdup("Linux Libertine O Bold 9");
+    style->title.colour.r    = 0.9;
+    style->title.colour.g    = 0.9;
+    style->title.colour.b    = 0.9;
+    style->title.colour.a    = 1.0;
 
     /* message */
-    style->message_spacing     = 5;
-    style->message_max_lines   = 10;
-    style->message_font = g_strdup("Linux Libertine O 9");
-    style->message_colour.r    = 0.9;
-    style->message_colour.g    = 0.9;
-    style->message_colour.b    = 0.9;
-    style->message_colour.a    = 1.0;
+    style->message.spacing     = 5;
+    style->message.max_lines   = 10;
+    style->message.font = g_strdup("Linux Libertine O 9");
+    style->message.colour.r    = 0.9;
+    style->message.colour.g    = 0.9;
+    style->message.colour.b    = 0.9;
+    style->message.colour.a    = 1.0;
 }
 
 static void
 _eventd_nd_style_init_parent(EventdNdStyle *self, EventdNdStyle *parent)
 {
     /* bubble geometry */
-    self->bubble_min_width = parent->bubble_min_width;
-    self->bubble_max_width = parent->bubble_max_width;
+    self->bubble.min_width = parent->bubble.min_width;
+    self->bubble.max_width = parent->bubble.max_width;
 
     /* bubble style */
-    self->bubble_padding = parent->bubble_padding;
-    self->bubble_radius  = parent->bubble_radius;
-    self->bubble_colour  = parent->bubble_colour;
+    self->bubble.padding = parent->bubble.padding;
+    self->bubble.radius  = parent->bubble.radius;
+    self->bubble.colour  = parent->bubble.colour;
 
     /* image */
-    self->image_max_width  = parent->image_max_width;
-    self->image_max_height = parent->image_max_height;
-    self->image_margin     = parent->image_margin;
+    self->image.max_width  = parent->image.max_width;
+    self->image.max_height = parent->image.max_height;
+    self->image.margin     = parent->image.margin;
 
     /* icon */
-    self->icon_placement  = parent->icon_placement;
-    self->icon_anchor     = parent->icon_anchor;
-    self->icon_max_width  = parent->icon_max_width;
-    self->icon_max_height = parent->icon_max_height;
-    self->icon_margin     = parent->icon_margin;
-    self->icon_fade_width = parent->icon_fade_width;
+    self->icon.placement  = parent->icon.placement;
+    self->icon.anchor     = parent->icon.anchor;
+    self->icon.max_width  = parent->icon.max_width;
+    self->icon.max_height = parent->icon.max_height;
+    self->icon.margin     = parent->icon.margin;
+    self->icon.fade_width = parent->icon.fade_width;
 
     /* title */
-    self->title_font   = g_strdup(parent->title_font);
-    self->title_colour = parent->title_colour;
+    self->title.font   = g_strdup(parent->title.font);
+    self->title.colour = parent->title.colour;
 
     /* message */
-    self->message_spacing   = parent->message_spacing;
-    self->message_max_lines = parent->message_max_lines;
-    self->message_font      = g_strdup(parent->message_font);
-    self->message_colour    = parent->message_colour;
+    self->message.spacing   = parent->message.spacing;
+    self->message.max_lines = parent->message.max_lines;
+    self->message.font      = g_strdup(parent->message.font);
+    self->message.colour    = parent->message.colour;
 }
 
 EventdNdStyle *
@@ -192,21 +202,21 @@ eventd_nd_style_update(EventdNdStyle *style, GKeyFile *config_file)
     if ( g_key_file_has_group(config_file, "NotificationBubble") )
     {
         if ( libeventd_config_key_file_get_int(config_file, "NotificationBubble", "MinWidth", &integer) == 0 )
-            style->bubble_min_width = integer.value;
+            style->bubble.min_width = integer.value;
 
         if ( libeventd_config_key_file_get_int(config_file, "NotificationBubble", "MaxWidth", &integer) == 0 )
-            style->bubble_max_width = integer.value;
+            style->bubble.max_width = integer.value;
 
         if ( libeventd_config_key_file_get_int(config_file, "NotificationBubble", "Padding", &integer) == 0 )
-            style->bubble_padding = integer.value;
+            style->bubble.padding = integer.value;
 
         if ( libeventd_config_key_file_get_int(config_file, "NotificationBubble", "Radius", &integer) == 0 )
-            style->bubble_radius = integer.value;
+            style->bubble.radius = integer.value;
 
         if ( ( libeventd_config_key_file_get_string(config_file, "NotificationBubble", "Colour", &string) == 0 ) && _eventd_nd_style_parse_colour(string, &colour) )
         {
             g_free(string);
-            style->bubble_colour = colour;
+            style->bubble.colour = colour;
         }
     }
 
@@ -214,48 +224,48 @@ eventd_nd_style_update(EventdNdStyle *style, GKeyFile *config_file)
     {
         if ( libeventd_config_key_file_get_string(config_file, "NotificationTitle", "Font", &string) == 0 )
         {
-            g_free(style->title_font);
-            style->title_font = string;
+            g_free(style->title.font);
+            style->title.font = string;
         }
 
         if ( ( libeventd_config_key_file_get_string(config_file, "NotificationTitle", "Colour", &string) == 0 ) && _eventd_nd_style_parse_colour(string, &colour) )
         {
             g_free(string);
-            style->title_colour = colour;
+            style->title.colour = colour;
         }
     }
 
     if ( g_key_file_has_group(config_file, "NotificationMessage") )
     {
         if ( libeventd_config_key_file_get_int(config_file, "NotificationMessage", "Spacing", &integer) == 0 )
-            style->message_spacing = integer.value;
+            style->message.spacing = integer.value;
 
         if ( libeventd_config_key_file_get_int(config_file, "NotificationMessage", "MaxLines", &integer) == 0 )
-            style->message_max_lines = integer.value;
+            style->message.max_lines = integer.value;
 
         if ( libeventd_config_key_file_get_string(config_file, "NotificationMessage", "Font", &string) == 0 )
         {
-            g_free(style->message_font);
-            style->message_font = string;
+            g_free(style->message.font);
+            style->message.font = string;
         }
 
         if ( ( libeventd_config_key_file_get_string(config_file, "NotificationMessage", "Colour", &string) == 0 ) && _eventd_nd_style_parse_colour(string, &colour) )
         {
             g_free(string);
-            style->message_colour = colour;
+            style->message.colour = colour;
         }
     }
 
     if ( g_key_file_has_group(config_file, "NotificationImage") )
     {
         if ( libeventd_config_key_file_get_int(config_file, "NotificationImage", "MaxWidth", &integer) == 0 )
-            style->image_max_width = integer.value;
+            style->image.max_width = integer.value;
 
         if ( libeventd_config_key_file_get_int(config_file, "NotificationImage", "MaxHeight", &integer) == 0 )
-            style->image_max_height = integer.value;
+            style->image.max_height = integer.value;
 
         if ( libeventd_config_key_file_get_int(config_file, "NotificationImage", "Margin", &integer) == 0 )
-            style->image_margin = integer.value;
+            style->image.margin = integer.value;
     }
 
     if ( g_key_file_has_group(config_file, "NotificationIcon") )
@@ -263,11 +273,11 @@ eventd_nd_style_update(EventdNdStyle *style, GKeyFile *config_file)
         if ( libeventd_config_key_file_get_string(config_file, "NotificationIcon", "Placement", &string) == 0 )
         {
             if ( g_strcmp0(string, "Background") == 0 )
-                style->icon_placement = EVENTD_ND_STYLE_ICON_PLACEMENT_BACKGROUND;
+                style->icon.placement = EVENTD_ND_STYLE_ICON_PLACEMENT_BACKGROUND;
             else if ( g_strcmp0(string, "Overlay") == 0 )
-                style->icon_placement = EVENTD_ND_STYLE_ICON_PLACEMENT_OVERLAY;
+                style->icon.placement = EVENTD_ND_STYLE_ICON_PLACEMENT_OVERLAY;
             else if ( g_strcmp0(string, "Foreground") == 0 )
-                style->icon_placement = EVENTD_ND_STYLE_ICON_PLACEMENT_FOREGROUND;
+                style->icon.placement = EVENTD_ND_STYLE_ICON_PLACEMENT_FOREGROUND;
             else
                 g_warning("Wrong placement value '%s'", string);
             g_free(string);
@@ -276,31 +286,31 @@ eventd_nd_style_update(EventdNdStyle *style, GKeyFile *config_file)
         if ( libeventd_config_key_file_get_string(config_file, "NotificationIcon", "Anchor", &string) == 0 )
         {
             if ( g_strcmp0(string, "Top") == 0 )
-                style->icon_anchor = EVENTD_ND_ANCHOR_TOP;
+                style->icon.anchor = EVENTD_ND_ANCHOR_TOP;
             else if ( g_strcmp0(string, "Bottom") == 0 )
-                style->icon_anchor = EVENTD_ND_ANCHOR_BOTTOM;
+                style->icon.anchor = EVENTD_ND_ANCHOR_BOTTOM;
             else if ( g_strcmp0(string, "Center") == 0 )
-                style->icon_anchor = EVENTD_ND_ANCHOR_VCENTER;
+                style->icon.anchor = EVENTD_ND_ANCHOR_VCENTER;
             else
                 g_warning("Wrong anchor value '%s'", string);
             g_free(string);
         }
 
         if ( libeventd_config_key_file_get_int(config_file, "NotificationIcon", "MaxWidth", &integer) == 0 )
-            style->icon_max_width = integer.value;
+            style->icon.max_width = integer.value;
 
         if ( libeventd_config_key_file_get_int(config_file, "NotificationIcon", "MaxHeight", &integer) == 0 )
-            style->icon_max_height = integer.value;
+            style->icon.max_height = integer.value;
 
         if ( libeventd_config_key_file_get_int(config_file, "NotificationIcon", "Margin", &integer) == 0 )
-            style->icon_margin = integer.value;
+            style->icon.margin = integer.value;
 
         if ( libeventd_config_key_file_get_int(config_file, "NotificationIcon", "FadeWidth", &integer) == 0 )
         {
             if ( ( integer.value < 0 ) || ( integer.value > 100 ) )
                 g_warning("Wrong percentage value '%jd'", integer.value);
             else
-                style->icon_fade_width = (gdouble) integer.value / 100.;
+                style->icon.fade_width = (gdouble) integer.value / 100.;
         }
     }
 }
@@ -311,8 +321,8 @@ eventd_nd_style_free(EventdNdStyle *style)
     if ( style == NULL )
         return;
 
-    g_free(style->title_font);
-    g_free(style->message_font);
+    g_free(style->title.font);
+    g_free(style->message.font);
 
     g_free(style);
 }
@@ -320,119 +330,119 @@ eventd_nd_style_free(EventdNdStyle *style)
 gint
 eventd_nd_style_get_bubble_min_width(EventdNdStyle *self)
 {
-    return self->bubble_min_width;
+    return self->bubble.min_width;
 }
 
 gint
 eventd_nd_style_get_bubble_max_width(EventdNdStyle *self)
 {
-    return self->bubble_max_width;
+    return self->bubble.max_width;
 }
 
 gint
 eventd_nd_style_get_bubble_padding(EventdNdStyle *self)
 {
-    return self->bubble_padding;
+    return self->bubble.padding;
 }
 
 gint
 eventd_nd_style_get_bubble_radius(EventdNdStyle *self)
 {
-    return self->bubble_radius;
+    return self->bubble.radius;
 }
 
 Colour
 eventd_nd_style_get_bubble_colour(EventdNdStyle *self)
 {
-    return self->bubble_colour;
+    return self->bubble.colour;
 }
 
 gint
 eventd_nd_style_get_image_max_width(EventdNdStyle *self)
 {
-    return self->image_max_width;
+    return self->image.max_width;
 }
 
 gint
 eventd_nd_style_get_image_max_height(EventdNdStyle *self)
 {
-    return self->image_max_height;
+    return self->image.max_height;
 }
 
 gint
 eventd_nd_style_get_image_margin(EventdNdStyle *self)
 {
-    return self->image_margin;
+    return self->image.margin;
 }
 
 EventdNdStyleIconPlacement
 eventd_nd_style_get_icon_placement(EventdNdStyle *self)
 {
-    return self->icon_placement;
+    return self->icon.placement;
 }
 
 EventdNdAnchor
 eventd_nd_style_get_icon_anchor(EventdNdStyle *self)
 {
-    return self->icon_anchor;
+    return self->icon.anchor;
 }
 
 gint
 eventd_nd_style_get_icon_max_width(EventdNdStyle *self)
 {
-    return self->icon_max_width;
+    return self->icon.max_width;
 }
 
 gint
 eventd_nd_style_get_icon_max_height(EventdNdStyle *self)
 {
-    return self->icon_max_height;
+    return self->icon.max_height;
 }
 
 gint
 eventd_nd_style_get_icon_margin(EventdNdStyle *self)
 {
-    return self->icon_margin;
+    return self->icon.margin;
 }
 
 gdouble
 eventd_nd_style_get_icon_fade_width(EventdNdStyle *self)
 {
-    return self->icon_fade_width;
+    return self->icon.fade_width;
 }
 
 const gchar *
 eventd_nd_style_get_title_font(EventdNdStyle *self)
 {
-    return self->title_font;
+    return self->title.font;
 }
 
 Colour
 eventd_nd_style_get_title_colour(EventdNdStyle *self)
 {
-    return self->title_colour;
+    return self->title.colour;
 }
 
 gint
 eventd_nd_style_get_message_spacing(EventdNdStyle *self)
 {
-    return self->message_spacing;
+    return self->message.spacing;
 }
 
 guint8
 eventd_nd_style_get_message_max_lines(EventdNdStyle *self)
 {
-    return self->message_max_lines;
+    return self->message.max_lines;
 }
 
 const gchar *
 eventd_nd_style_get_message_font(EventdNdStyle *self)
 {
-    return self->message_font;
+    return self->message.font;
 }
 
 Colour
 eventd_nd_style_get_message_colour(EventdNdStyle *self)
 {
-    return self->message_colour;
+    return self->message.colour;
 }
