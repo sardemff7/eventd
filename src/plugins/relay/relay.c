@@ -40,12 +40,10 @@ struct _EventdPluginContext {
     GHashTable *events;
 };
 
-static void
-_eventd_relay_server_list_free(gpointer data)
-{
-    GList *list = data;
-    g_list_free(list);
-}
+
+/*
+ * Initialization interface
+ */
 
 static EventdPluginContext *
 _eventd_relay_init(EventdCoreContext *core, EventdCoreInterface *interface)
@@ -54,7 +52,7 @@ _eventd_relay_init(EventdCoreContext *core, EventdCoreInterface *interface)
 
     context = g_new0(EventdPluginContext, 1);
 
-    context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_relay_server_list_free);
+    context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_list_free);
 
     context->avahi = eventd_relay_avahi_init();
     context->servers = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, eventd_relay_server_free);
@@ -73,11 +71,45 @@ _eventd_relay_uninit(EventdPluginContext *context)
     g_free(context);
 }
 
+
+/*
+ * Start/Stop interface
+ */
+
 static void
-_eventd_relay_config_reset(EventdPluginContext *context)
+_eventd_relay_start_each(gpointer key, gpointer data, gpointer user_data)
 {
-    g_hash_table_remove_all(context->events);
+    if ( data == NULL )
+        return;
+
+    eventd_relay_server_start(data);
 }
+
+static void
+_eventd_relay_start(EventdPluginContext *context)
+{
+    g_hash_table_foreach(context->servers, _eventd_relay_start_each, NULL);
+}
+
+static void
+_eventd_relay_stop_each(gpointer key, gpointer data, gpointer user_data)
+{
+    if ( data == NULL )
+        return;
+
+    eventd_relay_server_stop(data);
+}
+
+static void
+_eventd_relay_stop(EventdPluginContext *context)
+{
+    g_hash_table_foreach(context->servers, _eventd_relay_stop_each, NULL);
+}
+
+
+/*
+ * Configuration interface
+ */
 
 static void
 _eventd_relay_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile *config_file)
@@ -147,34 +179,15 @@ fail:
 }
 
 static void
-_eventd_relay_start_each(gpointer key, gpointer data, gpointer user_data)
+_eventd_relay_config_reset(EventdPluginContext *context)
 {
-    if ( data == NULL )
-        return;
-
-    eventd_relay_server_start(data);
+    g_hash_table_remove_all(context->events);
 }
 
-static void
-_eventd_relay_start(EventdPluginContext *context)
-{
-    g_hash_table_foreach(context->servers, _eventd_relay_start_each, NULL);
-}
 
-static void
-_eventd_relay_stop_each(gpointer key, gpointer data, gpointer user_data)
-{
-    if ( data == NULL )
-        return;
-
-    eventd_relay_server_stop(data);
-}
-
-static void
-_eventd_relay_stop(EventdPluginContext *context)
-{
-    g_hash_table_foreach(context->servers, _eventd_relay_stop_each, NULL);
-}
+/*
+ * Event action interface
+ */
 
 static void
 _eventd_relay_event_action(EventdPluginContext *context, EventdEvent *event)
@@ -190,20 +203,25 @@ _eventd_relay_event_action(EventdPluginContext *context, EventdEvent *event)
         eventd_relay_server_event(server->data, event);
 }
 
+
+/*
+ * Plugin interface
+ */
+
 EVENTD_EXPORT const gchar *eventd_plugin_id = "eventd-relay";
 EVENTD_EXPORT
 void
 eventd_plugin_get_info(EventdPlugin *plugin)
 {
-    plugin->init = _eventd_relay_init;
+    plugin->init   = _eventd_relay_init;
     plugin->uninit = _eventd_relay_uninit;
 
     plugin->start = _eventd_relay_start;
-    plugin->stop = _eventd_relay_stop;
+    plugin->stop  = _eventd_relay_stop;
 
+    plugin->event_parse  = _eventd_relay_event_parse;
     plugin->config_reset = _eventd_relay_config_reset;
 
-    plugin->event_parse = _eventd_relay_event_parse;
     plugin->event_action = _eventd_relay_event_action;
 }
 
