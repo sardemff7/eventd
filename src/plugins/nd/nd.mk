@@ -21,7 +21,7 @@ nd_la_CFLAGS = \
 
 nd_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
-	-avoid-version -module -export-symbols-regex 'eventd_plugin_(id|get_info)'
+	-avoid-version -module
 
 nd_la_LIBADD = \
 	libeventd-event.la \
