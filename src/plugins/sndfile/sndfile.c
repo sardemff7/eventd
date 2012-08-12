@@ -38,6 +38,9 @@ struct _EventdPluginContext {
     EventdSndfilePulseaudioContext *pulseaudio;
 };
 
+/*
+ * File reading helper
+ */
 typedef sf_count_t (*sndfile_readf_t)(SNDFILE *sndfile, void *ptr, sf_count_t frames);
 
 static void
@@ -109,50 +112,10 @@ out:
     sf_close(f);
 }
 
-static void
-_eventd_sndfile_event_action(EventdPluginContext *context, EventdEvent *event)
-{
-    gchar *sound;
-    gchar *file;
-    gpointer data = NULL;
-    gsize length = 0;
-    gint format = 0;
-    guint32 rate = 0;
-    guint8 channels = 0;
 
-    sound = g_hash_table_lookup(context->events, eventd_event_get_config_id(event));
-    if ( sound == NULL )
-        return;
-
-    if ( ( file = libeventd_config_get_filename(sound, event, "sounds") ) != NULL )
-        _eventd_sndfile_read_file(file, &data, &length, &format, &rate, &channels);
-    // TODO: using event data
-
-    eventd_sndfile_pulseaudio_play_data(context->pulseaudio, data, length, format, rate, channels);
-}
-
-static void
-_eventd_sndfile_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile *config_file)
-{
-    gboolean disable;
-    gchar *sound = NULL;
-
-    if ( ! g_key_file_has_group(config_file, "Sound") )
-        return;
-
-    if ( libeventd_config_key_file_get_boolean(config_file, "Sound", "Disable", &disable) < 0 )
-        return;
-
-    if ( ! disable )
-    {
-        if ( libeventd_config_key_file_get_string(config_file, "Sound", "Sound", &sound) < 0 )
-            return;
-        if ( sound == NULL )
-            sound = g_strdup("$text");
-    }
-
-    g_hash_table_insert(context->events, g_strdup(id), sound);
-}
+/*
+ * Initialization interface
+ */
 
 static EventdPluginContext *
 _eventd_sndfile_init(EventdCoreContext *core, EventdCoreInterface *interface)
@@ -180,6 +143,11 @@ _eventd_sndfile_uninit(EventdPluginContext *context)
     g_free(context);
 }
 
+
+/*
+ * Start/Stop interface
+ */
+
 static void
 _eventd_sndfile_start(EventdPluginContext *context)
 {
@@ -192,25 +160,84 @@ _eventd_sndfile_stop(EventdPluginContext *context)
     eventd_sndfile_pulseaudio_stop(context->pulseaudio);
 }
 
+/*
+ * Configuration interface
+ */
+
+static void
+_eventd_sndfile_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile *config_file)
+{
+    gboolean disable;
+    gchar *sound = NULL;
+
+    if ( ! g_key_file_has_group(config_file, "Sound") )
+        return;
+
+    if ( libeventd_config_key_file_get_boolean(config_file, "Sound", "Disable", &disable) < 0 )
+        return;
+
+    if ( ! disable )
+    {
+        if ( libeventd_config_key_file_get_string(config_file, "Sound", "Sound", &sound) < 0 )
+            return;
+        if ( sound == NULL )
+            sound = g_strdup("$text");
+    }
+
+    g_hash_table_insert(context->events, g_strdup(id), sound);
+}
+
 static void
 _eventd_sndfile_config_reset(EventdPluginContext *context)
 {
     g_hash_table_remove_all(context->events);
 }
 
+
+/*
+ * Event action interface
+ */
+
+static void
+_eventd_sndfile_event_action(EventdPluginContext *context, EventdEvent *event)
+{
+    gchar *sound;
+    gchar *file;
+    gpointer data = NULL;
+    gsize length = 0;
+    gint format = 0;
+    guint32 rate = 0;
+    guint8 channels = 0;
+
+    sound = g_hash_table_lookup(context->events, eventd_event_get_config_id(event));
+    if ( sound == NULL )
+        return;
+
+    if ( ( file = libeventd_config_get_filename(sound, event, "sounds") ) != NULL )
+        _eventd_sndfile_read_file(file, &data, &length, &format, &rate, &channels);
+    // TODO: using event data
+
+    eventd_sndfile_pulseaudio_play_data(context->pulseaudio, data, length, format, rate, channels);
+}
+
+
+/*
+ * Plugin interface
+ */
+
 EVENTD_EXPORT const gchar *eventd_plugin_id = "eventd-sndfile";
 EVENTD_EXPORT
 void
 eventd_plugin_get_info(EventdPlugin *plugin)
 {
-    plugin->init = _eventd_sndfile_init;
+    plugin->init   = _eventd_sndfile_init;
     plugin->uninit = _eventd_sndfile_uninit;
 
     plugin->start = _eventd_sndfile_start;
-    plugin->stop = _eventd_sndfile_stop;
+    plugin->stop  = _eventd_sndfile_stop;
 
+    plugin->event_parse  = _eventd_sndfile_event_parse;
     plugin->config_reset = _eventd_sndfile_config_reset;
 
-    plugin->event_parse = _eventd_sndfile_event_parse;
     plugin->event_action = _eventd_sndfile_event_action;
 }
