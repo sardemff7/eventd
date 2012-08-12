@@ -632,7 +632,8 @@ _eventd_evp_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile 
         g_hash_table_insert(context->events, g_strdup(id), GUINT_TO_POINTER(disable));
 }
 
-const gchar *eventd_plugin_id = "eventd-evp";
+EVENTD_EXPORT const gchar *eventd_plugin_id = "eventd-evp";
+EVENTD_EXPORT
 void
 eventd_plugin_get_info(EventdPlugin *plugin)
 {
