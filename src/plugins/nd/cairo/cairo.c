@@ -40,6 +40,7 @@
 static GRegex *regex_amp = NULL;
 static GRegex *regex_markup = NULL;
 
+EVENTD_EXPORT
 void
 eventd_nd_cairo_init()
 {
@@ -66,6 +67,7 @@ eventd_nd_cairo_init()
         g_regex_ref(regex_markup);
 }
 
+EVENTD_EXPORT
 void
 eventd_nd_cairo_uninit()
 {
@@ -692,6 +694,7 @@ _eventd_nd_cairo_image_and_icon_draw(cairo_t *cr, cairo_surface_t *image, cairo_
     }
 }
 
+EVENTD_EXPORT
 void
 eventd_nd_cairo_get_surfaces(EventdEvent *event, EventdNdNotification *notification, EventdNdStyle *style, cairo_surface_t **bubble, cairo_surface_t **shape)
 {

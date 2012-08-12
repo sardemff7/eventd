@@ -5,9 +5,6 @@ pkglib_LTLIBRARIES += \
 pkginclude_HEADERS += \
 	include/eventd-nd-cairo.h
 
-EXTRA_DIST += \
-	src/plugins/nd/cairo/libeventd-nd-cairo.sym
-
 libeventd_nd_cairo_la_SOURCES = \
 	src/plugins/nd/cairo/cairo.c
 
@@ -24,8 +21,7 @@ libeventd_nd_cairo_la_CFLAGS = \
 
 libeventd_nd_cairo_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
-	-avoid-version \
-	-export-symbols $(srcdir)/src/plugins/nd/cairo/libeventd-nd-cairo.sym
+	-avoid-version
 
 libeventd_nd_cairo_la_LIBADD = \
 	libeventd.la \
