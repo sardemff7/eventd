@@ -65,27 +65,6 @@ typedef struct {
 
 
 static void
-_eventd_nd_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile *config_file)
-{
-    gboolean disable;
-    EventdNdStyle *style = NULL;
-
-    if ( ! g_key_file_has_group(config_file, "Notification") )
-        return;
-
-    if ( libeventd_config_key_file_get_boolean(config_file, "Notification", "Disable", &disable) < 0 )
-        return;
-
-    if ( ! disable )
-    {
-        style = eventd_nd_style_new(context->style);
-        eventd_nd_style_update(style, config_file, &context->max_width, &context->max_height);
-    }
-
-    g_hash_table_insert(context->events, g_strdup(id), style);
-}
-
-static void
 _eventd_nd_surface_hide(gpointer data)
 {
     EventdNdSurfaceContext *surface = data;
@@ -129,6 +108,10 @@ _eventd_nd_backend_remove_display(EventdNdContext *context, EventdNdDisplay *dis
         }
     }
 }
+
+/*
+ * Initialization interface
+ */
 
 static EventdPluginContext *
 _eventd_nd_init(EventdCoreContext *core, EventdCoreInterface *interface)
@@ -176,6 +159,11 @@ _eventd_nd_uninit(EventdPluginContext *context)
     g_free(context);
 }
 
+
+/*
+ * Control command interface
+ */
+
 static void
 _eventd_nd_control_command(EventdPluginContext *context, const gchar *command)
 {
@@ -210,6 +198,11 @@ _eventd_nd_control_command(EventdPluginContext *context, const gchar *command)
     }
 }
 
+
+/*
+ * Configuration interface
+ */
+
 static void
 _eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
 {
@@ -239,6 +232,38 @@ _eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
 
     eventd_nd_style_update(context->style, config_file, &context->max_width, &context->max_height);
 }
+
+static void
+_eventd_nd_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile *config_file)
+{
+    gboolean disable;
+    EventdNdStyle *style = NULL;
+
+    if ( ! g_key_file_has_group(config_file, "Notification") )
+        return;
+
+    if ( libeventd_config_key_file_get_boolean(config_file, "Notification", "Disable", &disable) < 0 )
+        return;
+
+    if ( ! disable )
+    {
+        style = eventd_nd_style_new(context->style);
+        eventd_nd_style_update(style, config_file, &context->max_width, &context->max_height);
+    }
+
+    g_hash_table_insert(context->events, g_strdup(id), style);
+}
+
+static void
+_eventd_nd_config_reset(EventdPluginContext *context)
+{
+    g_hash_table_remove_all(context->events);
+}
+
+
+/*
+ * Event action interface
+ */
 
 static void
 _eventd_nd_event_updated(EventdEvent *event, EventdPluginContext *context)
@@ -320,26 +345,25 @@ _eventd_nd_event_action(EventdPluginContext *context, EventdEvent *event)
     libeventd_nd_notification_free(notification);
 }
 
-static void
-_eventd_nd_config_reset(EventdPluginContext *context)
-{
-    g_hash_table_remove_all(context->events);
-}
+
+/*
+ * Plugin interface
+ */
 
 EVENTD_EXPORT const gchar *eventd_plugin_id = "eventd-nd";
 EVENTD_EXPORT
 void
 eventd_plugin_get_info(EventdPlugin *plugin)
 {
-    plugin->init = _eventd_nd_init;
+    plugin->init   = _eventd_nd_init;
     plugin->uninit = _eventd_nd_uninit;
 
     plugin->control_command = _eventd_nd_control_command;
 
+    plugin->global_parse = _eventd_nd_global_parse;
+    plugin->event_parse  = _eventd_nd_event_parse;
     plugin->config_reset = _eventd_nd_config_reset;
 
-    plugin->global_parse = _eventd_nd_global_parse;
-    plugin->event_parse = _eventd_nd_event_parse;
     plugin->event_action = _eventd_nd_event_action;
 }
 
