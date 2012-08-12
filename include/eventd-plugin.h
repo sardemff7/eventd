@@ -49,10 +49,9 @@ typedef struct {
 
     EventdPluginControlCommandFunc control_command;
 
-    EventdPluginFunc config_reset;
-
     EventdPluginGlobalParseFunc global_parse;
     EventdPluginEventParseFunc event_parse;
+    EventdPluginFunc config_reset;
 
     EventdPluginEventDispatchFunc event_action;
 
