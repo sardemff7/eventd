@@ -44,20 +44,13 @@ struct _EventdConfig {
 };
 
 typedef struct {
-    gboolean disable;
     gint64 timeout;
 } EventdConfigEvent;
 
 static gchar *
 _eventd_config_events_get_name(const gchar *category, const gchar *name)
 {
-    if ( category == NULL )
-        return NULL;
-
-    if ( name == NULL )
-        return g_strdup(category);
-
-    return g_strconcat(category, "-", name, NULL);
+    return ( name == NULL ) ? g_strdup(category) : g_strconcat(category, "-", name, NULL);
 }
 
 const gchar *
@@ -72,6 +65,7 @@ eventd_config_get_event_config_id(EventdConfig *config, EventdEvent *event)
     name = _eventd_config_events_get_name(category, eventd_event_get_name(event));
 
     id = g_hash_table_lookup(config->event_ids, name);
+    g_free(name);
     if ( id == NULL )
         id = g_hash_table_lookup(config->event_ids, category);
 
@@ -79,16 +73,15 @@ eventd_config_get_event_config_id(EventdConfig *config, EventdEvent *event)
 }
 
 static EventdConfigEvent *
-_eventd_config_event_new(gboolean disable, Int *timeout)
+_eventd_config_event_new(Int *timeout)
 {
     EventdConfigEvent *event;
 
-    if ( ( ! disable ) && ( ! timeout->set ) )
+    if ( ! timeout->set )
         return NULL;
 
     event = g_new0(EventdConfigEvent, 1);
 
-    event->disable = disable;
     event->timeout = timeout->set ? timeout->value : -1;
 
     return event;
@@ -100,19 +93,6 @@ _eventd_config_event_free(gpointer data)
     EventdConfigEvent *event = data;
 
     g_free(event);
-}
-
-gboolean
-eventd_config_event_get_disable(EventdConfig *config, EventdEvent *event)
-{
-    EventdConfigEvent *config_event;
-
-    config_event = g_hash_table_lookup(config->events, eventd_event_get_config_id(event));
-
-    if ( config_event == NULL )
-        return FALSE;
-    else
-        return config_event->disable;
 }
 
 gint64
@@ -162,13 +142,18 @@ _eventd_config_parse_client(EventdConfig *config, const gchar *id, GKeyFile *con
     gboolean disable;
     Int timeout;
 
-    if ( libeventd_config_key_file_get_boolean(config_file, "Event", "Disable", &disable) < 0 )
+    if ( ( libeventd_config_key_file_get_boolean(config_file, "Event", "Disable", &disable) == 0 ) && disable )
+    {
+        g_hash_table_insert(config->events, g_strdup(id), NULL);
         return;
+    }
+
+
 
     if ( libeventd_config_key_file_get_int(config_file, "Event", "Timeout", &timeout) >= 0 )
         return;
 
-    event = _eventd_config_event_new(disable, &timeout);
+    event = _eventd_config_event_new(&timeout);
     if ( event == NULL )
         return;
 
@@ -185,20 +170,20 @@ _eventd_config_parse_event_file(EventdConfig *config, const gchar *id, GKeyFile 
     g_debug("Parsing event '%s'", id);
 #endif /* DEBUG */
 
-    if ( libeventd_config_key_file_get_string(config_file, "Event", "Category", &category) < 0 )
-        goto fail;
+    if ( libeventd_config_key_file_get_string(config_file, "Event", "Category", &category) != 0 )
+        return;
 
     if ( libeventd_config_key_file_get_string(config_file, "Event", "Name", &name) < 0 )
         goto fail;
 
-    _eventd_config_parse_client(config, id, config_file);
-    eventd_plugins_event_parse_all(id, config_file);
-
     gchar *internal_name;
 
     internal_name = _eventd_config_events_get_name(category, name);
-    if ( internal_name != NULL )
-        g_hash_table_insert(config->event_ids, internal_name, g_strdup(id));
+
+    g_hash_table_insert(config->event_ids, internal_name, g_strdup(id));
+
+    _eventd_config_parse_client(config, id, config_file);
+    eventd_plugins_event_parse_all(id, config_file);
 
 fail:
     g_free(name);

@@ -343,7 +343,7 @@ _eventd_evp_main(EventdPluginContext *context, EventdEvpClient *client, GError *
 
                 config_id = context->core_interface->get_event_config_id(context->core, event);
                 g_debug("Event config id: %s", config_id);
-                if ( ( config_id != NULL ) && ( ! GPOINTER_TO_UINT(g_hash_table_lookup(context->events, config_id)) ) )
+                if ( config_id != NULL )
                 {
                     gchar *tid;
                     tid = g_strdup_printf("%x", id);
