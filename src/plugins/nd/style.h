@@ -43,7 +43,7 @@ typedef enum {
 EventdNdStyle *eventd_nd_style_new(EventdNdStyle *parent);
 void eventd_nd_style_free(gpointer style);
 
-void eventd_nd_style_update(EventdNdStyle *style, GKeyFile *config_file);
+void eventd_nd_style_update(EventdNdStyle *style, GKeyFile *config_file, gint *max_width, gint *max_height);
 
 LibeventdNdNotificationTemplate *eventd_nd_style_get_template(EventdNdStyle *style);
 

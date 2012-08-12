@@ -196,7 +196,7 @@ eventd_nd_style_new(EventdNdStyle *parent)
 }
 
 void
-eventd_nd_style_update(EventdNdStyle *style, GKeyFile *config_file)
+eventd_nd_style_update(EventdNdStyle *style, GKeyFile *config_file, gint *max_width, gint *max_height)
 {
     style->template = libeventd_nd_notification_template_new(config_file);
 
@@ -264,10 +264,16 @@ eventd_nd_style_update(EventdNdStyle *style, GKeyFile *config_file)
     if ( g_key_file_has_group(config_file, "NotificationImage") )
     {
         if ( libeventd_config_key_file_get_int(config_file, "NotificationImage", "MaxWidth", &integer) == 0 )
+        {
             style->image.max_width = integer.value;
+            *max_width  = MAX(*max_width, integer.value);
+        }
 
         if ( libeventd_config_key_file_get_int(config_file, "NotificationImage", "MaxHeight", &integer) == 0 )
+        {
             style->image.max_height = integer.value;
+            *max_height = MAX(*max_height, integer.value);
+        }
 
         if ( libeventd_config_key_file_get_int(config_file, "NotificationImage", "Margin", &integer) == 0 )
             style->image.margin = integer.value;
@@ -302,10 +308,16 @@ eventd_nd_style_update(EventdNdStyle *style, GKeyFile *config_file)
         }
 
         if ( libeventd_config_key_file_get_int(config_file, "NotificationIcon", "MaxWidth", &integer) == 0 )
+        {
             style->icon.max_width = integer.value;
+            *max_width  = MAX(*max_width, integer.value);
+        }
 
         if ( libeventd_config_key_file_get_int(config_file, "NotificationIcon", "MaxHeight", &integer) == 0 )
+        {
             style->icon.max_height = integer.value;
+            *max_height = MAX(*max_height, integer.value);
+        }
 
         if ( libeventd_config_key_file_get_int(config_file, "NotificationIcon", "Margin", &integer) == 0 )
             style->icon.margin = integer.value;

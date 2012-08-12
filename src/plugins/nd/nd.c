@@ -63,26 +63,6 @@ typedef struct {
     EventdNdSurface *surface;
 } EventdNdSurfaceContext;
 
-static void
-_eventd_nd_get_max_width_and_height(gint width, gint height, EventdNdStyle *style, gint *new_width, gint *new_height)
-{
-    gint w, h;
-
-    w = eventd_nd_style_get_image_max_width(style);
-    h = eventd_nd_style_get_image_max_height(style);
-
-    width = MAX(width, w);
-    height = MAX(height, h);
-
-    w = eventd_nd_style_get_icon_max_width(style);
-    h = eventd_nd_style_get_icon_max_height(style);
-
-    width = MAX(width, w);
-    height = MAX(height, h);
-
-    *new_width = width;
-    *new_height = height;
-}
 
 static void
 _eventd_nd_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile *config_file)
@@ -99,8 +79,7 @@ _eventd_nd_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile *
     if ( ! disable )
     {
         style = eventd_nd_style_new(context->style);
-        eventd_nd_style_update(style, config_file);
-        _eventd_nd_get_max_width_and_height(context->max_width, context->max_height, style, &context->max_width, &context->max_height);
+        eventd_nd_style_update(style, config_file, &context->max_width, &context->max_height);
     }
 
     g_hash_table_insert(context->events, g_strdup(id), style);
@@ -258,8 +237,7 @@ _eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
             context->bubble_margin = integer.value;
     }
 
-    eventd_nd_style_update(context->style, config_file);
-    _eventd_nd_get_max_width_and_height(context->max_width, context->max_height, context->style, &context->max_width, &context->max_height);
+    eventd_nd_style_update(context->style, config_file, &context->max_width, &context->max_height);
 }
 
 static void
