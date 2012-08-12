@@ -14,7 +14,7 @@ dbus_la_CFLAGS = \
 
 dbus_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
-	-avoid-version -module -export-symbols-regex 'eventd_plugin_(id|get_info)'
+	-avoid-version -module
 
 dbus_la_LIBADD = \
 	libeventd-event.la \
