@@ -38,12 +38,14 @@ struct _EventdNdNotification {
     GdkPixbuf *icon;
 };
 
+EVENTD_EXPORT
 void
 eventd_nd_notification_init()
 {
     libeventd_regex_init();
 }
 
+EVENTD_EXPORT
 void
 eventd_nd_notification_uninit()
 {
@@ -142,6 +144,7 @@ _eventd_nd_notification_pixbuf_from_base64(EventdEvent *event, const gchar *name
     return pixbuf;
 }
 
+EVENTD_EXPORT
 EventdNdNotification *
 eventd_nd_notification_new(EventdEvent *event, const gchar *title, const gchar *message, const gchar *image_name, const gchar *icon_name, gint width, gint height)
 {
@@ -173,6 +176,7 @@ eventd_nd_notification_new(EventdEvent *event, const gchar *title, const gchar *
     return self;
 }
 
+EVENTD_EXPORT
 void
 eventd_nd_notification_free(EventdNdNotification *self)
 {
@@ -186,24 +190,28 @@ eventd_nd_notification_free(EventdNdNotification *self)
     g_free(self);
 }
 
+EVENTD_EXPORT
 const gchar *
 eventd_nd_notification_get_title(EventdNdNotification *self)
 {
     return self->title;
 }
 
+EVENTD_EXPORT
 const gchar *
 eventd_nd_notification_get_message(EventdNdNotification *self)
 {
     return self->message;
 }
 
+EVENTD_EXPORT
 GdkPixbuf *
 eventd_nd_notification_get_image(EventdNdNotification *self)
 {
     return self->image;
 }
 
+EVENTD_EXPORT
 GdkPixbuf *
 eventd_nd_notification_get_icon(EventdNdNotification *self)
 {
