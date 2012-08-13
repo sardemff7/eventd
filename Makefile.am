@@ -69,8 +69,8 @@ include src/eventc/eventc.mk
 if ENABLE_TESTS
 include tests/tests.mk
 endif
-include data/units/units.mk
 include man/man.mk
+include data/units/units.mk
 
 
 #

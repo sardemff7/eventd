@@ -41,6 +41,7 @@ nd_la_LIBADD = \
 	$(GMODULE_LIBS) \
 	$(GLIB_LIBS)
 
+
 ndbackendsdir = $(pluginsdir)/nd
 
 ndbackends_LTLIBRARIES =

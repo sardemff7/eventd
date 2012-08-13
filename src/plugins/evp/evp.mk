@@ -2,13 +2,6 @@
 plugins_LTLIBRARIES += \
 	evp.la
 
-man1_MANS += \
-	man/eventd-evp.1
-
-man5_MANS += \
-	man/eventd-evp.conf.5 \
-	man/eventd-evp.event.5
-
 evp_la_SOURCES = \
 	src/plugins/evp/evp.c
 
@@ -32,8 +25,26 @@ evp_la_LIBADD = \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS)
 
+man1_MANS += \
+	man/eventd-evp.1
+
+man5_MANS += \
+	man/eventd-evp.conf.5 \
+	man/eventd-evp.event.5
+
+
 if ENABLE_AVAHI
+
 evp_la_SOURCES += \
 	src/plugins/evp/avahi.h \
 	src/plugins/evp/avahi.c
+
+endif
+
+
+if ENABLE_SYSTEMD
+
+systemduserunit_DATA += \
+	data/units/eventd-evp.socket
+
 endif

@@ -6,13 +6,6 @@ pkginclude_HEADERS += \
 	include/eventd-core-interface.h \
 	include/eventd-plugin.h
 
-man1_MANS += \
-	man/eventd.1
-
-man5_MANS += \
-	man/eventd.conf.5 \
-	man/eventd.event.5
-
 eventd_SOURCES = \
 	src/eventd/types.h \
 	src/eventd/config.h \
@@ -53,11 +46,17 @@ eventd_LDADD = \
 	$(GMODULE_LIBS) \
 	$(GLIB_LIBS)
 
+man1_MANS += \
+	man/eventd.1
+
+man5_MANS += \
+	man/eventd.conf.5 \
+	man/eventd.event.5
+
 
 if ENABLE_SYSTEMD
 
 systemduserunit_DATA += \
-	data/units/eventd-evp.socket \
 	data/units/eventd-control.socket \
 	data/units/eventd.service
 

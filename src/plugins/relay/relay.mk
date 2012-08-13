@@ -30,10 +30,15 @@ relay_la_LIBADD = \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS)
 
+
 if ENABLE_AVAHI
+
 relay_la_SOURCES += \
 	src/plugins/relay/avahi.c
+
 else
+
 relay_la_SOURCES += \
 	src/plugins/relay/avahi-dummy.c
+
 endif

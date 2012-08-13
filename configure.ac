@@ -113,7 +113,7 @@ AM_CONDITIONAL(ENABLE_AVAHI, test x$enable_avahi = xyes)
 PKG_CHECK_MODULES(GMODULE, [gmodule-2.0 >= $gmodule_min_version])
 
 AC_ARG_ENABLE(systemd, AS_HELP_STRING([--enable-systemd], [Enable systemd activation support]), [], enable_systemd=no)
-AC_ARG_WITH(systemduserunitdir, AS_HELP_STRING([--with-systemduserunitdir=DIR], [Directory for systemd service files]), [], with_systemduserunitdir=yes)
+AC_ARG_WITH(systemduserunitdir, AS_HELP_STRING([--with-systemduserunitdir=DIR], [Directory for systemd user unit files]), [], with_systemduserunitdir=yes)
 if test x$enable_systemd = xyes; then
     case "$with_systemduserunitdir" in
         no|"") AC_MSG_ERROR([*** You must define systemduserunitdir when compiling systemd support]) ;;
