@@ -64,23 +64,7 @@ typedef struct {
 } EventdNdSurfaceContext;
 
 
-static void
-_eventd_nd_surface_hide(gpointer data)
-{
-    EventdNdSurfaceContext *surface = data;
-
-    surface->backend->surface_hide(surface->surface);
-
-    g_free(surface);
-}
-
-static void
-_eventd_nd_surface_hide_all(gpointer data)
-{
-    GList *surfaces = data;
-
-    g_list_free_full(surfaces, _eventd_nd_surface_hide);
-}
+static void _eventd_nd_notification_free(gpointer data);
 
 static void
 _eventd_nd_backend_display_free(gpointer data)
@@ -125,7 +109,7 @@ _eventd_nd_init(EventdCoreContext *core, EventdCoreInterface *interface)
     context->backends = eventd_nd_backends_load(context, &context->interface);
 
     context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, eventd_nd_style_free);
-    context->surfaces = g_hash_table_new_full(g_direct_hash, g_direct_equal, g_object_unref, _eventd_nd_surface_hide_all);
+    context->surfaces = g_hash_table_new_full(g_direct_hash, g_direct_equal, g_object_unref, _eventd_nd_notification_free);
 
     libeventd_nd_notification_init();
 
@@ -265,6 +249,55 @@ _eventd_nd_config_reset(EventdPluginContext *context)
  * Event action interface
  */
 
+static GList *
+_eventd_nd_notification_new(EventdPluginContext *context, EventdEvent *event, EventdNdStyle *style)
+{
+    GList *self = NULL;
+
+    LibeventdNdNotification *notification;
+    cairo_surface_t *bubble;
+    cairo_surface_t *shape;
+
+    notification = libeventd_nd_notification_new(eventd_nd_style_get_template(style), event, context->max_width, context->max_height);
+    eventd_nd_cairo_get_surfaces(event, notification, style, &bubble, &shape);
+    libeventd_nd_notification_free(notification);
+
+    GList *display_;
+    for ( display_ = context->displays ; display_ != NULL ; display_ = g_list_next(display_) )
+    {
+        EventdNdDisplayContext *display = display_->data;
+        EventdNdSurfaceContext *surface;
+
+        surface = g_new(EventdNdSurfaceContext, 1);
+        surface->backend = display->backend;
+        surface->surface = display->backend->surface_show(event, display->display, bubble, shape);
+
+        self = g_list_prepend(self, surface);
+    }
+
+    cairo_surface_destroy(bubble);
+    cairo_surface_destroy(shape);
+
+    return self;
+}
+
+static void
+_eventd_nd_notification_surface_context_free(gpointer data)
+{
+    EventdNdSurfaceContext *surface = data;
+
+    surface->backend->surface_hide(surface->surface);
+
+    g_free(surface);
+}
+
+static void
+_eventd_nd_notification_free(gpointer data)
+{
+    GList *self = data;
+    g_list_free_full(self, _eventd_nd_notification_surface_context_free);
+}
+
 static void
 _eventd_nd_event_updated(EventdEvent *event, EventdPluginContext *context)
 {
@@ -312,37 +345,13 @@ _eventd_nd_event_action(EventdPluginContext *context, EventdEvent *event)
     if ( style == NULL )
         return;
 
-    LibeventdNdNotification *notification;
-    cairo_surface_t *bubble;
-    cairo_surface_t *shape;
-
-    notification = libeventd_nd_notification_new(eventd_nd_style_get_template(style), event, context->max_width, context->max_height);
-    eventd_nd_cairo_get_surfaces(event, notification, style, &bubble, &shape);
-
-    GList *surfaces = NULL;
-
-    GList *display_;
-    for ( display_ = context->displays ; display_ != NULL ; display_ = g_list_next(display_) )
-    {
-        EventdNdDisplayContext *display = display_->data;
-        EventdNdSurfaceContext *surface;
-
-        surface = g_new(EventdNdSurfaceContext, 1);
-        surface->backend = display->backend;
-        surface->surface = display->backend->surface_show(event, display->display, bubble, shape);
-
-        surfaces = g_list_prepend(surfaces, surface);
-    }
-
-    cairo_surface_destroy(bubble);
-    cairo_surface_destroy(shape);
+    GList *notification;
+    notification = _eventd_nd_notification_new(context, event, style);
 
     g_signal_connect(event, "updated", G_CALLBACK(_eventd_nd_event_updated), context);
     g_signal_connect(event, "ended", G_CALLBACK(_eventd_nd_event_ended), context);
 
-    g_hash_table_insert(context->surfaces, g_object_ref(event), surfaces);
-
-    libeventd_nd_notification_free(notification);
+    g_hash_table_insert(context->surfaces, g_object_ref(event), notification);
 }
 
 
