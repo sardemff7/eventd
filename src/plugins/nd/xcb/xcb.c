@@ -48,7 +48,6 @@ struct _EventdNdDisplay {
     xcb_screen_t *screen;
     gboolean shape;
     GHashTable *bubbles;
-    GQueue *queue;
 };
 
 struct _EventdNdSurface {
@@ -58,7 +57,6 @@ struct _EventdNdSurface {
     gint width;
     gint height;
     cairo_surface_t *bubble;
-    GList *bubble_;
 };
 
 static EventdNdBackendContext *
@@ -165,7 +163,6 @@ _eventd_nd_xcb_display_error_callback(gpointer user_data)
     display->context->nd_interface->remove_display(display->context->nd, display);
 }
 
-static void _eventd_nd_xcb_surface_hide_internal(gpointer surface);
 static EventdNdDisplay *
 _eventd_nd_xcb_display_new(EventdNdBackendContext *context, const gchar *target)
 {
@@ -195,8 +192,7 @@ _eventd_nd_xcb_display_new(EventdNdBackendContext *context, const gchar *target)
     else
         display->shape = TRUE;
 
-    display->bubbles = g_hash_table_new_full(NULL, NULL, NULL, _eventd_nd_xcb_surface_hide_internal);
-    display->queue = g_queue_new();
+    display->bubbles = g_hash_table_new(NULL, NULL);
 
     return display;
 }
@@ -204,7 +200,6 @@ _eventd_nd_xcb_display_new(EventdNdBackendContext *context, const gchar *target)
 static void
 _eventd_nd_xcb_display_free(EventdNdDisplay *context)
 {
-    g_queue_free(context->queue);
     g_hash_table_unref(context->bubbles);
     g_xcb_source_unref(context->source);
     g_free(context);
@@ -231,25 +226,8 @@ _eventd_nd_xcb_surface_button_release_event(EventdNdSurface *self)
     eventd_event_end(self->event, EVENTD_EVENT_END_REASON_USER_DISMISS);
 }
 
-static void
-_eventd_nd_xcb_update_bubbles(EventdNdDisplay *display)
-{
-    guint16 mask = XCB_CONFIG_WINDOW_Y;
-    guint32 vals[] = { 0 };
-
-    GList *surface_;
-    EventdNdSurface *surface;
-    for ( surface_ = g_queue_peek_head_link(display->queue) ; surface_ != NULL ; surface_ = g_list_next(surface_) )
-    {
-        surface = surface_->data;
-        xcb_configure_window(display->xcb_connection, surface->window, mask, vals);
-        vals[0] += surface->height;
-    }
-    xcb_flush(display->xcb_connection);
-}
-
 static EventdNdSurface *
-_eventd_nd_xcb_surface_show_internal(EventdEvent *event, EventdNdDisplay *display, cairo_surface_t *bubble, cairo_surface_t *shape)
+_eventd_nd_xcb_surface_new(EventdEvent *event, EventdNdDisplay *display, cairo_surface_t *bubble, cairo_surface_t *shape)
 {
     guint32 selmask = XCB_CW_OVERRIDE_REDIRECT | XCB_CW_EVENT_MASK;
     guint32 selval[] = { 1, XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_BUTTON_RELEASE };
@@ -306,41 +284,7 @@ _eventd_nd_xcb_surface_show_internal(EventdEvent *event, EventdNdDisplay *displa
 
     xcb_map_window(surface->display->xcb_connection, surface->window);
 
-    return surface;
-}
-
-static void
-_eventd_nd_xcb_surface_hide_internal(gpointer data)
-{
-    EventdNdSurface *surface = data;
-
-    if ( ! g_source_is_destroyed((GSource *)surface->display->source) )
-    {
-        xcb_unmap_window(surface->display->xcb_connection, surface->window);
-        xcb_flush(surface->display->xcb_connection);
-    }
-
-    cairo_surface_destroy(surface->bubble);
-
-    g_object_unref(surface->event);
-
-    g_free(surface);
-}
-
-static EventdNdSurface *
-_eventd_nd_xcb_surface_new(EventdEvent *event, EventdNdDisplay *display, cairo_surface_t *bubble, cairo_surface_t *shape)
-{
-    if ( g_source_is_destroyed((GSource *)display->source) )
-        return NULL;
-
-    EventdNdSurface *surface;
-
-    surface = _eventd_nd_xcb_surface_show_internal(event, display, bubble, shape);
-
-    g_queue_push_head(surface->display->queue, surface);
-    surface->bubble_ = g_queue_peek_head_link(surface->display->queue);
     g_hash_table_insert(surface->display->bubbles, GUINT_TO_POINTER(surface->window), surface);
-    _eventd_nd_xcb_update_bubbles(surface->display);
 
     return surface;
 }
@@ -353,10 +297,19 @@ _eventd_nd_xcb_surface_free(EventdNdSurface *surface)
 
     EventdNdDisplay *display = surface->display;
 
-    g_queue_delete_link(display->queue, surface->bubble_);
     g_hash_table_remove(display->bubbles, GUINT_TO_POINTER(surface->window));
 
-    _eventd_nd_xcb_update_bubbles(display);
+    if ( ! g_source_is_destroyed((GSource *)display->source) )
+    {
+        xcb_unmap_window(display->xcb_connection, surface->window);
+        xcb_flush(display->xcb_connection);
+    }
+
+    cairo_surface_destroy(surface->bubble);
+
+    g_object_unref(surface->event);
+
+    g_free(surface);
 }
 
 EVENTD_EXPORT const gchar *eventd_nd_backend_id = "eventd-nd-xcb";
@@ -371,6 +324,6 @@ eventd_nd_backend_get_info(EventdNdBackend *backend)
     backend->display_new = _eventd_nd_xcb_display_new;
     backend->display_free = _eventd_nd_xcb_display_free;
 
-    backend->surface_new    = _eventd_nd_xcb_surface_new;
+    backend->surface_new  = _eventd_nd_xcb_surface_new;
     backend->surface_free = _eventd_nd_xcb_surface_free;
 }
