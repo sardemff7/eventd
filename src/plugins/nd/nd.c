@@ -300,18 +300,13 @@ _eventd_nd_event_action(EventdPluginContext *context, EventdEvent *event)
     for ( display_ = context->displays ; display_ != NULL ; display_ = g_list_next(display_) )
     {
         EventdNdDisplayContext *display = display_->data;
-        EventdNdSurface *surface;
-        surface = display->backend->surface_show(event, display->display, bubble, shape);
-        if ( surface != NULL )
-        {
-            EventdNdSurfaceContext *surface_context;
+        EventdNdSurfaceContext *surface;
 
-            surface_context = g_new(EventdNdSurfaceContext, 1);
-            surface_context->backend = display->backend;
-            surface_context->surface = surface;
+        surface = g_new(EventdNdSurfaceContext, 1);
+        surface->backend = display->backend;
+        surface->surface = display->backend->surface_show(event, display->display, bubble, shape);
 
-            surfaces = g_list_prepend(surfaces, surface_context);
-        }
+        surfaces = g_list_prepend(surfaces, surface);
     }
 
     cairo_surface_destroy(bubble);
