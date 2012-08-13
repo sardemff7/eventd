@@ -313,24 +313,10 @@ _eventd_nd_event_updated(EventdEvent *event, EventdPluginContext *context)
     if ( style == NULL )
         return;
 
-    LibeventdNdNotification *notification;
-    cairo_surface_t *bubble;
-    cairo_surface_t *shape;
+    GList *notification;
+    notification = _eventd_nd_notification_new(context, event, style);
 
-    notification = libeventd_nd_notification_new(eventd_nd_style_get_template(style), event, context->max_width, context->max_height);
-    eventd_nd_cairo_get_surfaces(event, notification, style, &bubble, &shape);
-
-    GList *surfaces = g_hash_table_lookup(context->surfaces, event);
-    for ( ; surfaces != NULL ; surfaces = g_list_next(surfaces) )
-    {
-        EventdNdSurfaceContext *surface = surfaces->data;
-
-        if ( surface->backend->surface_update != NULL )
-            surface->surface = surface->backend->surface_update(surface->surface, bubble, shape);
-    }
-
-    cairo_surface_destroy(bubble);
-    cairo_surface_destroy(shape);
+    g_hash_table_insert(context->surfaces, g_object_ref(event), notification);
 }
 
 static void

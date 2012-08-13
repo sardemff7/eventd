@@ -44,7 +44,6 @@ typedef EventdNdDisplay *(*EventdNdDisplayNewFunc)(EventdNdBackendContext *conte
 typedef void (*EventdNdDisplayFunc)(EventdNdDisplay *display);
 
 typedef EventdNdSurface *(*EventdNdSurfaceNewFunc)(EventdEvent *event, EventdNdDisplay *display, cairo_surface_t *bubble, cairo_surface_t *shape);
-typedef EventdNdSurface *(*EventdNdSurfaceUpdateFunc)(EventdNdSurface *old_surface, cairo_surface_t *bubble, cairo_surface_t *shape);
 typedef void (*EventdNdSurfaceFunc)(EventdNdSurface *surface);
 
 typedef struct {
@@ -57,7 +56,6 @@ typedef struct {
 
     EventdNdSurfaceNewFunc surface_new;
     EventdNdSurfaceFunc surface_free;
-    EventdNdSurfaceUpdateFunc surface_update;
 
     /* private */
     gpointer module;

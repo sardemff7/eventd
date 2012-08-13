@@ -359,25 +359,6 @@ _eventd_nd_xcb_surface_free(EventdNdSurface *surface)
     _eventd_nd_xcb_update_bubbles(display);
 }
 
-static EventdNdSurface *
-_eventd_nd_xcb_surface_update(EventdNdSurface *old_surface, cairo_surface_t *bubble, cairo_surface_t *shape)
-{
-    if ( g_source_is_destroyed((GSource *)old_surface->display->source) )
-        return old_surface;
-
-    EventdNdSurface *surface;
-
-    surface = _eventd_nd_xcb_surface_show_internal(old_surface->event, old_surface->display, bubble, shape);
-
-    surface->bubble_ = old_surface->bubble_;
-    surface->bubble_->data = surface;
-    g_hash_table_insert(surface->display->bubbles, GUINT_TO_POINTER(surface->window), surface);
-
-    _eventd_nd_xcb_update_bubbles(surface->display);
-
-    return surface;
-}
-
 EVENTD_EXPORT const gchar *eventd_nd_backend_id = "eventd-nd-xcb";
 EVENTD_EXPORT
 void
@@ -392,5 +373,4 @@ eventd_nd_backend_get_info(EventdNdBackend *backend)
 
     backend->surface_new    = _eventd_nd_xcb_surface_new;
     backend->surface_free = _eventd_nd_xcb_surface_free;
-    backend->surface_update = _eventd_nd_xcb_surface_update;
 }
