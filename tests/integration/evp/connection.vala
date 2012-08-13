@@ -141,7 +141,7 @@ int
 main(string[] args)
 {
     int r = 0;
-    Eventd.Tests.setup("test-plugin,evp", "9987", "--event-listen", "tcp:localhost:9876", "--no-avahi");
+    Eventd.Tests.setup("test-plugin,evp", "9987", "--event-listen", "tcp:localhost4:9876", "--no-avahi");
     try
     {
         Eventd.Tests.start_eventd();

@@ -146,11 +146,29 @@ eventd_sockets_get_inet_sockets(EventdSockets *sockets, const gchar *address, gu
         socket = _eventd_sockets_get_inet_socket(sockets, inet_address, port);
         g_object_unref(inet_address);
     }
-    else if ( g_strcmp0(address, "localhost") == 0 )
+    else if ( g_strcmp0(address, "localhost4") == 0 )
     {
         inet_address = g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV4);
         socket = _eventd_sockets_get_inet_socket(sockets, inet_address, port);
         g_object_unref(inet_address);
+    }
+    else if ( g_strcmp0(address, "localhost") == 0 )
+    {
+        GList *ret_sockets = NULL;
+
+        inet_address = g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV6);
+        socket = _eventd_sockets_get_inet_socket(sockets, inet_address, port);
+        g_object_unref(inet_address);
+        if ( socket != NULL )
+            ret_sockets = g_list_prepend(ret_sockets, socket);
+
+        inet_address = g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV4);
+        socket = _eventd_sockets_get_inet_socket(sockets, inet_address, port);
+        g_object_unref(inet_address);
+        if ( socket != NULL )
+            ret_sockets = g_list_prepend(ret_sockets, socket);
+
+        return ret_sockets;
     }
     else
     {
