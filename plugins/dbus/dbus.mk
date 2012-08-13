@@ -3,8 +3,14 @@
 plugins_LTLIBRARIES += \
 	dbus.la
 
+libexec_PROGRAMS += \
+	eventd-notification-daemon
+
 dist_pkgdata_DATA += \
 	plugins/dbus/events/libnotify.event
+
+dbussessionservice_DATA += \
+	plugins/dbus/services/org.eventd.dbus.service
 
 
 dbus_la_SOURCES = \
@@ -26,3 +32,11 @@ dbus_la_LIBADD = \
 	$(GIO_LIBS) \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS)
+
+
+eventd_notification_daemon_SOURCES = \
+	plugins/dbus/helper/main.c
+
+eventd_notification_daemon_CFLAGS = \
+	$(AM_CFLAGS) \
+	-D BINDIR=\"$(bindir)\"

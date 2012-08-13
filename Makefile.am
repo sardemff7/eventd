@@ -1,5 +1,6 @@
 AM_DISTCHECK_CONFIGURE_FLAGS = \
-	--with-systemduserunitdir="$$dc_install_base/$(systemduserunitdir)"
+	--with-systemduserunitdir="$$dc_install_base/$(systemduserunitdir)" \
+	--with-dbussessionservicedir="$$dc_install_base/$(dbussessionservicedir)"
 
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 AM_MAKEFLAGS = --no-print-directory
@@ -9,6 +10,7 @@ vapidir = $(datadir)/vala/vapi
 pluginsdir = $(pkglibdir)/plugins
 
 bin_PROGRAMS =
+libexec_PROGRAMS =
 noinst_LTLIBRARIES =
 lib_LTLIBRARIES =
 pkglib_LTLIBRARIES =
@@ -27,6 +29,7 @@ dist_vapi_DATA =
 vapi_DATA =
 dist_pkgdata_DATA =
 systemduserunit_DATA =
+dbussessionservice_DATA =
 
 EXTRA_DIST =
 CLEANFILES =
@@ -79,6 +82,7 @@ include plugins/test-plugin/test-plugin.mk
 
 include src/man.mk
 include src/units.mk
+include src/services.mk
 
 
 #

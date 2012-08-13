@@ -133,7 +133,16 @@ if test x$enable_systemd = xyes; then
 fi
 AM_CONDITIONAL(ENABLE_SYSTEMD, test x$enable_systemd = xyes)
 
-AC_ARG_ENABLE(dbus, AS_HELP_STRING([--disable-dbus], [Disable DBus support (org.freedesktop.Notifications interface)]), [], enable_dbus=yes)
+AC_ARG_ENABLE(dbus, AS_HELP_STRING([--disable-dbus], [Disable D-Bus support (org.freedesktop.Notifications interface)]), [], enable_dbus=yes)
+AC_ARG_WITH(dbussessionservicedir, AS_HELP_STRING([--with-dbussessionservicedir=DIR], [Directory for D-Bus session service files]), [], with_dbussessionservicedir=yes)
+if test x$enable_dbus = xyes; then
+    case "$with_dbussessionservicedir" in
+        no|"") AC_MSG_ERROR([*** You must define dbussessionservicedir when compiling D-Bus support]) ;;
+        yes) dbussessionservicedir="`$PKG_CONFIG --variable=session_bus_services_dir dbus-1`" ;;
+        *) dbussessionservicedir="$with_dbussessionservicedir" ;;
+    esac
+    AC_SUBST(dbussessionservicedir)
+fi
 AM_CONDITIONAL(ENABLE_DBUS, test x$enable_dbus = xyes)
 
 # sndfile plugin

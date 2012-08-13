@@ -5,6 +5,7 @@
 /eventd
 /eventdctl
 /eventc
+/eventd-notification-daemon
 
 *.test
 

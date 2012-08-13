@@ -150,9 +150,11 @@
             <para>
                 With its <command>dbus</command> and <command>nd</command> plugins, eventd can be a drop-in replacement for a notification daemon.
             </para>
-
             <para>
-                To use this feature, just add the following line to your <filename>~/.xsession</filename> or equivalent file:
+                This feature should work automagically using D-Bus on-demand spawning.
+            </para>
+            <para>
+                If you use several X displays or launch your session D-Bus daemon manually, you should add the following line to your <filename>~/.xsession</filename> or equivalent file:
             </para>
             <programlisting>eventdctl --auto-spawn notification-daemon ${DISPLAY}</programlisting>
             <para>
