@@ -52,7 +52,6 @@ struct _EventdNdDisplay {
 struct _EventdNdSurface {
     cairo_surface_t *bubble;
     guchar *buffer;
-    guchar *save;
     gint stride;
     gint channels;
 };
@@ -156,26 +155,14 @@ alpha_div(guchar c, guchar a)
         return ((t << 8) + t) << 8;
     }
 }
-
 static EventdNdSurface *
 _eventd_nd_linux_surface_new(EventdEvent *event, EventdNdDisplay *display, cairo_surface_t *bubble, cairo_surface_t *shape)
 {
     EventdNdSurface *self;
     gint x, y;
 
-    gint width;
-    gint height;
-
-    width = cairo_image_surface_get_width(bubble);
-    height = cairo_image_surface_get_height(bubble);
-
     x = 0;
     y = 0;
-
-    if ( x < 0 )
-        x = - x - width;
-    if ( y < 0 )
-        y = - y - height;
 
     self = g_new0(EventdNdSurface, 1);
 
@@ -184,10 +171,6 @@ _eventd_nd_linux_surface_new(EventdEvent *event, EventdNdDisplay *display, cairo
     self->stride = display->stride;
     self->channels = display->channels;
 
-    self->save = g_malloc(self->channels * cairo_image_surface_get_height(self->bubble) * cairo_image_surface_get_width(self->bubble));
-
-    guchar *spixels, *sline;
-    gint sstride;
     guchar *pixels, *line;
     const guchar *cpixels, *cpixels_end, *cline, *cline_end;
     gint cstride, clo;
@@ -200,36 +183,25 @@ _eventd_nd_linux_surface_new(EventdEvent *event, EventdNdDisplay *display, cairo
     cpixels_end = cpixels + cstride * cairo_image_surface_get_height(self->bubble);
     clo =  w << 2;
 
-    spixels = self->save;
-    sstride = w * self->channels;
-
     pixels = self->buffer;
 
     while ( cpixels < cpixels_end )
     {
-        sline = spixels;
         line = pixels;
         cline = cpixels;
         cline_end = cline + clo;
 
         while ( cline < cline_end )
         {
-            sline[0] = line[0];
-            sline[1] = line[1];
-            sline[2] = line[2];
-            sline[3] = line[3];
-
             line[0] = alpha_div(cline[0], cline[3]);
             line[1] = alpha_div(cline[1], cline[3]);
             line[2] = alpha_div(cline[2], cline[3]);
             line[3] = ~cline[3];
 
-            sline += self->channels;
             line += self->channels;
             cline += 4;
         }
 
-        spixels += sstride;
         pixels += self->stride;
         cpixels += cstride;
     }
@@ -240,40 +212,7 @@ _eventd_nd_linux_surface_new(EventdEvent *event, EventdNdDisplay *display, cairo
 static void
 _eventd_nd_linux_surface_free(EventdNdSurface *self)
 {
-    guchar *pixels, *line;
-    const guchar *spixels, *spixels_end, *sline, *sline_end;
-    gint sstride, slo;
-
-    spixels = self->save;
-    sstride = slo = self->channels * cairo_image_surface_get_width(self->bubble);
-    spixels_end = self->save + sstride * cairo_image_surface_get_height(self->bubble);
-
-    pixels = self->buffer;
-
-    while ( spixels < spixels_end )
-    {
-        sline = spixels;
-        sline_end = sline + slo;
-        line = pixels;
-
-        while ( sline < sline_end )
-        {
-            line[0] = sline[0];
-            line[1] = sline[1];
-            line[2] = sline[2];
-            line[3] = sline[3];
-
-            sline += self->channels;
-            line += self->channels;
-        }
-
-        pixels += self->stride;
-        spixels += sstride;
-    }
-
     cairo_surface_destroy(self->bubble);
-
-    g_free(self->save);
 
     g_free(self);
 }
