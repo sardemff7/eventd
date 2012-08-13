@@ -158,7 +158,7 @@ alpha_div(guchar c, guchar a)
 }
 
 static EventdNdSurface *
-_eventd_nd_linux_surface_show(EventdEvent *event, EventdNdDisplay *display, cairo_surface_t *bubble, cairo_surface_t *shape)
+_eventd_nd_linux_surface_new(EventdEvent *event, EventdNdDisplay *display, cairo_surface_t *bubble, cairo_surface_t *shape)
 {
     EventdNdSurface *self;
     gint x, y;
@@ -238,7 +238,7 @@ _eventd_nd_linux_surface_show(EventdEvent *event, EventdNdDisplay *display, cair
 }
 
 static void
-_eventd_nd_linux_surface_hide(EventdNdSurface *self)
+_eventd_nd_linux_surface_free(EventdNdSurface *self)
 {
     guchar *pixels, *line;
     const guchar *spixels, *spixels_end, *sline, *sline_end;
@@ -290,6 +290,6 @@ eventd_nd_backend_get_info(EventdNdBackend *backend)
     backend->display_new = _eventd_nd_linux_display_new;
     backend->display_free = _eventd_nd_linux_display_free;
 
-    backend->surface_show = _eventd_nd_linux_surface_show;
-    backend->surface_hide = _eventd_nd_linux_surface_hide;
+    backend->surface_new  = _eventd_nd_linux_surface_new;
+    backend->surface_free = _eventd_nd_linux_surface_free;
 }

@@ -328,7 +328,7 @@ _eventd_nd_xcb_surface_hide_internal(gpointer data)
 }
 
 static EventdNdSurface *
-_eventd_nd_xcb_surface_show(EventdEvent *event, EventdNdDisplay *display, cairo_surface_t *bubble, cairo_surface_t *shape)
+_eventd_nd_xcb_surface_new(EventdEvent *event, EventdNdDisplay *display, cairo_surface_t *bubble, cairo_surface_t *shape)
 {
     if ( g_source_is_destroyed((GSource *)display->source) )
         return NULL;
@@ -343,6 +343,20 @@ _eventd_nd_xcb_surface_show(EventdEvent *event, EventdNdDisplay *display, cairo_
     _eventd_nd_xcb_update_bubbles(surface->display);
 
     return surface;
+}
+
+static void
+_eventd_nd_xcb_surface_free(EventdNdSurface *surface)
+{
+    if ( surface == NULL )
+        return;
+
+    EventdNdDisplay *display = surface->display;
+
+    g_queue_delete_link(display->queue, surface->bubble_);
+    g_hash_table_remove(display->bubbles, GUINT_TO_POINTER(surface->window));
+
+    _eventd_nd_xcb_update_bubbles(display);
 }
 
 static EventdNdSurface *
@@ -364,20 +378,6 @@ _eventd_nd_xcb_surface_update(EventdNdSurface *old_surface, cairo_surface_t *bub
     return surface;
 }
 
-static void
-_eventd_nd_xcb_surface_hide(EventdNdSurface *surface)
-{
-    if ( surface == NULL )
-        return;
-
-    EventdNdDisplay *display = surface->display;
-
-    g_queue_delete_link(display->queue, surface->bubble_);
-    g_hash_table_remove(display->bubbles, GUINT_TO_POINTER(surface->window));
-
-    _eventd_nd_xcb_update_bubbles(display);
-}
-
 EVENTD_EXPORT const gchar *eventd_nd_backend_id = "eventd-nd-xcb";
 EVENTD_EXPORT
 void
@@ -390,7 +390,7 @@ eventd_nd_backend_get_info(EventdNdBackend *backend)
     backend->display_new = _eventd_nd_xcb_display_new;
     backend->display_free = _eventd_nd_xcb_display_free;
 
-    backend->surface_show = _eventd_nd_xcb_surface_show;
+    backend->surface_new    = _eventd_nd_xcb_surface_new;
+    backend->surface_free = _eventd_nd_xcb_surface_free;
     backend->surface_update = _eventd_nd_xcb_surface_update;
-    backend->surface_hide = _eventd_nd_xcb_surface_hide;
 }

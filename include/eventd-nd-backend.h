@@ -43,9 +43,9 @@ typedef gboolean (*EventdNdDisplayTestFunc)(EventdNdBackendContext *context, con
 typedef EventdNdDisplay *(*EventdNdDisplayNewFunc)(EventdNdBackendContext *context, const gchar *target);
 typedef void (*EventdNdDisplayFunc)(EventdNdDisplay *display);
 
-typedef EventdNdSurface *(*EventdNdSurfaceShowFunc)(EventdEvent *event, EventdNdDisplay *display, cairo_surface_t *bubble, cairo_surface_t *shape);
+typedef EventdNdSurface *(*EventdNdSurfaceNewFunc)(EventdEvent *event, EventdNdDisplay *display, cairo_surface_t *bubble, cairo_surface_t *shape);
 typedef EventdNdSurface *(*EventdNdSurfaceUpdateFunc)(EventdNdSurface *old_surface, cairo_surface_t *bubble, cairo_surface_t *shape);
-typedef void (*EventdNdSurfaceHideFunc)(EventdNdSurface *surface);
+typedef void (*EventdNdSurfaceFunc)(EventdNdSurface *surface);
 
 typedef struct {
     EventdNdBackendInitFunc init;
@@ -55,9 +55,9 @@ typedef struct {
     EventdNdDisplayNewFunc display_new;
     EventdNdDisplayFunc display_free;
 
-    EventdNdSurfaceShowFunc surface_show;
+    EventdNdSurfaceNewFunc surface_new;
+    EventdNdSurfaceFunc surface_free;
     EventdNdSurfaceUpdateFunc surface_update;
-    EventdNdSurfaceHideFunc surface_hide;
 
     /* private */
     gpointer module;

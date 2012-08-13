@@ -276,7 +276,7 @@ _eventd_nd_notification_new(EventdPluginContext *context, EventdEvent *event, Ev
 
         surface = g_new(EventdNdSurfaceContext, 1);
         surface->backend = display->backend;
-        surface->surface = display->backend->surface_show(event, display->display, bubble, shape);
+        surface->surface = display->backend->surface_new(event, display->display, bubble, shape);
 
         self = g_list_prepend(self, surface);
     }
@@ -292,7 +292,7 @@ _eventd_nd_notification_surface_context_free(gpointer data)
 {
     EventdNdSurfaceContext *surface = data;
 
-    surface->backend->surface_hide(surface->surface);
+    surface->backend->surface_free(surface->surface);
 
     g_free(surface);
 }
