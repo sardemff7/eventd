@@ -1,15 +1,8 @@
-/data/libeventd-event.pc
-/data/libeventc.pc
-/data/units/eventd-control.socket
-/data/units/eventd-evp.socket
-/data/units/eventd.service
 /include/config.h.in
 /include/config.h
-/include/libeventc.h
-/vapi/libeventd-event.deps
-/vapi/libeventc.vapi
-/vapi/libeventc.deps
 
+# Vala generated stuff
+/include/libeventc.h
 /src/libeventc/*.c
 /src/eventc/*.c
 
@@ -17,9 +10,10 @@
 /eventdctl
 /eventc
 
-/man/*.1
-/man/*.5
-/man/config.dtd
+/data/*.pc
+
+/vapi/*.deps
+/vapi/*.vapi
 
 *.test
 /tests/integration/*.h
@@ -28,3 +22,10 @@
 /tests/integration/libtest/*.c
 /tests/integration/evp/*.c
 /tests/integration/libeventc/*.c
+
+/man/*.1
+/man/*.5
+/man/config.dtd
+
+/data/units/*.socket
+/data/units/*.service
