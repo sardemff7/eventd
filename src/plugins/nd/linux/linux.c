@@ -47,6 +47,8 @@ struct _EventdNdDisplay {
     guint64 screensize;
     gint stride;
     gint channels;
+    gint width;
+    gint height;
 };
 
 struct _EventdNdSurface {
@@ -112,6 +114,8 @@ _eventd_nd_linux_display_new(EventdNdBackendContext *context, const gchar *targe
     display->channels = vinfo.bits_per_pixel >> 3;
     display->stride = finfo.line_length;
 
+    display->width = vinfo.xres;
+    display->height = vinfo.yres;
 
     display->screensize = ( vinfo.xoffset * ( vinfo.yres - 1 ) + vinfo.xres * vinfo.yres ) * display->channels;
 
