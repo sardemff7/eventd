@@ -52,6 +52,7 @@ struct _EventdNdDisplay {
 };
 
 struct _EventdNdSurface {
+    EventdNdDisplay *display;
     cairo_surface_t *bubble;
     guchar *buffer;
     gint stride;
@@ -165,6 +166,7 @@ _eventd_nd_linux_surface_new(EventdEvent *event, EventdNdDisplay *display, cairo
     EventdNdSurface *self;
 
     self = g_new0(EventdNdSurface, 1);
+    self->display = display;
 
     self->bubble = cairo_surface_reference(bubble);
     self->stride = display->stride;
