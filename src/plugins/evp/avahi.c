@@ -75,6 +75,8 @@ _eventd_evp_avahi_create_group(EventdEvpAvahiContext *context, AvahiClient *clie
         break;
         case G_SOCKET_FAMILY_IPV6:
             proto = AVAHI_PROTO_INET6;
+            if ( g_inet_address_get_is_any(g_inet_socket_address_get_address(G_INET_SOCKET_ADDRESS(address))) )
+                proto = AVAHI_PROTO_UNSPEC;
         break;
         default:
             goto next;
