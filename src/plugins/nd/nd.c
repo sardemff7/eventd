@@ -72,6 +72,8 @@ typedef struct {
 typedef struct {
     EventdNdContext *context;
     GList *notification;
+    gint width;
+    gint height;
     GList *surfaces;
 } EventdNdNotification;
 
@@ -277,6 +279,9 @@ _eventd_nd_notification_new(EventdPluginContext *context, EventdEvent *event, Ev
     eventd_nd_cairo_get_surfaces(event, notification, style, &bubble, &shape);
     libeventd_nd_notification_free(notification);
 
+    self->width = cairo_image_surface_get_width(bubble);
+    self->height = cairo_image_surface_get_height(bubble);
+
     GList *display_;
     for ( display_ = context->displays ; display_ != NULL ; display_ = g_list_next(display_) )
     {
@@ -286,8 +291,6 @@ _eventd_nd_notification_new(EventdPluginContext *context, EventdEvent *event, Ev
         surface = g_new(EventdNdSurfaceContext, 1);
         surface->backend = display->backend;
         surface->surface = display->backend->surface_new(event, display->display, bubble, shape);
-
-        surface->backend->surface_display(surface->surface, 0, 0);
 
         self->surfaces = g_list_prepend(self->surfaces, surface);
     }
@@ -317,6 +320,46 @@ _eventd_nd_notification_free(EventdNdNotification *self)
 }
 
 static void
+_eventd_nd_update_notifications(EventdPluginContext *context)
+{
+    GList *notification_;
+    GList *surface_;
+    EventdNdNotification *notification;
+    EventdNdSurfaceContext *surface;
+
+    gboolean right;
+    gboolean bottom;
+    right = context->bubble_anchor & EVENTD_ND_ANCHOR_RIGHT;
+    bottom = context->bubble_anchor & EVENTD_ND_ANCHOR_BOTTOM;
+
+    gint x, y;
+    x = y = context->bubble_margin;
+    if ( right )
+        x *= -1;
+    if ( bottom )
+        y *= -1;
+    for ( notification_ = g_queue_peek_head_link(context->queue) ; notification_ != NULL ; notification_ = g_list_next(notification_) )
+    {
+        notification = notification_->data;
+        if ( bottom )
+            y -= notification->height;
+        if ( right )
+            x -= notification->width;
+        for ( surface_ = notification->surfaces ; surface_ != NULL ; surface_ = g_list_next(surface_) )
+        {
+            surface = surface_->data;
+            surface->backend->surface_display(surface->surface, x, y);
+        }
+        if ( right )
+            x += notification->width;
+        if ( bottom )
+            y -= context->bubble_margin;
+        else
+            y += notification->height + context->bubble_margin;
+    }
+}
+
+static void
 _eventd_nd_event_updated(EventdEvent *event, EventdNdNotification *old_notification)
 {
     EventdPluginContext *context = old_notification->context;
@@ -334,6 +377,8 @@ _eventd_nd_event_updated(EventdEvent *event, EventdNdNotification *old_notificat
     notification->notification->data = notification;
 
     _eventd_nd_notification_free(old_notification);
+
+    _eventd_nd_update_notifications(context);
 }
 
 static void
@@ -343,6 +388,8 @@ _eventd_nd_event_ended(EventdEvent *event, EventdEventEndReason reason, EventdNd
 
     g_queue_delete_link(context->queue, notification->notification);
     _eventd_nd_notification_free(notification);
+
+    _eventd_nd_update_notifications(context);
 }
 
 static void
@@ -365,6 +412,8 @@ _eventd_nd_event_action(EventdPluginContext *context, EventdEvent *event)
 
     g_queue_push_head(context->queue, notification);
     notification->notification = g_queue_peek_head_link(context->queue);
+
+    _eventd_nd_update_notifications(context);
 }
 
 
