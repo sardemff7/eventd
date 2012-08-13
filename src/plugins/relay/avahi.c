@@ -78,8 +78,12 @@ _eventd_relay_avahi_service_resolve_callback(AvahiServiceResolver *r, AvahiIfInd
     switch ( event )
     {
     case AVAHI_RESOLVER_FAILURE:
+        g_warning("Service '%s', resolver failure: %s", name, avahi_strerror(avahi_client_errno(server->context->client)));
     break;
     case AVAHI_RESOLVER_FOUND:
+#if DEBUG
+        g_debug("Service '%s' resolved: [%s]:%" G_GUINT16_FORMAT, name, host_name, port);
+#endif /* DEBUG */
         eventd_relay_server_avahi_connect(server->server, host_name, port);
     default:
     break;
@@ -97,14 +101,21 @@ _eventd_relay_avahi_service_browser_callback(AvahiServiceBrowser *b, AvahiIfInde
     switch ( event )
     {
     case AVAHI_BROWSER_FAILURE:
+        g_warning("Avahi Browser failure: %s", avahi_strerror(avahi_client_errno(context->client)));
         avahi_service_browser_free(context->browser);
         context->browser = NULL;
     break;
     case AVAHI_BROWSER_NEW:
+#if DEBUG
+        g_debug("Service found in '%s' domain: %s", domain, name);
+#endif /* DEBUG */
         if ( ( server = g_hash_table_lookup(context->servers, name) ) != NULL )
             avahi_service_resolver_new(context->client, interface, protocol, name, type, domain, AVAHI_PROTO_UNSPEC, 0, _eventd_relay_avahi_service_resolve_callback, server);
     break;
     case AVAHI_BROWSER_REMOVE:
+#if DEBUG
+        g_debug("Service removed in '%s' domain: %s", domain, name);
+#endif /* DEBUG */
         if ( ( server = g_hash_table_lookup(context->servers, name) ) != NULL )
             eventd_relay_server_stop(server->server);
     break;
@@ -129,7 +140,7 @@ eventd_relay_avahi_init()
 
     if ( context->client == NULL )
     {
-        g_warning("Couldn't initialize Avahi: %s", g_strerror(error));
+        g_warning("Couldn't initialize Avahi: %s", avahi_strerror(error));
         eventd_relay_avahi_uninit(context);
         return NULL;
     }
