@@ -52,7 +52,7 @@ _eventd_evp_avahi_create_group(EventdEvpAvahiContext *context, AvahiClient *clie
     context->group = avahi_entry_group_new(client, _eventd_evp_avahi_group_callback, context);
     if ( context->group == NULL )
     {
-        g_warning("Couldn't create avahi entry group: %s", g_strerror(avahi_client_errno(client)));
+        g_warning("Couldn't create avahi entry group: %s", avahi_strerror(avahi_client_errno(client)));
         return;
     }
 
@@ -82,7 +82,7 @@ _eventd_evp_avahi_create_group(EventdEvpAvahiContext *context, AvahiClient *clie
 
         if ( ( error = avahi_entry_group_add_service(context->group, AVAHI_IF_UNSPEC, proto, 0, context->name, "_event._tcp", NULL, NULL, g_inet_socket_address_get_port(G_INET_SOCKET_ADDRESS(address)), NULL) ) < 0 )
         {
-            g_warning("Couldn't add _event._tcp service: %s", g_strerror(error));
+            g_warning("Couldn't add _event._tcp service: %s", avahi_strerror(error));
             goto fail;
         }
 
@@ -93,7 +93,7 @@ _eventd_evp_avahi_create_group(EventdEvpAvahiContext *context, AvahiClient *clie
 
     if ( ( error = avahi_entry_group_commit(context->group) ) < 0 )
     {
-        g_warning("Couldn't commit entry group: %s", g_strerror(error));
+        g_warning("Couldn't commit entry group: %s", avahi_strerror(error));
         goto fail;
     }
 
@@ -143,7 +143,7 @@ eventd_evp_avahi_start(const gchar *name, GList *sockets)
 
     if ( context->client == NULL )
     {
-        g_warning("Couldn't initialize Avahi: %s", g_strerror(error));
+        g_warning("Couldn't initialize Avahi: %s", avahi_strerror(error));
         eventd_evp_avahi_stop(context);
         return NULL;
     }
