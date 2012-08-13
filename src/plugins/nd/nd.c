@@ -287,6 +287,8 @@ _eventd_nd_notification_new(EventdPluginContext *context, EventdEvent *event, Ev
         surface->backend = display->backend;
         surface->surface = display->backend->surface_new(event, display->display, bubble, shape);
 
+        surface->backend->surface_display(surface->surface, 0, 0);
+
         self->surfaces = g_list_prepend(self->surfaces, surface);
     }
 

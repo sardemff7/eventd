@@ -160,6 +160,7 @@ alpha_div(guchar c, guchar a)
         return ((t << 8) + t) << 8;
     }
 }
+
 static EventdNdSurface *
 _eventd_nd_linux_surface_new(EventdEvent *event, EventdNdDisplay *display, cairo_surface_t *bubble, cairo_surface_t *shape)
 {
@@ -172,10 +173,26 @@ _eventd_nd_linux_surface_new(EventdEvent *event, EventdNdDisplay *display, cairo
     self->stride = display->stride;
     self->channels = display->channels;
 
-    gint x, y;
+    return self;
+}
 
-    x = 0;
-    y = 0;
+static void
+_eventd_nd_linux_surface_free(EventdNdSurface *self)
+{
+    cairo_surface_destroy(self->bubble);
+
+    g_free(self);
+}
+
+static void
+_eventd_nd_linux_surface_display(EventdNdSurface *self, gint x, gint y)
+{
+    EventdNdDisplay *display = self->display;
+
+    if ( x < 0 )
+        x += display->width;
+    if ( y < 0 )
+        y += display->height;
 
     self->buffer = display->buffer + x * display->channels + y * display->stride;
 
@@ -216,16 +233,6 @@ _eventd_nd_linux_surface_new(EventdEvent *event, EventdNdDisplay *display, cairo
         pixels += self->stride;
         cpixels += cstride;
     }
-
-    return self;
-}
-
-static void
-_eventd_nd_linux_surface_free(EventdNdSurface *self)
-{
-    cairo_surface_destroy(self->bubble);
-
-    g_free(self);
 }
 
 EVENTD_EXPORT const gchar *eventd_nd_backend_id = "eventd-nd-linux";
@@ -240,6 +247,7 @@ eventd_nd_backend_get_info(EventdNdBackend *backend)
     backend->display_new = _eventd_nd_linux_display_new;
     backend->display_free = _eventd_nd_linux_display_free;
 
-    backend->surface_new  = _eventd_nd_linux_surface_new;
-    backend->surface_free = _eventd_nd_linux_surface_free;
+    backend->surface_new     = _eventd_nd_linux_surface_new;
+    backend->surface_free    = _eventd_nd_linux_surface_free;
+    backend->surface_display = _eventd_nd_linux_surface_display;
 }

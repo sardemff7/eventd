@@ -312,6 +312,21 @@ _eventd_nd_xcb_surface_free(EventdNdSurface *surface)
     g_free(surface);
 }
 
+static void
+_eventd_nd_xcb_surface_display(EventdNdSurface *self, gint x, gint y)
+{
+    if ( x < 0 )
+        x += self->display->screen->width_in_pixels;
+    if ( y < 0 )
+        y += self->display->screen->height_in_pixels;
+
+    guint16 mask = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y;
+    guint32 vals[] = { x, y };
+
+    xcb_configure_window(self->display->xcb_connection, self->window, mask, vals);
+    xcb_flush(self->display->xcb_connection);
+}
+
 EVENTD_EXPORT const gchar *eventd_nd_backend_id = "eventd-nd-xcb";
 EVENTD_EXPORT
 void
@@ -324,6 +339,7 @@ eventd_nd_backend_get_info(EventdNdBackend *backend)
     backend->display_new = _eventd_nd_xcb_display_new;
     backend->display_free = _eventd_nd_xcb_display_free;
 
-    backend->surface_new  = _eventd_nd_xcb_surface_new;
-    backend->surface_free = _eventd_nd_xcb_surface_free;
+    backend->surface_new     = _eventd_nd_xcb_surface_new;
+    backend->surface_free    = _eventd_nd_xcb_surface_free;
+    backend->surface_display = _eventd_nd_xcb_surface_display;
 }
