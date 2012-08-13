@@ -23,9 +23,16 @@
 #ifndef __EVENTD_ND_STYLE_H__
 #define __EVENTD_ND_STYLE_H__
 
-#include <eventd-nd-types.h>
-
 typedef struct _EventdNdStyle EventdNdStyle;
+
+typedef enum {
+    EVENTD_ND_ANCHOR_TOP     = 1<<0,
+    EVENTD_ND_ANCHOR_BOTTOM  = 1<<1,
+    EVENTD_ND_ANCHOR_VCENTER = 3<<0,
+    EVENTD_ND_ANCHOR_LEFT    = 1<<2,
+    EVENTD_ND_ANCHOR_RIGHT   = 1<<3,
+    EVENTD_ND_ANCHOR_HCENTER = 3<<2
+} EventdNdAnchor;
 
 typedef struct {
     gdouble r;

@@ -32,7 +32,6 @@
 #include <glib/gstdio.h>
 #include <cairo.h>
 
-#include <eventd-nd-types.h>
 #include <eventd-nd-backend.h>
 
 #define FRAMEBUFFER_TARGET_PREFIX "/dev/tty"
@@ -48,8 +47,6 @@ struct _EventdNdDisplay {
     guint64 screensize;
     gint stride;
     gint channels;
-    gint x;
-    gint y;
 };
 
 struct _EventdNdSurface {
@@ -86,7 +83,7 @@ _eventd_nd_linux_display_test(EventdNdBackendContext *context, const gchar *targ
 }
 
 static EventdNdDisplay *
-_eventd_nd_linux_display_new(EventdNdBackendContext *context, const gchar *target, EventdNdCornerAnchor anchor, gint margin)
+_eventd_nd_linux_display_new(EventdNdBackendContext *context, const gchar *target)
 {
     EventdNdDisplay *display;
     struct fb_fix_screeninfo finfo;
@@ -116,25 +113,6 @@ _eventd_nd_linux_display_new(EventdNdBackendContext *context, const gchar *targe
     display->channels = vinfo.bits_per_pixel >> 3;
     display->stride = finfo.line_length;
 
-    switch ( anchor )
-    {
-    case EVENTD_ND_ANCHOR_TOP_LEFT:
-        display->x = margin;
-        display->y = margin;
-    break;
-    case EVENTD_ND_ANCHOR_TOP_RIGHT:
-        display->x = - vinfo.xres + margin;
-        display->y = margin;
-    break;
-    case EVENTD_ND_ANCHOR_BOTTOM_LEFT:
-        display->x = margin;
-        display->y = - vinfo.yres + margin;
-    break;
-    case EVENTD_ND_ANCHOR_BOTTOM_RIGHT:
-        display->x = - vinfo.xres + margin;
-        display->y = - vinfo.yres + margin;
-    break;
-    }
 
     display->screensize = ( vinfo.xoffset * ( vinfo.yres - 1 ) + vinfo.xres * vinfo.yres ) * display->channels;
 
@@ -191,8 +169,8 @@ _eventd_nd_linux_surface_show(EventdEvent *event, EventdNdDisplay *display, cair
     width = cairo_image_surface_get_width(bubble);
     height = cairo_image_surface_get_height(bubble);
 
-    x = display->x;
-    y = display->y;
+    x = 0;
+    y = 0;
 
     if ( x < 0 )
         x = - x - width;

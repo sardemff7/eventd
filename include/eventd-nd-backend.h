@@ -24,7 +24,6 @@
 #define __EVENTD_ND_BACKEND_H__
 
 #include <libeventd-event-types.h>
-#include <eventd-nd-types.h>
 
 typedef struct _EventdPluginContext EventdNdContext;
 typedef struct _EventdNdDisplay EventdNdDisplay;
@@ -41,7 +40,7 @@ typedef EventdNdBackendContext *(*EventdNdBackendInitFunc)(EventdNdContext *nd, 
 typedef void (*EventdNdBackendUninitFunc)(EventdNdBackendContext *context);
 
 typedef gboolean (*EventdNdDisplayTestFunc)(EventdNdBackendContext *context, const gchar *target);
-typedef EventdNdDisplay *(*EventdNdDisplayNewFunc)(EventdNdBackendContext *context, const gchar *target, EventdNdCornerAnchor anchor, gint margin);
+typedef EventdNdDisplay *(*EventdNdDisplayNewFunc)(EventdNdBackendContext *context, const gchar *target);
 typedef void (*EventdNdDisplayFunc)(EventdNdDisplay *display);
 
 typedef EventdNdSurface *(*EventdNdSurfaceShowFunc)(EventdEvent *event, EventdNdDisplay *display, cairo_surface_t *bubble, cairo_surface_t *shape);

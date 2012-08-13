@@ -33,7 +33,6 @@
 
 #include <libeventd-event.h>
 
-#include <eventd-nd-types.h>
 #include <eventd-nd-backend.h>
 
 struct _EventdNdBackendContext {
@@ -47,11 +46,7 @@ struct _EventdNdDisplay {
     GXcbSource *source;
     xcb_connection_t *xcb_connection;
     xcb_screen_t *screen;
-    gint x;
-    gint y;
     gboolean shape;
-    gboolean anchor_bottom;
-    gint margin;
     GHashTable *bubbles;
     GQueue *queue;
 };
@@ -172,7 +167,7 @@ _eventd_nd_xcb_display_error_callback(gpointer user_data)
 
 static void _eventd_nd_xcb_surface_hide_internal(gpointer surface);
 static EventdNdDisplay *
-_eventd_nd_xcb_display_new(EventdNdBackendContext *context, const gchar *target, EventdNdCornerAnchor anchor, gint margin)
+_eventd_nd_xcb_display_new(EventdNdBackendContext *context, const gchar *target)
 {
     EventdNdDisplay *display;
     const xcb_query_extension_reply_t *shape_query;
@@ -199,30 +194,6 @@ _eventd_nd_xcb_display_new(EventdNdBackendContext *context, const gchar *target,
         g_warning("No Shape extension");
     else
         display->shape = TRUE;
-
-    display->margin = margin;
-
-    switch ( anchor )
-    {
-    case EVENTD_ND_ANCHOR_TOP_LEFT:
-        display->x = margin;
-        display->y = margin;
-    break;
-    case EVENTD_ND_ANCHOR_TOP_RIGHT:
-        display->x = - display->screen->width_in_pixels + margin;
-        display->y = margin;
-    break;
-    case EVENTD_ND_ANCHOR_BOTTOM_LEFT:
-        display->anchor_bottom = TRUE;
-        display->x = margin;
-        display->y = display->screen->height_in_pixels - margin;
-    break;
-    case EVENTD_ND_ANCHOR_BOTTOM_RIGHT:
-        display->anchor_bottom = TRUE;
-        display->x = - display->screen->width_in_pixels + margin;
-        display->y = display->screen->height_in_pixels - margin;
-    break;
-    }
 
     display->bubbles = g_hash_table_new_full(NULL, NULL, NULL, _eventd_nd_xcb_surface_hide_internal);
     display->queue = g_queue_new();
@@ -265,28 +236,14 @@ _eventd_nd_xcb_update_bubbles(EventdNdDisplay *display)
 {
     guint16 mask = XCB_CONFIG_WINDOW_Y;
     guint32 vals[] = { 0 };
-    vals[0] = display->y;
 
     GList *surface_;
     EventdNdSurface *surface;
-    if ( display->anchor_bottom )
+    for ( surface_ = g_queue_peek_head_link(display->queue) ; surface_ != NULL ; surface_ = g_list_next(surface_) )
     {
-        for ( surface_ = g_queue_peek_head_link(display->queue) ; surface_ != NULL ; surface_ = g_list_next(surface_) )
-        {
-            surface = surface_->data;
-            vals[0] -= surface->height;
-            xcb_configure_window(display->xcb_connection, surface->window, mask, vals);
-            vals[0] -= display->margin;
-        }
-    }
-    else
-    {
-        for ( surface_ = g_queue_peek_head_link(display->queue) ; surface_ != NULL ; surface_ = g_list_next(surface_) )
-        {
-            surface = surface_->data;
-            xcb_configure_window(display->xcb_connection, surface->window, mask, vals);
-            vals[0] += surface->height + display->margin;
-        }
+        surface = surface_->data;
+        xcb_configure_window(display->xcb_connection, surface->window, mask, vals);
+        vals[0] += surface->height;
     }
     xcb_flush(display->xcb_connection);
 }
@@ -296,7 +253,6 @@ _eventd_nd_xcb_surface_show_internal(EventdEvent *event, EventdNdDisplay *displa
 {
     guint32 selmask = XCB_CW_OVERRIDE_REDIRECT | XCB_CW_EVENT_MASK;
     guint32 selval[] = { 1, XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_BUTTON_RELEASE };
-    gint x = 0;
     EventdNdSurface *surface;
 
     gint width;
@@ -314,16 +270,12 @@ _eventd_nd_xcb_surface_show_internal(EventdEvent *event, EventdNdDisplay *displa
     surface->height = height;
     surface->bubble = cairo_surface_reference(bubble);
 
-    x = display->x;
-    if ( x < 0 )
-        x = - x - width;
-
     surface->window = xcb_generate_id(display->xcb_connection);
     xcb_create_window(display->xcb_connection,
                                        display->screen->root_depth,   /* depth         */
                                        surface->window,
                                        display->screen->root,         /* parent window */
-                                       x, 0,                          /* x, y          */
+                                       0, 0,                          /* x, y          */
                                        width, height,                 /* width, height */
                                        0,                             /* border_width  */
                                        XCB_WINDOW_CLASS_INPUT_OUTPUT, /* class         */

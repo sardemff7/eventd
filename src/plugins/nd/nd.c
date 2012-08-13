@@ -33,12 +33,18 @@
 #include <libeventd-nd-notification.h>
 #include <libeventd-nd-notification-template.h>
 
-#include <eventd-nd-types.h>
 #include <eventd-nd-backend.h>
 
 #include "backends.h"
 #include "style.h"
 #include "cairo.h"
+
+typedef enum {
+    EVENTD_ND_ANCHOR_TOP_LEFT     = EVENTD_ND_ANCHOR_TOP    | EVENTD_ND_ANCHOR_LEFT,
+    EVENTD_ND_ANCHOR_TOP_RIGHT    = EVENTD_ND_ANCHOR_TOP    | EVENTD_ND_ANCHOR_RIGHT,
+    EVENTD_ND_ANCHOR_BOTTOM_LEFT  = EVENTD_ND_ANCHOR_BOTTOM | EVENTD_ND_ANCHOR_LEFT,
+    EVENTD_ND_ANCHOR_BOTTOM_RIGHT = EVENTD_ND_ANCHOR_BOTTOM | EVENTD_ND_ANCHOR_RIGHT
+} EventdNdCornerAnchor;
 
 struct _EventdPluginContext {
     EventdNdInterface interface;
@@ -166,7 +172,7 @@ _eventd_nd_control_command(EventdPluginContext *context, const gchar *command)
         if ( ! backend->display_test(backend->context, target) )
             continue;
 
-        display = backend->display_new(backend->context, target, context->bubble_anchor, context->bubble_margin);
+        display = backend->display_new(backend->context, target);
         if ( display == NULL )
             g_warning("Couldn't initialize display for '%s'", target);
         else
