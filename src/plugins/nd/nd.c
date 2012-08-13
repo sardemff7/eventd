@@ -43,7 +43,8 @@ typedef enum {
     EVENTD_ND_ANCHOR_TOP_LEFT     = EVENTD_ND_ANCHOR_TOP    | EVENTD_ND_ANCHOR_LEFT,
     EVENTD_ND_ANCHOR_TOP_RIGHT    = EVENTD_ND_ANCHOR_TOP    | EVENTD_ND_ANCHOR_RIGHT,
     EVENTD_ND_ANCHOR_BOTTOM_LEFT  = EVENTD_ND_ANCHOR_BOTTOM | EVENTD_ND_ANCHOR_LEFT,
-    EVENTD_ND_ANCHOR_BOTTOM_RIGHT = EVENTD_ND_ANCHOR_BOTTOM | EVENTD_ND_ANCHOR_RIGHT
+    EVENTD_ND_ANCHOR_BOTTOM_RIGHT = EVENTD_ND_ANCHOR_BOTTOM | EVENTD_ND_ANCHOR_RIGHT,
+    EVENTD_ND_ANCHOR_REVERSE      = 1<<4
 } EventdNdCornerAnchor;
 
 struct _EventdPluginContext {
@@ -208,6 +209,7 @@ _eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
     {
         Int integer;
         gchar *string;
+        gboolean boolean;
 
         if ( libeventd_config_key_file_get_string(config_file, "Notification", "Anchor", &string) == 0 )
         {
@@ -223,6 +225,9 @@ _eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
                 g_warning("Wrong anchor value '%s'", string);
             g_free(string);
         }
+
+        if ( ( libeventd_config_key_file_get_boolean(config_file, "Notification", "OldestFirst", &boolean) == 0 ) && boolean )
+            context->bubble_anchor |= EVENTD_ND_ANCHOR_REVERSE;
 
         if ( libeventd_config_key_file_get_int(config_file, "Notification", "Margin", &integer) == 0 )
             context->bubble_margin = integer.value;
@@ -410,8 +415,16 @@ _eventd_nd_event_action(EventdPluginContext *context, EventdEvent *event)
     g_signal_connect(event, "updated", G_CALLBACK(_eventd_nd_event_updated), notification);
     g_signal_connect(event, "ended", G_CALLBACK(_eventd_nd_event_ended), notification);
 
-    g_queue_push_head(context->queue, notification);
-    notification->notification = g_queue_peek_head_link(context->queue);
+    if ( context->bubble_anchor & EVENTD_ND_ANCHOR_REVERSE )
+    {
+        g_queue_push_tail(context->queue, notification);
+        notification->notification = g_queue_peek_tail_link(context->queue);
+    }
+    else
+    {
+        g_queue_push_head(context->queue, notification);
+        notification->notification = g_queue_peek_head_link(context->queue);
+    }
 
     _eventd_nd_update_notifications(context);
 }
