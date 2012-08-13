@@ -159,29 +159,34 @@ static EventdNdSurface *
 _eventd_nd_linux_surface_new(EventdEvent *event, EventdNdDisplay *display, cairo_surface_t *bubble, cairo_surface_t *shape)
 {
     EventdNdSurface *self;
+
+    self = g_new0(EventdNdSurface, 1);
+
+    self->bubble = cairo_surface_reference(bubble);
+    self->stride = display->stride;
+    self->channels = display->channels;
+
     gint x, y;
 
     x = 0;
     y = 0;
 
-    self = g_new0(EventdNdSurface, 1);
-
-    self->bubble = cairo_surface_reference(bubble);
     self->buffer = display->buffer + x * display->channels + y * display->stride;
-    self->stride = display->stride;
-    self->channels = display->channels;
+
+    gint width;
+    gint height;
 
     guchar *pixels, *line;
     const guchar *cpixels, *cpixels_end, *cline, *cline_end;
     gint cstride, clo;
-    gint w;
 
-    w = cairo_image_surface_get_width(self->bubble);
+    width = cairo_image_surface_get_width(self->bubble);
+    height = cairo_image_surface_get_height(self->bubble);
 
     cpixels = cairo_image_surface_get_data(self->bubble);
     cstride = cairo_image_surface_get_stride(self->bubble);
-    cpixels_end = cpixels + cstride * cairo_image_surface_get_height(self->bubble);
-    clo =  w << 2;
+    cpixels_end = cpixels + cstride * height;
+    clo =  width << 2;
 
     pixels = self->buffer;
 
