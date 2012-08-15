@@ -196,7 +196,7 @@ namespace Eventc
             this.output = new GLib.DataOutputStream(this.connection.get_output_stream());
             this.cancellable.reset();
 
-            this.receive_loop();
+            this.receive_loop.begin();
 
             this.send("HELLO " + this.category);
 
@@ -308,10 +308,11 @@ namespace Eventc
         receive_loop()
         {
             string r = null;
+            size_t len;
             Eventd.Event event;
             try
             {
-                while ( ( r = yield this.input.read_upto_async("\n", -1, GLib.Priority.DEFAULT, this.cancellable) ) != null )
+                while ( ( r = yield this.input.read_upto_async("\n", -1, GLib.Priority.DEFAULT, this.cancellable, out len) ) != null )
                 {
                     this.input.read_byte(null);
                     if ( r.has_prefix("ENDED ") )
@@ -344,7 +345,7 @@ namespace Eventc
                         var answer = r.substring(9).split(" ", 2);
                         event = this.events.lookup(answer[0]);
 
-                        while ( ( r = yield this.input.read_upto_async("\n", -1, GLib.Priority.DEFAULT, this.cancellable) ) != null )
+                        while ( ( r = yield this.input.read_upto_async("\n", -1, GLib.Priority.DEFAULT, this.cancellable, out len) ) != null )
                         {
                             this.input.read_byte(null);
                             if ( r == "." )
@@ -360,7 +361,7 @@ namespace Eventc
                             {
                                 var name = r.substring(5);
                                 string data = null;
-                                while ( ( r = yield this.input.read_upto_async("\n", -1, GLib.Priority.DEFAULT, this.cancellable) ) != null )
+                                while ( ( r = yield this.input.read_upto_async("\n", -1, GLib.Priority.DEFAULT, this.cancellable, out len) ) != null )
                                 {
                                     this.input.read_byte(null);
                                     if ( r == "." )
