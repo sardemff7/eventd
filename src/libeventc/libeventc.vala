@@ -318,6 +318,9 @@ namespace Eventc
                     {
                         var end = r.substring(6).split(" ", 2);
                         event = this.events.lookup(end[0]);
+                        if ( event == null )
+                            continue;
+
                         Eventd.EventEndReason reason = Eventd.EventEndReason.NONE;
                         switch ( end[1] )
                         {
