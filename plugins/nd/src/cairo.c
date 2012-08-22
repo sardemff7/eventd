@@ -111,42 +111,43 @@ fallback:
     return g_markup_escape_text(message, -1);
 }
 
+static gsize
+_eventd_nd_cairo_strccount(const gchar *str, char c)
+{
+    gsize count = 1;
+    for ( ; *str != 0 ; ++str )
+    {
+        if ( *str == c )
+            ++count;
+    }
+    return count;
+}
+
 static gchar *
 _eventd_nd_cairo_get_message(const gchar *message, guint8 max)
 {
+    gsize count;
     gchar **message_lines;
-    guint size;
+    gchar **message_line;
+
+    count = _eventd_nd_cairo_strccount(message, '\n');
+    if ( ( g_strstr_len(message, -1, "\n") == NULL ) || ( max < 1 ) || ( count <= max ) )
+        return _eventd_nd_cairo_message_escape(message);
 
     message_lines = g_strsplit(message, "\n", -1);
 
-    size = g_strv_length(message_lines);
+    GString *message_str;
 
-    if ( size > max )
-    {
-        gchar **tmp = message_lines;
-        gchar **message_line;
-        gchar **message_new_line;
+    message_str = g_string_new(message_lines[0]);
+    g_string_append(message_str, "\n[…]");
 
-        message_lines = g_new(gchar *, max + 1);
-        message_lines[max] = NULL;
-
-        for ( message_line = tmp + size - ( max - 2 ), message_new_line = message_lines ; *message_line != NULL ; ++message_line )
-        {
-            *message_new_line = *message_line;
-            *message_line = NULL;
-        }
-
-        g_strfreev(tmp);
-    }
-    gchar *tmp;
-
-    tmp = g_strjoinv("\n", message_lines);
-    g_strfreev(message_lines);
+    for ( message_line = message_lines + count - ( max - 2 ) ; *message_line != NULL ; ++message_line )
+        message_str = g_string_append(g_string_append_c(message_str, '\n'), *message_line);
 
     gchar *ret;
 
-    ret = _eventd_nd_cairo_message_escape(tmp);
-    g_free(tmp);
+    ret = _eventd_nd_cairo_message_escape(message_str->str);
+    g_string_free(message_str, TRUE);
 
     return ret;
 }
