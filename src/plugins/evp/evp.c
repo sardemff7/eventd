@@ -60,6 +60,12 @@ typedef struct {
     GHashTable *events;
 } EventdEvpClient;
 
+typedef struct {
+    EventdEvent *event;
+    gulong answered_handler;
+    gulong ended_handler;
+} EventdEvpEvent;
+
 /*
  * Stream reading helper
  */
@@ -375,13 +381,17 @@ _eventd_evp_main(EventdPluginContext *context, EventdEvpClient *client, GError *
                 g_debug("Event config id: %s", config_id);
                 if ( config_id != NULL )
                 {
+                    EventdEvpEvent *evp_event;
+
+                    evp_event = g_new0(EventdEvpEvent, 1);
+                    evp_event->event = event;
                     gchar *tid;
                     tid = g_strdup_printf("%x", id);
-                    g_hash_table_insert(client->events, tid, event);
+                    g_hash_table_insert(client->events, tid, evp_event);
                     eventd_event_set_id(event, tid);
                     eventd_event_set_config_id(event, config_id);
-                    g_signal_connect(event, "answered", G_CALLBACK(_event_evp_event_answered), client);
-                    g_signal_connect(event, "ended", G_CALLBACK(_event_evp_event_ended), client);
+                    evp_event->answered_handler = g_signal_connect(event, "answered", G_CALLBACK(_event_evp_event_answered), client);
+                    evp_event->ended_handler = g_signal_connect(event, "ended", G_CALLBACK(_event_evp_event_ended), client);
                     context->core_interface->push_event(context->core, event);
                 }
                 else
@@ -443,6 +453,19 @@ _eventd_evp_main(EventdPluginContext *context, EventdEvpClient *client, GError *
     g_free(line);
 }
 
+static void
+_eventd_evp_event_free(gpointer data)
+{
+    EventdEvpEvent *evp_event = data;
+
+    g_signal_handler_disconnect(evp_event->event, evp_event->answered_handler);
+    g_signal_handler_disconnect(evp_event->event, evp_event->ended_handler);
+
+    g_object_unref(evp_event->event);
+
+    g_free(evp_event);
+}
+
 /*
  * Callback for the client connection
  */
@@ -455,7 +478,7 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
     GError *error = NULL;
 
     client.cancellable = g_cancellable_new();
-    client.events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_object_unref);
+    client.events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_evp_event_free);
 
     service->clients = g_slist_prepend(service->clients, client.cancellable);
 
@@ -472,13 +495,6 @@ _eventd_service_connection_handler(GThreadedSocketService *socket_service, GSock
 #if DEBUG
             g_debug("Client connection closde(category: %s)", client.category);
 #endif /* DEBUG */
-
-    GHashTableIter iter;
-    gpointer tid;
-    gpointer event;
-    g_hash_table_iter_init(&iter, client.events);
-    while ( g_hash_table_iter_next(&iter, &tid, &event) )
-        g_signal_handlers_disconnect_by_data(event, &client);
 
     g_hash_table_unref(client.events);
     g_free(client.category);
