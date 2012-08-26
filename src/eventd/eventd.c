@@ -27,7 +27,9 @@
 #include <glib-object.h>
 #include <glib/gprintf.h>
 #ifdef G_OS_UNIX
+#if GLIB_CHECK_VERSION(2,32,0)
 #include <glib-unix.h>
+#endif /* GLIB_CHECK_VERSION(2,32,0) */
 #endif /* G_OS_UNIX */
 #include <gio/gio.h>
 
@@ -244,12 +246,21 @@ _eventd_core_debug_log_handler(const gchar *log_domain, GLogLevelFlags log_level
 #endif /* ! DEBUG */
 
 #ifdef G_OS_UNIX
+#if GLIB_CHECK_VERSION(2,32,0)
 static gboolean
 _eventd_core_quit(gpointer user_data)
 {
     eventd_core_quit(user_data);
     return FALSE;
 }
+#else /* ! GLIB_CHECK_VERSION(2,32,0) */
+static EventdCoreContext *_eventd_core_sigaction_context = NULL;
+static void
+_eventd_core_sigaction_quit(int sig, siginfo_t *info, void *data)
+{
+    eventd_core_quit(_eventd_core_sigaction_context);
+}
+#endif /* ! GLIB_CHECK_VERSION(2,32,0) */
 #endif /* G_OS_UNIX */
 
 int
@@ -365,8 +376,18 @@ main(int argc, char *argv[])
     }
 
 #ifdef G_OS_UNIX
+#if GLIB_CHECK_VERSION(2,32,0)
     g_unix_signal_add(SIGTERM, _eventd_core_quit, context);
     g_unix_signal_add(SIGINT, _eventd_core_quit, context);
+#else /* ! GLIB_CHECK_VERSION(2,32,0) */
+    _eventd_core_sigaction_context = context;
+    struct sigaction action;
+    action.sa_sigaction = _eventd_core_sigaction_quit;
+    action.sa_flags = SA_SIGINFO;
+    sigemptyset(&action.sa_mask);
+    sigaction(SIGTERM, &action, NULL);
+    sigaction(SIGINT, &action, NULL);
+#endif /* ! GLIB_CHECK_VERSION(2,32,0) */
 #endif /* G_OS_UNIX */
 
     eventd_config_parse(context->config);
