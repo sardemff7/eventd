@@ -55,7 +55,7 @@ typedef struct {
 
     EventdPluginEventDispatchFunc event_action;
 
-    /* Private stuff */
+    /*< private >*/
     void *module;
     EventdPluginContext *context;
 } EventdPlugin;
