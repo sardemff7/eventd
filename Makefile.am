@@ -13,6 +13,7 @@ bin_PROGRAMS =
 lib_LTLIBRARIES =
 pkglib_LTLIBRARIES =
 plugins_LTLIBRARIES =
+noinst_LTLIBRARIES =
 pkginclude_HEADERS =
 pkgconfig_DATA =
 dist_vapi_DATA =
@@ -40,10 +41,12 @@ AM_XSLTPROCFLAGS += \
 	--path "$(builddir)/man/"
 
 EXTRA_DIST += \
+	vapi/libeventd-evp.vapi \
 	vapi/glib-local-2.0.vapi \
 	vapi/config.vapi
 
 include src/libeventd-event/libeventd-event.mk
+include src/libeventd-evp/libeventd-evp.mk
 include src/libeventd/libeventd.mk
 include src/eventd/eventd.mk
 include src/eventdctl/eventdctl.mk
