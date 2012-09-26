@@ -22,37 +22,37 @@
 
 namespace Eventd
 {
-	[CCode (cheader_filename = "libeventd-event.h")]
-	public enum EventEndReason
-	{
-		NONE = 0,
-		TIMEOUT = 1,
-		USER_DISMISS = 2,
-		CLIENT_DISMISS = 3,
-		RESERVED = 4
-	}
+    [CCode (cheader_filename = "libeventd-event.h")]
+    public enum EventEndReason
+    {
+        NONE = 0,
+        TIMEOUT = 1,
+        USER_DISMISS = 2,
+        CLIENT_DISMISS = 3,
+        RESERVED = 4
+    }
 
-	[CCode (cheader_filename = "libeventd-event.h")]
-	public class Event : GLib.Object
-	{
-		public Event(string name);
+    [CCode (cheader_filename = "libeventd-event.h")]
+    public class Event : GLib.Object
+    {
+        public Event(string name);
 
-		public void set_id(string id);
-		public void add_answer(string answer);
-		public void add_data(owned string name, owned string content);
-		public void add_answer_data(owned string name, owned string content);
+        public void set_id(string id);
+        public void add_answer(string answer);
+        public void add_data(owned string name, owned string content);
+        public void add_answer_data(owned string name, owned string content);
 
-		public unowned string get_id();
-		public unowned string get_category();
-		public unowned string get_name();
-		public unowned string get_data(string name);
-		public unowned GLib.HashTable<string, string> get_all_data();
-		public unowned GLib.List<string> get_answers();
+        public unowned string get_id();
+        public unowned string get_category();
+        public unowned string get_name();
+        public unowned string get_data(string name);
+        public unowned GLib.HashTable<string, string> get_all_data();
+        public unowned GLib.List<string> get_answers();
 
-		public void answer(string answer);
-		public void end(EventEndReason reason);
+        public void answer(string answer);
+        public void end(EventEndReason reason);
 
-		public signal void answered(string answer);
-		public signal void ended(EventEndReason reason);
-	}
+        public signal void answered(string answer);
+        public signal void ended(EventEndReason reason);
+    }
 }
