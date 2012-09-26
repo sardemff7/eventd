@@ -12,6 +12,7 @@ libeventc_la_SOURCES = \
 libeventc_la_VALAFLAGS = \
 	$(AM_VALAFLAGS) \
 	--pkg libeventd-event \
+	--pkg libeventd-evp \
 	--library libeventc \
 	--vapi vapi/libeventc.vapi \
 	--header include/libeventc.h \
@@ -34,6 +35,7 @@ libeventc_la_LDFLAGS = \
 
 libeventc_la_LIBADD = \
 	libeventd-event.la \
+	libeventd-evp.la \
 	$(GIO_LIBS) \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS)

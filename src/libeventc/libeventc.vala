@@ -29,14 +29,10 @@ namespace Eventc
         CONNECTION_OTHER,
         ALREADY_CONNECTED,
         HELLO,
-        MODE,
-        BYE,
-        RENAMED,
-        SEND,
         RECEIVE,
         EVENT,
         END,
-        CLOSE
+        BYE
     }
 
     public static unowned string
@@ -47,51 +43,22 @@ namespace Eventc
 
     public class Connection : GLib.Object
     {
-        private GLib.Mutex mutex;
+        static Libeventd.Evp.ClientInterface client_interface = Libeventd.Evp.ClientInterface() {
+            get_event = Connection.get_event,
+            answered = Connection.answered,
+            ended = Connection.ended,
+            bye = Connection.bye
+        };
 
-        private string _host;
-        private uint16 _port;
-
-        public string host
-        {
-            set
-            {
-                if ( this._host != value )
-                {
-                    this._host = value;
-                    this.address = null;
-                }
-            }
-        }
-
-        public uint16 port
-        {
-            set
-            {
-                if ( this._port != value )
-                {
-                    this._port = value;
-                    this.address = null;
-                }
-            }
-        }
+        public string host { set; private get; }
+        public uint16 port { set; private get; }
 
         private string category;
-
-        #if HAVE_GIO_UNIX
-        public bool host_is_socket { get; set; default = false; }
-        #endif
 
         public uint timeout { get; set; default = 0; }
         public bool enable_proxy { get; set; default = true; }
 
-        private GLib.SocketConnectable address;
-        private GLib.SocketConnection connection;
-        private GLib.DataInputStream input;
-        private GLib.DataOutputStream output;
-        private GLib.AsyncQueue<string> queue;
-        private GLib.Error pending_error = null;
-        private GLib.Cancellable cancellable;
+        private Libeventd.Evp.Context evp;
         private GLib.HashTable<string, Eventd.Event> events;
 
         private bool handshake_passed;
@@ -99,78 +66,44 @@ namespace Eventc
         public
         Connection(string host, uint16 port, string category)
         {
-            this.mutex = new GLib.Mutex();
-            this._host = host;
-            this._port = port;
+            this.host = host;
+            this.port = port;
             this.category = category;
 
-            this.queue = new GLib.AsyncQueue<string>();
-            this.cancellable = new GLib.Cancellable();
+            this.evp = new Libeventd.Evp.Context((void *)this, ref Connection.client_interface);
             this.events = new GLib.HashTable<string, Eventd.Event>(GLib.str_hash, GLib.str_equal);
         }
 
         public bool
         is_connected() throws EventcError
         {
-            if ( this.pending_error != null )
+            try
             {
-                var e = (owned) this.pending_error;
-                throw new EventcError.RECEIVE("Failed to receive message: %s", e.message);
+                return ( this.evp.is_connected() && this.handshake_passed );
             }
-            return ( ( this.connection != null ) && ( ! this.connection.is_closed() ) && this.handshake_passed );
-        }
-
-        private void
-        proccess_address() throws EventcError
-        {
-            if ( this.address != null )
-                return;
-
-            #if HAVE_GIO_UNIX
-            string path = null;
-            if ( this._host == "localhost" )
-                path = GLib.Path.build_filename(GLib.Environment.get_user_runtime_dir(), Eventd.Config.PACKAGE_NAME, Eventd.Config.UNIX_SOCKET);
-            else if ( this.host_is_socket )
-                path = this._host;
-            if ( ( path != null ) && GLib.FileUtils.test(path, GLib.FileTest.EXISTS) && ( ! GLib.FileUtils.test(path, GLib.FileTest.IS_DIR|GLib.FileTest.IS_REGULAR) ) )
-                this.address = new GLib.UnixSocketAddress(path);
-            #endif
-            if ( this.address == null )
+            catch ( GLib.Error e )
             {
-                this.address = new GLib.NetworkAddress(this._host, ( this._port > 0 ) ? ( this._port ) : ( Eventd.Config.DEFAULT_BIND_PORT ));
-                if ( address == null )
-                    throw new EventcError.HOSTNAME("Couldn't resolve the hostname");
+                throw new EventcError.RECEIVE("Failed to receive message: %s", e.message);
             }
         }
 
         public new async void
         connect() throws EventcError
         {
-            if ( this.connection != null )
-            {
-                if ( this.handshake_passed )
-                    throw new EventcError.ALREADY_CONNECTED("Already connected, you must disconnect first");
-                else
-                    yield this.close();
-            }
+            if ( this.is_connected() )
+                throw new EventcError.ALREADY_CONNECTED("Already connected, you must disconnect first");
 
             this.handshake_passed = false;
-            this.proccess_address();
-
-            while ( ! this.mutex.trylock() )
-            {
-                Idle.add(this.connect.callback);
-                yield;
-            }
-
-            try
-            {
+            var address = Libeventd.Evp.get_address(this.host, this.port);
+            if ( address == null )
+                throw new EventcError.HOSTNAME("Couldn't resolve the hostname");
 
             var client = new GLib.SocketClient();
             client.set_enable_proxy(this.enable_proxy);
+            GLib.SocketConnection connection;
             try
             {
-                this.connection = yield client.connect_async(this.address);
+                connection = yield client.connect_async(address);
             }
             catch ( GLib.IOError.CONNECTION_REFUSED ie )
             {
@@ -180,296 +113,91 @@ namespace Eventc
             {
                 throw new EventcError.CONNECTION_OTHER("Failed to connect: %s", e.message);
             }
-            yield this.hello();
+            this.evp.set_connection(connection);
 
-            }
-            finally
-            {
-            this.mutex.unlock();
-            }
+            this.evp.receive_loop_client();
+
+            yield this.hello();
         }
 
         private async void
         hello() throws EventcError
         {
-            this.input = new GLib.DataInputStream(this.connection.get_input_stream());
-            this.output = new GLib.DataOutputStream(this.connection.get_output_stream());
-            this.cancellable.reset();
-
-            this.receive_loop.begin();
-
-            this.send("HELLO " + this.category);
-
-            var r = yield this.receive();
-            if ( r != "HELLO" )
-                throw new EventcError.HELLO("Got a wrong hello message: %s", r);
-            else
-                this.handshake_passed = true;
+            try
+            {
+                yield this.evp.send_hello(this.category);
+            }
+            catch ( GLib.Error e )
+            {
+                throw new EventcError.HELLO(e.message);
+            }
+            this.handshake_passed = true;
         }
 
         public async void
         event(Eventd.Event event) throws EventcError
         {
-            while ( ! this.mutex.trylock() )
-            {
-                Idle.add(this.event.callback);
-                yield;
-            }
-
+            unowned string id;
             try
             {
-
-            unowned string name = event.get_name();
-            this.send( @"EVENT $name");
-
-            var event_category =  event.get_category();
-            if ( (  event_category != null ) && ( this.category != event_category ) )
-                this.send("CATEGORY " + event.get_category());
-
-            unowned GLib.List<string> answers = event.get_answers();
-            if ( answers != null )
-            {
-                foreach ( var answer in answers )
-                    this.send(@"ANSWER $answer");
+                id = yield this.evp.send_event(event);
             }
-
-            unowned GLib.HashTable<string, string> data = event.get_all_data();
-            if ( data != null )
+            catch ( GLib.Error e )
             {
-                EventcError e = null;
-                data.foreach((name, content) => {
-                    try
-                    {
-                        if ( content.index_of_char('\n') == -1 )
-                            this.send(@"DATAL $name $content");
-                        else
-                        {
-                            this.send(@"DATA $name");
-                            var datas = content.split("\n");
-                            foreach ( var line in datas )
-                            {
-                                if ( line[0] == '.' )
-                                    line = "." + line;
-                                this.send(line);
-                            }
-                            this.send(".");
-                        }
-                    }
-                    catch ( EventcError ie )
-                    {
-                        e = ie;
-                    }
-                });
-                if ( e != null )
-                    throw e;
+                this.handshake_passed = false;
+                throw new EventcError.EVENT("Couldn't send event: %s", e.message);
             }
-            this.send(".");
-            var r = yield this.receive();
-            if ( ! r.has_prefix("EVENT ") )
-                throw new EventcError.EVENT("Got a wrong event acknowledge message: %s", r);
-
-            string id = r.substring(6);
             event.set_id(id);
             this.events.insert(id, event);
-
-            }
-            finally
-            {
-            this.mutex.unlock();
-            }
         }
 
         public async void
         event_end(Eventd.Event event) throws EventcError
         {
-            while ( ! this.mutex.trylock() )
-            {
-                Idle.add(this.event_end.callback);
-                yield;
-            }
-
             try
             {
-
-            unowned string id = event.get_id();
-            this.send(@"END $id");
-            var r = yield this.receive();
-            if ( ! r.has_prefix("ENDING ") )
-                throw new EventcError.END("Got a wrong event ending acknowledge message: %s", r);
-
-            }
-            finally
-            {
-            this.mutex.unlock();
-            }
-        }
-
-        private async void
-        receive_loop()
-        {
-            string r = null;
-            size_t len;
-            Eventd.Event event;
-            try
-            {
-                while ( ( r = yield this.input.read_upto_async("\n", -1, GLib.Priority.DEFAULT, this.cancellable, out len) ) != null )
-                {
-                    this.input.read_byte(null);
-                    if ( r.has_prefix("ENDED ") )
-                    {
-                        var end = r.substring(6).split(" ", 2);
-                        event = this.events.lookup(end[0]);
-                        if ( event == null )
-                            continue;
-
-                        Eventd.EventEndReason reason = Eventd.EventEndReason.NONE;
-                        switch ( end[1] )
-                        {
-                        case "timeout":
-                            reason = Eventd.EventEndReason.TIMEOUT;
-                        break;
-                        case "user-dismiss":
-                            reason = Eventd.EventEndReason.USER_DISMISS;
-                        break;
-                        case "client-dismiss":
-                            reason = Eventd.EventEndReason.CLIENT_DISMISS;
-                        break;
-                        case "reserved":
-                            reason = Eventd.EventEndReason.RESERVED;
-                        break;
-                        }
-                        event.end(reason);
-                    }
-                    else if ( r.has_prefix("ANSWERED ") )
-                    {
-                        var answer = r.substring(9).split(" ", 2);
-                        event = this.events.lookup(answer[0]);
-
-                        while ( ( r = yield this.input.read_upto_async("\n", -1, GLib.Priority.DEFAULT, this.cancellable, out len) ) != null )
-                        {
-                            this.input.read_byte(null);
-                            if ( r == "." )
-                                break;
-
-                            if ( r.has_prefix("DATAL ") )
-                            {
-                                var datal = r.substring(6).split(" ", 2);
-                                if ( event != null )
-                                    event.add_answer_data(datal[0], datal[1]);
-                            }
-                            else if ( r.has_prefix("DATA ") )
-                            {
-                                var name = r.substring(5);
-                                string data = null;
-                                while ( ( r = yield this.input.read_upto_async("\n", -1, GLib.Priority.DEFAULT, this.cancellable, out len) ) != null )
-                                {
-                                    this.input.read_byte(null);
-                                    if ( r == "." )
-                                        break;
-
-                                    if ( data == null )
-                                        data = r;
-                                    else
-                                        data = data + "\n" + r;
-                                }
-                                if ( event != null )
-                                    event.add_answer_data(name, data);
-                            }
-                        }
-                        if ( event != null )
-                            event.answer(answer[1]);
-                    }
-                    else
-                        this.queue.push(r);
-                }
-            }
-            catch ( GLib.IOError.CANCELLED ie ) {}
-            catch ( GLib.Error e )
-            {
-                this.handshake_passed = false;
-                this.pending_error = e;
-            }
-        }
-
-        private async string?
-        receive() throws EventcError
-        {
-            if ( this.pending_error != null )
-            {
-                var e = (owned) this.pending_error;
-                throw new EventcError.RECEIVE("Failed to receive message: %s", e.message);
-            }
-            bool timedout = false;
-            uint timeout_id = 0;
-            if ( this.timeout > 0 )
-            {
-                timeout_id = GLib.Timeout.add_seconds(this.timeout, () => {
-                    timedout = true;
-                    return false;
-                });
-            }
-            string r = null;
-            while ( ( r = this.queue.try_pop() ) == null )
-            {
-                if ( timedout )
-                    throw new EventcError.RECEIVE("Failed to receive message: timed out");
-                if ( timeout_id > 0 )
-                    GLib.Source.remove(timeout_id);
-                Idle.add(this.receive.callback);
-                yield;
-            }
-            return r;
-        }
-
-        private void
-        send(string msg) throws EventcError
-        {
-            try
-            {
-                this.output.put_string(msg + "\n", null);
+                yield this.evp.send_end(event);
             }
             catch ( GLib.Error e )
             {
                 this.handshake_passed = false;
-                throw new EventcError.SEND("Couldn't send message \"%s\": %s", msg, e.message);
+                throw new EventcError.END("Couldn't send event end: %s", e.message);
             }
         }
 
         public async void
         close() throws EventcError
         {
-            while ( ! this.mutex.trylock() )
-            {
-                Idle.add(this.close.callback);
-                yield;
-            }
-
             this.events.remove_all();
-            this.cancellable.cancel();
-            while ( this.queue.try_pop() != null ) ;
-            GLib.Idle.add(this.close.callback);
-            yield;
 
-            if ( ( this.handshake_passed ) && ( ! this.connection.is_closed() ) )
-            {
-                try
-                {
-                    this.send("BYE");
-                }
-                catch ( EventcError ee ) {}
-            }
+            if ( this.is_connected() )
+                this.evp.send_bye();
+            yield this.evp.close();
             this.handshake_passed = false;
-            try
-            {
-                yield this.connection.close_async(GLib.Priority.DEFAULT);
-            }
-            catch ( GLib.Error e ) {}
+        }
 
-            this.output = null;
-            this.input = null;
-            this.connection = null;
+        private unowned Eventd.Event?
+        get_event(Libeventd.Evp.Context context, string id)
+        {
+            return this.events.lookup(id);
+        }
 
-            this.mutex.unlock();
+        private void
+        answered(Libeventd.Evp.Context context, Eventd.Event event, string answer)
+        {
+            event.answer(answer);
+        }
+
+        private void
+        ended(Libeventd.Evp.Context context, Eventd.Event event, Eventd.EventEndReason reason)
+        {
+            event.end(reason);
+        }
+
+        private void
+        bye(Libeventd.Evp.Context context)
+        {
+            this.handshake_passed = false;
         }
     }
 }
