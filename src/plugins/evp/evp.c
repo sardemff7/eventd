@@ -27,6 +27,7 @@
 #include <libeventd-event.h>
 #include <eventd-core-interface.h>
 #include <eventd-plugin.h>
+#include <libeventd-evp.h>
 #include <libeventd-config.h>
 
 #include "avahi.h"
@@ -53,10 +54,10 @@ struct _EventdPluginContext {
 };
 
 typedef struct {
-    GCancellable *cancellable;
-    GDataInputStream *input;
-    GDataOutputStream *output;
+    EventdPluginContext *context;
+    LibeventdEvpContext *evp;
     gchar *category;
+    guint64 id;
     GHashTable *events;
 } EventdEvpClient;
 
@@ -66,392 +67,130 @@ typedef struct {
     gulong ended_handler;
 } EventdEvpEvent;
 
-/*
- * Stream reading helper
- */
-static gchar *
-_eventd_evp_read_message(EventdEvpClient *client, GError **error)
+static EventdEvent *
+_eventd_evp_get_event(gpointer data, LibeventdEvpContext *evp, const gchar *id)
 {
-    gsize size;
-    gchar *line;
-    line = g_data_input_stream_read_upto(client->input, "\n", -1, &size, client->cancellable, error);
-    if ( line != NULL )
-    {
-#if DEBUG
-            g_debug("Received line: %s", line);
-#endif /* DEBUG */
+    EventdEvpClient *client = data;
+    EventdEvpEvent *evp_event;
 
-        if ( g_data_input_stream_read_byte(client->input, client->cancellable, error) != '\n' )
-            line = (g_free(line), NULL);
-    }
-    return line;
+    evp_event = g_hash_table_lookup(client->events, id);
+
+    return ( evp_event != NULL ) ? evp_event->event : NULL;
 }
 
-/*
- * Handle the following client messages:
- *     HELLO
- */
-static gboolean
-_eventd_evp_handshake(EventdEvpClient *client, GError **error)
-{
-    gchar *line;
-
-    while ( ( line =_eventd_evp_read_message(client, error) ) != NULL )
-    {
-        if ( g_str_has_prefix(line, "HELLO ") )
-        {
-            client->category = g_strdup(line+6);
-            g_free(line);
-
-            if ( ! g_data_output_stream_put_string(client->output, "HELLO\n", client->cancellable, error) )
-                break;
-
-#if DEBUG
-            g_debug("Successful handshake, client category: %s", client->category);
-#endif /* DEBUG */
-
-            return TRUE;
-        }
-
-        g_free(line);
-
-        if ( ! g_data_output_stream_put_string(client->output, "ERROR bad-handshake\n", client->cancellable, error) )
-            break;
-    }
-
-    return FALSE;
-}
-
-/*
- * Handle the following client messages:
- *         DATA
- */
-static gchar *
-_eventd_evp_event_data(EventdEvpClient *client, GError **error)
-{
-    gchar *data = NULL;
-
-    gchar *line;
-
-    while ( ( line =_eventd_evp_read_message(client, error) ) != NULL )
-    {
-        if ( g_strcmp0(line, ".") == 0 )
-        {
-            g_free(line);
-            return data;
-        }
-
-        if ( data == NULL )
-        {
-            if ( line[0] == '.' )
-                data = g_strdup(line+1);
-            else
-            {
-                data = line;
-                line = NULL;
-            }
-        }
-        else
-        {
-            gchar *old = data;
-            data = g_strconcat(old, "\n", ( line[0] == '.' ) ? line+1 : line, NULL);
-            g_free(old);
-        }
-        g_free(line);
-    }
-    g_free(line);
-    g_free(data);
-
-    return NULL;
-}
-
-/*
- * Retrieve the following client message:
- *         DATA
- *
- * Handle the following client messages:
- *     EVENT
- *         DATAL
- *         ANSWER
- *         CATEGORY
- */
-static gboolean
-_eventd_evp_event(EventdEvpClient *client, EventdEvent *event, GError **error)
-{
-    gboolean ret = TRUE;
-
-    gchar *line;
-
-    while ( ( line =_eventd_evp_read_message(client, error) ) != NULL )
-    {
-        if ( g_strcmp0(line, ".") == 0 )
-        {
-            g_free(line);
-            return ret;
-        }
-
-        if ( g_str_has_prefix(line, "DATA ") )
-        {
-            gchar *data;
-
-            data = _eventd_evp_event_data(client, error);
-            if ( data != NULL )
-                eventd_event_add_data(event, g_strdup(line+5), data);
-            else
-                ret = FALSE;
-        }
-        else if ( g_str_has_prefix(line, "DATAL ") )
-        {
-            gchar **data = NULL;
-
-            data = g_strsplit(line+6, " ", 2);
-            eventd_event_add_data(event, data[0], data[1]);
-            g_free(data);
-        }
-        else if ( g_str_has_prefix(line, "ANSWER ") )
-            eventd_event_add_answer(event, line+7);
-        else if ( g_str_has_prefix(line, "CATEGORY ") )
-            eventd_event_set_category(event, line+9);
-        else
-            ret = FALSE;
-
-        g_free(line);
-    }
-
-    return FALSE;
-}
-
-/*
- * Handle the following server message:
- *     ANSWER
- */
 static void
-_event_evp_event_answered(EventdEvent *event, const gchar *answer, gpointer user_data)
+_eventd_evp_error(gpointer data, LibeventdEvpContext *evp, GError *error)
+{
+    g_warning("Connection error: %s", error->message);
+    g_error_free(error);
+}
+
+static void
+_eventd_evp_hello(gpointer data, LibeventdEvpContext *evp, const gchar *category)
+{
+    EventdEvpClient *client = data;
+
+    client->category = g_strdup(category);
+}
+
+static void
+_eventd_evp_event_answered(EventdEvent *event, const gchar *answer, gpointer user_data)
 {
     EventdEvpClient *client = user_data;
-
-    const gchar *id;
-    id = eventd_event_get_id(event);
-
-    GHashTable *answer_data;
-    answer_data = eventd_event_get_all_answer_data(event);
-
-    gchar **messagev;
-    messagev = g_new(gchar *, g_hash_table_size(answer_data) + 3);
-
-    GHashTableIter iter;
-    gchar *name;
-    gchar *data;
-
-    gsize i = 1;
-
-    messagev[0] = g_strdup_printf("ANSWERED %s %s", id, answer);
-
-    g_hash_table_iter_init(&iter, answer_data);
-    while ( g_hash_table_iter_next(&iter, (gpointer *)&name, (gpointer *)&data) )
-    {
-        if ( g_utf8_strchr(data, -1, '\n') == NULL )
-            messagev[i++] = g_strdup_printf("DATAL %s %s", name, data);
-        else
-        {
-            gchar **datav;
-            gchar **data_;
-
-            datav = g_strsplit(data, "\n", -1);
-            for ( data_ = datav ; *data_ != NULL ; ++data_ )
-            {
-                if ( (*data_)[0] == '.' )
-                {
-                    gchar *tmp = *data_;
-                    *data_ = g_strconcat(".", tmp, NULL);
-                    g_free(tmp);
-                }
-            }
-
-            data = g_strjoinv("\n", datav);
-            g_strfreev(datav);
-
-            messagev[i++] = g_strdup_printf("DATA %s\n%s\n.", name, data);
-        }
-    }
-
-    messagev[i++] = g_strdup(".\n");
-    messagev[i] = NULL;
-
-    gchar *message;
-    message = g_strjoinv("\n", messagev);
-    g_strfreev(messagev);
-
     GError *error = NULL;
-    if ( ! g_data_output_stream_put_string(client->output, message, client->cancellable, &error) )
+
+    if ( ! libeventd_evp_context_send_answered(client->evp, event, answer, &error) )
     {
         g_warning("Couldn't send ANSWERED message: %s", error->message);
         g_clear_error(&error);
     }
-    g_free(message);
 }
 
-/*
- * Handle the following client message:
- *     END
- */
 static void
-_event_evp_event_ended(EventdEvent *event, EventdEventEndReason reason, gpointer user_data)
+_eventd_evp_event_ended(EventdEvent *event, EventdEventEndReason reason, gpointer user_data)
 {
     EventdEvpClient *client = user_data;
-
-    const gchar *id;
-    id = eventd_event_get_id(event);
-
-    const gchar *reason_text = "";
-    switch ( reason )
-    {
-    case EVENTD_EVENT_END_REASON_NONE:
-        reason_text = "none";
-    break;
-    case EVENTD_EVENT_END_REASON_TIMEOUT:
-        reason_text = "timeout";
-    break;
-    case EVENTD_EVENT_END_REASON_USER_DISMISS:
-        reason_text = "user-dismiss";
-    break;
-    case EVENTD_EVENT_END_REASON_CLIENT_DISMISS:
-        reason_text = "client-dismiss";
-    break;
-    case EVENTD_EVENT_END_REASON_RESERVED:
-        reason_text = "reserved";
-    break;
-    }
-
-    gchar *line;
-    line = g_strdup_printf("ENDED %s %s\n", id, reason_text);
-
     GError *error = NULL;
-    if ( ! g_data_output_stream_put_string(client->output, line, client->cancellable, &error) )
+
+    if ( ! libeventd_evp_context_send_ended(client->evp, event, reason, &error) )
     {
         g_warning("Couldn't send ENDED message: %s", error->message);
         g_clear_error(&error);
     }
-    g_free(line);
 
-    g_hash_table_remove(client->events, id);
+    g_hash_table_remove(client->events, eventd_event_get_id(event));
 }
 
-/*
- * Retrieve the following client messages:
- *     EVENT
- *     END
- *
- * Handle the following client message:
- *     BYE
- */
 static void
-_eventd_evp_main(EventdPluginContext *context, EventdEvpClient *client, GError **error)
+_eventd_evp_answered(gpointer data, LibeventdEvpContext *evp, EventdEvent *event, const gchar *answer)
 {
-    gchar *line;
-    guint id = 0;
+    eventd_event_answer(event, answer);
+}
 
-    while ( ( line =_eventd_evp_read_message(client, error) ) != NULL )
+static void
+_eventd_evp_ended(gpointer data, LibeventdEvpContext *evp, EventdEvent *event, EventdEventEndReason reason)
+{
+    eventd_event_end(event, reason);
+}
+
+static gchar *
+_eventd_evp_event(gpointer data, LibeventdEvpContext *evp, EventdEvent *event)
+{
+    EventdEvpClient *client = data;
+    gchar *tid;
+
+    tid = g_strdup_printf("%jx", ++client->id);
+    if ( eventd_event_get_category(event) == NULL )
+        eventd_event_set_category(event, client->category);
+
+#if DEBUG
+    g_debug("Received an event (category: %s): %s", eventd_event_get_category(event), eventd_event_get_name(event));
+#endif /* DEBUG */
+
+    const gchar *config_id;
+
+    config_id = client->context->core_interface->get_event_config_id(client->context->core, event);
+    if ( config_id != NULL )
     {
-        if ( g_strcmp0(line, "BYE") == 0 )
-            break;
+        EventdEvpEvent *evp_event;
 
-        if ( g_str_has_prefix(line, "EVENT ") )
-        {
-            EventdEvent *event;
-
-            event = eventd_event_new(line+6);
-            eventd_event_set_category(event, client->category);
-            if ( _eventd_evp_event(client, event, error) )
-            {
-                g_free(line);
-                line = g_strdup_printf("EVENT %x\n", ++id);
-                if ( ! g_data_output_stream_put_string(client->output, line, client->cancellable, error) )
-                {
-                    g_object_unref(event);
-                    break;
-                }
-
-#if DEBUG
-                g_debug("Received an event (category: %s): %s", eventd_event_get_category(event), eventd_event_get_name(event));
-#endif /* DEBUG */
-                const gchar *config_id;
-
-                config_id = context->core_interface->get_event_config_id(context->core, event);
-                g_debug("Event config id: %s", config_id);
-                if ( config_id != NULL )
-                {
-                    EventdEvpEvent *evp_event;
-
-                    evp_event = g_new0(EventdEvpEvent, 1);
-                    evp_event->event = event;
-                    gchar *tid;
-                    tid = g_strdup_printf("%x", id);
-                    g_hash_table_insert(client->events, tid, evp_event);
-                    eventd_event_set_id(event, tid);
-                    eventd_event_set_config_id(event, config_id);
-                    evp_event->answered_handler = g_signal_connect(event, "answered", G_CALLBACK(_event_evp_event_answered), client);
-                    evp_event->ended_handler = g_signal_connect(event, "ended", G_CALLBACK(_event_evp_event_ended), client);
-                    context->core_interface->push_event(context->core, event);
-                }
-                else
-                    g_object_unref(event);
-            }
-            else
-            {
-#if DEBUG
-                if ( *error == NULL )
-                    g_debug("Received a malformed event (category: %s): %s", eventd_event_get_category(event), eventd_event_get_name(event));
-#endif /* DEBUG */
-
-                g_object_unref(event);
-
-                if ( ( *error != NULL )
-                     || ( ! g_data_output_stream_put_string(client->output, "ERROR bad-event\n", client->cancellable, error) ) )
-                    break;
-            }
-        }
-        else if ( g_str_has_prefix(line, "END ") )
-        {
-            EventdEvpEvent *evp_event;
-
-
-            evp_event = g_hash_table_lookup(client->events, line+4);
-            if ( evp_event != NULL )
-            {
-                g_free(line);
-                line = g_strdup_printf("ENDING %s\n", eventd_event_get_id(evp_event->event));
-                if ( ! g_data_output_stream_put_string(client->output, line, client->cancellable, error) )
-                    break;
-
-#if DEBUG
-                g_debug("Ending event '%s'", eventd_event_get_id(evp_event->event));
-#endif /* DEBUG */
-
-                eventd_event_end(evp_event->event, EVENTD_EVENT_END_REASON_CLIENT_DISMISS);
-            }
-            else
-            {
-#if DEBUG
-                g_debug("Received an END message with a bad id '%s'", line+4);
-#endif /* DEBUG */
-
-                if ( ! g_data_output_stream_put_string(client->output, "ERROR bad-id\n", client->cancellable, error) )
-                    break;
-            }
-        }
-        else if ( ! g_data_output_stream_put_string(client->output, "ERROR unknown\n", client->cancellable, error) )
-            break;
-        else
-        {
-#if DEBUG
-            g_debug("Unknown message: %s", line);
-#endif /* DEBUG */
-        }
-
-        g_free(line);
+        evp_event = g_new0(EventdEvpEvent, 1);
+        evp_event->event = g_object_ref(event);
+        g_hash_table_insert(client->events, g_strdup(tid), evp_event);
+        eventd_event_set_id(event, tid);
+        eventd_event_set_config_id(event, config_id);
+        evp_event->answered_handler = g_signal_connect(event, "answered", G_CALLBACK(_eventd_evp_event_answered), client);
+        evp_event->ended_handler = g_signal_connect(event, "ended", G_CALLBACK(_eventd_evp_event_ended), client);
+        client->context->core_interface->push_event(client->context->core, event);
     }
-    g_free(line);
+
+    return tid;
+}
+
+static void
+_eventd_evp_end(gpointer data, LibeventdEvpContext *evp, EventdEvent *event)
+{
+    eventd_event_end(event, EVENTD_EVENT_END_REASON_CLIENT_DISMISS);
+}
+
+static void
+_eventd_evp_bye(gpointer data, LibeventdEvpContext *evp)
+{
+    EventdEvpClient *client = data;
+    EventdPluginContext *context = client->context;
+
+#if DEBUG
+    g_debug("Client connection closed(category: %s)", client->category);
+#endif /* DEBUG */
+
+    g_free(client->category);
+
+    libeventd_evp_context_free(client->evp);
+    g_hash_table_unref(client->events);
+
+    context->clients = g_slist_remove(context->clients, client);
+
+    g_free(client);
 }
 
 static void
@@ -467,47 +206,41 @@ _eventd_evp_event_free(gpointer data)
     g_free(evp_event);
 }
 
+static LibeventdEvpClientInterface _eventd_evp_interface = {
+    .get_event = _eventd_evp_get_event,
+    .error     = _eventd_evp_error,
+
+    .hello     = _eventd_evp_hello,
+    .event     = _eventd_evp_event,
+    .end       = _eventd_evp_end,
+
+    .answered  = _eventd_evp_answered,
+    .ended     = _eventd_evp_ended,
+
+    .bye       = _eventd_evp_bye
+};
+
 /*
  * Callback for the client connection
  */
 static gboolean
-_eventd_service_connection_handler(GThreadedSocketService *socket_service, GSocketConnection *connection, GObject *source_object, gpointer user_data)
+_eventd_service_connection_handler(GSocketService *socket_service, GSocketConnection *connection, GObject *source_object, gpointer user_data)
 {
     EventdPluginContext *service = user_data;
 
-    EventdEvpClient client = {0};
-    GError *error = NULL;
+    EventdEvpClient *client;
 
-    client.cancellable = g_cancellable_new();
-    client.events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_evp_event_free);
+    client = g_new0(EventdEvpClient, 1);
+    client->context = service;
 
-    service->clients = g_slist_prepend(service->clients, client.cancellable);
+    service->clients = g_slist_prepend(service->clients, client);
 
-    client.input = g_data_input_stream_new(g_io_stream_get_input_stream(G_IO_STREAM(connection)));
-    client.output = g_data_output_stream_new(g_io_stream_get_output_stream(G_IO_STREAM(connection)));
+    client->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_evp_event_free);
+    client->evp = libeventd_evp_context_new_for_connection(client, &_eventd_evp_interface, connection);
 
-    if ( _eventd_evp_handshake(&client, &error) )
-        _eventd_evp_main(service, &client, &error);
+    libeventd_evp_context_receive_loop_server(client->evp, G_PRIORITY_DEFAULT);
 
-    if ( ( error != NULL ) && ( error->code != G_IO_ERROR_CANCELLED ) )
-        g_warning("Can't read the socket: %s", error->message);
-    g_clear_error(&error);
-
-#if DEBUG
-            g_debug("Client connection closde(category: %s)", client.category);
-#endif /* DEBUG */
-
-    g_hash_table_unref(client.events);
-    g_free(client.category);
-
-    if ( ! g_io_stream_close(G_IO_STREAM(connection), NULL, &error) )
-        g_warning("Can't close the stream: %s", error->message);
-    g_clear_error(&error);
-
-    service->clients = g_slist_remove(service->clients, client.cancellable);
-    g_object_unref(client.cancellable);
-
-    return TRUE;
+    return FALSE;
 }
 
 
@@ -579,7 +312,7 @@ _eventd_evp_start(EventdPluginContext *service)
 {
     GList *sockets = NULL;
 
-    service->service = g_threaded_socket_service_new(service->max_clients);
+    service->service = g_socket_service_new();
 
     if ( service->binds != NULL )
     {
@@ -601,7 +334,7 @@ _eventd_evp_start(EventdPluginContext *service)
     }
 #endif /* HAVE_GIO_UNIX */
 
-    g_signal_connect(service->service, "run", G_CALLBACK(_eventd_service_connection_handler), service);
+    g_signal_connect(service->service, "incoming", G_CALLBACK(_eventd_service_connection_handler), service);
 
 #if ENABLE_AVAHI
     if ( ! service->no_avahi )
@@ -612,10 +345,18 @@ _eventd_evp_start(EventdPluginContext *service)
 }
 
 static void
+_eventd_evp_client_disconnect_finish(GObject *source_object, GAsyncResult *res, gpointer user_data)
+{
+    EventdEvpClient *client = user_data;
+    libeventd_evp_context_close_finish(client->evp, res);
+    _eventd_evp_bye(client, client->evp);
+}
+
+static void
 _eventd_service_client_disconnect(gpointer data)
 {
-    GCancellable *cancellable = data;
-    g_cancellable_cancel(cancellable);
+    EventdEvpClient *client = data;
+    libeventd_evp_context_close(client->evp, _eventd_evp_client_disconnect_finish, client);
 }
 
 static void

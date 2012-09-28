@@ -19,6 +19,7 @@ evp_la_LDFLAGS = \
 
 evp_la_LIBADD = \
 	libeventd-event.la \
+	libeventd-evp.la \
 	libeventd.la \
 	$(AVAHI_LIBS) \
 	$(GIO_LIBS) \
