@@ -6,7 +6,8 @@ libeventd_evp_la_SOURCES = \
 	src/libeventd-evp/receive.c \
 	src/libeventd-evp/context.c \
 	src/libeventd-evp/context.h \
-	src/libeventd-evp/helpers.c
+	src/libeventd-evp/helpers.c \
+	include/libeventd-evp.h
 
 libeventd_evp_la_CFLAGS = \
 	$(AM_CFLAGS) \
