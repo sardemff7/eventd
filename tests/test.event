@@ -1,3 +1,5 @@
 [Event]
 Category = test
 Timeout = 10000
+[Relay]
+Servers = localhost:19031;

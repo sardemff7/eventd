@@ -26,6 +26,7 @@
 !/tests/integration/tests.vapi
 /tests/integration/libtest/*.c
 /tests/integration/evp/*.c
+/tests/integration/relay/*.c
 /tests/integration/libeventc/*.c
 
 /man/*.1
