@@ -26,6 +26,8 @@
 #if ! GLIB_CHECK_VERSION(2, 31, 0)
 #define g_thread_try_new(n, f, d, e) g_thread_create(f, d, TRUE, e)
 #define g_thread_new(n, f, d) g_thread_try_new(n, f, d, NULL)
+
+#define g_socket_connection_is_connected(c) g_socket_is_connected(g_socket_connection_get_socket(c))
 #endif
 
 #endif /* __EVENTD_GLIB_COMPAT_H__ */

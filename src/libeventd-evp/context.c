@@ -22,6 +22,7 @@
 
 #include <glib.h>
 #include <gio/gio.h>
+#include <glib-compat.h>
 
 #include <libeventd-event.h>
 
