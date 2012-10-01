@@ -22,38 +22,48 @@
 
 namespace Eventd.Tests
 {
-    private static string[] start_args;
-    private static string[] stop_args;
-
-    public static void
-    setup(string plugins, string port, ...)
+    public class Env
     {
-        GLib.Environment.set_variable("EVENTD_CONFIG_DIR", GLib.Path.build_filename(BUILD_DIR, "tests"), true);
-        GLib.Environment.set_variable("XDG_RUNTIME_DIR", GLib.Path.build_filename(BUILD_DIR, "tests"), true);
-        GLib.Environment.set_variable("EVENTD_PLUGINS_DIR", GLib.Path.build_filename(BUILD_DIR, Config.LT_OBJDIR), true);
-        GLib.Environment.set_variable("EVENTD_PLUGINS_WHITELIST", plugins, true);
+        private string[] env;
+        private string[] start_args;
+        private string[] stop_args;
 
-        var eventd_path = GLib.Path.build_filename(BUILD_DIR, "eventd" + EXEEXT);
-        var eventdctl_path = GLib.Path.build_filename(BUILD_DIR, "eventdctl" + EXEEXT);
+        public static void
+        setup()
+        {
+            GLib.Environment.set_variable("EVENTD_CONFIG_DIR", GLib.Path.build_filename(BUILD_DIR, "tests"), true);
+            GLib.Environment.set_variable("XDG_RUNTIME_DIR", GLib.Path.build_filename(BUILD_DIR, "tests"), true);
+            GLib.Environment.set_variable("EVENTD_PLUGINS_DIR", GLib.Path.build_filename(BUILD_DIR, Config.LT_OBJDIR), true);
+        }
 
-        start_args = { eventdctl_path, "--socket", port, "start", "--argv0", eventd_path, "--take-over", "--private-socket", port };
-        var l = va_list();
-        string arg = null;
-        while ( ( arg = l.arg() ) != null )
-            start_args += arg;
+        public
+        Env(string plugins, string port, ...)
+        {
+            this.env = GLib.Environ.get();
+            this.env = GLib.Environ.set_variable((owned) this.env, "EVENTD_PLUGINS_WHITELIST", plugins, true);
 
-        stop_args = { eventdctl_path, "--socket", port, "quit" };
-    }
+            var eventd_path = GLib.Path.build_filename(BUILD_DIR, "eventd" + EXEEXT);
+            var eventdctl_path = GLib.Path.build_filename(BUILD_DIR, "eventdctl" + EXEEXT);
 
-    public static void
-    start_eventd() throws GLib.Error
-    {
-        GLib.Process.spawn_sync(null, start_args, null, 0, null);
-    }
+            this.start_args = { eventdctl_path, "--socket", port, "start", "--argv0", eventd_path, "--take-over", "--private-socket", port };
+            var l = va_list();
+            string arg = null;
+            while ( ( arg = l.arg() ) != null )
+                this.start_args += arg;
 
-    public static void
-    stop_eventd() throws GLib.Error
-    {
-        GLib.Process.spawn_sync(null, stop_args, null, 0, null);
+            this.stop_args = { eventdctl_path, "--socket", port, "quit" };
+        }
+
+        public void
+        start_eventd() throws GLib.Error
+        {
+            GLib.Process.spawn_sync(BUILD_DIR, this.start_args, this.env, 0, null);
+        }
+
+        public void
+        stop_eventd() throws GLib.Error
+        {
+            GLib.Process.spawn_sync(BUILD_DIR, this.stop_args, this.env, 0, null);
+        }
     }
 }

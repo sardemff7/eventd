@@ -28,7 +28,6 @@ tests_integration_libeventd_test_la_LDFLAGS = \
 	-export-dynamic
 
 tests_integration_libeventd_test_la_LIBADD = \
-	libeventd-event.la \
 	$(GIO_LIBS) \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS)

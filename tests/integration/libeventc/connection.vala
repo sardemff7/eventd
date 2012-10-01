@@ -106,10 +106,11 @@ int
 main(string[] args)
 {
     int r = 0;
-    Eventd.Tests.setup("test-plugin,evp", "9988", "--event-listen", "tcp:localhost4:9877", "--no-avahi");
+    Eventd.Tests.Env.setup();
+    var env = new Eventd.Tests.Env("test-plugin,evp", "9988", "--event-listen", "tcp:localhost4:9877", "--no-avahi");
     try
     {
-        Eventd.Tests.start_eventd();
+        env.start_eventd();
     }
     catch ( GLib.Error e )
     {
@@ -150,7 +151,7 @@ main(string[] args)
 
     try
     {
-        Eventd.Tests.stop_eventd();
+        env.stop_eventd();
     }
     catch ( GLib.Error e )
     {
