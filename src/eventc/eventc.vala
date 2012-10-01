@@ -39,15 +39,15 @@ namespace Eventc
 
     static const GLib.OptionEntry[] entries =
     {
-        { "name",         'n', 0, GLib.OptionArg.STRING,       out event_name,         N_("Event name to send"),                                     "<name>" },
-        { "data-name",    'd', 0, GLib.OptionArg.STRING_ARRAY, out event_data_name,    N_("Event data name to send"),                                "<name>" },
-        { "data-content", 'c', 0, GLib.OptionArg.STRING_ARRAY, out event_data_content, N_("Event data content to send (must be after a data-name)"), "<content>" },
-        { "host",         'h', 0, GLib.OptionArg.STRING,       out host,               N_("Host to connect to"),                                     "<host>" },
-        { "port",         'p', 0, GLib.OptionArg.INT,          ref port,               N_("Port to connect to"),                                     "<port>" },
-        { "max-tries",    'm', 0, GLib.OptionArg.INT,          ref max_tries,          N_("Maximum connection attempts (0 for infinite)"),           "<times>" },
-        { "timeout",      'o', 0, GLib.OptionArg.INT,          ref timeout,            N_("Connection timeout"),                                     "<seconds>" },
-        { "wait",         'w', 0, GLib.OptionArg.NONE,         ref wait,               N_("Wait the end of the event"),                              null },
-        { "version",      'V', 0, GLib.OptionArg.NONE,         ref print_version,      N_("Print version"),                                          null },
+        { "name",         'n', 0, GLib.OptionArg.STRING,       out event_name,         "Event name to send",                                     "<name>" },
+        { "data-name",    'd', 0, GLib.OptionArg.STRING_ARRAY, out event_data_name,    "Event data name to send",                                "<name>" },
+        { "data-content", 'c', 0, GLib.OptionArg.STRING_ARRAY, out event_data_content, "Event data content to send (must be after a data-name)", "<content>" },
+        { "host",         'h', 0, GLib.OptionArg.STRING,       out host,               "Host to connect to",                                     "<host>" },
+        { "port",         'p', 0, GLib.OptionArg.INT,          ref port,               "Port to connect to",                                     "<port>" },
+        { "max-tries",    'm', 0, GLib.OptionArg.INT,          ref max_tries,          "Maximum connection attempts (0 for infinite)",           "<times>" },
+        { "timeout",      'o', 0, GLib.OptionArg.INT,          ref timeout,            "Connection timeout",                                     "<seconds>" },
+        { "wait",         'w', 0, GLib.OptionArg.NONE,         ref wait,               "Wait the end of the event",                              null },
+        { "version",      'V', 0, GLib.OptionArg.NONE,         ref print_version,      "Print version",                                          null },
         { null }
     };
 
@@ -155,12 +155,12 @@ namespace Eventc
 
         if ( args.length < 2 )
         {
-            GLib.print(_("You must define the type of the client.\n"));
+            GLib.print("You must define the type of the client.\n");
             return 1;
         }
         if ( event_name == null )
         {
-            GLib.print(_("You must define the name of the event.\n"));
+            GLib.print("You must define the name of the event.\n");
             return 1;
         }
         type = args[1];
