@@ -185,7 +185,7 @@ AC_ARG_ENABLE(linux-framebuffer, AS_HELP_STRING([--disable-linux-framebuffer], [
 # Common
 if test x$enable_xcb = xyes -o x$enable_linux_framebuffer = xyes; then
     if test x$enable_notification_daemon = xno; then
-        AC_MSG_ERROR([*** XCB or Linux framebuffer backends require but not notification-daemon plugin])
+        AC_MSG_ERROR([*** XCB or Linux framebuffer backends required but not notification-daemon plugin])
     fi
 fi
 
