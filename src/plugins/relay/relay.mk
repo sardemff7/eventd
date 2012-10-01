@@ -23,8 +23,8 @@ relay_la_LDFLAGS = \
 
 relay_la_LIBADD = \
 	libeventd-event.la \
+	libeventd-evp.la \
 	libeventd.la \
-	libeventc.la \
 	$(AVAHI_LIBS) \
 	$(GIO_LIBS) \
 	$(GOBJECT_LIBS) \
