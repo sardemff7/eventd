@@ -20,6 +20,7 @@
  *
  */
 
+[CCode (cheader_filename = "")]
 namespace Eventd.Tests
 {
     public const string BUILD_DIR;
