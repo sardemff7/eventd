@@ -22,6 +22,9 @@
 
 #include <errno.h>
 #include <string.h>
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 
 #include <glib.h>
 #include <glib-object.h>
@@ -206,12 +209,7 @@ _eventd_core_debug_log_handler(const gchar *log_domain, GLogLevelFlags log_level
 
     g_log_default_handler(log_domain, log_level, message, NULL);
 
-    gchar *full_message;
-    gchar *log_domain_message = NULL;
     const gchar *log_level_message = "";
-
-    if ( log_domain != NULL )
-        log_domain_message = g_strconcat(" [", log_domain, "]", NULL);
 
     switch ( log_level & G_LOG_LEVEL_MASK )
     {
@@ -235,12 +233,29 @@ _eventd_core_debug_log_handler(const gchar *log_domain, GLogLevelFlags log_level
         break;
     }
 
-    full_message = g_strconcat(log_level_message, ( log_domain_message != NULL ) ? log_domain_message : "", ": ", message, "\n", NULL);
+    GString *full_message;
+    const gchar *prg_name;
 
-    g_data_output_stream_put_string(debug_stream, full_message, NULL, NULL);
+    full_message = g_string_new(NULL);
+    prg_name = g_get_prgname();
 
-    g_free(log_domain_message);
-    g_free(full_message);
+    if ( prg_name != NULL )
+        g_string_append_printf(full_message, "(%s:%lu): ", prg_name, (gulong) getpid());
+    else
+        g_string_append_printf(full_message, "(process:%lu): ", (gulong) getpid());
+
+    g_string_append(full_message, log_level_message);
+
+    if ( log_domain != NULL )
+        g_string_append_printf(full_message, " [%s]", log_domain);
+
+    g_string_append(full_message, ": ");
+    g_string_append(full_message, message);
+    g_string_append(full_message, "\n");
+
+    g_data_output_stream_put_string(debug_stream, full_message->str, NULL, NULL);
+
+    g_string_free(full_message, TRUE);
 }
 
 #endif /* ! DEBUG */
