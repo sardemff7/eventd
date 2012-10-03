@@ -422,6 +422,11 @@ main(int argc, char *argv[])
         close(0);
         close(1);
         close(2);
+#ifdef G_OS_UNIX
+        open("/dev/null", O_RDWR);
+        dup2(0,1);
+        dup2(0,2);
+#endif /* G_OS_UNIX */
     }
 
     context->loop = g_main_loop_new(NULL, FALSE);
