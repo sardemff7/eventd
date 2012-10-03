@@ -45,6 +45,8 @@ namespace Eventc
     {
         static Libeventd.Evp.ClientInterface client_interface = Libeventd.Evp.ClientInterface() {
             get_event = Connection.get_event,
+            error = Connection.error,
+
             answered = Connection.answered,
             ended = Connection.ended,
             bye = Connection.bye
@@ -180,6 +182,12 @@ namespace Eventc
         get_event(Libeventd.Evp.Context context, string id)
         {
             return this.events.lookup(id);
+        }
+
+        private void
+        error(Libeventd.Evp.Context context, GLib.Error error)
+        {
+            GLib.warning("Error: %s", error.message);
         }
 
         private void

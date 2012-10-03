@@ -59,6 +59,8 @@ namespace Libeventd
         [CCode (has_target = false)]
         public delegate unowned void Callback(void *client, Context context);
         [CCode (has_target = false)]
+        public delegate unowned void ErrorCallback(void *client, Context context, GLib.Error error);
+        [CCode (has_target = false)]
         public delegate unowned string HelloCallback(void *client, Context context, string category);
         [CCode (has_target = false)]
         public delegate string EventCallback(void *client, Context context, Eventd.Event event);
@@ -72,6 +74,7 @@ namespace Libeventd
         public struct ClientInterface
         {
             EventGetter get_event;
+            ErrorCallback error;
 
             HelloCallback hello;
             EventCallback event;
