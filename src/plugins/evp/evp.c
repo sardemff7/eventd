@@ -158,10 +158,9 @@ _eventd_evp_event(gpointer data, LibeventdEvpContext *evp, EventdEvent *event)
         evp_event->event = g_object_ref(event);
         g_hash_table_insert(client->events, g_strdup(tid), evp_event);
         eventd_event_set_id(event, tid);
-        eventd_event_set_config_id(event, config_id);
         evp_event->answered_handler = g_signal_connect(event, "answered", G_CALLBACK(_eventd_evp_event_answered), client);
         evp_event->ended_handler = g_signal_connect(event, "ended", G_CALLBACK(_eventd_evp_event_ended), client);
-        client->context->core_interface->push_event(client->context->core, event);
+        client->context->core_interface->push_event(client->context->core, config_id, event);
     }
 
     return tid;

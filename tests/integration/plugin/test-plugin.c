@@ -40,7 +40,7 @@ _eventd_test_event_end_earlier(gpointer user_data)
 }
 
 static void
-_eventd_test_event_action(EventdPluginContext *context, EventdEvent *event)
+_eventd_test_event_action(EventdPluginContext *context, const gchar *config_id, EventdEvent *event)
 {
     GError *error = NULL;
 

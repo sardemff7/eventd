@@ -25,7 +25,7 @@
 
 GList *eventd_core_get_sockets(EventdCoreContext *context, const gchar * const *binds);
 
-void eventd_core_push_event(EventdCoreContext *context, EventdEvent *event);
+void eventd_core_push_event(EventdCoreContext *context, const gchar *config_id, EventdEvent *event);
 
 void eventd_core_config_reload(EventdCoreContext *context);
 void eventd_core_quit(EventdCoreContext *context);

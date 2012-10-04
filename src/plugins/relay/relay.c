@@ -190,12 +190,12 @@ _eventd_relay_config_reset(EventdPluginContext *context)
  */
 
 static void
-_eventd_relay_event_action(EventdPluginContext *context, EventdEvent *event)
+_eventd_relay_event_action(EventdPluginContext *context, const gchar *config_id, EventdEvent *event)
 {
     GList *servers;
     GList *server;
 
-    servers = g_hash_table_lookup(context->events, eventd_event_get_config_id(event));
+    servers = g_hash_table_lookup(context->events, config_id);
     if ( servers == NULL )
         return;
 

@@ -344,7 +344,7 @@ eventd_plugins_event_parse_all(const gchar *event_id, GKeyFile *config_file)
 }
 
 void
-eventd_plugins_event_action_all(EventdEvent *event)
+eventd_plugins_event_action_all(const gchar *config_id, EventdEvent *event)
 {
     GHashTableIter iter;
     gchar *id;
@@ -353,6 +353,6 @@ eventd_plugins_event_action_all(EventdEvent *event)
     while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&plugin) )
     {
         if ( plugin->interface.event_action != NULL )
-            plugin->interface.event_action(plugin->context, event);
+            plugin->interface.event_action(plugin->context, config_id, event);
     }
 }

@@ -72,6 +72,7 @@ typedef struct {
 
 typedef struct {
     EventdNdContext *context;
+    EventdNdStyle *style;
     GList *notification;
     gint width;
     gint height;
@@ -275,6 +276,7 @@ _eventd_nd_notification_new(EventdPluginContext *context, EventdEvent *event, Ev
 
     self = g_new0(EventdNdNotification, 1);
     self->context = context;
+    self->style = style;
 
     LibeventdNdNotification *notification;
     cairo_surface_t *bubble;
@@ -368,12 +370,7 @@ static void
 _eventd_nd_event_updated(EventdEvent *event, EventdNdNotification *old_notification)
 {
     EventdPluginContext *context = old_notification->context;
-
-    EventdNdStyle *style;
-
-    style = g_hash_table_lookup(context->events, eventd_event_get_config_id(event));
-    if ( style == NULL )
-        return;
+    EventdNdStyle *style = old_notification->style;
 
     EventdNdNotification *notification;
     notification = _eventd_nd_notification_new(context, event, style);
@@ -398,14 +395,14 @@ _eventd_nd_event_ended(EventdEvent *event, EventdEventEndReason reason, EventdNd
 }
 
 static void
-_eventd_nd_event_action(EventdPluginContext *context, EventdEvent *event)
+_eventd_nd_event_action(EventdPluginContext *context, const gchar *config_id, EventdEvent *event)
 {
     EventdNdStyle *style;
 
     if ( context->displays == NULL )
         return;
 
-    style = g_hash_table_lookup(context->events, eventd_event_get_config_id(event));
+    style = g_hash_table_lookup(context->events, config_id);
     if ( style == NULL )
         return;
 

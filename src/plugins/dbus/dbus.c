@@ -72,7 +72,7 @@ _eventd_dbus_event_ended(EventdEvent *event, EventdEventEndReason reason, Eventd
  */
 
 static guint32
-_eventd_dbus_notification_new(EventdPluginContext *context, const gchar *sender, EventdEvent *event)
+_eventd_dbus_notification_new(EventdPluginContext *context, const gchar *sender, const gchar *config_id, EventdEvent *event)
 {
     EventdDbusNotification *notification;
 
@@ -85,7 +85,7 @@ _eventd_dbus_notification_new(EventdPluginContext *context, const gchar *sender,
     g_hash_table_insert(context->notifications, GUINT_TO_POINTER(notification->id), notification);
     g_signal_connect(event, "ended", G_CALLBACK(_eventd_dbus_event_ended), notification);
 
-    context->core_interface->push_event(context->core, event);
+    context->core_interface->push_event(context->core, config_id, event);
 
     return notification->id;
 }
@@ -244,13 +244,10 @@ _eventd_dbus_notify(EventdPluginContext *context, const gchar *sender, GVariant 
         return;
     }
 
-
-    eventd_event_set_config_id(event, config_id);
-
     if ( id > 0 )
         eventd_event_update(event, NULL);
     else
-        id = _eventd_dbus_notification_new(context, sender, event);
+        id = _eventd_dbus_notification_new(context, sender, config_id, event);
 
     g_dbus_method_invocation_return_value(invocation, g_variant_new("(u)", id));
 }

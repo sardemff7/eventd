@@ -28,7 +28,7 @@
 typedef GList *(*EventdCoreGetSocketsFunc)(EventdCoreContext *context, const gchar * const *binds);
 
 typedef const gchar *(*EventdCoreGetEventConfigIdFunc)(EventdCoreContext *context, EventdEvent *event);
-typedef void (*EventdCoreDispatchEventFunc)(EventdCoreContext *context, EventdEvent *event);
+typedef void (*EventdCoreDispatchEventFunc)(EventdCoreContext *context, const gchar *config_id, EventdEvent *event);
 
 struct _EventdCoreInterface {
     EventdCoreGetSocketsFunc get_sockets;

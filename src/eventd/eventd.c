@@ -175,9 +175,9 @@ eventd_core_get_event_config_id(EventdCoreContext *context, EventdEvent *event)
 }
 
 void
-eventd_core_push_event(EventdCoreContext *context, EventdEvent *event)
+eventd_core_push_event(EventdCoreContext *context, const gchar *config_id, EventdEvent *event)
 {
-    eventd_queue_push(context->queue, event);
+    eventd_queue_push(context->queue, config_id, event);
 }
 
 void

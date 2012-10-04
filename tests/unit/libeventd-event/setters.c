@@ -92,43 +92,6 @@ _test_set_id_notnull_bad(gpointer fixture, gconstpointer user_data)
 }
 
 static void
-_test_set_config_id_notnull_good(gpointer fixture, gconstpointer user_data)
-{
-    SettersData *data = fixture;
-
-    if (g_test_trap_fork (0, G_TEST_TRAP_SILENCE_STDOUT | G_TEST_TRAP_SILENCE_STDERR))
-    {
-        eventd_event_set_config_id(data->event, EVENTD_EVENT_TEST_CONFIG_ID);
-        exit(0);
-    }
-    g_test_trap_assert_passed();
-}
-
-static void
-_test_set_config_id_null_good(gpointer fixture, gconstpointer user_data)
-{
-    if (g_test_trap_fork (0, G_TEST_TRAP_SILENCE_STDOUT | G_TEST_TRAP_SILENCE_STDERR))
-    {
-        eventd_event_set_config_id(NULL, EVENTD_EVENT_TEST_CONFIG_ID);
-        exit(0);
-    }
-    g_test_trap_assert_failed();
-}
-
-static void
-_test_set_config_id_notnull_bad(gpointer fixture, gconstpointer user_data)
-{
-    SettersData *data = fixture;
-
-    if (g_test_trap_fork (0, G_TEST_TRAP_SILENCE_STDOUT | G_TEST_TRAP_SILENCE_STDERR))
-    {
-        eventd_event_set_config_id(data->event, NULL);
-        exit(0);
-    }
-    g_test_trap_assert_failed();
-}
-
-static void
 _test_set_category_notnull_good(gpointer fixture, gconstpointer user_data)
 {
     SettersData *data = fixture;
@@ -350,10 +313,6 @@ eventd_tests_unit_eventd_event_suite_setters(void)
     g_test_suite_add(suite, g_test_create_case("set_id(event, name)",                sizeof(SettersData), NULL, _init_data, _test_set_id_notnull_good,               _clean_data));
     g_test_suite_add(suite, g_test_create_case("set_id(NULL,)",                      sizeof(SettersData), NULL, NULL,       _test_set_id_null_good,                  NULL));
     g_test_suite_add(suite, g_test_create_case("set_id(event, NULL)",                sizeof(SettersData), NULL, _init_data, _test_set_id_notnull_bad,                _clean_data));
-
-    g_test_suite_add(suite, g_test_create_case("set_config_id(event, name)",         sizeof(SettersData), NULL, _init_data, _test_set_config_id_notnull_good,        _clean_data));
-    g_test_suite_add(suite, g_test_create_case("set_config_id(NULL,)",               sizeof(SettersData), NULL, NULL,       _test_set_config_id_null_good,           NULL));
-    g_test_suite_add(suite, g_test_create_case("set_config_id(event, NULL)",         sizeof(SettersData), NULL, _init_data, _test_set_config_id_notnull_bad,         _clean_data));
 
     g_test_suite_add(suite, g_test_create_case("set_category(event, name)",          sizeof(SettersData), NULL, _init_data, _test_set_category_notnull_good,         _clean_data));
     g_test_suite_add(suite, g_test_create_case("set_category(NULL,)",                sizeof(SettersData), NULL, NULL,       _test_set_category_null_good,            NULL));

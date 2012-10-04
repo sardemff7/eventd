@@ -35,8 +35,8 @@ typedef void (*EventdPluginFunc)(EventdPluginContext *context);
 typedef GOptionGroup *(*EventdPluginGetOptionGroupFunc)(EventdPluginContext *context);
 typedef void (*EventdPluginControlCommandFunc)(EventdPluginContext *context, const gchar *command);
 typedef void (*EventdPluginGlobalParseFunc)(EventdPluginContext *context, GKeyFile *);
-typedef void (*EventdPluginEventParseFunc)(EventdPluginContext *context, const gchar *id, GKeyFile *);
-typedef void (*EventdPluginEventDispatchFunc)(EventdPluginContext *context, EventdEvent *event);
+typedef void (*EventdPluginEventParseFunc)(EventdPluginContext *context, const gchar *config_id, GKeyFile *key_file);
+typedef void (*EventdPluginEventDispatchFunc)(EventdPluginContext *context, const gchar *config_id, EventdEvent *event);
 
 typedef struct {
     EventdPluginInitFunc init;

@@ -199,7 +199,7 @@ _eventd_sndfile_config_reset(EventdPluginContext *context)
  */
 
 static void
-_eventd_sndfile_event_action(EventdPluginContext *context, EventdEvent *event)
+_eventd_sndfile_event_action(EventdPluginContext *context, const gchar *config_id, EventdEvent *event)
 {
     gchar *sound;
     gchar *file;
@@ -209,7 +209,7 @@ _eventd_sndfile_event_action(EventdPluginContext *context, EventdEvent *event)
     guint32 rate = 0;
     guint8 channels = 0;
 
-    sound = g_hash_table_lookup(context->events, eventd_event_get_config_id(event));
+    sound = g_hash_table_lookup(context->events, config_id);
     if ( sound == NULL )
         return;
 

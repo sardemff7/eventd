@@ -251,17 +251,6 @@ eventd_event_set_id(EventdEvent *self, const gchar *id)
 
 EVENTD_EXPORT
 void
-eventd_event_set_config_id(EventdEvent *self, const gchar *config_id)
-{
-    g_return_if_fail(EVENTD_IS_EVENT(self));
-    g_return_if_fail(config_id != NULL);
-
-    g_free(self->priv->config_id);
-    self->priv->config_id = g_strdup(config_id);
-}
-
-EVENTD_EXPORT
-void
 eventd_event_set_category(EventdEvent *self, const gchar *category)
 {
     g_return_if_fail(EVENTD_IS_EVENT(self));

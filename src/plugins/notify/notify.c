@@ -172,7 +172,7 @@ _eventd_libnotify_config_reset(EventdPluginContext *context)
  */
 
 static void
-_eventd_libnotify_event_action(EventdPluginContext *context, EventdEvent *event)
+_eventd_libnotify_event_action(EventdPluginContext *context, const gchar *config_id, EventdEvent *event)
 {
     GError *error = NULL;
     EventdLibnotifyEvent *libnotify_event;
@@ -182,7 +182,7 @@ _eventd_libnotify_event_action(EventdPluginContext *context, EventdEvent *event)
     NotifyNotification *notification = NULL;
     GdkPixbuf *icon;
 
-    libnotify_event = g_hash_table_lookup(context->events, eventd_event_get_config_id(event));
+    libnotify_event = g_hash_table_lookup(context->events, config_id);
     if ( libnotify_event == NULL )
         return;
 

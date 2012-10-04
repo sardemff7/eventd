@@ -44,19 +44,20 @@ struct _EventdQueue {
 
 typedef struct {
     EventdQueue *queue;
+    const gchar *config_id;
     EventdEvent *event;
     guint timeout_id;
 } EventdQueueEvent;
 
 
 static gint64
-_eventd_queue_event_set_timeout(EventdQueue *queue, EventdEvent *event)
+_eventd_queue_event_set_timeout(EventdQueue *queue, const gchar *config_id, EventdEvent *event)
 {
     gint64 timeout;
 
     timeout = eventd_event_get_timeout(event);
     if ( timeout < 0 )
-        timeout = eventd_config_event_get_timeout(queue->config, event);
+        timeout = eventd_config_event_get_timeout(queue->config, config_id);
     eventd_event_set_timeout(event, timeout);
 
     return timeout;
@@ -82,7 +83,7 @@ _eventd_queue_event_updated(GObject *object, gpointer user_data)
 
     g_source_remove(event->timeout_id);
 
-    timeout = _eventd_queue_event_set_timeout(event->queue, event->event);
+    timeout = _eventd_queue_event_set_timeout(event->queue, event->config_id, event->event);
 
     if ( timeout > 0 )
         event->timeout_id = g_timeout_add(timeout, _eventd_queue_event_timeout, event);
@@ -120,11 +121,11 @@ _eventd_queue_source_dispatch(gpointer user_data)
             g_async_queue_lock(queue->queue);
         queue->current = g_slist_prepend(queue->current, event);
 
-        eventd_plugins_event_action_all(event->event);
+        eventd_plugins_event_action_all(event->config_id, event->event);
 
         g_signal_connect(event->event, "updated", G_CALLBACK(_eventd_queue_event_updated), event);
         g_signal_connect(event->event, "ended", G_CALLBACK(_eventd_queue_event_ended), event);
-        timeout = _eventd_queue_event_set_timeout(queue, event->event);
+        timeout = _eventd_queue_event_set_timeout(queue, event->config_id, event->event);
         if ( timeout > 0 )
             event->timeout_id = g_timeout_add(timeout, _eventd_queue_event_timeout, event);
     }
@@ -180,12 +181,13 @@ eventd_queue_free(EventdQueue *queue)
 }
 
 void
-eventd_queue_push(EventdQueue *queue, EventdEvent *event)
+eventd_queue_push(EventdQueue *queue, const gchar *config_id, EventdEvent *event)
 {
     EventdQueueEvent *queue_event;
 
     queue_event = g_new0(EventdQueueEvent, 1);
     queue_event->queue = queue;
+    queue_event->config_id = config_id;
     queue_event->event = g_object_ref(event);
 
     g_async_queue_push_unlocked(queue->queue, queue_event);

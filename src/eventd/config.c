@@ -96,11 +96,11 @@ _eventd_config_event_free(gpointer data)
 }
 
 gint64
-eventd_config_event_get_timeout(EventdConfig *config, EventdEvent *event)
+eventd_config_event_get_timeout(EventdConfig *config, const gchar *config_id)
 {
     EventdConfigEvent *config_event;
 
-    config_event = g_hash_table_lookup(config->events, eventd_event_get_config_id(event));
+    config_event = g_hash_table_lookup(config->events, config_id);
 
     if ( config_event == NULL )
         return config->timeout;

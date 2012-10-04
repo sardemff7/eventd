@@ -162,13 +162,13 @@ _eventd_espeak_regex_event_data_cb(const GMatchInfo *info, EventdEvent *event, g
 
 
 static void
-_eventd_espeak_event_action(EventdPluginContext *context, EventdEvent *event)
+_eventd_espeak_event_action(EventdPluginContext *context, const gchar *config_id, EventdEvent *event)
 {
     gchar *message;
     gchar *msg;
     espeak_ERROR error;
 
-    message = g_hash_table_lookup(context->events, eventd_event_get_config_id(event));
+    message = g_hash_table_lookup(context->events, config_id);
     if ( message == NULL )
         return;
 
