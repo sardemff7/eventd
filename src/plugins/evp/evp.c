@@ -458,17 +458,17 @@ _eventd_evp_config_reset(EventdPluginContext *context)
 EVENTD_EXPORT const gchar *eventd_plugin_id = "eventd-evp";
 EVENTD_EXPORT
 void
-eventd_plugin_get_info(EventdPlugin *plugin)
+eventd_plugin_get_interface(EventdPluginInterface *interface)
 {
-    plugin->init   = _eventd_evp_init;
-    plugin->uninit = _eventd_evp_uninit;
+    interface->init   = _eventd_evp_init;
+    interface->uninit = _eventd_evp_uninit;
 
-    plugin->get_option_group = _eventd_evp_get_option_group;
+    interface->get_option_group = _eventd_evp_get_option_group;
 
-    plugin->start = _eventd_evp_start;
-    plugin->stop  = _eventd_evp_stop;
+    interface->start = _eventd_evp_start;
+    interface->stop  = _eventd_evp_stop;
 
-    plugin->global_parse = _eventd_evp_global_parse;
-    plugin->event_parse  = _eventd_evp_event_parse;
-    plugin->config_reset = _eventd_evp_config_reset;
+    interface->global_parse = _eventd_evp_global_parse;
+    interface->event_parse  = _eventd_evp_event_parse;
+    interface->config_reset = _eventd_evp_config_reset;
 }

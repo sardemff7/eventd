@@ -198,15 +198,15 @@ _eventd_espeak_event_action(EventdPluginContext *context, EventdEvent *event)
 EVENTD_EXPORT const gchar *eventd_plugin_id = "eventd-espeak";
 EVENTD_EXPORT
 void
-eventd_plugin_get_info(EventdPlugin *plugin)
+eventd_plugin_get_interface(EventdPluginInterface *interface)
 {
-    plugin->init   = _eventd_espeak_init;
-    plugin->uninit = _eventd_espeak_uninit;
+    interface->init   = _eventd_espeak_init;
+    interface->uninit = _eventd_espeak_uninit;
 
-    plugin->stop = _eventd_espeak_stop;
+    interface->stop = _eventd_espeak_stop;
 
-    plugin->event_parse  = _eventd_espeak_event_parse;
-    plugin->config_reset = _eventd_espeak_config_reset;
+    interface->event_parse  = _eventd_espeak_event_parse;
+    interface->config_reset = _eventd_espeak_config_reset;
 
-    plugin->event_action = _eventd_espeak_event_action;
+    interface->event_action = _eventd_espeak_event_action;
 }

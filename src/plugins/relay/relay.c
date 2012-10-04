@@ -211,17 +211,17 @@ _eventd_relay_event_action(EventdPluginContext *context, EventdEvent *event)
 EVENTD_EXPORT const gchar *eventd_plugin_id = "eventd-relay";
 EVENTD_EXPORT
 void
-eventd_plugin_get_info(EventdPlugin *plugin)
+eventd_plugin_get_interface(EventdPluginInterface *interface)
 {
-    plugin->init   = _eventd_relay_init;
-    plugin->uninit = _eventd_relay_uninit;
+    interface->init   = _eventd_relay_init;
+    interface->uninit = _eventd_relay_uninit;
 
-    plugin->start = _eventd_relay_start;
-    plugin->stop  = _eventd_relay_stop;
+    interface->start = _eventd_relay_start;
+    interface->stop  = _eventd_relay_stop;
 
-    plugin->event_parse  = _eventd_relay_event_parse;
-    plugin->config_reset = _eventd_relay_config_reset;
+    interface->event_parse  = _eventd_relay_event_parse;
+    interface->config_reset = _eventd_relay_config_reset;
 
-    plugin->event_action = _eventd_relay_event_action;
+    interface->event_action = _eventd_relay_event_action;
 }
 

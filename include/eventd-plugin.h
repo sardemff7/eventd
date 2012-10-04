@@ -54,12 +54,8 @@ typedef struct {
     EventdPluginFunc config_reset;
 
     EventdPluginEventDispatchFunc event_action;
+} EventdPluginInterface;
 
-    /*< private >*/
-    void *module;
-    EventdPluginContext *context;
-} EventdPlugin;
-
-typedef void (*EventdPluginGetInfoFunc)(EventdPlugin *plugin);
+typedef void (*EventdPluginGetInterfaceFunc)(EventdPluginInterface *interface);
 
 #endif /* __EVENTD_EVENTD_PLUGIN_H__ */

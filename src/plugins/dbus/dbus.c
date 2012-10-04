@@ -516,13 +516,13 @@ _eventd_dbus_stop(EventdPluginContext *context)
 EVENTD_EXPORT const gchar *eventd_plugin_id = "eventd-dbus";
 EVENTD_EXPORT
 void
-eventd_plugin_get_info(EventdPlugin *plugin)
+eventd_plugin_get_interface(EventdPluginInterface *interface)
 {
-    plugin->init   = _eventd_dbus_init;
-    plugin->uninit = _eventd_dbus_uninit;
+    interface->init   = _eventd_dbus_init;
+    interface->uninit = _eventd_dbus_uninit;
 
-    plugin->get_option_group = _eventd_dbus_get_option_group;
+    interface->get_option_group = _eventd_dbus_get_option_group;
 
-    plugin->start = _eventd_dbus_start;
-    plugin->stop  = _eventd_dbus_stop;
+    interface->start = _eventd_dbus_start;
+    interface->stop  = _eventd_dbus_stop;
 }

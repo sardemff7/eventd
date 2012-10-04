@@ -437,17 +437,17 @@ _eventd_nd_event_action(EventdPluginContext *context, EventdEvent *event)
 EVENTD_EXPORT const gchar *eventd_plugin_id = "eventd-nd";
 EVENTD_EXPORT
 void
-eventd_plugin_get_info(EventdPlugin *plugin)
+eventd_plugin_get_interface(EventdPluginInterface *interface)
 {
-    plugin->init   = _eventd_nd_init;
-    plugin->uninit = _eventd_nd_uninit;
+    interface->init   = _eventd_nd_init;
+    interface->uninit = _eventd_nd_uninit;
 
-    plugin->control_command = _eventd_nd_control_command;
+    interface->control_command = _eventd_nd_control_command;
 
-    plugin->global_parse = _eventd_nd_global_parse;
-    plugin->event_parse  = _eventd_nd_event_parse;
-    plugin->config_reset = _eventd_nd_config_reset;
+    interface->global_parse = _eventd_nd_global_parse;
+    interface->event_parse  = _eventd_nd_event_parse;
+    interface->config_reset = _eventd_nd_config_reset;
 
-    plugin->event_action = _eventd_nd_event_action;
+    interface->event_action = _eventd_nd_event_action;
 }
 

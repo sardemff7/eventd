@@ -221,14 +221,14 @@ _eventd_libnotify_event_action(EventdPluginContext *context, EventdEvent *event)
 EVENTD_EXPORT const gchar *eventd_plugin_id = "eventd-notify";
 EVENTD_EXPORT
 void
-eventd_plugin_get_info(EventdPlugin *plugin)
+eventd_plugin_get_interface(EventdPluginInterface *interface)
 {
-    plugin->init   = _eventd_libnotify_init;
-    plugin->uninit = _eventd_libnotify_uninit;
+    interface->init   = _eventd_libnotify_init;
+    interface->uninit = _eventd_libnotify_uninit;
 
-    plugin->event_parse  = _eventd_libnotify_event_parse;
-    plugin->config_reset = _eventd_libnotify_config_reset;
+    interface->event_parse  = _eventd_libnotify_event_parse;
+    interface->config_reset = _eventd_libnotify_config_reset;
 
-    plugin->event_action = _eventd_libnotify_event_action;
+    interface->event_action = _eventd_libnotify_event_action;
 }
 

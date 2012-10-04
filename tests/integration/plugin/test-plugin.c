@@ -65,7 +65,7 @@ _eventd_test_event_action(EventdPluginContext *context, EventdEvent *event)
 EVENTD_EXPORT const gchar *eventd_plugin_id = "eventd-test-plugin";
 EVENTD_EXPORT
 void
-eventd_plugin_get_info(EventdPlugin *plugin)
+eventd_plugin_get_interface(EventdPluginInterface *interface)
 {
-    plugin->event_action = _eventd_test_event_action;
+    interface->event_action = _eventd_test_event_action;
 }
