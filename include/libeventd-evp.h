@@ -57,7 +57,6 @@ GQuark libeventd_evp_error_quark(void);
  */
 
 typedef struct _LibeventdEvpContext LibeventdEvpContext;
-typedef struct _LibeventdEvpClient LibeventdEvpClient;
 typedef void LibeventdEvpClientIface;
 
 typedef EventdEvent *(*LibeventdEvpEventGetter)(gpointer client, LibeventdEvpContext *context, const gchar *id);
