@@ -363,14 +363,16 @@ _libeventd_evp_context_receive_callback(GObject *source_object, GAsyncResult *re
     }
     else if ( self->server && g_str_has_prefix(line, "END ") )
     {
+        const gchar *id;
         EventdEvent *event;
 
-        event = self->interface->get_event(self->client, self, line + strlen("END "));
+        id = line + strlen("END ");
+        event = self->interface->get_event(self->client, self, id);
         if ( event != NULL )
         {
             gchar *message;
 
-            message = g_strdup_printf("ENDING %s", eventd_event_get_id(event));
+            message = g_strdup_printf("ENDING %s", id);
 
             if ( ! libeventd_evp_context_send_message(self, message, &self->error) )
             {
