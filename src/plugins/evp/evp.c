@@ -63,6 +63,8 @@ typedef struct {
 } EventdEvpClient;
 
 typedef struct {
+    EventdEvpClient *client;
+    const gchar *id;
     EventdEvent *event;
     gulong answered_handler;
     gulong ended_handler;
@@ -97,10 +99,11 @@ _eventd_evp_hello(gpointer data, LibeventdEvpContext *evp, const gchar *category
 static void
 _eventd_evp_event_answered(EventdEvent *event, const gchar *answer, gpointer user_data)
 {
-    EventdEvpClient *client = user_data;
+    EventdEvpEvent *evp_event = user_data;
+    EventdEvpClient *client = evp_event->client;
     GError *error = NULL;
 
-    if ( ! libeventd_evp_context_send_answered(client->evp, eventd_event_get_id(event), answer, eventd_event_get_all_answer_data(event), &error) )
+    if ( ! libeventd_evp_context_send_answered(client->evp, evp_event->id, answer, eventd_event_get_all_answer_data(evp_event->event), &error) )
     {
         g_warning("Couldn't send ANSWERED message: %s", error->message);
         g_clear_error(&error);
@@ -110,16 +113,17 @@ _eventd_evp_event_answered(EventdEvent *event, const gchar *answer, gpointer use
 static void
 _eventd_evp_event_ended(EventdEvent *event, EventdEventEndReason reason, gpointer user_data)
 {
-    EventdEvpClient *client = user_data;
+    EventdEvpEvent *evp_event = user_data;
+    EventdEvpClient *client = evp_event->client;
     GError *error = NULL;
 
-    if ( ! libeventd_evp_context_send_ended(client->evp, eventd_event_get_id(event), reason, &error) )
+    if ( ! libeventd_evp_context_send_ended(client->evp, evp_event->id, reason, &error) )
     {
         g_warning("Couldn't send ENDED message: %s", error->message);
         g_clear_error(&error);
     }
 
-    g_hash_table_remove(client->events, eventd_event_get_id(event));
+    g_hash_table_remove(client->events, evp_event->id);
 }
 
 static void
@@ -139,9 +143,9 @@ static gchar *
 _eventd_evp_event(gpointer data, LibeventdEvpContext *evp, EventdEvent *event)
 {
     EventdEvpClient *client = data;
-    gchar *tid;
+    gchar *rid;
 
-    tid = g_strdup_printf("%jx", ++client->id);
+    rid = g_strdup_printf("%jx", ++client->id);
     if ( eventd_event_get_category(event) == NULL )
         eventd_event_set_category(event, client->category);
 
@@ -154,18 +158,25 @@ _eventd_evp_event(gpointer data, LibeventdEvpContext *evp, EventdEvent *event)
     config_id = client->context->core_interface->get_event_config_id(client->context->core, event);
     if ( config_id != NULL )
     {
+        gchar *id;
         EventdEvpEvent *evp_event;
 
+        id = g_strdup(rid);
+
         evp_event = g_new0(EventdEvpEvent, 1);
+        evp_event->client = client;
+        evp_event->id = id;
         evp_event->event = g_object_ref(event);
-        g_hash_table_insert(client->events, g_strdup(tid), evp_event);
-        eventd_event_set_id(event, tid);
-        evp_event->answered_handler = g_signal_connect(event, "answered", G_CALLBACK(_eventd_evp_event_answered), client);
-        evp_event->ended_handler = g_signal_connect(event, "ended", G_CALLBACK(_eventd_evp_event_ended), client);
+
+        g_hash_table_insert(client->events, id, evp_event);
+
+        evp_event->answered_handler = g_signal_connect(event, "answered", G_CALLBACK(_eventd_evp_event_answered), evp_event);
+        evp_event->ended_handler = g_signal_connect(event, "ended", G_CALLBACK(_eventd_evp_event_ended), evp_event);
+
         client->context->core_interface->push_event(client->context->core, config_id, event);
     }
 
-    return tid;
+    return rid;
 }
 
 static void
