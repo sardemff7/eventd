@@ -191,8 +191,9 @@ namespace Eventc
         }
 
         private void
-        answered(Libeventd.Evp.Context context, Eventd.Event event, string answer)
+        answered(Libeventd.Evp.Context context, Eventd.Event event, string answer, GLib.HashTable<string, string> data_hash)
         {
+            (event as Eventd.PrivateEvent).set_all_answer_data(data_hash);
             event.answer(answer);
         }
 

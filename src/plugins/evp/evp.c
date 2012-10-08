@@ -123,8 +123,9 @@ _eventd_evp_event_ended(EventdEvent *event, EventdEventEndReason reason, gpointe
 }
 
 static void
-_eventd_evp_answered(gpointer data, LibeventdEvpContext *evp, EventdEvent *event, const gchar *answer)
+_eventd_evp_answered(gpointer data, LibeventdEvpContext *evp, EventdEvent *event, const gchar *answer, GHashTable *data_hash)
 {
+    eventd_event_set_all_answer_data(event, g_hash_table_ref(data_hash));
     eventd_event_answer(event, answer);
 }
 

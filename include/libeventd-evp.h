@@ -65,7 +65,7 @@ typedef void (*LibeventdEvpCallback)(gpointer client, LibeventdEvpContext *conte
 typedef void (*LibeventdEvpHelloCallback)(gpointer client, LibeventdEvpContext *context, const gchar *category);
 typedef gchar *(*LibeventdEvpEventCallback)(gpointer client, LibeventdEvpContext *context, EventdEvent *event);
 typedef void (*LibeventdEvpEndCallback)(gpointer client, LibeventdEvpContext *context, EventdEvent *event);
-typedef void (*LibeventdEvpAnsweredCallback)(gpointer client, LibeventdEvpContext *context, EventdEvent *event, const gchar *answer);
+typedef void (*LibeventdEvpAnsweredCallback)(gpointer client, LibeventdEvpContext *context, EventdEvent *event, const gchar *answer, GHashTable *data_hash);
 typedef void (*LibeventdEvpEndedCallback)(gpointer client, LibeventdEvpContext *context, EventdEvent *event, EventdEventEndReason reason);
 
 typedef struct {

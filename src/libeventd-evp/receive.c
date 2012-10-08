@@ -25,6 +25,7 @@
 #include <gio/gio.h>
 
 #include <libeventd-event.h>
+#include <libeventd-event-private.h>
 
 #include <libeventd-evp.h>
 
@@ -63,13 +64,11 @@ _libeventd_evp_receive_finish(LibeventdEvpContext *self, GAsyncResult *res)
     return line;
 }
 
-typedef void (*LibeventdEvpDataAddDataFunc)(EventdEvent *event, gchar *name, gchar *data);
 typedef struct {
     LibeventdEvpContext *context;
-    EventdEvent *event;
+    GHashTable *data_hash;
     gchar *name;
     GString *data;
-    LibeventdEvpDataAddDataFunc add_data_func;
     GAsyncReadyCallback callback;
     gpointer user_data;
 } LibeventdEvpReceiveDataData;
@@ -77,6 +76,7 @@ typedef struct {
 typedef struct {
     LibeventdEvpContext *context;
     EventdEvent *event;
+    GHashTable *data_hash;
     gboolean error;
 } LibeventdEvpReceiveEventData;
 
@@ -84,6 +84,7 @@ typedef struct {
     LibeventdEvpContext *context;
     EventdEvent *event;
     gchar *answer;
+    GHashTable *data_hash;
     gboolean error;
 } LibeventdEvpReceiveAnsweredData;
 
@@ -113,9 +114,9 @@ _libeventd_evp_context_receive_data_callback(GObject *source_object, GAsyncResul
 
     if ( g_strcmp0(line, ".") == 0 )
     {
-        data->add_data_func(data->event, data->name, g_string_free(data->data, FALSE));
+        g_hash_table_insert(data->data_hash, data->name, g_string_free(data->data, FALSE));
 
-        g_object_unref(data->event);
+        g_hash_table_unref(data->data_hash);
 
         _libeventd_evp_receive(data->context, data->callback, data->user_data);
 
@@ -134,16 +135,15 @@ _libeventd_evp_context_receive_data_callback(GObject *source_object, GAsyncResul
 }
 
 static void
-_libeventd_evp_context_receive_data(LibeventdEvpContext *self, EventdEvent *event, const gchar *name, LibeventdEvpDataAddDataFunc add_data_func, GAsyncReadyCallback callback, gpointer user_data)
+_libeventd_evp_context_receive_data(LibeventdEvpContext *self, GHashTable *data_hash, const gchar *name, GAsyncReadyCallback callback, gpointer user_data)
 {
     LibeventdEvpReceiveDataData *data;
 
     data = g_new0(LibeventdEvpReceiveDataData, 1);
     data->context = self;
-    data->event = g_object_ref(event);
+    data->data_hash = g_hash_table_ref(data_hash);
     data->name = g_strdup(name);
     data->data = g_string_new("");
-    data->add_data_func = add_data_func;
     data->callback = callback;
     data->user_data = user_data;
 
@@ -151,7 +151,7 @@ _libeventd_evp_context_receive_data(LibeventdEvpContext *self, EventdEvent *even
 }
 
 static gboolean
-_libeventd_evp_context_receive_data_handle(LibeventdEvpContext *self, EventdEvent *event, const gchar *line, LibeventdEvpDataAddDataFunc add_data_func, GAsyncReadyCallback callback, gpointer user_data)
+_libeventd_evp_context_receive_data_handle(LibeventdEvpContext *self, GHashTable *data_hash, const gchar *line, GAsyncReadyCallback callback, gpointer user_data)
 {
     if ( g_str_has_prefix(line, "DATAL ") )
     {
@@ -159,14 +159,14 @@ _libeventd_evp_context_receive_data_handle(LibeventdEvpContext *self, EventdEven
 
         sline = g_strsplit(line + strlen("DATAL "), " ", 2);
 
-        add_data_func(event, sline[0], sline[1]);
+        g_hash_table_insert(data_hash, sline[0], sline[1]);
 
         g_free(sline);
 
         _libeventd_evp_receive(self, callback, user_data);
     }
     else if ( g_str_has_prefix(line, "DATA ") )
-        _libeventd_evp_context_receive_data(self, event, line + strlen("DATA "), add_data_func, callback, user_data);
+        _libeventd_evp_context_receive_data(self, data_hash, line + strlen("DATA "), callback, user_data);
     else
         return FALSE;
     return TRUE;
@@ -204,6 +204,11 @@ _libeventd_evp_context_receive_event_callback(GObject *source_object, GAsyncResu
             gchar *id;
             gchar *message;
 
+            if ( g_hash_table_size(data->data_hash) == 0 )
+                g_hash_table_unref(data->data_hash);
+            else
+                eventd_event_set_all_data(data->event, data->data_hash);
+
             id = self->interface->event(self->client, self, data->event);
             message = g_strdup_printf("EVENT %s", id);
             g_free(id);
@@ -233,7 +238,7 @@ _libeventd_evp_context_receive_event_callback(GObject *source_object, GAsyncResu
         eventd_event_add_answer(data->event, line + strlen("ANSWER "));
         _libeventd_evp_receive(self, _libeventd_evp_context_receive_event_callback, data);
     }
-    else if ( ! _libeventd_evp_context_receive_data_handle(self, data->event, line, eventd_event_add_data, _libeventd_evp_context_receive_event_callback, data) )
+    else if ( ! _libeventd_evp_context_receive_data_handle(self, data->data_hash, line, _libeventd_evp_context_receive_event_callback, data) )
     {
         data->error = TRUE;
         _libeventd_evp_receive(self, _libeventd_evp_context_receive_event_callback, data);
@@ -261,16 +266,15 @@ _libeventd_evp_context_receive_answered_callback(GObject *source_object, GAsyncR
 
     if ( g_strcmp0(line, ".") == 0 )
     {
-        self->interface->answered(self->client, self, data->event, data->answer);
+        self->interface->answered(self->client, self, data->event, data->answer, data->data_hash);
 
         g_free(data->answer);
-        g_object_unref(data->event);
 
         _libeventd_evp_receive(self, _libeventd_evp_context_receive_callback, self);
 
         g_free(data);
     }
-    else if ( ! _libeventd_evp_context_receive_data_handle(self, data->event, line, eventd_event_add_answer_data, _libeventd_evp_context_receive_answered_callback, data) )
+    else if ( ! _libeventd_evp_context_receive_data_handle(self, data->data_hash, line, _libeventd_evp_context_receive_answered_callback, data) )
         data->error = TRUE;
 
     g_free(line);
@@ -346,14 +350,12 @@ _libeventd_evp_context_receive_callback(GObject *source_object, GAsyncResult *re
     }
     else if ( self->server && g_str_has_prefix(line, "EVENT ") )
     {
-        EventdEvent *event;
         LibeventdEvpReceiveEventData *data;
-
-        event = eventd_event_new(line + strlen("EVENT "));
 
         data = g_new0(LibeventdEvpReceiveEventData, 1);
         data->context = self;
-        data->event = event;
+        data->event = eventd_event_new(line + strlen("EVENT "));
+        data->data_hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 
         _libeventd_evp_receive(self, _libeventd_evp_context_receive_event_callback, data);
         g_free(line);
@@ -429,6 +431,7 @@ _libeventd_evp_context_receive_callback(GObject *source_object, GAsyncResult *re
             data = g_new0(LibeventdEvpReceiveAnsweredData, 1);
             data->context = self;
             data->event = g_object_ref(event);
+            data->data_hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
             data->answer = g_strdup(answer[1]);
 
             _libeventd_evp_receive(self, _libeventd_evp_context_receive_answered_callback, data);

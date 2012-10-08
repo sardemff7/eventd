@@ -12,6 +12,7 @@ libeventc_la_SOURCES = \
 libeventc_la_VALAFLAGS = \
 	$(AM_VALAFLAGS) \
 	--pkg libeventd-event \
+	--pkg libeventd-event-private \
 	--pkg libeventd-evp \
 	--library libeventc \
 	--vapi vapi/libeventc.vapi \

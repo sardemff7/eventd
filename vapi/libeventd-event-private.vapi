@@ -25,8 +25,8 @@ namespace Eventd
     [CCode (cheader_filename = "libeventd-event-private.h", cname = "EventdEvent", cprefix = "eventd_event_", type_id = "EVENTD_TYPE_EVENT")]
     public class PrivateEvent : Event
     {
-        public void set_all_data(GLib.HashTable<string, string> data);
-        public void set_all_answer_data(GLib.HashTable<string, string> data);
+        public void set_all_data(owned GLib.HashTable<string, string> data);
+        public void set_all_answer_data(owned GLib.HashTable<string, string> data);
         public unowned GLib.List<string> get_answers();
         public unowned GLib.HashTable<string, string> get_all_data();
         public unowned GLib.HashTable<string, string> get_all_answer_data();

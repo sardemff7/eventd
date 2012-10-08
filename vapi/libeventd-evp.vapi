@@ -67,7 +67,7 @@ namespace Libeventd
         [CCode (has_target = false)]
         public delegate void EndCallback(void *client, Context context, Eventd.Event event);
         [CCode (has_target = false)]
-        public delegate void AnsweredCallback(void *client, Context context, Eventd.Event event, string answer);
+        public delegate void AnsweredCallback(void *client, Context context, Eventd.Event event, string answer, GLib.HashTable<string, string> data_hash);
         [CCode (has_target = false)]
         public delegate void EndedCallback(void *client, Context context, Eventd.Event event, Eventd.EventEndReason reason);
 
