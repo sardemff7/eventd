@@ -189,7 +189,7 @@ namespace Eventc
             this.handshake_passed = false;
         }
 
-        private unowned Eventd.Event?
+        private void *
         get_event(Libeventd.Evp.Context context, string id)
         {
             return this.events.lookup(id);
@@ -202,16 +202,17 @@ namespace Eventc
         }
 
         private void
-        answered(Libeventd.Evp.Context context, Eventd.Event event, string answer, GLib.HashTable<string, string> data_hash)
+        answered(Libeventd.Evp.Context context, void *data_event, string answer, GLib.HashTable<string, string> data_hash)
         {
+            Eventd.Event event = data_event as Eventd.Event;
             (event as Eventd.PrivateEvent).set_all_answer_data(data_hash);
             event.answer(answer);
         }
 
         private void
-        ended(Libeventd.Evp.Context context, Eventd.Event event, Eventd.EventEndReason reason)
+        ended(Libeventd.Evp.Context context, void *event, Eventd.EventEndReason reason)
         {
-            event.end(reason);
+            (event as Eventd.Event).end(reason);
         }
 
         private void

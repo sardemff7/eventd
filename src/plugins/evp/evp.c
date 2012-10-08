@@ -70,15 +70,12 @@ typedef struct {
     gulong ended_handler;
 } EventdEvpEvent;
 
-static EventdEvent *
+static gpointer
 _eventd_evp_get_event(gpointer data, LibeventdEvpContext *evp, const gchar *id)
 {
     EventdEvpClient *client = data;
-    EventdEvpEvent *evp_event;
 
-    evp_event = g_hash_table_lookup(client->events, id);
-
-    return ( evp_event != NULL ) ? evp_event->event : NULL;
+    return g_hash_table_lookup(client->events, id);
 }
 
 static void
@@ -127,16 +124,18 @@ _eventd_evp_event_ended(EventdEvent *event, EventdEventEndReason reason, gpointe
 }
 
 static void
-_eventd_evp_answered(gpointer data, LibeventdEvpContext *evp, EventdEvent *event, const gchar *answer, GHashTable *data_hash)
+_eventd_evp_answered(gpointer data, LibeventdEvpContext *evp, gpointer event_data, const gchar *answer, GHashTable *data_hash)
 {
-    eventd_event_set_all_answer_data(event, g_hash_table_ref(data_hash));
-    eventd_event_answer(event, answer);
+    EventdEvpEvent *evp_event = event_data;
+    eventd_event_set_all_answer_data(evp_event->event, g_hash_table_ref(data_hash));
+    eventd_event_answer(evp_event->event, answer);
 }
 
 static void
-_eventd_evp_ended(gpointer data, LibeventdEvpContext *evp, EventdEvent *event, EventdEventEndReason reason)
+_eventd_evp_ended(gpointer data, LibeventdEvpContext *evp, gpointer event_data, EventdEventEndReason reason)
 {
-    eventd_event_end(event, reason);
+    EventdEvpEvent *evp_event = event_data;
+    eventd_event_end(evp_event->event, reason);
 }
 
 static gchar *
@@ -180,9 +179,10 @@ _eventd_evp_event(gpointer data, LibeventdEvpContext *evp, EventdEvent *event)
 }
 
 static void
-_eventd_evp_end(gpointer data, LibeventdEvpContext *evp, EventdEvent *event)
+_eventd_evp_end(gpointer data, LibeventdEvpContext *evp, gpointer event_data)
 {
-    eventd_event_end(event, EVENTD_EVENT_END_REASON_CLIENT_DISMISS);
+    EventdEvpEvent *evp_event = event_data;
+    eventd_event_end(evp_event->event, EVENTD_EVENT_END_REASON_CLIENT_DISMISS);
 }
 
 static void

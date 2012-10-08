@@ -59,14 +59,14 @@ GQuark libeventd_evp_error_quark(void);
 typedef struct _LibeventdEvpContext LibeventdEvpContext;
 typedef void LibeventdEvpClientIface;
 
-typedef EventdEvent *(*LibeventdEvpEventGetter)(gpointer client, LibeventdEvpContext *context, const gchar *id);
+typedef gpointer (*LibeventdEvpEventGetter)(gpointer client, LibeventdEvpContext *context, const gchar *id);
 typedef void (*LibeventdEvpErrorCallback)(gpointer client, LibeventdEvpContext *context, GError *error);
 typedef void (*LibeventdEvpCallback)(gpointer client, LibeventdEvpContext *context);
 typedef void (*LibeventdEvpHelloCallback)(gpointer client, LibeventdEvpContext *context, const gchar *category);
 typedef gchar *(*LibeventdEvpEventCallback)(gpointer client, LibeventdEvpContext *context, EventdEvent *event);
-typedef void (*LibeventdEvpEndCallback)(gpointer client, LibeventdEvpContext *context, EventdEvent *event);
-typedef void (*LibeventdEvpAnsweredCallback)(gpointer client, LibeventdEvpContext *context, EventdEvent *event, const gchar *answer, GHashTable *data_hash);
-typedef void (*LibeventdEvpEndedCallback)(gpointer client, LibeventdEvpContext *context, EventdEvent *event, EventdEventEndReason reason);
+typedef void (*LibeventdEvpEndCallback)(gpointer client, LibeventdEvpContext *context, gpointer event);
+typedef void (*LibeventdEvpAnsweredCallback)(gpointer client, LibeventdEvpContext *context, gpointer event, const gchar *answer, GHashTable *data_hash);
+typedef void (*LibeventdEvpEndedCallback)(gpointer client, LibeventdEvpContext *context, gpointer event, EventdEventEndReason reason);
 
 typedef struct {
     LibeventdEvpEventGetter get_event;

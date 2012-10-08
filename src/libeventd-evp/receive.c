@@ -82,7 +82,7 @@ typedef struct {
 
 typedef struct {
     LibeventdEvpContext *context;
-    EventdEvent *event;
+    gpointer event;
     gchar *answer;
     GHashTable *data_hash;
     gboolean error;
@@ -364,7 +364,7 @@ _libeventd_evp_context_receive_callback(GObject *source_object, GAsyncResult *re
     else if ( self->server && g_str_has_prefix(line, "END ") )
     {
         const gchar *id;
-        EventdEvent *event;
+        gpointer event;
 
         id = line + strlen("END ");
         event = self->interface->get_event(self->client, self, id);
@@ -395,7 +395,7 @@ _libeventd_evp_context_receive_callback(GObject *source_object, GAsyncResult *re
     else if ( g_str_has_prefix(line, "ENDED ") )
     {
         gchar **end;
-        EventdEvent *event;
+        gpointer event;
 
         end = g_strsplit(line + strlen("ENDED "), " ", 2);
 
@@ -421,7 +421,7 @@ _libeventd_evp_context_receive_callback(GObject *source_object, GAsyncResult *re
     else if ( g_str_has_prefix(line, "ANSWERED ") )
     {
         gchar **answer;
-        EventdEvent *event;
+        gpointer event;
 
         answer = g_strsplit(line + strlen("ANSWERED "), " ", 2);
 
@@ -432,7 +432,7 @@ _libeventd_evp_context_receive_callback(GObject *source_object, GAsyncResult *re
 
             data = g_new0(LibeventdEvpReceiveAnsweredData, 1);
             data->context = self;
-            data->event = g_object_ref(event);
+            data->event = event;
             data->data_hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
             data->answer = g_strdup(answer[1]);
 

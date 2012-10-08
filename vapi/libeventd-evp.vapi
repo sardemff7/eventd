@@ -55,7 +55,7 @@ namespace Libeventd
         }
 
         [CCode (has_target = false)]
-        public delegate unowned Eventd.Event? EventGetter(void *client, Context context, string id);
+        public delegate void *EventGetter(void *client, Context context, string id);
         [CCode (has_target = false)]
         public delegate unowned void Callback(void *client, Context context);
         [CCode (has_target = false)]
@@ -65,11 +65,11 @@ namespace Libeventd
         [CCode (has_target = false)]
         public delegate string EventCallback(void *client, Context context, Eventd.Event event);
         [CCode (has_target = false)]
-        public delegate void EndCallback(void *client, Context context, Eventd.Event event);
+        public delegate void EndCallback(void *client, Context context, void *event);
         [CCode (has_target = false)]
-        public delegate void AnsweredCallback(void *client, Context context, Eventd.Event event, string answer, GLib.HashTable<string, string> data_hash);
+        public delegate void AnsweredCallback(void *client, Context context, void *event, string answer, GLib.HashTable<string, string> data_hashS);
         [CCode (has_target = false)]
-        public delegate void EndedCallback(void *client, Context context, Eventd.Event event, Eventd.EventEndReason reason);
+        public delegate void EndedCallback(void *client, Context context, void *event, Eventd.EventEndReason reason);
 
         public struct ClientInterface
         {
