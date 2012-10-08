@@ -107,7 +107,7 @@ const gchar *libeventd_evp_context_send_event_finish(LibeventdEvpContext *contex
 void libeventd_evp_context_send_end(LibeventdEvpContext *context, const gchar *id, GAsyncReadyCallback callback, gpointer user_data);
 gboolean libeventd_evp_context_send_end_finish(LibeventdEvpContext *context, GAsyncResult *result, GError **error);
 
-gboolean libeventd_evp_context_send_answered(LibeventdEvpContext *context, EventdEvent *event, const gchar *answer, GError **error);
+gboolean libeventd_evp_context_send_answered(LibeventdEvpContext *context, const gchar *id, const gchar *answer, GHashTable *data, GError **error);
 gboolean libeventd_evp_context_send_ended(LibeventdEvpContext *context, const gchar *id, EventdEventEndReason reason, GError **error);
 
 void libeventd_evp_context_send_bye(LibeventdEvpContext *context);

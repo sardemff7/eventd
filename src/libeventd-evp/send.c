@@ -288,20 +288,20 @@ libeventd_evp_context_send_end_finish(LibeventdEvpContext *self, GAsyncResult *r
 }
 
 gboolean
-libeventd_evp_context_send_answered(LibeventdEvpContext *self, EventdEvent *event, const gchar *answer, GError **error)
+libeventd_evp_context_send_answered(LibeventdEvpContext *self, const gchar *id, const gchar *answer, GHashTable *data, GError **error)
 {
     g_return_val_if_fail(self != NULL, FALSE);
-    g_return_val_if_fail(event != NULL, FALSE);
+    g_return_val_if_fail(id != NULL, FALSE);
     g_return_val_if_fail(answer != NULL, FALSE);
 
     gchar *message;
 
-    message = g_strdup_printf("ANSWERED %s %s", eventd_event_get_id(event), answer);
+    message = g_strdup_printf("ANSWERED %s %s", id, answer);
     if ( ! libeventd_evp_context_send_message(self, message, error) )
         goto fail;
     g_free(message);
 
-    if ( ! _libeventd_evp_context_send_data(self, eventd_event_get_all_answer_data(event), error) )
+    if ( ! _libeventd_evp_context_send_data(self, data, error) )
         return FALSE;
 
     if ( ! libeventd_evp_context_send_message(self, ".", error) )

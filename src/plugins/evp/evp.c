@@ -25,6 +25,7 @@
 #include <gio/gio.h>
 
 #include <libeventd-event.h>
+#include <libeventd-event-private.h>
 #include <eventd-core-interface.h>
 #include <eventd-plugin.h>
 #include <libeventd-evp.h>
@@ -99,7 +100,7 @@ _eventd_evp_event_answered(EventdEvent *event, const gchar *answer, gpointer use
     EventdEvpClient *client = user_data;
     GError *error = NULL;
 
-    if ( ! libeventd_evp_context_send_answered(client->evp, event, answer, &error) )
+    if ( ! libeventd_evp_context_send_answered(client->evp, eventd_event_get_id(event), answer, eventd_event_get_all_answer_data(event), &error) )
     {
         g_warning("Couldn't send ANSWERED message: %s", error->message);
         g_clear_error(&error);
