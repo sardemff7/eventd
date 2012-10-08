@@ -65,14 +65,12 @@ void eventd_event_answer(EventdEvent *event, const gchar *answer);
 void eventd_event_end(EventdEvent *event, EventdEventEndReason reason);
 
 
-void eventd_event_set_id(EventdEvent *event, const gchar *id);
 void eventd_event_set_category(EventdEvent *event, const gchar *category);
 void eventd_event_set_timeout(EventdEvent *event, gint64 timeout);
 void eventd_event_add_data(EventdEvent *event, gchar *name, gchar *content);
 void eventd_event_add_answer(EventdEvent *event, const gchar *name);
 void eventd_event_add_answer_data(EventdEvent *event, gchar *name, gchar *content);
 
-const gchar *eventd_event_get_id(EventdEvent *event);
 const gchar *eventd_event_get_category(EventdEvent *event);
 const gchar *eventd_event_get_name(EventdEvent *event);
 gint64 eventd_event_get_timeout(EventdEvent *event);

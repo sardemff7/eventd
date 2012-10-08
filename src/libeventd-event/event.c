@@ -54,8 +54,6 @@ eventd_event_end_reason_get_type()
 }
 
 struct _EventdEventPrivate {
-    gchar *id;
-    gchar *config_id;
     gchar *category;
     gchar *name;
     gint64 timeout;
@@ -240,17 +238,6 @@ eventd_event_set_timeout(EventdEvent *self, gint64 timeout)
 
 EVENTD_EXPORT
 void
-eventd_event_set_id(EventdEvent *self, const gchar *id)
-{
-    g_return_if_fail(EVENTD_IS_EVENT(self));
-    g_return_if_fail(id != NULL);
-
-    g_free(self->priv->id);
-    self->priv->id = g_strdup(id);
-}
-
-EVENTD_EXPORT
-void
 eventd_event_set_category(EventdEvent *self, const gchar *category)
 {
     g_return_if_fail(EVENTD_IS_EVENT(self));
@@ -260,24 +247,6 @@ eventd_event_set_category(EventdEvent *self, const gchar *category)
     self->priv->category = g_strdup(category);
 }
 
-
-EVENTD_EXPORT
-const gchar *
-eventd_event_get_id(EventdEvent *self)
-{
-    g_return_val_if_fail(EVENTD_IS_EVENT(self), NULL);
-
-    return self->priv->id;
-}
-
-EVENTD_EXPORT
-const gchar *
-eventd_event_get_config_id(EventdEvent *self)
-{
-    g_return_val_if_fail(EVENTD_IS_EVENT(self), NULL);
-
-    return self->priv->config_id;
-}
 
 EVENTD_EXPORT
 const gchar *
