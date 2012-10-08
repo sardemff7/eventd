@@ -62,6 +62,7 @@ namespace Eventc
 
         private Libeventd.Evp.Context evp;
         private GLib.HashTable<string, Eventd.Event> events;
+        private GLib.HashTable<Eventd.Event, string> ids;
 
         private bool handshake_passed;
 
@@ -74,6 +75,7 @@ namespace Eventc
 
             this.evp = new Libeventd.Evp.Context((void *)this, ref Connection.client_interface);
             this.events = new GLib.HashTable<string, Eventd.Event>(GLib.str_hash, GLib.str_equal);
+            this.ids = new GLib.HashTable<Eventd.Event, string>(GLib.direct_hash, GLib.direct_equal);
         }
 
         public bool
@@ -149,16 +151,25 @@ namespace Eventc
                 this.handshake_passed = false;
                 throw new EventcError.EVENT("Couldn't send event: %s", e.message);
             }
-            event.set_id(id);
             this.events.insert(id, event);
+            this.ids.insert(event, id);
+            event.ended.connect(() => {
+                id = this.ids.lookup(event);
+                this.events.remove(id);
+                this.ids.remove(event);
+            });
         }
 
         public async void
         event_end(Eventd.Event event) throws EventcError
         {
+            unowned string id;
+            id = this.ids.lookup(event);
+            if ( id == null )
+                return;
             try
             {
-                yield this.evp.send_end(event.get_id());
+                yield this.evp.send_end(id);
             }
             catch ( GLib.Error e )
             {
