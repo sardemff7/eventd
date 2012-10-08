@@ -43,7 +43,7 @@ struct _LibeventdEvpContext {
     struct {
         LibeventdEvpWaiterCallback callback;
         GSimpleAsyncResult *result;
-        EventdEvent *event;
+        gchar *id;
     } waiter;
 
 #if GLIB_CHECK_VERSION(2,32,0)

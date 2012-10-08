@@ -49,7 +49,7 @@ namespace Libeventd
 
             public async unowned string? send_event(Eventd.Event event) throws GLib.Error;
 
-            public async bool send_end(Eventd.Event event) throws GLib.Error;
+            public async bool send_end(string id) throws GLib.Error;
 
             public void send_bye();
         }

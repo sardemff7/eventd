@@ -442,7 +442,7 @@ _libeventd_evp_context_receive_callback(GObject *source_object, GAsyncResult *re
         self->waiter.callback(self, line);
         self->waiter.callback = NULL;
         self->waiter.result = NULL;
-        self->waiter.event = NULL;
+        self->waiter.id = NULL;
     }
     /* … then warn if we received something unexpected */
     else if ( ! libeventd_evp_context_send_message(self, "ERROR unknown", &self->error) )

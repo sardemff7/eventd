@@ -158,7 +158,7 @@ namespace Eventc
         {
             try
             {
-                yield this.evp.send_end(event);
+                yield this.evp.send_end(event.get_id());
             }
             catch ( GLib.Error e )
             {

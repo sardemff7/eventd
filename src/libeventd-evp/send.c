@@ -236,30 +236,30 @@ _libeventd_evp_context_send_end_check_callback(LibeventdEvpContext *self, const 
     g_return_if_fail(self != NULL);
 
     GSimpleAsyncResult *result = self->waiter.result;
-    EventdEvent *event = self->waiter.event;
+    gchar *id = self->waiter.id;
 
     if ( ! g_str_has_prefix(line, "ENDING ") )
         g_simple_async_result_set_error(result, LIBEVENTD_EVP_ERROR, LIBEVENTD_EVP_ERROR_END, "Wrong END aknowledgement message: %s", line);
-    else if ( g_strcmp0(line + strlen("ENDING "), eventd_event_get_id(event)) != 0 )
-        g_simple_async_result_set_error(result, LIBEVENTD_EVP_ERROR, LIBEVENTD_EVP_ERROR_END, "Wrong event id for END message (wanted '%s'): %s", eventd_event_get_id(event), line + strlen("ENDING "));
+    else if ( g_strcmp0(line + strlen("ENDING "), id) != 0 )
+        g_simple_async_result_set_error(result, LIBEVENTD_EVP_ERROR, LIBEVENTD_EVP_ERROR_END, "Wrong event id for END message (wanted '%s'): %s", id, line + strlen("ENDING "));
 
-    g_object_unref(event);
+    g_free(id);
 
     g_simple_async_result_complete_in_idle(result);
     g_object_unref(result);
 }
 
 void
-libeventd_evp_context_send_end(LibeventdEvpContext *self, EventdEvent *event, GAsyncReadyCallback callback, gpointer user_data)
+libeventd_evp_context_send_end(LibeventdEvpContext *self, const gchar *id, GAsyncReadyCallback callback, gpointer user_data)
 {
     g_return_if_fail(self != NULL);
-    g_return_if_fail(event != NULL);
+    g_return_if_fail(id != NULL);
 
     gboolean r = FALSE;
     gchar *message;
     GError *error = NULL;
 
-    message = g_strdup_printf("END %s", eventd_event_get_id(event));
+    message = g_strdup_printf("END %s", id);
     r = libeventd_evp_context_send_message(self, message, &error);
     g_free(message);
 
@@ -269,7 +269,7 @@ libeventd_evp_context_send_end(LibeventdEvpContext *self, EventdEvent *event, GA
     {
         self->waiter.callback = _libeventd_evp_context_send_end_check_callback;
         self->waiter.result = g_simple_async_result_new(G_OBJECT(self->connection), callback, user_data, libeventd_evp_context_send_end);
-        self->waiter.event = g_object_ref(event);
+        self->waiter.id = g_strdup(id);
     }
 }
 
@@ -315,10 +315,10 @@ fail:
 }
 
 gboolean
-libeventd_evp_context_send_ended(LibeventdEvpContext *self, EventdEvent *event, EventdEventEndReason reason, GError **error)
+libeventd_evp_context_send_ended(LibeventdEvpContext *self, const gchar *id, EventdEventEndReason reason, GError **error)
 {
     g_return_val_if_fail(self != NULL, FALSE);
-    g_return_val_if_fail(event != NULL, FALSE);
+    g_return_val_if_fail(id != NULL, FALSE);
 
     const gchar *reason_text = "";
     switch ( reason )
@@ -343,7 +343,7 @@ libeventd_evp_context_send_ended(LibeventdEvpContext *self, EventdEvent *event, 
     gboolean r = FALSE;
     gchar *message;
 
-    message = g_strdup_printf("ENDED %s %s", eventd_event_get_id(event), reason_text);
+    message = g_strdup_printf("ENDED %s %s", id, reason_text);
     r = libeventd_evp_context_send_message(self, message, error);
     g_free(message);
 

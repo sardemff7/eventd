@@ -112,7 +112,7 @@ _eventd_evp_event_ended(EventdEvent *event, EventdEventEndReason reason, gpointe
     EventdEvpClient *client = user_data;
     GError *error = NULL;
 
-    if ( ! libeventd_evp_context_send_ended(client->evp, event, reason, &error) )
+    if ( ! libeventd_evp_context_send_ended(client->evp, eventd_event_get_id(event), reason, &error) )
     {
         g_warning("Couldn't send ENDED message: %s", error->message);
         g_clear_error(&error);
