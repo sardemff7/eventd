@@ -17,6 +17,8 @@
 !/vapi/config.vapi
 !/vapi/glib-local-2.0.vapi
 !/vapi/libeventd-evp.vapi
+!/vapi/libeventd-event.vapi
+!/vapi/libeventd-event-private.vapi
 
 *.test
 /tests/integration/*.h

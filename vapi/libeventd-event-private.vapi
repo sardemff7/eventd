@@ -1,5 +1,5 @@
 /*
- * eventd - Small daemon to act on remote or local events
+ * libeventc - Library to communicate with eventd
  *
  * Copyright © 2011-2012 Quentin "Sardem FF7" Glidic
  *
@@ -20,22 +20,15 @@
  *
  */
 
-#ifndef __EVENTD_TESTS_UNIT_EVENTD_EVENT_COMMON_H__
-#define __EVENTD_TESTS_UNIT_EVENTD_EVENT_COMMON_H__
-
-#include <stdlib.h>
-#include <glib.h>
-#include <glib-object.h>
-#include <libeventd-event.h>
-#include <libeventd-event-private.h>
-
-#define EVENTD_EVENT_TEST_NAME "test-name"
-#define EVENTD_EVENT_TEST_ID "5B41"
-#define EVENTD_EVENT_TEST_CONFIG_ID "test.event"
-#define EVENTD_EVENT_TEST_CATEGORY "test-category"
-#define EVENTD_EVENT_TEST_TIMEOUT -1
-#define EVENTD_EVENT_TEST_ANSWER "test-answer"
-#define EVENTD_EVENT_TEST_DATA_NAME "test-name"
-#define EVENTD_EVENT_TEST_DATA_CONTENT "test-content"
-
-#endif /* __EVENTD_TESTS_UNIT_EVENTD_EVENT_COMMON_H__ */
+namespace Eventd
+{
+    [CCode (cheader_filename = "libeventd-event-private.h", cname = "EventdEvent", cprefix = "eventd_event_", type_id = "EVENTD_TYPE_EVENT")]
+    public class PrivateEvent : Event
+    {
+        public void set_all_data(GLib.HashTable<string, string> data);
+        public void set_all_answer_data(GLib.HashTable<string, string> data);
+        public unowned GLib.List<string> get_answers();
+        public unowned GLib.HashTable<string, string> get_all_data();
+        public unowned GLib.HashTable<string, string> get_all_answer_data();
+    }
+}

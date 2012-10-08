@@ -25,6 +25,7 @@
 #include <gio/gio.h>
 
 #include <libeventd-event.h>
+#include <libeventd-event-private.h>
 
 #include <libeventd-evp.h>
 

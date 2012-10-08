@@ -77,10 +77,7 @@ const gchar *eventd_event_get_category(EventdEvent *event);
 const gchar *eventd_event_get_name(EventdEvent *event);
 gint64 eventd_event_get_timeout(EventdEvent *event);
 const gchar *eventd_event_get_data(EventdEvent *event, const gchar *name);
-GHashTable *eventd_event_get_all_data(EventdEvent *event);
-GList *eventd_event_get_answers(EventdEvent *event);
 const gchar *eventd_event_get_answer_data(EventdEvent *event, const gchar *name);
-GHashTable *eventd_event_get_all_answer_data(EventdEvent *event);
 
 G_END_DECLS
 

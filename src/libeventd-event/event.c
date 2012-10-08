@@ -289,7 +289,6 @@ eventd_event_get_category(EventdEvent *self)
 }
 
 EVENTD_EXPORT
-
 const gchar *
 eventd_event_get_name(EventdEvent *self)
 {
@@ -320,6 +319,41 @@ eventd_event_get_data(EventdEvent *self, const gchar *name)
 }
 
 EVENTD_EXPORT
+const gchar *
+eventd_event_get_answer_data(EventdEvent *self, const gchar *name)
+{
+    g_return_val_if_fail(EVENTD_IS_EVENT(self), NULL);
+
+    if ( self->priv->answer_data == NULL )
+        return NULL;
+
+    return g_hash_table_lookup(self->priv->answer_data, name);
+}
+
+
+EVENTD_EXPORT
+void
+eventd_event_set_all_data(EventdEvent *self, GHashTable *data)
+{
+    g_return_if_fail(EVENTD_IS_EVENT(self));
+
+    if ( self->priv->data != NULL )
+        g_hash_table_unref(self->priv->data);
+    self->priv->data = data;
+}
+
+EVENTD_EXPORT
+void
+eventd_event_set_all_answer_data(EventdEvent *self, GHashTable *data)
+{
+    g_return_if_fail(EVENTD_IS_EVENT(self));
+
+    if ( self->priv->answer_data != NULL )
+        g_hash_table_unref(self->priv->answer_data);
+    self->priv->answer_data = data;
+}
+
+EVENTD_EXPORT
 GHashTable *
 eventd_event_get_all_data(EventdEvent *self)
 {
@@ -335,18 +369,6 @@ eventd_event_get_answers(EventdEvent *self)
     g_return_val_if_fail(EVENTD_IS_EVENT(self), NULL);
 
     return self->priv->answers;
-}
-
-EVENTD_EXPORT
-const gchar *
-eventd_event_get_answer_data(EventdEvent *self, const gchar *name)
-{
-    g_return_val_if_fail(EVENTD_IS_EVENT(self), NULL);
-
-    if ( self->priv->answer_data == NULL )
-        return NULL;
-
-    return g_hash_table_lookup(self->priv->answer_data, name);
 }
 
 EVENTD_EXPORT

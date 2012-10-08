@@ -46,8 +46,6 @@ namespace Eventd
         public unowned string get_category();
         public unowned string get_name();
         public unowned string get_data(string name);
-        public unowned GLib.HashTable<string, string> get_all_data();
-        public unowned GLib.List<string> get_answers();
 
         public void answer(string answer);
         public void end(EventEndReason reason);

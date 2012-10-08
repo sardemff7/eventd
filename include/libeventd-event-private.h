@@ -1,5 +1,5 @@
 /*
- * eventd - Small daemon to act on remote or local events
+ * libeventd-event - Library to manipulate eventd events
  *
  * Copyright © 2011-2012 Quentin "Sardem FF7" Glidic
  *
@@ -20,22 +20,19 @@
  *
  */
 
-#ifndef __EVENTD_TESTS_UNIT_EVENTD_EVENT_COMMON_H__
-#define __EVENTD_TESTS_UNIT_EVENTD_EVENT_COMMON_H__
+#ifndef __EVENTD_EVENT_PRIVATE_H__
+#define __EVENTD_EVENT_PRIVATE_H__
 
-#include <stdlib.h>
-#include <glib.h>
-#include <glib-object.h>
 #include <libeventd-event.h>
-#include <libeventd-event-private.h>
 
-#define EVENTD_EVENT_TEST_NAME "test-name"
-#define EVENTD_EVENT_TEST_ID "5B41"
-#define EVENTD_EVENT_TEST_CONFIG_ID "test.event"
-#define EVENTD_EVENT_TEST_CATEGORY "test-category"
-#define EVENTD_EVENT_TEST_TIMEOUT -1
-#define EVENTD_EVENT_TEST_ANSWER "test-answer"
-#define EVENTD_EVENT_TEST_DATA_NAME "test-name"
-#define EVENTD_EVENT_TEST_DATA_CONTENT "test-content"
+G_BEGIN_DECLS
 
-#endif /* __EVENTD_TESTS_UNIT_EVENTD_EVENT_COMMON_H__ */
+void eventd_event_set_all_data(EventdEvent *event, GHashTable *data);
+void eventd_event_set_all_answer_data(EventdEvent *event, GHashTable *data);
+GHashTable *eventd_event_get_all_data(EventdEvent *event);
+GList *eventd_event_get_answers(EventdEvent *event);
+GHashTable *eventd_event_get_all_answer_data(EventdEvent *event);
+
+G_END_DECLS
+
+#endif /* __EVENTD_EVENT_PRIVATE_H__ */

@@ -9,6 +9,7 @@ lib_LTLIBRARIES += \
 	libeventd-event.la
 
 pkginclude_HEADERS += \
+	include/libeventd-event-private.h \
 	include/libeventd-event-types.h \
 	include/libeventd-event.h
 
