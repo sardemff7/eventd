@@ -82,7 +82,7 @@ typedef struct {
 
 typedef struct {
     LibeventdEvpContext *context;
-    gpointer event;
+    gchar *id;
     gchar *answer;
     GHashTable *data_hash;
     gboolean error;
@@ -266,9 +266,13 @@ _libeventd_evp_context_receive_answered_callback(GObject *source_object, GAsyncR
 
     if ( g_strcmp0(line, ".") == 0 )
     {
-        self->interface->answered(self->client, self, data->event, data->answer, data->data_hash);
+        gpointer event;
+        event = self->interface->get_event(self->client, self, data->id);
+        if ( event != NULL )
+            self->interface->answered(self->client, self, event, data->answer, data->data_hash);
 
         g_free(data->answer);
+        g_free(data->id);
 
         _libeventd_evp_receive(self, _libeventd_evp_context_receive_callback, self);
 
@@ -421,25 +425,20 @@ _libeventd_evp_context_receive_callback(GObject *source_object, GAsyncResult *re
     else if ( g_str_has_prefix(line, "ANSWERED ") )
     {
         gchar **answer;
-        gpointer event;
 
         answer = g_strsplit(line + strlen("ANSWERED "), " ", 2);
 
-        event = self->interface->get_event(self->client, self, answer[0]);
-        if ( event != NULL )
-        {
-            LibeventdEvpReceiveAnsweredData *data;
+        LibeventdEvpReceiveAnsweredData *data;
 
-            data = g_new0(LibeventdEvpReceiveAnsweredData, 1);
-            data->context = self;
-            data->event = event;
-            data->data_hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-            data->answer = g_strdup(answer[1]);
+        data = g_new0(LibeventdEvpReceiveAnsweredData, 1);
+        data->context = self;
+        data->id = answer[0];
+        data->data_hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+        data->answer = answer[1];
 
-            _libeventd_evp_receive(self, _libeventd_evp_context_receive_answered_callback, data);
-        }
+        _libeventd_evp_receive(self, _libeventd_evp_context_receive_answered_callback, data);
 
-        g_strfreev(answer);
+        g_free(answer);
     }
     /* … and just inform for answers … */
     else if ( self->waiter.callback != NULL )
