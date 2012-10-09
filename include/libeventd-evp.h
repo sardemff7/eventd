@@ -92,9 +92,6 @@ void libeventd_evp_context_set_connection(LibeventdEvpContext *context, GSocketC
 void libeventd_evp_context_close(LibeventdEvpContext *context, GAsyncReadyCallback callback, gpointer user_data);
 void libeventd_evp_context_close_finish(LibeventdEvpContext *context, GAsyncResult *result);
 
-gboolean libeventd_evp_context_lock(LibeventdEvpContext *context, GSourceFunc callback, gpointer user_data);
-void libeventd_evp_context_unlock(LibeventdEvpContext *context);
-
 void libeventd_evp_context_receive_loop_client(LibeventdEvpContext *context, gint priority);
 void libeventd_evp_context_receive_loop_server(LibeventdEvpContext *context, gint priority);
 

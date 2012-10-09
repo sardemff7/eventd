@@ -31,7 +31,6 @@ struct _LibeventdEvpContext {
     gpointer client;
     LibeventdEvpClientInterface *interface;
 
-    GMutex *mutex;
     GCancellable *cancellable;
     GSocketConnection *connection;
     GDataInputStream  *in;
@@ -46,9 +45,6 @@ struct _LibeventdEvpContext {
         gchar *id;
     } waiter;
 
-#if GLIB_CHECK_VERSION(2,32,0)
-    GMutex mutex_;
-#endif /* ! GLIB_CHECK_VERSION(2,32,0) */
 };
 
 gboolean libeventd_evp_context_send_message(LibeventdEvpContext *context, const gchar *message, GError** error);

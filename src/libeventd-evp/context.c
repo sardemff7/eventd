@@ -53,13 +53,6 @@ libeventd_evp_context_new(gpointer client, LibeventdEvpClientInterface *interfac
     self->client = client;
     self->interface = interface;
 
-#if GLIB_CHECK_VERSION(2,32,0)
-    self->mutex = &self->mutex_;
-    g_mutex_init(self->mutex);
-#else /* ! GLIB_CHECK_VERSION(2,32,0) */
-    self->mutex = g_mutex_new();
-#endif /* ! GLIB_CHECK_VERSION(2,32,0) */
-
     self->cancellable = g_cancellable_new();
 
     return self;
@@ -97,12 +90,6 @@ libeventd_evp_context_free(LibeventdEvpContext *self)
     g_return_if_fail(self != NULL);
 
     g_object_unref(self->cancellable);
-
-#if GLIB_CHECK_VERSION(2,32,0)
-    g_mutex_clear(self->mutex);
-#else /* ! GLIB_CHECK_VERSION(2,32,0) */
-    g_mutex_free(self->mutex);
-#endif /* ! GLIB_CHECK_VERSION(2,32,0) */
 
     g_free(self);
 }
@@ -165,23 +152,4 @@ libeventd_evp_context_close_finish(LibeventdEvpContext *self, GAsyncResult *resu
 {
     g_return_if_fail(self != NULL);
     g_return_if_fail(g_simple_async_result_is_valid(result, G_OBJECT(self->cancellable), libeventd_evp_context_close));
-}
-
-gboolean
-libeventd_evp_context_lock(LibeventdEvpContext *self, GSourceFunc callback, gpointer user_data)
-{
-    g_return_val_if_fail(self != NULL, FALSE);
-
-    if ( g_mutex_trylock(self->mutex) )
-        return TRUE;
-    g_idle_add(callback, user_data);
-    return FALSE;
-}
-
-void
-libeventd_evp_context_unlock(LibeventdEvpContext *self)
-{
-    g_return_if_fail(self != NULL);
-
-    g_mutex_unlock(self->mutex);
 }
