@@ -443,6 +443,7 @@ _libeventd_evp_context_receive_callback(GObject *source_object, GAsyncResult *re
         _libeventd_evp_receive(self, _libeventd_evp_context_receive_answered_callback, data);
 
         g_free(answer);
+        return;
     }
     /* … and just inform for answers … */
     else if ( self->waiter.callback != NULL )
