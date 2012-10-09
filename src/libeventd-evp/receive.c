@@ -40,7 +40,11 @@ static void
 _libeventd_evp_receive(LibeventdEvpContext *self, GAsyncReadyCallback callback, gpointer user_data)
 {
     if ( self->error != NULL )
+    {
+        self->interface->error(self->client, self, self->error);
+        self->error = NULL;
         return;
+    }
     g_data_input_stream_read_upto_async(self->in, "\n", -1, self->priority, self->cancellable, callback, user_data);
 }
 
