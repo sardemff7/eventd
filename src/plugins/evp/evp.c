@@ -128,6 +128,8 @@ _eventd_evp_answered(gpointer data, LibeventdEvpContext *evp, gpointer event_dat
 {
     EventdEvpEvent *evp_event = event_data;
     eventd_event_set_all_answer_data(evp_event->event, g_hash_table_ref(data_hash));
+    g_signal_handler_disconnect(evp_event->event, evp_event->answered_handler);
+    evp_event->answered_handler = 0;
     eventd_event_answer(evp_event->event, answer);
 }
 
@@ -135,6 +137,8 @@ static void
 _eventd_evp_ended(gpointer data, LibeventdEvpContext *evp, gpointer event_data, EventdEventEndReason reason)
 {
     EventdEvpEvent *evp_event = event_data;
+    g_signal_handler_disconnect(evp_event->event, evp_event->ended_handler);
+    evp_event->ended_handler = 0;
     eventd_event_end(evp_event->event, reason);
 }
 
@@ -210,8 +214,10 @@ _eventd_evp_event_free(gpointer data)
 {
     EventdEvpEvent *evp_event = data;
 
-    g_signal_handler_disconnect(evp_event->event, evp_event->answered_handler);
-    g_signal_handler_disconnect(evp_event->event, evp_event->ended_handler);
+    if ( evp_event->answered_handler > 0 )
+        g_signal_handler_disconnect(evp_event->event, evp_event->answered_handler);
+    if ( evp_event->ended_handler > 0 )
+        g_signal_handler_disconnect(evp_event->event, evp_event->ended_handler);
 
     g_object_unref(evp_event->event);
 
