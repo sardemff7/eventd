@@ -275,6 +275,9 @@ eventd_relay_server_new_avahi(EventdRelayAvahi *context, const gchar *name)
 void
 eventd_relay_server_start(EventdRelayServer *server)
 {
+    if ( server->address == NULL )
+        return;
+
     GSocketClient *client;
 
     client = g_socket_client_new();
@@ -367,7 +370,8 @@ eventd_relay_server_free(gpointer data)
     if ( server->connection_timeout_id > 0 )
         g_source_remove(server->connection_timeout_id);
 
-    libeventd_evp_context_free(server->evp);
+    if ( server->evp != NULL )
+        libeventd_evp_context_free(server->evp);
 
     if ( server->avahi != NULL )
         eventd_relay_avahi_server_free(server->avahi);
