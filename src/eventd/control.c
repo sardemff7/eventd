@@ -38,7 +38,7 @@ struct _EventdControl {
 };
 
 static gboolean
-_eventd_service_private_connection_handler(GThreadedSocketService *socket_service, GSocketConnection *connection, GObject *source_object, gpointer user_data)
+_eventd_service_private_connection_handler(GSocketService *socket_service, GSocketConnection *connection, GObject *source_object, gpointer user_data)
 {
     EventdControl *control = user_data;
 
@@ -115,7 +115,7 @@ eventd_control_start(EventdControl *control)
     GList *sockets = NULL;
     GList *socket_;
 
-    control->socket_service = g_threaded_socket_service_new(-1);
+    control->socket_service = g_socket_service_new();
 
     const gchar *binds[] = { NULL, NULL };
 
@@ -159,7 +159,7 @@ eventd_control_start(EventdControl *control)
     g_list_free_full(sockets, g_object_unref);
 
     if ( ret )
-        g_signal_connect(control->socket_service, "run", G_CALLBACK(_eventd_service_private_connection_handler), control);
+        g_signal_connect(control->socket_service, "incoming", G_CALLBACK(_eventd_service_private_connection_handler), control);
     else
        eventd_control_stop(control);
 
