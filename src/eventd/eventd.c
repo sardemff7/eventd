@@ -191,8 +191,6 @@ eventd_core_config_reload(EventdCoreContext *context)
 void
 eventd_core_quit(EventdCoreContext *context)
 {
-    eventd_queue_stop(context->queue);
-
     eventd_plugins_stop_all();
 
     eventd_control_stop(context->control);
@@ -411,8 +409,6 @@ main(int argc, char *argv[])
 
     if ( ! eventd_control_start(context->control) )
         goto no_control;
-
-    eventd_queue_start(context->queue);
 
     eventd_plugins_start_all();
 
