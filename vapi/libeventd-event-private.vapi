@@ -22,13 +22,18 @@
 
 namespace Eventd
 {
-    [CCode (cheader_filename = "libeventd-event-private.h", cname = "EventdEvent", cprefix = "eventd_event_", type_id = "EVENTD_TYPE_EVENT")]
-    public class PrivateEvent : Event
+    [CCode (cheader_filename = "libeventd-event-private.h")]
+    namespace PrivateEvent
     {
-        public void set_all_data(owned GLib.HashTable<string, string> data);
-        public void set_all_answer_data(owned GLib.HashTable<string, string> data);
-        public unowned GLib.List<string> get_answers();
-        public unowned GLib.HashTable<string, string> get_all_data();
-        public unowned GLib.HashTable<string, string> get_all_answer_data();
+        [CCode (cname = "eventd_event_set_all_data")]
+        public void set_all_data(Event event, owned GLib.HashTable<string, string> data);
+        [CCode (cname = "eventd_event_set_all_answer_data")]
+        public void set_all_answer_data(Event event, owned GLib.HashTable<string, string> data);
+        [CCode (cname = "eventd_event_get_answers")]
+        public unowned GLib.List<string> get_answers(Event event);
+        [CCode (cname = "eventd_event_get_all_data")]
+        public unowned GLib.HashTable<string, string> get_all_data(Event event);
+        [CCode (cname = "eventd_event_get_all_answer_data")]
+        public unowned GLib.HashTable<string, string> get_all_answer_data(Event event);
     }
 }

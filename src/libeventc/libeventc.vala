@@ -205,7 +205,7 @@ namespace Eventc
         answered(Libeventd.Evp.Context context, void *data_event, string answer, GLib.HashTable<string, string> data_hash)
         {
             Eventd.Event event = data_event as Eventd.Event;
-            (event as Eventd.PrivateEvent).set_all_answer_data(data_hash);
+            Eventd.PrivateEvent.set_all_answer_data(event, data_hash);
             event.answer(answer);
         }
 
