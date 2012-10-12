@@ -2,22 +2,12 @@ check_LTLIBRARIES += \
 	tests/integration/libeventd-test.la
 
 tests_integration_libeventd_test_la_SOURCES = \
-	tests/integration/libtest/libtest.vala
-
-tests_integration_libeventd_test_la_VALAFLAGS = \
-	$(AM_TESTS_INTEGRATION_VALAFLAGS) \
-	--pkg tests \
-	--library libeventd-test \
-	--vapi tests/integration/libeventd-test.vapi \
-	--header tests/integration/libeventd-test.h \
-	$(GIO_VALAFLAGS) \
-	$(GOBJECT_VALAFLAGS) \
-	$(GLIB_VALAFLAGS)
+	tests/integration/libtest/libtest.c
 
 tests_integration_libeventd_test_la_CFLAGS = \
 	$(AM_TESTS_INTEGRATION_CFLAGS) \
-	-D EVENTD_TESTS_BUILD_DIR=\"$(builddir)\" \
-	-D EVENTD_TESTS_EXEEXT=\"$(EXEEXT)\" \
+	-D BUILD_DIR=\"$(builddir)\" \
+	-D EXEEXT=\"$(EXEEXT)\" \
 	$(GIO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS)

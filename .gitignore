@@ -21,10 +21,6 @@
 !/vapi/libeventd-event-private.vapi
 
 *.test
-/tests/integration/*.h
-/tests/integration/*.vapi
-!/tests/integration/tests.vapi
-/tests/integration/libtest/*.c
 /tests/integration/evp/*.c
 /tests/integration/relay/*.c
 /tests/integration/libeventc/*.c

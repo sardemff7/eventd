@@ -20,9 +20,15 @@
  *
  */
 
-[CCode (cheader_filename = "")]
+[CCode (cheader_filename = "libeventd-test.h")]
 namespace Eventd.Tests
 {
-    public const string BUILD_DIR;
-    public const string EXEEXT;
+    [CCode (ref_function = "", unref_function = "")]
+    public class Env
+    {
+        public Env(string plugins, string port, owned string[] args);
+        public static void setup();
+        public void start_eventd() throws GLib.Error;
+        public void stop_eventd() throws GLib.Error;
+    }
 }

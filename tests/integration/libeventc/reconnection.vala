@@ -91,7 +91,7 @@ main(string[] args)
 {
     int r = 0;
     Eventd.Tests.Env.setup();
-    var env = new Eventd.Tests.Env("test-plugin,evp", "9989", "--event-listen", "tcp:localhost4:9878", "--no-avahi");
+    var env = new Eventd.Tests.Env("test-plugin,evp", "9989", { "--event-listen", "tcp:localhost4:9878", "--no-avahi" });
     try
     {
         env.start_eventd();
