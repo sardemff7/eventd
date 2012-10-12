@@ -218,6 +218,8 @@ _eventd_nd_xcb_surface_expose_event(EventdNdSurface *self, xcb_expose_event_t *e
     cairo_fill(cr);
     cairo_destroy(cr);
     cairo_surface_destroy(cs);
+
+    xcb_flush(self->display->xcb_connection);
 }
 
 static void
