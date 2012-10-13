@@ -106,11 +106,17 @@ static void _eventd_nd_xcb_surface_expose_event(EventdNdSurface *self, xcb_expos
 static void _eventd_nd_xcb_surface_button_release_event(EventdNdSurface *self);
 
 
-static void
+static gboolean
 _eventd_nd_xcb_events_callback(xcb_generic_event_t *event, gpointer user_data)
 {
     EventdNdDisplay *display = user_data;
     EventdNdSurface *surface;
+
+    if ( event == NULL )
+    {
+        display->context->nd_interface->remove_display(display->context->nd, display);
+        return FALSE;
+    }
 
     switch ( event->response_type & ~0x80 )
     {
@@ -135,6 +141,8 @@ _eventd_nd_xcb_events_callback(xcb_generic_event_t *event, gpointer user_data)
     default:
     break;
     }
+
+    return TRUE;
 }
 
 static gboolean
@@ -155,14 +163,6 @@ _eventd_nd_xcb_display_test(EventdNdBackendContext *context, const gchar *target
     return TRUE;
 }
 
-static void
-_eventd_nd_xcb_display_error_callback(gpointer user_data)
-{
-    EventdNdDisplay *display = user_data;
-
-    display->context->nd_interface->remove_display(display->context->nd, display);
-}
-
 static EventdNdDisplay *
 _eventd_nd_xcb_display_new(EventdNdBackendContext *context, const gchar *target)
 {
@@ -178,7 +178,6 @@ _eventd_nd_xcb_display_new(EventdNdBackendContext *context, const gchar *target)
         return NULL;
     }
     display->context = context;
-    g_xcb_source_set_error_callback(display->source, _eventd_nd_xcb_display_error_callback);
 
     context->displays = g_slist_prepend(context->displays, g_strdup(target));
 
