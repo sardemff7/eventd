@@ -77,6 +77,8 @@ fi
 #
 # Common dependencies
 #
+AC_CHECK_HEADERS([fcntl.h])
+
 PKG_CHECK_MODULES(GLIB, [glib-2.0 >= $glib_min_version])
 GLIB_VALAFLAGS="--pkg glib-2.0 --pkg glib-local-2.0"
 AC_SUBST(GLIB_VALAFLAGS)
