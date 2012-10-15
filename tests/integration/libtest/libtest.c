@@ -42,6 +42,7 @@ eventd_tests_env_setup()
     g_setenv("EVENTD_CONFIG_DIR", TESTS_DIR, TRUE);
     g_setenv("XDG_RUNTIME_DIR", TESTS_DIR, TRUE);
     g_setenv("EVENTD_PLUGINS_DIR", PLUGINS_DIR, TRUE);
+    g_unsetenv("EVENTD_PLUGINS_WHITELIST");
 }
 
 EventdTestsEnv *
@@ -52,9 +53,13 @@ eventd_tests_env_new(const gchar *plugins, const gchar *port, gchar **argv, gint
 
     self = g_new0(EventdTestsEnv, 1);
 
+    guint length;
 
     self->env = g_get_environ();
-    self->env = g_environ_setenv(self->env, "EVENTD_PLUGINS_WHITELIST", plugins, TRUE);
+    length = g_strv_length(self->env);
+    self->env = g_renew(gchar *, self->env, length+2);
+    self->env[length] = g_strdup_printf("EVENTD_PLUGINS_WHITELIST=%s", plugins);
+    self->env[length+1] = NULL;
 
 
     self->start_args = g_new(char *, 10+argc);
