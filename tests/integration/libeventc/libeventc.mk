@@ -30,8 +30,6 @@ tests_integration_libeventc_connection_test_LDADD = \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS)
 
-$(srcdir)/tests_integration_libeventc_connection_test_vala.stamp: $(srcdir)/tests_integration_libeventd_test_la_vala.stamp
-
 TESTS += \
 	tests/integration/libeventc-reconnection.test
 
@@ -63,5 +61,3 @@ tests_integration_libeventc_reconnection_test_LDADD = \
 	$(GIO_LIBS) \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS)
-
-$(srcdir)/tests_integration_libeventc_reconnection_test_vala.stamp: $(srcdir)/tests_integration_libeventd_test_la_vala.stamp

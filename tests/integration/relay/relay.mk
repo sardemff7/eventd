@@ -29,5 +29,3 @@ tests_integration_relay_connection_test_LDADD = \
 	$(GIO_LIBS) \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS)
-
-$(srcdir)/tests_integration_relay_connection_test_vala.stamp: $(srcdir)/tests_integration_libeventd_test_la_vala.stamp
