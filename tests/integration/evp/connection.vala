@@ -155,15 +155,19 @@ main(string[] args)
 
     var client = new GLib.SocketClient();
     var address = new GLib.InetSocketAddress(new GLib.InetAddress.loopback(GLib.SocketFamily.IPV4), 9876);
+    GLib.SocketConnection connection;
+    GLib.DataInputStream input;
+    GLib.DataOutputStream output;
+    string m;
 
     try
     {
-        var connection = client.connect(address, null);
+        connection = client.connect(address, null);
 
-        var input = new GLib.DataInputStream((connection as GLib.IOStream).get_input_stream());
-        var output = new GLib.DataOutputStream((connection as GLib.IOStream).get_output_stream());
+        input = new GLib.DataInputStream((connection as GLib.IOStream).get_input_stream());
+        output = new GLib.DataOutputStream((connection as GLib.IOStream).get_output_stream());
 
-        var m = connection_test(input, output);
+        m = connection_test(input, output);
         if ( m != null )
         {
             r = 1;
@@ -180,12 +184,12 @@ main(string[] args)
 
     try
     {
-        var connection = client.connect(address, null);
+        connection = client.connect(address, null);
 
-        var input = new GLib.DataInputStream((connection as GLib.IOStream).get_input_stream());
-        var output = new GLib.DataOutputStream((connection as GLib.IOStream).get_output_stream());
+        input = new GLib.DataInputStream((connection as GLib.IOStream).get_input_stream());
+        output = new GLib.DataOutputStream((connection as GLib.IOStream).get_output_stream());
 
-        var m = connection_fail_test(input, output);
+        m = connection_fail_test(input, output);
         if ( m != null )
         {
             r = 1;
