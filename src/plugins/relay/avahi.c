@@ -158,7 +158,8 @@ eventd_relay_avahi_uninit(EventdRelayAvahi *context)
     if ( context == NULL )
         return;
 
-    g_hash_table_unref(context->servers);
+    if ( context->servers != NULL )
+        g_hash_table_unref(context->servers);
 
     if ( context->browser != NULL )
         avahi_service_browser_free(context->browser);
