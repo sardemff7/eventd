@@ -52,6 +52,23 @@ typedef struct {
 
 static void _eventd_queue_source_try_dispatch(EventdQueue *queue);
 
+static void
+_eventd_queue_event_free(gpointer data)
+{
+    EventdQueueEvent *event = data;
+
+    if ( event->answered_handler > 0 )
+        g_signal_handler_disconnect(event->event, event->answered_handler);
+    if ( event->ended_handler > 0 )
+        g_signal_handler_disconnect(event->event, event->ended_handler);
+    if ( event->timeout_id > 0 )
+        g_source_remove(event->timeout_id);
+
+    g_object_unref(event->event);
+
+    g_free(event);
+}
+
 static gboolean
 _eventd_queue_event_timeout(gpointer user_data)
 {
@@ -99,15 +116,11 @@ _eventd_queue_event_ended(GObject *object, gint reason, gpointer user_data)
 {
     EventdQueueEvent *event = user_data;
     EventdQueue *queue = event->queue;
+    GList *link = event->link;
 
-    if ( event->timeout_id > 0 )
-        g_source_remove(event->timeout_id);
-
-    g_queue_delete_link(queue->current, event->link);
+    _eventd_queue_event_free(event);
+    g_queue_delete_link(queue->current, link);
     _eventd_queue_source_try_dispatch(queue);
-
-    g_object_unref(event->event);
-    g_free(event);
 }
 
 static void
@@ -118,8 +131,8 @@ _eventd_queue_source_dispatch(EventdQueue *queue, EventdQueueEvent *event)
 
     eventd_plugins_event_action_all(event->config_id, event->event);
 
-    g_signal_connect(event->event, "updated", G_CALLBACK(_eventd_queue_event_updated), event);
-    g_signal_connect(event->event, "ended", G_CALLBACK(_eventd_queue_event_ended), event);
+    event->answered_handler = g_signal_connect(event->event, "updated", G_CALLBACK(_eventd_queue_event_updated), event);
+    event->ended_handler = g_signal_connect(event->event, "ended", G_CALLBACK(_eventd_queue_event_ended), event);
     _eventd_queue_event_set_timeout(queue, event->config_id, event);
 }
 
@@ -154,27 +167,6 @@ eventd_queue_new(EventdConfig *config)
     return queue;
 }
 
-static void
-#if GLIB_CHECK_VERSION(2,32,0)
-_eventd_queue_event_free(gpointer data)
-#else /* ! GLIB_CHECK_VERSION(2,32,0) */
-_eventd_queue_event_free(gpointer data, gpointer user_data)
-#endif /* ! GLIB_CHECK_VERSION(2,32,0) */
-{
-    EventdQueueEvent *event = data;
-
-    if ( event->answered_handler > 0 )
-        g_signal_handler_disconnect(event->event, event->answered_handler);
-    if ( event->ended_handler > 0 )
-        g_signal_handler_disconnect(event->event, event->ended_handler);
-    if ( event->timeout_id > 0 )
-        g_source_remove(event->timeout_id);
-
-    g_object_unref(event->event);
-
-    g_free(event);
-}
-
 void
 eventd_queue_free(EventdQueue *queue)
 {
@@ -182,8 +174,8 @@ eventd_queue_free(EventdQueue *queue)
     g_queue_free_full(queue->current, _eventd_queue_event_free);
     g_queue_free_full(queue->queue, _eventd_queue_event_free);
 #else /* ! GLIB_CHECK_VERSION(2,32,0) */
-    g_queue_foreach(queue->current, _eventd_queue_event_free, NULL);
-    g_queue_foreach(queue->queue, _eventd_queue_event_free, NULL);
+    g_queue_foreach(queue->current, (GFunc)_eventd_queue_event_free, NULL);
+    g_queue_foreach(queue->queue, (GFunc)_eventd_queue_event_free, NULL);
     g_queue_free(queue->current);
     g_queue_free(queue->queue);
 #endif /* ! GLIB_CHECK_VERSION(2,32,0) */
