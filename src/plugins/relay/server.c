@@ -81,6 +81,8 @@ _eventd_relay_event_answered(EventdEvent *event, const gchar *answer, gpointer u
         g_warning("Couldn't send ANSWERED message: %s", error->message);
         g_clear_error(&error);
     }
+    g_signal_handler_disconnect(relay_event->event, relay_event->answered_handler);
+    relay_event->answered_handler = 0;
 }
 
 static void
@@ -95,6 +97,8 @@ _eventd_relay_event_ended(EventdEvent *event, EventdEventEndReason reason, gpoin
         g_warning("Couldn't send ENDED message: %s", error->message);
         g_clear_error(&error);
     }
+    g_signal_handler_disconnect(relay_event->event, relay_event->ended_handler);
+    relay_event->ended_handler = 0;
 
     g_hash_table_remove(server->events, relay_event->id);
 }
