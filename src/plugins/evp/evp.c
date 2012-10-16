@@ -105,6 +105,8 @@ _eventd_evp_event_answered(EventdEvent *event, const gchar *answer, gpointer use
         g_warning("Couldn't send ANSWERED message: %s", error->message);
         g_clear_error(&error);
     }
+    g_signal_handler_disconnect(evp_event->event, evp_event->answered_handler);
+    evp_event->answered_handler = 0;
 }
 
 static void
@@ -119,6 +121,8 @@ _eventd_evp_event_ended(EventdEvent *event, EventdEventEndReason reason, gpointe
         g_warning("Couldn't send ENDED message: %s", error->message);
         g_clear_error(&error);
     }
+    g_signal_handler_disconnect(evp_event->event, evp_event->ended_handler);
+    evp_event->ended_handler = 0;
 
     g_hash_table_remove(client->events, evp_event->id);
 }
@@ -136,10 +140,12 @@ _eventd_evp_answered(gpointer data, LibeventdEvpContext *evp, gpointer event_dat
 static void
 _eventd_evp_ended(gpointer data, LibeventdEvpContext *evp, gpointer event_data, EventdEventEndReason reason)
 {
+    EventdEvpClient *client = data;
     EventdEvpEvent *evp_event = event_data;
     g_signal_handler_disconnect(evp_event->event, evp_event->ended_handler);
     evp_event->ended_handler = 0;
     eventd_event_end(evp_event->event, reason);
+    g_hash_table_remove(client->events, evp_event->id);
 }
 
 static gchar *
