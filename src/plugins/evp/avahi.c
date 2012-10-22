@@ -92,6 +92,7 @@ _eventd_evp_avahi_create_group(EventdEvpAvahiContext *context, AvahiClient *clie
         g_object_unref(address);
     }
     g_list_free_full(context->sockets, g_object_unref);
+    context->sockets = NULL;
 
     if ( ( error = avahi_entry_group_commit(context->group) ) < 0 )
     {
@@ -163,6 +164,8 @@ eventd_evp_avahi_stop(EventdEvpAvahiContext *context)
         avahi_client_free(context->client);
 
     avahi_glib_poll_free(context->glib_poll);
+
+    g_list_free_full(context->sockets, g_object_unref);
 
     g_free(context);
 }
