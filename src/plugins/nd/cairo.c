@@ -538,11 +538,12 @@ _eventd_nd_cairo_bubble_draw(cairo_t *cr, Colour colour, gint width, gint height
 }
 
 static void
-_eventd_nd_cairo_text_draw_line(EventdNdTextLine *line, cairo_t *cr, gint offset_x, gint *offset_y)
+_eventd_nd_cairo_text_draw_line(EventdNdTextLine *line, cairo_t *cr, gint offset_x, gint *offset_y, gint max_width)
 {
     cairo_new_path(cr);
 
     cairo_move_to(cr, offset_x, *offset_y);
+    pango_layout_set_width(line->layout, max_width * PANGO_SCALE);
     pango_cairo_update_layout(cr, line->layout);
     pango_cairo_layout_path(cr, line->layout);
 
@@ -552,7 +553,7 @@ _eventd_nd_cairo_text_draw_line(EventdNdTextLine *line, cairo_t *cr, gint offset
 }
 
 static void
-_eventd_nd_cairo_text_draw(cairo_t *cr, GList *lines, EventdNdStyle *style, gint offset_x, gint offset_y)
+_eventd_nd_cairo_text_draw(cairo_t *cr, GList *lines, EventdNdStyle *style, gint offset_x, gint offset_y, gint max_width)
 {
     Colour colour;
 
@@ -560,12 +561,12 @@ _eventd_nd_cairo_text_draw(cairo_t *cr, GList *lines, EventdNdStyle *style, gint
     cairo_set_source_rgba(cr, colour.r, colour.g, colour.b, colour.a);
 
     lines = g_list_first(lines);
-    _eventd_nd_cairo_text_draw_line(lines->data, cr, offset_x, &offset_y);
+    _eventd_nd_cairo_text_draw_line(lines->data, cr, offset_x, &offset_y, max_width);
 
     colour = eventd_nd_style_get_message_colour(style);
     cairo_set_source_rgba(cr, colour.r, colour.g, colour.b, colour.a);
     for ( lines = g_list_next(lines) ; lines != NULL ; lines = g_list_next(lines) )
-        _eventd_nd_cairo_text_draw_line(lines->data, cr, offset_x, &offset_y);
+        _eventd_nd_cairo_text_draw_line(lines->data, cr, offset_x, &offset_y, max_width);
 
     g_list_free_full(lines, _eventd_nd_cairo_text_line_free);
 }
@@ -735,7 +736,7 @@ eventd_nd_cairo_get_surfaces(EventdEvent *event, LibeventdNdNotification *notifi
     cr = cairo_create(*bubble);
     _eventd_nd_cairo_bubble_draw(cr, eventd_nd_style_get_bubble_colour(style), width, height);
     _eventd_nd_cairo_image_and_icon_draw(cr, image, icon, style, width, height);
-    _eventd_nd_cairo_text_draw(cr, lines, style, padding + text_margin, padding);
+    _eventd_nd_cairo_text_draw(cr, lines, style, padding + text_margin, padding, text_width);
     cairo_destroy(cr);
 
     *shape = cairo_image_surface_create(CAIRO_FORMAT_A1, width, height);
