@@ -1,0 +1,5 @@
+/src/*.c
+/include/libeventc.h
+/vapi/libeventc.deps
+/vapi/libeventc.vapi
+/tests/integration/*.c

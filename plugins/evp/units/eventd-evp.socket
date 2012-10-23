@@ -1,0 +1,10 @@
+[Unit]
+Description=eventd EvP Sockets
+
+[Socket]
+Service=eventd.service
+ListenStream=%t/eventd/sock
+ListenStream=7100
+
+[Install]
+WantedBy=sockets.target

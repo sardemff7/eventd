@@ -1,8 +1,8 @@
 AC_PREREQ([2.65])
 AC_INIT([eventd],[0.1],[],[])
 
-AC_CONFIG_HEADERS([include/config.h])
-AC_CONFIG_SRCDIR([src/])
+AC_CONFIG_HEADERS([src/config.h])
+AC_CONFIG_SRCDIR([server/eventd/src/eventd.c])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([.aux])
 
@@ -213,8 +213,8 @@ AM_PROG_VALAC([$vala_min_version])
 #
 # Tests
 #
-AC_ARG_ENABLE(tests, AS_HELP_STRING([--enable-tests], [Build tests]), [], enable_tests=yes)
-AM_CONDITIONAL(ENABLE_TESTS, [test x$enable_tests = xyes])
+dnl No additional dependencies for tests
+dnl AC_ARG_ENABLE(tests, AS_HELP_STRING([--enable-tests], [Build tests]), [], enable_tests=yes)
 
 
 # Debug flags
@@ -233,11 +233,11 @@ AM_SUBST_NOTMAKE(LIBS)
 AC_SUBST(shrext_cmds)
 
 AC_CONFIG_FILES([
-    data/libeventd-event.pc
-    data/libeventc.pc
+    server/libeventd-event/pkgconfig/libeventd-event.pc
+    server/libeventd-event/vapi/libeventd-event.deps
+    client/libeventc/pkgconfig/libeventc.pc
+    client/libeventc/vapi/libeventc.deps
     Makefile
-    vapi/libeventd-event.deps
-    vapi/libeventc.deps
 ])
 AC_OUTPUT
 
@@ -264,7 +264,7 @@ echo '          'Backends:
 echo '            'XCB: $enable_xcb
 echo '            'Linux framebuffer: $enable_linux_framebuffer
 echo
-echo '    'Tests: $enable_tests
+dnl echo '    'Tests: $enable_tests
 echo '    'Debug mode: $enable_debug
 echo
 echo

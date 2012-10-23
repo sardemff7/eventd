@@ -1,6 +1,5 @@
 AM_DISTCHECK_CONFIGURE_FLAGS = \
-	--with-systemduserunitdir="$$dc_install_base/$(systemduserunitdir)" \
-	--disable-debug
+	--with-systemduserunitdir="$$dc_install_base/$(systemduserunitdir)"
 
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 AM_MAKEFLAGS = --no-print-directory
@@ -10,70 +9,75 @@ vapidir = $(datadir)/vala/vapi
 pluginsdir = $(pkglibdir)/plugins
 
 bin_PROGRAMS =
+noinst_LTLIBRARIES =
 lib_LTLIBRARIES =
 pkglib_LTLIBRARIES =
 plugins_LTLIBRARIES =
-noinst_LTLIBRARIES =
 pkginclude_HEADERS =
-pkgconfig_DATA =
-dist_vapi_DATA =
-dist_pkgdata_DATA =
-systemduserunit_DATA =
+
+TESTS =
+XFAIL_TESTS =
+check_PROGRAMS =
+check_LTLIBRARIES =
+
 man1_MANS =
 man5_MANS =
+pkgconfig_DATA =
+dist_vapi_DATA =
+vapi_DATA =
+dist_pkgdata_DATA =
+systemduserunit_DATA =
 
 EXTRA_DIST =
 CLEANFILES =
 
 AM_CFLAGS += \
 	-D LOCALEDIR=\"$(localedir)\" \
-	--include config.h \
-	-I $(srcdir)/include/ \
-	-I $(builddir)/include/
+	-I $(srcdir)/src/ \
+	-I $(builddir)/src/ \
+	--include config.h
 
 AM_VALAFLAGS += \
-	--vapidir $(srcdir)/vapi/ \
-	--vapidir $(builddir)/vapi/ \
+	--vapidir $(srcdir)/src/ \
+	--vapidir $(builddir)/src/ \
 	--pkg config
 
 AM_XSLTPROCFLAGS += \
-	--path "$(srcdir)/man/" \
-	--path "$(builddir)/man/"
+	--path "$(builddir)/src/"
 
 EXTRA_DIST += \
-	vapi/libeventd-evp.vapi \
-	vapi/glib-local-2.0.vapi \
-	vapi/config.vapi
+	src/glib-local-2.0.vapi \
+	src/config.vapi
 
-include src/libeventd-event/libeventd-event.mk
-include src/libeventd-evp/libeventd-evp.mk
-include src/libeventd/libeventd.mk
-include src/eventd/eventd.mk
-include src/eventdctl/eventdctl.mk
-include src/plugins/evp/evp.mk
+include server/libeventd-event/libeventd-event.mk
+include server/libeventd-evp/libeventd-evp.mk
+include server/libeventd/libeventd.mk
+include server/eventd/eventd.mk
+include server/eventdctl/eventdctl.mk
+include plugins/evp/evp.mk
+include plugins/relay/relay.mk
 if ENABLE_DBUS
-include src/plugins/dbus/dbus.mk
+include plugins/dbus/dbus.mk
 endif
 if ENABLE_SNDFILE
-include src/plugins/sndfile/sndfile.mk
+include plugins/sndfile/sndfile.mk
 endif
 if ENABLE_ESPEAK
-include src/plugins/espeak/espeak.mk
+include plugins/espeak/espeak.mk
 endif
 if ENABLE_NOTIFICATION_DAEMON
-include src/plugins/nd/nd.mk
+include plugins/nd/nd.mk
 endif
 if ENABLE_NOTIFY
-include src/plugins/notify/notify.mk
+include plugins/notify/notify.mk
 endif
-include src/plugins/relay/relay.mk
-include src/libeventc/libeventc.mk
-include src/eventc/eventc.mk
-if ENABLE_TESTS
-include tests/tests.mk
-endif
-include man/man.mk
-include data/units/units.mk
+include client/libeventc/libeventc.mk
+include client/eventc/eventc.mk
+include server/libeventd-test/libeventd-test.mk
+include plugins/test-plugin/test-plugin.mk
+
+include src/man.mk
+include src/units.mk
 
 
 #
