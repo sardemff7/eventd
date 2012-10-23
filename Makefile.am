@@ -56,6 +56,7 @@ include server/eventd/eventd.mk
 include server/eventdctl/eventdctl.mk
 include plugins/evp/evp.mk
 include plugins/relay/relay.mk
+include plugins/exec/exec.mk
 if ENABLE_DBUS
 include plugins/dbus/dbus.mk
 endif
