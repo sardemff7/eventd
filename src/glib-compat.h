@@ -28,6 +28,8 @@
 #define g_thread_new(n, f, d) g_thread_try_new(n, f, d, NULL)
 
 #define g_socket_connection_is_connected(c) g_socket_is_connected(g_socket_connection_get_socket(c))
+
+#define g_test_undefined() (FALSE)
 #endif
 
 #endif /* __EVENTD_GLIB_COMPAT_H__ */

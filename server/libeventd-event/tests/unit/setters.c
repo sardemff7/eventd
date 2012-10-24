@@ -46,6 +46,8 @@ _clean_data(gpointer fixture, gconstpointer user_data)
 static void
 _test_new_null(gpointer fixture, gconstpointer user_data)
 {
+    if ( ! g_test_undefined() )
+            return;
     if (g_test_trap_fork (0, G_TEST_TRAP_SILENCE_STDOUT | G_TEST_TRAP_SILENCE_STDERR))
     {
         eventd_event_new(NULL);
@@ -70,6 +72,8 @@ _test_set_category_notnull_good(gpointer fixture, gconstpointer user_data)
 static void
 _test_set_category_null_good(gpointer fixture, gconstpointer user_data)
 {
+    if ( ! g_test_undefined() )
+            return;
     if (g_test_trap_fork (0, G_TEST_TRAP_SILENCE_STDOUT | G_TEST_TRAP_SILENCE_STDERR))
     {
         eventd_event_set_category(NULL, EVENTD_EVENT_TEST_CATEGORY);
@@ -83,6 +87,8 @@ _test_set_category_notnull_bad(gpointer fixture, gconstpointer user_data)
 {
     SettersData *data = fixture;
 
+    if ( ! g_test_undefined() )
+            return;
     if (g_test_trap_fork (0, G_TEST_TRAP_SILENCE_STDOUT | G_TEST_TRAP_SILENCE_STDERR))
     {
         eventd_event_set_category(data->event, NULL);
@@ -107,6 +113,8 @@ _test_set_timeout_notnull_good(gpointer fixture, gconstpointer user_data)
 static void
 _test_set_timeout_null_good(gpointer fixture, gconstpointer user_data)
 {
+    if ( ! g_test_undefined() )
+            return;
     if (g_test_trap_fork (0, G_TEST_TRAP_SILENCE_STDOUT | G_TEST_TRAP_SILENCE_STDERR))
     {
         eventd_event_set_timeout(NULL, EVENTD_EVENT_TEST_TIMEOUT);
@@ -120,6 +128,8 @@ _test_set_timeout_notnull_bad(gpointer fixture, gconstpointer user_data)
 {
     SettersData *data = fixture;
 
+    if ( ! g_test_undefined() )
+            return;
     if (g_test_trap_fork (0, G_TEST_TRAP_SILENCE_STDOUT | G_TEST_TRAP_SILENCE_STDERR))
     {
         eventd_event_set_timeout(data->event, -2);
@@ -144,6 +154,8 @@ _test_add_data_notnull_good_good(gpointer fixture, gconstpointer user_data)
 static void
 _test_add_data_null_good_good(gpointer fixture, gconstpointer user_data)
 {
+    if ( ! g_test_undefined() )
+            return;
     if (g_test_trap_fork (0, G_TEST_TRAP_SILENCE_STDOUT | G_TEST_TRAP_SILENCE_STDERR))
     {
         eventd_event_add_data(NULL, EVENTD_EVENT_TEST_DATA_NAME, EVENTD_EVENT_TEST_DATA_CONTENT);
@@ -157,6 +169,8 @@ _test_add_data_notnull_bad_good(gpointer fixture, gconstpointer user_data)
 {
     SettersData *data = fixture;
 
+    if ( ! g_test_undefined() )
+            return;
     if (g_test_trap_fork (0, G_TEST_TRAP_SILENCE_STDOUT | G_TEST_TRAP_SILENCE_STDERR))
     {
         eventd_event_add_data(data->event, NULL, EVENTD_EVENT_TEST_DATA_CONTENT);
@@ -170,6 +184,8 @@ _test_add_data_notnull_good_bad(gpointer fixture, gconstpointer user_data)
 {
     SettersData *data = fixture;
 
+    if ( ! g_test_undefined() )
+            return;
     if (g_test_trap_fork (0, G_TEST_TRAP_SILENCE_STDOUT | G_TEST_TRAP_SILENCE_STDERR))
     {
         eventd_event_add_data(data->event, EVENTD_EVENT_TEST_DATA_NAME, NULL);
@@ -194,6 +210,8 @@ _test_add_answer_notnull_good(gpointer fixture, gconstpointer user_data)
 static void
 _test_add_answer_null_good(gpointer fixture, gconstpointer user_data)
 {
+    if ( ! g_test_undefined() )
+            return;
     if (g_test_trap_fork (0, G_TEST_TRAP_SILENCE_STDOUT | G_TEST_TRAP_SILENCE_STDERR))
     {
         eventd_event_add_answer(NULL, EVENTD_EVENT_TEST_ANSWER);
@@ -207,6 +225,8 @@ _test_add_answer_notnull_bad(gpointer fixture, gconstpointer user_data)
 {
     SettersData *data = fixture;
 
+    if ( ! g_test_undefined() )
+            return;
     if (g_test_trap_fork (0, G_TEST_TRAP_SILENCE_STDOUT | G_TEST_TRAP_SILENCE_STDERR))
     {
         eventd_event_add_answer(data->event, NULL);
@@ -230,6 +250,8 @@ _test_add_answer_data_notnull_good_good(gpointer fixture, gconstpointer user_dat
 static void
 _test_add_answer_data_null_good_good(gpointer fixture, gconstpointer user_data)
 {
+    if ( ! g_test_undefined() )
+            return;
     if (g_test_trap_fork (0, G_TEST_TRAP_SILENCE_STDOUT | G_TEST_TRAP_SILENCE_STDERR))
     {
         eventd_event_add_answer_data(NULL, EVENTD_EVENT_TEST_DATA_NAME, EVENTD_EVENT_TEST_DATA_CONTENT);
@@ -243,6 +265,8 @@ _test_add_answer_data_notnull_bad_good(gpointer fixture, gconstpointer user_data
 {
     SettersData *data = fixture;
 
+    if ( ! g_test_undefined() )
+            return;
     if (g_test_trap_fork (0, G_TEST_TRAP_SILENCE_STDOUT | G_TEST_TRAP_SILENCE_STDERR))
     {
         eventd_event_add_answer_data(data->event, NULL, EVENTD_EVENT_TEST_DATA_CONTENT);
@@ -256,6 +280,8 @@ _test_add_answer_data_notnull_good_bad(gpointer fixture, gconstpointer user_data
 {
     SettersData *data = fixture;
 
+    if ( ! g_test_undefined() )
+            return;
     if (g_test_trap_fork (0, G_TEST_TRAP_SILENCE_STDOUT | G_TEST_TRAP_SILENCE_STDERR))
     {
         eventd_event_add_answer_data(data->event, EVENTD_EVENT_TEST_DATA_NAME, NULL);
