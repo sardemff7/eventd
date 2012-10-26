@@ -55,6 +55,8 @@ typedef struct {
     /* Conditions */
     gchar **if_data;
     GList *if_data_matches;
+    GQuark *flags_whitelist;
+    GQuark *flags_blacklist;
 } EventdConfigMatch;
 
 typedef struct {
@@ -68,7 +70,7 @@ _eventd_config_events_get_name(const gchar *category, const gchar *name)
 }
 
 const gchar *
-eventd_config_get_event_config_id(EventdConfig *config, EventdEvent *event)
+eventd_config_get_event_config_id(EventdConfig *config, EventdEvent *event, GQuark *current_flags)
 {
     const gchar *category;
     gchar *name;
@@ -118,6 +120,40 @@ eventd_config_get_event_config_id(EventdConfig *config, EventdEvent *event)
             }
             if ( skip )
                 continue;
+        }
+
+        if ( current_flags != NULL )
+        {
+            GQuark *flag;
+            if ( match->flags_whitelist != NULL )
+            {
+                GQuark *wflag;
+                for ( wflag = match->flags_whitelist ; ( *wflag != 0 ) && ( ! skip ) ; ++wflag )
+                {
+                    for ( flag = current_flags ; ( *flag != 0 ) && ( ! skip ) ; ++flag )
+                    {
+                        if ( *flag != *wflag )
+                            skip = TRUE;
+                    }
+                }
+                if ( skip )
+                    continue;
+            }
+
+            if ( match->flags_blacklist != NULL )
+            {
+                GQuark *bflag;
+                for ( bflag = match->flags_blacklist ; ( *bflag != 0 ) && ( ! skip ) ; ++bflag )
+                {
+                    for ( flag = current_flags ; ( *flag != 0 ) && ( ! skip ) ; ++flag )
+                    {
+                        if ( *flag == *bflag )
+                            skip = TRUE;
+                    }
+                }
+                if ( skip )
+                    continue;
+            }
         }
 
         return match->id;
@@ -236,6 +272,27 @@ _eventd_config_compare_matches(gconstpointer a_, gconstpointer b_)
     return 0;
 }
 
+static GQuark *
+_eventd_config_parse_event_flags(gchar **flags, gsize length)
+{
+    GQuark *quarks;
+
+    quarks = g_new0(GQuark, length + 1);
+    quarks[length] = 0;
+
+    gsize i;
+    for ( i = 0 ; i < length ; ++i )
+    {
+        gchar *flag = flags[i];
+        quarks[i] = g_quark_from_string(flag);
+        g_free(flag);
+    }
+
+    g_free(flags);
+
+    return quarks;
+}
+
 static void
 _eventd_config_parse_event_file(EventdConfig *config, const gchar *id, GKeyFile *config_file)
 {
@@ -258,8 +315,11 @@ _eventd_config_parse_event_file(EventdConfig *config, const gchar *id, GKeyFile 
     match->id = g_strdup(id);
 
     gchar **if_data_matches;
+    gchar **flags;
+    gsize length;
 
     libeventd_config_key_file_get_string_list(config_file, "Event", "IfData", &match->if_data, NULL);
+
     if ( libeventd_config_key_file_get_string_list(config_file, "Event", "IfDataMatches", &if_data_matches, NULL) == 0 )
     {
         EventdConfigDataMatch *data_match;
@@ -284,7 +344,13 @@ _eventd_config_parse_event_file(EventdConfig *config, const gchar *id, GKeyFile 
         g_strfreev(if_data_matches);
     }
 
-    if ( ( match->if_data != NULL ) || ( match->if_data_matches != NULL ) )
+    if ( libeventd_config_key_file_get_string_list(config_file, "Event", "OnlyIfFlags", &flags, &length) == 0 )
+        match->flags_whitelist = _eventd_config_parse_event_flags(flags, length);
+
+    if ( libeventd_config_key_file_get_string_list(config_file, "Event", "NotIfFlags", &flags, &length) == 0 )
+        match->flags_blacklist = _eventd_config_parse_event_flags(flags, length);
+
+    if ( ( match->if_data != NULL ) || ( match->if_data_matches != NULL ) || ( match->flags_whitelist != NULL ) || ( match->flags_blacklist != NULL ) )
         match->importance = libeventd_config_key_file_get_int_with_default(config_file, "Event", "Importance", G_MAXINT64);
 
     gchar *internal_name;

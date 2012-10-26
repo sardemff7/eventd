@@ -207,6 +207,19 @@ _eventd_eventdctl_process_command(const gchar *private_socket, gboolean autospaw
         retval = _eventd_eventdctl_send_command(G_IO_STREAM(connection), "quit");
     else if ( g_strcmp0(argv[0], "reload") == 0 )
         retval =  _eventd_eventdctl_send_command(G_IO_STREAM(connection), "reload");
+    else if ( g_strcmp0(argv[0], "add-flag") == 0 )
+    {
+        if ( argc == 1 )
+            g_warning("You must specify a flag");
+        else
+        {
+            gchar *command = g_strconcat("add-flag ", argv[1], NULL);
+            retval = _eventd_eventdctl_send_command(G_IO_STREAM(connection), command);
+            g_free(command);
+        }
+    }
+    else if ( g_strcmp0(argv[0], "reset-flags") == 0 )
+        retval =  _eventd_eventdctl_send_command(G_IO_STREAM(connection), "reset-flags");
     else if ( g_strcmp0(argv[0], "notification-daemon") == 0 )
     {
         if ( argc == 1 )

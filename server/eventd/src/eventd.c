@@ -69,6 +69,8 @@ struct _EventdCoreContext {
     gchar *runtime_dir;
     gboolean take_over_socket;
     GMainLoop *loop;
+    guint flags_count;
+    GQuark *flags;
 };
 
 static gboolean
@@ -178,13 +180,28 @@ eventd_core_get_sockets(EventdCoreContext *context, const gchar * const *binds)
 const gchar *
 eventd_core_get_event_config_id(EventdCoreContext *context, EventdEvent *event)
 {
-    return eventd_config_get_event_config_id(context->config, event);
+    return eventd_config_get_event_config_id(context->config, event, context->flags);
 }
 
 void
 eventd_core_push_event(EventdCoreContext *context, const gchar *config_id, EventdEvent *event)
 {
     eventd_queue_push(context->queue, config_id, event);
+}
+
+void
+eventd_core_add_flag(EventdCoreContext *context, GQuark flag)
+{
+    context->flags = g_renew(GQuark, context->flags, ++context->flags_count + 1);
+    context->flags[context->flags_count-1] = flag;
+    context->flags[context->flags_count] = 0;
+}
+
+void
+eventd_core_reset_flags(EventdCoreContext *context)
+{
+    g_free(context->flags);
+    context->flags = NULL;
 }
 
 void

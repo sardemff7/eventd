@@ -20,6 +20,7 @@
  *
  */
 
+#include <string.h>
 #include <glib.h>
 #include <glib-object.h>
 #include <gio/gio.h>
@@ -75,6 +76,14 @@ _eventd_service_private_connection_handler(GSocketService *socket_service, GSock
         else if ( g_strcmp0(line, "reload") == 0 )
         {
             eventd_core_config_reload(control->core);
+        }
+        else if ( g_str_has_prefix(line, "add-flag ") )
+        {
+            eventd_core_add_flag(control->core, g_quark_from_string(line + strlen("add-flag ")));
+        }
+        else if ( g_strcmp0(line, "reset-flags") == 0 )
+        {
+            eventd_core_reset_flags(control->core);
         }
         else
             eventd_plugins_control_command_all(line);

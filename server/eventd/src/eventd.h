@@ -27,6 +27,8 @@ GList *eventd_core_get_sockets(EventdCoreContext *context, const gchar * const *
 
 void eventd_core_push_event(EventdCoreContext *context, const gchar *config_id, EventdEvent *event);
 
+void eventd_core_add_flag(EventdCoreContext *context, GQuark mode);
+void eventd_core_reset_flags(EventdCoreContext *context);
 void eventd_core_config_reload(EventdCoreContext *context);
 void eventd_core_quit(EventdCoreContext *context);
 

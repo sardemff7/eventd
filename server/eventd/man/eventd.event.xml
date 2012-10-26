@@ -157,6 +157,22 @@
                             <para>If the named data is present, it must match the provided regex. All present data must match for this event id to match.</para>
                         </listitem>
                     </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>OnlyIfFlags=</varname></term>
+                        <listitem>
+                            <para>A <type>list of flag names</type></para>
+                            <para>eventd will only dispatch an event if all of these flags are present.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>NotIfFlags=</varname></term>
+                        <listitem>
+                            <para>A <type>list of flag names</type></para>
+                            <para>eventd will only dispatch an event if none of these flags is present.</para>
+                        </listitem>
+                    </varlistentry>
                 </variablelist>
             </refsect3>
 
