@@ -61,7 +61,7 @@ _eventd_eventdctl_start_eventd(int argc, gchar *argv[], GError **error)
     ++current;
     *current = NULL;
 
-    if ( ! g_spawn_async_with_pipes(NULL, args, NULL, 0, NULL, NULL, &pid, NULL, &stdin_fd, NULL, error) )
+    if ( ! g_spawn_async_with_pipes(NULL, args, NULL, flags, NULL, NULL, &pid, NULL, &stdin_fd, NULL, error) )
         goto fail;
 
     GIOChannel *stdin_io;
