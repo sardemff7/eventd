@@ -72,21 +72,6 @@ eventd_config_get_event_config_id(EventdConfig *config, EventdEvent *event)
     return id;
 }
 
-static EventdConfigEvent *
-_eventd_config_event_new(Int *timeout)
-{
-    EventdConfigEvent *event;
-
-    if ( ! timeout->set )
-        return NULL;
-
-    event = g_new0(EventdConfigEvent, 1);
-
-    event->timeout = timeout->set ? timeout->value : -1;
-
-    return event;
-}
-
 static void
 _eventd_config_event_free(gpointer data)
 {
@@ -102,7 +87,7 @@ eventd_config_event_get_timeout(EventdConfig *config, const gchar *config_id)
 
     config_event = g_hash_table_lookup(config->events, config_id);
 
-    if ( config_event == NULL )
+    if ( ( config_event == NULL ) || ( config_event->timeout < 0 ) )
         return config->timeout;
     else
         return config_event->timeout;
@@ -124,14 +109,10 @@ _eventd_config_parse_global(EventdConfig *config, GKeyFile *config_file)
     if ( ! g_key_file_has_group(config_file, "Event") )
         return;
 
-    if ( libeventd_config_key_file_get_int(config_file, "Event", "Stack", &integer) < 0 )
-        return;
-    if ( integer.set )
+    if ( libeventd_config_key_file_get_int(config_file, "Event", "Stack", &integer) == 0 )
         config->stack = integer.value;
 
-    if ( libeventd_config_key_file_get_int(config_file, "Event", "Timeout", &integer) < 0 )
-        return;
-    if ( integer.set )
+    if ( libeventd_config_key_file_get_int(config_file, "Event", "Timeout", &integer) == 0 )
         config->timeout = integer.value;
 }
 
@@ -148,14 +129,13 @@ _eventd_config_parse_client(EventdConfig *config, const gchar *id, GKeyFile *con
         return;
     }
 
+    event = g_new0(EventdConfigEvent, 1);
+
+    event->timeout = -1;
 
 
-    if ( libeventd_config_key_file_get_int(config_file, "Event", "Timeout", &timeout) >= 0 )
-        return;
-
-    event = _eventd_config_event_new(&timeout);
-    if ( event == NULL )
-        return;
+    if ( libeventd_config_key_file_get_int(config_file, "Event", "Timeout", &timeout) == 0 )
+        event->timeout = timeout.value;
 
     g_hash_table_insert(config->events, g_strdup(id), event);
 }
