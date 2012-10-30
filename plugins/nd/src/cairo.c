@@ -75,44 +75,15 @@ eventd_nd_cairo_uninit()
         g_regex_unref(regex_amp);
 }
 
-typedef struct {
-    gchar *text;
-    PangoLayout *layout;
-    gint height;
-} EventdNdTextLine;
-
 struct _EventdNdBubble {
     GList *surfaces;
 };
 
-static EventdNdTextLine *
-_eventd_nd_cairo_text_line_new(const gchar *text)
-{
-    EventdNdTextLine *line;
-
-    line = g_new0(EventdNdTextLine, 1);
-    line->text = g_strdup(text);
-
-    return line;
-}
-
-static void
-_eventd_nd_cairo_text_line_free(gpointer data)
-{
-    EventdNdTextLine *line = data;
-
-    g_object_unref(line->layout);
-    g_free(line->text);
-
-    g_free(line);
-}
-
-static gchar **
-_eventd_nd_cairo_message_escape_and_split(const gchar *message)
+static gchar *
+_eventd_nd_cairo_message_escape(const gchar *message)
 {
     GError *error = NULL;
     gchar *escaped, *tmp = NULL;
-    gchar **ret;
 
     escaped = g_regex_replace_literal(regex_amp, message, -1, 0, "&amp;" , 0, &error);
     if ( escaped == NULL )
@@ -127,77 +98,62 @@ _eventd_nd_cairo_message_escape_and_split(const gchar *message)
         g_warning("Couldn't escape markup: %s", error->message);
         goto fallback;
     }
+    g_free(tmp);
 
     if ( ! pango_parse_markup(tmp = escaped, -1, 0, NULL, NULL, NULL, NULL) )
         goto fallback;
 
-split:
-    ret = g_strsplit(escaped, "\n", -1);
-    g_free(escaped);
-
-    return ret;
+    return escaped;
 
 fallback:
     g_free(tmp);
     g_clear_error(&error);
-    escaped = g_markup_escape_text(message, -1);
-    goto split;
+    return g_markup_escape_text(message, -1);
 }
 
-static GList *
-_eventd_nd_cairo_text_split(LibeventdNdNotification *notification, EventdNdStyle *style)
+static gchar *
+_eventd_nd_cairo_get_message(const gchar *message, guint8 max)
 {
-    GList *lines = NULL;
+    gchar *escaped;
     gchar **message_lines;
-    gchar **message_line;
-    guint8 max;
     guint size;
+    gchar *ret;
 
-    message_lines = _eventd_nd_cairo_message_escape_and_split(libeventd_nd_notification_get_message(notification));
+    escaped = _eventd_nd_cairo_message_escape(message);
+    message_lines = g_strsplit(escaped, "\n", -1);
+    g_free(escaped);
 
-    max = eventd_nd_style_get_message_max_lines(style);
     size = g_strv_length(message_lines);
 
     if ( size > max )
     {
-        lines = g_list_prepend(lines, _eventd_nd_cairo_text_line_new(*message_lines));
-        lines = g_list_prepend(lines, _eventd_nd_cairo_text_line_new("[…]"));
-        message_line = message_lines + size - ( max - 2 );
-    }
-    else
-        message_line = message_lines;
+        gchar **tmp = message_lines;
+        gchar **message_line;
+        gchar **message_new_line;
 
-    for ( ; *message_line != NULL ; ++message_line )
-        lines = g_list_prepend(lines, _eventd_nd_cairo_text_line_new(*message_line));
+        message_lines = g_new(gchar *, max + 1);
+        message_lines[max] = NULL;
+
+        for ( message_line = tmp + size - ( max - 2 ), message_new_line = message_lines ; *message_line != NULL ; ++message_line )
+        {
+            *message_new_line = *message_line;
+            *message_line = NULL;
+        }
+
+        g_strfreev(tmp);
+    }
+
+    ret = g_strjoinv("\n", message_lines);
 
     g_strfreev(message_lines);
 
-    return g_list_reverse(lines);
+    return ret;
 }
 
 static void
-_eventd_nd_cairo_text_process_line(EventdNdTextLine *line, PangoContext *pango_context, const PangoFontDescription *font, gint *text_height, gint *text_width)
+_eventd_nd_cairo_text_process(LibeventdNdNotification *notification, EventdNdStyle *style, PangoLayout **title, PangoLayout **message, gint *text_height, gint *text_width)
 {
-    gint w;
-
-    line->layout = pango_layout_new(pango_context);
-    pango_layout_set_font_description(line->layout, font);
-    pango_layout_set_markup(line->layout, line->text, -1);
-    pango_layout_get_pixel_size(line->layout, &w, &line->height);
-
-    *text_height += line->height;
-
-    if ( w > *text_width )
-        *text_width = w;
-}
-
-static GList *
-_eventd_nd_cairo_text_process(LibeventdNdNotification *notification, EventdNdStyle *style, PangoLayout **title, gint *text_height, gint *text_width)
-{
-    GList *ret;
-    GList *lines = NULL;
     PangoContext *pango_context;
-
 
     pango_context = pango_context_new();
     pango_context_set_font_map(pango_context, pango_cairo_font_map_get_default());
@@ -207,22 +163,29 @@ _eventd_nd_cairo_text_process(LibeventdNdNotification *notification, EventdNdSty
     pango_layout_set_text(*title, libeventd_nd_notification_get_title(notification), -1);
     pango_layout_get_pixel_size(*title, text_width, text_height);
 
-    lines = _eventd_nd_cairo_text_split(notification, style);
-    ret = lines;
-    if ( lines != NULL )
+    const gchar *tmp;
+    tmp = libeventd_nd_notification_get_message(notification);
+    if ( tmp != NULL )
     {
-        gint spacing;
+        gchar *text;
+        gint w;
+        gint h;
 
-        spacing = eventd_nd_style_get_message_spacing(style);
-        *text_height += spacing;
+        text = _eventd_nd_cairo_get_message(tmp, eventd_nd_style_get_message_max_lines(style));
 
-        for ( ; lines != NULL ; lines = g_list_next(lines) )
-            _eventd_nd_cairo_text_process_line(lines->data, pango_context, eventd_nd_style_get_message_font(style), text_height, text_width);
+        *message = pango_layout_new(pango_context);
+        pango_layout_set_font_description(*message, eventd_nd_style_get_message_font(style));
+        pango_layout_set_height(*message, -eventd_nd_style_get_message_max_lines(style));
+        pango_layout_set_markup(*message, text, -1);
+        pango_layout_get_pixel_size(*message, &w, &h);
+
+        g_free(text);
+
+        *text_height += eventd_nd_style_get_message_spacing(style) + h;
+        *text_width = MAX(*text_width, w);
     }
 
     g_object_unref(pango_context);
-
-    return ret;
 }
 
 static cairo_surface_t *
@@ -524,22 +487,7 @@ _eventd_nd_cairo_bubble_draw(cairo_t *cr, Colour colour, gint width, gint height
 }
 
 static void
-_eventd_nd_cairo_text_draw_line(EventdNdTextLine *line, cairo_t *cr, gint offset_x, gint *offset_y, gint max_width)
-{
-    cairo_new_path(cr);
-
-    cairo_move_to(cr, offset_x, *offset_y);
-    pango_layout_set_width(line->layout, max_width * PANGO_SCALE);
-    pango_cairo_update_layout(cr, line->layout);
-    pango_cairo_layout_path(cr, line->layout);
-
-    cairo_fill(cr);
-
-    *offset_y += line->height;
-}
-
-static void
-_eventd_nd_cairo_text_draw(cairo_t *cr, EventdNdStyle *style, PangoLayout *title, GList *lines, gint offset_x, gint offset_y, gint max_width)
+_eventd_nd_cairo_text_draw(cairo_t *cr, EventdNdStyle *style, PangoLayout *title, PangoLayout *message, gint offset_x, gint offset_y, gint max_width)
 {
     Colour colour;
 
@@ -552,18 +500,23 @@ _eventd_nd_cairo_text_draw(cairo_t *cr, EventdNdStyle *style, PangoLayout *title
     pango_cairo_layout_path(cr, title);
     cairo_fill(cr);
 
-    if ( lines != NULL )
+    if ( message != NULL )
     {
         gint h;
         pango_layout_get_pixel_size(title, NULL, &h);
+
         offset_y += eventd_nd_style_get_message_spacing(style) + h;
 
         colour = eventd_nd_style_get_message_colour(style);
         cairo_set_source_rgba(cr, colour.r, colour.g, colour.b, colour.a);
-        for ( lines = g_list_next(lines) ; lines != NULL ; lines = g_list_next(lines) )
-            _eventd_nd_cairo_text_draw_line(lines->data, cr, offset_x, &offset_y, max_width);
+        cairo_new_path(cr);
+        cairo_move_to(cr, offset_x, offset_y);
+        pango_layout_set_width(message, max_width * PANGO_SCALE);
+        pango_cairo_update_layout(cr, message);
+        pango_cairo_layout_path(cr, message);
+        cairo_fill(cr);
 
-        g_list_free_full(lines, _eventd_nd_cairo_text_line_free);
+        g_object_unref(message);
     }
 
     g_object_unref(title);
@@ -701,10 +654,10 @@ eventd_nd_cairo_get_surfaces(EventdEvent *event, LibeventdNdNotification *notifi
     gint height;
 
     PangoLayout *title;
+    PangoLayout *message = NULL;
     cairo_surface_t *image = NULL;
     cairo_surface_t *icon = NULL;
 
-    GList *lines = NULL;
     gint text_width = 0, text_height = 0;
     gint text_margin = 0;
     gint image_width = 0, image_height = 0;
@@ -712,7 +665,7 @@ eventd_nd_cairo_get_surfaces(EventdEvent *event, LibeventdNdNotification *notifi
     cairo_t *cr;
 
     /* proccess data */
-    lines = _eventd_nd_cairo_text_process(notification, style, &title, &text_height, &text_width);
+    _eventd_nd_cairo_text_process(notification, style, &title, &message, &text_height, &text_width);
 
     _eventd_nd_cairo_image_and_icon_process(notification, style, &image, &icon, &text_margin, &image_width, &image_height);
 
@@ -735,7 +688,7 @@ eventd_nd_cairo_get_surfaces(EventdEvent *event, LibeventdNdNotification *notifi
     cr = cairo_create(*bubble);
     _eventd_nd_cairo_bubble_draw(cr, eventd_nd_style_get_bubble_colour(style), width, height);
     _eventd_nd_cairo_image_and_icon_draw(cr, image, icon, style, width, height);
-    _eventd_nd_cairo_text_draw(cr, style, title, lines, padding + text_margin, padding, text_width);
+    _eventd_nd_cairo_text_draw(cr, style, title, message, padding + text_margin, padding, text_width);
     cairo_destroy(cr);
 
     *shape = cairo_image_surface_create(CAIRO_FORMAT_A1, width, height);
