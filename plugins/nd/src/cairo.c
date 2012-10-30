@@ -114,14 +114,10 @@ fallback:
 static gchar *
 _eventd_nd_cairo_get_message(const gchar *message, guint8 max)
 {
-    gchar *escaped;
     gchar **message_lines;
     guint size;
-    gchar *ret;
 
-    escaped = _eventd_nd_cairo_message_escape(message);
-    message_lines = g_strsplit(escaped, "\n", -1);
-    g_free(escaped);
+    message_lines = g_strsplit(message, "\n", -1);
 
     size = g_strv_length(message_lines);
 
@@ -142,10 +138,15 @@ _eventd_nd_cairo_get_message(const gchar *message, guint8 max)
 
         g_strfreev(tmp);
     }
+    gchar *tmp;
 
-    ret = g_strjoinv("\n", message_lines);
-
+    tmp = g_strjoinv("\n", message_lines);
     g_strfreev(message_lines);
+
+    gchar *ret;
+
+    ret = _eventd_nd_cairo_message_escape(tmp);
+    g_free(tmp);
 
     return ret;
 }
