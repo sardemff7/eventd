@@ -21,6 +21,7 @@
  */
 
 #include <glib.h>
+#include <pango/pango.h>
 
 #include <libeventd-config.h>
 #include <libeventd-nd-notification-template.h>
@@ -65,7 +66,7 @@ struct _EventdNdStyle {
     struct {
         gboolean set;
 
-        gchar *font;
+        PangoFontDescription *font;
         Colour colour;
     } title;
 
@@ -74,7 +75,7 @@ struct _EventdNdStyle {
 
         gint   spacing;
         guint8 max_lines;
-        gchar *font;
+        PangoFontDescription *font;
         Colour colour;
     } message;
 };
@@ -156,7 +157,7 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
 
     /* title */
     style->title.set = TRUE;
-    style->title.font = g_strdup("Linux Libertine O Bold 9");
+    style->title.font        = pango_font_description_from_string("Linux Libertine O Bold 9");
     style->title.colour.r    = 0.9;
     style->title.colour.g    = 0.9;
     style->title.colour.b    = 0.9;
@@ -166,7 +167,7 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
     style->message.set = TRUE;
     style->message.spacing     = 5;
     style->message.max_lines   = 10;
-    style->message.font = g_strdup("Linux Libertine O 9");
+    style->message.font        = pango_font_description_from_string("Linux Libertine O 9");
     style->message.colour.r    = 0.9;
     style->message.colour.g    = 0.9;
     style->message.colour.b    = 0.9;
@@ -226,10 +227,10 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
         if ( ( libeventd_config_key_file_get_string(config_file, "NotificationTitle", "Font", &font) == 0 )
              || ( ( r_colour = _eventd_nd_style_key_file_get_colour(config_file, "NotificationTitle", "Colour", &colour) ) == 0 ) )
         {
-            g_free(self->title.font);
+            pango_font_description_free(self->title.font);
 
             self->title.set = TRUE;
-            self->title.font = ( font != NULL ) ? font : g_strdup(eventd_nd_style_get_title_font(self->parent));
+            self->title.font = ( font != NULL ) ? pango_font_description_from_string(font) : pango_font_description_copy_static(eventd_nd_style_get_title_font(self->parent));
             self->title.colour = ( r_colour == 0 ) ? colour : eventd_nd_style_get_title_colour(self->parent);
         }
     }
@@ -247,12 +248,12 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
              || ( libeventd_config_key_file_get_string(config_file, "NotificationMessage", "Font", &font) == 0 )
              || ( ( r_colour = _eventd_nd_style_key_file_get_colour(config_file, "NotificationMessage", "Colour", &colour) ) == 0 ) )
         {
-            g_free(self->message.font);
+            pango_font_description_free(self->message.font);
 
             self->message.set = TRUE;
             self->message.spacing = spacing.set ? spacing.value : eventd_nd_style_get_message_spacing(self->parent);
             self->message.max_lines = max_lines.set ? max_lines.value : eventd_nd_style_get_message_max_lines(self->parent);
-            self->message.font = ( font != NULL ) ? font : g_strdup(eventd_nd_style_get_message_font(self->parent));
+            self->message.font = ( font != NULL ) ? pango_font_description_from_string(font) : pango_font_description_copy_static(eventd_nd_style_get_message_font(self->parent));
             self->message.colour = ( r_colour == 0 ) ? colour : eventd_nd_style_get_message_colour(self->parent);
         }
 
@@ -358,8 +359,8 @@ eventd_nd_style_free(gpointer data)
     if ( style == NULL )
         return;
 
-    g_free(style->title.font);
-    g_free(style->message.font);
+    pango_font_description_free(style->title.font);
+    pango_font_description_free(style->message.font);
 
     libeventd_nd_notification_template_free(style->template);
 
@@ -485,7 +486,7 @@ eventd_nd_style_get_icon_fade_width(EventdNdStyle *self)
     return eventd_nd_style_get_icon_fade_width(self->parent);
 }
 
-const gchar *
+const PangoFontDescription *
 eventd_nd_style_get_title_font(EventdNdStyle *self)
 {
     if ( self->title.set )
@@ -517,7 +518,7 @@ eventd_nd_style_get_message_max_lines(EventdNdStyle *self)
     return eventd_nd_style_get_message_max_lines(self->parent);
 }
 
-const gchar *
+const PangoFontDescription *
 eventd_nd_style_get_message_font(EventdNdStyle *self)
 {
     if ( self->message.set )

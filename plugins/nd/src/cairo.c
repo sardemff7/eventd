@@ -181,7 +181,7 @@ _eventd_nd_cairo_text_split(LibeventdNdNotification *notification, EventdNdStyle
 }
 
 static void
-_eventd_nd_cairo_text_process_line(EventdNdTextLine *line, PangoContext *pango_context, PangoFontDescription *font, gint *text_height, gint *text_width)
+_eventd_nd_cairo_text_process_line(EventdNdTextLine *line, PangoContext *pango_context, const PangoFontDescription *font, gint *text_height, gint *text_width)
 {
     gint w;
 
@@ -203,7 +203,6 @@ _eventd_nd_cairo_text_process(LibeventdNdNotification *notification, EventdNdSty
     GList *lines = NULL;
     EventdNdTextLine *line;
     PangoContext *pango_context;
-    PangoFontDescription *font;
 
     lines = _eventd_nd_cairo_text_split(notification, style);
 
@@ -215,9 +214,7 @@ _eventd_nd_cairo_text_process(LibeventdNdNotification *notification, EventdNdSty
 
     ret = g_list_first(lines);
     line = lines->data;
-    font = pango_font_description_from_string(eventd_nd_style_get_title_font(style));
-    _eventd_nd_cairo_text_process_line(line, pango_context, font, text_height, text_width);
-    pango_font_description_free(font);
+    _eventd_nd_cairo_text_process_line(line, pango_context, eventd_nd_style_get_title_font(style), text_height, text_width);
 
     lines = g_list_next(lines);
     if ( lines != NULL )
@@ -228,10 +225,8 @@ _eventd_nd_cairo_text_process(LibeventdNdNotification *notification, EventdNdSty
         line->height += spacing;
         *text_height += spacing;
 
-        font = pango_font_description_from_string(eventd_nd_style_get_message_font(style));
         for ( ; lines != NULL ; lines = g_list_next(lines) )
-            _eventd_nd_cairo_text_process_line(lines->data, pango_context, font, text_height, text_width);
-        pango_font_description_free(font);
+            _eventd_nd_cairo_text_process_line(lines->data, pango_context, eventd_nd_style_get_message_font(style), text_height, text_width);
     }
 
     g_object_unref(pango_context);

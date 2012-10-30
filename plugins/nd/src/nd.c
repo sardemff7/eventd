@@ -25,6 +25,7 @@
 #include <gio/gio.h>
 
 #include <gdk-pixbuf/gdk-pixbuf.h>
+#include <pango/pango.h>
 #include <cairo.h>
 
 #include <eventd-plugin.h>
