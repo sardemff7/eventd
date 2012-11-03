@@ -111,10 +111,14 @@ fallback:
     return g_markup_escape_text(message, -1);
 }
 
-static gsize
+static gssize
 _eventd_nd_cairo_strccount(const gchar *str, char c)
 {
-    gsize count = 1;
+    gssize count = 1;
+    if ( str == NULL )
+        return -1;
+    if ( *str == '\0' )
+        return 0;
     for ( ; *str != 0 ; ++str )
     {
         if ( *str == c )
@@ -126,9 +130,8 @@ _eventd_nd_cairo_strccount(const gchar *str, char c)
 static gchar *
 _eventd_nd_cairo_get_message(const gchar *message, guint8 max)
 {
-    gsize count;
+    gssize count;
     gchar **message_lines;
-    gchar **message_line;
 
     count = _eventd_nd_cairo_strccount(message, '\n');
     if ( ( g_strstr_len(message, -1, "\n") == NULL ) || ( max < 1 ) || ( count <= max ) )
@@ -137,12 +140,19 @@ _eventd_nd_cairo_get_message(const gchar *message, guint8 max)
     message_lines = g_strsplit(message, "\n", -1);
 
     GString *message_str;
+    gint i;
 
-    message_str = g_string_new(message_lines[0]);
-    g_string_append(message_str, "\n[…]");
+    message_str = g_string_sized_new(strlen(message));
 
-    for ( message_line = message_lines + count - ( max - 2 ) ; *message_line != NULL ; ++message_line )
-        message_str = g_string_append(g_string_append_c(message_str, '\n'), *message_line);
+    for ( i = 0 ; i < ( ( max - 1 ) / 2 ) ; ++i )
+        message_str = g_string_append_c(g_string_append(message_str, message_lines[i]), '\n');
+    /* Ellipsize */
+    g_string_append(message_str, "[…]");
+    for ( i = count - ( max / 2 ) ; i < count ; ++i )
+        message_str = g_string_append_c(g_string_append(message_str, message_lines[i]), '\n');
+
+    /* Strip the last new-line */
+    g_string_truncate(message_str, message_str->len - 1);
 
     gchar *ret;
 
