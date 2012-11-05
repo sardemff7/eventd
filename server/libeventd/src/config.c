@@ -92,6 +92,51 @@ libeventd_config_key_file_get_string_list(GKeyFile *config_file, const gchar *gr
 }
 
 EVENTD_EXPORT
+gint8
+libeventd_config_key_file_get_colour(GKeyFile *config_file, const gchar *section, const gchar *key, Colour *colour)
+{
+    gchar *string;
+    gint8 r;
+
+    if ( ( r = libeventd_config_key_file_get_string(config_file, section, key, &string) ) != 0 )
+        return r;
+
+    r = 1;
+
+    if ( string[0] == '#' )
+    {
+        gchar hex[3] = {0};
+
+        hex[0] = string[1]; hex[1] = string[2];
+        colour->r = g_ascii_strtoll(hex, NULL, 16) / 255.;
+
+        hex[0] = string[3]; hex[1] = string[4];
+        colour->g = g_ascii_strtoll(hex, NULL, 16) / 255.;
+
+        hex[0] = string[5]; hex[1] = string[6];
+        colour->b = g_ascii_strtoll(hex, NULL, 16) / 255.;
+
+        if ( string[7] != 0 )
+        {
+            hex[0] = string[7]; hex[1] = string[8];
+            colour->a = g_ascii_strtoll(hex, NULL, 16) / 255.;
+        }
+        else
+            colour->a = 1.0;
+
+        r = 0
+    }
+    else if ( g_str_has_prefix(string, "rgb(") && g_str_has_suffix(string, ")") )
+        g_warning("rgb() format not yet supported");
+    else if ( g_str_has_prefix(string, "rgba(") && g_str_has_suffix(string, ")") )
+        g_warning("rgba() format not yet supported");
+
+    g_free(string);
+
+    return r;
+}
+
+EVENTD_EXPORT
 gchar *
 libeventd_config_get_filename(const gchar *filename, EventdEvent *event, const gchar *subdir)
 {

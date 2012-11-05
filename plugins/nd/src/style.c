@@ -80,49 +80,6 @@ struct _EventdNdStyle {
     } message;
 };
 
-static gint
-_eventd_nd_style_key_file_get_colour(GKeyFile *config_file, const gchar *section, const gchar *key, Colour *colour)
-{
-    gchar *string;
-    gint r;
-
-    if ( ( r = libeventd_config_key_file_get_string(config_file, section, key, &string) ) != 0 )
-        return r;
-
-    if ( string[0] == '#' )
-    {
-        gchar hex[3] = {0};
-
-        hex[0] = string[1]; hex[1] = string[2];
-        colour->r = g_ascii_strtoll(hex, NULL, 16) / 255.;
-
-        hex[0] = string[3]; hex[1] = string[4];
-        colour->g = g_ascii_strtoll(hex, NULL, 16) / 255.;
-
-        hex[0] = string[5]; hex[1] = string[6];
-        colour->b = g_ascii_strtoll(hex, NULL, 16) / 255.;
-
-        if ( string[7] != 0 )
-        {
-            hex[0] = string[7]; hex[1] = string[8];
-            colour->a = g_ascii_strtoll(hex, NULL, 16) / 255.;
-        }
-        else
-            colour->a = 1.0;
-    }
-    else if ( g_str_has_prefix(string, "rgb(") && g_str_has_suffix(string, ")") )
-    {
-        r = 1;
-        g_warning("rgba() format not yet supported");
-    }
-    else
-        r = 1;
-
-    g_free(string);
-
-    return r;
-}
-
 static void
 _eventd_nd_style_init_defaults(EventdNdStyle *style)
 {
@@ -207,7 +164,7 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
              || ( libeventd_config_key_file_get_int(config_file, "NotificationBubble", "MaxWidth", &max_width) == 0 )
              || ( libeventd_config_key_file_get_int(config_file, "NotificationBubble", "Padding", &padding) == 0 )
              || ( libeventd_config_key_file_get_int(config_file, "NotificationBubble", "Radius", &radius) == 0 )
-             || ( ( r_colour = _eventd_nd_style_key_file_get_colour(config_file, "NotificationBubble", "Colour", &colour) ) == 0 ) )
+             || ( ( r_colour = libeventd_config_key_file_get_colour(config_file, "NotificationBubble", "Colour", &colour) ) == 0 ) )
         {
             self->bubble.set = TRUE;
             self->bubble.min_width = min_width.set ? min_width.value : eventd_nd_style_get_bubble_min_width(self->parent);
@@ -225,7 +182,7 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
         Colour colour;
 
         if ( ( libeventd_config_key_file_get_string(config_file, "NotificationTitle", "Font", &font) == 0 )
-             || ( ( r_colour = _eventd_nd_style_key_file_get_colour(config_file, "NotificationTitle", "Colour", &colour) ) == 0 ) )
+             || ( ( r_colour = libeventd_config_key_file_get_colour(config_file, "NotificationTitle", "Colour", &colour) ) == 0 ) )
         {
             pango_font_description_free(self->title.font);
 
@@ -246,7 +203,7 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
         if ( ( libeventd_config_key_file_get_int(config_file, "NotificationMessage", "Spacing", &spacing) == 0 )
              || ( libeventd_config_key_file_get_int(config_file, "NotificationMessage", "MaxLines", &max_lines) == 0 )
              || ( libeventd_config_key_file_get_string(config_file, "NotificationMessage", "Font", &font) == 0 )
-             || ( ( r_colour = _eventd_nd_style_key_file_get_colour(config_file, "NotificationMessage", "Colour", &colour) ) == 0 ) )
+             || ( ( r_colour = libeventd_config_key_file_get_colour(config_file, "NotificationMessage", "Colour", &colour) ) == 0 ) )
         {
             pango_font_description_free(self->message.font);
 

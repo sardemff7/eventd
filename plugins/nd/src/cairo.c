@@ -31,6 +31,7 @@
 #include <pango/pangocairo.h>
 
 #include <libeventd-event-types.h>
+#include <libeventd-config.h>
 #include <libeventd-nd-notification.h>
 
 #include "style.h"

@@ -34,13 +34,6 @@ typedef enum {
     EVENTD_ND_ANCHOR_HCENTER = 3<<2
 } EventdNdAnchor;
 
-typedef struct {
-    gdouble r;
-    gdouble g;
-    gdouble b;
-    gdouble a;
-} Colour;
-
 typedef enum {
     EVENTD_ND_STYLE_ICON_PLACEMENT_BACKGROUND,
     EVENTD_ND_STYLE_ICON_PLACEMENT_OVERLAY,

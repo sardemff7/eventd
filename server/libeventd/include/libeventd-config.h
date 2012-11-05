@@ -30,10 +30,18 @@ typedef struct {
     gboolean set;
 } Int;
 
+typedef struct {
+    gdouble r;
+    gdouble g;
+    gdouble b;
+    gdouble a;
+} Colour;
+
 gint8 libeventd_config_key_file_get_boolean(GKeyFile *config_file, const gchar *group, const gchar *key, gboolean *value);
 gint8 libeventd_config_key_file_get_string(GKeyFile *config_file, const gchar *group, const gchar *key, gchar **value);
 gint8 libeventd_config_key_file_get_int(GKeyFile *config_file, const gchar *group, const gchar *key, Int *value);
 gint8 libeventd_config_key_file_get_string_list(GKeyFile *config_file, const gchar *group, const gchar *key, gchar ***value, gsize *length);
+gint8 libeventd_config_key_file_get_colour(GKeyFile *config_file, const gchar *group, const gchar *key, Colour *value);
 
 gchar *libeventd_config_get_filename(const gchar *filename, EventdEvent *event, const gchar *subdir);
 
