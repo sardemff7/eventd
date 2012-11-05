@@ -39,6 +39,10 @@
 #endif /* G_OS_UNIX */
 #include <gio/gio.h>
 
+#if ENABLE_SYSTEMD
+#include <systemd/sd-daemon.h>
+#endif /* ENABLE_SYSTEMD */
+
 #include <eventd-core-interface.h>
 
 #include "types.h"
@@ -410,29 +414,43 @@ main(int argc, char *argv[])
 
     context->sockets = eventd_sockets_new();
 
-    if ( ! eventd_control_start(context->control) )
-        goto no_control;
-
-    eventd_plugins_start_all();
-
-    if ( daemonize )
+    if ( eventd_control_start(context->control) )
     {
-        g_setenv("G_MESSAGES_DEBUG", "", TRUE);
-        close(0);
-        close(1);
-        close(2);
+        eventd_plugins_start_all();
+
+        if ( daemonize )
+        {
+            g_setenv("G_MESSAGES_DEBUG", "", TRUE);
+            close(0);
+            close(1);
+            close(2);
 #ifdef G_OS_UNIX
-        open("/dev/null", O_RDWR);
-        dup2(0,1);
-        dup2(0,2);
+            open("/dev/null", O_RDWR);
+            dup2(0,1);
+            dup2(0,2);
 #endif /* G_OS_UNIX */
+        }
+
+#if ENABLE_SYSTEMD
+        sd_notify(1,
+            "READY=1\n"
+            "STATUS=Waiting for events\n"
+        );
+#endif /* ENABLE_SYSTEMD */
+
+        context->loop = g_main_loop_new(NULL, FALSE);
+        g_main_loop_run(context->loop);
+        g_main_loop_unref(context->loop);
+    }
+    else
+    {
+#if ENABLE_SYSTEMD
+        sd_notify(1,
+            "STATUS=Failed to start the control interface\n"
+        );
+#endif /* ENABLE_SYSTEMD */
     }
 
-    context->loop = g_main_loop_new(NULL, FALSE);
-    g_main_loop_run(context->loop);
-    g_main_loop_unref(context->loop);
-
-no_control:
     eventd_sockets_free(context->sockets);
 
     g_free(context->runtime_dir);
