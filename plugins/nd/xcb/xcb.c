@@ -28,6 +28,7 @@
 
 #include <cairo-xcb.h>
 #include <xcb/xcb.h>
+#include <xcb/xcb_aux.h>
 #include <libxcb-glib.h>
 #include <xcb/shape.h>
 
@@ -46,6 +47,12 @@ struct _EventdNdDisplay {
     GXcbSource *source;
     xcb_connection_t *xcb_connection;
     xcb_screen_t *screen;
+    struct {
+        gint x;
+        gint y;
+        gint width;
+        gint height;
+    } base_geometry;
     gboolean shape;
     GHashTable *bubbles;
 };
@@ -100,6 +107,13 @@ get_root_visual_type(xcb_screen_t *s)
     }
 
     return visual_type;
+}
+
+static void
+_eventd_nd_xcb_geometry_fallback(EventdNdDisplay *display)
+{
+    display->base_geometry.width = display->screen->width_in_pixels;
+    display->base_geometry.height = display->screen->height_in_pixels;
 }
 
 static void _eventd_nd_xcb_surface_expose_event(EventdNdSurface *self, xcb_expose_event_t *event);
@@ -167,11 +181,12 @@ static EventdNdDisplay *
 _eventd_nd_xcb_display_new(EventdNdBackendContext *context, const gchar *target)
 {
     EventdNdDisplay *display;
-    const xcb_query_extension_reply_t *shape_query;
+    const xcb_query_extension_reply_t *extension_query;
+    gint screen;
 
     display = g_new0(EventdNdDisplay, 1);
 
-    display->source = g_xcb_source_new(NULL, target, NULL, _eventd_nd_xcb_events_callback, display, NULL);
+    display->source = g_xcb_source_new(NULL, target, &screen, _eventd_nd_xcb_events_callback, display, NULL);
     if ( display->source == NULL )
     {
         g_free(display);
@@ -183,10 +198,12 @@ _eventd_nd_xcb_display_new(EventdNdBackendContext *context, const gchar *target)
 
     display->xcb_connection = g_xcb_source_get_connection(display->source);
 
-    display->screen = xcb_setup_roots_iterator(xcb_get_setup(display->xcb_connection)).data;
+    display->screen = xcb_aux_get_screen(display->xcb_connection, screen);
 
-    shape_query = xcb_get_extension_data(display->xcb_connection, &xcb_shape_id);
-    if ( ! shape_query->present )
+    _eventd_nd_xcb_geometry_fallback(display);
+
+    extension_query = xcb_get_extension_data(display->xcb_connection, &xcb_shape_id);
+    if ( ! extension_query->present )
         g_warning("No Shape extension");
     else
         display->shape = TRUE;
@@ -317,9 +334,11 @@ static void
 _eventd_nd_xcb_surface_display(EventdNdSurface *self, gint x, gint y)
 {
     if ( x < 0 )
-        x += self->display->screen->width_in_pixels;
+        x += self->display->base_geometry.width;
     if ( y < 0 )
-        y += self->display->screen->height_in_pixels;
+        y += self->display->base_geometry.height;
+    x += self->display->base_geometry.x;
+    y += self->display->base_geometry.y;
 
     guint16 mask = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y;
     guint32 vals[] = { x, y };

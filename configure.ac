@@ -202,7 +202,7 @@ fi
 
 # XCB backend
 if test x$enable_xcb = xyes; then
-    PKG_CHECK_MODULES(XCB, [cairo-xcb xcb libxcb-glib xcb-shape])
+    PKG_CHECK_MODULES(XCB, [cairo-xcb xcb xcb-aux libxcb-glib xcb-shape])
 fi
 AM_CONDITIONAL(ENABLE_XCB, [test x$enable_xcb = xyes])
 
