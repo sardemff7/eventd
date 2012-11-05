@@ -366,6 +366,12 @@ _eventd_nd_xcb_display_new(EventdNdBackendContext *context, const gchar *target)
     else
     {
         display->randr_event_base = extension_query->first_event;
+        xcb_randr_select_input(display->xcb_connection, display->screen->root,
+                XCB_RANDR_NOTIFY_MASK_SCREEN_CHANGE |
+                XCB_RANDR_NOTIFY_MASK_OUTPUT_CHANGE |
+                XCB_RANDR_NOTIFY_MASK_CRTC_CHANGE |
+                XCB_RANDR_NOTIFY_MASK_OUTPUT_PROPERTY);
+        xcb_flush(display->xcb_connection);
         _eventd_nd_xcb_randr_check_geometry(display);
     }
 
