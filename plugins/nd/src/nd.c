@@ -236,6 +236,16 @@ _eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
     }
 
     eventd_nd_style_update(context->style, config_file, &context->max_width, &context->max_height);
+
+    GHashTableIter iter;
+    const gchar *id;
+    EventdNdBackend *backend;
+    g_hash_table_iter_init(&iter, context->backends);
+    while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&backend) )
+    {
+        if ( backend->global_parse != NULL )
+            backend->global_parse(backend->context, config_file);
+    }
 }
 
 static void

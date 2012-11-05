@@ -39,6 +39,8 @@ typedef struct {
 typedef EventdNdBackendContext *(*EventdNdBackendInitFunc)(EventdNdContext *nd, EventdNdInterface *nd_interface);
 typedef void (*EventdNdBackendUninitFunc)(EventdNdBackendContext *context);
 
+typedef void (*EventdNdBackendGlobalParseFunc)(EventdNdBackendContext *context, GKeyFile *config_file);
+
 typedef gboolean (*EventdNdDisplayTestFunc)(EventdNdBackendContext *context, const gchar *target);
 typedef EventdNdDisplay *(*EventdNdDisplayNewFunc)(EventdNdBackendContext *context, const gchar *target);
 typedef void (*EventdNdDisplayFunc)(EventdNdDisplay *display);
@@ -50,6 +52,8 @@ typedef void (*EventdNdSurfaceDisplayFunc)(EventdNdSurface *surface, gint x, gin
 typedef struct {
     EventdNdBackendInitFunc init;
     EventdNdBackendUninitFunc uninit;
+
+    EventdNdBackendGlobalParseFunc global_parse;
 
     EventdNdDisplayTestFunc display_test;
     EventdNdDisplayNewFunc display_new;
