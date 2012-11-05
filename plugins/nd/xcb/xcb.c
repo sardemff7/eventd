@@ -30,15 +30,18 @@
 #include <xcb/xcb.h>
 #include <xcb/xcb_aux.h>
 #include <libxcb-glib.h>
+#include <xcb/randr.h>
 #include <xcb/shape.h>
 
 #include <libeventd-event.h>
+#include <libeventd-config.h>
 
 #include <eventd-nd-backend.h>
 
 struct _EventdNdBackendContext {
     EventdNdContext *nd;
     EventdNdInterface *nd_interface;
+    gchar **outputs;
     GSList *displays;
 };
 
@@ -53,6 +56,7 @@ struct _EventdNdDisplay {
         gint width;
         gint height;
     } base_geometry;
+    gint randr_event_base;
     gboolean shape;
     GHashTable *bubbles;
 };
@@ -87,6 +91,16 @@ _eventd_nd_xcb_uninit(EventdNdBackendContext *context)
     g_free(context);
 }
 
+
+static void
+_eventd_nd_xcb_global_parse(EventdNdBackendContext *context, GKeyFile *config_file)
+{
+    if ( ! g_key_file_has_group(config_file, "NotificationXcb") )
+        return;
+
+    libeventd_config_key_file_get_string_list(config_file, "NotificationXcb", "Outputs", &context->outputs, NULL);
+}
+
 static xcb_visualtype_t *
 get_root_visual_type(xcb_screen_t *s)
 {
@@ -116,6 +130,137 @@ _eventd_nd_xcb_geometry_fallback(EventdNdDisplay *display)
     display->base_geometry.height = display->screen->height_in_pixels;
 }
 
+static gboolean
+_eventd_nd_xcb_randr_check_primary(EventdNdDisplay *display)
+{
+    xcb_randr_get_output_primary_cookie_t pcookie;
+    xcb_randr_get_output_primary_reply_t *primary;
+
+    pcookie = xcb_randr_get_output_primary(display->xcb_connection, display->screen->root);
+    if ( ( primary = xcb_randr_get_output_primary_reply(display->xcb_connection, pcookie, NULL) ) == NULL )
+        return FALSE;
+
+    gboolean found = FALSE;
+
+    xcb_randr_get_output_info_cookie_t ocookie;
+    xcb_randr_get_output_info_reply_t *output;
+
+    ocookie = xcb_randr_get_output_info(display->xcb_connection, primary->output, 0);
+    if ( ( output = xcb_randr_get_output_info_reply(display->xcb_connection, ocookie, NULL) ) != NULL )
+    {
+
+        xcb_randr_get_crtc_info_cookie_t ccookie;
+        xcb_randr_get_crtc_info_reply_t *crtc;
+
+        ccookie = xcb_randr_get_crtc_info(display->xcb_connection, output->crtc, output->timestamp);
+        if ( ( crtc = xcb_randr_get_crtc_info_reply(display->xcb_connection, ccookie, NULL) ) != NULL )
+        {
+            found = TRUE;
+
+            display->base_geometry.x = crtc->x;
+            display->base_geometry.y = crtc->y;
+            display->base_geometry.width = crtc->width;
+            display->base_geometry.height = crtc->height;
+
+            free(crtc);
+        }
+        free(output);
+    }
+    free(primary);
+
+    return found;
+}
+
+typedef struct {
+    xcb_randr_get_output_info_reply_t *output;
+    xcb_randr_get_crtc_info_reply_t *crtc;
+} EventdNdXcbRandrOutput;
+
+static gboolean
+_eventd_nd_xcb_randr_check_outputs(EventdNdDisplay *display)
+{
+    xcb_randr_get_screen_resources_current_cookie_t rcookie;
+    xcb_randr_get_screen_resources_current_reply_t *ressources;
+
+    rcookie = xcb_randr_get_screen_resources_current(display->xcb_connection, display->screen->root);
+    if ( ( ressources = xcb_randr_get_screen_resources_current_reply(display->xcb_connection, rcookie, NULL) ) == NULL )
+    {
+        g_warning("Couldn't get RandR screen ressources");
+        return FALSE;
+    }
+
+    xcb_timestamp_t cts;
+    xcb_randr_output_t *randr_outputs;
+    gint i, length;
+
+    cts = ressources->config_timestamp;
+
+    length = xcb_randr_get_screen_resources_current_outputs_length(ressources);
+    randr_outputs = xcb_randr_get_screen_resources_current_outputs(ressources);
+
+    EventdNdXcbRandrOutput *outputs;
+    EventdNdXcbRandrOutput output_;
+
+    outputs = g_new(EventdNdXcbRandrOutput, length + 1);
+
+    for ( i = 0 ; i < length ; ++i )
+    {
+        xcb_randr_get_output_info_cookie_t ocookie;
+
+        ocookie = xcb_randr_get_output_info(display->xcb_connection, randr_outputs[i], cts);
+        if ( ( output_.output = xcb_randr_get_output_info_reply(display->xcb_connection, ocookie, NULL) ) == NULL )
+            continue;
+
+        xcb_randr_get_crtc_info_cookie_t ccookie;
+
+        ccookie = xcb_randr_get_crtc_info(display->xcb_connection, output_.output->crtc, cts);
+        if ( ( output_.crtc = xcb_randr_get_crtc_info_reply(display->xcb_connection, ccookie, NULL) ) == NULL )
+            free(output_.output);
+        else
+            *(outputs++) = output_;
+    }
+    (outputs++)->output = NULL;
+
+    EventdNdXcbRandrOutput *output;
+    gchar **config_output;
+    gboolean found = FALSE;
+    for ( config_output = display->context->outputs ; ( *config_output != NULL ) && ( ! found ) ; ++config_output )
+    {
+        for ( output = outputs ; ( output->output != NULL ) && ( ! found ) ; ++output )
+        {
+            if ( g_ascii_strncasecmp(*config_output, (const gchar *)xcb_randr_get_output_info_name(output->output), xcb_randr_get_output_info_name_length(output->output)) != 0 )
+                continue;
+            display->base_geometry.x = output->crtc->x;
+            display->base_geometry.y = output->crtc->y;
+            display->base_geometry.width = output->crtc->width;
+            display->base_geometry.height = output->crtc->height;
+
+            found = TRUE;
+        }
+    }
+
+    for ( output = outputs ; output->output != NULL ; ++output )
+    {
+        free(output->crtc);
+        free(output->output);
+    }
+    g_free(outputs);
+
+    return found;
+}
+
+static void
+_eventd_nd_xcb_randr_check_geometry(EventdNdDisplay *display)
+{
+    gboolean found = FALSE;
+    if ( display->context->outputs != NULL )
+        found = _eventd_nd_xcb_randr_check_outputs(display);
+    if ( ! found )
+        found = _eventd_nd_xcb_randr_check_primary(display);
+    if ( ! found )
+        _eventd_nd_xcb_geometry_fallback(display);
+}
+
 static void _eventd_nd_xcb_surface_expose_event(EventdNdSurface *self, xcb_expose_event_t *event);
 static void _eventd_nd_xcb_surface_button_release_event(EventdNdSurface *self);
 
@@ -132,7 +277,17 @@ _eventd_nd_xcb_events_callback(xcb_generic_event_t *event, gpointer user_data)
         return FALSE;
     }
 
-    switch ( event->response_type & ~0x80 )
+    gint type = event->response_type & ~0x80;
+
+    switch ( type - display->randr_event_base )
+    {
+    case XCB_RANDR_SCREEN_CHANGE_NOTIFY:
+        _eventd_nd_xcb_randr_check_outputs(display);
+    break;
+    case XCB_RANDR_NOTIFY:
+    break;
+    default:
+    switch ( type )
     {
     case XCB_EXPOSE:
     {
@@ -154,6 +309,7 @@ _eventd_nd_xcb_events_callback(xcb_generic_event_t *event, gpointer user_data)
     break;
     default:
     break;
+    }
     }
 
     return TRUE;
@@ -200,7 +356,18 @@ _eventd_nd_xcb_display_new(EventdNdBackendContext *context, const gchar *target)
 
     display->screen = xcb_aux_get_screen(display->xcb_connection, screen);
 
-    _eventd_nd_xcb_geometry_fallback(display);
+    extension_query = xcb_get_extension_data(display->xcb_connection, &xcb_randr_id);
+    if ( ! extension_query->present )
+    {
+        display->randr_event_base = G_MAXINT;
+        g_warning("No RandR extension");
+        _eventd_nd_xcb_geometry_fallback(display);
+    }
+    else
+    {
+        display->randr_event_base = extension_query->first_event;
+        _eventd_nd_xcb_randr_check_geometry(display);
+    }
 
     extension_query = xcb_get_extension_data(display->xcb_connection, &xcb_shape_id);
     if ( ! extension_query->present )
@@ -354,6 +521,8 @@ eventd_nd_backend_get_info(EventdNdBackend *backend)
 {
     backend->init = _eventd_nd_xcb_init;
     backend->uninit = _eventd_nd_xcb_uninit;
+
+    backend->global_parse = _eventd_nd_xcb_global_parse;
 
     backend->display_test = _eventd_nd_xcb_display_test;
     backend->display_new = _eventd_nd_xcb_display_new;
