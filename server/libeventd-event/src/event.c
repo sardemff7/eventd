@@ -280,6 +280,7 @@ const gchar *
 eventd_event_get_data(EventdEvent *self, const gchar *name)
 {
     g_return_val_if_fail(EVENTD_IS_EVENT(self), NULL);
+    g_return_val_if_fail(name != NULL, NULL);
 
     if ( self->priv->data == NULL )
         return NULL;
@@ -292,6 +293,7 @@ const gchar *
 eventd_event_get_answer_data(EventdEvent *self, const gchar *name)
 {
     g_return_val_if_fail(EVENTD_IS_EVENT(self), NULL);
+    g_return_val_if_fail(name != NULL, NULL);
 
     if ( self->priv->answer_data == NULL )
         return NULL;
