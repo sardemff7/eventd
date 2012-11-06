@@ -39,7 +39,7 @@ libeventd_regex_init()
     if ( ++regex_refcount > 1 )
         return;
 
-    regex_event_data = g_regex_new("\\$([\\w-]+)", G_REGEX_OPTIMIZE, 0, &error);
+    regex_event_data = g_regex_new("\\$(\\{)?([A-Za-z0-9-]+)(?(1)\\})", G_REGEX_OPTIMIZE, 0, &error);
     if ( ! regex_event_data )
         g_warning("Couldn't create $event-data regex: %s", error->message);
     g_clear_error(&error);
@@ -67,7 +67,7 @@ _libeventd_regex_replace_cb(const GMatchInfo *info, EventdEvent *event)
     gchar *name;
     const gchar *data;
 
-    name = g_match_info_fetch(info, 1);
+    name = g_match_info_fetch(info, 2);
     data = eventd_event_get_data(event, name);
     g_free(name);
 
