@@ -66,7 +66,7 @@ AM_CFLAGS="-fvisibility=hidden -Wall -Wextra -Wno-unused-parameter -Wno-missing-
 AM_LDFLAGS="-no-undefined -Wl,--no-undefined"
 AM_VALA_CFLAGS="-fvisibility=default -Wno-unused"
 AM_VALAFLAGS=""
-AM_XSLTPROCFLAGS="--nonet --stringparam man.output.quietly 1 --stringparam funcsynopsis.style ansi"
+AM_XSLTPROCFLAGS="--nonet --xinclude --stringparam man.output.quietly 1 --stringparam funcsynopsis.style ansi"
 
 
 if test -d .git; then

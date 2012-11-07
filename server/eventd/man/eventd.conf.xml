@@ -1,5 +1,8 @@
-<?xml version='1.0' ?>
-<!DOCTYPE config SYSTEM "config.dtd">
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % config SYSTEM "config.ent">
+%config;
+]>
 
 <!--
   eventd - Small daemon to act on remote or local events
@@ -23,20 +26,7 @@
 -->
 
 <refentry id="eventd.conf">
-    <refentryinfo>
-        <title>&PACKAGE_NAME; Manual</title>
-        <productname>&PACKAGE_NAME;</productname>
-        <productnumber>&PACKAGE_VERSION;</productnumber>
-
-        <authorgroup>
-            <author>
-                <contrib>Developer</contrib>
-                <firstname>Quentin</firstname>
-                <surname>Glidic</surname>
-                <email>sardemff7@eventd.org</email>
-            </author>
-        </authorgroup>
-    </refentryinfo>
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="common-man.xml" xpointer="refentryinfo" />
 
     <refmeta>
         <refentrytitle>eventd.conf</refentrytitle>
@@ -103,11 +93,5 @@
         </refsect2>
     </refsect1>
 
-    <refsect1>
-        <title>See Also</title>
-        <para>
-            <citerefentry><refentrytitle>eventd</refentrytitle><manvolnum>1</manvolnum></citerefentry>
-            <citerefentry><refentrytitle>eventd.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>
-        </para>
-    </refsect1>
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="common-man.xml" xpointer="see-also" />
 </refentry>

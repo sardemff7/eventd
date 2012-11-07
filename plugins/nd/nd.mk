@@ -3,6 +3,8 @@
 AM_CFLAGS += \
 	-I $(srcdir)/plugins/nd/include
 
+XSLTPROC_CONDITIONS += enable_nd
+
 
 plugins_LTLIBRARIES += \
 	nd.la

@@ -1,5 +1,8 @@
 # dbus plugin
 
+XSLTPROC_CONDITIONS += enable_dbus
+
+
 plugins_LTLIBRARIES += \
 	dbus.la
 

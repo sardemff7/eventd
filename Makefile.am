@@ -1,3 +1,7 @@
+comma := ,
+empty :=
+space := $(empty) $(empty)
+
 AM_DISTCHECK_CONFIGURE_FLAGS = \
 	--with-systemduserunitdir="$$dc_install_base/$(systemduserunitdir)" \
 	--with-dbussessionservicedir="$$dc_install_base/$(dbussessionservicedir)"
@@ -34,6 +38,9 @@ dbussessionservice_DATA =
 EXTRA_DIST =
 CLEANFILES =
 
+XSLTPROC_CONDITIONS = \
+	installation
+
 AM_CFLAGS += \
 	-D LOCALEDIR=\"$(localedir)\" \
 	-I $(srcdir)/src/ \
@@ -46,7 +53,9 @@ AM_VALAFLAGS += \
 	--pkg config
 
 AM_XSLTPROCFLAGS += \
-	--path "$(builddir)/src/"
+	--path "$(srcdir)/src/" \
+	--path "$(builddir)/src/" \
+	--stringparam profile.condition '$(subst $(space),;,$(XSLTPROC_CONDITIONS))'
 
 EXTRA_DIST += \
 	src/glib-local-2.0.vapi \

@@ -1,5 +1,8 @@
 # notify plugin
 
+XSLTPROC_CONDITIONS += enable_notify
+
+
 plugins_LTLIBRARIES += \
 	notify.la
 

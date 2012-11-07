@@ -1,5 +1,8 @@
 # sndfile plugin
 
+XSLTPROC_CONDITIONS += enable_sndfile
+
+
 plugins_LTLIBRARIES += \
 	sndfile.la
 

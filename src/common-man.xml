@@ -1,0 +1,140 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % config SYSTEM "config.ent">
+%config;
+]>
+
+<!--
+  eventd - Small daemon to act on remote or local events
+
+  Copyright © 2011-2012 Quentin "Sardem FF7" Glidic
+
+  This file is part of eventd.
+
+  eventd is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  eventd is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with eventd. If not, see <http://www.gnu.org/licenses/>.
+-->
+<refentry>
+    <refentryinfo id="refentryinfo">
+        <title>&PACKAGE_NAME; Manual</title>
+        <productname>&PACKAGE_NAME;</productname>
+        <productnumber>&PACKAGE_VERSION;</productnumber>
+
+        <authorgroup>
+            <author>
+                <contrib>Developer</contrib>
+                <firstname>Quentin</firstname>
+                <surname>Glidic</surname>
+                <email>sardemff7@eventd.org</email>
+            </author>
+        </authorgroup>
+    </refentryinfo>
+
+    <refsect1 id="see-also">
+        <title>See Also</title>
+
+        <variablelist>
+            <varlistentry>
+                <term><command>eventd</command> core man pages</term>
+                <listitem>
+                    <para>
+                        <citerefentry><refentrytitle>eventd</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+                        <citerefentry><refentrytitle>eventdctl</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+                        <citerefentry><refentrytitle>eventd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                        <citerefentry><refentrytitle>eventd.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                    </para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><command>evp</command> plugin man pages</term>
+                <listitem>
+                    <para>
+                        <citerefentry><refentrytitle>eventd-evp</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+                        <citerefentry><refentrytitle>eventd-evp.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                        <citerefentry><refentrytitle>eventd-evp.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                    </para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry condition="website;enable_dbus">
+                <term><command>dbus</command> plugin man pages</term>
+                <listitem>
+                    <para>
+                        <citerefentry><refentrytitle>eventd-dbus</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+                    </para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><command>relay</command> plugin man pages</term>
+                <listitem>
+                    <para>
+                        <citerefentry><refentrytitle>eventd-relay.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                    </para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><command>exec</command> plugin man pages</term>
+                <listitem>
+                    <para>
+                        <citerefentry><refentrytitle>eventd-exec.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                    </para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry condition="website;enable_nd">
+                <term><command>nd</command> plugin and backends man pages</term>
+                <listitem>
+                    <para>
+                        <citerefentry><refentrytitle>eventd-nd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                        <citerefentry><refentrytitle>eventd-nd.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                    </para>
+                </listitem>
+                <listitem condition="website;enable_nd_xcb">
+                    <para>
+                        <citerefentry condition="website;enable_nd_xcb"><refentrytitle>eventd-xcb.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                    </para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry condition="website;enable_notify">
+                <term><command>notify</command> plugin man pages</term>
+                <listitem>
+                    <para>
+                        <citerefentry><refentrytitle>eventd-notify.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                    </para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry condition="website;enable_sndfile">
+                <term><command>sndfile</command> plugin man pages</term>
+                <listitem>
+                    <para>
+                        <citerefentry><refentrytitle>eventd-sndfile.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                    </para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry condition="website;enable_espeak">
+                <term><command>espeak</command> plugin man pages</term>
+                <listitem>
+                    <para>
+                        <citerefentry><refentrytitle>eventd-espeak.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                    </para>
+                </listitem>
+            </varlistentry>
+        </variablelist>
+    </refsect1>
+</refentry>

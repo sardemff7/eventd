@@ -1,5 +1,8 @@
 <?xml version='1.0' ?>
-<!DOCTYPE config SYSTEM "config.dtd">
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % config SYSTEM "config.ent">
+%config;
+]>
 
 <!--
   eventd - Small daemon to act on remote or local events
@@ -23,20 +26,7 @@
 -->
 
 <refentry id="eventd">
-    <refentryinfo>
-        <title>&PACKAGE_NAME; Manual</title>
-        <productname>&PACKAGE_NAME;</productname>
-        <productnumber>&PACKAGE_VERSION;</productnumber>
-
-        <authorgroup>
-            <author>
-                <contrib>Developer</contrib>
-                <firstname>Quentin</firstname>
-                <surname>Glidic</surname>
-                <email>sardemff7@eventd.org</email>
-            </author>
-        </authorgroup>
-    </refentryinfo>
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="common-man.xml" xpointer="refentryinfo" />
 
     <refmeta>
         <refentrytitle>eventd</refentrytitle>
@@ -65,36 +55,40 @@
             eventd is composed by a core, the daemon itself, and various plugins.
             Plugins may be event collecting plugins or action plugins.
         </para>
-        <para>Two official event collecting plugins are distributed with eventd:</para>
+        <para>The following event collection plugins are <phrase condition="website">distributed</phrase><phrase condition="installation">installed</phrase> with eventd:</para>
         <variablelist>
             <varlistentry>
                 <term><command>evp</command> (see <citerefentry><refentrytitle>eventd-evp</refentrytitle><manvolnum>1</manvolnum></citerefentry>)</term>
                 <listitem><para>which implements our own EVENT protocol</para></listitem>
             </varlistentry>
-            <varlistentry>
+            <varlistentry condition="website;enable_dbus">
                 <term><command>dbus</command> (see <citerefentry><refentrytitle>eventd-dbus</refentrytitle><manvolnum>1</manvolnum></citerefentry>)</term>
                 <listitem><para>which implements the <ulink url="http://people.gnome.org/~mccann/docs/notification-spec/notification-spec-latest.html">Desktop Notifications Specification</ulink></para></listitem>
             </varlistentry>
         </variablelist>
-        <para>Five official action plugins are distributed with eventd:</para>
+        <para>The following action plugins are <phrase condition="website">distributed</phrase><phrase condition="installation">installed</phrase> with eventd:</para>
         <variablelist>
             <varlistentry>
                 <term><command>relay</command> (see <citerefentry><refentrytitle>eventd-relay.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
                 <listitem><para>a relay plugin, to relay events to remote eventd</para></listitem>
             </varlistentry>
             <varlistentry>
+                <term><command>exec</command> (see <citerefentry><refentrytitle>eventd-exec.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
+                <listitem><para>a simple exec plugin, to exec arbitrary commands</para></listitem>
+            </varlistentry>
+            <varlistentry condition="website;enable_nd">
                 <term><command>nd</command> (see <citerefentry><refentrytitle>eventd-nd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry> and <citerefentry><refentrytitle>eventd-nd.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
                 <listitem><para>a notification plugin, aka "bubble" plugin</para></listitem>
             </varlistentry>
-            <varlistentry>
+            <varlistentry condition="website;enable_notify">
                 <term><command>notify</command> (see <citerefentry><refentrytitle>eventd-notify.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
                 <listitem><para>a libnotify client plugin</para></listitem>
             </varlistentry>
-            <varlistentry>
+            <varlistentry condition="website;enable_sndfile">
                 <term><command>sndfile</command> (see <citerefentry><refentrytitle>eventd-sndfile.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
                 <listitem><para>a sound file playing plugin</para></listitem>
             </varlistentry>
-            <varlistentry>
+            <varlistentry condition="website;enable_espeak">
                 <term><command>espeak</command> (see <citerefentry><refentrytitle>eventd-espeak.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
                 <listitem><para>a Text-to-Speech plugin</para></listitem>
             </varlistentry>
@@ -144,11 +138,11 @@
     <refsect1>
         <title>Examples</title>
 
-        <example>
+        <example condition="website;enable_notification_daemon_dropin_replacement">
             <title>Drop-in replacement for a notification daemon</title>
 
             <para>
-                With its <command>dbus</command> and <command>nd</command> plugins, eventd can be a drop-in replacement for a notification daemon.
+                With its <command>dbus</command> plugin and <command>nd</command> plugin with <command>xcb</command> backend, eventd can be a drop-in replacement for a notification daemon.
             </para>
             <para>
                 This feature should work automagically using D-Bus on-demand spawning.
@@ -223,12 +217,5 @@
         </variablelist>
     </refsect1>
 
-    <refsect1>
-        <title>See Also</title>
-        <para>
-            <citerefentry><refentrytitle>eventdctl</refentrytitle><manvolnum>1</manvolnum></citerefentry>
-            <citerefentry><refentrytitle>eventd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
-            <citerefentry><refentrytitle>eventd.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>
-        </para>
-    </refsect1>
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="common-man.xml" xpointer="see-also" />
 </refentry>
