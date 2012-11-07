@@ -43,7 +43,6 @@ struct _EventdPluginContext {
     EventdCoreContext *core;
     EventdCoreInterface *core_interface;
     EventdEvpAvahiContext *avahi;
-    gint64 max_clients;
     gboolean default_bind;
     gboolean default_unix;
     gchar **binds;
@@ -282,8 +281,6 @@ _eventd_evp_init(EventdCoreContext *core, EventdCoreInterface *core_interface)
     service->core = core;
     service->core_interface= core_interface;
 
-    service->max_clients = -1;
-
     service->avahi_name = g_strdup_printf(PACKAGE_NAME " %s", g_get_host_name());
 
     service->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
@@ -431,16 +428,10 @@ _eventd_evp_get_option_group(EventdPluginContext *context)
 static void
 _eventd_evp_global_parse(EventdPluginContext *context, GKeyFile *config_file)
 {
-    Int integer;
     gchar *avahi_name;
 
     if ( ! g_key_file_has_group(config_file, "Server") )
         return;
-
-    if ( libeventd_config_key_file_get_int(config_file, "Server", "MaxClients", &integer) < 0 )
-        return;
-    if ( integer.set )
-        context->max_clients = integer.value;
 
     if ( libeventd_config_key_file_get_string(config_file, "Server", "AvahiName", &avahi_name) < 0 )
         return;

@@ -61,16 +61,6 @@
             <variablelist>
                 <varlistentry>
                     <term>
-                        <varname>MaxClients=</varname>
-                        (<type>integer</type>, defaults to <literal>-1</literal>, unlimited)
-                    </term>
-                    <listitem>
-                        <para>Configures the maximum number of client that may wait for a connection.</para>
-                    </listitem>
-                </varlistentry>
-
-                <varlistentry>
-                    <term>
                         <varname>AvahiName=</varname>
                         (defaults to <literal>&PACKAGE_NAME; <replaceable>hostname</replaceable></literal>)
                     </term>
