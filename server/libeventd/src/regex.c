@@ -62,14 +62,11 @@ typedef struct {
 } LibeventdRegexReplaceData;
 
 static gchar *
-_libeventd_regex_replace_cb(const GMatchInfo *info, EventdEvent *event)
+_libeventd_regex_replace_cb(const gchar *name, EventdEvent *event)
 {
-    gchar *name;
     const gchar *data;
 
-    name = g_match_info_fetch(info, 2);
     data = eventd_event_get_data(event, name);
-    g_free(name);
 
     return g_strdup(( data != NULL ) ? data : "");
 }
@@ -78,12 +75,15 @@ static gboolean
 _libeventd_regex_replace_event_data_cb(const GMatchInfo *info, GString *r, gpointer user_data)
 {
     gchar *data = NULL;
+    gchar *name;
     LibeventdRegexReplaceData *replace_data = user_data;
 
+    name = g_match_info_fetch(info, 2);
     if ( replace_data->callback != NULL )
-        data = replace_data->callback(info, replace_data->event, replace_data->user_data);
+        data = replace_data->callback(name, replace_data->event, replace_data->user_data);
     else
-        data = _libeventd_regex_replace_cb(info, replace_data->event);
+        data = _libeventd_regex_replace_cb(name, replace_data->event);
+    g_free(name);
 
     if ( data == NULL )
         return TRUE;

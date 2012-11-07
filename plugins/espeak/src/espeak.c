@@ -129,15 +129,12 @@ _eventd_espeak_config_reset(EventdPluginContext *context)
  */
 
 static gchar *
-_eventd_espeak_regex_event_data_cb(const GMatchInfo *info, EventdEvent *event, gpointer user_data)
+_eventd_espeak_regex_event_data_cb(const gchar *name, EventdEvent *event, gpointer user_data)
 {
-    gchar *name;
     const gchar *data;
     gchar *ret;
 
-    name = g_match_info_fetch(info, 1);
     data = eventd_event_get_data(event, name);
-    g_free(name);
     if ( data != NULL )
     {
         gchar *lang_name;

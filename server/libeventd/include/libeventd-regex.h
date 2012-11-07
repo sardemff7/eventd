@@ -25,7 +25,7 @@
 
 #include <libeventd-event-types.h>
 
-typedef gchar *(*LibeventdRegexReplaceCallback)(const GMatchInfo *info, EventdEvent *event, gpointer user_data);
+typedef gchar *(*LibeventdRegexReplaceCallback)(const gchar *name, EventdEvent *event, gpointer user_data);
 
 void libeventd_regex_init(void);
 void libeventd_regex_clean(void);
