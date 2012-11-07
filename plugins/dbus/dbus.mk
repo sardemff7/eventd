@@ -9,6 +9,9 @@ plugins_LTLIBRARIES += \
 libexec_PROGRAMS += \
 	eventd-notification-daemon
 
+man1_MANS += \
+	plugins/dbus/man/eventd-dbus.1
+
 dist_pkgdata_DATA += \
 	plugins/dbus/events/libnotify.event
 

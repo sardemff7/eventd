@@ -1,0 +1,70 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % config SYSTEM "config.ent">
+%config;
+]>
+
+<!--
+  eventd - Small daemon to act on remote or local events
+
+  Copyright © 2011-2012 Quentin "Sardem FF7" Glidic
+
+  This file is part of eventd.
+
+  eventd is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  eventd is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with eventd. If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<refentry id="eventd-dbus">
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="common-man.xml" xpointer="refentryinfo" />
+
+    <refmeta>
+        <refentrytitle>eventd-dbus</refentrytitle>
+        <manvolnum>1</manvolnum>
+    </refmeta>
+
+    <refnamediv>
+        <refname>eventd-dbus</refname>
+        <refpurpose>eventd org.freedesktop.Notification D-Bus interface plugin</refpurpose>
+    </refnamediv>
+
+    <refsynopsisdiv>
+        <cmdsynopsis>
+            <command>eventd</command>
+            <arg choice="opt" rep="repeat">OPTIONS</arg>
+        </cmdsynopsis>
+    </refsynopsisdiv>
+
+    <refsect1>
+        <title>Description</title>
+        <para>
+            This plugin implements the org.freedesktop.Notification D-Bus interface.
+        </para>
+    </refsect1>
+
+    <refsect1>
+        <title>Options</title>
+
+        <variablelist>
+            <varlistentry>
+                <term><option>-D</option></term>
+                <term><option>--no-dbus</option></term>
+                <listitem>
+                    <para>Disable D-Bus interface</para>
+                </listitem>
+            </varlistentry>
+        </variablelist>
+    </refsect1>
+
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="common-man.xml" xpointer="see-also" />
+</refentry>
