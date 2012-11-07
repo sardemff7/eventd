@@ -60,11 +60,9 @@
 
             <variablelist>
                 <varlistentry>
-                    <term>
-                        <varname>AvahiName=</varname>
-                        (defaults to <literal>&PACKAGE_NAME; <replaceable>hostname</replaceable></literal>)
-                    </term>
+                    <term><varname>AvahiName=</varname> (defaults to <literal>&PACKAGE_NAME; <replaceable>hostname</replaceable></literal>)</term>
                     <listitem>
+                        <para>A <type>string</type></para>
                         <para>Configures the Avahi name of the server.</para>
                     </listitem>
                 </varlistentry>

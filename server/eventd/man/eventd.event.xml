@@ -88,11 +88,9 @@
 
                 <variablelist>
                     <varlistentry>
-                        <term>
-                            <varname>Extends=</varname>
-                            (an <type>event id</type>)
-                        </term>
+                        <term><varname>Extends=</varname></term>
                         <listitem>
+                            <para>An <type>event id</type></para>
                             <para>Prepend the configuration of the specified event to this event.</para>
                         </listitem>
                     </varlistentry>
@@ -104,19 +102,17 @@
 
                 <variablelist>
                     <varlistentry>
-                        <term>
-                            <varname>Category=</varname>
-                        </term>
+                        <term><varname>Category=</varname></term>
                         <listitem>
+                            <para>A <type>string</type></para>
                             <para>The event category name.</para>
                         </listitem>
                     </varlistentry>
 
                     <varlistentry>
-                        <term>
-                            <varname>Name=</varname>
-                        </term>
+                        <term><varname>Name=</varname></term>
                         <listitem>
+                            <para>A <type>string</type></para>
                             <para>The event name.</para>
                         </listitem>
                     </varlistentry>
@@ -128,21 +124,17 @@
 
                 <variablelist>
                     <varlistentry>
-                        <term>
-                            <varname>Disable=</varname>
-                            (<type>boolean</type>)
-                        </term>
+                        <term><varname>Disable=</varname></term>
                         <listitem>
+                            <para>A <type>boolean</type></para>
                             <para>If true, the event is not dispatched.</para>
                         </listitem>
                     </varlistentry>
 
                     <varlistentry>
-                        <term>
-                            <varname>Timeout=</varname>
-                            (in <type>milliseconds</type>, defaults to global setting, see <citerefentry><refentrytitle>eventd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>)
-                        </term>
+                        <term><varname>Timeout=</varname> (defaults to global setting, see <citerefentry><refentrytitle>eventd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
                         <listitem>
+                            <para>A time in <type>milliseconds</type></para>
                             <para>Configures the timeout of the event.</para>
                         </listitem>
                     </varlistentry>

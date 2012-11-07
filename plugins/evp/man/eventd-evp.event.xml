@@ -60,11 +60,9 @@
 
             <variablelist>
                 <varlistentry>
-                    <term>
-                        <varname>Disable=</varname>
-                        (<type>boolean</type>)
-                    </term>
+                    <term><varname>Disable=</varname></term>
                     <listitem>
+                        <para>A <type>boolean</type></para>
                         <para>If true, the event is not dispatched.</para>
                     </listitem>
                 </varlistentry>
