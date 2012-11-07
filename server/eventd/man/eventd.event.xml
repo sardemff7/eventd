@@ -127,7 +127,7 @@
                         <term><varname>Disable=</varname></term>
                         <listitem>
                             <para>A <type>boolean</type></para>
-                            <para>If true, the event is not dispatched.</para>
+                            <para>If <literal>true</literal>, the event is not dispatched.</para>
                         </listitem>
                     </varlistentry>
 
@@ -135,7 +135,7 @@
                         <term><varname>Timeout=</varname> (defaults to global setting, see <citerefentry><refentrytitle>eventd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
                         <listitem>
                             <para>A time in <type>milliseconds</type></para>
-                            <para>Configures the timeout of the event.</para>
+                            <para>Event's timeout.</para>
                         </listitem>
                     </varlistentry>
                 </variablelist>

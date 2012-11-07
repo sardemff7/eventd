@@ -63,7 +63,7 @@
                     <term><varname>Disable=</varname></term>
                     <listitem>
                         <para>A <type>boolean</type></para>
-                        <para>If true, the event is not dispatched.</para>
+                        <para>If <literal>true</literal>, the event is not dispatched.</para>
                     </listitem>
                 </varlistentry>
             </variablelist>
