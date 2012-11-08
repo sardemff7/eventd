@@ -3,6 +3,9 @@
 plugins_LTLIBRARIES += \
 	exec.la
 
+man5_MANS += \
+	plugins/exec/man/eventd-exec.event.5
+
 
 exec_la_SOURCES = \
 	plugins/exec/src/exec.c
