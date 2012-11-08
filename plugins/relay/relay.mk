@@ -9,6 +9,9 @@ TESTS += \
 check_PROGRAMS += \
 	relay-connection.test
 
+man5_MANS += \
+	plugins/relay/man/eventd-relay.event.5
+
 
 relay_la_SOURCES = \
 	plugins/relay/src/types.h \
