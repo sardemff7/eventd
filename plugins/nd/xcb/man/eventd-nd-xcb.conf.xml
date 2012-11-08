@@ -25,17 +25,17 @@
   along with eventd. If not, see <http://www.gnu.org/licenses/>.
 -->
 
-<refentry id="eventd-nd-xcb.event">
+<refentry id="eventd-nd-xcb.conf">
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="common-man.xml" xpointer="refentryinfo" />
 
     <refmeta>
-        <refentrytitle>eventd-nd-xcb.event</refentrytitle>
+        <refentrytitle>eventd-nd-xcb.conf</refentrytitle>
         <manvolnum>5</manvolnum>
     </refmeta>
 
     <refnamediv>
-        <refname>eventd-nd-xcb.event</refname>
-        <refpurpose>nd plugin xcb backend event configuration file</refpurpose>
+        <refname>eventd-nd-xcb.conf</refname>
+        <refpurpose>nd plugin xcb backend global configuration file</refpurpose>
     </refnamediv>
 
     <refsynopsisdiv>
