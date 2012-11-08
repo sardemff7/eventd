@@ -181,7 +181,7 @@ _eventd_sndfile_event_parse(EventdPluginContext *context, const gchar *id, GKeyF
         if ( libeventd_config_key_file_get_string(config_file, "Sound", "Sound", &sound) < 0 )
             return;
         if ( sound == NULL )
-            sound = g_strdup("$text");
+            sound = g_strdup("sound");
     }
 
     g_hash_table_insert(context->events, g_strdup(id), sound);

@@ -6,6 +6,9 @@ XSLTPROC_CONDITIONS += enable_sndfile
 plugins_LTLIBRARIES += \
 	sndfile.la
 
+man5_MANS += \
+	plugins/sndfile/man/eventd-sndfile.event.5
+
 
 sndfile_la_SOURCES = \
 	plugins/sndfile/src/pulseaudio.h \
