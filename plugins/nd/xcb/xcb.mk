@@ -6,9 +6,12 @@ XSLTPROC_CONDITIONS += enable_nd_xcb
 ndbackends_LTLIBRARIES += \
 	xcb.la
 
+man5_MANS += \
+	plugins/nd/xcb/man/eventd-nd-xcb.conf.5
+
 
 xcb_la_SOURCES = \
-	plugins/nd/xcb/xcb.c
+	plugins/nd/xcb/src/xcb.c
 
 xcb_la_CFLAGS = \
 	$(AM_CFLAGS) \

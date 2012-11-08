@@ -104,7 +104,7 @@
                 </listitem>
                 <listitem condition="website;enable_nd_xcb">
                     <para>
-                        <citerefentry condition="website;enable_nd_xcb"><refentrytitle>eventd-xcb.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                        <citerefentry condition="website;enable_nd_xcb"><refentrytitle>eventd-nd-xcb.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
                     </para>
                 </listitem>
             </varlistentry>
