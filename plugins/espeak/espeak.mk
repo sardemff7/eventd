@@ -6,6 +6,9 @@ XSLTPROC_CONDITIONS += enable_espeak
 plugins_LTLIBRARIES += \
 	espeak.la
 
+man5_MANS += \
+	plugins/espeak/man/eventd-espeak.event.5
+
 
 espeak_la_SOURCES = \
 	plugins/espeak/src/espeak.c

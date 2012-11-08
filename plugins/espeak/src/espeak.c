@@ -111,7 +111,7 @@ _eventd_espeak_event_parse(EventdPluginContext *context, const gchar *id, GKeyFi
         if ( libeventd_config_key_file_get_string(config_file, "Espeak", "Message", &message) < 0 )
             return;
         if ( message == NULL )
-            message = g_strdup("sound");
+            message = g_strdup("$message");
     }
 
     g_hash_table_insert(context->events, g_strdup(id), message);
