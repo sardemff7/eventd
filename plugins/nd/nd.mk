@@ -12,6 +12,10 @@ plugins_LTLIBRARIES += \
 pkginclude_HEADERS += \
 	plugins/nd/include/eventd-nd-backend.h
 
+man5_MANS += \
+	plugins/nd/man/eventd-nd.conf.5 \
+	plugins/nd/man/eventd-nd.event.5
+
 
 nd_la_SOURCES = \
 	plugins/nd/src/cairo.c \

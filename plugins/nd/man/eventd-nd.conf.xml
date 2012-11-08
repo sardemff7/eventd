@@ -1,0 +1,348 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % config SYSTEM "config.ent">
+%config;
+]>
+
+<!--
+  eventd - Small daemon to act on remote or local events
+
+  Copyright © 2011-2012 Quentin "Sardem FF7" Glidic
+
+  This file is part of eventd.
+
+  eventd is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  eventd is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with eventd. If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<refentry id="eventd-nd.conf">
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="common-man.xml" xpointer="refentryinfo" />
+
+    <refmeta>
+        <refentrytitle>eventd-nd.conf</refentrytitle>
+        <manvolnum>5</manvolnum>
+    </refmeta>
+
+    <refnamediv>
+        <refname>eventd-nd.conf</refname>
+        <refpurpose>nd plugin main configuration file</refpurpose>
+    </refnamediv>
+
+    <refsynopsisdiv>
+        <para>
+            Global configuration for the nd plugin.
+        </para>
+    </refsynopsisdiv>
+
+    <refsect1>
+        <title>Description</title>
+
+        <para>
+            It controls the notification behavior.
+        </para>
+    </refsect1>
+
+    <refsect1>
+        <title>Sections</title>
+
+        <para>Many keys are usable in event configuration. Keys which are not will be identified as specific to the global configuration.</para>
+
+        <refsect2>
+            <title>Section <varname>[Notification]</varname></title>
+
+            <!-- Some other plugin may reuse this section -->
+            <refsect3 id="content-keys">
+                <title>Contents keys</title>
+
+                <variablelist>
+                    <varlistentry>
+                        <term><varname>Title=</varname> (defaults to <literal>$name</literal>)</term>
+                        <listitem>
+                            <para>A <type>string</type> (can contain $data-name references)</para>
+                            <para>The notification's title. It will be highlighted compared to the message.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>Message=</varname> (defaults to <literal>$name</literal>)</term>
+                        <listitem>
+                            <para>A <type>string</type> (can contain $data-name references)</para>
+                            <para>The notification's message.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>Image=</varname> (defaults to <literal>image</literal>)</term>
+                        <listitem>
+                            <para>A <type>data name</type>, or a <type>file:// URI</type> (which can contain $data-name references)</para>
+                            <para>The notification's image. Generally event-specific.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>Icon=</varname> (defaults to <literal>icon</literal>)</term>
+                        <listitem>
+                            <para>A <type>data name</type>, or a <type>file:// URI</type> (which can contain $data-name references)</para>
+                            <para>The notification's icon. Generally application-specific or category-specific.</para>
+                        </listitem>
+                    </varlistentry>
+                </variablelist>
+            </refsect3>
+
+            <refsect3>
+                <title>Placement keys</title>
+
+                <para>These keys are specific to the global configuration.</para>
+
+                <variablelist>
+                    <varlistentry>
+                        <term><varname>Anchor=</varname> (defaults to <literal>$name</literal>)</term>
+                        <listitem>
+                            <para>
+                                An <type>enumeration</type>:
+                                <simplelist type='inline'>
+                                    <member><literal>top left</literal></member>
+                                    <member><literal>top right</literal></member>
+                                    <member><literal>bottom left</literal></member>
+                                    <member><literal>bottom right</literal></member>
+                                </simplelist>
+                            </para>
+                            <para>The screen corner in which the bubble will be placed.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>OldestFirst=</varname> (defaults to <literal>false</literal>)</term>
+                        <listitem>
+                            <para>A <type>boolean</type></para>
+                            <para>If <literal>true</literal>, the first bubble is the oldest, new bubbles will be pushed at the end of the queue.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>Margin=</varname> (defaults to <literal>image</literal>)</term>
+                        <listitem>
+                            <para>An <type>integer</type></para>
+                            <para>Margin between bubble and screen's edge.</para>
+                        </listitem>
+                    </varlistentry>
+                </variablelist>
+            </refsect3>
+        </refsect2>
+
+        <refsect2>
+            <title>Style keys</title>
+
+            <para>
+                Following keys define the style of the bubble's contents.
+            </para>
+
+            <refsect3>
+                <title>Section <varname>[NotificationBubble]</varname></title>
+
+                <variablelist>
+                    <varlistentry>
+                        <term><varname>MinWidth=</varname> (defaults to <literal>200</literal>)</term>
+                        <term><varname>MaxWidth=</varname> (defaults to <literal>-1</literal>, unlimited)</term>
+                        <listitem>
+                            <para>Two <type>integers</type>, <literal>-1</literal> is unlimited</para>
+                            <para>These two keys control the bubble width.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>Padding=</varname> (defaults to <literal>10</literal>)</term>
+                        <listitem>
+                            <para>An <type>integer</type></para>
+                            <para>Padding between bubble's contents and border.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>Radius=</varname> (defaults to <literal>10</literal>)</term>
+                        <listitem>
+                            <para>An <type>integer</type></para>
+                            <para>Radius of bubble's corners.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>Colour=</varname> (defaults to <literal>#262626</literal>)</term>
+                        <listitem>
+                            <para>A <type>colour string</type>, either #RRGGBBAA or rgba(r, g, b, a) form</para>
+                            <para>Colour of bubble's background.</para>
+                        </listitem>
+                    </varlistentry>
+                </variablelist>
+            </refsect3>
+
+            <refsect3>
+                <title>Section <varname>[NotificationImage]</varname></title>
+
+                <variablelist>
+                    <varlistentry>
+                        <term><varname>MaxWidth=</varname> (defaults to <literal>50</literal>)</term>
+                        <term><varname>MaxHeight=</varname> (defaults to <literal>50</literal>)</term>
+                        <listitem>
+                            <para>Two <type>integers</type>, <literal>-1</literal> is unlimited</para>
+                            <para>These two keys control the image size.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>Margin=</varname> (defaults to <literal>10</literal>)</term>
+                        <listitem>
+                            <para>An <type>integer</type></para>
+                            <para>Margin between bubble's image and text.</para>
+                        </listitem>
+                    </varlistentry>
+                </variablelist>
+            </refsect3>
+
+            <refsect3>
+                <title>Section <varname>[NotificationIcon]</varname></title>
+
+                <variablelist>
+                    <varlistentry>
+                        <term><varname>Placement=</varname> (defaults to <literal>Background</literal>)</term>
+                        <listitem>
+                            <para>
+                                An <type>enumeration</type>:
+                                <simplelist type='inline'>
+                                    <member><literal>Background</literal></member>
+                                    <member><literal>Overlay</literal></member>
+                                    <member><literal>Foreground</literal></member>
+                                </simplelist>
+                            </para>
+                            <para>Bubble's icon can be placed at several places.</para>
+                            <variablelist>
+                                <varlistentry>
+                                    <term><literal>Background</literal></term>
+                                    <listitem>
+                                        <para>The icon is placed in the bubble's background</para>
+                                        <para>Margin between bubble's icon and text if placement is <literal>Foreground</literal>.</para>
+                                    </listitem>
+                                </varlistentry>
+                            </variablelist>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>Anchor=</varname> (defaults to <literal>Center</literal>)</term>
+                        <listitem>
+                            <para>
+                                An <type>enumeration</type>:
+                                <simplelist type='inline'>
+                                    <member><literal>Top</literal></member>
+                                    <member><literal>Bottom</literal></member>
+                                    <member><literal>Center</literal></member>
+                                </simplelist>
+                            </para>
+                            <para>Vertical icon's aligment.</para>
+                            <para>Used only if placement is <literal>Background</literal> or <literal>Foreground</literal>.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>MaxWidth=</varname> (defaults to <literal>50</literal>)</term>
+                        <term><varname>MaxHeight=</varname> (defaults to <literal>50</literal>)</term>
+                        <listitem>
+                            <para>Two <type>integers</type>, <literal>-1</literal> is unlimited</para>
+                            <para>These two keys control the icon size.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>Margin=</varname> (defaults to <literal>10</literal>)</term>
+                        <listitem>
+                            <para>An <type>integer</type></para>
+                            <para>Margin between bubble's icon and text.</para>
+                            <para>Used only if placement is <literal>Foreground</literal>.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>FadeWidth=</varname> (defaults to <literal>75</literal>)</term>
+                        <listitem>
+                            <para>A <type>percentage</type> as an <type>integer</type></para>
+                            <para>Determines the fading width when the icon is placed in background.</para>
+                            <para>Used only if placement is <literal>Background</literal>.</para>
+                        </listitem>
+                    </varlistentry>
+                </variablelist>
+            </refsect3>
+
+            <refsect3>
+                <title>Section <varname>[NotificationTitle]</varname></title>
+
+                <variablelist>
+                    <varlistentry>
+                        <term><varname>Font=</varname> (defaults to <literal>Linux Libertine O Bold 9</literal>)</term>
+                        <listitem>
+                            <para>A <type>Pango font description string</type></para>
+                            <para>Fonts for the bubble's title.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>Colour=</varname> (defaults to <literal>#262626</literal>)</term>
+                        <listitem>
+                            <para>A <type>colour string</type>, either #RRGGBBAA or rgba(r, g, b, a) form</para>
+                            <para>Colour of bubble's title.</para>
+                        </listitem>
+                    </varlistentry>
+                </variablelist>
+            </refsect3>
+
+            <refsect3>
+                <title>Section <varname>[NotificationMessage]</varname></title>
+
+                <variablelist>
+                    <varlistentry>
+                        <term><varname>Spacing=</varname> (defaults to <literal>5</literal>)</term>
+                        <listitem>
+                            <para>An <type>integer</type></para>
+                            <para>Spacing between bubble's title and message.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>MaxLines=</varname> (defaults to <literal>10</literal>)</term>
+                        <listitem>
+                            <para>An <type>integer</type></para>
+                            <para>Maximum lines of bubble's message to print.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>Font=</varname> (defaults to <literal>Linux Libertine O 9</literal>)</term>
+                        <listitem>
+                            <para>A <type>Pango font description string</type></para>
+                            <para>Fonts for the bubble's message.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>Colour=</varname> (defaults to <literal>#262626</literal>)</term>
+                        <listitem>
+                            <para>A <type>colour string</type>, either #RRGGBBAA or rgba(r, g, b, a) form</para>
+                            <para>Colour of bubble's message.</para>
+                        </listitem>
+                    </varlistentry>
+                </variablelist>
+            </refsect3>
+        </refsect2>
+    </refsect1>
+
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="common-man.xml" xpointer="see-also" />
+</refentry>
