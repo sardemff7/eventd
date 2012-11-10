@@ -62,7 +62,7 @@
         <para>This configuration mechanism is seperated in two steps:</para>
         <orderedlist>
             <listitem><para>Define a set of <replaceable>id</replaceable>s with matching and configuration information</para></listitem>
-            <listitem><para>When an event is dispatched, get the best matching <replaceable>id</replaceable> to associate its configuration to the event</para></listitem>
+            <listitem><para>When an event is received, get the best matching <replaceable>id</replaceable> to associate its configuration to the event</para></listitem>
         </orderedlist>
         <para>
             Plugins may parse their own section(s) in this file for their event configuration.
@@ -70,6 +70,23 @@
         <para>
             Many configuration keys will use event data. They can either be just the data name or use in-string replacement. Data may be referenced using <replaceable>$data-name</replaceable> or <replaceable>${data-name}</replaceable> forms.
         </para>
+    </refsect1>
+
+    <refsect1>
+        <title>Configuration ids, event matching and filtering</title>
+
+        <para>
+            When eventd receive an event from one of its event collecting plugin, it searchs the best matching configuration <replaceable>id</replaceable>.
+        </para>
+
+        <refsect2>
+            <title>Matching mechanism</title>
+
+            <para>
+                eventd will first try to match both the category and the name of an event. If no <replaceable>id</replaceable> is found, it will try to find an
+                <replaceable>id</replaceable> for the category alone. If nothing matches, the event is unknown and will not be dispatched.
+            </para>
+        </refsect2>
     </refsect1>
 
     <refsect1>
