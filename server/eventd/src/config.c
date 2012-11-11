@@ -44,6 +44,20 @@ struct _EventdConfig {
 };
 
 typedef struct {
+    gchar *data;
+    GRegex *regex;
+} EventdConfigDataMatch;
+
+typedef struct {
+    gint64 importance;
+    gchar *id;
+
+    /* Conditions */
+    gchar **if_data;
+    GList *if_data_matches;
+} EventdConfigMatch;
+
+typedef struct {
     gint64 timeout;
 } EventdConfigEvent;
 
@@ -58,18 +72,58 @@ eventd_config_get_event_config_id(EventdConfig *config, EventdEvent *event)
 {
     const gchar *category;
     gchar *name;
-    const gchar *id;
+    GList *list;
 
     category = eventd_event_get_category(event);
 
     name = _eventd_config_events_get_name(category, eventd_event_get_name(event));
 
-    id = g_hash_table_lookup(config->event_ids, name);
+    list = g_hash_table_lookup(config->event_ids, name);
     g_free(name);
-    if ( id == NULL )
-        id = g_hash_table_lookup(config->event_ids, category);
+    if ( list == NULL )
+        list = g_hash_table_lookup(config->event_ids, category);
 
-    return id;
+    if ( list == NULL )
+        return NULL;
+
+    GList *match_;
+    for ( match_ = list ; match_ != NULL ; match_ = g_list_next(match_) )
+    {
+        EventdConfigMatch *match = match_->data;
+        gboolean skip = FALSE;
+
+        if ( match->if_data != NULL )
+        {
+            gchar **data;
+            for ( data = match->if_data ; ( *data != NULL ) && ( ! skip )  ; ++data )
+            {
+                if ( ! eventd_event_has_data(event, *data) )
+                    skip = TRUE;
+            }
+            if ( skip )
+                continue;
+        }
+
+        if ( match->if_data_matches != NULL )
+        {
+            GList *data_match_;
+            const gchar *data;
+            for ( data_match_ = match->if_data_matches ; ( data_match_ != NULL ) && ( ! skip ) ; data_match_ = g_list_next(data_match_) )
+            {
+                EventdConfigDataMatch *data_match = data_match_->data;
+                if ( ( data = eventd_event_get_data(event, data_match->data) ) == NULL )
+                    continue;
+                if ( ! g_regex_match(data_match->regex, data, 0, NULL) )
+                    skip = TRUE;
+            }
+            if ( skip )
+                continue;
+        }
+
+        return match->id;
+    }
+
+    return NULL;
 }
 
 static void
@@ -141,6 +195,48 @@ _eventd_config_parse_client(EventdConfig *config, const gchar *id, GKeyFile *con
 }
 
 static void
+_eventd_config_match_data_match_free(gpointer data)
+{
+    EventdConfigDataMatch *data_match = data;
+
+    g_regex_unref(data_match->regex);
+    g_free(data_match->data);
+
+    g_free(data_match);
+}
+
+static void
+_eventd_config_match_free(gpointer data)
+{
+    EventdConfigMatch *match = data;
+
+    g_list_free_full(match->if_data_matches, _eventd_config_match_data_match_free);
+    g_strfreev(match->if_data);
+
+    g_free(match->id);
+
+    g_free(match);
+}
+
+static void
+_eventd_config_matches_free(gpointer data)
+{
+    g_list_free_full(data, _eventd_config_match_free);
+}
+
+static gint
+_eventd_config_compare_matches(gconstpointer a_, gconstpointer b_)
+{
+    const EventdConfigMatch *a = a_;
+    const EventdConfigMatch *b = b_;
+    if ( a->importance < b->importance )
+        return -1;
+    if ( b->importance < a->importance )
+        return 1;
+    return 0;
+}
+
+static void
 _eventd_config_parse_event_file(EventdConfig *config, const gchar *id, GKeyFile *config_file)
 {
     gchar *category = NULL;
@@ -156,11 +252,51 @@ _eventd_config_parse_event_file(EventdConfig *config, const gchar *id, GKeyFile 
     if ( libeventd_config_key_file_get_string(config_file, "Event", "Name", &name) < 0 )
         goto fail;
 
+    EventdConfigMatch *match;
+    match = g_new0(EventdConfigMatch, 1);
+    match->importance = G_MAXINT64;
+    match->id = g_strdup(id);
+
+    gchar **if_data_matches;
+
+    libeventd_config_key_file_get_string_list(config_file, "Event", "IfData", &match->if_data, NULL);
+    if ( libeventd_config_key_file_get_string_list(config_file, "Event", "IfDataMatches", &if_data_matches, NULL) == 0 )
+    {
+        EventdConfigDataMatch *data_match;
+        gchar **if_data_match;
+        GError *error = NULL;
+        GRegex *regex;
+
+        for ( if_data_match = if_data_matches ; *if_data_match != NULL ; ++if_data_match )
+        {
+            gchar **if_data_matchv;
+            if_data_matchv = g_strsplit(*if_data_match, ",", 2);
+            if ( ( regex = g_regex_new(if_data_matchv[1], G_REGEX_OPTIMIZE, 0, &error) ) != NULL )
+            {
+                data_match = g_new0(EventdConfigDataMatch, 1);
+                data_match->data = g_strdup(if_data_matchv[0]);
+                data_match->regex = regex;
+
+                match->if_data_matches = g_list_prepend(match->if_data_matches, data_match);
+            }
+            g_strfreev(if_data_matchv);
+        }
+        g_strfreev(if_data_matches);
+    }
+
+    if ( ( match->if_data != NULL ) || ( match->if_data_matches != NULL ) )
+        match->importance = libeventd_config_key_file_get_int_with_default(config_file, "Event", "Importance", G_MAXINT64);
+
     gchar *internal_name;
 
     internal_name = _eventd_config_events_get_name(category, name);
 
-    g_hash_table_insert(config->event_ids, internal_name, g_strdup(id));
+    GList *list;
+
+    list = g_hash_table_lookup(config->event_ids, internal_name);
+    g_hash_table_steal(config->event_ids, internal_name);
+    list = g_list_insert_sorted(list, match, _eventd_config_compare_matches);
+    g_hash_table_insert(config->event_ids, internal_name, list);
 
     _eventd_config_parse_client(config, id, config_file);
     eventd_plugins_event_parse_all(id, config_file);
@@ -319,7 +455,7 @@ eventd_config_new()
 
     config = g_new0(EventdConfig, 1);
 
-    config->event_ids = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+    config->event_ids = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_config_matches_free);
     config->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_config_event_free);
 
     return config;

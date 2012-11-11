@@ -89,6 +89,11 @@
                 eventd will first try to match both the category and the name of an event. If no <replaceable>id</replaceable> is found, it will try to find an
                 <replaceable>id</replaceable> for the category alone. If nothing matches, the event is unknown and will not be dispatched.
             </para>
+
+            <para>
+                Multiple events can match the name and the category. eventd provides a fine-grained matching mechanism. Several keys are dedicated to that.
+                See the corresponding key description in the relevant category of the <varname>[Event]</varname> section.
+            </para>
         </refsect2>
     </refsect1>
 
@@ -134,6 +139,22 @@
                         <listitem>
                             <para>A <type>string</type></para>
                             <para>The event name.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>IfData=</varname></term>
+                        <listitem>
+                            <para>A <type>list of data names</type></para>
+                            <para>All data listed here must exist for this event id to match.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>IfDataMatches=</varname></term>
+                        <listitem>
+                            <para>A <type>list of <type>(data name,regex)</type> couples</type></para>
+                            <para>If the named data is present, it must match the provided regex. All present data must match for this event id to match.</para>
                         </listitem>
                     </varlistentry>
                 </variablelist>
