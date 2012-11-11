@@ -276,6 +276,23 @@ eventd_event_get_timeout(EventdEvent *self)
 }
 
 EVENTD_EXPORT
+gboolean
+eventd_event_has_data(EventdEvent *self, const gchar *name)
+{
+    g_return_val_if_fail(EVENTD_IS_EVENT(self), FALSE);
+    g_return_val_if_fail(name != NULL, FALSE);
+
+    if ( self->priv->data == NULL )
+        return FALSE;
+
+#if GLIB_CHECK_VERSION(2,31,0)
+    return g_hash_table_contains(self->priv->data, name);
+#else /* ! GLIB_CHECK_VERSION(2,31,0) */
+    return ( g_hash_table_lookup(self->priv->data, name) != NULL );
+#endif /* ! GLIB_CHECK_VERSION(2,31,0) */
+}
+
+EVENTD_EXPORT
 const gchar *
 eventd_event_get_data(EventdEvent *self, const gchar *name)
 {
