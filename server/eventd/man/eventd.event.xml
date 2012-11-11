@@ -47,6 +47,9 @@
             <listitem><para><filename><varname>$EVENTD_CONFIG_DIR</varname>/<replaceable>id</replaceable>.event</filename> (see <citerefentry><refentrytitle>eventd</refentrytitle><manvolnum>1</manvolnum></citerefentry>)</para></listitem>
         </orderedlist>
         <para>
+            eventd will search event files in subdirectories too, so you can organize your events.
+        </para>
+        <para>
             If the same file is found in several places, the last one is used.
         </para>
     </refsynopsisdiv>

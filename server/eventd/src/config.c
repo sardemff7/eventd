@@ -171,17 +171,59 @@ fail:
 }
 
 static void
-_eventd_config_load_dir(EventdConfig *config, GHashTable *config_files, const gchar *config_dir_name)
+_eventd_config_read_dir(EventdConfig *config, GHashTable *config_files, const gchar *config_dir_name)
 {
     GError *error = NULL;
     GDir *config_dir = NULL;
-    const gchar *file = NULL;
+
+    config_dir = g_dir_open(config_dir_name, 0, &error);
+    if ( config_dir == NULL )
+    {
+        g_warning("Can't read configuration directory '%s': %s", config_dir_name, error->message);
+        g_clear_error(&error);
+        return;
+    }
+
+    gchar *config_file_name = NULL;
+    GKeyFile *config_file = NULL;
+    const gchar *file;
+    while ( ( file = g_dir_read_name(config_dir) ) != NULL )
+    {
+        if ( g_str_has_prefix(file, ".") )
+            continue;
+
+        config_file_name = g_build_filename(config_dir_name, file, NULL);
+
+        if ( g_str_has_suffix(file, ".event") && g_file_test(config_file_name, G_FILE_TEST_IS_REGULAR) )
+        {
+            config_file = g_key_file_new();
+            if ( ! g_key_file_load_from_file(config_file, config_file_name, G_KEY_FILE_NONE, &error) )
+            {
+                g_warning("Can't read the defaults file '%s': %s", config_file_name, error->message);
+                g_clear_error(&error);
+                g_key_file_free(config_file);
+            }
+            else if ( ! g_key_file_has_group(config_file, "Event") )
+                g_key_file_free(config_file);
+            else
+                g_hash_table_insert(config_files, g_strdup(file), config_file);
+        }
+        else if ( g_file_test(config_file_name, G_FILE_TEST_IS_DIR) )
+            _eventd_config_read_dir(config, config_files, config_file_name);
+
+        g_free(config_file_name);
+    }
+}
+
+static void
+_eventd_config_load_dir(EventdConfig *config, GHashTable *config_files, const gchar *config_dir_name)
+{
+    GError *error = NULL;
     gchar *config_file_name = NULL;
     GKeyFile *config_file = NULL;
 
-
     if ( ! g_file_test(config_dir_name, G_FILE_TEST_IS_DIR) )
-        goto out;
+        return;
 
     config_file_name = g_build_filename(config_dir_name, PACKAGE_NAME ".conf", NULL);
     if ( g_file_test(config_file_name, G_FILE_TEST_IS_REGULAR) )
@@ -199,39 +241,7 @@ _eventd_config_load_dir(EventdConfig *config, GHashTable *config_files, const gc
     }
     g_free(config_file_name);
 
-    config_dir = g_dir_open(config_dir_name, 0, &error);
-    if ( ! config_dir )
-        goto out;
-
-    while ( ( file = g_dir_read_name(config_dir) ) != NULL )
-    {
-        if ( g_str_has_prefix(file, ".") || ( ! g_str_has_suffix(file, ".event") ) )
-            continue;
-
-        config_file_name = g_build_filename(config_dir_name, file, NULL);
-
-        if ( g_file_test(config_file_name, G_FILE_TEST_IS_REGULAR) )
-        {
-            config_file = g_key_file_new();
-            if ( ! g_key_file_load_from_file(config_file, config_file_name, G_KEY_FILE_NONE, &error) )
-            {
-                g_warning("Can't read the defaults file '%s': %s", config_file_name, error->message);
-                g_clear_error(&error);
-                g_key_file_free(config_file);
-            }
-            else if ( ! g_key_file_has_group(config_file, "Event") )
-                g_key_file_free(config_file);
-            else
-                g_hash_table_insert(config_files, g_strdup(file), config_file);
-        }
-
-        g_free(config_file_name);
-    }
-
-out:
-    if ( error != NULL )
-        g_warning("Can't read the configuration directory: %s", error->message);
-    g_clear_error(&error);
+    _eventd_config_read_dir(config, config_files, config_dir_name);
 }
 
 static GKeyFile *
