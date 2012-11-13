@@ -173,6 +173,14 @@
                             <para>eventd will only dispatch an event if none of these flags is present.</para>
                         </listitem>
                     </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>Importance=</varname></term>
+                        <listitem>
+                            <para>An <type>integer</type> (can be negative)</para>
+                            <para>The less you put here, the more important this event configuration is. It allows you to order alternative configurations, as the first matching configuration is taken.</para>
+                        </listitem>
+                    </varlistentry>
                 </variablelist>
             </refsect3>
 
