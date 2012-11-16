@@ -141,15 +141,15 @@ _eventd_nd_cairo_get_message(const gchar *message, guint8 max)
     message_lines = g_strsplit(message, "\n", -1);
 
     GString *message_str;
-    gint i;
+    guint i;
 
     message_str = g_string_sized_new(strlen(message));
 
-    for ( i = 0 ; i < ( ( max - 1 ) / 2 ) ; ++i )
+    for ( i = 0 ; i < ( max / 2 ) ; ++i )
         message_str = g_string_append_c(g_string_append(message_str, message_lines[i]), '\n');
     /* Ellipsize */
     g_string_append(message_str, "[…]");
-    for ( i = count - ( max / 2 ) ; i < count ; ++i )
+    for ( i = count - ( ( max + 1 ) / 2 ) ; i < count ; ++i )
         message_str = g_string_append_c(g_string_append(message_str, message_lines[i]), '\n');
     g_strfreev(message_lines);
 
