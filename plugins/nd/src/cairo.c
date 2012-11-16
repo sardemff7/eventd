@@ -150,11 +150,8 @@ _eventd_nd_cairo_get_message(const gchar *message, guint8 max)
     /* Ellipsize */
     g_string_append(message_str, "[…]");
     for ( i = count - ( ( max + 1 ) / 2 ) ; i < count ; ++i )
-        message_str = g_string_append_c(g_string_append(message_str, message_lines[i]), '\n');
+        message_str = g_string_append(g_string_append_c(message_str, '\n'), message_lines[i]);
     g_strfreev(message_lines);
-
-    /* Strip the last new-line */
-    g_string_truncate(message_str, message_str->len - 1);
 
     gchar *ret;
 
