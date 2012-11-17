@@ -1,7 +1,8 @@
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 libdir=@libdir@
-pkgincludedir=@includedir@/@PACKAGE@
+includedir=@includedir@
+pkgincludedir=${includedir}/@PACKAGE@
 
 Name: libeventd-event
 Description: Library to manipulate eventd events
