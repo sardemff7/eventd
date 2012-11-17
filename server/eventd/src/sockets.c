@@ -20,9 +20,6 @@
  *
  */
 
-#include <errno.h>
-#include <string.h>
-
 #include <glib.h>
 #include <gio/gio.h>
 #ifdef HAVE_GIO_UNIX

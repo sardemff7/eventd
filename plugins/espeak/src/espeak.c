@@ -20,12 +20,11 @@
  *
  */
 
-#include <speak_lib.h>
-
 #include <string.h>
 #include <glib.h>
 #include <glib-object.h>
-#include <gio/gio.h>
+
+#include <speak_lib.h>
 
 #include <eventd-plugin.h>
 #include <libeventd-event.h>

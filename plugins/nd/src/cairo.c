@@ -20,9 +20,9 @@
  *
  */
 
+#include <string.h>
 #include <math.h>
 
-#include <string.h>
 #include <glib.h>
 
 #include <gdk-pixbuf/gdk-pixbuf.h>

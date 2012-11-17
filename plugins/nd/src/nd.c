@@ -22,7 +22,6 @@
 
 #include <glib.h>
 #include <glib-object.h>
-#include <gio/gio.h>
 
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <pango/pango.h>

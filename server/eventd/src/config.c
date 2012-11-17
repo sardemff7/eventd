@@ -20,11 +20,8 @@
  *
  */
 
-#include <string.h>
-
 #include <glib.h>
 #include <glib-object.h>
-#include <gio/gio.h>
 
 #include <libeventd-event.h>
 #include <libeventd-config.h>

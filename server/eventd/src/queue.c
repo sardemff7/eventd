@@ -21,9 +21,7 @@
  */
 
 #include <glib.h>
-#include <glib-compat.h>
 #include <glib-object.h>
-#include <gio/gio.h>
 
 #include <libeventd-event.h>
 

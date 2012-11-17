@@ -20,10 +20,10 @@
  *
  */
 
-#include <sndfile.h>
-
 #include <glib.h>
 #include <glib-object.h>
+
+#include <sndfile.h>
 
 #include <eventd-plugin.h>
 #include <libeventd-event.h>

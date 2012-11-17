@@ -20,12 +20,12 @@
  *
  */
 
+#include <glib.h>
+#include <glib-object.h>
+
 #include <pulse/pulseaudio.h>
 #include <pulse/glib-mainloop.h>
 #include <sndfile.h>
-
-#include <glib.h>
-#include <glib-object.h>
 
 #include <libeventd-event.h>
 

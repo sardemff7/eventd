@@ -20,12 +20,12 @@
  *
  */
 
+#include <glib.h>
+#include <glib-object.h>
+
 #include <libnotify/notify.h>
 #include "libnotify-compat.h"
 #include <gdk-pixbuf/gdk-pixbuf.h>
-
-#include <glib.h>
-#include <glib-object.h>
 
 #include <libeventd-event.h>
 #include <eventd-plugin.h>
