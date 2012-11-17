@@ -25,7 +25,7 @@
 #include <libeventd-test.h>
 
 #define EVENTS_DIR     SRC_DIR   G_DIR_SEPARATOR_S "plugins" G_DIR_SEPARATOR_S "test-plugin" G_DIR_SEPARATOR_S "events"
-#define RUN_DIR        BUILD_DIR G_DIR_SEPARATOR_S "run"
+#define RUN_DIR        BUILD_DIR G_DIR_SEPARATOR_S ".test-run"
 #define PLUGINS_DIR    BUILD_DIR G_DIR_SEPARATOR_S LT_OBJDIR
 
 #define EVENTD_PATH    BUILD_DIR G_DIR_SEPARATOR_S "eventd" EXEEXT
@@ -45,6 +45,7 @@ eventd_tests_env_setup()
     g_setenv("EVENTD_TESTS_TMP_DIR", RUN_DIR, TRUE);
     g_setenv("EVENTD_PLUGINS_DIR", PLUGINS_DIR, TRUE);
     g_unsetenv("EVENTD_PLUGINS_WHITELIST");
+    g_unsetenv("EVENTD_PLUGINS_BLACKLIST");
 }
 
 EventdTestsEnv *
