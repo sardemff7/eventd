@@ -20,8 +20,13 @@
  *
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif /* HAVE_CONFIG_H */
+
 #include <glib.h>
 #include <glib-object.h>
+
 #include <avahi-common/error.h>
 #include <avahi-client/client.h>
 #include <avahi-client/lookup.h>

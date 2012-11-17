@@ -44,7 +44,9 @@ XSLTPROC_CONDITIONS = \
 AM_CFLAGS += \
 	-D LOCALEDIR=\"$(localedir)\" \
 	-I $(srcdir)/src/ \
-	-I $(builddir)/src/ \
+	-I $(builddir)/src/
+
+AM_VALA_CFLAGS += \
 	--include config.h
 
 AM_XSLTPROCFLAGS += \
