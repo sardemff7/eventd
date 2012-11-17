@@ -18,6 +18,9 @@ man5_MANS += \
 	server/eventd/man/eventd.conf.5 \
 	server/eventd/man/eventd.event.5
 
+pkgconfig_DATA += \
+	server/eventd/pkgconfig/eventd.pc
+
 
 eventd_SOURCES = \
 	src/glib-compat.h \
