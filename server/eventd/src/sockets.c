@@ -28,7 +28,9 @@
 #endif /* HAVE_GIO_UNIX */
 
 #ifdef ENABLE_SYSTEMD
+#ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
+#endif /* HAVE_SYS_SOCKET_H */
 #include <systemd/sd-daemon.h>
 #endif /* ENABLE_SYSTEMD */
 

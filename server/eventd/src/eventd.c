@@ -20,7 +20,9 @@
  *
  */
 
+#ifdef HAVE_ERRNO_H
 #include <errno.h>
+#endif /* HAVE_ERRNO_H */
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */

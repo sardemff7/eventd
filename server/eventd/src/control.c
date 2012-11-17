@@ -20,7 +20,10 @@
  *
  */
 
+#ifdef HAVE_STRING_H
 #include <string.h>
+#endif /* HAVE_STRING_H */
+
 #include <glib.h>
 #include <glib-object.h>
 #include <gio/gio.h>

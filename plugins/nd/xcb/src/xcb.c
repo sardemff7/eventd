@@ -20,7 +20,10 @@
  *
  */
 
+#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
+#endif /* HAVE_STDLIB_H */
+
 #include <glib.h>
 #include <glib-object.h>
 

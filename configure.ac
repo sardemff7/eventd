@@ -77,7 +77,7 @@ fi
 #
 # Common dependencies
 #
-AC_CHECK_HEADERS([fcntl.h])
+AC_CHECK_HEADERS([fcntl.h errno.h])
 
 PKG_CHECK_MODULES(GLIB, [glib-2.0 >= $glib_min_version])
 GLIB_VALAFLAGS="--pkg glib-2.0"
@@ -127,6 +127,7 @@ if test x$enable_systemd = xyes; then
         yes) systemduserunitdir="`$PKG_CONFIG --variable=systemduserunitdir systemd`" ;;
         *) systemduserunitdir="$with_systemduserunitdir" ;;
     esac
+    AC_CHECK_HEADERS([sys/socket.h])
     PKG_CHECK_MODULES(SYSTEMD, [libsystemd-daemon])
     AC_DEFINE([ENABLE_SYSTEMD], [1], [Enable systemd activation support])
     AC_SUBST(systemduserunitdir)
@@ -183,6 +184,7 @@ AM_CONDITIONAL(ENABLE_NOTIFY, [test x$enable_libnotify = xyes])
 # notification-daemon plugin
 AC_ARG_ENABLE(notification-daemon, AS_HELP_STRING([--disable-notification-daemon], [Disable notification-daemon plugin]), [], enable_notification_daemon=yes)
 if test x$enable_notification_daemon = xyes; then
+    AC_CHECK_HEADERS([math.h])
     PKG_CHECK_MODULES(GDK_PIXBUF, [gdk-pixbuf-2.0])
     PKG_CHECK_MODULES(CAIRO, [cairo])
     PKG_CHECK_MODULES(PANGO, [pango pangocairo])
