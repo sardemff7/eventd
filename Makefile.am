@@ -58,7 +58,6 @@ AM_XSLTPROCFLAGS += \
 	--stringparam profile.condition '$(subst $(space),;,$(XSLTPROC_CONDITIONS))'
 
 EXTRA_DIST += \
-	src/glib-local-2.0.vapi \
 	src/config.vapi
 
 include server/libeventd-event/libeventd-event.mk

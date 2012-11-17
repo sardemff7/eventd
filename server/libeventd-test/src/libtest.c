@@ -42,6 +42,7 @@ eventd_tests_env_setup()
 {
     g_setenv("EVENTD_CONFIG_DIR", EVENTS_DIR, TRUE);
     g_setenv("XDG_RUNTIME_DIR", RUN_DIR, TRUE);
+    g_setenv("EVENTD_TESTS_TMP_DIR", RUN_DIR, TRUE);
     g_setenv("EVENTD_PLUGINS_DIR", PLUGINS_DIR, TRUE);
     g_unsetenv("EVENTD_PLUGINS_WHITELIST");
 }

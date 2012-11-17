@@ -25,7 +25,7 @@ connection_test(Eventc.Connection client) throws GLib.Error
 {
     yield client.connect();
 
-    var filename = GLib.Path.build_filename(GLib.Environment.get_user_runtime_dir(), "some-relay-file");
+    var filename = GLib.Path.build_filename(GLib.Environment.get_variable("EVENTD_TESTS_TMP_DIR"), "relay-connection-file");
     var message = "Some relay message";
 
     var event = new Eventd.Event("test");

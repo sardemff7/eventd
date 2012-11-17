@@ -25,7 +25,7 @@ connection_test(Eventc.Connection client, bool first) throws GLib.Error
 {
     yield client.connect();
 
-    var filename = GLib.Path.build_filename(GLib.Environment.get_user_runtime_dir(), "some-other-file");
+    var filename = GLib.Path.build_filename(GLib.Environment.get_variable("EVENTD_TESTS_TMP_DIR"), "libeventc-reconnection-file");
     var message = "Some other message";
 
     var event = new Eventd.Event("test");

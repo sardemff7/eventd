@@ -31,7 +31,7 @@ connection_test(GLib.DataInputStream input, GLib.DataOutputStream output) throws
     if ( r != "HELLO" )
         return @"Bad handshake: $r";
 
-    var filename = GLib.Path.build_filename(GLib.Environment.get_user_runtime_dir(), "some-file");
+    var filename = GLib.Path.build_filename(GLib.Environment.get_variable("EVENTD_TESTS_TMP_DIR"), "evp-connection-file");
     var message = "Some message";
 
     output.put_string("EVENT test\n");
