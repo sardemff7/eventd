@@ -22,7 +22,7 @@
 
 #include <glib.h>
 #include <gio/gio.h>
-#if HAVE_GIO_UNIX
+#ifdef HAVE_GIO_UNIX
 #include <gio/gunixsocketaddress.h>
 #endif /* HAVE_GIO_UNIX */
 
@@ -36,7 +36,7 @@ libeventd_evp_get_address(const gchar *hostname, guint16 port)
 {
     GSocketConnectable *address = NULL;
 
-#if HAVE_GIO_UNIX
+#ifdef HAVE_GIO_UNIX
     gchar *path = NULL;
     if ( g_strcmp0(hostname, "localhost") == 0 )
         path = g_build_filename(g_get_user_runtime_dir(), PACKAGE_NAME, UNIX_SOCKET, NULL);

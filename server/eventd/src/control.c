@@ -132,7 +132,7 @@ eventd_control_start(EventdControl *control)
     {
         gchar *bind;
 
-#if HAVE_GIO_UNIX
+#ifdef HAVE_GIO_UNIX
         bind = g_strconcat("unix:", control->socket, NULL);
 #else /* ! HAVE_GIO_UNIX */
         bind = g_strconcat("tcp:localhost:", control->socket, NULL);
@@ -146,7 +146,7 @@ eventd_control_start(EventdControl *control)
 
     if ( sockets == NULL )
     {
-#if HAVE_GIO_UNIX
+#ifdef HAVE_GIO_UNIX
         binds[0] = "unix-runtime:private";
 #else /* ! HAVE_GIO_UNIX */
         binds[0] = "tcp:localhost:" DEFAULT_CONTROL_PORT_STR;

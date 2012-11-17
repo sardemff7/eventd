@@ -24,7 +24,7 @@
 #include <glib.h>
 #include <glib/gstdio.h>
 #include <gio/gio.h>
-#if HAVE_GIO_UNIX
+#ifdef HAVE_GIO_UNIX
 #include <gio/gunixsocketaddress.h>
 #endif /* HAVE_GIO_UNIX */
 
@@ -93,7 +93,7 @@ _eventd_eventdctl_get_connection(const gchar *private_socket, GError **error)
     GSocketClient *client;
     GSocketConnection *connection;
 
-#if HAVE_GIO_UNIX
+#ifdef HAVE_GIO_UNIX
     const gchar *real_socket = private_socket;
     gchar *default_socket = NULL;
     if ( private_socket == NULL )
@@ -258,7 +258,7 @@ main(int argc, char *argv[])
     GError *error = NULL;
     GOptionContext *context = NULL;
 
-#if ENABLE_NLS
+#ifdef ENABLE_NLS
     setlocale(LC_ALL, "");
     bindtextdomain(GETTEXT_PACKAGE, LOCALEDIR);
     bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");

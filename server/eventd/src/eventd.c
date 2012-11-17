@@ -39,7 +39,7 @@
 #endif /* G_OS_UNIX */
 #include <gio/gio.h>
 
-#if ENABLE_SYSTEMD
+#ifdef ENABLE_SYSTEMD
 #include <systemd/sd-daemon.h>
 #endif /* ENABLE_SYSTEMD */
 
@@ -55,7 +55,7 @@
 
 #include "eventd.h"
 
-#if HAVE_GIO_UNIX
+#ifdef HAVE_GIO_UNIX
 #define GIO_UNIX_OPTION_FLAG 0
 #else /* ! HAVE_GIO_UNIX */
 #define GIO_UNIX_OPTION_FLAG G_OPTION_FLAG_HIDDEN
@@ -143,7 +143,7 @@ eventd_core_get_sockets(EventdCoreContext *context, const gchar * const *binds)
             if ( inet_sockets != NULL )
                 sockets = g_list_concat(sockets, inet_sockets);
         }
-#if HAVE_GIO_UNIX
+#ifdef HAVE_GIO_UNIX
         else if ( g_str_has_prefix(bind, "unix:") )
         {
             if ( bind[5] == 0 )
@@ -325,7 +325,7 @@ main(int argc, char *argv[])
     g_setenv("G_MESSAGES_DEBUG", "all", FALSE);
 #endif /* ! DEBUG */
 
-#if ENABLE_NLS
+#ifdef ENABLE_NLS
     setlocale(LC_ALL, "");
     bindtextdomain(GETTEXT_PACKAGE, LOCALEDIR);
     bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
@@ -448,7 +448,7 @@ main(int argc, char *argv[])
 #endif /* G_OS_UNIX */
         }
 
-#if ENABLE_SYSTEMD
+#ifdef ENABLE_SYSTEMD
         sd_notify(1,
             "READY=1\n"
             "STATUS=Waiting for events\n"
@@ -461,7 +461,7 @@ main(int argc, char *argv[])
     }
     else
     {
-#if ENABLE_SYSTEMD
+#ifdef ENABLE_SYSTEMD
         sd_notify(1,
             "STATUS=Failed to start the control interface\n"
         );

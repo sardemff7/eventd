@@ -25,12 +25,12 @@
 
 #include <glib.h>
 #include <gio/gio.h>
-#if HAVE_GIO_UNIX
+#ifdef HAVE_GIO_UNIX
 #include <gio/gunixsocketaddress.h>
 #include <glib/gstdio.h>
 #endif /* HAVE_GIO_UNIX */
 
-#if ENABLE_SYSTEMD
+#ifdef ENABLE_SYSTEMD
 #include <sys/socket.h>
 #include <systemd/sd-daemon.h>
 #endif /* ENABLE_SYSTEMD */
@@ -204,7 +204,7 @@ eventd_sockets_get_inet_sockets(EventdSockets *sockets, const gchar *address, gu
     return g_list_prepend(NULL, socket);
 }
 
-#if HAVE_GIO_UNIX
+#ifdef HAVE_GIO_UNIX
 GSocket *
 eventd_sockets_get_unix_socket(EventdSockets *sockets, const gchar *path, gboolean take_over_socket)
 {
@@ -280,7 +280,7 @@ eventd_sockets_new()
 {
     EventdSockets *sockets;
 
-#if ENABLE_SYSTEMD
+#ifdef ENABLE_SYSTEMD
     GError *error = NULL;
     GSocket *socket;
     gint n;
@@ -290,7 +290,7 @@ eventd_sockets_new()
 
     sockets = g_new0(EventdSockets, 1);
 
-#if ENABLE_SYSTEMD
+#ifdef ENABLE_SYSTEMD
     n = sd_listen_fds(TRUE);
     if ( n < 0 )
         g_warning("Failed to acquire systemd sockets: %s", g_strerror(-n));
@@ -317,7 +317,7 @@ eventd_sockets_new()
     return sockets;
 }
 
-#if HAVE_GIO_UNIX
+#ifdef HAVE_GIO_UNIX
 static void
 _eventd_sockets_unix_socket_free(gpointer data)
 {
@@ -332,7 +332,7 @@ eventd_sockets_free(EventdSockets *sockets)
 {
     g_list_free_full(sockets->list, g_object_unref);
 
-#if HAVE_GIO_UNIX
+#ifdef HAVE_GIO_UNIX
     g_slist_free_full(sockets->created, _eventd_sockets_unix_socket_free);
 #endif /* HAVE_GIO_UNIX */
 

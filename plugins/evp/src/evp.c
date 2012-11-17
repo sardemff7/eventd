@@ -33,7 +33,7 @@
 
 #include "avahi.h"
 
-#if ENABLE_AVAHI
+#ifdef ENABLE_AVAHI
 #define AVAHI_OPTION_FLAG 0
 #else /* ! ENABLE_AVAHI */
 #define AVAHI_OPTION_FLAG G_OPTION_FLAG_HIDDEN
@@ -347,7 +347,7 @@ _eventd_evp_start(EventdPluginContext *service)
         sockets = _eventd_evp_add_socket(sockets, service, binds);
     }
 
-#if HAVE_GIO_UNIX
+#ifdef HAVE_GIO_UNIX
     if ( service->default_unix )
     {
         const gchar *binds[] = { "unix-runtime:" UNIX_SOCKET, NULL };
@@ -357,7 +357,7 @@ _eventd_evp_start(EventdPluginContext *service)
 
     g_signal_connect(service->service, "incoming", G_CALLBACK(_eventd_service_connection_handler), service);
 
-#if ENABLE_AVAHI
+#ifdef ENABLE_AVAHI
     if ( ! service->no_avahi )
         service->avahi = eventd_evp_avahi_start(service->avahi_name, sockets);
     else
@@ -383,7 +383,7 @@ _eventd_service_client_disconnect(gpointer data)
 static void
 _eventd_evp_stop(EventdPluginContext *service)
 {
-#if ENABLE_AVAHI
+#ifdef ENABLE_AVAHI
     eventd_evp_avahi_stop(service->avahi);
 #endif /* ENABLE_AVAHI */
 
@@ -407,7 +407,7 @@ _eventd_evp_get_option_group(EventdPluginContext *context)
     {
         { "listen-default",      'L', 0,                 G_OPTION_ARG_NONE,         &context->default_bind, "Listen on default interface",   NULL },
         { "listen",              'l', 0,                 G_OPTION_ARG_STRING_ARRAY, &context->binds,        "Add a socket to listen to",     "<socket>" },
-#if HAVE_GIO_UNIX
+#ifdef HAVE_GIO_UNIX
         { "listen-default-unix", 'u', 0,                 G_OPTION_ARG_NONE,         &context->default_unix, "Listen on default UNIX socket", NULL },
 #endif /* HAVE_GIO_UNIX */
         { "no-avahi",            'A', AVAHI_OPTION_FLAG, G_OPTION_ARG_NONE,         &context->no_avahi,     "Disable avahi publishing",      NULL },
