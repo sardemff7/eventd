@@ -20,6 +20,7 @@ man5_MANS += \
 
 
 eventd_SOURCES = \
+	src/glib-compat.h \
 	server/eventd/src/types.h \
 	server/eventd/src/config.h \
 	server/eventd/src/config.c \
