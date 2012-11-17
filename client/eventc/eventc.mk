@@ -3,6 +3,7 @@ bin_PROGRAMS += \
 	eventc
 
 eventc_SOURCES = \
+	src/config.vapi \
 	client/eventc/src/eventc.vala
 
 eventc_VALAFLAGS = \

@@ -47,18 +47,11 @@ AM_CFLAGS += \
 	-I $(builddir)/src/ \
 	--include config.h
 
-AM_VALAFLAGS += \
-	--vapidir $(srcdir)/src/ \
-	--vapidir $(builddir)/src/ \
-	--pkg config
-
 AM_XSLTPROCFLAGS += \
 	--path "$(srcdir)/src/" \
 	--path "$(builddir)/src/" \
 	--stringparam profile.condition '$(subst $(space),;,$(XSLTPROC_CONDITIONS))'
 
-EXTRA_DIST += \
-	src/config.vapi
 
 include server/libeventd-event/libeventd-event.mk
 include server/libeventd-evp/libeventd-evp.mk

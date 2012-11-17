@@ -37,6 +37,7 @@ vapi_DATA += \
 
 
 libeventc_la_SOURCES = \
+	src/config.vapi \
 	client/libeventc/src/libeventc.vala
 
 libeventc_la_VALAFLAGS = \
