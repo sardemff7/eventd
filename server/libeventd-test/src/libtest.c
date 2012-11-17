@@ -40,9 +40,17 @@ struct _EventdTestsEnv {
 void
 eventd_tests_env_setup()
 {
+    const gchar *tmp_dir;
+    tmp_dir = g_getenv("EVENTD_TESTS_TMP_DIR");
+
     g_setenv("EVENTD_CONFIG_DIR", EVENTS_DIR, TRUE);
-    g_setenv("XDG_RUNTIME_DIR", RUN_DIR, TRUE);
-    g_setenv("EVENTD_TESTS_TMP_DIR", RUN_DIR, TRUE);
+    if ( tmp_dir != NULL )
+        g_setenv("XDG_RUNTIME_DIR", tmp_dir, TRUE);
+    else
+    {
+        g_setenv("XDG_RUNTIME_DIR", RUN_DIR, TRUE);
+        g_setenv("EVENTD_TESTS_TMP_DIR", RUN_DIR, TRUE);
+    }
     g_setenv("EVENTD_PLUGINS_DIR", PLUGINS_DIR, TRUE);
     g_unsetenv("EVENTD_PLUGINS_WHITELIST");
     g_unsetenv("EVENTD_PLUGINS_BLACKLIST");
