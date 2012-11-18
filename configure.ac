@@ -231,6 +231,9 @@ AM_CONDITIONAL(ENABLE_NOTIFY, [test x$enable_libnotify = xyes])
 # Client
 #
 AM_PROG_VALAC([$vala_min_version])
+if test -d .git -a -z "${VALAC}"; then
+    AC_MSG_ERROR([*** You need Vala >= $vala_min_version to build from git])
+fi
 
 
 
