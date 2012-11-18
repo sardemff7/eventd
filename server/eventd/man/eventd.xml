@@ -80,10 +80,6 @@
                 <term><command>nd</command> (see <citerefentry><refentrytitle>eventd-nd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry> and <citerefentry><refentrytitle>eventd-nd.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
                 <listitem><para>a notification plugin, aka "bubble" plugin</para></listitem>
             </varlistentry>
-            <varlistentry condition="website;enable_notify">
-                <term><command>notify</command> (see <citerefentry><refentrytitle>eventd-notify.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
-                <listitem><para>a libnotify client plugin</para></listitem>
-            </varlistentry>
             <varlistentry condition="website;enable_sndfile">
                 <term><command>sndfile</command> (see <citerefentry><refentrytitle>eventd-sndfile.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
                 <listitem><para>a sound file playing plugin</para></listitem>
@@ -91,6 +87,10 @@
             <varlistentry condition="website;enable_espeak">
                 <term><command>espeak</command> (see <citerefentry><refentrytitle>eventd-espeak.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
                 <listitem><para>a Text-to-Speech plugin</para></listitem>
+            </varlistentry>
+            <varlistentry condition="website;enable_notify">
+                <term><command>notify</command> (see <citerefentry><refentrytitle>eventd-notify.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
+                <listitem><para>a libnotify client plugin</para></listitem>
             </varlistentry>
         </variablelist>
     </refsect1>

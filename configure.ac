@@ -150,44 +150,6 @@ if test x$enable_dbus = xyes; then
 fi
 AM_CONDITIONAL(ENABLE_DBUS, test x$enable_dbus = xyes)
 
-# sndfile plugin
-AC_ARG_ENABLE(sndfile, AS_HELP_STRING([--disable-sndfile], [Disable libsndfile support]), [], enable_sndfile=yes)
-if test x$enable_sndfile = xyes; then
-    PKG_CHECK_MODULES(SNDFILE, [sndfile])
-    PKG_CHECK_MODULES(PULSEAUDIO, [libpulse >= $libpulse_min_version libpulse-mainloop-glib])
-    DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_sndfile"
-fi
-AM_CONDITIONAL(ENABLE_SNDFILE, test x$enable_sndfile = xyes)
-
-# espeak plugin
-AC_ARG_ENABLE(espeak, AS_HELP_STRING([--enable-espeak], [Enable eSpeak support]), [], enable_espeak=no)
-if test x$enable_espeak = xyes; then
-    ESPEAK_CFLAGS="-I/usr/include/espeak"
-    ESPEAK_LIBS="-lespeak"
-    AC_SEARCH_LIBS([espeak_Synth], [espeak],
-        [
-            AC_SUBST(ESPEAK_CFLAGS)
-            AC_SUBST(ESPEAK_LIBS)
-        ],
-        [
-            AC_MSG_ERROR([*** eSpeak support requested but library is missing])
-        ])
-    DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_espeak"
-fi
-AM_CONDITIONAL(ENABLE_ESPEAK, test x$enable_espeak = xyes)
-
-# libnotify plugin
-AC_ARG_ENABLE(libnotify, AS_HELP_STRING([--enable-libnotify], [Enable libnotify support (client side)]), [], enable_libnotify=no)
-if test x$enable_libnotify = xyes; then
-    if test x$enable_dbus = xyes; then
-        AC_MSG_ERROR([*** You can’t activate both org.freedesktop.Notifications server and libnotify client at the same time])
-    fi
-    PKG_CHECK_MODULES(NOTIFY, [libnotify >= $libnotify_min_version])
-    PKG_CHECK_MODULES(GDK_PIXBUF, [gdk-pixbuf-2.0])
-    DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_notify"
-fi
-AM_CONDITIONAL(ENABLE_NOTIFY, [test x$enable_libnotify = xyes])
-
 # notification-daemon plugin
 AC_ARG_ENABLE(notification-daemon, AS_HELP_STRING([--disable-notification-daemon], [Disable notification-daemon plugin]), [], enable_notification_daemon=yes)
 if test x$enable_notification_daemon = xyes; then
@@ -226,6 +188,44 @@ if test x$enable_linux_framebuffer = xyes; then
     DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_linux_framebuffer"
 fi
 AM_CONDITIONAL(ENABLE_LINUX_FB, [test x$enable_linux_framebuffer = xyes])
+
+# sndfile plugin
+AC_ARG_ENABLE(sndfile, AS_HELP_STRING([--disable-sndfile], [Disable libsndfile support]), [], enable_sndfile=yes)
+if test x$enable_sndfile = xyes; then
+    PKG_CHECK_MODULES(SNDFILE, [sndfile])
+    PKG_CHECK_MODULES(PULSEAUDIO, [libpulse >= $libpulse_min_version libpulse-mainloop-glib])
+    DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_sndfile"
+fi
+AM_CONDITIONAL(ENABLE_SNDFILE, test x$enable_sndfile = xyes)
+
+# espeak plugin
+AC_ARG_ENABLE(espeak, AS_HELP_STRING([--enable-espeak], [Enable eSpeak support]), [], enable_espeak=no)
+if test x$enable_espeak = xyes; then
+    ESPEAK_CFLAGS="-I/usr/include/espeak"
+    ESPEAK_LIBS="-lespeak"
+    AC_SEARCH_LIBS([espeak_Synth], [espeak],
+        [
+            AC_SUBST(ESPEAK_CFLAGS)
+            AC_SUBST(ESPEAK_LIBS)
+        ],
+        [
+            AC_MSG_ERROR([*** eSpeak support requested but library is missing])
+        ])
+    DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_espeak"
+fi
+AM_CONDITIONAL(ENABLE_ESPEAK, test x$enable_espeak = xyes)
+
+# libnotify plugin
+AC_ARG_ENABLE(libnotify, AS_HELP_STRING([--enable-libnotify], [Enable libnotify support (client side)]), [], enable_libnotify=no)
+if test x$enable_libnotify = xyes; then
+    if test x$enable_dbus = xyes; then
+        AC_MSG_ERROR([*** You can’t activate both org.freedesktop.Notifications server and libnotify client at the same time])
+    fi
+    PKG_CHECK_MODULES(NOTIFY, [libnotify >= $libnotify_min_version])
+    PKG_CHECK_MODULES(GDK_PIXBUF, [gdk-pixbuf-2.0])
+    DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_notify"
+fi
+AM_CONDITIONAL(ENABLE_NOTIFY, [test x$enable_libnotify = xyes])
 
 #
 # Client
@@ -284,13 +284,13 @@ AC_MSG_RESULT([
     Action plugins:
         EVENT protocol relay: yes
         exec plugin: yes
-        Sound files playing through libsndfile: $enable_sndfile
-        Text-to-speech through eSpeak: $enable_espeak
-        libnotify proxy: $enable_libnotify
         notification-daemon: $enable_notification_daemon
           Backends:
             XCB: $enable_xcb
             Linux framebuffer: $enable_linux_framebuffer
+        Sound files playing through libsndfile: $enable_sndfile
+        Text-to-speech through eSpeak: $enable_espeak
+        libnotify proxy: $enable_libnotify
 
 dnl     Tests: $enable_tests
     Debug mode: $enable_debug
