@@ -24,6 +24,10 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif /* HAVE_STRING_H */
+
 #include <glib.h>
 #include <glib-object.h>
 
@@ -171,7 +175,7 @@ _eventd_nd_uninit(EventdPluginContext *context)
 static void
 _eventd_nd_control_command(EventdPluginContext *context, const gchar *command)
 {
-    const gchar *target = command+20;
+    const gchar *target = command + strlen("notification-daemon ");
     EventdNdDisplay *display;
     GHashTableIter iter;
     const gchar *id;
