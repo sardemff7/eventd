@@ -53,7 +53,6 @@ namespace Eventc
         };
 
         public string host { set; private get; }
-        public uint16 port { set; private get; }
 
         private string category;
 
@@ -67,10 +66,9 @@ namespace Eventc
         private bool handshake_passed;
 
         public
-        Connection(string host, uint16 port, string category)
+        Connection(string host, string category)
         {
             this.host = host;
-            this.port = port;
             this.category = category;
 
             this.evp = new Libeventd.Evp.Context((void *)this, ref Connection.client_interface);
@@ -98,9 +96,15 @@ namespace Eventc
                 throw new EventcError.ALREADY_CONNECTED("Already connected, you must disconnect first");
 
             this.handshake_passed = false;
-            var address = Libeventd.Evp.get_address(this.host, this.port);
-            if ( address == null )
-                throw new EventcError.HOSTNAME("Couldn't resolve the hostname");
+            GLib.SocketConnectable address;
+            try
+            {
+                address = Libeventd.Evp.get_address(this.host);
+            }
+            catch ( GLib.Error re )
+            {
+                throw new EventcError.HOSTNAME("Couldn't resolve the hostname '%s': %s", this.host, re.message);
+            }
 
             var client = new GLib.SocketClient();
             client.set_enable_proxy(this.enable_proxy);

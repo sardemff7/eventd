@@ -27,7 +27,6 @@ namespace Eventc
     static string[] event_data_name;
     static string[] event_data_content;
     static string host;
-    static uint16 port = 0;
     static GLib.MainLoop loop;
     static Connection client;
     static int tries;
@@ -43,7 +42,6 @@ namespace Eventc
         { "data-name",    'd', 0, GLib.OptionArg.STRING_ARRAY, out event_data_name,    "Event data name to send",                                "<name>" },
         { "data-content", 'c', 0, GLib.OptionArg.STRING_ARRAY, out event_data_content, "Event data content to send (must be after a data-name)", "<content>" },
         { "host",         'h', 0, GLib.OptionArg.STRING,       out host,               "Host to connect to",                                     "<host>" },
-        { "port",         'p', 0, GLib.OptionArg.INT,          ref port,               "Port to connect to",                                     "<port>" },
         { "max-tries",    'm', 0, GLib.OptionArg.INT,          ref max_tries,          "Maximum connection attempts (0 for infinite)",           "<times>" },
         { "timeout",      'o', 0, GLib.OptionArg.INT,          ref timeout,            "Connection timeout",                                     "<seconds>" },
         { "wait",         'w', 0, GLib.OptionArg.NONE,         ref wait,               "Wait the end of the event",                              null },
@@ -168,7 +166,7 @@ namespace Eventc
         if ( host == null )
             host = "localhost";
 
-        client = new Connection(host, port, type);
+        client = new Connection(host, type);
         client.timeout = timeout;
 
         tries = 0;

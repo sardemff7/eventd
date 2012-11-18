@@ -33,7 +33,7 @@
  * Helpers
  */
 
-GSocketConnectable *libeventd_evp_get_address(const gchar *hostname, guint16 port);
+GSocketConnectable *libeventd_evp_get_address(const gchar *host_and_port, GError **error);
 
 
 /*

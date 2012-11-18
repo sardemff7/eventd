@@ -225,40 +225,30 @@ eventd_relay_server_avahi_connect(EventdRelayServer *server, const gchar *host, 
         return;
     server->avahi_connected = TRUE;
 
-    server->address = libeventd_evp_get_address(host, port);
+    server->address = g_network_address_new(host, port);
     eventd_relay_server_start(server);
 }
 
 EventdRelayServer *
-eventd_relay_server_new(const gchar *uri)
+eventd_relay_server_new(const gchar *host_and_port)
 {
     EventdRelayServer *server;
-    gchar *colon;
-    gchar *host;
-    guint16 port = DEFAULT_BIND_PORT;
+    GSocketConnectable *address;
+    GError *error = NULL;
 
-    if ( ( colon = g_utf8_strrchr(uri, -1, ':') ) != NULL )
+    address = libeventd_evp_get_address(host_and_port, &error);
+    if ( address == NULL )
     {
-        port = g_ascii_strtoull(colon+1, NULL, 10);
-        host = g_strndup(uri, colon-uri);
-    }
-    else
-        host = g_strdup(uri);
-
-    if ( g_str_has_prefix(host, "[") && g_str_has_suffix(host, "]") )
-    {
-        gchar *tmp = host;
-        host = g_strndup(tmp+1, strlen(tmp) - 2);
-        g_free(tmp);
+        g_warning("Couldn't get address for relay server '%s': %s", host_and_port, error->message);
+        g_clear_error(&error);
+        return NULL;
     }
 
     server = g_new0(EventdRelayServer, 1);
 
     server->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_relay_event_free);
 
-    server->address = libeventd_evp_get_address(host, port);
-
-    g_free(host);
+    server->address = address;
 
     return server;
 }

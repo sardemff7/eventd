@@ -25,7 +25,7 @@ namespace Libeventd
 {
     namespace Evp
     {
-        GLib.SocketConnectable? get_address(string hostname, uint16 port);
+        GLib.SocketConnectable? get_address(string host_and_port) throws GLib.Error;
 
         [SimpleType]
         [CCode (ref_function = "", unref_function = "")]

@@ -102,7 +102,7 @@ main(string[] args)
         return 99;
     }
 
-    var client = new Eventc.Connection("localhost", 9878, "test");
+    var client = new Eventc.Connection("localhost:9878", "test");
 
     var loop = new GLib.MainLoop(null);
 

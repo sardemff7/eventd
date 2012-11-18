@@ -36,23 +36,23 @@
 
 
 GSocketConnectable *
-libeventd_evp_get_address(const gchar *hostname, guint16 port)
+libeventd_evp_get_address(const gchar *host_and_port, GError **error)
 {
     GSocketConnectable *address = NULL;
 
 #ifdef HAVE_GIO_UNIX
     gchar *path = NULL;
-    if ( g_strcmp0(hostname, "localhost") == 0 )
+    if ( g_strcmp0(host_and_port, "localhost") == 0 )
         path = g_build_filename(g_get_user_runtime_dir(), PACKAGE_NAME, UNIX_SOCKET, NULL);
-    else if ( g_path_is_absolute(hostname) )
-        path = g_strdup(hostname);
+    else if ( g_path_is_absolute(host_and_port) )
+        path = g_strdup(host_and_port);
     if ( ( path != NULL ) && g_file_test(path, G_FILE_TEST_EXISTS) && ( ! g_file_test(path, G_FILE_TEST_IS_DIR|G_FILE_TEST_IS_REGULAR) ) )
         address = G_SOCKET_CONNECTABLE(g_unix_socket_address_new(path));
     g_free(path);
 #endif /* HAVE_GIO_UNIX */
 
     if ( address == NULL )
-        address = g_network_address_new(hostname, ( port > 0 ) ? port : DEFAULT_BIND_PORT);
+        address = g_network_address_parse(host_and_port, DEFAULT_BIND_PORT, error);
 
     return address;
 }
