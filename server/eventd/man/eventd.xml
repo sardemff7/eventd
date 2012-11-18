@@ -76,7 +76,7 @@
                 <term><command>exec</command> (see <citerefentry><refentrytitle>eventd-exec.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
                 <listitem><para>a simple exec plugin, to exec arbitrary commands</para></listitem>
             </varlistentry>
-            <varlistentry condition="website;enable_nd">
+            <varlistentry condition="website;enable_notification_daemon">
                 <term><command>nd</command> (see <citerefentry><refentrytitle>eventd-nd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry> and <citerefentry><refentrytitle>eventd-nd.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
                 <listitem><para>a notification plugin, aka "bubble" plugin</para></listitem>
             </varlistentry>
@@ -138,7 +138,7 @@
     <refsect1>
         <title>Examples</title>
 
-        <example condition="website;enable_notification_daemon_dropin_replacement">
+        <example condition="website;enable_full_notification_daemon">
             <title>Drop-in replacement for a notification daemon</title>
 
             <para>

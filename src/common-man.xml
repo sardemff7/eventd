@@ -94,7 +94,7 @@
                 </listitem>
             </varlistentry>
 
-            <varlistentry condition="website;enable_nd">
+            <varlistentry condition="website;enable_notification_daemon">
                 <term><command>nd</command> plugin and backends man pages</term>
                 <listitem>
                     <para>
@@ -102,9 +102,9 @@
                         <citerefentry><refentrytitle>eventd-nd.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>
                     </para>
                 </listitem>
-                <listitem condition="website;enable_nd_xcb">
+                <listitem condition="website;enable_xcb">
                     <para>
-                        <citerefentry condition="website;enable_nd_xcb"><refentrytitle>eventd-nd-xcb.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                        <citerefentry condition="website;enable_xcb"><refentrytitle>eventd-nd-xcb.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
                     </para>
                 </listitem>
             </varlistentry>

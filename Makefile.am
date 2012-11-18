@@ -38,8 +38,6 @@ dbussessionservice_DATA =
 EXTRA_DIST =
 CLEANFILES =
 
-XSLTPROC_CONDITIONS = \
-	installation
 
 AM_CFLAGS += \
 	-D LOCALEDIR=\"$(localedir)\" \
@@ -51,8 +49,7 @@ AM_VALA_CFLAGS += \
 
 AM_XSLTPROCFLAGS += \
 	--path "$(srcdir)/src/" \
-	--path "$(builddir)/src/" \
-	--stringparam profile.condition '$(subst $(space),;,$(XSLTPROC_CONDITIONS))'
+	--path "$(builddir)/src/"
 
 
 include server/libeventd-event/libeventd-event.mk

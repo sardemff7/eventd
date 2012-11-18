@@ -1,8 +1,5 @@
 # espeak plugin
 
-XSLTPROC_CONDITIONS += enable_espeak
-
-
 plugins_LTLIBRARIES += \
 	espeak.la
 

@@ -1,8 +1,5 @@
 # Linux framebuffer backend
 
-XSLTPROC_CONDITIONS += enable_nd_linux_framebuffer
-
-
 ndbackends_LTLIBRARIES += \
 	linux.la
 

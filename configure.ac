@@ -61,6 +61,8 @@ gtk_min_version="3.0"
 # Client dependencies
 vala_min_version="0.12"
 
+DOCBOOK_CONDITIONS="installation"
+
 
 AM_CFLAGS="-fvisibility=hidden -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers"
 AM_LDFLAGS="-no-undefined -Wl,--no-undefined"
@@ -108,6 +110,7 @@ AC_ARG_ENABLE(avahi, AS_HELP_STRING([--disable-avahi], [Disable Avahi support]),
 if test x$enable_avahi = xyes; then
     PKG_CHECK_MODULES(AVAHI, [avahi-client avahi-glib])
     AC_DEFINE([ENABLE_AVAHI], [1], [Enable Avahi support])
+    DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_avahi"
 fi
 AM_CONDITIONAL(ENABLE_AVAHI, test x$enable_avahi = xyes)
 
@@ -143,6 +146,7 @@ if test x$enable_dbus = xyes; then
         *) dbussessionservicedir="$with_dbussessionservicedir" ;;
     esac
     AC_SUBST(dbussessionservicedir)
+    DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_dbus"
 fi
 AM_CONDITIONAL(ENABLE_DBUS, test x$enable_dbus = xyes)
 
@@ -151,6 +155,7 @@ AC_ARG_ENABLE(sndfile, AS_HELP_STRING([--disable-sndfile], [Disable libsndfile s
 if test x$enable_sndfile = xyes; then
     PKG_CHECK_MODULES(SNDFILE, [sndfile])
     PKG_CHECK_MODULES(PULSEAUDIO, [libpulse >= $libpulse_min_version libpulse-mainloop-glib])
+    DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_sndfile"
 fi
 AM_CONDITIONAL(ENABLE_SNDFILE, test x$enable_sndfile = xyes)
 
@@ -167,6 +172,7 @@ if test x$enable_espeak = xyes; then
         [
             AC_MSG_ERROR([*** eSpeak support requested but library is missing])
         ])
+    DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_espeak"
 fi
 AM_CONDITIONAL(ENABLE_ESPEAK, test x$enable_espeak = xyes)
 
@@ -178,6 +184,7 @@ if test x$enable_libnotify = xyes; then
     fi
     PKG_CHECK_MODULES(NOTIFY, [libnotify >= $libnotify_min_version])
     PKG_CHECK_MODULES(GDK_PIXBUF, [gdk-pixbuf-2.0])
+    DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_notify"
 fi
 AM_CONDITIONAL(ENABLE_NOTIFY, [test x$enable_libnotify = xyes])
 
@@ -188,6 +195,7 @@ if test x$enable_notification_daemon = xyes; then
     PKG_CHECK_MODULES(GDK_PIXBUF, [gdk-pixbuf-2.0])
     PKG_CHECK_MODULES(CAIRO, [cairo])
     PKG_CHECK_MODULES(PANGO, [pango pangocairo])
+    DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_notification_daemon"
 fi
 AM_CONDITIONAL(ENABLE_NOTIFICATION_DAEMON, [test x$enable_notification_daemon = xyes])
 
@@ -205,12 +213,17 @@ fi
 # XCB backend
 if test x$enable_xcb = xyes; then
     PKG_CHECK_MODULES(XCB, [cairo-xcb xcb xcb-aux libxcb-glib xcb-randr xcb-shape])
+    DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_xcb"
+    if test x$enable_dbus = xyes; then
+        DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_full_notification_daemon"
+    fi
 fi
 AM_CONDITIONAL(ENABLE_XCB, [test x$enable_xcb = xyes])
 
 # Linux framebuffer backend
 if test x$enable_linux_framebuffer = xyes; then
     AC_CHECK_HEADER([linux/fb.h])
+    DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_linux_framebuffer"
 fi
 AM_CONDITIONAL(ENABLE_LINUX_FB, [test x$enable_linux_framebuffer = xyes])
 
@@ -234,6 +247,9 @@ if test x$enable_debug = xyes; then
     AC_DEFINE([DEBUG], [1], [Activate debug mode])
     AM_VALAFLAGS="${AM_VALAFLAGS} --debug -D DEBUG"
 fi
+
+AM_XSLTPROCFLAGS="${AM_XSLTPROCFLAGS} --stringparam profile.condition '${DOCBOOK_CONDITIONS}'"
+
 AC_SUBST(AM_CFLAGS)
 AC_SUBST(AM_LDFLAGS)
 AC_SUBST(AM_VALA_CFLAGS)
