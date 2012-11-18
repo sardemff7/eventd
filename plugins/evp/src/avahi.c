@@ -83,10 +83,7 @@ _eventd_evp_avahi_create_group(EventdEvpAvahiContext *context, AvahiClient *clie
         }
 
         if ( ( error = avahi_entry_group_add_service(context->group, AVAHI_IF_UNSPEC, proto, 0, context->name, "_event._tcp", NULL, NULL, g_inet_socket_address_get_port(G_INET_SOCKET_ADDRESS(address)), NULL) ) < 0 )
-        {
             g_warning("Couldn't add _event._tcp service: %s", avahi_strerror(error));
-            goto fail;
-        }
 
     next:
         g_object_unref(address);
