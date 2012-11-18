@@ -91,15 +91,12 @@ _eventd_evp_avahi_create_group(EventdEvpAvahiContext *context, AvahiClient *clie
     g_list_free_full(context->sockets, g_object_unref);
     context->sockets = NULL;
 
-    if ( ( error = avahi_entry_group_commit(context->group) ) < 0 )
+    if ( ! avahi_entry_group_is_empty(context->group) )
     {
+        if ( ( error = avahi_entry_group_commit(context->group) ) == 0 )
+            return;
         g_warning("Couldn't commit entry group: %s", avahi_strerror(error));
-        goto fail;
     }
-
-    return;
-
-fail:
     avahi_entry_group_free(context->group);
 }
 
