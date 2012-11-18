@@ -139,10 +139,11 @@
         <title>Examples</title>
 
         <example condition="website;enable_full_notification_daemon">
-            <title>Drop-in replacement for a notification daemon</title>
+            <title>As a notification daemon</title>
 
             <para>
-                With its <command>dbus</command> plugin and <command>nd</command> plugin with <command>xcb</command> backend, eventd can be a drop-in replacement for a notification daemon.
+                With its <command>dbus</command> plugin and <command>nd</command> plugin with <command>xcb</command> backend, eventd can act as a notification daemon.
+                The generated notifications looks a lot like notify-osd’s ones.
             </para>
             <para>
                 This feature should work automagically using D-Bus on-demand spawning.
