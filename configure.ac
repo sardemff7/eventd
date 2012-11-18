@@ -269,30 +269,29 @@ AC_CONFIG_FILES([
 ])
 AC_OUTPUT
 
-echo
-echo
-echo '    '${PACKAGE_NAME} ${PACKAGE_VERSION}
-echo
-echo '    'Core features:
-echo '        'Avahi support: $enable_avahi
-echo '        'systemd support: $enable_systemd
-echo '        'UNIX sockets support: $have_gio_unix
-echo
-echo '    'Event collecting plugins:
-echo '        'EVENT protocol: yes
-echo '        'org.freedesktop.Notifications interface: $enable_dbus
-echo
-echo '    'Action plugins:
-echo '        'relay: yes
-echo '        'Sound files playing through libsndfile: $enable_sndfile
-echo '        'Text-to-speech through eSpeak: $enable_espeak
-echo '        'libnotify proxy: $enable_libnotify
-echo '        'notification-daemon: $enable_notification_daemon
-echo '          'Backends:
-echo '            'XCB: $enable_xcb
-echo '            'Linux framebuffer: $enable_linux_framebuffer
-echo
-dnl echo '    'Tests: $enable_tests
-echo '    'Debug mode: $enable_debug
-echo
-echo
+AC_MSG_RESULT([
+    ${PACKAGE_NAME} ${PACKAGE_VERSION}
+
+    Core features:
+        Avahi support: $enable_avahi
+        systemd support: $enable_systemd
+        UNIX sockets support: $have_gio_unix
+
+    Event collection plugins:
+        EVENT protocol: yes
+        org.freedesktop.Notifications interface: $enable_dbus
+
+    Action plugins:
+        EVENT protocol relay: yes
+        exec plugin: yes
+        Sound files playing through libsndfile: $enable_sndfile
+        Text-to-speech through eSpeak: $enable_espeak
+        libnotify proxy: $enable_libnotify
+        notification-daemon: $enable_notification_daemon
+          Backends:
+            XCB: $enable_xcb
+            Linux framebuffer: $enable_linux_framebuffer
+
+dnl     Tests: $enable_tests
+    Debug mode: $enable_debug
+])
