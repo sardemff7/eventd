@@ -24,6 +24,10 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif /* HAVE_STRING_H */
+
 #include <glib.h>
 #include <glib-object.h>
 #include <gio/gio.h>
@@ -116,6 +120,48 @@ _eventd_relay_stop(EventdPluginContext *context)
     eventd_relay_avahi_stop(context->avahi);
 #endif /* ENABLE_AVAHI */
     g_hash_table_foreach(context->servers, _eventd_relay_stop_each, NULL);
+}
+
+
+/*
+ * Control command interface
+ */
+
+static char *
+_eventd_relay_control_command(EventdPluginContext *context, const gchar *command)
+{
+    const gchar *name;
+    EventdRelayServer *server;
+    gchar *message;
+
+    if ( g_str_has_prefix(command, "connect ") )
+    {
+        name = command + strlen("connect ");
+        server = g_hash_table_lookup(context->servers, name);
+        if ( server == NULL )
+            message = g_strdup_printf("No such server: %s", name);
+        else
+        {
+            eventd_relay_server_start(server);
+            message = g_strdup_printf("Connected to server '%s'", name);
+        }
+    }
+    else if ( g_str_has_prefix(command, "disconnect ") )
+    {
+        name = command + strlen("disconnect ");
+        server = g_hash_table_lookup(context->servers, name);
+        if ( server == NULL )
+            message = g_strdup_printf("No such server: %s", name);
+        else
+        {
+            eventd_relay_server_stop(server);
+            message = g_strdup_printf("Discennected from server '%s'", name);
+        }
+    }
+    else
+        message = g_strdup("Unknown command");
+
+    return message;
 }
 
 
@@ -228,6 +274,8 @@ eventd_plugin_get_interface(EventdPluginInterface *interface)
 
     libeventd_plugin_interface_add_start_callback(interface, _eventd_relay_start);
     libeventd_plugin_interface_add_stop_callback(interface, _eventd_relay_stop);
+
+    libeventd_plugin_interface_add_control_command_callback(interface, _eventd_relay_control_command);
 
     libeventd_plugin_interface_add_event_parse_callback(interface, _eventd_relay_event_parse);
     libeventd_plugin_interface_add_config_reset_callback(interface, _eventd_relay_config_reset);

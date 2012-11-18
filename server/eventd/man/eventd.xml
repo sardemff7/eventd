@@ -184,9 +184,17 @@
             </para>
             <para>
                 The <command>relay</command> plugin will connect to configured servers at startup.
+                You can control connections using <command>eventdctl</command> with the following commands:
             </para>
+            <programlisting>
+                eventdctl relay connect your.distant.computer
+                eventdctl relay disconnect your.distant.computer
+            </programlisting>
             <para>
                 See <citerefentry><refentrytitle>eventd-relay.event</refentrytitle><manvolnum>5</manvolnum></citerefentry> for the <command>relay</command> plugin configuration.
+            </para>
+            <para>
+                See <citerefentry><refentrytitle>eventdctl</refentrytitle><manvolnum>1</manvolnum></citerefentry> for <command>eventdctl</command> call precisions.
             </para>
         </example>
 
