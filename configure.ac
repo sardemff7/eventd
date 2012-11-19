@@ -99,6 +99,7 @@ if test x$have_gio_unix = xyes; then
     gio_unix="gio-unix-2.0"
     gio_unix_vala="--pkg gio-unix-2.0 -D HAVE_GIO_UNIX"
     AC_DEFINE([HAVE_GIO_UNIX], [1], [UNIX-specific GIO support])
+    DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};have_gio_unix"
 fi
 
 PKG_CHECK_MODULES(GIO, [gio-2.0 >= $gio_min_version $gio_unix])
