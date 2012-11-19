@@ -66,9 +66,7 @@
                         <para>If <literal>true</literal>, no text will be read.</para>
                     </listitem>
                 </varlistentry>
-            </variablelist>
 
-            <variablelist>
                 <varlistentry>
                     <term><varname>Message=</varname> (defaults to <literal>$message</literal>)</term>
                     <listitem>

@@ -66,9 +66,7 @@
                         <para>If <literal>true</literal>, no sound will be play.</para>
                     </listitem>
                 </varlistentry>
-            </variablelist>
 
-            <variablelist>
                 <varlistentry>
                     <term><varname>Sound=</varname> (defaults to <literal>sound</literal>)</term>
                     <listitem>
