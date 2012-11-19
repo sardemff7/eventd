@@ -63,8 +63,8 @@ _eventd_libnotify_event_new(gboolean disable, const char *title, const char *mes
 
     event = g_new0(EventdLibnotifyEvent, 1);
 
-    event->title = g_strdup(( title != NULL ) ? title : "$client-name - $name");
-    event->message = g_strdup(( message != NULL ) ? message : "$text");
+    event->title = g_strdup(( title != NULL ) ? title : "$summary");
+    event->message = g_strdup(( message != NULL ) ? message : "$body");
     event->icon = g_strdup(( icon != NULL ) ? icon : "icon");
     event->overlay_icon = g_strdup(( overlay_icon != NULL ) ? overlay_icon : "overlay-icon");
     event->scale = scale->set ? ( scale->value / 100. ) : 0.5;
