@@ -3,6 +3,9 @@
 plugins_LTLIBRARIES += \
 	notify.la
 
+dist_pkgdata_DATA += \
+	plugins/notify/events/libnotify.event
+
 
 notify_la_SOURCES = \
 	plugins/notify/src/icon.h \

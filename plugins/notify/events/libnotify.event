@@ -1,0 +1,8 @@
+[Event]
+Category = libnotify
+
+[Libnotify]
+Title = $summary
+Message = $body
+Icon = image
+OverlayIcon = icon
