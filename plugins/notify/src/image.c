@@ -26,7 +26,7 @@
 #include <libeventd-event.h>
 #include <libeventd-config.h>
 
-#include "icon.h"
+#include "image.h"
 
 static GdkPixbuf *
 _eventd_libnotify_icon_get_pixbuf_from_file(const gchar *filename)
@@ -83,56 +83,56 @@ fail:
 }
 
 GdkPixbuf *
-eventd_libnotify_get_icon(EventdEvent *event, const gchar *event_icon, const gchar *event_overlay_icon, gdouble overlay_scale, gchar **icon_uri)
+eventd_libnotify_get_image(EventdEvent *event, const gchar *image_name, const gchar *icon_name, gdouble overlay_scale, gchar **icon_uri)
 {
     gchar *file;
+    GdkPixbuf *image;
     GdkPixbuf *icon;
-    GdkPixbuf *overlay_icon;
 
-    if ( ( file = libeventd_config_get_filename(event_icon, event, "icons") ) != NULL )
-        icon = _eventd_libnotify_icon_get_pixbuf_from_file(file);
+    if ( ( file = libeventd_config_get_filename(image_name, event, "icons") ) != NULL )
+        image = _eventd_libnotify_icon_get_pixbuf_from_file(file);
     else
-        icon = _eventd_libnotify_icon_get_pixbuf_from_base64(eventd_event_get_data(event, event_icon));
+        image = _eventd_libnotify_icon_get_pixbuf_from_base64(eventd_event_get_data(event, image_name));
     g_free(file);
 
-    if ( ( file = libeventd_config_get_filename(event_overlay_icon, event, "icons") ) != NULL )
+    if ( ( file = libeventd_config_get_filename(icon_name, event, "icons") ) != NULL )
     {
-        overlay_icon = _eventd_libnotify_icon_get_pixbuf_from_file(file);
         *icon_uri = g_strconcat("file://", file, NULL);
+        icon = _eventd_libnotify_icon_get_pixbuf_from_file(file);
     }
     else
-        overlay_icon = _eventd_libnotify_icon_get_pixbuf_from_base64(eventd_event_get_data(event, event_overlay_icon));
+        icon = _eventd_libnotify_icon_get_pixbuf_from_base64(eventd_event_get_data(event, icon_name));
     g_free(file);
 
-    if ( ( icon != NULL ) && ( overlay_icon != NULL ) )
+    if ( ( image != NULL ) && ( icon != NULL ) )
     {
+        gint image_width, image_height;
         gint icon_width, icon_height;
-        gint overlay_icon_width, overlay_icon_height;
         gint x, y;
         gdouble scale;
 
-        icon_width = gdk_pixbuf_get_width(icon);
-        icon_height = gdk_pixbuf_get_height(icon);
+        image_width = gdk_pixbuf_get_width(image);
+        image_height = gdk_pixbuf_get_height(image);
 
-        overlay_icon_width = overlay_scale * (gdouble)icon_width;
-        overlay_icon_height = overlay_scale * (gdouble)icon_height;
+        icon_width = overlay_scale * (gdouble) image_width;
+        icon_height = overlay_scale * (gdouble) image_height;
 
-        x = icon_width - overlay_icon_width;
-        y = icon_height - overlay_icon_height;
+        x = image_width - icon_width;
+        y = image_height - icon_height;
 
-        scale = (gdouble)overlay_icon_width / (gdouble)gdk_pixbuf_get_width(overlay_icon);
+        scale = (gdouble) icon_width / (gdouble) gdk_pixbuf_get_width(icon);
 
-        gdk_pixbuf_composite(overlay_icon, icon,
+        gdk_pixbuf_composite(icon, image,
                              x, y,
-                             overlay_icon_width, overlay_icon_height,
+                             icon_width, icon_height,
                              x, y,
                              scale, scale,
                              GDK_INTERP_BILINEAR, 255);
 
-        g_object_unref(overlay_icon);
+        g_object_unref(icon);
     }
-    else if ( ( icon == NULL ) && ( overlay_icon != NULL ) )
-        icon = overlay_icon;
+    else if ( ( image == NULL ) && ( icon != NULL ) )
+        image = icon;
 
-    return icon;
+    return image;
 }

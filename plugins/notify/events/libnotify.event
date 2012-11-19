@@ -2,5 +2,3 @@
 Category = libnotify
 
 [Libnotify]
-Icon = image
-OverlayIcon = icon

@@ -36,7 +36,7 @@
 #include <libeventd-regex.h>
 #include <libeventd-config.h>
 
-#include "icon.h"
+#include "image.h"
 
 struct _EventdPluginContext {
     GHashTable *events;
@@ -46,8 +46,8 @@ typedef struct {
     gboolean disable;
     gchar *title;
     gchar *message;
+    gchar *image;
     gchar *icon;
-    gchar *overlay_icon;
     gdouble scale;
 } EventdLibnotifyEvent;
 
@@ -57,7 +57,7 @@ typedef struct {
  */
 
 static EventdLibnotifyEvent *
-_eventd_libnotify_event_new(gboolean disable, const char *title, const char *message, const char *icon, const char *overlay_icon, Int *scale)
+_eventd_libnotify_event_new(gboolean disable, const char *title, const char *message, const char *image, const char *icon, Int *scale)
 {
     EventdLibnotifyEvent *event = NULL;
 
@@ -65,8 +65,8 @@ _eventd_libnotify_event_new(gboolean disable, const char *title, const char *mes
 
     event->title = g_strdup(( title != NULL ) ? title : "$summary");
     event->message = g_strdup(( message != NULL ) ? message : "$body");
+    event->image = g_strdup(( image != NULL ) ? image : "image");
     event->icon = g_strdup(( icon != NULL ) ? icon : "icon");
-    event->overlay_icon = g_strdup(( overlay_icon != NULL ) ? overlay_icon : "overlay-icon");
     event->scale = scale->set ? ( scale->value / 100. ) : 0.5;
 
     return event;
@@ -77,8 +77,8 @@ _eventd_libnotify_event_free(gpointer data)
 {
     EventdLibnotifyEvent *event = data;
 
+    g_free(event->image);
     g_free(event->icon);
-    g_free(event->overlay_icon);
     g_free(event->message);
     g_free(event->title);
     g_free(event);
@@ -134,10 +134,9 @@ _eventd_libnotify_event_parse(EventdPluginContext *context, const gchar *id, GKe
     gboolean disable;
     gchar *title = NULL;
     gchar *message = NULL;
+    gchar *image = NULL;
     gchar *icon = NULL;
-    gchar *overlay_icon = NULL;
     Int scale;
-    EventdLibnotifyEvent *event;
 
     if ( ! g_key_file_has_group(config_file, "Libnotify") )
         return;
@@ -148,18 +147,18 @@ _eventd_libnotify_event_parse(EventdPluginContext *context, const gchar *id, GKe
         goto skip;
     if ( libeventd_config_key_file_get_string(config_file, "Libnotify", "Message", &message) < 0 )
         goto skip;
-    if ( libeventd_config_key_file_get_string(config_file, "Libnotify", "Icon", &icon) < 0 )
+    if ( libeventd_config_key_file_get_string(config_file, "Libnotify", "Image", &image) < 0 )
         goto skip;
-    if ( libeventd_config_key_file_get_string(config_file, "Libnotify", "OverlayIcon", &overlay_icon) < 0 )
+    if ( libeventd_config_key_file_get_string(config_file, "Libnotify", "Icon", &icon) < 0 )
         goto skip;
     if ( libeventd_config_key_file_get_int(config_file, "Libnotify", "OverlayScale", &scale) < 0 )
         goto skip;
 
-    g_hash_table_insert(context->events, g_strdup(id), _eventd_libnotify_event_new(disable, title, message, icon, overlay_icon, &scale);
+    g_hash_table_insert(context->events, g_strdup(id), _eventd_libnotify_event_new(disable, title, message, image, icon, &scale));
 
 skip:
-    g_free(overlay_icon);
     g_free(icon);
+    g_free(image);
     g_free(message);
     g_free(title);
 }
@@ -184,7 +183,7 @@ _eventd_libnotify_event_action(EventdPluginContext *context, const gchar *config
     gchar *message;
     gchar *icon_uri = NULL;
     NotifyNotification *notification = NULL;
-    GdkPixbuf *icon;
+    GdkPixbuf *image;
 
     libnotify_event = g_hash_table_lookup(context->events, config_id);
     if ( libnotify_event == NULL )
@@ -194,17 +193,17 @@ _eventd_libnotify_event_action(EventdPluginContext *context, const gchar *config
 
     message = libeventd_regex_replace_event_data(libnotify_event->message, event, NULL, NULL);
 
-    icon = eventd_libnotify_get_icon(event, libnotify_event->icon, libnotify_event->overlay_icon, libnotify_event->scale, &icon_uri);
+    image = eventd_libnotify_get_image(event, libnotify_event->image, libnotify_event->icon, libnotify_event->scale, &icon_uri);
 
     notification = notify_notification_new(title, message, icon_uri);
     g_free(icon_uri);
     g_free(message);
     g_free(title);
 
-    if ( icon != NULL )
+    if ( image != NULL )
     {
-        notify_notification_set_image_from_pixbuf(notification, icon);
-        g_object_unref(icon);
+        notify_notification_set_image_from_pixbuf(notification, image);
+        g_object_unref(image);
     }
 
 

@@ -8,8 +8,8 @@ dist_pkgdata_DATA += \
 
 
 notify_la_SOURCES = \
-	plugins/notify/src/icon.h \
-	plugins/notify/src/icon.c \
+	plugins/notify/src/image.h \
+	plugins/notify/src/image.c \
 	plugins/notify/src/libnotify-compat.h \
 	plugins/notify/src/notify.c
 

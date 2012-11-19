@@ -23,6 +23,6 @@
 #ifndef __EVENTD_LIBNOTIFY_ICON_H__
 #define __EVENTD_LIBNOTIFY_ICON_H__
 
-GdkPixbuf *eventd_libnotify_get_icon(EventdEvent *event, const gchar *event_icon, const gchar *event_overlay_icon, gdouble overlay_scale, gchar **icon_uri);
+GdkPixbuf *eventd_libnotify_get_image(EventdEvent *event, const gchar *event_icon, const gchar *event_overlay_icon, gdouble overlay_scale, gchar **icon_uri);
 
 #endif /* __EVENTD_LIBNOTIFY_ICON_H__ */
