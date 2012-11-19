@@ -3,6 +3,9 @@
 plugins_LTLIBRARIES += \
 	notify.la
 
+man5_MANS += \
+	plugins/notify/man/eventd-notify.event.5
+
 dist_pkgdata_DATA += \
 	plugins/notify/events/libnotify.event
 
