@@ -209,6 +209,18 @@
                 See <citerefentry><refentrytitle>eventd-notify.event</refentrytitle><manvolnum>5</manvolnum></citerefentry> for the <command>notify</command> plugin configuration.
             </para>
         </example>
+
+        <example condition="website;enable_dbus;enable_notify">
+            <title>Relaying remote D-Bus notifications</title>
+
+            <para>
+                Combining <command>dbus</command>, <command>evp</command>, <command>relay</command> and <command>notify</command> plugins, you can easily relay remote D-Bus notifications to your local computer.
+            </para>
+            <para>
+                You need to configure <command>relay</command> and <command>dbus</command> plugins on the remote computer and <command>evp</command> and <command>notify</command> plugins on the local one.
+                Default provided configurations for <command>dbus</command> and <command>notify</command>
+            </para>
+        </example>
     </refsect1>
 
     <refsect1>
