@@ -27,6 +27,8 @@
 #define g_thread_try_new(n, f, d, e) g_thread_create(f, d, TRUE, e)
 #define g_thread_new(n, f, d) g_thread_try_new(n, f, d, NULL)
 
+#define g_queue_free_full(q, f) G_STMT_START { g_queue_foreach(q, (GFunc) f, NULL); g_queue_free(q); } G_STMT_END
+
 #define g_socket_connection_is_connected(c) g_socket_is_connected(g_socket_connection_get_socket(c))
 
 #define g_test_undefined() (FALSE)

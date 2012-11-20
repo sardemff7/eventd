@@ -21,6 +21,7 @@
  */
 
 #include <glib.h>
+#include <glib-compat.h>
 #include <glib-object.h>
 
 #include <libeventd-event.h>
@@ -168,15 +169,8 @@ eventd_queue_new(EventdConfig *config)
 void
 eventd_queue_free(EventdQueue *queue)
 {
-#if GLIB_CHECK_VERSION(2,32,0)
     g_queue_free_full(queue->current, _eventd_queue_event_free);
     g_queue_free_full(queue->queue, _eventd_queue_event_free);
-#else /* ! GLIB_CHECK_VERSION(2,32,0) */
-    g_queue_foreach(queue->current, (GFunc)_eventd_queue_event_free, NULL);
-    g_queue_foreach(queue->queue, (GFunc)_eventd_queue_event_free, NULL);
-    g_queue_free(queue->current);
-    g_queue_free(queue->queue);
-#endif /* ! GLIB_CHECK_VERSION(2,32,0) */
 
     g_free(queue);
 }
