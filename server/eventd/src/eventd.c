@@ -336,7 +336,9 @@ main(int argc, char *argv[])
     bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
 #endif /* ENABLE_NLS */
 
+#if GLIB_CHECK_VERSION(2,35,0)
     g_type_init();
+#endif /* GLIB_CHECK_VERSION(2,35,0) */
 
 #if DEBUG
     const gchar *debug_log_filename =  g_getenv("EVENTD_DEBUG_LOG_FILENAME");
