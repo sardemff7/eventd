@@ -228,7 +228,7 @@ eventd_core_quit(EventdCoreContext *context)
         g_main_loop_quit(context->loop);
 }
 
-#if DEBUG
+#ifdef DEBUG
 static void
 _eventd_core_debug_log_handler(const gchar *log_domain, GLogLevelFlags log_level, const gchar *message, gpointer user_data)
 {
@@ -326,9 +326,9 @@ main(int argc, char *argv[])
     GOptionContext *option_context = NULL;
     GOptionGroup *option_group;
 
-#if DEBUG
+#ifdef DEBUG
     g_setenv("G_MESSAGES_DEBUG", "all", FALSE);
-#endif /* ! DEBUG */
+#endif /* DEBUG */
 
 #ifdef ENABLE_NLS
     setlocale(LC_ALL, "");
@@ -340,7 +340,7 @@ main(int argc, char *argv[])
     g_type_init();
 #endif /* ! GLIB_CHECK_VERSION(2,35,0) */
 
-#if DEBUG
+#ifdef DEBUG
     const gchar *debug_log_filename =  g_getenv("EVENTD_DEBUG_LOG_FILENAME");
     GDataOutputStream *debug_stream = NULL;
 
@@ -488,7 +488,7 @@ end:
 
     g_free(context);
 
-#if DEBUG
+#ifdef DEBUG
     if ( debug_stream != NULL )
         g_object_unref(debug_stream);
 #endif /* DEBUG */

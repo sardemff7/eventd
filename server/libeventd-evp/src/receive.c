@@ -119,7 +119,7 @@ _libeventd_evp_context_receive_data_callback(GObject *source_object, GAsyncResul
     if ( line == NULL )
         return;
 
-#if DEBUG
+#ifdef DEBUG
     g_debug("Received DATA line: %s", line);
 #endif /* DEBUG */
 
@@ -195,7 +195,7 @@ _libeventd_evp_context_receive_event_callback(GObject *source_object, GAsyncResu
     if ( line == NULL )
         return;
 
-#if DEBUG
+#ifdef DEBUG
     g_debug("Received EVENT line: %s", line);
 #endif /* DEBUG */
 
@@ -271,7 +271,7 @@ _libeventd_evp_context_receive_answered_callback(GObject *source_object, GAsyncR
     if ( line == NULL )
         return;
 
-#if DEBUG
+#ifdef DEBUG
     g_debug("Received ANSWERED line: %s", line);
 #endif /* DEBUG */
 
@@ -309,7 +309,7 @@ _libeventd_evp_context_receive_handshake_callback(GObject *source_object, GAsync
     if ( line == NULL )
         return;
 
-#if DEBUG
+#ifdef DEBUG
     g_debug("Received handshake line: %s", line);
 #endif /* DEBUG */
 
@@ -352,7 +352,7 @@ _libeventd_evp_context_receive_callback(GObject *source_object, GAsyncResult *re
     if ( line == NULL )
         return;
 
-#if DEBUG
+#ifdef DEBUG
     g_debug("Received line: %s", line);
 #endif /* DEBUG */
 

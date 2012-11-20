@@ -52,7 +52,7 @@ _eventd_nd_backends_load_dir(EventdNdContext *context, EventdNdInterface *interf
     const gchar *file;
 
 
-#if DEBUG
+#ifdef DEBUG
     g_debug("Scannig notification backends dir: %s", backends_dir_name);
 #endif /* DEBUG */
 
@@ -135,7 +135,7 @@ _eventd_nd_backends_load_dir(EventdNdContext *context, EventdNdInterface *interf
 
         if ( g_hash_table_lookup(backends, *id) != NULL )
         {
-#if DEBUG
+#ifdef DEBUG
             g_debug("Backend '%s' with id '%s' already loaded", file, *id);
 #endif /* ! DEBUG */
             continue;
@@ -144,7 +144,7 @@ _eventd_nd_backends_load_dir(EventdNdContext *context, EventdNdInterface *interf
         if ( ! g_module_symbol(module, "eventd_nd_backend_get_info", (void **)&get_info) )
             continue;
 
-#if DEBUG
+#ifdef DEBUG
         g_debug("Loading backend '%s': %s", file, *id);
 #endif /* ! DEBUG */
 

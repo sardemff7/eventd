@@ -161,7 +161,7 @@ _eventd_evp_event(gpointer data, LibeventdEvpContext *evp, EventdEvent *event)
     if ( eventd_event_get_category(event) == NULL )
         eventd_event_set_category(event, client->category);
 
-#if DEBUG
+#ifdef DEBUG
     g_debug("Received an event (category: %s): %s", eventd_event_get_category(event), eventd_event_get_name(event));
 #endif /* DEBUG */
 
@@ -204,7 +204,7 @@ _eventd_evp_bye(gpointer data, LibeventdEvpContext *evp)
     EventdEvpClient *client = data;
     EventdPluginContext *context = client->context;
 
-#if DEBUG
+#ifdef DEBUG
     g_debug("Client connection closed(category: %s)", client->category);
 #endif /* DEBUG */
 

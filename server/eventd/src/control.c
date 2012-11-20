@@ -69,7 +69,7 @@ _eventd_service_private_connection_handler(GSocketService *socket_service, GSock
     }
     else
     {
-#if DEBUG
+#ifdef DEBUG
         g_debug("Received control command: '%s'", line);
 #endif /* DEBUG */
 

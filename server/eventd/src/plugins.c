@@ -49,7 +49,7 @@ _eventd_plugins_load_dir(EventdCoreContext *core, EventdCoreInterface *interface
     const gchar *file;
 
 
-#if DEBUG
+#ifdef DEBUG
     g_debug("Scannig plugins dir: %s", plugins_dir_name);
 #endif /* DEBUG */
 
@@ -132,7 +132,7 @@ _eventd_plugins_load_dir(EventdCoreContext *core, EventdCoreInterface *interface
 
         if ( g_hash_table_lookup(plugins, *id) != NULL )
         {
-#if DEBUG
+#ifdef DEBUG
             g_debug("Plugin '%s' with id '%s' already loaded", file, *id);
 #endif /* ! DEBUG */
             continue;
@@ -141,7 +141,7 @@ _eventd_plugins_load_dir(EventdCoreContext *core, EventdCoreInterface *interface
         if ( ! g_module_symbol(module, "eventd_plugin_get_interface", (void **)&get_interface) )
             continue;
 
-#if DEBUG
+#ifdef DEBUG
         g_debug("Loading plugin '%s': %s", file, *id);
 #endif /* ! DEBUG */
 

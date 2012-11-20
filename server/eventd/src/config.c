@@ -300,7 +300,7 @@ _eventd_config_parse_event_file(EventdConfig *config, const gchar *id, GKeyFile 
     gchar *category = NULL;
     gchar *name = NULL;
 
-#if DEBUG
+#ifdef DEBUG
     g_debug("Parsing event '%s'", id);
 #endif /* DEBUG */
 

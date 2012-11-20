@@ -86,7 +86,7 @@ _eventd_relay_avahi_service_resolve_callback(AvahiServiceResolver *r, AvahiIfInd
         g_warning("Service '%s', resolver failure: %s", name, avahi_strerror(avahi_client_errno(server->context->client)));
     break;
     case AVAHI_RESOLVER_FOUND:
-#if DEBUG
+#ifdef DEBUG
         g_debug("Service '%s' resolved: [%s]:%" G_GUINT16_FORMAT, name, host_name, port);
 #endif /* DEBUG */
         eventd_relay_server_avahi_connect(server->server, host_name, port);
@@ -111,14 +111,14 @@ _eventd_relay_avahi_service_browser_callback(AvahiServiceBrowser *b, AvahiIfInde
         context->browser = NULL;
     break;
     case AVAHI_BROWSER_NEW:
-#if DEBUG
+#ifdef DEBUG
         g_debug("Service found in '%s' domain: %s", domain, name);
 #endif /* DEBUG */
         if ( ( server = g_hash_table_lookup(context->servers, name) ) != NULL )
             avahi_service_resolver_new(context->client, interface, protocol, name, type, domain, AVAHI_PROTO_UNSPEC, 0, _eventd_relay_avahi_service_resolve_callback, server);
     break;
     case AVAHI_BROWSER_REMOVE:
-#if DEBUG
+#ifdef DEBUG
         g_debug("Service removed in '%s' domain: %s", domain, name);
 #endif /* DEBUG */
         if ( ( server = g_hash_table_lookup(context->servers, name) ) != NULL )

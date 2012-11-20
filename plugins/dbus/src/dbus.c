@@ -141,13 +141,13 @@ _eventd_dbus_notify(EventdPluginContext *context, const gchar *sender, GVariant 
                   &hints,
                   &timeout);
 
-#if DEBUG
+#ifdef DEBUG
     g_debug("Received notification from '%s': '%s'", app_name, summary);
 #endif /* DEBUG */
 
     while ( g_variant_iter_next(hints, "{&sv}", &hint_name, &hint) )
     {
-#if DEBUG
+#ifdef DEBUG
         g_debug("Found hint '%s'", hint_name);
 #endif /* DEBUG */
 
@@ -170,7 +170,7 @@ _eventd_dbus_notify(EventdPluginContext *context, const gchar *sender, GVariant 
         g_variant_unref(hint);
     }
 
-#if DEBUG
+#ifdef DEBUG
     g_debug("Creanting event '%s' for client '%s' ", event_name, app_name);
 #endif /* DEBUG */
 
@@ -200,7 +200,7 @@ _eventd_dbus_notify(EventdPluginContext *context, const gchar *sender, GVariant 
 
     if ( ( icon != NULL ) && ( *icon != 0 ) )
     {
-#if DEBUG
+#ifdef DEBUG
         g_debug("Icon specified: '%s'", icon);
 #endif /* DEBUG */
 
@@ -408,7 +408,7 @@ _eventd_dbus_on_bus_acquired(GDBusConnection *connection, const gchar *name, gpo
 static void
 _eventd_dbus_on_name_acquired(GDBusConnection *connection, const gchar *name, gpointer user_data)
 {
-#if DEBUG
+#ifdef DEBUG
     g_debug("Acquired the name %s on the session bus", name);
 #endif /* DEBUG */
 }
@@ -416,7 +416,7 @@ _eventd_dbus_on_name_acquired(GDBusConnection *connection, const gchar *name, gp
 static void
 _eventd_dbus_on_name_lost(GDBusConnection *connection, const gchar *name, gpointer user_data)
 {
-#if DEBUG
+#ifdef DEBUG
     g_debug("Lost the name %s on the session bus", name);
 #endif /* DEBUG */
 }
