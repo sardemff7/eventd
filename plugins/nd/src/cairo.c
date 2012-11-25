@@ -32,6 +32,7 @@
 #endif /* HAVE_MATH_H */
 
 #include <glib.h>
+#include <glib-object.h>
 
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <cairo.h>
