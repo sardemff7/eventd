@@ -43,6 +43,7 @@
 #include "sockets.h"
 
 struct _EventdSockets {
+    gint systemd_fds;
     GList *list;
     GSList *created;
 };
@@ -283,23 +284,20 @@ eventd_sockets_new()
 {
     EventdSockets *sockets;
 
-#ifdef ENABLE_SYSTEMD
-    GError *error = NULL;
-    GSocket *socket;
-    gint n;
-    gint r;
-    gint fd;
-#endif /* ENABLE_SYSTEMD */
-
     sockets = g_new0(EventdSockets, 1);
 
 #ifdef ENABLE_SYSTEMD
-    n = sd_listen_fds(TRUE);
-    if ( n < 0 )
-        g_warning("Failed to acquire systemd sockets: %s", g_strerror(-n));
-
-    for ( fd = SD_LISTEN_FDS_START ; fd < SD_LISTEN_FDS_START + n ; ++fd )
+    if ( sockets->systemd_fds < 1 )
     {
+        sockets->systemd_fds = sd_listen_fds(TRUE);
+        if ( sockets->systemd_fds < 0 )
+            g_warning("Failed to acquire systemd sockets: %s", g_strerror(-sockets->systemd_fds));
+    }
+
+    gint fd;
+    for ( fd = SD_LISTEN_FDS_START ; fd < SD_LISTEN_FDS_START + sockets->systemd_fds ; ++fd )
+    {
+        gint r;
         r = sd_is_socket(fd, AF_UNSPEC, SOCK_STREAM, 1);
         if ( r < 0 )
         {
@@ -309,6 +307,9 @@ eventd_sockets_new()
 
         if ( r == 0 )
             continue;
+
+        GError *error = NULL;
+        GSocket *socket;
 
         if ( ( socket = g_socket_new_from_fd(fd, &error) ) == NULL )
             g_warning("Failed to take a socket from systemd: %s", error->message);
