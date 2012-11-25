@@ -299,6 +299,9 @@ _eventd_evp_uninit(EventdPluginContext *service)
 
     g_free(service->avahi_name);
 
+    if ( service->binds != NULL )
+        g_strfreev(service->binds);
+
     g_free(service);
 }
 
@@ -340,10 +343,7 @@ _eventd_evp_start(EventdPluginContext *service)
     service->service = g_socket_service_new();
 
     if ( service->binds != NULL )
-    {
         sockets = _eventd_evp_add_socket(sockets, service, (const gchar * const *)service->binds);
-        g_strfreev(service->binds);
-    }
 
     if ( service->default_bind )
     {
