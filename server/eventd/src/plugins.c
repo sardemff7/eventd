@@ -65,7 +65,7 @@ _eventd_plugins_load_dir(EventdCoreContext *core, EventdCoreInterface *interface
     {
         gchar *full_filename;
         EventdPlugin *plugin;
-        const gchar **id;
+        const gchar *id;
         EventdPluginGetInterfaceFunc get_interface;
         GModule *module;
 
@@ -130,10 +130,10 @@ _eventd_plugins_load_dir(EventdCoreContext *core, EventdCoreInterface *interface
             continue;
         }
 
-        if ( g_hash_table_lookup(plugins, *id) != NULL )
+        if ( g_hash_table_lookup(plugins, id) != NULL )
         {
 #ifdef DEBUG
-            g_debug("Plugin '%s' with id '%s' already loaded", file, *id);
+            g_debug("Plugin '%s' with id '%s' already loaded", file, id);
 #endif /* ! DEBUG */
             continue;
         }
@@ -142,7 +142,7 @@ _eventd_plugins_load_dir(EventdCoreContext *core, EventdCoreInterface *interface
             continue;
 
 #ifdef DEBUG
-        g_debug("Loading plugin '%s': %s", file, *id);
+        g_debug("Loading plugin '%s': %s", file, id);
 #endif /* ! DEBUG */
 
         plugin = g_new0(EventdPlugin, 1);
@@ -161,7 +161,7 @@ _eventd_plugins_load_dir(EventdCoreContext *core, EventdCoreInterface *interface
             }
         }
 
-        g_hash_table_insert(plugins, g_strdup(*id), plugin);
+        g_hash_table_insert(plugins, (gpointer) id, plugin);
     }
 }
 
@@ -192,7 +192,7 @@ eventd_plugins_load(EventdCoreContext *core, EventdCoreInterface *interface)
         return;
     }
 
-    plugins = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_plugins_plugin_free);
+    plugins = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, _eventd_plugins_plugin_free);
 
     env_whitelist = g_getenv("EVENTD_PLUGINS_WHITELIST");
     if ( env_whitelist != NULL )
@@ -247,7 +247,7 @@ void
 eventd_plugins_add_option_group_all(GOptionContext *option_context)
 {
     GHashTableIter iter;
-    gchar *id;
+    const gchar *id;
     EventdPlugin *plugin;
     g_hash_table_iter_init(&iter, plugins);
     while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&plugin) )
@@ -267,7 +267,7 @@ void
 eventd_plugins_start_all()
 {
     GHashTableIter iter;
-    gchar *id;
+    const gchar *id;
     EventdPlugin *plugin;
     g_hash_table_iter_init(&iter, plugins);
     while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&plugin) )
@@ -281,7 +281,7 @@ void
 eventd_plugins_stop_all()
 {
     GHashTableIter iter;
-    gchar *id;
+    const gchar *id;
     EventdPlugin *plugin;
     g_hash_table_iter_init(&iter, plugins);
     while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&plugin) )
@@ -295,7 +295,7 @@ void
 eventd_plugins_control_command_all(const gchar *command)
 {
     GHashTableIter iter;
-    gchar *id;
+    const gchar *id;
     EventdPlugin *plugin;
     g_hash_table_iter_init(&iter, plugins);
     while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&plugin) )
@@ -309,7 +309,7 @@ void
 eventd_plugins_config_reset_all()
 {
     GHashTableIter iter;
-    gchar *id;
+    const gchar *id;
     EventdPlugin *plugin;
     g_hash_table_iter_init(&iter, plugins);
     while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&plugin) )
@@ -323,7 +323,7 @@ void
 eventd_plugins_global_parse_all(GKeyFile *config_file)
 {
     GHashTableIter iter;
-    gchar *id;
+    const gchar *id;
     EventdPlugin *plugin;
     g_hash_table_iter_init(&iter, plugins);
     while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&plugin) )
@@ -337,7 +337,7 @@ void
 eventd_plugins_event_parse_all(const gchar *event_id, GKeyFile *config_file)
 {
     GHashTableIter iter;
-    gchar *id;
+    const gchar *id;
     EventdPlugin *plugin;
     g_hash_table_iter_init(&iter, plugins);
     while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&plugin) )
@@ -351,7 +351,7 @@ void
 eventd_plugins_event_action_all(const gchar *config_id, EventdEvent *event)
 {
     GHashTableIter iter;
-    gchar *id;
+    const gchar *id;
     EventdPlugin *plugin;
     g_hash_table_iter_init(&iter, plugins);
     while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&plugin) )
