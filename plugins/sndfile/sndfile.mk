@@ -26,6 +26,7 @@ sndfile_la_LDFLAGS = \
 
 sndfile_la_LIBADD = \
 	libeventd-event.la \
+	libeventd-plugin.la \
 	libeventd.la \
 	$(SNDFILE_LIBS) \
 	$(PULSEAUDIO_LIBS) \

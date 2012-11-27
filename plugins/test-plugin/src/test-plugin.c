@@ -70,5 +70,5 @@ EVENTD_EXPORT
 void
 eventd_plugin_get_interface(EventdPluginInterface *interface)
 {
-    interface->event_action = _eventd_test_event_action;
+    libeventd_plugin_interface_add_event_action_callback(interface, _eventd_test_event_action);
 }

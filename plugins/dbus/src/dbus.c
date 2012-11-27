@@ -28,7 +28,6 @@
 #include <gio/gio.h>
 
 #include <libeventd-event.h>
-#include <eventd-core-interface.h>
 #include <eventd-plugin.h>
 
 #define NOTIFICATION_BUS_NAME      "org.freedesktop.Notifications"
@@ -88,7 +87,7 @@ _eventd_dbus_notification_new(EventdPluginContext *context, const gchar *sender,
     g_hash_table_insert(context->notifications, GUINT_TO_POINTER(notification->id), notification);
     g_signal_connect(event, "ended", G_CALLBACK(_eventd_dbus_event_ended), notification);
 
-    context->core_interface->push_event(context->core, config_id, event);
+    libeventd_core_push_event(context->core, context->core_interface, config_id, event);
 
     return notification->id;
 }
@@ -238,7 +237,7 @@ _eventd_dbus_notify(EventdPluginContext *context, const gchar *sender, GVariant 
 
     const gchar *config_id;
 
-    config_id = context->core_interface->get_event_config_id(context->core, event);
+    config_id = libeventd_core_get_event_config_id(context->core, context->core_interface, event);
 
     if ( config_id == NULL )
     {
@@ -518,11 +517,11 @@ EVENTD_EXPORT
 void
 eventd_plugin_get_interface(EventdPluginInterface *interface)
 {
-    interface->init   = _eventd_dbus_init;
-    interface->uninit = _eventd_dbus_uninit;
+    libeventd_plugin_interface_add_init_callback(interface, _eventd_dbus_init);
+    libeventd_plugin_interface_add_uninit_callback(interface, _eventd_dbus_uninit);
 
-    interface->get_option_group = _eventd_dbus_get_option_group;
+    libeventd_plugin_interface_add_get_option_group_callback(interface, _eventd_dbus_get_option_group);
 
-    interface->start = _eventd_dbus_start;
-    interface->stop  = _eventd_dbus_stop;
+    libeventd_plugin_interface_add_start_callback(interface, _eventd_dbus_start);
+    libeventd_plugin_interface_add_stop_callback(interface, _eventd_dbus_stop);
 }

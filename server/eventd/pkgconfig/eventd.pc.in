@@ -1,17 +1,10 @@
 prefix=@prefix@
-exec_prefix=@exec_prefix@
-libdir=@libdir@
-includedir=@includedir@
 datadir=@datadir@
-pkglibdir=${libdir}/@PACKAGE@
-pkgincludedir=${includedir}/@PACKAGE@
 pkgdatadir=${datadir}/@PACKAGE@
 
-plugindir=${pkglibdir}/plugins
 eventdir=${pkgdatadir}
 
 Name: eventd
 Description: eventd daemon
 URL: http://www.eventd.org/
 Version: @VERSION@
-Cflags: -I${pkgincludedir}

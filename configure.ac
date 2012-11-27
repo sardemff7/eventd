@@ -267,6 +267,7 @@ AC_CONFIG_FILES([
     server/libeventd-event/pkgconfig/libeventd-event.pc
     server/libeventd-event/vapi/libeventd-event.deps
     server/eventd/pkgconfig/eventd.pc
+    server/libeventd-plugin/pkgconfig/libeventd-plugin.pc
     client/libeventc/pkgconfig/libeventc.pc
     client/libeventc/vapi/libeventc.deps
     Makefile

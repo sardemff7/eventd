@@ -23,6 +23,7 @@ espeak_la_LDFLAGS = \
 
 espeak_la_LIBADD = \
 	libeventd-event.la \
+	libeventd-plugin.la \
 	libeventd.la \
 	$(ESPEAK_LIBS) \
 	$(GOBJECT_LIBS) \

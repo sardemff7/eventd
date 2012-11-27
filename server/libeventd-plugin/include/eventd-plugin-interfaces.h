@@ -1,5 +1,5 @@
 /*
- * eventd - Small daemon to act on remote or local events
+ * libeventd-plugin - Library to implement an eventd plugin
  *
  * Copyright © 2011-2012 Quentin "Sardem FF7" Glidic
  *
@@ -20,21 +20,39 @@
  *
  */
 
-#ifndef __EVENTD_EVENTD_CORE_INTERFACE_H__
-#define __EVENTD_EVENTD_CORE_INTERFACE_H__
+#ifndef __EVENTD_EVENTD_PLUGIN_INTERFACES_H__
+#define __EVENTD_EVENTD_PLUGIN_INTERFACES_H__
 
 #include <eventd-plugin.h>
 
 typedef GList *(*EventdCoreGetSocketsFunc)(EventdCoreContext *context, const gchar * const *binds);
 
 typedef const gchar *(*EventdCoreGetEventConfigIdFunc)(EventdCoreContext *context, EventdEvent *event);
-typedef void (*EventdCoreDispatchEventFunc)(EventdCoreContext *context, const gchar *config_id, EventdEvent *event);
+typedef void (*EventdCorePushEventFunc)(EventdCoreContext *context, const gchar *config_id, EventdEvent *event);
 
 struct _EventdCoreInterface {
     EventdCoreGetSocketsFunc get_sockets;
 
     EventdCoreGetEventConfigIdFunc get_event_config_id;
-    EventdCoreDispatchEventFunc push_event;
+    EventdCorePushEventFunc push_event;
 };
 
-#endif /* __EVENTD_EVENTD_CORE_INTERFACE_H__ */
+struct EventdPluginInterface {
+    EventdPluginInitFunc init;
+    EventdPluginSimpleFunc uninit;
+
+    EventdPluginGetOptionGroupFunc get_option_group;
+
+    EventdPluginSimpleFunc start;
+    EventdPluginSimpleFunc stop;
+
+    EventdPluginControlCommandFunc control_command;
+
+    EventdPluginGlobalParseFunc global_parse;
+    EventdPluginEventParseFunc event_parse;
+    EventdPluginSimpleFunc config_reset;
+
+    EventdPluginEventDispatchFunc event_action;
+};
+
+#endif /* __EVENTD_EVENTD_PLUGIN_INTERFACES_H__ */

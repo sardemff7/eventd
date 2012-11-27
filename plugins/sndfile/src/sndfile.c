@@ -232,14 +232,14 @@ EVENTD_EXPORT
 void
 eventd_plugin_get_interface(EventdPluginInterface *interface)
 {
-    interface->init   = _eventd_sndfile_init;
-    interface->uninit = _eventd_sndfile_uninit;
+    libeventd_plugin_interface_add_init_callback(interface, _eventd_sndfile_init);
+    libeventd_plugin_interface_add_uninit_callback(interface, _eventd_sndfile_uninit);
 
-    interface->start = _eventd_sndfile_start;
-    interface->stop  = _eventd_sndfile_stop;
+    libeventd_plugin_interface_add_start_callback(interface, _eventd_sndfile_start);
+    libeventd_plugin_interface_add_stop_callback(interface, _eventd_sndfile_stop);
 
-    interface->event_parse  = _eventd_sndfile_event_parse;
-    interface->config_reset = _eventd_sndfile_config_reset;
+    libeventd_plugin_interface_add_event_parse_callback(interface, _eventd_sndfile_event_parse);
+    libeventd_plugin_interface_add_config_reset_callback(interface, _eventd_sndfile_config_reset);
 
-    interface->event_action = _eventd_sndfile_event_action;
+    libeventd_plugin_interface_add_event_action_callback(interface, _eventd_sndfile_event_action);
 }

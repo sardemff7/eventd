@@ -30,7 +30,6 @@
 
 #include <libeventd-event.h>
 #include <libeventd-event-private.h>
-#include <eventd-core-interface.h>
 #include <eventd-plugin.h>
 #include <libeventd-evp.h>
 #include <libeventd-config.h>
@@ -167,7 +166,7 @@ _eventd_evp_event(gpointer data, LibeventdEvpContext *evp, EventdEvent *event)
 
     const gchar *config_id;
 
-    config_id = client->context->core_interface->get_event_config_id(client->context->core, event);
+    config_id = libeventd_core_get_event_config_id(client->context->core, client->context->core_interface, event);
     if ( config_id != NULL )
     {
         gchar *id;
@@ -185,7 +184,7 @@ _eventd_evp_event(gpointer data, LibeventdEvpContext *evp, EventdEvent *event)
         evp_event->answered_handler = g_signal_connect(event, "answered", G_CALLBACK(_eventd_evp_event_answered), evp_event);
         evp_event->ended_handler = g_signal_connect(event, "ended", G_CALLBACK(_eventd_evp_event_ended), evp_event);
 
-        client->context->core_interface->push_event(client->context->core, config_id, event);
+        libeventd_core_push_event(client->context->core, client->context->core_interface, config_id, event);
     }
 
     return rid;
@@ -314,7 +313,7 @@ static GList *
 _eventd_evp_add_socket(GList *used_sockets, EventdPluginContext *context, const gchar * const *binds)
 {
     GList *sockets;
-    sockets = context->core_interface->get_sockets(context->core, binds);
+    sockets = libeventd_core_get_sockets(context->core, context->core_interface, binds);
 
     GList *socket_;
     for ( socket_ = sockets ; socket_ != NULL ; socket_ = g_list_next(socket_) )
@@ -478,15 +477,15 @@ EVENTD_EXPORT
 void
 eventd_plugin_get_interface(EventdPluginInterface *interface)
 {
-    interface->init   = _eventd_evp_init;
-    interface->uninit = _eventd_evp_uninit;
+    libeventd_plugin_interface_add_init_callback(interface, _eventd_evp_init);
+    libeventd_plugin_interface_add_uninit_callback(interface, _eventd_evp_uninit);
 
-    interface->get_option_group = _eventd_evp_get_option_group;
+    libeventd_plugin_interface_add_get_option_group_callback(interface, _eventd_evp_get_option_group);
 
-    interface->start = _eventd_evp_start;
-    interface->stop  = _eventd_evp_stop;
+    libeventd_plugin_interface_add_start_callback(interface, _eventd_evp_start);
+    libeventd_plugin_interface_add_stop_callback(interface, _eventd_evp_stop);
 
-    interface->global_parse = _eventd_evp_global_parse;
-    interface->event_parse  = _eventd_evp_event_parse;
-    interface->config_reset = _eventd_evp_config_reset;
+    libeventd_plugin_interface_add_global_parse_callback(interface, _eventd_evp_global_parse);
+    libeventd_plugin_interface_add_event_parse_callback(interface, _eventd_evp_event_parse);
+    libeventd_plugin_interface_add_config_reset_callback(interface, _eventd_evp_config_reset);
 }

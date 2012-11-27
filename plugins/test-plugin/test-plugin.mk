@@ -21,4 +21,5 @@ test_plugin_la_LDFLAGS = \
 
 test_plugin_la_LIBADD = \
 	libeventd-event.la \
+	libeventd-plugin.la \
 	$(GLIB_LIBS)

@@ -29,6 +29,7 @@
 #include <gmodule.h>
 
 #include <eventd-plugin.h>
+#include <eventd-plugin-interfaces.h>
 
 #include "plugins.h"
 

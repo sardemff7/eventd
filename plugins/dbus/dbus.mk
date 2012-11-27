@@ -32,6 +32,7 @@ dbus_la_LDFLAGS = \
 
 dbus_la_LIBADD = \
 	libeventd-event.la \
+	libeventd-plugin.la \
 	$(GIO_LIBS) \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS)

@@ -35,6 +35,7 @@ relay_la_LDFLAGS = \
 relay_la_LIBADD = \
 	libeventd-event.la \
 	libeventd-evp.la \
+	libeventd-plugin.la \
 	libeventd.la \
 	$(AVAHI_LIBS) \
 	$(GIO_LIBS) \

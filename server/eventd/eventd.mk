@@ -7,10 +7,6 @@ AM_CFLAGS += \
 bin_PROGRAMS += \
 	eventd
 
-pkginclude_HEADERS += \
-	server/eventd/include/eventd-core-interface.h \
-	server/eventd/include/eventd-plugin.h
-
 man1_MANS += \
 	server/eventd/man/eventd.1
 

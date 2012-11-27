@@ -1,5 +1,5 @@
 /*
- * eventd - Small daemon to act on remote or local events
+ * libeventd-plugin - Library to implement an eventd plugin
  *
  * Copyright © 2011-2012 Quentin "Sardem FF7" Glidic
  *
@@ -29,33 +29,50 @@ typedef struct _EventdCoreContext EventdCoreContext;
 typedef struct _EventdCoreInterface EventdCoreInterface;
 
 typedef struct _EventdPluginContext EventdPluginContext;
+typedef struct EventdPluginInterface EventdPluginInterface;
+
+
+/*
+ * eventd plugin interface
+ */
 
 typedef EventdPluginContext *(*EventdPluginInitFunc)(EventdCoreContext *core, EventdCoreInterface *interface);
-typedef void (*EventdPluginFunc)(EventdPluginContext *context);
+typedef void (*EventdPluginSimpleFunc)(EventdPluginContext *context);
 typedef GOptionGroup *(*EventdPluginGetOptionGroupFunc)(EventdPluginContext *context);
 typedef void (*EventdPluginControlCommandFunc)(EventdPluginContext *context, const gchar *command);
 typedef void (*EventdPluginGlobalParseFunc)(EventdPluginContext *context, GKeyFile *);
 typedef void (*EventdPluginEventParseFunc)(EventdPluginContext *context, const gchar *config_id, GKeyFile *key_file);
 typedef void (*EventdPluginEventDispatchFunc)(EventdPluginContext *context, const gchar *config_id, EventdEvent *event);
 
-typedef struct {
-    EventdPluginInitFunc init;
-    EventdPluginFunc uninit;
-
-    EventdPluginGetOptionGroupFunc get_option_group;
-
-    EventdPluginFunc start;
-    EventdPluginFunc stop;
-
-    EventdPluginControlCommandFunc control_command;
-
-    EventdPluginGlobalParseFunc global_parse;
-    EventdPluginEventParseFunc event_parse;
-    EventdPluginFunc config_reset;
-
-    EventdPluginEventDispatchFunc event_action;
-} EventdPluginInterface;
-
 typedef void (*EventdPluginGetInterfaceFunc)(EventdPluginInterface *interface);
+
+#define LIBEVENTD_PLUGIN_INTERFACE_ADD_CALLBACK(action, Action) void libeventd_plugin_interface_add_##action##_callback(EventdPluginInterface *interface, EventdPlugin##Action##Func callback)
+
+
+LIBEVENTD_PLUGIN_INTERFACE_ADD_CALLBACK(init, Init);
+LIBEVENTD_PLUGIN_INTERFACE_ADD_CALLBACK(uninit, Simple);
+
+LIBEVENTD_PLUGIN_INTERFACE_ADD_CALLBACK(get_option_group, GetOptionGroup);
+
+LIBEVENTD_PLUGIN_INTERFACE_ADD_CALLBACK(start, Simple);
+LIBEVENTD_PLUGIN_INTERFACE_ADD_CALLBACK(stop, Simple);
+
+LIBEVENTD_PLUGIN_INTERFACE_ADD_CALLBACK(control_command, ControlCommand);
+
+LIBEVENTD_PLUGIN_INTERFACE_ADD_CALLBACK(global_parse, GlobalParse);
+LIBEVENTD_PLUGIN_INTERFACE_ADD_CALLBACK(event_parse, EventParse);
+LIBEVENTD_PLUGIN_INTERFACE_ADD_CALLBACK(config_reset, Simple);
+
+LIBEVENTD_PLUGIN_INTERFACE_ADD_CALLBACK(event_action, EventDispatch);
+
+
+/*
+ * eventd core interface
+ */
+
+GList *libeventd_core_get_sockets(EventdCoreContext *context, EventdCoreInterface *interface, const gchar * const *binds);
+
+const gchar *libeventd_core_get_event_config_id(EventdCoreContext *context, EventdCoreInterface *interface, EventdEvent *event);
+void libeventd_core_push_event(EventdCoreContext *context, EventdCoreInterface *interface, const gchar *config_id, EventdEvent *event);
 
 #endif /* __EVENTD_EVENTD_PLUGIN_H__ */

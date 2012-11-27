@@ -56,6 +56,7 @@ include server/libeventd-event/libeventd-event.mk
 include server/libeventd-evp/libeventd-evp.mk
 include server/libeventd/libeventd.mk
 include server/eventd/eventd.mk
+include server/libeventd-plugin/libeventd-plugin.mk
 include server/eventdctl/eventdctl.mk
 include plugins/evp/evp.mk
 if ENABLE_DBUS

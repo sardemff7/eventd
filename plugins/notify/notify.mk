@@ -30,6 +30,7 @@ notify_la_LDFLAGS = \
 
 notify_la_LIBADD = \
 	libeventd-event.la \
+	libeventd-plugin.la \
 	libeventd.la \
 	$(NOTIFY_LIBS) \
 	$(GDK_PIXBUF_LIBS) \
