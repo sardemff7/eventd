@@ -160,8 +160,8 @@ _eventd_nd_linux_display_free(EventdNdDisplay *display)
 static inline guchar
 alpha_div(guchar c, guchar a)
 {
+#if 0
     guint16 t;
-    return c;
     switch ( a )
     {
     case 0xff:
@@ -172,6 +172,8 @@ alpha_div(guchar c, guchar a)
         t = c / a + 0x7f;
         return ((t << 8) + t) << 8;
     }
+#endif
+    return c;
 }
 
 static EventdNdSurface *
