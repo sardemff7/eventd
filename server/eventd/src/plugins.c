@@ -65,7 +65,7 @@ _eventd_plugins_load_dir(EventdCoreContext *core, EventdCoreInterface *interface
     {
         gchar *full_filename;
         EventdPlugin *plugin;
-        const gchar *id;
+        const gchar **id;
         EventdPluginGetInterfaceFunc get_interface;
         GModule *module;
 
@@ -124,16 +124,16 @@ _eventd_plugins_load_dir(EventdCoreContext *core, EventdCoreInterface *interface
         if ( ! g_module_symbol(module, "eventd_plugin_id", (void **)&id) )
             continue;
 
-        if ( id == NULL )
+        if ( *id == NULL )
         {
             g_warning("Plugin '%s' must define eventd_plugin_id", file);
             continue;
         }
 
-        if ( g_hash_table_lookup(plugins, id) != NULL )
+        if ( g_hash_table_lookup(plugins, *id) != NULL )
         {
 #ifdef DEBUG
-            g_debug("Plugin '%s' with id '%s' already loaded", file, id);
+            g_debug("Plugin '%s' with id '%s' already loaded", file, *id);
 #endif /* ! DEBUG */
             continue;
         }
@@ -142,7 +142,7 @@ _eventd_plugins_load_dir(EventdCoreContext *core, EventdCoreInterface *interface
             continue;
 
 #ifdef DEBUG
-        g_debug("Loading plugin '%s': %s", file, id);
+        g_debug("Loading plugin '%s': %s", file, *id);
 #endif /* ! DEBUG */
 
         plugin = g_new0(EventdPlugin, 1);
@@ -161,7 +161,7 @@ _eventd_plugins_load_dir(EventdCoreContext *core, EventdCoreInterface *interface
             }
         }
 
-        g_hash_table_insert(plugins, (gpointer) id, plugin);
+        g_hash_table_insert(plugins, (gpointer) *id, plugin);
     }
 }
 
