@@ -124,7 +124,7 @@ _eventd_plugins_load_dir(EventdCoreContext *core, EventdCoreInterface *interface
         if ( ! g_module_symbol(module, "eventd_plugin_id", (void **)&id) )
             continue;
 
-        if ( *id == NULL )
+        if ( id == NULL )
         {
             g_warning("Plugin '%s' must define eventd_plugin_id", file);
             continue;
