@@ -275,7 +275,7 @@ main(int argc, char *argv[])
     g_type_init();
 #endif /* ! GLIB_CHECK_VERSION(2,35,0) */
 
-    context = g_option_context_new("<command> [<command arguments>]- control utility for eventd");
+    context = g_option_context_new("<command> [<command arguments>] - control utility for eventd");
     g_option_context_add_main_entries(context, entries, GETTEXT_PACKAGE);
     g_option_context_set_ignore_unknown_options(context, TRUE);
     if ( ! g_option_context_parse(context, &argc, &argv, &error) )
