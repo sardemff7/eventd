@@ -206,29 +206,29 @@ _eventd_nd_xcb_randr_check_outputs(EventdNdDisplay *display)
     randr_outputs = xcb_randr_get_screen_resources_current_outputs(ressources);
 
     EventdNdXcbRandrOutput *outputs;
-    EventdNdXcbRandrOutput output_;
+    EventdNdXcbRandrOutput *output;
 
     outputs = g_new(EventdNdXcbRandrOutput, length + 1);
+    output = outputs;
 
     for ( i = 0 ; i < length ; ++i )
     {
         xcb_randr_get_output_info_cookie_t ocookie;
 
         ocookie = xcb_randr_get_output_info(display->xcb_connection, randr_outputs[i], cts);
-        if ( ( output_.output = xcb_randr_get_output_info_reply(display->xcb_connection, ocookie, NULL) ) == NULL )
+        if ( ( output->output = xcb_randr_get_output_info_reply(display->xcb_connection, ocookie, NULL) ) == NULL )
             continue;
 
         xcb_randr_get_crtc_info_cookie_t ccookie;
 
-        ccookie = xcb_randr_get_crtc_info(display->xcb_connection, output_.output->crtc, cts);
-        if ( ( output_.crtc = xcb_randr_get_crtc_info_reply(display->xcb_connection, ccookie, NULL) ) == NULL )
-            free(output_.output);
+        ccookie = xcb_randr_get_crtc_info(display->xcb_connection, output->output->crtc, cts);
+        if ( ( output->crtc = xcb_randr_get_crtc_info_reply(display->xcb_connection, ccookie, NULL) ) == NULL )
+            free(output->output);
         else
-            *(outputs++) = output_;
+            ++output;
     }
-    (outputs++)->output = NULL;
+    output->output = NULL;
 
-    EventdNdXcbRandrOutput *output;
     gchar **config_output;
     gboolean found = FALSE;
     for ( config_output = display->context->outputs ; ( *config_output != NULL ) && ( ! found ) ; ++config_output )
