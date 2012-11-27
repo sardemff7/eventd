@@ -119,67 +119,63 @@ static void
 _eventd_relay_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile *config_file)
 {
     gboolean disable;
-    gchar **server_uris = NULL;
-    gchar **server_uri = NULL;
-    gchar **avahi_names = NULL;
-    gchar **avahi_name = NULL;
-    GList *list = NULL;
-    EventdRelayServer *server;
 
     if ( ! g_key_file_has_group(config_file, "Relay") )
         return;
 
     if ( libeventd_config_key_file_get_boolean(config_file, "Relay", "Disable", &disable) < 0 )
         return;
-    if ( libeventd_config_key_file_get_string_list(config_file, "Relay", "Servers", &server_uris, NULL) < 0 )
-        goto fail;
-    if ( libeventd_config_key_file_get_string_list(config_file, "Relay", "Avahi", &avahi_names, NULL) < 0 )
-        goto fail;
-
-    if ( ! disable )
+    if ( disable )
     {
-        if ( server_uris != NULL )
-        {
-            for ( server_uri = server_uris ; *server_uri != NULL ; ++server_uri )
-            {
-                server = g_hash_table_lookup(context->servers, *server_uri);
-                if ( server == NULL )
-                {
-                    server = eventd_relay_server_new(*server_uri);
-                    if ( server == NULL )
-                        g_warning("Couldn't create the connectiont to server '%s'", *server_uri);
-                    else
-                        g_hash_table_insert(context->servers, g_strdup(*server_uri), server);
-                }
-                if ( server != NULL )
-                    list = g_list_prepend(list, server);
-            }
-        }
+        g_hash_table_insert(context->events, g_strdup(id), NULL);
+        return;
+    }
 
-        if ( avahi_names != NULL )
+    GList *list = NULL;
+
+    gchar **server_uris;
+    if ( libeventd_config_key_file_get_string_list(config_file, "Relay", "Servers", &server_uris, NULL) == 0 )
+    {
+        gchar **server_uri;
+        for ( server_uri = server_uris ; *server_uri != NULL ; ++server_uri )
         {
-            for ( avahi_name = avahi_names ; *avahi_name != NULL ; ++avahi_name )
+            EventdRelayServer *server;
+            server = g_hash_table_lookup(context->servers, *server_uri);
+            if ( server == NULL )
             {
-                server = g_hash_table_lookup(context->servers, *avahi_name);
+                server = eventd_relay_server_new(*server_uri);
                 if ( server == NULL )
-                {
-                    server = eventd_relay_server_new_avahi(context->avahi, *avahi_name);
-                    if ( server != NULL )
-                        g_hash_table_insert(context->servers, g_strdup(*avahi_name), server);
-                }
-                if ( server != NULL )
-                    list = g_list_prepend(list, server);
+                    g_warning("Couldn't create the connectiont to server '%s'", *server_uri);
+                else
+                    g_hash_table_insert(context->servers, g_strdup(*server_uri), server);
             }
+            if ( server != NULL )
+                list = g_list_prepend(list, server);
         }
+        g_strfreev(server_uris);
+    }
+
+    gchar **avahi_names;
+    if ( libeventd_config_key_file_get_string_list(config_file, "Relay", "Avahi", &avahi_names, NULL) == 0 )
+    {
+        gchar **avahi_name;
+        for ( avahi_name = avahi_names ; *avahi_name != NULL ; ++avahi_name )
+        {
+            EventdRelayServer *server;
+            server = g_hash_table_lookup(context->servers, *avahi_name);
+            if ( server == NULL )
+            {
+                server = eventd_relay_server_new_avahi(context->avahi, *avahi_name);
+                if ( server != NULL )
+                    g_hash_table_insert(context->servers, g_strdup(*avahi_name), server);
+            }
+            if ( server != NULL )
+                list = g_list_prepend(list, server);
+        }
+        g_strfreev(avahi_names);
     }
 
     g_hash_table_insert(context->events, g_strdup(id), list);
-
-fail:
-    if ( avahi_names != NULL )
-        g_strfreev(avahi_names);
-    if ( server_uris != NULL )
-        g_strfreev(server_uris);
 }
 
 static void
