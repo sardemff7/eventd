@@ -58,7 +58,7 @@ libeventd_evp_context_send_hello(LibeventdEvpContext *self, const gchar *categor
     g_return_if_fail(self != NULL);
     g_return_if_fail(category != NULL);
 
-    gboolean r = FALSE;
+    gboolean r;
     gchar *message;
     GError *error = NULL;
 
@@ -262,7 +262,7 @@ libeventd_evp_context_send_end(LibeventdEvpContext *self, const gchar *id, GAsyn
     g_return_if_fail(self != NULL);
     g_return_if_fail(id != NULL);
 
-    gboolean r = FALSE;
+    gboolean r;
     gchar *message;
     GError *error = NULL;
 
@@ -347,7 +347,7 @@ libeventd_evp_context_send_ended(LibeventdEvpContext *self, const gchar *id, Eve
     break;
     }
 
-    gboolean r = FALSE;
+    gboolean r;
     gchar *message;
 
     message = g_strdup_printf("ENDED %s %s", id, reason_text);

@@ -50,12 +50,6 @@ typedef sf_count_t (*sndfile_readf_t)(SNDFILE *sndfile, void *ptr, sf_count_t fr
 static void
 _eventd_sndfile_read_file(const gchar *filename, void **data, gsize *length, gint *format, guint32 *rate, guint8 *channels)
 {
-    SF_INFO sfi;
-    SNDFILE *f = NULL;
-    sndfile_readf_t readf_function = NULL;
-    size_t factor = 1;
-    sf_count_t r = 0;
-
     *data = NULL;
     *length = 0;
     *format = 0;
@@ -65,12 +59,16 @@ _eventd_sndfile_read_file(const gchar *filename, void **data, gsize *length, gin
     if ( *filename == 0 )
         return;
 
+    SNDFILE *f;
+    SF_INFO sfi;
     if ( ( f = sf_open(filename, SFM_READ, &sfi) ) == NULL )
     {
         g_warning("Can't open sound file");
         return;
     }
 
+    sndfile_readf_t readf_function;
+    size_t factor;
     switch ( sfi.format & SF_FORMAT_SUBMASK )
     {
     case SF_FORMAT_PCM_16:
@@ -98,7 +96,7 @@ _eventd_sndfile_read_file(const gchar *filename, void **data, gsize *length, gin
 
     *data = g_malloc0(*length);
 
-    if ( ( r = readf_function(f, *data, sfi.frames) ) < 0 )
+    if ( readf_function(f, *data, sfi.frames) < 0 )
     {
         g_warning("Error while reading sound file");
         g_free(*data);

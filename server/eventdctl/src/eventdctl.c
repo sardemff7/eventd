@@ -262,9 +262,6 @@ main(int argc, char *argv[])
         { NULL }
     };
 
-    GError *error = NULL;
-    GOptionContext *context = NULL;
-
 #ifdef ENABLE_NLS
     setlocale(LC_ALL, "");
     bindtextdomain(GETTEXT_PACKAGE, LOCALEDIR);
@@ -274,6 +271,9 @@ main(int argc, char *argv[])
 #if ! GLIB_CHECK_VERSION(2,35,0)
     g_type_init();
 #endif /* ! GLIB_CHECK_VERSION(2,35,0) */
+
+    GError *error = NULL;
+    GOptionContext *context;
 
     context = g_option_context_new("<command> [<command arguments>] - control utility for eventd");
     g_option_context_add_main_entries(context, entries, GETTEXT_PACKAGE);

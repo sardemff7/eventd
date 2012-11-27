@@ -377,7 +377,7 @@ static void
 _eventd_config_read_dir(EventdConfig *config, GHashTable *config_files, const gchar *config_dir_name)
 {
     GError *error = NULL;
-    GDir *config_dir = NULL;
+    GDir *config_dir;
 
     config_dir = g_dir_open(config_dir_name, 0, &error);
     if ( config_dir == NULL )
@@ -423,7 +423,6 @@ _eventd_config_load_dir(EventdConfig *config, GHashTable *config_files, const gc
 {
     GError *error = NULL;
     gchar *config_file_name = NULL;
-    GKeyFile *config_file = NULL;
 
     if ( ! g_file_test(config_dir_name, G_FILE_TEST_IS_DIR) )
         return;
@@ -431,6 +430,7 @@ _eventd_config_load_dir(EventdConfig *config, GHashTable *config_files, const gc
     config_file_name = g_build_filename(config_dir_name, PACKAGE_NAME ".conf", NULL);
     if ( g_file_test(config_file_name, G_FILE_TEST_IS_REGULAR) )
     {
+        GKeyFile *config_file;
         config_file = g_key_file_new();
         if ( ! g_key_file_load_from_file(config_file, config_file_name, G_KEY_FILE_NONE, &error) )
             g_warning("Can't read the configuration file '%s': %s", config_file_name, error->message);

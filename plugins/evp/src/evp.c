@@ -313,11 +313,10 @@ _eventd_evp_uninit(EventdPluginContext *service)
 static GList *
 _eventd_evp_add_socket(GList *used_sockets, EventdPluginContext *context, const gchar * const *binds)
 {
-    GList *sockets = NULL;
-    GList *socket_;
-
+    GList *sockets;
     sockets = context->core_interface->get_sockets(context->core, binds);
 
+    GList *socket_;
     for ( socket_ = sockets ; socket_ != NULL ; socket_ = g_list_next(socket_) )
     {
         GError *error = NULL;

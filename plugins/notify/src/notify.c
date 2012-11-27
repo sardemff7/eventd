@@ -59,7 +59,7 @@ typedef struct {
 static EventdLibnotifyEvent *
 _eventd_libnotify_event_new(gboolean disable, const char *title, const char *message, const char *image, const char *icon, Int *scale)
 {
-    EventdLibnotifyEvent *event = NULL;
+    EventdLibnotifyEvent *event;
 
     event = g_new0(EventdLibnotifyEvent, 1);
 
