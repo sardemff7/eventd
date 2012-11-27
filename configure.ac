@@ -67,7 +67,7 @@ DOCBOOK_CONDITIONS="installation"
 AM_CFLAGS="-fvisibility=hidden -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers"
 AM_LDFLAGS="-no-undefined -Wl,--no-undefined"
 AM_VALA_CFLAGS="-fvisibility=default -Wno-unused"
-AM_VALAFLAGS=""
+AM_VALAFLAGS="--target-glib=${glib_min_version}"
 AM_XSLTPROCFLAGS="--nonet --xinclude --stringparam man.output.quietly 1 --stringparam funcsynopsis.style ansi"
 
 
