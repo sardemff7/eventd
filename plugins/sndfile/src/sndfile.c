@@ -98,7 +98,7 @@ _eventd_sndfile_read_file(const gchar *filename, void **data, gsize *length, gin
 
     if ( readf_function(f, *data, sfi.frames) < 0 )
     {
-        g_warning("Error while reading sound file");
+        g_warning("Error while reading sound file: %s", sf_strerror(f));
         g_free(*data);
         *data = NULL;
         *length = 0;
