@@ -16,6 +16,7 @@ man5_MANS += \
 
 
 nd_la_SOURCES = \
+	plugins/nd/src/icon.h \
 	plugins/nd/src/cairo.c \
 	plugins/nd/src/cairo.h \
 	plugins/nd/src/style.c \
@@ -52,6 +53,10 @@ nd_la_LIBADD = \
 	$(GMODULE_LIBS) \
 	$(GLIB_LIBS)
 
+if ENABLE_GDK_PIXBUF
+nd_la_SOURCES += \
+	plugins/nd/src/icon.c
+endif
 
 ndbackendsdir = $(pluginsdir)/nd
 

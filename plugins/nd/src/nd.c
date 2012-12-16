@@ -31,7 +31,7 @@
 #include <glib.h>
 #include <glib-object.h>
 
-#include <gdk-pixbuf/gdk-pixbuf.h>
+//#include <gdk-pixbuf/gdk-pixbuf.h>
 #include <pango/pango.h>
 #include <cairo.h>
 

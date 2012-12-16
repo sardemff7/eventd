@@ -20,18 +20,10 @@
  *
  */
 
-#ifndef __LIBEVENTD_ND_NOTIFICATION_H__
-#define __LIBEVENTD_ND_NOTIFICATION_H__
+#ifndef __EVENTD_ND_ICON_H__
+#define __EVENTD_ND_ICON_H__
 
-#include <libeventd-nd-notification-types.h>
+void eventd_nd_cairo_image_and_icon_process(LibeventdNdNotification *notification, EventdNdStyle *style, cairo_surface_t **image, cairo_surface_t **icon, gint *text_margin, gint *width, gint *height);
+void eventd_nd_cairo_image_and_icon_draw(cairo_t *cr, cairo_surface_t *image, cairo_surface_t *icon, EventdNdStyle *style, gint width, gint height);
 
-void libeventd_nd_notification_init();
-void libeventd_nd_notification_uninit();
-
-LibeventdNdNotification *libeventd_nd_notification_new(LibeventdNdNotificationTemplate *template, EventdEvent *event, gint width, gint height);
-void libeventd_nd_notification_free(LibeventdNdNotification *notification);
-
-const gchar *libeventd_nd_notification_get_title(LibeventdNdNotification *notification);
-const gchar *libeventd_nd_notification_get_message(LibeventdNdNotification *notification);
-
-#endif /* __LIBEVENTD_ND_NOTIFICATION_H__ */
+#endif /* __EVENTD_ND_ICON_H__ */

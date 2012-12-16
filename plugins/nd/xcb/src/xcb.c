@@ -410,8 +410,7 @@ _eventd_nd_xcb_surface_expose_event(EventdNdSurface *self, xcb_expose_event_t *e
     cs = cairo_xcb_surface_create(self->display->xcb_connection, self->window, get_root_visual_type(self->display->screen), self->width, self->height);
     cr = cairo_create(cs);
     cairo_set_source_surface(cr, self->bubble, 0, 0);
-    cairo_rectangle(cr,  event->x, event->y, event->width, event->height);
-    cairo_fill(cr);
+    cairo_paint(cr);
     cairo_destroy(cr);
     cairo_surface_destroy(cs);
 

@@ -27,7 +27,9 @@
 #include <glib.h>
 #include <glib-object.h>
 
+#ifdef ENABLE_GDK_PIXBUF
 #include <gdk-pixbuf/gdk-pixbuf.h>
+#endif /* ENABLE_GDK_PIXBUF */
 
 #include <libeventd-event.h>
 #include <libeventd-config.h>
@@ -38,15 +40,19 @@
 struct _LibeventdNdNotificationTemplate {
     gchar *title;
     gchar *message;
+#ifdef ENABLE_GDK_PIXBUF
     gchar *image;
     gchar *icon;
+#endif /* ENABLE_GDK_PIXBUF */
 };
 
 struct _LibeventdNdNotification {
     gchar *title;
     gchar *message;
+#ifdef ENABLE_GDK_PIXBUF
     GdkPixbuf *image;
     GdkPixbuf *icon;
+#endif /* ENABLE_GDK_PIXBUF */
 };
 
 EVENTD_EXPORT
@@ -76,8 +82,10 @@ libeventd_nd_notification_template_new(GKeyFile *config_file)
     {
         self->title = g_strdup("$name");
         self->message = g_strdup("$text");
+#ifdef ENABLE_GDK_PIXBUF
         self->image = g_strdup("image");
         self->icon = g_strdup("icon");
+#endif /* ENABLE_GDK_PIXBUF */
         return self;
     }
 
@@ -93,6 +101,7 @@ libeventd_nd_notification_template_new(GKeyFile *config_file)
     else
         self->message = g_strdup("$text");
 
+#ifdef ENABLE_GDK_PIXBUF
     if ( libeventd_config_key_file_get_string(config_file, "Notification", "Image", &string) == 0 )
         self->image = string;
     else
@@ -102,6 +111,7 @@ libeventd_nd_notification_template_new(GKeyFile *config_file)
         self->icon = string;
     else
         self->icon = g_strdup("icon");
+#endif /* ENABLE_GDK_PIXBUF */
 
     return self;
 }
@@ -110,14 +120,17 @@ EVENTD_EXPORT
 void
 libeventd_nd_notification_template_free(LibeventdNdNotificationTemplate *self)
 {
+#ifdef ENABLE_GDK_PIXBUF
     g_free(self->image);
     g_free(self->icon);
+#endif /* ENABLE_GDK_PIXBUF */
     g_free(self->message);
     g_free(self->title);
     g_free(self);
 }
 
 
+#ifdef ENABLE_GDK_PIXBUF
 static GdkPixbuf *
 _libeventd_nd_notification_pixbuf_from_file(const gchar *path, gint width, gint height)
 {
@@ -209,19 +222,22 @@ _libeventd_nd_notification_pixbuf_from_base64(EventdEvent *event, const gchar *n
 
     return pixbuf;
 }
+#endif /* ENABLE_GDK_PIXBUF */
 
 EVENTD_EXPORT
 LibeventdNdNotification *
 libeventd_nd_notification_new(LibeventdNdNotificationTemplate *template, EventdEvent *event, gint width, gint height)
 {
     LibeventdNdNotification *self;
-    gchar *path;
 
     self = g_new0(LibeventdNdNotification, 1);
 
     self->title = libeventd_regex_replace_event_data(template->title, event, NULL, NULL);
 
     self->message = libeventd_regex_replace_event_data(template->message, event, NULL, NULL);
+
+#ifdef ENABLE_GDK_PIXBUF
+    gchar *path;
 
     if ( ( path = libeventd_config_get_filename(template->image, event, "icons") ) != NULL )
     {
@@ -238,6 +254,7 @@ libeventd_nd_notification_new(LibeventdNdNotificationTemplate *template, EventdE
     }
     else
         self->icon = _libeventd_nd_notification_pixbuf_from_base64(event, template->icon);
+#endif /* ENABLE_GDK_PIXBUF */
 
     return self;
 }
@@ -249,10 +266,12 @@ libeventd_nd_notification_free(LibeventdNdNotification *self)
     if ( self == NULL )
         return;
 
+#ifdef ENABLE_GDK_PIXBUF
     if ( self->icon != NULL )
         g_object_unref(self->icon);
     if ( self->image != NULL )
         g_object_unref(self->image);
+#endif /* ENABLE_GDK_PIXBUF */
     g_free(self->message);
     g_free(self->title);
 
@@ -273,6 +292,7 @@ libeventd_nd_notification_get_message(LibeventdNdNotification *self)
     return self->message;
 }
 
+#ifdef ENABLE_GDK_PIXBUF
 EVENTD_EXPORT
 GdkPixbuf *
 libeventd_nd_notification_get_image(LibeventdNdNotification *self)
@@ -286,4 +306,5 @@ libeventd_nd_notification_get_icon(LibeventdNdNotification *self)
 {
     return self->icon;
 }
+#endif /* ENABLE_GDK_PIXBUF */
 

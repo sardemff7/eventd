@@ -48,4 +48,9 @@ libeventd_la_CFLAGS += \
 libeventd_la_LIBADD += \
 	$(GDK_PIXBUF_LIBS)
 
+if ENABLE_GDK_PIXBUF
+pkginclude_HEADERS += \
+	server/libeventd/include/libeventd-nd-notification-icon.h
+endif
+
 endif

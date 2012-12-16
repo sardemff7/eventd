@@ -20,18 +20,12 @@
  *
  */
 
-#ifndef __LIBEVENTD_ND_NOTIFICATION_H__
-#define __LIBEVENTD_ND_NOTIFICATION_H__
+#ifndef __LIBEVENTD_ND_NOTIFICATION_ICON_H__
+#define __LIBEVENTD_ND_NOTIFICATION_ICON_H__
 
 #include <libeventd-nd-notification-types.h>
 
-void libeventd_nd_notification_init();
-void libeventd_nd_notification_uninit();
+GdkPixbuf *libeventd_nd_notification_get_image(LibeventdNdNotification *self);
+GdkPixbuf *libeventd_nd_notification_get_icon(LibeventdNdNotification *self);
 
-LibeventdNdNotification *libeventd_nd_notification_new(LibeventdNdNotificationTemplate *template, EventdEvent *event, gint width, gint height);
-void libeventd_nd_notification_free(LibeventdNdNotification *notification);
-
-const gchar *libeventd_nd_notification_get_title(LibeventdNdNotification *notification);
-const gchar *libeventd_nd_notification_get_message(LibeventdNdNotification *notification);
-
-#endif /* __LIBEVENTD_ND_NOTIFICATION_H__ */
+#endif /* __LIBEVENTD_ND_NOTIFICATION_ICON_H__ */

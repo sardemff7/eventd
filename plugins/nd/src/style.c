@@ -20,6 +20,10 @@
  *
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif /* HAVE_CONFIG_H */
+
 #include <glib.h>
 #include <pango/pango.h>
 
@@ -44,6 +48,7 @@ struct _EventdNdStyle {
         Colour colour;
     } bubble;
 
+#ifdef ENABLE_GDK_PIXBUF
     struct {
         gboolean set;
 
@@ -62,6 +67,7 @@ struct _EventdNdStyle {
         gint                       margin;
         gdouble                    fade_width;
     } icon;
+#endif /* ENABLE_GDK_PIXBUF */
 
     struct {
         gboolean set;
@@ -97,6 +103,7 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
     style->bubble.colour.b = 0.15;
     style->bubble.colour.a = 1.0;
 
+#ifdef ENABLE_GDK_PIXBUF
     /* image */
     style->image.set = TRUE;
     style->image.max_width  = 50;
@@ -111,6 +118,7 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
     style->icon.max_height = 50;
     style->icon.margin     = 10;
     style->icon.fade_width = 0.75;
+#endif /* ENABLE_GDK_PIXBUF */
 
     /* title */
     style->title.set = TRUE;
@@ -216,6 +224,7 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
 
     }
 
+#ifdef ENABLE_GDK_PIXBUF
     if ( g_key_file_has_group(config_file, "NotificationImage") )
     {
         Int max_width;
@@ -307,6 +316,7 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
                 self->icon.fade_width = eventd_nd_style_get_icon_fade_width(self->parent);
         }
     }
+#endif /* ENABLE_GDK_PIXBUF */
 }
 
 void
@@ -371,6 +381,7 @@ eventd_nd_style_get_bubble_colour(EventdNdStyle *self)
     return eventd_nd_style_get_bubble_colour(self->parent);
 }
 
+#ifdef ENABLE_GDK_PIXBUF
 gint
 eventd_nd_style_get_image_max_width(EventdNdStyle *self)
 {
@@ -442,6 +453,7 @@ eventd_nd_style_get_icon_fade_width(EventdNdStyle *self)
         return self->icon.fade_width;
     return eventd_nd_style_get_icon_fade_width(self->parent);
 }
+#endif /* ENABLE_GDK_PIXBUF */
 
 const PangoFontDescription *
 eventd_nd_style_get_title_font(EventdNdStyle *self)
