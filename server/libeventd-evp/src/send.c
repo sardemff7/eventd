@@ -67,11 +67,11 @@ libeventd_evp_context_send_hello(LibeventdEvpContext *self, const gchar *categor
     g_free(message);
 
     if ( ! r )
-        g_simple_async_report_take_gerror_in_idle(G_OBJECT(self->connection), callback, user_data, error);
+        g_simple_async_report_take_gerror_in_idle(G_OBJECT(self->cancellable), callback, user_data, error);
     else
     {
         self->waiter.callback = _libeventd_evp_context_send_hello_check_callback;
-        self->waiter.result = g_simple_async_result_new(G_OBJECT(self->connection), callback, user_data, libeventd_evp_context_send_hello);
+        self->waiter.result = g_simple_async_result_new(G_OBJECT(self->cancellable), callback, user_data, libeventd_evp_context_send_hello);
     }
 }
 
@@ -79,7 +79,7 @@ gboolean
 libeventd_evp_context_send_hello_finish(LibeventdEvpContext *self, GAsyncResult *result, GError **error)
 {
     g_return_val_if_fail(self != NULL, FALSE);
-    g_return_val_if_fail(g_simple_async_result_is_valid(result, G_OBJECT(self->connection), libeventd_evp_context_send_hello), FALSE);
+    g_return_val_if_fail(g_simple_async_result_is_valid(result, G_OBJECT(self->cancellable), libeventd_evp_context_send_hello), FALSE);
 
     GSimpleAsyncResult *simple = G_SIMPLE_ASYNC_RESULT(result);
 
@@ -214,20 +214,20 @@ libeventd_evp_context_send_event(LibeventdEvpContext *self, EventdEvent *event, 
         goto fail;
 
     self->waiter.callback = _libeventd_evp_context_send_event_check_callback;
-    self->waiter.result = g_simple_async_result_new(G_OBJECT(self->connection), callback, user_data, libeventd_evp_context_send_event);
+    self->waiter.result = g_simple_async_result_new(G_OBJECT(self->cancellable), callback, user_data, libeventd_evp_context_send_event);
 
     return;
 
 fail:
     g_free(message);
-    g_simple_async_report_take_gerror_in_idle(G_OBJECT(self->connection), callback, user_data, error);
+    g_simple_async_report_take_gerror_in_idle(G_OBJECT(self->cancellable), callback, user_data, error);
 }
 
 const gchar *
 libeventd_evp_context_send_event_finish(LibeventdEvpContext *self, GAsyncResult *result, GError **error)
 {
     g_return_val_if_fail(self != NULL, NULL);
-    g_return_val_if_fail(g_simple_async_result_is_valid(result, G_OBJECT(self->connection), libeventd_evp_context_send_event), NULL);
+    g_return_val_if_fail(g_simple_async_result_is_valid(result, G_OBJECT(self->cancellable), libeventd_evp_context_send_event), NULL);
 
     GSimpleAsyncResult *simple = G_SIMPLE_ASYNC_RESULT(result);
 
@@ -271,11 +271,11 @@ libeventd_evp_context_send_end(LibeventdEvpContext *self, const gchar *id, GAsyn
     g_free(message);
 
     if ( ! r )
-        g_simple_async_report_take_gerror_in_idle(G_OBJECT(self->connection), callback, user_data, error);
+        g_simple_async_report_take_gerror_in_idle(G_OBJECT(self->cancellable), callback, user_data, error);
     else
     {
         self->waiter.callback = _libeventd_evp_context_send_end_check_callback;
-        self->waiter.result = g_simple_async_result_new(G_OBJECT(self->connection), callback, user_data, libeventd_evp_context_send_end);
+        self->waiter.result = g_simple_async_result_new(G_OBJECT(self->cancellable), callback, user_data, libeventd_evp_context_send_end);
         self->waiter.id = g_strdup(id);
     }
 }
@@ -284,7 +284,7 @@ gboolean
 libeventd_evp_context_send_end_finish(LibeventdEvpContext *self, GAsyncResult *result, GError **error)
 {
     g_return_val_if_fail(self != NULL, FALSE);
-    g_return_val_if_fail(g_simple_async_result_is_valid(result, G_OBJECT(self->connection), libeventd_evp_context_send_end), FALSE);
+    g_return_val_if_fail(g_simple_async_result_is_valid(result, G_OBJECT(self->cancellable), libeventd_evp_context_send_end), FALSE);
 
     GSimpleAsyncResult *simple = G_SIMPLE_ASYNC_RESULT(result);
 
