@@ -79,7 +79,7 @@ gboolean
 libeventd_evp_context_send_hello_finish(LibeventdEvpContext *self, GAsyncResult *result, GError **error)
 {
     g_return_val_if_fail(self != NULL, FALSE);
-    g_return_val_if_fail(g_simple_async_result_is_valid(result, G_OBJECT(self->cancellable), libeventd_evp_context_send_hello), FALSE);
+    g_return_val_if_fail(g_simple_async_result_is_valid(result, G_OBJECT(self->cancellable), NULL), FALSE);
 
     GSimpleAsyncResult *simple = G_SIMPLE_ASYNC_RESULT(result);
 
@@ -227,7 +227,7 @@ const gchar *
 libeventd_evp_context_send_event_finish(LibeventdEvpContext *self, GAsyncResult *result, GError **error)
 {
     g_return_val_if_fail(self != NULL, NULL);
-    g_return_val_if_fail(g_simple_async_result_is_valid(result, G_OBJECT(self->cancellable), libeventd_evp_context_send_event), NULL);
+    g_return_val_if_fail(g_simple_async_result_is_valid(result, G_OBJECT(self->cancellable), NULL), NULL);
 
     GSimpleAsyncResult *simple = G_SIMPLE_ASYNC_RESULT(result);
 
@@ -284,7 +284,7 @@ gboolean
 libeventd_evp_context_send_end_finish(LibeventdEvpContext *self, GAsyncResult *result, GError **error)
 {
     g_return_val_if_fail(self != NULL, FALSE);
-    g_return_val_if_fail(g_simple_async_result_is_valid(result, G_OBJECT(self->cancellable), libeventd_evp_context_send_end), FALSE);
+    g_return_val_if_fail(g_simple_async_result_is_valid(result, G_OBJECT(self->cancellable), NULL), FALSE);
 
     GSimpleAsyncResult *simple = G_SIMPLE_ASYNC_RESULT(result);
 
