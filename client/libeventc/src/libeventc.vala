@@ -28,6 +28,7 @@ namespace Eventc
         CONNECTION_REFUSED,
         CONNECTION_OTHER,
         ALREADY_CONNECTED,
+        NOT_CONNECTED,
         HELLO,
         RECEIVE,
         EVENT,
@@ -145,6 +146,9 @@ namespace Eventc
         public async void
         event(Eventd.Event event) throws EventcError
         {
+            if ( ! this.is_connected() )
+                throw new EventcError.NOT_CONNECTED("not connected, you must connect first");
+
             unowned string id;
             try
             {
@@ -152,7 +156,7 @@ namespace Eventc
             }
             catch ( GLib.Error e )
             {
-                this.handshake_passed = false;
+                this.close_internal();
                 throw new EventcError.EVENT("Couldn't send event: %s", e.message);
             }
             this.events.insert(id, event);
@@ -167,6 +171,9 @@ namespace Eventc
         public async void
         event_end(Eventd.Event event) throws EventcError
         {
+            if ( ! this.is_connected() )
+                throw new EventcError.NOT_CONNECTED("not connected, you must connect first");
+
             unowned string id;
             id = this.ids.lookup(event);
             if ( id == null )
@@ -177,7 +184,7 @@ namespace Eventc
             }
             catch ( GLib.Error e )
             {
-                this.handshake_passed = false;
+                this.close_internal();
                 throw new EventcError.END("Couldn't send event end: %s", e.message);
             }
         }
@@ -185,12 +192,9 @@ namespace Eventc
         public async void
         close() throws EventcError
         {
-            this.events.remove_all();
-
             if ( this.is_connected() )
                 this.evp.send_bye();
-            yield this.evp.close();
-            this.handshake_passed = false;
+            this.close_internal();
         }
 
         private void *
@@ -222,7 +226,15 @@ namespace Eventc
         private void
         bye(Libeventd.Evp.Context context)
         {
+            this.close_internal();
+        }
+
+        private void
+        close_internal()
+        {
+            this.events.remove_all();
             this.handshake_passed = false;
+            this.evp.close();
         }
     }
 }
