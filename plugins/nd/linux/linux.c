@@ -197,6 +197,13 @@ _eventd_nd_linux_surface_free(EventdNdSurface *self)
 }
 
 static void
+_eventd_nd_linux_surface_update(EventdNdSurface *self, cairo_surface_t *bubble, cairo_surface_t *shape)
+{
+    cairo_surface_destroy(self->bubble);
+    self->bubble = cairo_surface_reference(bubble);
+}
+
+static void
 _eventd_nd_linux_surface_display(EventdNdSurface *self, gint x, gint y)
 {
     EventdNdDisplay *display = self->display;
@@ -260,5 +267,6 @@ eventd_nd_backend_get_info(EventdNdBackend *backend)
 
     backend->surface_new     = _eventd_nd_linux_surface_new;
     backend->surface_free    = _eventd_nd_linux_surface_free;
+    backend->surface_update  = _eventd_nd_linux_surface_update;
     backend->surface_display = _eventd_nd_linux_surface_display;
 }
