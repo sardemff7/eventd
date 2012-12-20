@@ -130,6 +130,7 @@ NK_INIT([uuid enum token colour/alpha colour/double])
 # Common dependencies
 #
 AC_CHECK_HEADERS([locale.h fcntl.h errno.h])
+AC_FUNC_MMAP
 
 PKG_CHECK_MODULES([GLIB], [glib-2.0 >= ${glib_min_version}])
 AC_DEFINE_UNQUOTED([GLIB_VERSION_MIN_REQUIRED], [(G_ENCODE_VERSION(${glib_min_major},${glib_min_minor}))], [The lower GLib version supported])
@@ -248,21 +249,41 @@ fi
 AM_CONDITIONAL([ENABLE_NOTIFICATION_DAEMON], [test x${enable_notification_daemon} = xyes])
 
 # nd backends
+AC_ARG_ENABLE([nd-wayland], AS_HELP_STRING([--disable-nd-wayland], [Disable Wayland graphical backend]), [], [enable_nd_wayland=${ev_os_unix}])
 AC_ARG_ENABLE([nd-xcb], AS_HELP_STRING([--disable-nd-xcb], [Disable XCB graphical backend]), [], [enable_nd_xcb=${ev_os_unix}])
 AC_ARG_ENABLE([nd-fbdev], AS_HELP_STRING([--enable-nd-fbdev], [Enable fbdev backend]), [], [enable_nd_fbdev=no])
 AC_ARG_ENABLE([nd-windows], AS_HELP_STRING([--enable-nd-windows], [Enable Windows backend]), [], [enable_nd_windows=${ev_os_win}])
 
 # Common
-if test x${enable_nd_xcb} = xyes -o x${enable_nd_fbdev} = xyes -o x${enable_nd_windows} = xyes; then
+if test x${enable_nd_wayland} = xyes -o x${enable_nd_xcb} = xyes -o x${enable_nd_fbdev} = xyes -o x${enable_nd_windows} = xyes; then
     if test x${enable_notification_daemon} = xno; then
-        AC_MSG_ERROR([*** XCB, fbdev or Windows backends required but not notification-daemon plugin])
+        AC_MSG_ERROR([*** Wayland, XCB, fbdev or Windows backends required but not notification-daemon plugin])
     fi
 fi
 if test x${enable_notification_daemon} = xyes; then
-    if test x${enable_nd_xcb} = xno -a x${enable_nd_fbdev} = xno -a x${enable_nd_windows} = xno; then
+    if test x${enable_nd_wayland} = xno -a x${enable_nd_xcb} = xno -a x${enable_nd_fbdev} = xno -a x${enable_nd_windows} = xno; then
         AC_MSG_ERROR([*** notification-daemon plugin required but no backend selected])
     fi
 fi
+
+# Wayland backend
+if test x${enable_nd_wayland} = xyes; then
+    AC_CHECK_HEADER([sys/mman.h])
+    if test x${ac_cv_func_mmap_fixed_mapped} = xno; then
+        AC_MSG_ERROR([*** mmap() function is required for the Wayland backend of the notification-daemon plugin])
+    fi
+    GW_CHECK_WAYLAND([wayland-cursor wayland-notification-area])
+    AC_ARG_VAR([WAYLAND_SCANNER], [Wayland XML scanner executable])
+    AC_PATH_PROG([WAYLAND_SCANNER], [wayland-scanner])
+    if test -z "${WAYLAND_SCANNER}"; then
+        AC_MSG_ERROR([wayland-scanner not found])
+    fi
+    wnadir=`${PKG_CONFIG} --variable=pkgdatadir wayland-notification-area`
+    AC_SUBST([wnadir])
+    AC_DEFINE([ENABLE_ND_WAYLAND], [1], [nd Wayland backend])
+    DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_nd_wayland"
+fi
+AM_CONDITIONAL([ENABLE_ND_WAYLAND], [test x${enable_nd_wayland} = xyes])
 
 # XCB backend
 if test x${enable_nd_xcb} = xyes; then
@@ -402,6 +423,7 @@ AC_MSG_RESULT([
         exec plugin: yes
         notification-daemon: ${enable_notification_daemon}
             Backends:
+                Wayland: ${enable_nd_wayland}
                 XCB: ${enable_nd_xcb}
                 fbdev: ${enable_nd_fbdev}
                 Windows: ${enable_nd_windows}

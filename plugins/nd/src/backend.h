@@ -29,6 +29,9 @@
 
 typedef enum {
     EVENTD_ND_BACKEND_NONE = 0,
+#ifdef ENABLE_ND_WAYLAND
+    EVENTD_ND_BACKEND_WAYLAND,
+#endif /* ENABLE_ND_WAYLAND */
 #ifdef ENABLE_ND_XCB
     EVENTD_ND_BACKEND_XCB,
 #endif /* ENABLE_ND_XCB */

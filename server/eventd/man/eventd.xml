@@ -289,7 +289,7 @@
     <refsect1 id="examples">
         <title>Examples</title>
 
-        <example condition="website;enable_nd_xcb">
+        <example condition="website;enable_nd_xcb;enable_nd_wayland">
             <title>As a notification daemon</title>
 
             <para>

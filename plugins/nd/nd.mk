@@ -100,6 +100,46 @@ ND_BACKENDS_LIBS = \
 	$(GLIB_LIBS) \
 	$(null)
 
+if ENABLE_ND_WAYLAND
+include src/libgwater/wayland.mk
+
+ndbackends_LTLIBRARIES += \
+	wayland.la \
+	$(null)
+
+wayland_la_SOURCES = \
+	%D%/src/backend.h \
+	%D%/src/backend-wayland.c \
+	$(null)
+
+nodist_wayland_la_SOURCES = \
+	%D%/src/notification-area-unstable-v1-protocol.c \
+	%D%/src/notification-area-unstable-v1-client-protocol.h \
+	$(null)
+
+wayland_la_CFLAGS = \
+	$(ND_BACKENDS_CFLAGS) \
+	$(GW_WAYLAND_CFLAGS) \
+	$(null)
+
+wayland_la_LDFLAGS = \
+	$(AM_LDFLAGS) \
+	$(PLUGIN_LDFLAGS) \
+	$(null)
+
+wayland_la_LIBADD = \
+	$(ND_BACKENDS_LIBS) \
+	$(GW_WAYLAND_LIBS) \
+	$(null)
+
+CLEANFILES += \
+	%D%/src/notification-area-unstable-v1-protocol.c \
+	%D%/src/notification-area-unstable-v1-client-protocol.h \
+	$(null)
+
+wayland.la %D%/src/wayland_la-wayland.lo: %D%/src/notification-area-unstable-v1-client-protocol.h
+endif
+
 if ENABLE_ND_XCB
 include src/libgwater/xcb.mk
 
@@ -179,6 +219,22 @@ win_la_LIBADD = \
 	$(GW_WIN_LIBS) \
 	$(null)
 endif
+
+
+#
+# Special rules
+#
+
+# Wayland protocol code generation rules
+%D%/src/%-protocol.c : $(wnadir)/%.xml
+	$(AM_V_GEN)$(WAYLAND_SCANNER) code < $< > $@
+
+%D%/src/%-server-protocol.h : $(wnadir)/%.xml
+	$(AM_V_GEN)$(WAYLAND_SCANNER) server-header < $< > $@
+
+%D%/src/%-client-protocol.h : $(wnadir)/%.xml
+	$(AM_V_GEN)$(WAYLAND_SCANNER) client-header < $< > $@
+
 
 
 #

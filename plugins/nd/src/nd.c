@@ -48,6 +48,9 @@
 
 const gchar *eventd_nd_backends_names[_EVENTD_ND_BACKENDS_SIZE] = {
     [EVENTD_ND_BACKEND_NONE] = "none",
+#ifdef ENABLE_ND_WAYLAND
+    [EVENTD_ND_BACKEND_WAYLAND] = "wayland",
+#endif /* ENABLE_ND_WAYLAND */
 #ifdef ENABLE_ND_XCB
     [EVENTD_ND_BACKEND_XCB] = "xcb",
 #endif /* ENABLE_ND_XCB */
@@ -194,6 +197,15 @@ _eventd_nd_start(EventdPluginContext *context)
 {
     EventdNdBackends backend = EVENTD_ND_BACKEND_NONE;
     const gchar *target = NULL;
+
+#ifdef ENABLE_ND_WAYLAND
+    if ( backend == EVENTD_ND_BACKEND_NONE )
+    {
+        target = g_getenv("WAYLAND_DISPLAY");
+        if ( target != NULL )
+            backend = EVENTD_ND_BACKEND_WAYLAND;
+    }
+#endif /* ENABLE_ND_WAYLAND */
 
 #ifdef ENABLE_ND_XCB
     if ( backend == EVENTD_ND_BACKEND_NONE )

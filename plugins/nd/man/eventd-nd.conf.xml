@@ -54,8 +54,31 @@
         </para>
     </refsect1>
 
-    <refsect1 id="global-sections" condition="website;enable_nd_xcb">
+    <refsect1 id="global-sections" condition="website;enable_nd_wayland;enable_nd_xcb">
         <title>Global sections</title>
+
+        <refsect2 condition="website;enable_nd_wayland">
+            <title>Section <varname>[NotificationWayland]</varname></title>
+
+            <para>The Wayland backend configuration</para>
+
+            <variablelist>
+                <varlistentry>
+                    <term><varname>CursorTheme=</varname></term>
+                    <listitem>
+                        <para>A <type>theme name</type></para>
+                        <para>The backend will use this theme, if available, to search for cursors.</para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><varname>Cursor=</varname></term>
+                    <listitem>
+                        <para>A <type>list of cursor names</type></para>
+                        <para>The backend will use the first available cursor of this list as the cursor when hovering a bubble.</para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+        </refsect2>
 
         <refsect2 condition="website;enable_nd_xcb">
             <title>Section <varname>[NotificationXcb]</varname></title>
