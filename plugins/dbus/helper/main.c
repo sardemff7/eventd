@@ -30,9 +30,23 @@
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif /* HAVE_STDLIB_H */
+#ifdef HAVE_ERRNO_H
+#include <errno.h>
+#endif /* HAVE_ERRNO_H */
 
 int
 main()
 {
-    return execl(BINDIR "/eventdctl", "eventdctl", "--auto-spawn", "notification-daemon", getenv("DISPLAY"), NULL);
+    const char *target = NULL;
+
+#ifdef ENABLE_XCB
+    target = getenv("DISPLAY");
+#endif /* ENABLE_XCB */
+
+    if ( target == NULL )
+        return 32;
+
+    execl(BINDIR "/eventdctl", "eventdctl", "--auto-spawn", "notification-daemon", target, NULL);
+
+    return 64 + errno;
 }
