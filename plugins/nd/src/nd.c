@@ -170,6 +170,36 @@ _eventd_nd_uninit(EventdPluginContext *context)
 
 
 /*
+ * Start/stop interface
+ */
+
+static void
+_eventd_nd_start(EventdPluginContext *context)
+{
+    EventdNdDisplay *display;
+    GHashTableIter iter;
+    const gchar *id;
+    EventdNdBackend *backend;
+
+    g_hash_table_iter_init(&iter, context->backends);
+    while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&backend) )
+    {
+        display = backend->display_new(backend->context, NULL);
+        if ( display != NULL )
+        {
+            EventdNdDisplayContext *display_context;
+
+            display_context = g_new(EventdNdDisplayContext, 1);
+            display_context->backend = backend;
+            display_context->display = display;
+
+            context->displays = g_list_prepend(context->displays, display_context);
+        }
+    }
+}
+
+
+/*
  * Control command interface
  */
 
@@ -477,6 +507,8 @@ eventd_plugin_get_interface(EventdPluginInterface *interface)
 {
     libeventd_plugin_interface_add_init_callback(interface, _eventd_nd_init);
     libeventd_plugin_interface_add_uninit_callback(interface, _eventd_nd_uninit);
+
+    libeventd_plugin_interface_add_start_callback(interface, _eventd_nd_start);
 
     libeventd_plugin_interface_add_control_command_callback(interface, _eventd_nd_control_command);
 

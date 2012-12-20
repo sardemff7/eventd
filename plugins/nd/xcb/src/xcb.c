@@ -325,6 +325,12 @@ _eventd_nd_xcb_events_callback(xcb_generic_event_t *event, gpointer user_data)
 static EventdNdDisplay *
 _eventd_nd_xcb_display_new(EventdNdBackendContext *context, const gchar *target)
 {
+    if ( target == NULL )
+        target = g_getenv("DISPLAY");
+
+    if ( target == NULL )
+        return NULL;
+
     gint r;
     gchar *h;
     gint d;

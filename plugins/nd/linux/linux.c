@@ -98,6 +98,12 @@ _eventd_nd_linux_display_new(EventdNdBackendContext *context, const gchar *targe
     struct fb_fix_screeninfo finfo;
     struct fb_var_screeninfo vinfo;
 
+    if ( target == NULL )
+        target = g_getenv("TTY");
+
+    if ( target == NULL )
+        return NULL;
+
     if ( ! g_str_has_prefix(target, FRAMEBUFFER_TARGET_PREFIX) )
         return NULL;
 
