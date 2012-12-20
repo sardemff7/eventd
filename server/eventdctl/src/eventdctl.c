@@ -214,6 +214,10 @@ _eventd_eventdctl_process_command(const gchar *private_socket, gboolean autospaw
         retval = _eventd_eventdctl_send_command(G_IO_STREAM(connection), "stop");
     else if ( g_strcmp0(argv[0], "reload") == 0 )
         retval =  _eventd_eventdctl_send_command(G_IO_STREAM(connection), "reload");
+    else if ( g_strcmp0(argv[0], "pause") == 0 )
+        retval =  _eventd_eventdctl_send_command(G_IO_STREAM(connection), "pause");
+    else if ( g_strcmp0(argv[0], "resume") == 0 )
+        retval =  _eventd_eventdctl_send_command(G_IO_STREAM(connection), "resume");
     else if ( g_strcmp0(argv[0], "add-flag") == 0 )
     {
         if ( argc == 1 )

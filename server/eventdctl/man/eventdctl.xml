@@ -120,6 +120,20 @@
             </varlistentry>
 
             <varlistentry>
+                <term><parameter class="command">pause</parameter></term>
+                <listitem>
+                    <para>Pause eventd, events will not be dispatched until resume.</para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><parameter class="command">resume</parameter></term>
+                <listitem>
+                    <para>Resume eventd, events are dispatched again. Waiting events are dispatched right after resume.</para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
                 <term><parameter class="command">add-flag</parameter> <parameter><replaceable class="option">flag</replaceable></parameter></term>
                 <listitem>
                     <para>Add <replaceable class="option">flag</replaceable>  to eventd (see <citerefentry><refentrytitle>eventd.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>).</para>

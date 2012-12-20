@@ -195,6 +195,18 @@ eventd_core_push_event(EventdCoreContext *context, const gchar *config_id, Event
 }
 
 void
+eventd_core_pause(EventdCoreContext *context)
+{
+    eventd_queue_pause(context->queue);
+}
+
+void
+eventd_core_resume(EventdCoreContext *context)
+{
+    eventd_queue_resume(context->queue);
+}
+
+void
 eventd_core_add_flag(EventdCoreContext *context, GQuark flag)
 {
     context->flags = g_renew(GQuark, context->flags, ++context->flags_count + 1);

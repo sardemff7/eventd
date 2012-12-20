@@ -26,8 +26,8 @@
 EventdQueue *eventd_queue_new(EventdConfig *config);
 void eventd_queue_free(EventdQueue *queue);
 
-void eventd_queue_start(EventdQueue *queue);
-void eventd_queue_stop(EventdQueue *queue);
+void eventd_queue_pause(EventdQueue *queue);
+void eventd_queue_resume(EventdQueue *queue);
 
 void eventd_queue_push(EventdQueue *queue, const gchar *config_id, EventdEvent *event);
 void eventd_queue_event_ended(EventdQueue *queue);

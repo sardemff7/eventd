@@ -35,6 +35,7 @@
 
 struct _EventdQueue {
     EventdConfig *config;
+    gboolean paused;
     GQueue *queue;
     GQueue *current;
 };
@@ -49,7 +50,7 @@ typedef struct {
     guint timeout_id;
 } EventdQueueEvent;
 
-static void _eventd_queue_source_try_dispatch(EventdQueue *queue);
+static gboolean _eventd_queue_source_try_dispatch(EventdQueue *queue);
 
 static void
 _eventd_queue_event_free(gpointer data)
@@ -135,20 +136,25 @@ _eventd_queue_source_dispatch(EventdQueue *queue, EventdQueueEvent *event)
     _eventd_queue_event_set_timeout(queue, event->config_id, event);
 }
 
-static void
+static gboolean
 _eventd_queue_source_try_dispatch(EventdQueue *queue)
 {
+    if ( queue->paused )
+        return FALSE;
+
     guint64 stack;
 
     stack = eventd_config_get_stack(queue->config);
     if ( ( stack > 0 ) && ( g_queue_get_length(queue->current) == stack ) )
-        return;
+        return FALSE;
 
     EventdQueueEvent *event;
 
     event = g_queue_pop_head(queue->queue);
     if ( event != NULL )
         _eventd_queue_source_dispatch(queue, event);
+
+    return TRUE;
 }
 
 EventdQueue *
@@ -173,6 +179,23 @@ eventd_queue_free(EventdQueue *queue)
     g_queue_free_full(queue->queue, _eventd_queue_event_free);
 
     g_free(queue);
+}
+
+void
+eventd_queue_pause(EventdQueue *queue)
+{
+    queue->paused = TRUE;
+}
+
+void
+eventd_queue_resume(EventdQueue *queue)
+{
+    queue->paused = FALSE;
+    while ( ! g_queue_is_empty(queue->queue) )
+    {
+        if ( ! _eventd_queue_source_try_dispatch(queue) )
+            break;
+    }
 }
 
 void

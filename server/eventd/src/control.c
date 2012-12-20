@@ -84,6 +84,14 @@ _eventd_service_private_connection_handler(GSocketService *socket_service, GSock
         {
             eventd_core_config_reload(control->core);
         }
+        else if ( g_strcmp0(line, "pause") == 0 )
+        {
+            eventd_core_pause(control->core);
+        }
+        else if ( g_strcmp0(line, "resume") == 0 )
+        {
+            eventd_core_resume(control->core);
+        }
         else if ( g_str_has_prefix(line, "add-flag ") )
         {
             eventd_core_add_flag(control->core, g_quark_from_string(line + strlen("add-flag ")));
