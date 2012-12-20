@@ -218,7 +218,7 @@ eventd_core_config_reload(EventdCoreContext *context)
 }
 
 void
-eventd_core_quit(EventdCoreContext *context)
+eventd_core_stop(EventdCoreContext *context)
 {
     eventd_plugins_stop_all();
 
@@ -290,17 +290,17 @@ _eventd_core_debug_log_handler(const gchar *log_domain, GLogLevelFlags log_level
 #ifdef G_OS_UNIX
 #if GLIB_CHECK_VERSION(2,32,0)
 static gboolean
-_eventd_core_quit(gpointer user_data)
+_eventd_core_stop(gpointer user_data)
 {
-    eventd_core_quit(user_data);
+    eventd_core_stop(user_data);
     return FALSE;
 }
 #else /* ! GLIB_CHECK_VERSION(2,32,0) */
 static EventdCoreContext *_eventd_core_sigaction_context = NULL;
 static void
-_eventd_core_sigaction_quit(int sig, siginfo_t *info, void *data)
+_eventd_core_sigaction_stop(int sig, siginfo_t *info, void *data)
 {
-    eventd_core_quit(_eventd_core_sigaction_context);
+    eventd_core_stop(_eventd_core_sigaction_context);
 }
 #endif /* ! GLIB_CHECK_VERSION(2,32,0) */
 #endif /* G_OS_UNIX */
@@ -336,9 +336,9 @@ main(int argc, char *argv[])
     bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
 #endif /* ENABLE_NLS */
 
-#if ! GLIB_CHECK_VERSION(2,35,0)
+#if ! GLIB_CHECK_VERSION(2,35,1)
     g_type_init();
-#endif /* ! GLIB_CHECK_VERSION(2,35,0) */
+#endif /* ! GLIB_CHECK_VERSION(2,35,1) */
 
 #ifdef DEBUG
     const gchar *debug_log_filename =  g_getenv("EVENTD_DEBUG_LOG_FILENAME");
@@ -421,12 +421,12 @@ main(int argc, char *argv[])
 
 #ifdef G_OS_UNIX
 #if GLIB_CHECK_VERSION(2,32,0)
-    g_unix_signal_add(SIGTERM, _eventd_core_quit, context);
-    g_unix_signal_add(SIGINT, _eventd_core_quit, context);
+    g_unix_signal_add(SIGTERM, _eventd_core_stop, context);
+    g_unix_signal_add(SIGINT, _eventd_core_stop, context);
 #else /* ! GLIB_CHECK_VERSION(2,32,0) */
     _eventd_core_sigaction_context = context;
     struct sigaction action;
-    action.sa_sigaction = _eventd_core_sigaction_quit;
+    action.sa_sigaction = _eventd_core_sigaction_stop;
     action.sa_flags = SA_SIGINFO;
     sigemptyset(&action.sa_mask);
     sigaction(SIGTERM, &action, NULL);

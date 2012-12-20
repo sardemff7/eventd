@@ -210,8 +210,8 @@ _eventd_eventdctl_process_command(const gchar *private_socket, gboolean autospaw
 
     retval = 2;
 
-    if ( g_strcmp0(argv[0], "quit") == 0 )
-        retval = _eventd_eventdctl_send_command(G_IO_STREAM(connection), "quit");
+    if ( g_strcmp0(argv[0], "stop") == 0 )
+        retval = _eventd_eventdctl_send_command(G_IO_STREAM(connection), "stop");
     else if ( g_strcmp0(argv[0], "reload") == 0 )
         retval =  _eventd_eventdctl_send_command(G_IO_STREAM(connection), "reload");
     else if ( g_strcmp0(argv[0], "add-flag") == 0 )
@@ -268,9 +268,9 @@ main(int argc, char *argv[])
     bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
 #endif /* ENABLE_NLS */
 
-#if ! GLIB_CHECK_VERSION(2,35,0)
+#if ! GLIB_CHECK_VERSION(2,35,1)
     g_type_init();
-#endif /* ! GLIB_CHECK_VERSION(2,35,0) */
+#endif /* ! GLIB_CHECK_VERSION(2,35,1) */
 
     GError *error = NULL;
     GOptionContext *context;

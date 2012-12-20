@@ -97,7 +97,7 @@ eventd_tests_env_new(const gchar *plugins, const gchar *port, gchar **argv, gint
     self->stop_args[0] = g_strdup(EVENTDCTL_PATH);
     self->stop_args[1] = g_strdup("--socket");
     self->stop_args[2] = g_strdup(port);
-    self->stop_args[3] = g_strdup("quit");
+    self->stop_args[3] = g_strdup("stop");
     self->stop_args[4] = NULL;
 
 

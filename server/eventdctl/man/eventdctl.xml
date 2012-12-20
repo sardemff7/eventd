@@ -106,7 +106,7 @@
             </varlistentry>
 
             <varlistentry>
-                <term><parameter class="command">quit</parameter></term>
+                <term><parameter class="command">stop</parameter></term>
                 <listitem>
                     <para>Quit eventd.</para>
                 </listitem>
@@ -157,7 +157,7 @@
                 <varlistentry>
                     <term><literal>1</literal></term>
                     <listitem>
-                        <para>Impossible to connect to eventd. May be returned if no eventd is started or if our started eventd quitted early.</para>
+                        <para>Impossible to connect to eventd. May be returned if no eventd is started or if our started eventd exited early.</para>
                     </listitem>
                 </varlistentry>
 
