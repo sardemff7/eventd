@@ -75,6 +75,7 @@ typedef struct {
 
 typedef struct {
     EventdNdBackend *backend;
+    EventdNdDisplay *display;
     EventdNdSurface *surface;
 } EventdNdSurfaceContext;
 
@@ -282,6 +283,19 @@ _eventd_nd_config_reset(EventdPluginContext *context)
  * Event action interface
  */
 
+static void
+_eventd_nd_notification_set(EventdNdNotification *self, EventdPluginContext *context, EventdEvent *event, cairo_surface_t **bubble, cairo_surface_t **shape)
+{
+    LibeventdNdNotification *notification;
+
+    notification = libeventd_nd_notification_new(eventd_nd_style_get_template(self->style), event, context->max_width, context->max_height);
+    eventd_nd_cairo_get_surfaces(event, notification, self->style, bubble, shape);
+    libeventd_nd_notification_free(notification);
+
+    self->width = cairo_image_surface_get_width(*bubble);
+    self->height = cairo_image_surface_get_height(*bubble);
+}
+
 static EventdNdNotification *
 _eventd_nd_notification_new(EventdPluginContext *context, EventdEvent *event, EventdNdStyle *style)
 {
@@ -291,16 +305,10 @@ _eventd_nd_notification_new(EventdPluginContext *context, EventdEvent *event, Ev
     self->context = context;
     self->style = style;
 
-    LibeventdNdNotification *notification;
     cairo_surface_t *bubble;
     cairo_surface_t *shape;
 
-    notification = libeventd_nd_notification_new(eventd_nd_style_get_template(style), event, context->max_width, context->max_height);
-    eventd_nd_cairo_get_surfaces(event, notification, style, &bubble, &shape);
-    libeventd_nd_notification_free(notification);
-
-    self->width = cairo_image_surface_get_width(bubble);
-    self->height = cairo_image_surface_get_height(bubble);
+    _eventd_nd_notification_set(self, context, event, &bubble, &shape);
 
     GList *display_;
     for ( display_ = context->displays ; display_ != NULL ; display_ = g_list_next(display_) )
@@ -310,6 +318,7 @@ _eventd_nd_notification_new(EventdPluginContext *context, EventdEvent *event, Ev
 
         surface = g_new(EventdNdSurfaceContext, 1);
         surface->backend = display->backend;
+        surface->display = display->display;
         surface->surface = display->backend->surface_new(event, display->display, bubble, shape);
 
         self->surfaces = g_list_prepend(self->surfaces, surface);
@@ -337,6 +346,31 @@ _eventd_nd_notification_free(EventdNdNotification *self)
     g_list_free_full(self->surfaces, _eventd_nd_notification_surface_context_free);
 
     g_free(self);
+}
+
+static void
+_eventd_nd_notification_update(EventdNdNotification *self,EventdPluginContext *context,  EventdEvent *event)
+{
+    cairo_surface_t *bubble;
+    cairo_surface_t *shape;
+
+    _eventd_nd_notification_set(self, context, event, &bubble, &shape);
+
+    GList *surface_;
+    for ( surface_ = self->surfaces ; surface_ != NULL ; surface_ = g_list_next(surface_) )
+    {
+        EventdNdSurfaceContext *surface = surface_->data;
+        if ( surface->backend->surface_update != NULL )
+            surface->backend->surface_update(surface->surface, bubble, shape);
+        else
+        {
+            surface->backend->surface_free(surface->surface);
+            surface->surface = surface->backend->surface_new(event, surface->display, bubble, shape);
+        }
+    }
+
+    cairo_surface_destroy(bubble);
+    cairo_surface_destroy(shape);
 }
 
 static void
@@ -381,19 +415,10 @@ _eventd_nd_update_notifications(EventdPluginContext *context)
 }
 
 static void
-_eventd_nd_event_updated(EventdEvent *event, EventdNdNotification *old_notification)
+_eventd_nd_event_updated(EventdEvent *event, EventdNdNotification *self)
 {
-    EventdPluginContext *context = old_notification->context;
-    EventdNdStyle *style = old_notification->style;
-
-    EventdNdNotification *notification;
-    notification = _eventd_nd_notification_new(context, event, style);
-
-    notification->notification = old_notification->notification;
-    notification->notification->data = notification;
-
-    _eventd_nd_notification_free(old_notification);
-
+    EventdPluginContext *context = self->context;
+    _eventd_nd_notification_update(self, context, event);
     _eventd_nd_update_notifications(context);
 }
 

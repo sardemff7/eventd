@@ -46,6 +46,7 @@ typedef void (*EventdNdDisplayFunc)(EventdNdDisplay *display);
 
 typedef EventdNdSurface *(*EventdNdSurfaceNewFunc)(EventdEvent *event, EventdNdDisplay *display, cairo_surface_t *bubble, cairo_surface_t *shape);
 typedef void (*EventdNdSurfaceFunc)(EventdNdSurface *surface);
+typedef void(*EventdNdSurfaceUpdateFunc)(EventdNdSurface *surface, cairo_surface_t *bubble, cairo_surface_t *shape);
 typedef void (*EventdNdSurfaceDisplayFunc)(EventdNdSurface *surface, gint x, gint y);
 
 typedef struct {
@@ -59,6 +60,7 @@ typedef struct {
 
     EventdNdSurfaceNewFunc surface_new;
     EventdNdSurfaceFunc surface_free;
+    EventdNdSurfaceUpdateFunc surface_update;
     EventdNdSurfaceDisplayFunc surface_display;
 
     /* private */
