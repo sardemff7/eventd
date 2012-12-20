@@ -14,7 +14,6 @@ vapidir = $(datadir)/vala/vapi
 pluginsdir = $(pkglibdir)/plugins
 
 bin_PROGRAMS =
-libexec_PROGRAMS =
 noinst_LTLIBRARIES =
 lib_LTLIBRARIES =
 pkglib_LTLIBRARIES =

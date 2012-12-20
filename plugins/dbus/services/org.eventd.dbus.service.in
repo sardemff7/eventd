@@ -1,4 +1,4 @@
 [D-BUS Service]
 Name=org.freedesktop.Notifications
-Exec=@libexecdir@/eventd-notification-daemon
+Exec=@bindir@/eventd
 SystemdService=eventd.service
