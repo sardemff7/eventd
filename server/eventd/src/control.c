@@ -76,9 +76,9 @@ _eventd_service_private_connection_handler(GSocketService *socket_service, GSock
         g_data_input_stream_read_byte(input, NULL, &error);
         if ( error != NULL )
             g_clear_error(&error);
-        else if ( g_strcmp0(line, "quit") == 0 )
+        else if ( g_strcmp0(line, "stop") == 0 )
         {
-            eventd_core_quit(control->core);
+            eventd_core_stop(control->core);
         }
         else if ( g_strcmp0(line, "reload") == 0 )
         {
