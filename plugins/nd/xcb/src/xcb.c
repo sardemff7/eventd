@@ -405,7 +405,8 @@ _eventd_nd_xcb_surface_expose_event(EventdNdSurface *self, xcb_expose_event_t *e
     cs = cairo_xcb_surface_create(self->display->xcb_connection, self->window, get_root_visual_type(self->display->screen), self->width, self->height);
     cr = cairo_create(cs);
     cairo_set_source_surface(cr, self->bubble, 0, 0);
-    cairo_paint(cr);
+    cairo_rectangle(cr, event->x, event->y, event->width, event->height);
+    cairo_fill(cr);
     cairo_destroy(cr);
     cairo_surface_destroy(cs);
 
@@ -416,6 +417,40 @@ static void
 _eventd_nd_xcb_surface_button_release_event(EventdNdSurface *self)
 {
     eventd_event_end(self->event, EVENTD_EVENT_END_REASON_USER_DISMISS);
+}
+
+static void
+_eventd_nd_xcb_surface_shape(EventdNdSurface *self, cairo_surface_t *shape)
+{
+    EventdNdDisplay *display = self->display;
+
+    if ( ! display->shape )
+        return;
+
+    gint width;
+    gint height;
+
+    width = cairo_image_surface_get_width(shape);
+    height = cairo_image_surface_get_height(shape);
+
+    xcb_pixmap_t shape_id;
+    xcb_gcontext_t gc;
+
+    shape_id = xcb_generate_id(display->xcb_connection);
+    xcb_create_pixmap(display->xcb_connection, 1,
+                      shape_id, display->screen->root,
+                      width, height);
+
+    gc = xcb_generate_id(display->xcb_connection);
+    xcb_create_gc(display->xcb_connection, gc, shape_id, 0, NULL);
+    xcb_put_image(display->xcb_connection, XCB_IMAGE_FORMAT_Z_PIXMAP, shape_id, gc, width, height, 0, 0, 0, 1, cairo_image_surface_get_stride(shape) * height, cairo_image_surface_get_data(shape));
+    xcb_free_gc(display->xcb_connection, gc);
+
+    xcb_shape_mask(display->xcb_connection,
+                   XCB_SHAPE_SO_INTERSECT, XCB_SHAPE_SK_BOUNDING,
+                   self->window, 0, 0, shape_id);
+
+    xcb_free_pixmap(display->xcb_connection, shape_id);
 }
 
 static EventdNdSurface *
@@ -452,27 +487,7 @@ _eventd_nd_xcb_surface_new(EventdEvent *event, EventdNdDisplay *display, cairo_s
                                        display->screen->root_visual,  /* visual        */
                                        selmask, selval);              /* masks         */
 
-    if ( display->shape )
-    {
-        xcb_pixmap_t shape_id;
-        xcb_gcontext_t gc;
-
-        shape_id = xcb_generate_id(display->xcb_connection);
-        xcb_create_pixmap(display->xcb_connection, 1,
-                          shape_id, display->screen->root,
-                          width, height);
-
-        gc = xcb_generate_id(display->xcb_connection);
-        xcb_create_gc(display->xcb_connection, gc, shape_id, 0, NULL);
-        xcb_put_image(display->xcb_connection, XCB_IMAGE_FORMAT_Z_PIXMAP, shape_id, gc, width, height, 0, 0, 0, 1, cairo_image_surface_get_stride(shape) * height, cairo_image_surface_get_data(shape));
-        xcb_free_gc(display->xcb_connection, gc);
-
-        xcb_shape_mask(display->xcb_connection,
-                       XCB_SHAPE_SO_INTERSECT, XCB_SHAPE_SK_BOUNDING,
-                       surface->window, 0, 0, shape_id);
-
-        xcb_free_pixmap(display->xcb_connection, shape_id);
-    }
+    _eventd_nd_xcb_surface_shape(surface, shape);
 
     xcb_map_window(surface->display->xcb_connection, surface->window);
 
@@ -502,6 +517,29 @@ _eventd_nd_xcb_surface_free(EventdNdSurface *surface)
     g_object_unref(surface->event);
 
     g_free(surface);
+}
+
+static void
+_eventd_nd_xcb_surface_update(EventdNdSurface *self, cairo_surface_t *bubble, cairo_surface_t *shape)
+{
+    cairo_surface_destroy(self->bubble);
+    self->bubble = cairo_surface_reference(bubble);
+
+    gint width;
+    gint height;
+
+    width = cairo_image_surface_get_width(bubble);
+    height = cairo_image_surface_get_height(bubble);
+
+    guint16 mask = XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT;
+    guint32 vals[] = { width, height };
+
+    xcb_configure_window(self->display->xcb_connection, self->window, mask, vals);
+    _eventd_nd_xcb_surface_shape(self, shape);
+
+    xcb_clear_area(self->display->xcb_connection, TRUE, self->window, 0, 0, width, height);
+
+    xcb_flush(self->display->xcb_connection);
 }
 
 static void
@@ -536,5 +574,6 @@ eventd_nd_backend_get_info(EventdNdBackend *backend)
 
     backend->surface_new     = _eventd_nd_xcb_surface_new;
     backend->surface_free    = _eventd_nd_xcb_surface_free;
+    backend->surface_update  = _eventd_nd_xcb_surface_update;
     backend->surface_display = _eventd_nd_xcb_surface_display;
 }
