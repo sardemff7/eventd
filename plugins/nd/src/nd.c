@@ -368,7 +368,8 @@ _eventd_nd_update_notifications(EventdPluginContext *context)
         for ( surface_ = notification->surfaces ; surface_ != NULL ; surface_ = g_list_next(surface_) )
         {
             surface = surface_->data;
-            surface->backend->surface_display(surface->surface, x, y);
+            if ( surface->backend->surface_display != NULL )
+                surface->backend->surface_display(surface->surface, x, y);
         }
         if ( right )
             x += notification->width;
