@@ -187,13 +187,8 @@ _eventd_nd_control_command(EventdPluginContext *context, const gchar *command)
     g_hash_table_iter_init(&iter, context->backends);
     while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&backend) )
     {
-        if ( ! backend->display_test(backend->context, target) )
-            continue;
-
         display = backend->display_new(backend->context, target);
-        if ( display == NULL )
-            g_warning("Couldn't initialize display for '%s'", target);
-        else
+        if ( display != NULL )
         {
             EventdNdDisplayContext *display_context;
 

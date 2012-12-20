@@ -41,7 +41,6 @@ typedef void (*EventdNdBackendUninitFunc)(EventdNdBackendContext *context);
 
 typedef void (*EventdNdBackendGlobalParseFunc)(EventdNdBackendContext *context, GKeyFile *config_file);
 
-typedef gboolean (*EventdNdDisplayTestFunc)(EventdNdBackendContext *context, const gchar *target);
 typedef EventdNdDisplay *(*EventdNdDisplayNewFunc)(EventdNdBackendContext *context, const gchar *target);
 typedef void (*EventdNdDisplayFunc)(EventdNdDisplay *display);
 
@@ -55,7 +54,6 @@ typedef struct {
 
     EventdNdBackendGlobalParseFunc global_parse;
 
-    EventdNdDisplayTestFunc display_test;
     EventdNdDisplayNewFunc display_new;
     EventdNdDisplayFunc display_free;
 

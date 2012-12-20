@@ -91,18 +91,15 @@ _eventd_nd_linux_uninit(EventdNdBackendContext *context)
     g_free(context);
 }
 
-static gboolean
-_eventd_nd_linux_display_test(EventdNdBackendContext *context, const gchar *target)
-{
-    return g_str_has_prefix(target, FRAMEBUFFER_TARGET_PREFIX);
-}
-
 static EventdNdDisplay *
 _eventd_nd_linux_display_new(EventdNdBackendContext *context, const gchar *target)
 {
     EventdNdDisplay *display;
     struct fb_fix_screeninfo finfo;
     struct fb_var_screeninfo vinfo;
+
+    if ( ! g_str_has_prefix(target, FRAMEBUFFER_TARGET_PREFIX) )
+        return NULL;
 
     display = g_new0(EventdNdDisplay, 1);
 
@@ -258,7 +255,6 @@ eventd_nd_backend_get_info(EventdNdBackend *backend)
     backend->init = _eventd_nd_linux_init;
     backend->uninit = _eventd_nd_linux_uninit;
 
-    backend->display_test = _eventd_nd_linux_display_test;
     backend->display_new = _eventd_nd_linux_display_new;
     backend->display_free = _eventd_nd_linux_display_free;
 

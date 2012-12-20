@@ -322,27 +322,21 @@ _eventd_nd_xcb_events_callback(xcb_generic_event_t *event, gpointer user_data)
     return TRUE;
 }
 
-static gboolean
-_eventd_nd_xcb_display_test(EventdNdBackendContext *context, const gchar *target)
-{
-    gint r;
-    gchar *host;
-    gint display;
-
-    r = xcb_parse_display(target, &host, &display, NULL);
-    if ( r == 0 )
-        return FALSE;
-    free(host);
-
-    if ( g_slist_find_custom(context->displays, target, g_str_equal) != NULL )
-        return FALSE;
-
-    return TRUE;
-}
-
 static EventdNdDisplay *
 _eventd_nd_xcb_display_new(EventdNdBackendContext *context, const gchar *target)
 {
+    gint r;
+    gchar *h;
+    gint d;
+
+    r = xcb_parse_display(target, &h, &d, NULL);
+    if ( r == 0 )
+        return NULL;
+    free(h);
+
+    if ( g_slist_find_custom(context->displays, target, g_str_equal) != NULL )
+        return NULL;
+
     EventdNdDisplay *display;
     const xcb_query_extension_reply_t *extension_query;
     gint screen;
@@ -352,6 +346,7 @@ _eventd_nd_xcb_display_new(EventdNdBackendContext *context, const gchar *target)
     display->source = g_xcb_source_new(NULL, target, &screen, _eventd_nd_xcb_events_callback, display, NULL);
     if ( display->source == NULL )
     {
+        g_warning("Couldn't initialize X connection for '%s'", target);
         g_free(display);
         return NULL;
     }
@@ -536,7 +531,6 @@ eventd_nd_backend_get_info(EventdNdBackend *backend)
 
     backend->global_parse = _eventd_nd_xcb_global_parse;
 
-    backend->display_test = _eventd_nd_xcb_display_test;
     backend->display_new = _eventd_nd_xcb_display_new;
     backend->display_free = _eventd_nd_xcb_display_free;
 
