@@ -22,7 +22,7 @@
 
 namespace Eventc
 {
-    static string type;
+    static string category;
     static string event_name;
     static string[] event_data_name;
     static string[] event_data_content;
@@ -129,7 +129,7 @@ namespace Eventc
     public static int
     main(string[] args)
     {
-        var opt_context = new GLib.OptionContext("<client type> - Basic CLI client for eventd");
+        var opt_context = new GLib.OptionContext("<event category> - Basic CLI client for eventd");
 
         opt_context.add_main_entries(entries, Eventd.Config.GETTEXT_PACKAGE);
 
@@ -153,7 +153,7 @@ namespace Eventc
 
         if ( args.length < 2 )
         {
-            GLib.print("You must define the type of the client.\n");
+            GLib.print("You must define the category of the event.\n");
             return 1;
         }
         if ( event_name == null )
@@ -161,12 +161,12 @@ namespace Eventc
             GLib.print("You must define the name of the event.\n");
             return 1;
         }
-        type = args[1];
+        category = args[1];
 
         if ( host == null )
             host = "localhost";
 
-        client = new Connection(host, type);
+        client = new Connection(host, category);
         client.timeout = timeout;
 
         tries = 0;
