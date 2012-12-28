@@ -23,7 +23,7 @@
 namespace Eventc
 {
     static string category;
-    static string event_name;
+    static string name;
     static string[] event_data_name;
     static string[] event_data_content;
     static string host;
@@ -38,7 +38,6 @@ namespace Eventc
 
     static const GLib.OptionEntry[] entries =
     {
-        { "name",         'n', 0, GLib.OptionArg.STRING,       out event_name,         "Event name to send",                                     "<name>" },
         { "data-name",    'd', 0, GLib.OptionArg.STRING_ARRAY, out event_data_name,    "Event data name to send",                                "<name>" },
         { "data-content", 'c', 0, GLib.OptionArg.STRING_ARRAY, out event_data_content, "Event data content to send (must be after a data-name)", "<content>" },
         { "host",         'h', 0, GLib.OptionArg.STRING,       out host,               "Host to connect to",                                     "<host>" },
@@ -84,7 +83,7 @@ namespace Eventc
             return;
         }
 
-        var event = new Eventd.Event(event_name);
+        var event = new Eventd.Event(name);
 
         for ( uint i = 0 ; i < n_length ; ++i )
             event.add_data(event_data_name[i], event_data_content[i]);
@@ -102,7 +101,7 @@ namespace Eventc
             }
             catch ( EventcError e )
             {
-                GLib.warning("Couldn't send event '%s': %s", event_name, e.message);
+                GLib.warning("Couldn't send event '%s': %s", name, e.message);
             }
             if ( ! wait )
                 disconnect();
@@ -129,7 +128,7 @@ namespace Eventc
     public static int
     main(string[] args)
     {
-        var opt_context = new GLib.OptionContext("<event category> - Basic CLI client for eventd");
+        var opt_context = new GLib.OptionContext("<event category> <event name> - Basic CLI client for eventd");
 
         opt_context.add_main_entries(entries, Eventd.Config.GETTEXT_PACKAGE);
 
@@ -156,12 +155,13 @@ namespace Eventc
             GLib.print("You must define the category of the event.\n");
             return 1;
         }
-        if ( event_name == null )
+        if ( args.length < 3 )
         {
             GLib.print("You must define the name of the event.\n");
             return 1;
         }
         category = args[1];
+        name = args[2];
 
         if ( host == null )
             host = "localhost";
