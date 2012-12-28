@@ -170,7 +170,10 @@ eventd_control_start(EventdControl *control)
     }
 
     if ( sockets == NULL )
+    {
+        g_warning("No control socket available, stopping");
         return ret;
+    }
 
     for ( socket_ = sockets ; socket_ != NULL ; socket_ = g_list_next(socket_) )
     {
