@@ -246,7 +246,10 @@ eventd_sockets_get_unix_socket(EventdSockets *sockets, const gchar *path, gboole
         if ( take_over_socket )
             g_unlink(path);
         else
+        {
+            g_warning("Socket %s already exists", path);
             return NULL;
+        }
     }
 
     if ( ( socket = g_socket_new(G_SOCKET_FAMILY_UNIX, G_SOCKET_TYPE_STREAM, 0, &error)  ) == NULL )
