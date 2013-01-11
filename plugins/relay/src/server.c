@@ -37,18 +37,12 @@
 #include <eventd-plugin.h>
 #include <libeventd-evp.h>
 
-#include "types.h"
-
-#include "avahi.h"
-
 #include "server.h"
 
 struct _EventdRelayServer {
-    EventdRelayAvahiServer *avahi;
     GSocketConnectable *address;
     LibeventdEvpContext *evp;
     GHashTable *events;
-    gboolean avahi_connected;
     guint64 tries;
     guint connection_timeout_id;
 };
@@ -218,17 +212,6 @@ _eventd_relay_connection_handler(GObject *obj, GAsyncResult *res, gpointer user_
     }
 }
 
-void
-eventd_relay_server_avahi_connect(EventdRelayServer *server, const gchar *host, guint16 port)
-{
-    if ( server->avahi_connected )
-        return;
-    server->avahi_connected = TRUE;
-
-    server->address = g_network_address_new(host, port);
-    eventd_relay_server_start(server);
-}
-
 EventdRelayServer *
 eventd_relay_server_new(void)
 {
@@ -264,20 +247,6 @@ eventd_relay_server_new_for_host_and_port(const gchar *host_and_port)
     return server;
 }
 
-#ifdef ENABLE_AVAHI
-EventdRelayServer *
-eventd_relay_server_new_avahi(EventdRelayAvahi *context, const gchar *name)
-{
-    EventdRelayServer *server;
-
-    server = eventd_relay_server_new();
-
-    server->avahi = eventd_relay_avahi_server_new(context, name, server);
-
-    return server;
-}
-#endif /* ENABLE_AVAHI */
-
 void
 eventd_relay_server_set_address(EventdRelayServer *server, GSocketConnectable *address)
 {
@@ -312,10 +281,6 @@ _eventd_relay_close_handler(GObject *obj, GAsyncResult *res, gpointer user_data)
 void
 eventd_relay_server_stop(EventdRelayServer *server)
 {
-    if ( ! server->avahi_connected )
-        return;
-    server->avahi_connected = FALSE;
-
     if ( server->connection_timeout_id > 0 )
     {
         g_source_remove(server->connection_timeout_id);
@@ -387,10 +352,6 @@ eventd_relay_server_free(gpointer data)
     if ( server->evp != NULL )
         libeventd_evp_context_free(server->evp);
 
-#ifdef ENABLE_AVAHI
-    if ( server->avahi != NULL )
-        eventd_relay_avahi_server_free(server->avahi);
-#endif /* ENABLE_AVAHI */
     g_hash_table_unref(server->events);
 
     g_free(server);

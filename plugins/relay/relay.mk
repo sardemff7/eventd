@@ -14,7 +14,6 @@ man5_MANS += \
 
 
 relay_la_SOURCES = \
-	plugins/relay/src/types.h \
 	plugins/relay/src/avahi.h \
 	plugins/relay/src/server.h \
 	plugins/relay/src/server.c \

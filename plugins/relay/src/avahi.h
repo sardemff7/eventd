@@ -23,14 +23,16 @@
 #ifndef __EVENTD_PLUGINS_RELAY_AVAHI_H__
 #define __EVENTD_PLUGINS_RELAY_AVAHI_H__
 
+typedef struct _EventdRelayAvahi EventdRelayAvahi;
+typedef struct _EventdRelayAvahiServer EventdRelayAvahiServer;
+
 EventdRelayAvahi *eventd_relay_avahi_init(void);
 void eventd_relay_avahi_uninit(EventdRelayAvahi *context);
 
-EventdRelayAvahiServer *eventd_relay_avahi_server_new(EventdRelayAvahi *context, const gchar *name, EventdRelayServer *relay_server);
-void eventd_relay_avahi_server_free(EventdRelayAvahiServer *server);
-
 void eventd_relay_avahi_start(EventdRelayAvahi *context);
 void eventd_relay_avahi_stop(EventdRelayAvahi *context);
+
+void eventd_relay_avahi_server_new(EventdRelayAvahi *context, const gchar *name, EventdRelayServer *relay_server);
 
 #endif /* __EVENTD_PLUGINS_RELAY_AVAHI_H__ */
 

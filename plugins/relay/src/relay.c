@@ -32,11 +32,9 @@
 #include <eventd-plugin.h>
 #include <libeventd-config.h>
 
-#include "types.h"
-
-#include "avahi.h"
 
 #include "server.h"
+#include "avahi.h"
 
 struct _EventdPluginContext {
     EventdRelayAvahi *avahi;
@@ -176,7 +174,8 @@ _eventd_relay_event_parse(EventdPluginContext *context, const gchar *id, GKeyFil
             server = g_hash_table_lookup(context->servers, *avahi_name);
             if ( server == NULL )
             {
-                server = eventd_relay_server_new_avahi(context->avahi, *avahi_name);
+                server = eventd_relay_server_new();
+                eventd_relay_avahi_server_new(context->avahi, *avahi_name, server);
                 g_hash_table_insert(context->servers, g_strdup(*avahi_name), server);
             }
             if ( server != NULL )

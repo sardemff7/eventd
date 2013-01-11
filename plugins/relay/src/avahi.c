@@ -36,8 +36,6 @@
 
 #include <libeventd-event.h>
 
-#include "types.h"
-
 #include "server.h"
 
 #include "avahi.h"
@@ -90,7 +88,8 @@ _eventd_relay_avahi_service_resolve_callback(AvahiServiceResolver *r, AvahiIfInd
 #ifdef DEBUG
         g_debug("Service '%s' resolved: [%s]:%" G_GUINT16_FORMAT, name, host_name, port);
 #endif /* DEBUG */
-        eventd_relay_server_avahi_connect(server->server, host_name, port);
+        eventd_relay_server_set_address(server->server, g_network_address_new(host_name, port));
+        eventd_relay_server_start(server->server);
     default:
     break;
     }
@@ -123,7 +122,10 @@ _eventd_relay_avahi_service_browser_callback(AvahiServiceBrowser *b, AvahiIfInde
         g_debug("Service removed in '%s' domain: %s", domain, name);
 #endif /* DEBUG */
         if ( ( server = g_hash_table_lookup(context->servers, name) ) != NULL )
+        {
             eventd_relay_server_stop(server->server);
+            eventd_relay_server_set_address(server->server, NULL);
+        }
     break;
     case AVAHI_BROWSER_ALL_FOR_NOW:
     case AVAHI_BROWSER_CACHE_EXHAUSTED:
@@ -150,7 +152,7 @@ eventd_relay_avahi_init()
         return NULL;
     }
 
-    context->servers = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+    context->servers = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 
     return context;
 }
@@ -189,7 +191,7 @@ eventd_relay_avahi_stop(EventdRelayAvahi *context)
 }
 
 
-EventdRelayAvahiServer *
+void
 eventd_relay_avahi_server_new(EventdRelayAvahi *context, const gchar *name, EventdRelayServer *relay_server)
 {
     EventdRelayAvahiServer *server;
@@ -201,14 +203,4 @@ eventd_relay_avahi_server_new(EventdRelayAvahi *context, const gchar *name, Even
     server->server = relay_server;
 
     g_hash_table_insert(server->context->servers, server->name, server);
-
-    return server;
-}
-
-void
-eventd_relay_avahi_server_free(EventdRelayAvahiServer *server)
-{
-    g_hash_table_remove(server->context->servers, server->name);
-
-    g_free(server);
 }
