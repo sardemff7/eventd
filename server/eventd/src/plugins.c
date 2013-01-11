@@ -135,7 +135,7 @@ _eventd_plugins_load_dir(EventdCoreContext *core, EventdCoreInterface *interface
             continue;
         }
 
-        if ( g_hash_table_lookup(plugins, *id) != NULL )
+        if ( g_hash_table_contains(plugins, *id) )
         {
 #ifdef DEBUG
             g_debug("Plugin '%s' with id '%s' already loaded", file, *id);

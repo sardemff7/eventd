@@ -25,6 +25,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <glib.h>
+#include <glib-compat.h>
 #include <glib-object.h>
 
 #include <libeventd-event.h>
@@ -289,11 +290,7 @@ eventd_event_has_data(EventdEvent *self, const gchar *name)
     if ( self->priv->data == NULL )
         return FALSE;
 
-#if GLIB_CHECK_VERSION(2,31,0)
     return g_hash_table_contains(self->priv->data, name);
-#else /* ! GLIB_CHECK_VERSION(2,31,0) */
-    return ( g_hash_table_lookup(self->priv->data, name) != NULL );
-#endif /* ! GLIB_CHECK_VERSION(2,31,0) */
 }
 
 EVENTD_EXPORT

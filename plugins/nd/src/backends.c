@@ -133,7 +133,7 @@ _eventd_nd_backends_load_dir(EventdNdContext *context, EventdNdInterface *interf
             continue;
         }
 
-        if ( g_hash_table_lookup(backends, *id) != NULL )
+        if ( g_hash_table_contains(backends, *id) )
         {
 #ifdef DEBUG
             g_debug("Backend '%s' with id '%s' already loaded", file, *id);
