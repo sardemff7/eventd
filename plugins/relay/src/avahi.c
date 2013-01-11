@@ -26,6 +26,7 @@
 
 #include <glib.h>
 #include <glib-object.h>
+#include <gio/gio.h>
 
 #include <avahi-common/error.h>
 #include <avahi-client/client.h>

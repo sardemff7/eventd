@@ -211,7 +211,7 @@ _eventd_relay_connection_handler(GObject *obj, GAsyncResult *res, gpointer user_
     }
     else
     {
-        server->evp = libeventd_evp_context_new_for_connection(server, &_eventd_relay_interface, connection);
+        libeventd_evp_context_set_connection(server->evp, connection);
         g_object_unref(connection);
         libeventd_evp_context_send_hello(server->evp, PACKAGE_NAME, _eventd_relay_hello_handler, server);
         libeventd_evp_context_receive_loop_client(server->evp, G_PRIORITY_DEFAULT);
@@ -230,9 +230,21 @@ eventd_relay_server_avahi_connect(EventdRelayServer *server, const gchar *host, 
 }
 
 EventdRelayServer *
-eventd_relay_server_new(const gchar *host_and_port)
+eventd_relay_server_new(void)
 {
     EventdRelayServer *server;
+
+    server = g_new0(EventdRelayServer, 1);
+
+    server->evp = libeventd_evp_context_new(server, &_eventd_relay_interface);
+    server->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_relay_event_free);
+
+    return server;
+}
+
+EventdRelayServer *
+eventd_relay_server_new_for_host_and_port(const gchar *host_and_port)
+{
     GSocketConnectable *address;
     GError *error = NULL;
 
@@ -244,11 +256,10 @@ eventd_relay_server_new(const gchar *host_and_port)
         return NULL;
     }
 
-    server = g_new0(EventdRelayServer, 1);
+    EventdRelayServer *server;
 
-    server->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_relay_event_free);
-
-    server->address = address;
+    server = eventd_relay_server_new();
+    eventd_relay_server_set_address(server, address);
 
     return server;
 }
@@ -259,15 +270,21 @@ eventd_relay_server_new_avahi(EventdRelayAvahi *context, const gchar *name)
 {
     EventdRelayServer *server;
 
-    server = g_new0(EventdRelayServer, 1);
-
-    server->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_relay_event_free);
+    server = eventd_relay_server_new();
 
     server->avahi = eventd_relay_avahi_server_new(context, name, server);
 
     return server;
 }
 #endif /* ENABLE_AVAHI */
+
+void
+eventd_relay_server_set_address(EventdRelayServer *server, GSocketConnectable *address)
+{
+    if ( server->address != NULL )
+        g_object_unref(server->address);
+    server->address = address;
+}
 
 void
 eventd_relay_server_start(EventdRelayServer *server)
