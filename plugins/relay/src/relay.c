@@ -97,6 +97,9 @@ static void
 _eventd_relay_start(EventdPluginContext *context)
 {
     g_hash_table_foreach(context->servers, _eventd_relay_start_each, NULL);
+#ifdef ENABLE_AVAHI
+    eventd_relay_avahi_start(context->avahi);
+#endif /* ENABLE_AVAHI */
 }
 
 static void
@@ -111,6 +114,9 @@ _eventd_relay_stop_each(gpointer key, gpointer data, gpointer user_data)
 static void
 _eventd_relay_stop(EventdPluginContext *context)
 {
+#ifdef ENABLE_AVAHI
+    eventd_relay_avahi_stop(context->avahi);
+#endif /* ENABLE_AVAHI */
     g_hash_table_foreach(context->servers, _eventd_relay_stop_each, NULL);
 }
 

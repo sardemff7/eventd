@@ -149,8 +149,6 @@ eventd_relay_avahi_init()
         return NULL;
     }
 
-    context->browser = avahi_service_browser_new(context->client, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, "_event._tcp", NULL, 0, _eventd_relay_avahi_service_browser_callback, context);
-
     context->servers = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 
     return context;
@@ -164,14 +162,29 @@ eventd_relay_avahi_uninit(EventdRelayAvahi *context)
 
     g_hash_table_unref(context->servers);
 
-    if ( context->browser != NULL )
-        avahi_service_browser_free(context->browser);
-
-
     avahi_client_free(context->client);
     avahi_glib_poll_free(context->glib_poll);
 
     g_free(context);
+}
+
+void
+eventd_relay_avahi_start(EventdRelayAvahi *context)
+{
+    if ( context == NULL )
+        return;
+
+    context->browser = avahi_service_browser_new(context->client, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, "_event._tcp", NULL, 0, _eventd_relay_avahi_service_browser_callback, context);
+}
+
+void
+eventd_relay_avahi_stop(EventdRelayAvahi *context)
+{
+    if ( context == NULL )
+        return;
+
+    if ( context->browser != NULL )
+        avahi_service_browser_free(context->browser);
 }
 
 
