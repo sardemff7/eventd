@@ -142,7 +142,6 @@ eventd_relay_avahi_init()
 
     context->glib_poll = avahi_glib_poll_new(NULL, G_PRIORITY_DEFAULT);
     context->client = avahi_client_new(avahi_glib_poll_get(context->glib_poll), 0, _eventd_relay_avahi_client_callback, context, &error);
-
     if ( context->client == NULL )
     {
         g_warning("Couldn't initialize Avahi: %s", avahi_strerror(error));
@@ -163,15 +162,13 @@ eventd_relay_avahi_uninit(EventdRelayAvahi *context)
     if ( context == NULL )
         return;
 
-    if ( context->servers != NULL )
-        g_hash_table_unref(context->servers);
+    g_hash_table_unref(context->servers);
 
     if ( context->browser != NULL )
         avahi_service_browser_free(context->browser);
 
-    if ( context->client != NULL )
-        avahi_client_free(context->client);
 
+    avahi_client_free(context->client);
     avahi_glib_poll_free(context->glib_poll);
 
     g_free(context);
