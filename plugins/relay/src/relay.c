@@ -58,7 +58,9 @@ _eventd_relay_init(EventdCoreContext *core, EventdCoreInterface *interface)
 
     context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_list_free);
 
+#ifdef ENABLE_AVAHI
     context->avahi = eventd_relay_avahi_init();
+#endif /* ENABLE_AVAHI */
     context->servers = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, eventd_relay_server_free);
 
     return context;
@@ -68,7 +70,9 @@ static void
 _eventd_relay_uninit(EventdPluginContext *context)
 {
     g_hash_table_unref(context->servers);
+#ifdef ENABLE_AVAHI
     eventd_relay_avahi_uninit(context->avahi);
+#endif /* ENABLE_AVAHI */
 
     g_hash_table_unref(context->events);
 
@@ -155,8 +159,9 @@ _eventd_relay_event_parse(EventdPluginContext *context, const gchar *id, GKeyFil
         g_strfreev(server_uris);
     }
 
+#ifdef ENABLE_AVAHI
     gchar **avahi_names;
-    if ( libeventd_config_key_file_get_string_list(config_file, "Relay", "Avahi", &avahi_names, NULL) == 0 )
+    if ( ( context->avahi != NULL ) && ( libeventd_config_key_file_get_string_list(config_file, "Relay", "Avahi", &avahi_names, NULL) == 0 ) )
     {
         gchar **avahi_name;
         for ( avahi_name = avahi_names ; *avahi_name != NULL ; ++avahi_name )
@@ -166,14 +171,14 @@ _eventd_relay_event_parse(EventdPluginContext *context, const gchar *id, GKeyFil
             if ( server == NULL )
             {
                 server = eventd_relay_server_new_avahi(context->avahi, *avahi_name);
-                if ( server != NULL )
-                    g_hash_table_insert(context->servers, g_strdup(*avahi_name), server);
+                g_hash_table_insert(context->servers, g_strdup(*avahi_name), server);
             }
             if ( server != NULL )
                 list = g_list_prepend(list, server);
         }
         g_strfreev(avahi_names);
     }
+#endif /* ENABLE_AVAHI */
 
     g_hash_table_insert(context->events, g_strdup(id), list);
 }

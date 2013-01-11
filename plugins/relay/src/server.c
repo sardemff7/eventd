@@ -253,6 +253,7 @@ eventd_relay_server_new(const gchar *host_and_port)
     return server;
 }
 
+#ifdef ENABLE_AVAHI
 EventdRelayServer *
 eventd_relay_server_new_avahi(EventdRelayAvahi *context, const gchar *name)
 {
@@ -264,14 +265,9 @@ eventd_relay_server_new_avahi(EventdRelayAvahi *context, const gchar *name)
 
     server->avahi = eventd_relay_avahi_server_new(context, name, server);
 
-    if ( server->avahi == NULL )
-    {
-        g_free(server);
-        return NULL;
-    }
-
     return server;
 }
+#endif /* ENABLE_AVAHI */
 
 void
 eventd_relay_server_start(EventdRelayServer *server)
@@ -374,9 +370,10 @@ eventd_relay_server_free(gpointer data)
     if ( server->evp != NULL )
         libeventd_evp_context_free(server->evp);
 
+#ifdef ENABLE_AVAHI
     if ( server->avahi != NULL )
         eventd_relay_avahi_server_free(server->avahi);
-
+#endif /* ENABLE_AVAHI */
     g_hash_table_unref(server->events);
 
     g_free(server);

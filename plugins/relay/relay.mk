@@ -76,9 +76,4 @@ if ENABLE_AVAHI
 relay_la_SOURCES += \
 	plugins/relay/src/avahi.c
 
-else
-
-relay_la_SOURCES += \
-	plugins/relay/src/avahi-dummy.c
-
 endif
