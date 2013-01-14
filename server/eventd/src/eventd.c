@@ -219,6 +219,7 @@ eventd_core_reset_flags(EventdCoreContext *context)
 {
     g_free(context->flags);
     context->flags = NULL;
+    context->flags_count = 0;
 }
 
 void
