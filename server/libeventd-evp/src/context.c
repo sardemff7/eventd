@@ -30,11 +30,6 @@
 
 #include "context.h"
 
-typedef struct {
-    LibeventdEvpContext *context;
-    GSimpleAsyncResult *result;
-} LibeventdEvpContextCloseData;
-
 GQuark
 libeventd_evp_error_quark(void)
 {
@@ -106,14 +101,21 @@ libeventd_evp_context_set_connection(LibeventdEvpContext *self, GSocketConnectio
     self->out = g_data_output_stream_new(g_io_stream_get_output_stream(G_IO_STREAM(self->connection)));
 }
 
-static gboolean
-_libeventd_evp_context_close_complete(gpointer user_data)
+void
+libeventd_evp_context_close(LibeventdEvpContext *self, GAsyncReadyCallback callback, gpointer user_data)
 {
-    LibeventdEvpContextCloseData *data = user_data;
-    LibeventdEvpContext *self = data->context;
-    GSimpleAsyncResult *result = data->result;
+    g_return_if_fail(self != NULL);
 
-    g_free(data);
+    g_cancellable_cancel(self->cancellable);
+
+    g_simple_async_result_complete_in_idle(g_simple_async_result_new(G_OBJECT(self->cancellable), callback, user_data, libeventd_evp_context_close));
+}
+
+void
+libeventd_evp_context_close_finish(LibeventdEvpContext *self, GAsyncResult *result)
+{
+    g_return_if_fail(self != NULL);
+    g_return_if_fail(g_simple_async_result_is_valid(result, G_OBJECT(self->cancellable), NULL));
 
     g_object_unref(self->out);
     g_object_unref(self->in);
@@ -125,31 +127,4 @@ _libeventd_evp_context_close_complete(gpointer user_data)
     self->out = NULL;
     self->in = NULL;
     self->connection = NULL;
-
-    g_simple_async_result_complete_in_idle(result);
-
-    return FALSE;
-}
-
-void
-libeventd_evp_context_close(LibeventdEvpContext *self, GAsyncReadyCallback callback, gpointer user_data)
-{
-    g_return_if_fail(self != NULL);
-
-    g_cancellable_cancel(self->cancellable);
-
-    LibeventdEvpContextCloseData *data;
-
-    data = g_new0(LibeventdEvpContextCloseData, 1);
-    data->context = self;
-    data->result = g_simple_async_result_new(G_OBJECT(self->cancellable), callback, user_data, libeventd_evp_context_close);
-
-    g_idle_add(_libeventd_evp_context_close_complete, data);
-}
-
-void
-libeventd_evp_context_close_finish(LibeventdEvpContext *self, GAsyncResult *result)
-{
-    g_return_if_fail(self != NULL);
-    g_return_if_fail(g_simple_async_result_is_valid(result, G_OBJECT(self->cancellable), libeventd_evp_context_close));
 }
