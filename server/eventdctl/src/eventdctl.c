@@ -144,7 +144,7 @@ _eventd_eventdctl_send_command(GIOStream *connection, const gchar *command)
 
     if ( ! g_output_stream_write_all(g_io_stream_get_output_stream(connection), command, strlen(command) + 1, NULL, NULL, &error) )
     {
-        g_warning("Couldn't send command '%s'", command);
+        g_warning("Couldn't send command '%s': %s", command, error->message);
         g_clear_error(&error);
         retval = 1;
     }
