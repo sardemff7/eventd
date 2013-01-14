@@ -49,17 +49,18 @@ static gboolean
 _eventd_service_private_connection_handler(GSocketService *socket_service, GSocketConnection *connection, GObject *source_object, gpointer user_data)
 {
     EventdControl *control = user_data;
+    GIOStream *stream = G_IO_STREAM(connection);
 
     GError *error = NULL;
     GDataInputStream *input = NULL;
     gsize size = 0;
     gchar *line = NULL;
 
-    if ( ! g_output_stream_close(g_io_stream_get_output_stream(G_IO_STREAM(connection)), NULL, &error) )
+    if ( ! g_output_stream_close(g_io_stream_get_output_stream(stream), NULL, &error) )
         g_warning("Can't close the output stream: %s", error->message);
     g_clear_error(&error);
 
-    input = g_data_input_stream_new(g_io_stream_get_input_stream(G_IO_STREAM(connection)));
+    input = g_data_input_stream_new(g_io_stream_get_input_stream(stream));
 
     if ( ( line = g_data_input_stream_read_upto(input, "\0", 1, &size, NULL, &error) ) == NULL )
     {
@@ -106,7 +107,9 @@ _eventd_service_private_connection_handler(GSocketService *socket_service, GSock
         g_free(line);
     }
 
-    if ( ! g_io_stream_close(G_IO_STREAM(connection), NULL, &error) )
+    g_object_unref(input);
+
+    if ( ! g_io_stream_close(stream, NULL, &error) )
         g_warning("Can't close the stream: %s", error->message);
     g_clear_error(&error);
 
