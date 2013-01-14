@@ -288,7 +288,8 @@ eventd_relay_server_stop(EventdRelayServer *server)
     }
 
     if ( libeventd_evp_context_is_connected(server->evp, NULL) )
-        libeventd_evp_context_close(server->evp, _eventd_relay_close_handler, server);
+        libeventd_evp_context_send_bye(server->evp);
+    libeventd_evp_context_close(server->evp, _eventd_relay_close_handler, server);
 }
 
 static void
