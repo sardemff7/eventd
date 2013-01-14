@@ -157,7 +157,7 @@ _eventd_eventdctl_process_command(const gchar *private_socket, gboolean autospaw
 {
     if ( argc == 0 )
     {
-        g_warning("Missing command");
+        g_print("Missing command");
         return 2;
     }
 
@@ -220,8 +220,8 @@ _eventd_eventdctl_process_command(const gchar *private_socket, gboolean autospaw
         retval =  _eventd_eventdctl_send_command(G_IO_STREAM(connection), "resume");
     else if ( g_strcmp0(argv[0], "add-flag") == 0 )
     {
-        if ( argc == 1 )
-            g_warning("You must specify a flag");
+        if ( argc < 2 )
+            g_print("You must specify a flag");
         else
         {
             gchar *command = g_strconcat("add-flag ", argv[1], NULL);
@@ -234,7 +234,7 @@ _eventd_eventdctl_process_command(const gchar *private_socket, gboolean autospaw
     else if ( g_strcmp0(argv[0], "notification-daemon") == 0 )
     {
         if ( argc == 1 )
-            g_warning("You must specify a target");
+            g_print("You must specify a target");
         else
         {
             gchar *command = g_strconcat("notification-daemon ", argv[1], NULL);
