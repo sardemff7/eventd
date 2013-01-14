@@ -236,13 +236,8 @@ _eventd_eventdctl_process_command(const gchar *private_socket, gboolean autospaw
     }
     else if ( g_strcmp0(argv[0], "reset-flags") == 0 )
         retval =  _eventd_eventdctl_send_command(connection, "reset-flags", 0, null_argv);
-    else if ( g_strcmp0(argv[0], "notification-daemon") == 0 )
-    {
-        if ( argc == 1 )
-            g_print("You must specify a target");
-        else
-            retval = _eventd_eventdctl_send_command(connection, argv[0], 1, argv+1);
-    }
+    else
+        retval = _eventd_eventdctl_send_command(connection, argv[0], argc-1, argv+1);
 
 close:
     if ( ! g_io_stream_close(connection, NULL, &error) )
