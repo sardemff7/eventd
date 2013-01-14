@@ -154,6 +154,30 @@ _eventd_eventdctl_send_command(GIOStream *connection, const gchar *command, gint
         g_clear_error(&error);
         retval = 1;
     }
+    else
+    {
+        GDataInputStream *input;
+        gchar *line;
+
+        input = g_data_input_stream_new(g_io_stream_get_input_stream(connection));
+
+        if ( ( line = g_data_input_stream_read_upto(input, "\0", 1, NULL, NULL, &error) ) == NULL )
+        {
+            if ( error != NULL )
+            {
+                g_warning("Couldn't read the answer: %s", error->message);
+                g_clear_error(&error);
+                retval = 1;
+            }
+        }
+        else
+        {
+            g_printf("%s\n", line);
+            g_free(line);
+        }
+
+        g_object_unref(input);
+    }
 
     g_string_free(str, TRUE);
 

@@ -56,10 +56,6 @@ _eventd_service_private_connection_handler(GSocketService *socket_service, GSock
     gsize size = 0;
     gchar *line = NULL;
 
-    if ( ! g_output_stream_close(g_io_stream_get_output_stream(stream), NULL, &error) )
-        g_warning("Can't close the output stream: %s", error->message);
-    g_clear_error(&error);
-
     input = g_data_input_stream_new(g_io_stream_get_input_stream(stream));
 
     if ( ( line = g_data_input_stream_read_upto(input, "\0", 1, &size, NULL, &error) ) == NULL )
@@ -70,6 +66,8 @@ _eventd_service_private_connection_handler(GSocketService *socket_service, GSock
     }
     else
     {
+        const gchar *answer = "Done";
+
 #ifdef DEBUG
         g_debug("Received control command: '%s'", line);
 #endif /* DEBUG */
@@ -105,6 +103,10 @@ _eventd_service_private_connection_handler(GSocketService *socket_service, GSock
             eventd_plugins_control_command_all(line);
 
         g_free(line);
+
+        if ( ! g_output_stream_write_all(g_io_stream_get_output_stream(stream), answer, strlen(answer) + 1, NULL, NULL, &error) )
+            g_warning("Couldn't send answer '%s': %s", answer, error->message);
+        g_clear_error(&error);
     }
 
     g_object_unref(input);
