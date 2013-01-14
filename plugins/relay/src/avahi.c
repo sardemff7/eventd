@@ -88,8 +88,11 @@ _eventd_relay_avahi_service_resolve_callback(AvahiServiceResolver *r, AvahiIfInd
 #ifdef DEBUG
         g_debug("Service '%s' resolved: [%s]:%" G_GUINT16_FORMAT, name, host_name, port);
 #endif /* DEBUG */
-        eventd_relay_server_set_address(server->server, g_network_address_new(host_name, port));
-        eventd_relay_server_start(server->server);
+        if ( ! eventd_relay_server_has_address(server->server) )
+        {
+            eventd_relay_server_set_address(server->server, g_network_address_new(host_name, port));
+            eventd_relay_server_start(server->server);
+        }
     default:
     break;
     }
@@ -121,7 +124,7 @@ _eventd_relay_avahi_service_browser_callback(AvahiServiceBrowser *b, AvahiIfInde
 #ifdef DEBUG
         g_debug("Service removed in '%s' domain: %s", domain, name);
 #endif /* DEBUG */
-        if ( ( server = g_hash_table_lookup(context->servers, name) ) != NULL )
+        if ( ( ( server = g_hash_table_lookup(context->servers, name) ) != NULL ) && ( eventd_relay_server_has_address(server->server) ) )
         {
             eventd_relay_server_stop(server->server);
             eventd_relay_server_set_address(server->server, NULL);

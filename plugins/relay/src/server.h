@@ -30,6 +30,7 @@ EventdRelayServer *eventd_relay_server_new_for_host_and_port(const gchar *host_a
 void eventd_relay_server_free(gpointer data);
 
 void eventd_relay_server_set_address(EventdRelayServer *server, GSocketConnectable *address);
+gboolean eventd_relay_server_has_address(EventdRelayServer *server);
 
 void eventd_relay_server_start(EventdRelayServer *server);
 void eventd_relay_server_stop(EventdRelayServer *server);

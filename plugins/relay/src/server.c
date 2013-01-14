@@ -255,6 +255,12 @@ eventd_relay_server_set_address(EventdRelayServer *server, GSocketConnectable *a
     server->address = address;
 }
 
+gboolean
+eventd_relay_server_has_address(EventdRelayServer *server)
+{
+    return ( server->address != NULL );
+}
+
 void
 eventd_relay_server_start(EventdRelayServer *server)
 {
