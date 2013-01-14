@@ -93,7 +93,7 @@ fail:
     return retval;
 }
 
-static GSocketConnection *
+static GIOStream *
 _eventd_eventdctl_get_connection(const gchar *private_socket, GError **error)
 {
     GSocketAddress *address;
@@ -133,7 +133,7 @@ _eventd_eventdctl_get_connection(const gchar *private_socket, GError **error)
     g_object_unref(address);
     g_object_unref(client);
 
-    return connection;
+    return G_IO_STREAM(connection);
 }
 
 static int
@@ -162,7 +162,7 @@ _eventd_eventdctl_process_command(const gchar *private_socket, gboolean autospaw
     }
 
     GError *error = NULL;
-    GSocketConnection *connection;
+    GIOStream *connection;
 
     connection = _eventd_eventdctl_get_connection(private_socket, &error);
 
@@ -244,7 +244,7 @@ _eventd_eventdctl_process_command(const gchar *private_socket, gboolean autospaw
     }
 
 close:
-    if ( ! g_io_stream_close(G_IO_STREAM(connection), NULL, &error) )
+    if ( ! g_io_stream_close(connection, NULL, &error) )
         g_warning("Can't close the stream: %s", error->message);
     g_clear_error(&error);
 
