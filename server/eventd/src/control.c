@@ -100,7 +100,18 @@ _eventd_service_private_connection_handler(GSocketService *socket_service, GSock
             eventd_core_reset_flags(control->core);
         }
         else
-            eventd_plugins_control_command_all(line);
+        {
+            gchar *space;
+
+            space = strchr(line, ' ');
+            if ( space != NULL )
+            {
+                *space = '\0';
+                eventd_plugins_control_command(line, space+1);
+            }
+            else
+                answer = "No plugin command specified";
+        }
 
         g_free(line);
 

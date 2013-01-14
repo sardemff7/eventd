@@ -293,17 +293,18 @@ eventd_plugins_stop_all()
 }
 
 void
-eventd_plugins_control_command_all(const gchar *command)
+eventd_plugins_control_command(const gchar *id, const gchar *command)
 {
-    GHashTableIter iter;
-    const gchar *id;
     EventdPlugin *plugin;
-    g_hash_table_iter_init(&iter, plugins);
-    while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&plugin) )
-    {
-        if ( plugin->interface.control_command != NULL )
-            plugin->interface.control_command(plugin->context, command);
-    }
+
+    plugin = g_hash_table_lookup(plugins, id);
+    if ( plugin == NULL )
+        return;
+
+    if ( plugin->interface.control_command == NULL )
+        return;
+
+    plugin->interface.control_command(plugin->context, command);
 }
 
 void

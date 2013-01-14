@@ -206,13 +206,13 @@ _eventd_nd_start(EventdPluginContext *context)
 static void
 _eventd_nd_control_command(EventdPluginContext *context, const gchar *command)
 {
-    const gchar *target = command + strlen("notification-daemon ");
+    const gchar *target = command + strlen("attach ");
     EventdNdDisplay *display;
     GHashTableIter iter;
     const gchar *id;
     EventdNdBackend *backend;
 
-    if ( ! g_str_has_prefix(command, "notification-daemon ") )
+    if ( ! g_str_has_prefix(command, "attach ") )
         return;
 
     g_hash_table_iter_init(&iter, context->backends);

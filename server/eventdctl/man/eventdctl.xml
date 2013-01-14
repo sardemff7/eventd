@@ -147,11 +147,19 @@
                 </listitem>
             </varlistentry>
 
-            <varlistentry>
-                <term><parameter class="command">notification-daemon</parameter> <parameter><replaceable class="option">target</replaceable></parameter></term>
+            <varlistentry condition="website;enable_notification_daemon">
+                <term><parameter class="command">notification-daemon</parameter> <parameter class="command"><replaceable class="command">sub-command</replaceable></parameter></term>
                 <listitem>
-                    <para>Tell the nd plugin to link to the specified target.</para>
-                    <para><replaceable class="option">target</replaceable> may be any target recognized by a nd backend. Examples: <literal>:0</literal> (XCB backend) or <filename>/dev/tty1</filename> (Linux framebuffer backend)</para>
+                    <para>Control the <command>nd</command> plugin behavior</para>
+                    <variablelist>
+                        <varlistentry>
+                            <term><parameter class="command">attach</parameter> <parameter><replaceable class="option">target</replaceable></parameter></term>
+                            <listitem>
+                                <para>Tell the plugin to attach to the specified <replaceable class="option">target</replaceable>.</para>
+                                <para><replaceable class="option">target</replaceable> may be any target recognized by a <command>nd</command> backend. Examples: <literal>:0</literal> (XCB backend) or <filename>/dev/tty1</filename> (Linux framebuffer backend)</para>
+                            </listitem>
+                        </varlistentry>
+                    </variablelist>
                 </listitem>
             </varlistentry>
         </variablelist>

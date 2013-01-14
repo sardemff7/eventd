@@ -260,6 +260,24 @@ _eventd_eventdctl_process_command(const gchar *private_socket, gboolean autospaw
     }
     else if ( g_strcmp0(argv[0], "reset-flags") == 0 )
         retval =  _eventd_eventdctl_send_command(connection, "reset-flags", 0, null_argv);
+    else if ( g_strcmp0(argv[0], "notification-daemon") == 0 )
+        retval = _eventd_eventdctl_send_command(connection, "eventd-nd", argc-1, argv+1);
+    else if ( ( g_strcmp0(argv[0], "evp") == 0 )
+              || ( g_strcmp0(argv[0], "dbus") == 0 )
+              || ( g_strcmp0(argv[0], "relay") == 0 )
+              || ( g_strcmp0(argv[0], "exec") == 0 )
+              || ( g_strcmp0(argv[0], "nd") == 0 )
+              || ( g_strcmp0(argv[0], "sndfile") == 0 )
+              || ( g_strcmp0(argv[0], "espeak") == 0 )
+              || ( g_strcmp0(argv[0], "notify") == 0 )
+            )
+    {
+        gchar *plugin;
+
+        plugin = g_strconcat("eventd-", argv[0], NULL);
+        retval = _eventd_eventdctl_send_command(connection, plugin, argc-1, argv+1);
+        g_free(plugin);
+    }
     else
         retval = _eventd_eventdctl_send_command(connection, argv[0], argc-1, argv+1);
 
