@@ -95,6 +95,8 @@ libeventd_evp_context_set_connection(LibeventdEvpContext *self, GSocketConnectio
     g_return_if_fail(self != NULL);
     g_return_if_fail(connection != NULL);
 
+    g_cancellable_reset(self->cancellable);
+
     self->connection = g_object_ref(connection);
 
     self->in  = g_data_input_stream_new(g_io_stream_get_input_stream(G_IO_STREAM(self->connection)));
