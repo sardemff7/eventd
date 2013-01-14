@@ -137,17 +137,25 @@ _eventd_eventdctl_get_connection(const gchar *private_socket, GError **error)
 }
 
 static int
-_eventd_eventdctl_send_command(GIOStream *connection, const gchar *command)
+_eventd_eventdctl_send_command(GIOStream *connection, const gchar *command, gint argc, gchar *argv[])
 {
     int retval = 0;
     GError *error = NULL;
+    GString *str;
+    gint i;
 
-    if ( ! g_output_stream_write_all(g_io_stream_get_output_stream(connection), command, strlen(command) + 1, NULL, NULL, &error) )
+    str = g_string_new(command);
+    for ( i = 0 ; i < argc ; ++i )
+        g_string_append(g_string_append_c(str, ' '), argv[i]);
+
+    if ( ! g_output_stream_write_all(g_io_stream_get_output_stream(connection), str->str, str->len + 1, NULL, NULL, &error) )
     {
-        g_warning("Couldn't send command '%s': %s", command, error->message);
+        g_warning("Couldn't send command '%s': %s", str->str, error->message);
         g_clear_error(&error);
         retval = 1;
     }
+
+    g_string_free(str, TRUE);
 
     return retval;
 }
@@ -210,37 +218,30 @@ _eventd_eventdctl_process_command(const gchar *private_socket, gboolean autospaw
 
     retval = 2;
 
+    gchar **null_argv = { NULL };
     if ( g_strcmp0(argv[0], "stop") == 0 )
-        retval = _eventd_eventdctl_send_command(G_IO_STREAM(connection), "stop");
+        retval = _eventd_eventdctl_send_command(connection, "stop", 0, null_argv);
     else if ( g_strcmp0(argv[0], "reload") == 0 )
-        retval =  _eventd_eventdctl_send_command(G_IO_STREAM(connection), "reload");
+        retval = _eventd_eventdctl_send_command(connection, "reload", 0, null_argv);
     else if ( g_strcmp0(argv[0], "pause") == 0 )
-        retval =  _eventd_eventdctl_send_command(G_IO_STREAM(connection), "pause");
+        retval = _eventd_eventdctl_send_command(connection, "pause", 0, null_argv);
     else if ( g_strcmp0(argv[0], "resume") == 0 )
-        retval =  _eventd_eventdctl_send_command(G_IO_STREAM(connection), "resume");
+        retval = _eventd_eventdctl_send_command(connection, "resume", 0, null_argv);
     else if ( g_strcmp0(argv[0], "add-flag") == 0 )
     {
         if ( argc < 2 )
             g_print("You must specify a flag");
         else
-        {
-            gchar *command = g_strconcat("add-flag ", argv[1], NULL);
-            retval = _eventd_eventdctl_send_command(G_IO_STREAM(connection), command);
-            g_free(command);
-        }
+            retval = _eventd_eventdctl_send_command(connection, argv[0], 1, argv+1);
     }
     else if ( g_strcmp0(argv[0], "reset-flags") == 0 )
-        retval =  _eventd_eventdctl_send_command(G_IO_STREAM(connection), "reset-flags");
+        retval =  _eventd_eventdctl_send_command(connection, "reset-flags", 0, null_argv);
     else if ( g_strcmp0(argv[0], "notification-daemon") == 0 )
     {
         if ( argc == 1 )
             g_print("You must specify a target");
         else
-        {
-            gchar *command = g_strconcat("notification-daemon ", argv[1], NULL);
-            retval = _eventd_eventdctl_send_command(G_IO_STREAM(connection), command);
-            g_free(command);
-        }
+            retval = _eventd_eventdctl_send_command(connection, argv[0], 1, argv+1);
     }
 
 close:
