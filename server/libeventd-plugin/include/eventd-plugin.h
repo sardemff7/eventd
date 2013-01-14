@@ -39,7 +39,7 @@ typedef struct EventdPluginInterface EventdPluginInterface;
 typedef EventdPluginContext *(*EventdPluginInitFunc)(EventdCoreContext *core, EventdCoreInterface *interface);
 typedef void (*EventdPluginSimpleFunc)(EventdPluginContext *context);
 typedef GOptionGroup *(*EventdPluginGetOptionGroupFunc)(EventdPluginContext *context);
-typedef void (*EventdPluginControlCommandFunc)(EventdPluginContext *context, const gchar *command);
+typedef char *(*EventdPluginControlCommandFunc)(EventdPluginContext *context, const gchar *command);
 typedef void (*EventdPluginGlobalParseFunc)(EventdPluginContext *context, GKeyFile *);
 typedef void (*EventdPluginEventParseFunc)(EventdPluginContext *context, const gchar *config_id, GKeyFile *key_file);
 typedef void (*EventdPluginEventDispatchFunc)(EventdPluginContext *context, const gchar *config_id, EventdEvent *event);

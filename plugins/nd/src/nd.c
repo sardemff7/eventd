@@ -203,7 +203,7 @@ _eventd_nd_start(EventdPluginContext *context)
  * Control command interface
  */
 
-static void
+static char *
 _eventd_nd_control_command(EventdPluginContext *context, const gchar *command)
 {
     const gchar *target = command + strlen("attach ");
@@ -213,7 +213,9 @@ _eventd_nd_control_command(EventdPluginContext *context, const gchar *command)
     EventdNdBackend *backend;
 
     if ( ! g_str_has_prefix(command, "attach ") )
-        return;
+        return g_strdup_printf("Unknown command '%s'", command);
+
+    const gchar *status = "No backend attached";
 
     g_hash_table_iter_init(&iter, context->backends);
     while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&backend) )
@@ -228,8 +230,12 @@ _eventd_nd_control_command(EventdPluginContext *context, const gchar *command)
             display_context->display = display;
 
             context->displays = g_list_prepend(context->displays, display_context);
+
+            status = "Backend attached";
         }
     }
+
+    return g_strdup(status);
 }
 
 

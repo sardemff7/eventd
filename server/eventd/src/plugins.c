@@ -24,6 +24,10 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif /* HAVE_STRING_H */
+
 #include <glib.h>
 #include <glib-object.h>
 #include <gmodule.h>
@@ -292,19 +296,22 @@ eventd_plugins_stop_all()
     }
 }
 
-void
+gchar *
 eventd_plugins_control_command(const gchar *id, const gchar *command)
 {
+    const gchar *eid;
     EventdPlugin *plugin;
+
+    eid = g_str_has_prefix(id, "eventd-") ? ( id + strlen("eventd-") ) : id;
 
     plugin = g_hash_table_lookup(plugins, id);
     if ( plugin == NULL )
-        return;
+        return g_strdup_printf("No such plugin '%s'", eid);
 
     if ( plugin->interface.control_command == NULL )
-        return;
+        return g_strdup_printf("Plugin '%s' does not support", eid);
 
-    plugin->interface.control_command(plugin->context, command);
+    return plugin->interface.control_command(plugin->context, command);
 }
 
 void

@@ -67,6 +67,7 @@ _eventd_service_private_connection_handler(GSocketService *socket_service, GSock
     else
     {
         const gchar *answer = "Done";
+        gchar *plugin_answer = NULL;
 
 #ifdef DEBUG
         g_debug("Received control command: '%s'", line);
@@ -107,7 +108,7 @@ _eventd_service_private_connection_handler(GSocketService *socket_service, GSock
             if ( space != NULL )
             {
                 *space = '\0';
-                eventd_plugins_control_command(line, space+1);
+                answer = plugin_answer = eventd_plugins_control_command(line, space+1);
             }
             else
                 answer = "No plugin command specified";
@@ -118,6 +119,8 @@ _eventd_service_private_connection_handler(GSocketService *socket_service, GSock
         if ( ! g_output_stream_write_all(g_io_stream_get_output_stream(stream), answer, strlen(answer) + 1, NULL, NULL, &error) )
             g_warning("Couldn't send answer '%s': %s", answer, error->message);
         g_clear_error(&error);
+
+        g_free(plugin_answer);
     }
 
     g_object_unref(input);
