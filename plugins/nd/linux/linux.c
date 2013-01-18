@@ -224,40 +224,20 @@ _eventd_nd_linux_surface_display(EventdNdSurface *self, gint x, gint y)
     gint width;
     gint height;
 
-    guchar *pixels, *line;
-    const guchar *cpixels, *cpixels_end, *cline, *cline_end;
-    gint cstride, clo;
-
     width = cairo_image_surface_get_width(self->bubble);
     height = cairo_image_surface_get_height(self->bubble);
 
-    cpixels = cairo_image_surface_get_data(self->bubble);
-    cstride = cairo_image_surface_get_stride(self->bubble);
-    cpixels_end = cpixels + cstride * height;
-    clo =  width << 2;
+    cairo_surface_t *surface;
+    cairo_t *cr;
 
-    pixels = self->buffer;
+    surface = cairo_image_surface_create_for_data(self->buffer, CAIRO_FORMAT_ARGB32, width, height, self->stride);
+    cr = cairo_create(surface);
 
-    while ( cpixels < cpixels_end )
-    {
-        line = pixels;
-        cline = cpixels;
-        cline_end = cline + clo;
+    cairo_set_source_surface(cr, self->bubble, 0, 0);
+    cairo_paint(cr);
 
-        while ( cline < cline_end )
-        {
-            line[0] = alpha_div(cline[0], cline[3]);
-            line[1] = alpha_div(cline[1], cline[3]);
-            line[2] = alpha_div(cline[2], cline[3]);
-            line[3] = ~cline[3];
-
-            line += self->channels;
-            cline += 4;
-        }
-
-        pixels += self->stride;
-        cpixels += cstride;
-    }
+    cairo_destroy(cr);
+    cairo_surface_destroy(surface);
 }
 
 EVENTD_EXPORT const gchar *eventd_nd_backend_id = "eventd-nd-linux";
