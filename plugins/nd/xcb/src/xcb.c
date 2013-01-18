@@ -340,7 +340,7 @@ _eventd_nd_xcb_display_new(EventdNdBackendContext *context, const gchar *target)
         return NULL;
     free(h);
 
-    if ( g_slist_find_custom(context->displays, target, g_str_equal) != NULL )
+    if ( g_slist_find_custom(context->displays, target, (GCompareFunc) g_strcmp0) != NULL )
         return NULL;
 
     EventdNdDisplay *display;
