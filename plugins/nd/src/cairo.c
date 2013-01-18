@@ -248,13 +248,10 @@ _eventd_nd_cairo_shape_draw(cairo_t *cr, gint radius, gint width, gint height)
 }
 
 static void
-_eventd_nd_cairo_bubble_draw(cairo_t *cr, Colour colour, gint width, gint height)
+_eventd_nd_cairo_bubble_draw(cairo_t *cr, Colour colour, gint radius, gint width, gint height)
 {
     cairo_set_source_rgba(cr, colour.r, colour.g, colour.b, colour.a);
-
-    cairo_new_path(cr);
-    cairo_rectangle(cr, 0, 0, width, height);
-    cairo_fill(cr);
+    _eventd_nd_cairo_shape_draw(cr, radius, width, height);
 }
 
 static void
@@ -337,7 +334,7 @@ eventd_nd_cairo_get_surfaces(EventdEvent *event, LibeventdNdNotification *notifi
     /* draw the bubble */
     *bubble = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
     cr = cairo_create(*bubble);
-    _eventd_nd_cairo_bubble_draw(cr, eventd_nd_style_get_bubble_colour(style), width, height);
+    _eventd_nd_cairo_bubble_draw(cr, eventd_nd_style_get_bubble_colour(style), eventd_nd_style_get_bubble_radius(style), width, height);
 #ifdef ENABLE_GDK_PIXBUF
     eventd_nd_cairo_image_and_icon_draw(cr, image, icon, style, width, height);
 #endif /* ENABLE_GDK_PIXBUF */
