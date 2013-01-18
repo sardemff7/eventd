@@ -9,7 +9,6 @@ AM_DISTCHECK_CONFIGURE_FLAGS = \
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 AM_MAKEFLAGS = --no-print-directory
 
-pkgconfigdir = $(libdir)/pkgconfig
 vapidir = $(datadir)/vala/vapi
 pluginsdir = $(pkglibdir)/plugins
 

@@ -76,6 +76,8 @@ if test -d .git; then
     AC_DEFINE_UNQUOTED([PACKAGE_VERSION], ["$PACKAGE_VERSION"], [Full version with git information])
 fi
 
+PKG_INSTALLDIR
+
 #
 # Common dependencies
 #
