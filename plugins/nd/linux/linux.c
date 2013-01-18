@@ -180,7 +180,7 @@ alpha_div(guchar c, guchar a)
 }
 
 static EventdNdSurface *
-_eventd_nd_linux_surface_new(EventdEvent *event, EventdNdDisplay *display, cairo_surface_t *bubble, cairo_surface_t *shape)
+_eventd_nd_linux_surface_new(EventdEvent *event, EventdNdDisplay *display, cairo_surface_t *bubble)
 {
     EventdNdSurface *self;
 
@@ -203,7 +203,7 @@ _eventd_nd_linux_surface_free(EventdNdSurface *self)
 }
 
 static void
-_eventd_nd_linux_surface_update(EventdNdSurface *self, cairo_surface_t *bubble, cairo_surface_t *shape)
+_eventd_nd_linux_surface_update(EventdNdSurface *self, cairo_surface_t *bubble)
 {
     cairo_surface_destroy(self->bubble);
     self->bubble = cairo_surface_reference(bubble);

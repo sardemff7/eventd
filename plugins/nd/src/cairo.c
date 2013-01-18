@@ -211,7 +211,7 @@ _eventd_nd_cairo_text_process(LibeventdNdNotification *notification, EventdNdSty
 }
 
 static void
-_eventd_nd_cairo_shape_draw(cairo_t *cr, gint radius, gint width, gint height)
+_eventd_nd_cairo_bubble_draw(cairo_t *cr, Colour colour, gint radius, gint width, gint height)
 {
     gint limit;
 
@@ -244,14 +244,8 @@ _eventd_nd_cairo_shape_draw(cairo_t *cr, gint radius, gint width, gint height)
               M_PI / 2.0, M_PI);
     cairo_close_path(cr);
 
-    cairo_fill(cr);
-}
-
-static void
-_eventd_nd_cairo_bubble_draw(cairo_t *cr, Colour colour, gint radius, gint width, gint height)
-{
     cairo_set_source_rgba(cr, colour.r, colour.g, colour.b, colour.a);
-    _eventd_nd_cairo_shape_draw(cr, radius, width, height);
+    cairo_fill(cr);
 }
 
 static void
@@ -290,8 +284,8 @@ _eventd_nd_cairo_text_draw(cairo_t *cr, EventdNdStyle *style, PangoLayout *title
     g_object_unref(title);
 }
 
-void
-eventd_nd_cairo_get_surfaces(EventdEvent *event, LibeventdNdNotification *notification, EventdNdStyle *style, cairo_surface_t **bubble, cairo_surface_t **shape)
+cairo_surface_t *
+eventd_nd_cairo_get_surface(EventdEvent *event, LibeventdNdNotification *notification, EventdNdStyle *style)
 {
     gint padding;
     gint min_width, max_width;
@@ -331,9 +325,11 @@ eventd_nd_cairo_get_surfaces(EventdEvent *event, LibeventdNdNotification *notifi
 
     height = 2 * padding + MAX(image_height, text_height);
 
+    cairo_surface_t *bubble;
+
     /* draw the bubble */
-    *bubble = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
-    cr = cairo_create(*bubble);
+    bubble = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
+    cr = cairo_create(bubble);
     _eventd_nd_cairo_bubble_draw(cr, eventd_nd_style_get_bubble_colour(style), eventd_nd_style_get_bubble_radius(style), width, height);
 #ifdef ENABLE_GDK_PIXBUF
     eventd_nd_cairo_image_and_icon_draw(cr, image, icon, style, width, height);
@@ -341,9 +337,5 @@ eventd_nd_cairo_get_surfaces(EventdEvent *event, LibeventdNdNotification *notifi
     _eventd_nd_cairo_text_draw(cr, style, title, message, padding + text_margin, padding, text_width);
     cairo_destroy(cr);
 
-    *shape = cairo_image_surface_create(CAIRO_FORMAT_A1, width, height);
-    cr = cairo_create(*shape);
-    cairo_set_source_rgba(cr, 0, 0, 0, 1);
-    _eventd_nd_cairo_shape_draw(cr, eventd_nd_style_get_bubble_radius(style), width, height);
-    cairo_destroy(cr);
+    return bubble;
 }

@@ -44,9 +44,9 @@ typedef void (*EventdNdBackendGlobalParseFunc)(EventdNdBackendContext *context, 
 typedef EventdNdDisplay *(*EventdNdDisplayNewFunc)(EventdNdBackendContext *context, const gchar *target);
 typedef void (*EventdNdDisplayFunc)(EventdNdDisplay *display);
 
-typedef EventdNdSurface *(*EventdNdSurfaceNewFunc)(EventdEvent *event, EventdNdDisplay *display, cairo_surface_t *bubble, cairo_surface_t *shape);
+typedef EventdNdSurface *(*EventdNdSurfaceNewFunc)(EventdEvent *event, EventdNdDisplay *display, cairo_surface_t *bubble);
 typedef void (*EventdNdSurfaceFunc)(EventdNdSurface *surface);
-typedef void(*EventdNdSurfaceUpdateFunc)(EventdNdSurface *surface, cairo_surface_t *bubble, cairo_surface_t *shape);
+typedef void(*EventdNdSurfaceUpdateFunc)(EventdNdSurface *surface, cairo_surface_t *bubble);
 typedef void (*EventdNdSurfaceDisplayFunc)(EventdNdSurface *surface, gint x, gint y);
 
 typedef struct {
