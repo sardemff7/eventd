@@ -53,7 +53,12 @@
 
         <para>
             This is the main configuration file for <citerefentry><refentrytitle>eventd</refentrytitle><manvolnum>1</manvolnum></citerefentry>.
-            The syntax of this file is described in the <ulink url="http://standards.freedesktop.org/desktop-entry-spec/latest/">XDG Desktop Entry Specification</ulink>.
+        </para>
+        <para>
+            It uses a <code><replaceable>Key</replaceable>=<replaceable>Value</replaceable></code> syntax, organized in categories.
+            Categories are specified using square brackets (e.g. <code>[<replaceable>Category Name</replaceable>]</code>).
+            List values are semi-colon-separated.
+            More details are available in the <ulink url="http://standards.freedesktop.org/desktop-entry-spec/latest/">XDG Desktop Entry Specification</ulink>.
         </para>
         <para>
             It controls the daemon and event queue behavior.

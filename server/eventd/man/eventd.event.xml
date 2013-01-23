@@ -60,7 +60,7 @@
         <para>
             These files are used to configure eventd reaction on a per-event basis.
             Each file is named using the following scheme: <filename><replaceable>id</replaceable>.event</filename>. The file name is afteward used as a configuration id.
-            The syntax of these files is described in the <ulink url="http://standards.freedesktop.org/desktop-entry-spec/latest/">XDG Desktop Entry Specification</ulink>.
+            They use the same syntax as the main configuration file.
         </para>
         <para>This configuration mechanism is seperated in two steps:</para>
         <orderedlist>
