@@ -39,18 +39,25 @@
     </refnamediv>
 
     <refsynopsisdiv>
-        <para>The event files are searched in following order:</para>
+        <para>
+            Each file is named using the following scheme: <filename><replaceable>id</replaceable>.event</filename>.
+        </para>
+        <para>eventd will search for event files in following directories:</para>
         <orderedlist>
-            <listitem><para><filename>&sysconfdir;/&PACKAGE_NAME;/<replaceable>id</replaceable>.event</filename></para></listitem>
-            <listitem><para><filename>&datadir;/&PACKAGE_NAME;/<replaceable>id</replaceable>.event</filename></para></listitem>
-            <listitem><para><filename><varname>$XDG_CONFIG_HOME</varname>/&PACKAGE_NAME;/<replaceable>id</replaceable>.event</filename> (fallback to <filename>~/.config/&PACKAGE_NAME;/<replaceable>id</replaceable>.event</filename>)</para></listitem>
-            <listitem><para><filename><varname>$EVENTD_CONFIG_DIR</varname>/<replaceable>id</replaceable>.event</filename> (see <citerefentry><refentrytitle>eventd</refentrytitle><manvolnum>1</manvolnum></citerefentry>)</para></listitem>
+            <listitem><para><filename>&datadir;/&PACKAGE_NAME;</filename></para></listitem>
+            <listitem><para><filename>&sysconfdir;/&PACKAGE_NAME;</filename></para></listitem>
+            <listitem><para><filename><varname>$XDG_CONFIG_HOME</varname>/&PACKAGE_NAME;</filename> (fallback to <filename>~/.config/&PACKAGE_NAME;/<replaceable>id</replaceable>.event</filename>)</para></listitem>
+            <listitem><para><filename><varname>$EVENTD_CONFIG_DIR</varname></filename> (see <citerefentry><refentrytitle>eventd</refentrytitle><manvolnum>1</manvolnum></citerefentry>)</para></listitem>
         </orderedlist>
         <para>
-            eventd will search event files in subdirectories too, so you can organize your events.
+            eventd will also walk through subdirectories, to let you organize your events.
         </para>
         <para>
             If the same file is found in several places, the last one is used.
+        </para>
+        <para>
+            <emphasis>An event file is <emphasis>mandatory</emphasis> for the event to be processed by eventd.</emphasis>
+            Unknown events are ignored.
         </para>
     </refsynopsisdiv>
 
@@ -58,8 +65,7 @@
         <title>Description</title>
 
         <para>
-            These files are used to configure eventd reaction on a per-event basis.
-            Each file is named using the following scheme: <filename><replaceable>id</replaceable>.event</filename>. The file name is afteward used as a configuration id.
+            These files are used to configure eventd reaction on a per-event basis. The file name is used as a configuration id.
             They use the same syntax as the main configuration file.
         </para>
         <para>This configuration mechanism is seperated in two steps:</para>
@@ -79,23 +85,19 @@
         <title>Configuration ids and event matching</title>
 
         <para>
-            When eventd receive an event from one of its event collecting plugin, it searchs the best matching configuration id.
+            When eventd receive an event from one of its event collecting plugin, it searches the best matching configuration id, using the following mechanism:
         </para>
 
-        <refsect2>
-            <title>Matching mechanism</title>
+        <para>
+            eventd will first try to match both the category and the name of an event.
+            If no id is found, it will try to find an id for the category alone.
+            If nothing matches, the event is unknown and will not be dispatched.
+        </para>
 
-            <para>
-                eventd will first try to match both the category and the name of an event.
-                If no id is found, it will try to find an id for the category alone.
-                If nothing matches, the event is unknown and will not be dispatched.
-            </para>
-
-            <para>
-                Multiple events can match the name and the category. eventd provides a fine-grained matching mechanism. Several keys are dedicated to that.
-                See the corresponding key description in the relevant category of the <varname>[Event]</varname> section.
-            </para>
-        </refsect2>
+        <para>
+            Multiple events can match the name and the category. eventd provides a fine-grained matching mechanism. Several keys are dedicated to that.
+            See the corresponding key description in the relevant category of the <varname>[Event]</varname> section.
+        </para>
     </refsect1>
 
     <refsect1>
