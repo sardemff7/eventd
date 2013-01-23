@@ -47,11 +47,38 @@
             <varlistentry>
                 <term><command>eventd</command> core man pages</term>
                 <listitem>
+                    <variablelist>
+                        <varlistentry>
+                            <term><citerefentry><refentrytitle>eventd</refentrytitle><manvolnum>1</manvolnum></citerefentry></term>
+                            <listitem>
+                                <para><command>eventd</command> daemon command-line options</para>
+                            </listitem>
+                        </varlistentry>
+                        <varlistentry>
+                            <term><citerefentry><refentrytitle>eventdctl</refentrytitle><manvolnum>1</manvolnum></citerefentry></term>
+                            <listitem>
+                                <para><command>eventdctl</command> (control tool) command-line options</para>
+                            </listitem>
+                        </varlistentry>
+                        <varlistentry>
+                            <term><citerefentry><refentrytitle>eventd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry></term>
+                            <listitem>
+                                <para>Main eventd configuration file</para>
+                            </listitem>
+                        </varlistentry>
+                        <varlistentry>
+                            <term><citerefentry><refentrytitle>eventd.event</refentrytitle><manvolnum>5</manvolnum></citerefentry></term>
+                            <listitem>
+                                <para>Event definition and global configuration</para>
+                            </listitem>
+                        </varlistentry>
+                    </variablelist>
                     <para>
-                        <citerefentry><refentrytitle>eventd</refentrytitle><manvolnum>1</manvolnum></citerefentry>
-                        <citerefentry><refentrytitle>eventdctl</refentrytitle><manvolnum>1</manvolnum></citerefentry>
-                        <citerefentry><refentrytitle>eventd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
-                        <citerefentry><refentrytitle>eventd.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                        Plugins <phrase condition="website">distributed</phrase><phrase condition="installation">installed</phrase> with eventd will use the same scheme:
+                        eventd-<replaceable>plugin-name</replaceable> for their additionnal <command>eventd</command> command-line options,
+                        eventdctl-<replaceable>plugin-name</replaceable> for their additionnal <command>eventdctl</command> command-line options,
+                        eventd-<replaceable>plugin-name</replaceable>.conf for their global configuration,
+                        eventd-<replaceable>plugin-name</replaceable>.event for their event configuration.
                     </para>
                 </listitem>
             </varlistentry>
