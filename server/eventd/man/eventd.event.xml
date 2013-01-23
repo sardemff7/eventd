@@ -88,11 +88,16 @@
             When eventd receive an event from one of its event collecting plugin, it searches the best matching configuration id, using the following mechanism:
         </para>
 
-        <para>
-            eventd will first try to match both the category and the name of an event.
-            If no id is found, it will try to find an id for the category alone.
-            If nothing matches, the event is unknown and will not be dispatched.
-        </para>
+        <orderedlist>
+            <listitem><para>eventd will get the list of configurations ids matching both the category and the name of the event</para></listitem>
+            <listitem><para>If the list is empty, jump to step <xref linkend="matching-step-category" /></para></listitem>
+            <listitem><para>Test all configuration ids in user-configured order to find the best match</para></listitem>
+            <listitem><para>If an id matches, use it when passing the event to the plugins, otherwise continue</para></listitem>
+            <listitem id="matching-step-category"><para>eventd will get the list of configurations ids matching the category the event</para></listitem>
+            <listitem><para>Test all configuration ids in user-configured order to find the best match</para></listitem>
+            <listitem><para>If an id matches, use it when passing the event to the plugins, otherwise continue</para></listitem>
+            <listitem><para>If nothing matches, the event is unknown and will not be dispatched.</para></listitem>
+        </orderedlist>
 
         <para>
             Multiple events can match the name and the category. eventd provides a fine-grained matching mechanism. Several keys are dedicated to that.
