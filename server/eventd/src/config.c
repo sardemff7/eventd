@@ -71,24 +71,8 @@ _eventd_config_events_get_name(const gchar *category, const gchar *name)
 }
 
 const gchar *
-eventd_config_get_event_config_id(EventdConfig *config, EventdEvent *event, GQuark *current_flags)
+_eventd_config_get_best_match(GList *list, EventdEvent *event, GQuark *current_flags)
 {
-    const gchar *category;
-    gchar *name;
-    GList *list;
-
-    category = eventd_event_get_category(event);
-
-    name = _eventd_config_events_get_name(category, eventd_event_get_name(event));
-
-    list = g_hash_table_lookup(config->event_ids, name);
-    g_free(name);
-    if ( list == NULL )
-        list = g_hash_table_lookup(config->event_ids, category);
-
-    if ( list == NULL )
-        return NULL;
-
     GList *match_;
     for ( match_ = list ; match_ != NULL ; match_ = g_list_next(match_) )
     {
@@ -158,6 +142,39 @@ eventd_config_get_event_config_id(EventdConfig *config, EventdEvent *event, GQua
         }
 
         return match->id;
+    }
+
+    return NULL;
+}
+
+const gchar *
+eventd_config_get_event_config_id(EventdConfig *config, EventdEvent *event, GQuark *current_flags)
+{
+    const gchar *category;
+    GList *list;
+    const gchar *match;
+
+    category = eventd_event_get_category(event);
+
+    gchar *name;
+    name = _eventd_config_events_get_name(category, eventd_event_get_name(event));
+    list = g_hash_table_lookup(config->event_ids, name);
+    g_free(name);
+
+
+    if ( list != NULL )
+    {
+        match = _eventd_config_get_best_match(list, event, current_flags);
+        if ( match != NULL )
+            return match;
+    }
+
+    list = g_hash_table_lookup(config->event_ids, category);
+    if ( list != NULL )
+    {
+        match = _eventd_config_get_best_match(list, event, current_flags);
+        if ( match != NULL )
+            return match;
     }
 
     return NULL;
