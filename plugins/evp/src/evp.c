@@ -169,6 +169,10 @@ _eventd_evp_event(gpointer data, LibeventdEvpContext *evp, EventdEvent *event)
     config_id = libeventd_core_get_event_config_id(client->context->core, client->context->core_interface, event);
     if ( config_id != NULL )
     {
+#ifdef DEBUG
+        g_debug("Matched an event (category: %s, name: %s): %s", eventd_event_get_category(event), eventd_event_get_name(event), config_id);
+#endif /* DEBUG */
+
         gchar *id;
         EventdEvpEvent *evp_event;
 
