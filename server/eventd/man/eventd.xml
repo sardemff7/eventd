@@ -187,8 +187,8 @@
                 You can control connections using <command>eventdctl</command> with the following commands:
             </para>
             <programlisting>
-                eventdctl relay connect your.distant.computer
-                eventdctl relay disconnect your.distant.computer
+eventdctl relay connect your.distant.computer
+eventdctl relay disconnect your.distant.computer
             </programlisting>
             <para>
                 See <citerefentry><refentrytitle>eventd-relay.event</refentrytitle><manvolnum>5</manvolnum></citerefentry> for the <command>relay</command> plugin configuration.

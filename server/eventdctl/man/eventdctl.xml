@@ -190,37 +190,37 @@
     </refsect1>
 
     <refsect1>
-            <title>Exit status</title>
+        <title>Exit status</title>
 
-            <variablelist>
-                <varlistentry>
-                    <term><literal>0</literal></term>
-                    <listitem>
-                        <para>The command was successful. With the <parameter class="command">start</parameter> command, it will return <literal>0</literal> if eventd is already started.</para>
-                    </listitem>
-                </varlistentry>
+        <variablelist>
+            <varlistentry>
+                <term><literal>0</literal></term>
+                <listitem>
+                    <para>The command was successful. With the <parameter class="command">start</parameter> command, it will return <literal>0</literal> if eventd is already started.</para>
+                </listitem>
+            </varlistentry>
 
-                <varlistentry>
-                    <term><literal>1</literal></term>
-                    <listitem>
-                        <para>Impossible to connect to eventd. May be returned if no eventd is started or if our started eventd exited early.</para>
-                    </listitem>
-                </varlistentry>
+            <varlistentry>
+                <term><literal>1</literal></term>
+                <listitem>
+                    <para>Impossible to connect to eventd. May be returned if no eventd is started or if our started eventd exited early.</para>
+                </listitem>
+            </varlistentry>
 
-                <varlistentry>
-                    <term><literal>2</literal></term>
-                    <listitem>
-                        <para>Command error. No command passed, unknown command or missing command argument.</para>
-                    </listitem>
-                </varlistentry>
+            <varlistentry>
+                <term><literal>2</literal></term>
+                <listitem>
+                    <para>Command error. No command passed, unknown command or missing command argument.</para>
+                </listitem>
+            </varlistentry>
 
-                <varlistentry>
-                    <term><literal>3</literal></term>
-                    <listitem>
-                        <para>eventd invocation faild. Either with the <parameter class="command">start</parameter> command, or the <option>--auto-spawn</option> option.</para>
-                    </listitem>
-                </varlistentry>
-            </variablelist>
+            <varlistentry>
+                <term><literal>3</literal></term>
+                <listitem>
+                    <para>eventd invocation faild. Either with the <parameter class="command">start</parameter> command, or the <option>--auto-spawn</option> option.</para>
+                </listitem>
+            </varlistentry>
+        </variablelist>
     </refsect1>
 
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="common-man.xml" xpointer="see-also" />
