@@ -7,5 +7,5 @@ CLEANFILES += \
 $(dbussessionservice_DATA): %: %.in src/config.h
 	$(AM_V_GEN)$(MKDIR_P) $(dir $@) && \
 		$(SED) \
-		-e 's:[@]libexecdir[@]:$(libexecdir):g' \
+		-e 's:[@]bindir[@]:$(bindir):g' \
 		< $< > $@ || rm $@
