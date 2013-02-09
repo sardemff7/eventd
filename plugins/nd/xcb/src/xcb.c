@@ -49,11 +49,12 @@ struct _EventdNdBackendContext {
     EventdNdContext *nd;
     EventdNdInterface *nd_interface;
     gchar **outputs;
-    GSList *displays;
+    GList *displays;
 };
 
 struct _EventdNdDisplay {
     EventdNdBackendContext *context;
+    GList *link;
     GXcbSource *source;
     xcb_connection_t *xcb_connection;
     xcb_screen_t *screen;
@@ -93,7 +94,7 @@ _eventd_nd_xcb_init(EventdNdContext *nd, EventdNdInterface *nd_interface)
 static void
 _eventd_nd_xcb_uninit(EventdNdBackendContext *context)
 {
-    g_slist_free_full(context->displays, g_free);
+    g_list_free_full(context->displays, g_free);
 
     g_free(context);
 }
@@ -340,7 +341,7 @@ _eventd_nd_xcb_display_new(EventdNdBackendContext *context, const gchar *target)
         return NULL;
     free(h);
 
-    if ( g_slist_find_custom(context->displays, target, (GCompareFunc) g_strcmp0) != NULL )
+    if ( g_list_find_custom(context->displays, target, (GCompareFunc) g_strcmp0) != NULL )
         return NULL;
 
     EventdNdDisplay *display;
@@ -358,7 +359,8 @@ _eventd_nd_xcb_display_new(EventdNdBackendContext *context, const gchar *target)
     }
     display->context = context;
 
-    context->displays = g_slist_prepend(context->displays, g_strdup(target));
+    context->displays = g_list_prepend(context->displays, g_strdup(target));
+    display->link = context->displays;
 
     display->xcb_connection = g_xcb_source_get_connection(display->source);
 
@@ -395,11 +397,12 @@ _eventd_nd_xcb_display_new(EventdNdBackendContext *context, const gchar *target)
 }
 
 static void
-_eventd_nd_xcb_display_free(EventdNdDisplay *context)
+_eventd_nd_xcb_display_free(EventdNdDisplay *display)
 {
-    g_hash_table_unref(context->bubbles);
-    g_xcb_source_unref(context->source);
-    g_free(context);
+    g_hash_table_unref(display->bubbles);
+    g_xcb_source_unref(display->source);
+    display->context->displays = g_list_delete_link(display->context->displays, display->link);
+    g_free(display);
 }
 
 static void
