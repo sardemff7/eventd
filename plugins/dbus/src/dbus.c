@@ -42,6 +42,8 @@ struct _EventdPluginContext {
     gboolean disabled;
     guint id;
     GDBusConnection *connection;
+    GVariant *capabilities;
+    GVariant *server_information;
     guint32 count;
     GHashTable *events;
     GHashTable *notifications;
@@ -277,44 +279,15 @@ _eventd_dbus_close_notification(EventdPluginContext *context, GVariant *paramete
 }
 
 static void
-_eventd_dbus_get_capabilities(GDBusMethodInvocation *invocation)
+_eventd_dbus_get_capabilities(EventdPluginContext *context, GDBusMethodInvocation *invocation)
 {
-    GVariantBuilder *builder;
-
-    builder = g_variant_builder_new(G_VARIANT_TYPE("as"));
-
-    g_variant_builder_add(builder, "s", "body");
-    g_variant_builder_add(builder, "s", "body-markup");
-    g_variant_builder_add(builder, "s", "icon-static");
-    g_variant_builder_add(builder, "s", "image/svg+xml");
-
-    /* eventd special features */
-    g_variant_builder_add(builder, "s", "x-eventd-overlay-icon");
-    g_variant_builder_add(builder, "s", "x-eventd-user-control");
-
-    /* TODO: make the notification plugin works fine with these
-    g_variant_builder_add(builder, "s", "body-hyperlinks");
-    */
-
-    /* TODO: pass the data to the sound plugin
-    g_variant_builder_add(builder, "s", "sound");
-    */
-
-    /* TODO: or not, these imply “some” work
-    g_variant_builder_add(builder, "s", "body-images");
-    g_variant_builder_add(builder, "s", "persistence");
-    g_variant_builder_add(builder, "s", "actions");
-    g_variant_builder_add(builder, "s", "action-icons");
-    */
-
-    g_dbus_method_invocation_return_value(invocation, g_variant_new("(as)", builder));
-    g_variant_builder_unref(builder);
+    g_dbus_method_invocation_return_value(invocation, g_variant_ref(context->capabilities));
 }
 
 static void
-_eventd_dbus_get_server_information(GDBusMethodInvocation *invocation)
+_eventd_dbus_get_server_information(EventdPluginContext *context, GDBusMethodInvocation *invocation)
 {
-    g_dbus_method_invocation_return_value(invocation, g_variant_new("(ssss)", PACKAGE_NAME, "Quentin 'Sardem FF7' Glidic", PACKAGE_VERSION, NOTIFICATION_SPEC_VERSION));
+    g_dbus_method_invocation_return_value(invocation, g_variant_ref(context->server_information));
 }
 
 /* D-Bus method callback */
@@ -339,9 +312,9 @@ _eventd_dbus_method(GDBusConnection       *connection,
     else if ( g_strcmp0(method_name, "CloseNotification") == 0 )
         _eventd_dbus_close_notification(context, parameters, invocation);
     else if ( g_strcmp0(method_name, "GetCapabilities") == 0 )
-        _eventd_dbus_get_capabilities(invocation);
+        _eventd_dbus_get_capabilities(context, invocation);
     else if ( g_strcmp0(method_name, "GetServerInformation") == 0 )
-        _eventd_dbus_get_server_information(invocation);
+        _eventd_dbus_get_server_information(context, invocation);
 }
 
 
@@ -447,6 +420,8 @@ _eventd_dbus_init(EventdCoreContext *core, EventdCoreInterface *core_interface)
     context->core = core;
     context->core_interface = core_interface;
 
+    context->server_information = g_variant_new("(ssss)", PACKAGE_NAME, "Quentin 'Sardem FF7' Glidic", PACKAGE_VERSION, NOTIFICATION_SPEC_VERSION);
+
     context->notifications = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, _eventd_dbus_notification_free);
 
     return context;
@@ -459,6 +434,10 @@ _eventd_dbus_uninit(EventdPluginContext *context)
         return;
 
     g_hash_table_unref(context->notifications);
+
+    g_variant_unref(context->server_information);
+
+    g_dbus_node_info_unref(context->introspection_data);
 
     g_free(context);
 }
@@ -482,6 +461,53 @@ _eventd_dbus_get_option_group(EventdPluginContext *context)
     g_option_group_set_translation_domain(option_group, GETTEXT_PACKAGE);
     g_option_group_add_entries(option_group, entries);
     return option_group;
+}
+
+
+/*
+ * Configuration interface
+ */
+
+void
+_eventd_dbus_global_parse(EventdPluginContext *context, GKeyFile *config_file)
+{
+    GVariantBuilder *builder;
+
+    builder = g_variant_builder_new(G_VARIANT_TYPE("as"));
+
+    g_variant_builder_add(builder, "s", "body");
+    g_variant_builder_add(builder, "s", "body-markup");
+    g_variant_builder_add(builder, "s", "icon-static");
+    g_variant_builder_add(builder, "s", "image/svg+xml");
+
+    /* eventd special features */
+    g_variant_builder_add(builder, "s", "x-eventd-overlay-icon");
+    g_variant_builder_add(builder, "s", "x-eventd-user-control");
+
+    /* TODO: make the notification plugin works fine with these
+    g_variant_builder_add(builder, "s", "body-hyperlinks");
+    */
+
+    /* TODO: pass the data to the sound plugin
+    g_variant_builder_add(builder, "s", "sound");
+    */
+
+    /* TODO: or not, these imply “some” work
+    g_variant_builder_add(builder, "s", "body-images");
+    g_variant_builder_add(builder, "s", "persistence");
+    g_variant_builder_add(builder, "s", "actions");
+    g_variant_builder_add(builder, "s", "action-icons");
+    */
+
+    context->capabilities = g_variant_new("(as)", builder);
+    g_variant_builder_unref(builder);
+}
+
+void
+_eventd_dbus_config_reset(EventdPluginContext *context)
+{
+    g_variant_unref(context->capabilities);
+    context->capabilities = NULL;
 }
 
 
@@ -521,6 +547,9 @@ eventd_plugin_get_interface(EventdPluginInterface *interface)
     libeventd_plugin_interface_add_uninit_callback(interface, _eventd_dbus_uninit);
 
     libeventd_plugin_interface_add_get_option_group_callback(interface, _eventd_dbus_get_option_group);
+
+    libeventd_plugin_interface_add_global_parse_callback(interface, _eventd_dbus_global_parse);
+    libeventd_plugin_interface_add_config_reset_callback(interface, _eventd_dbus_config_reset);
 
     libeventd_plugin_interface_add_start_callback(interface, _eventd_dbus_start);
     libeventd_plugin_interface_add_stop_callback(interface, _eventd_dbus_stop);
