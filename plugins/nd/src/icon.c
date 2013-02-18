@@ -268,16 +268,18 @@ eventd_nd_cairo_image_and_icon_process(LibeventdNdNotification *notification, Ev
             *icon = _eventd_nd_cairo_icon_process_background(icon_pixbuf, style, width, height);
     break;
     case EVENTD_ND_STYLE_ICON_PLACEMENT_OVERLAY:
+        if ( ( image_pixbuf == NULL ) && ( icon_pixbuf != NULL ) )
+        {
+            image_pixbuf = icon_pixbuf;
+            icon_pixbuf = NULL;
+        }
         if ( image_pixbuf != NULL )
         {
             *image = _eventd_nd_cairo_image_process(image_pixbuf, style, width, height);
             if ( icon_pixbuf != NULL )
                 *icon = _eventd_nd_cairo_icon_process_overlay(icon_pixbuf, style, width, height);
-        }
-        else if ( icon_pixbuf != NULL )
-            *image = _eventd_nd_cairo_image_process(icon_pixbuf, style, width, height);
-        if ( *image != NULL )
             *text_margin = *width + eventd_nd_style_get_image_margin(style);
+        }
     break;
     case EVENTD_ND_STYLE_ICON_PLACEMENT_FOREGROUND:
         if ( image_pixbuf != NULL )
