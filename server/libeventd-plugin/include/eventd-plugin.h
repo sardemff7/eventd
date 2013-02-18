@@ -46,24 +46,21 @@ typedef void (*EventdPluginEventDispatchFunc)(EventdPluginContext *context, cons
 
 typedef void (*EventdPluginGetInterfaceFunc)(EventdPluginInterface *interface);
 
-#define LIBEVENTD_PLUGIN_INTERFACE_ADD_CALLBACK(action, Action) void libeventd_plugin_interface_add_##action##_callback(EventdPluginInterface *interface, EventdPlugin##Action##Func callback)
+void libeventd_plugin_interface_add_init_callback(EventdPluginInterface *interface, EventdPluginInitFunc callback);
+void libeventd_plugin_interface_add_uninit_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback);
 
+void libeventd_plugin_interface_add_get_option_group_callback(EventdPluginInterface *interface, EventdPluginGetOptionGroupFunc callback);
 
-LIBEVENTD_PLUGIN_INTERFACE_ADD_CALLBACK(init, Init);
-LIBEVENTD_PLUGIN_INTERFACE_ADD_CALLBACK(uninit, Simple);
+void libeventd_plugin_interface_add_start_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback);
+void libeventd_plugin_interface_add_stop_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback);
 
-LIBEVENTD_PLUGIN_INTERFACE_ADD_CALLBACK(get_option_group, GetOptionGroup);
+void libeventd_plugin_interface_add_control_command_callback(EventdPluginInterface *interface, EventdPluginControlCommandFunc callback);
 
-LIBEVENTD_PLUGIN_INTERFACE_ADD_CALLBACK(start, Simple);
-LIBEVENTD_PLUGIN_INTERFACE_ADD_CALLBACK(stop, Simple);
+void libeventd_plugin_interface_add_global_parse_callback(EventdPluginInterface *interface, EventdPluginGlobalParseFunc callback);
+void libeventd_plugin_interface_add_event_parse_callback(EventdPluginInterface *interface, EventdPluginEventParseFunc callback);
+void libeventd_plugin_interface_add_config_reset_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback);
 
-LIBEVENTD_PLUGIN_INTERFACE_ADD_CALLBACK(control_command, ControlCommand);
-
-LIBEVENTD_PLUGIN_INTERFACE_ADD_CALLBACK(global_parse, GlobalParse);
-LIBEVENTD_PLUGIN_INTERFACE_ADD_CALLBACK(event_parse, EventParse);
-LIBEVENTD_PLUGIN_INTERFACE_ADD_CALLBACK(config_reset, Simple);
-
-LIBEVENTD_PLUGIN_INTERFACE_ADD_CALLBACK(event_action, EventDispatch);
+void libeventd_plugin_interface_add_event_action_callback(EventdPluginInterface *interface, EventdPluginEventDispatchFunc callback);
 
 
 /*
