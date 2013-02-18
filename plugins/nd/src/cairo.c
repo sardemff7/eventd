@@ -296,27 +296,30 @@ eventd_nd_cairo_get_surface(EventdEvent *event, LibeventdNdNotification *notific
     PangoLayout *title;
     PangoLayout *message = NULL;
 
+#ifdef ENABLE_GDK_PIXBUF
+    cairo_surface_t *image = NULL;
+    cairo_surface_t *icon = NULL;
+#endif /* ENABLE_GDK_PIXBUF */
+
     gint text_width = 0, text_height = 0;
     gint text_margin = 0;
     gint image_width = 0, image_height = 0;
 
     cairo_t *cr;
 
-    /* proccess data */
-    _eventd_nd_cairo_text_process(notification, style, &title, &message, &text_height, &text_width);
-
-#ifdef ENABLE_GDK_PIXBUF
-    cairo_surface_t *image = NULL;
-    cairo_surface_t *icon = NULL;
-    eventd_nd_cairo_image_and_icon_process(notification, style, &image, &icon, &text_margin, &image_width, &image_height);
-#endif /* ENABLE_GDK_PIXBUF */
-
-    /* compute the bubble size */
     padding = eventd_nd_style_get_bubble_padding(style);
     min_width = eventd_nd_style_get_bubble_min_width(style);
     max_width = eventd_nd_style_get_bubble_max_width(style);
 
-    width = 2 * padding + image_width + text_width;
+    /* proccess data and compute the bubble size */
+    _eventd_nd_cairo_text_process(notification, style, &title, &message, &text_height, &text_width);
+
+    width = 2 * padding + text_width;
+
+#ifdef ENABLE_GDK_PIXBUF
+    eventd_nd_cairo_image_and_icon_process(notification, style, &image, &icon, &text_margin, &image_width, &image_height);
+    width += image_width;
+#endif /* ENABLE_GDK_PIXBUF */
 
     if ( min_width > -1 )
         width = MAX(width, min_width);
