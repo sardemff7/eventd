@@ -173,7 +173,7 @@ _eventd_nd_cairo_get_message(const gchar *message, guint8 max)
 }
 
 static void
-_eventd_nd_cairo_text_process(LibeventdNdNotification *notification, EventdNdStyle *style, PangoLayout **title, PangoLayout **message, gint *text_height, gint *text_width)
+_eventd_nd_cairo_text_process(LibeventdNdNotification *notification, EventdNdStyle *style, gint max_width, PangoLayout **title, PangoLayout **message, gint *text_height, gint *text_width)
 {
     PangoContext *pango_context;
 
@@ -182,6 +182,9 @@ _eventd_nd_cairo_text_process(LibeventdNdNotification *notification, EventdNdSty
 
     *title = pango_layout_new(pango_context);
     pango_layout_set_font_description(*title, eventd_nd_style_get_title_font(style));
+    pango_layout_set_ellipsize(*title, PANGO_ELLIPSIZE_MIDDLE);
+    if ( max_width > -1 )
+        pango_layout_set_width(*title, max_width * PANGO_SCALE);
     pango_layout_set_text(*title, libeventd_nd_notification_get_title(notification), -1);
     pango_layout_get_pixel_size(*title, text_width, text_height);
 
@@ -197,7 +200,10 @@ _eventd_nd_cairo_text_process(LibeventdNdNotification *notification, EventdNdSty
 
         *message = pango_layout_new(pango_context);
         pango_layout_set_font_description(*message, eventd_nd_style_get_message_font(style));
+        pango_layout_set_ellipsize(*message, PANGO_ELLIPSIZE_MIDDLE);
         pango_layout_set_height(*message, -eventd_nd_style_get_message_max_lines(style));
+        if ( max_width > -1 )
+            pango_layout_set_width(*message, max_width * PANGO_SCALE);
         pango_layout_set_markup(*message, text, -1);
         pango_layout_get_pixel_size(*message, &w, &h);
 
@@ -312,12 +318,13 @@ eventd_nd_cairo_get_surface(EventdEvent *event, LibeventdNdNotification *notific
     max_width = eventd_nd_style_get_bubble_max_width(style);
 
     /* proccess data and compute the bubble size */
-    _eventd_nd_cairo_text_process(notification, style, &title, &message, &text_height, &text_width);
+    _eventd_nd_cairo_text_process(notification, style, ( max_width > -1 ) ? ( max_width - 2 * padding ) : -1, &title, &message, &text_height, &text_width);
 
     width = 2 * padding + text_width;
 
 #ifdef ENABLE_GDK_PIXBUF
-    eventd_nd_cairo_image_and_icon_process(notification, style, &image, &icon, &text_margin, &image_width, &image_height);
+    if ( ( max_width < 0 ) || ( width < max_width ) )
+        eventd_nd_cairo_image_and_icon_process(notification, style, &image, &icon, &text_margin, &image_width, &image_height);
     width += image_width;
 #endif /* ENABLE_GDK_PIXBUF */
 
@@ -328,8 +335,6 @@ eventd_nd_cairo_get_surface(EventdEvent *event, LibeventdNdNotification *notific
         /* Let the text take the remaining space if needed (e.g. Right-to-Left) */
         text_width = width - ( 2 * padding + image_width );
     }
-    if ( max_width > -1 )
-        width = MIN(width, max_width);
 
     height = 2 * padding + MAX(image_height, text_height);
 
