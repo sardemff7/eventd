@@ -324,7 +324,7 @@ eventd_nd_cairo_get_surface(EventdEvent *event, LibeventdNdNotification *notific
 
 #ifdef ENABLE_GDK_PIXBUF
     if ( ( max_width < 0 ) || ( width < max_width ) )
-        eventd_nd_cairo_image_and_icon_process(notification, style, &image, &icon, &text_margin, &image_width, &image_height);
+        eventd_nd_cairo_image_and_icon_process(notification, style, ( max_width > -1 ) ? ( max_width - width ) : -1, &image, &icon, &text_margin, &image_width, &image_height);
     width += image_width;
 #endif /* ENABLE_GDK_PIXBUF */
 
