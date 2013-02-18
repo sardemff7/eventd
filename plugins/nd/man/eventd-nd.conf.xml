@@ -157,6 +157,7 @@
                         <listitem>
                             <para>Two <type>integers</type>, <literal>-1</literal> is unlimited</para>
                             <para>These two keys control the bubble width.</para>
+                            <para>The maximum width overrides the minimum.</para>
                         </listitem>
                     </varlistentry>
 
