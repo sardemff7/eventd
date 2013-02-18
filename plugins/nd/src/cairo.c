@@ -321,8 +321,13 @@ eventd_nd_cairo_get_surface(EventdEvent *event, LibeventdNdNotification *notific
     width += image_width;
 #endif /* ENABLE_GDK_PIXBUF */
 
-    if ( min_width > -1 )
-        width = MAX(width, min_width);
+    /* We are sure that min_width < max_width */
+    if ( ( min_width > -1 ) && ( min_width > width ) )
+    {
+        width = min_width;
+        /* Let the text take the remaining space if needed (e.g. Right-to-Left) */
+        text_width = width - ( 2 * padding + image_width );
+    }
     if ( max_width > -1 )
         width = MIN(width, max_width);
 
