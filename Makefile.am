@@ -32,6 +32,7 @@ vapi_DATA =
 dist_event_DATA =
 systemduserunit_DATA =
 dbussessionservice_DATA =
+dbuscapabilities_DATA =
 
 EXTRA_DIST =
 CLEANFILES =

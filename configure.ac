@@ -96,8 +96,10 @@ PKG_NOARCH_INSTALLDIR
 # eventd specific dirs
 pluginsdir='${pkglibdir}/plugins'
 eventdir='${pkgdatadir}'
+dbuscapabilitiesdir="${pluginsdir}/dbus"
 AC_SUBST([pluginsdir])
 AC_SUBST([eventdir])
+AC_SUBST([dbuscapabilitiesdir])
 
 
 #
@@ -172,6 +174,9 @@ if test x$enable_dbus = xyes; then
     esac
     AC_SUBST(dbussessionservicedir)
     DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_dbus"
+    AC_CONFIG_FILES([
+        plugins/dbus/pkgconfig/eventd-dbus.pc
+    ])
 fi
 AM_CONDITIONAL(ENABLE_DBUS, test x$enable_dbus = xyes)
 

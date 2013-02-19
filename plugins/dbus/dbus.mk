@@ -6,6 +6,9 @@ plugins_LTLIBRARIES += \
 man1_MANS += \
 	plugins/dbus/man/eventd-dbus.1
 
+pkgconfig_DATA += \
+	plugins/dbus/pkgconfig/eventd-dbus.pc
+
 dist_event_DATA += \
 	plugins/dbus/events/libnotify.event
 
@@ -19,6 +22,7 @@ dbus_la_SOURCES = \
 dbus_la_CFLAGS = \
 	$(AM_CFLAGS) \
 	-D G_LOG_DOMAIN=\"eventd-dbus\" \
+	-D DBUSCAPABILITIESDIR=\"$(dbuscapabilitiesdir)\" \
 	$(GIO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS)

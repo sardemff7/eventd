@@ -70,6 +70,27 @@ if ENABLE_LINUX_FB
 include plugins/nd/linux/linux.mk
 endif
 
+
+if ENABLE_DBUS
+dbuscapabilities_DATA += \
+	plugins/nd/dbuscapabilities/nd.capabilities
+endif
+
+nd_dbus_capabilities = \
+	body \
+	body-markup
+
+if ENABLE_GDK_PIXBUF
+nd_dbus_capabilities += \
+	icon-static \
+	image/svg+xml \
+	x-eventd-overlay-icon
+endif
+
+plugins/nd/dbuscapabilities/nd.capabilities: src/config.h
+	$(AM_V_GEN)$(MKDIR_P) $(dir $@) && \
+	echo $(nd_dbus_capabilities) > $@
+
 #
 # Hooks
 #

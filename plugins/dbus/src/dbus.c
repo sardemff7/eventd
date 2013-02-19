@@ -471,33 +471,76 @@ _eventd_dbus_get_option_group(EventdPluginContext *context)
 void
 _eventd_dbus_global_parse(EventdPluginContext *context, GKeyFile *config_file)
 {
+    GHashTable *capabilities_set;
+
+    capabilities_set = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+
+    /* Common capabilities */
+    /* TODO: or not, these imply “some” work
+    g_hash_table_insert(capabilities_set, "actions", NULL);
+     */
+
+    GDir *capabilities_dir;
+    GError *error = NULL;
+    capabilities_dir = g_dir_open(DBUSCAPABILITIESDIR, 0, &error);
+    if ( capabilities_dir != NULL )
+    {
+        const gchar *file;
+        while ( ( file = g_dir_read_name(capabilities_dir) ) != NULL )
+        {
+            if ( g_str_has_prefix(file, "." ) || ( ! g_str_has_suffix(file, ".capabilities") ) )
+                continue;
+
+            gchar *full_filename;
+
+            full_filename = g_build_filename(DBUSCAPABILITIESDIR, file, NULL);
+            if ( ! g_file_test(full_filename, G_FILE_TEST_IS_REGULAR) )
+                goto next;
+
+            gchar *capabilities;
+            if ( ! g_file_get_contents(full_filename, &capabilities, NULL, &error) )
+            {
+                g_warning("Could not read capability file '%s': %s", file, error->message);
+                g_clear_error(&error);
+                goto next;
+            }
+
+            gchar **capabilitiesv;
+            capabilitiesv = g_strsplit_set(capabilities, " \n,", -1);
+            g_free(capabilities);
+
+            gchar **capability;
+            for ( capability = capabilitiesv ; *capability != NULL ; ++capability )
+                g_hash_table_insert(capabilities_set, *capability, NULL);
+            g_free(capabilitiesv);
+
+        next:
+            g_free(full_filename);
+        }
+        g_dir_close(capabilities_dir);
+    }
+    else
+    {
+        g_warning("Couldn't read the D-Bus plugin capabilities directory: %s", error->message);
+        g_clear_error(&error);
+    }
+
     GVariantBuilder *builder;
 
     builder = g_variant_builder_new(G_VARIANT_TYPE("as"));
 
-    g_variant_builder_add(builder, "s", "body");
-    g_variant_builder_add(builder, "s", "body-markup");
-    g_variant_builder_add(builder, "s", "icon-static");
-    g_variant_builder_add(builder, "s", "image/svg+xml");
+    GHashTableIter iter;
+    const gchar *capability;
+    gpointer dummy;
+    g_hash_table_iter_init(&iter, capabilities_set);
+    while ( g_hash_table_iter_next(&iter, (gpointer *)&capability, &dummy) )
+    {
+        if ( *capability != '\0' )
+            /* Do not add empty capabilitys */
+            g_variant_builder_add(builder, "s", capability);
+    }
 
-    /* eventd special features */
-    g_variant_builder_add(builder, "s", "x-eventd-overlay-icon");
-    g_variant_builder_add(builder, "s", "x-eventd-user-control");
-
-    /* TODO: make the notification plugin works fine with these
-    g_variant_builder_add(builder, "s", "body-hyperlinks");
-    */
-
-    /* TODO: pass the data to the sound plugin
-    g_variant_builder_add(builder, "s", "sound");
-    */
-
-    /* TODO: or not, these imply “some” work
-    g_variant_builder_add(builder, "s", "body-images");
-    g_variant_builder_add(builder, "s", "persistence");
-    g_variant_builder_add(builder, "s", "actions");
-    g_variant_builder_add(builder, "s", "action-icons");
-    */
+    g_hash_table_unref(capabilities_set);
 
     context->capabilities = g_variant_new("(as)", builder);
     g_variant_builder_unref(builder);
