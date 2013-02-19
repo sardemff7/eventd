@@ -91,6 +91,7 @@ AC_SUBST([pkgdatadir])
 
 # pkg-config files
 PKG_INSTALLDIR
+PKG_NOARCH_INSTALLDIR
 
 # eventd specific dirs
 pluginsdir='${pkglibdir}/plugins'

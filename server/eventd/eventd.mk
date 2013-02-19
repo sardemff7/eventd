@@ -14,7 +14,7 @@ man5_MANS += \
 	server/eventd/man/eventd.conf.5 \
 	server/eventd/man/eventd.event.5
 
-pkgconfig_DATA += \
+noarch_pkgconfig_DATA += \
 	server/eventd/pkgconfig/eventd.pc
 
 
