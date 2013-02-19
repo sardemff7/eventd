@@ -3,12 +3,11 @@ exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@
 datadir=@datadir@
-pkglibdir=${libdir}/@PACKAGE@
-pkgincludedir=${includedir}/@PACKAGE@
-pkgdatadir=${datadir}/@PACKAGE@
+pkglibdir=@pkglibdir@
+pkgincludedir=@pkgincludedir@
+pkgdatadir=@pkgdatadir@
 
-plugindir=${pkglibdir}/plugins
-eventdir=${pkgdatadir}
+plugindir=@pluginsdir@
 
 Name: libeventd-plugin
 Description: Library to implement an eventd plugin

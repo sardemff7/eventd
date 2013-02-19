@@ -10,7 +10,6 @@ ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 AM_MAKEFLAGS = --no-print-directory
 
 vapidir = $(datadir)/vala/vapi
-pluginsdir = $(pkglibdir)/plugins
 
 bin_PROGRAMS =
 noinst_LTLIBRARIES =
@@ -29,7 +28,7 @@ man5_MANS =
 pkgconfig_DATA =
 dist_vapi_DATA =
 vapi_DATA =
-dist_pkgdata_DATA =
+dist_event_DATA =
 systemduserunit_DATA =
 dbussessionservice_DATA =
 

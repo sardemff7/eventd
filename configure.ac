@@ -76,7 +76,28 @@ if test -d .git; then
     AC_DEFINE_UNQUOTED([PACKAGE_VERSION], ["$PACKAGE_VERSION"], [Full version with git information])
 fi
 
+
+#
+# Directories
+#
+
+# package-specific dirs
+pkglibdir='${libdir}/'${PACKAGE}
+pkgincludedir='${includedir}/'${PACKAGE}
+pkgdatadir='${datadir}/'${PACKAGE}
+AC_SUBST([pkglibdir])
+AC_SUBST([pkgincludedir])
+AC_SUBST([pkgdatadir])
+
+# pkg-config files
 PKG_INSTALLDIR
+
+# eventd specific dirs
+pluginsdir='${pkglibdir}/plugins'
+eventdir='${pkgdatadir}'
+AC_SUBST([pluginsdir])
+AC_SUBST([eventdir])
+
 
 #
 # Common dependencies

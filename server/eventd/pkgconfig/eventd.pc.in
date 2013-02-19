@@ -1,8 +1,8 @@
 prefix=@prefix@
 datadir=@datadir@
-pkgdatadir=${datadir}/@PACKAGE@
+pkgdatadir=@pkgdatadir@
 
-eventdir=${pkgdatadir}
+eventdir=@eventdir@
 
 Name: eventd
 Description: eventd daemon

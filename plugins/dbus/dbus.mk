@@ -6,7 +6,7 @@ plugins_LTLIBRARIES += \
 man1_MANS += \
 	plugins/dbus/man/eventd-dbus.1
 
-dist_pkgdata_DATA += \
+dist_event_DATA += \
 	plugins/dbus/events/libnotify.event
 
 dbussessionservice_DATA += \
