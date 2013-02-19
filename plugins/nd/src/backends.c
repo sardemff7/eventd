@@ -156,6 +156,7 @@ _eventd_nd_backends_load_dir(EventdNdContext *context, EventdNdInterface *interf
 
         g_hash_table_insert(backends, g_strdup(*id), backend);
     }
+    g_dir_close(plugins_dir);
 }
 
 GHashTable *

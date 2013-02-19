@@ -433,6 +433,7 @@ _eventd_config_read_dir(EventdConfig *config, GHashTable *config_files, const gc
 
         g_free(config_file_name);
     }
+    g_dir_close(config_dir);
 }
 
 static void

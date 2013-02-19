@@ -168,6 +168,7 @@ _eventd_plugins_load_dir(EventdCoreContext *core, EventdCoreInterface *interface
 
         g_hash_table_insert(plugins, (gpointer) *id, plugin);
     }
+    g_dir_close(plugins_dir);
 }
 
 static void
