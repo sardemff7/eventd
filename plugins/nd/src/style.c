@@ -161,160 +161,197 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
 
     if ( g_key_file_has_group(config_file, "NotificationBubble") )
     {
-        Int min_width;
-        Int max_width;
-        Int padding;
-        Int radius;
-        gint r_colour;
+        self->bubble.set = TRUE;
+
+        Int integer;
         Colour colour;
 
-        if ( ( libeventd_config_key_file_get_int(config_file, "NotificationBubble", "MinWidth", &min_width) == 0 )
-             || ( libeventd_config_key_file_get_int(config_file, "NotificationBubble", "MaxWidth", &max_width) == 0 )
-             || ( libeventd_config_key_file_get_int(config_file, "NotificationBubble", "Padding", &padding) == 0 )
-             || ( libeventd_config_key_file_get_int(config_file, "NotificationBubble", "Radius", &radius) == 0 )
-             || ( ( r_colour = libeventd_config_key_file_get_colour(config_file, "NotificationBubble", "Colour", &colour) ) == 0 ) )
-        {
-            self->bubble.set = TRUE;
-            self->bubble.min_width = min_width.set ? min_width.value : eventd_nd_style_get_bubble_min_width(self->parent);
-            self->bubble.max_width = max_width.set ? max_width.value : eventd_nd_style_get_bubble_max_width(self->parent);
-            self->bubble.padding = padding.set ? padding.value : eventd_nd_style_get_bubble_padding(self->parent);
-            self->bubble.radius = radius.set ? radius.value : eventd_nd_style_get_bubble_radius(self->parent);
-            self->bubble.colour = ( r_colour == 0 ) ? colour : eventd_nd_style_get_bubble_colour(self->parent);
-        }
+        if ( libeventd_config_key_file_get_int(config_file, "NotificationBubble", "MinWidth", &integer) == 0 )
+            self->bubble.min_width = integer.value;
+        else if ( self->parent != NULL )
+            self->bubble.min_width = eventd_nd_style_get_bubble_min_width(self->parent);
+
+        if ( libeventd_config_key_file_get_int(config_file, "NotificationBubble", "MaxWidth", &integer) == 0 )
+            self->bubble.max_width = integer.value;
+        else if ( self->parent != NULL )
+            self->bubble.max_width = eventd_nd_style_get_bubble_max_width(self->parent);
+
+        if ( libeventd_config_key_file_get_int(config_file, "NotificationBubble", "Padding", &integer) == 0 )
+            self->bubble.padding = integer.value;
+        else if ( self->parent != NULL )
+            self->bubble.padding = eventd_nd_style_get_bubble_padding(self->parent);
+
+        if ( libeventd_config_key_file_get_int(config_file, "NotificationBubble", "Radius", &integer) == 0 )
+            self->bubble.radius = integer.value;
+        else if ( self->parent != NULL )
+            self->bubble.radius = eventd_nd_style_get_bubble_radius(self->parent);
+
+        if ( libeventd_config_key_file_get_colour(config_file, "NotificationBubble", "Colour", &colour) == 0 )
+            self->bubble.colour = colour;
+        else if ( self->parent != NULL )
+            self->bubble.colour = eventd_nd_style_get_bubble_colour(self->parent);
     }
 
     if ( g_key_file_has_group(config_file, "NotificationTitle") )
     {
-        gchar *font;
-        gint r_colour;
+        self->title.set = TRUE;
+
+        gchar *string;
         Colour colour;
 
-        if ( ( libeventd_config_key_file_get_string(config_file, "NotificationTitle", "Font", &font) == 0 )
-             || ( ( r_colour = libeventd_config_key_file_get_colour(config_file, "NotificationTitle", "Colour", &colour) ) == 0 ) )
+        if ( libeventd_config_key_file_get_string(config_file, "NotificationTitle", "Font", &string) == 0 )
         {
             pango_font_description_free(self->title.font);
-
-            self->title.set = TRUE;
-            self->title.font = ( font != NULL ) ? pango_font_description_from_string(font) : pango_font_description_copy_static(eventd_nd_style_get_title_font(self->parent));
-            self->title.colour = ( r_colour == 0 ) ? colour : eventd_nd_style_get_title_colour(self->parent);
+            self->title.font = pango_font_description_from_string(string);
         }
+        else if ( self->parent != NULL )
+        {
+            pango_font_description_free(self->title.font);
+            self->title.font = pango_font_description_copy_static(eventd_nd_style_get_title_font(self->parent));
+        }
+
+        if ( libeventd_config_key_file_get_colour(config_file, "NotificationTitle", "Colour", &colour) == 0 )
+            self->title.colour = colour;
+        else if ( self->parent != NULL )
+            self->title.colour = eventd_nd_style_get_title_colour(self->parent);
+
     }
 
     if ( g_key_file_has_group(config_file, "NotificationMessage") )
     {
-        Int spacing;
-        Int max_lines;
-        gchar *font;
-        gint r_colour;
+        self->message.set = TRUE;
+
+        Int integer;
+        gchar *string;
         Colour colour;
 
-        if ( ( libeventd_config_key_file_get_int(config_file, "NotificationMessage", "Spacing", &spacing) == 0 )
-             || ( libeventd_config_key_file_get_int(config_file, "NotificationMessage", "MaxLines", &max_lines) == 0 )
-             || ( libeventd_config_key_file_get_string(config_file, "NotificationMessage", "Font", &font) == 0 )
-             || ( ( r_colour = libeventd_config_key_file_get_colour(config_file, "NotificationMessage", "Colour", &colour) ) == 0 ) )
+        if ( libeventd_config_key_file_get_int(config_file, "NotificationMessage", "Spacing", &integer) == 0 )
+            self->message.spacing = integer.value;
+        else if ( self->parent != NULL )
+            self->message.spacing = eventd_nd_style_get_message_spacing(self->parent);
+
+        if ( libeventd_config_key_file_get_int(config_file, "NotificationMessage", "MaxLines", &integer) == 0 )
+            self->message.max_lines = integer.value;
+        else if ( self->parent != NULL )
+            self->message.max_lines = eventd_nd_style_get_message_max_lines(self->parent);
+
+        if ( libeventd_config_key_file_get_string(config_file, "NotificationMessage", "Font", &string) == 0 )
         {
             pango_font_description_free(self->message.font);
-
-            self->message.set = TRUE;
-            self->message.spacing = spacing.set ? spacing.value : eventd_nd_style_get_message_spacing(self->parent);
-            self->message.max_lines = max_lines.set ? max_lines.value : eventd_nd_style_get_message_max_lines(self->parent);
-            self->message.font = ( font != NULL ) ? pango_font_description_from_string(font) : pango_font_description_copy_static(eventd_nd_style_get_message_font(self->parent));
-            self->message.colour = ( r_colour == 0 ) ? colour : eventd_nd_style_get_message_colour(self->parent);
+            self->message.font = pango_font_description_from_string(string);
         }
+        else if ( self->parent != NULL )
+        {
+            pango_font_description_free(self->message.font);
+            self->message.font = pango_font_description_copy_static(eventd_nd_style_get_message_font(self->parent));
+        }
+
+        if ( libeventd_config_key_file_get_colour(config_file, "NotificationMessage", "Colour", &colour) == 0 )
+            self->message.colour = colour;
+        else if ( self->parent != NULL )
+            self->message.colour = eventd_nd_style_get_message_colour(self->parent);
 
     }
 
 #ifdef ENABLE_GDK_PIXBUF
     if ( g_key_file_has_group(config_file, "NotificationImage") )
     {
-        Int max_width;
-        Int max_height;
-        Int margin;
+        self->image.set = TRUE;
 
-        if ( ( libeventd_config_key_file_get_int(config_file, "NotificationImage", "MaxWidth", &max_width) == 0 )
-             || ( libeventd_config_key_file_get_int(config_file, "NotificationImage", "MaxHeight", &max_height) == 0 )
-             || ( libeventd_config_key_file_get_int(config_file, "NotificationImage", "Margin", &margin) == 0 ) )
+        Int integer;
+
+        if ( libeventd_config_key_file_get_int(config_file, "NotificationImage", "MaxWidth", &integer) == 0 )
         {
-            self->image.set = TRUE;
-            self->image.max_width = max_width.set ? max_width.value : eventd_nd_style_get_image_max_width(self->parent);
-            self->image.max_height = max_height.set ? max_height.value : eventd_nd_style_get_image_max_height(self->parent);
-            self->image.margin = margin.set ? margin.value : eventd_nd_style_get_image_margin(self->parent);
-
-            if ( max_width.set )
-                *images_max_width  = MAX(*images_max_width, max_width.value);
-            if ( max_height.set )
-                *images_max_height  = MAX(*images_max_height, max_height.value);
+            self->image.max_width = integer.value;
+            *images_max_width  = MAX(*images_max_width, integer.value);
         }
+        else if ( self->parent != NULL )
+            self->image.max_width = eventd_nd_style_get_image_max_width(self->parent);
+
+        if ( libeventd_config_key_file_get_int(config_file, "NotificationImage", "MaxHeight", &integer) == 0 )
+        {
+            self->image.max_height = integer.value;
+            *images_max_height  = MAX(*images_max_height, integer.value);
+        }
+        else if ( self->parent != NULL )
+            self->image.max_height = eventd_nd_style_get_image_max_height(self->parent);
+
+        if ( libeventd_config_key_file_get_int(config_file, "NotificationImage", "Margin", &integer) == 0 )
+            self->image.margin = integer.value;
+        else if ( self->parent != NULL )
+            self->image.margin = eventd_nd_style_get_image_margin(self->parent);
 
     }
 
     if ( g_key_file_has_group(config_file, "NotificationIcon") )
     {
-        gchar *placement;
-        gchar *anchor;
-        Int max_width;
-        Int max_height;
-        Int margin;
-        Int fade_width;
+        self->icon.set = TRUE;
 
-        if ( ( libeventd_config_key_file_get_string(config_file, "NotificationIcon", "Placement", &placement) == 0 )
-             || ( libeventd_config_key_file_get_string(config_file, "NotificationIcon", "Anchor", &anchor) == 0 )
-             || ( libeventd_config_key_file_get_int(config_file, "NotificationIcon", "MaxWidth", &max_width) == 0 )
-             || ( libeventd_config_key_file_get_int(config_file, "NotificationIcon", "MaxHeight", &max_height) == 0 )
-             || ( libeventd_config_key_file_get_int(config_file, "NotificationIcon", "Margin", &margin) == 0 )
-             || ( libeventd_config_key_file_get_int(config_file, "NotificationIcon", "FadeWidth", &fade_width) == 0 ) )
+        gchar *string;
+        Int integer;
+
+        if ( libeventd_config_key_file_get_string(config_file, "NotificationIcon", "Placement", &string) == 0 )
         {
-            self->icon.set = TRUE;
-
-            if ( placement != NULL )
-            {
-                if ( g_strcmp0(placement, "Background") == 0 )
-                    self->icon.placement = EVENTD_ND_STYLE_ICON_PLACEMENT_BACKGROUND;
-                else if ( g_strcmp0(placement, "Overlay") == 0 )
-                    self->icon.placement = EVENTD_ND_STYLE_ICON_PLACEMENT_OVERLAY;
-                else if ( g_strcmp0(placement, "Foreground") == 0 )
-                    self->icon.placement = EVENTD_ND_STYLE_ICON_PLACEMENT_FOREGROUND;
-                else
-                    g_warning("Wrong placement value '%s'", placement);
-                g_free(placement);
-            }
+            if ( g_strcmp0(string, "Background") == 0 )
+                self->icon.placement = EVENTD_ND_STYLE_ICON_PLACEMENT_BACKGROUND;
+            else if ( g_strcmp0(string, "Overlay") == 0 )
+                self->icon.placement = EVENTD_ND_STYLE_ICON_PLACEMENT_OVERLAY;
+            else if ( g_strcmp0(string, "Foreground") == 0 )
+                self->icon.placement = EVENTD_ND_STYLE_ICON_PLACEMENT_FOREGROUND;
             else
-                self->icon.placement = eventd_nd_style_get_icon_placement(self->parent);
-
-            if ( anchor != NULL )
-            {
-                if ( g_strcmp0(anchor, "Top") == 0 )
-                    self->icon.anchor = EVENTD_ND_ANCHOR_TOP;
-                else if ( g_strcmp0(anchor, "Bottom") == 0 )
-                    self->icon.anchor = EVENTD_ND_ANCHOR_BOTTOM;
-                else if ( g_strcmp0(anchor, "Center") == 0 )
-                    self->icon.anchor = EVENTD_ND_ANCHOR_VCENTER;
-                else
-                    g_warning("Wrong anchor value '%s'", anchor);
-                g_free(anchor);
-            }
-            else
-                self->icon.anchor = eventd_nd_style_get_icon_anchor(self->parent);
-
-            self->icon.max_width = max_width.set ? max_width.value : eventd_nd_style_get_icon_max_width(self->parent);
-            self->icon.max_height = max_height.set ? max_height.value : eventd_nd_style_get_icon_max_height(self->parent);
-            self->icon.margin = margin.set ? margin.value : eventd_nd_style_get_icon_margin(self->parent);
-
-            if ( fade_width.set )
-            {
-                if ( ( fade_width.value < 0 ) || ( fade_width.value > 100 ) )
-                    g_warning("Wrong percentage value '%jd'", fade_width.value);
-                else
-                    self->icon.fade_width = (gdouble) fade_width.value / 100.;
-
-                if ( max_width.set )
-                    *images_max_width  = MAX(*images_max_width, max_width.value);
-                if ( max_height.set )
-                    *images_max_height  = MAX(*images_max_height, max_height.value);
-            }
-            else
-                self->icon.fade_width = eventd_nd_style_get_icon_fade_width(self->parent);
+                g_warning("Wrong placement value '%s'", string);
+            g_free(string);
         }
+        else if ( self->parent != NULL )
+            self->icon.placement = eventd_nd_style_get_icon_placement(self->parent);
+
+        if ( libeventd_config_key_file_get_string(config_file, "NotificationIcon", "Anchor", &string) == 0 )
+        {
+            if ( g_strcmp0(string, "Top") == 0 )
+                self->icon.anchor = EVENTD_ND_ANCHOR_TOP;
+            else if ( g_strcmp0(string, "Bottom") == 0 )
+                self->icon.anchor = EVENTD_ND_ANCHOR_BOTTOM;
+            else if ( g_strcmp0(string, "Center") == 0 )
+                self->icon.anchor = EVENTD_ND_ANCHOR_VCENTER;
+            else
+                g_warning("Wrong anchor value '%s'", string);
+            g_free(string);
+        }
+        else if ( self->parent != NULL )
+            self->icon.anchor = eventd_nd_style_get_icon_anchor(self->parent);
+
+        if ( libeventd_config_key_file_get_int(config_file, "NotificationIcon", "MaxWidth", &integer) == 0 )
+        {
+            self->icon.max_width = integer.value;
+            *images_max_width  = MAX(*images_max_width, integer.value);
+        }
+        else if ( self->parent != NULL )
+            self->icon.max_width = eventd_nd_style_get_icon_max_width(self->parent);
+
+        if ( libeventd_config_key_file_get_int(config_file, "NotificationIcon", "MaxHeight", &integer) == 0 )
+        {
+            self->icon.max_height = integer.value;
+            *images_max_height  = MAX(*images_max_height, integer.value);
+        }
+        else if ( self->parent != NULL )
+            self->icon.max_height = eventd_nd_style_get_icon_max_height(self->parent);
+
+        if ( libeventd_config_key_file_get_int(config_file, "NotificationIcon", "Margin", &integer) == 0 )
+            self->icon.margin = integer.value;
+        else if ( self->parent != NULL )
+            self->icon.margin = eventd_nd_style_get_icon_margin(self->parent);
+
+        if ( libeventd_config_key_file_get_int(config_file, "NotificationIcon", "FadeWidth", &integer) == 0 )
+        {
+            if ( ( integer.value < 0 ) || ( integer.value > 100 ) )
+            {
+                g_warning("Wrong percentage value '%jd'", integer.value);
+                integer.value = CLAMP(integer.value, 0, 100);
+            }
+            self->icon.fade_width = (gdouble) integer.value / 100.;
+        }
+        else if ( self->parent != NULL )
+            self->icon.fade_width = eventd_nd_style_get_icon_fade_width(self->parent);
     }
 #endif /* ENABLE_GDK_PIXBUF */
 }
