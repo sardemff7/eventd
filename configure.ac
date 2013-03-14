@@ -6,7 +6,7 @@ AC_CONFIG_SRCDIR([server/eventd/src/eventd.c])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([.aux])
 
-AM_INIT_AUTOMAKE([1.11 subdir-objects dist-xz no-dist-gzip tar-ustar foreign])
+AM_INIT_AUTOMAKE([1.11 foreign subdir-objects parallel-tests dist-xz no-dist-gzip tar-ustar])
 
 AM_SILENT_RULES([yes])
 
