@@ -31,5 +31,6 @@ libeventd_evp_la_LDFLAGS = \
 	-avoid-version
 
 libeventd_evp_la_LIBADD = \
+	libeventd-event.la \
 	$(GIO_LIBS) \
 	$(GLIB_LIBS)
