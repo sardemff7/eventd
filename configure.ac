@@ -17,8 +17,7 @@ AC_PROG_CC_C99
 AM_PROG_CC_C_O
 AC_PROG_SED
 AC_PROG_MKDIR_P
-AC_DISABLE_STATIC
-LT_INIT
+LT_INIT([disable-static pic-only])
 PKG_PROG_PKG_CONFIG
 AC_PATH_PROG([XSLTPROC], [xsltproc])
 if test -z "$XSLTPROC"; then
@@ -65,7 +64,7 @@ DOCBOOK_CONDITIONS="installation"
 
 
 AM_CFLAGS="-fvisibility=hidden -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers"
-AM_LDFLAGS="-no-undefined -Wl,--no-undefined"
+AM_LDFLAGS="-Wl,--no-undefined"
 AM_VALA_CFLAGS="-fvisibility=default -Wno-unused"
 AM_VALAFLAGS="--target-glib=${glib_min_version}"
 AM_XSLTPROCFLAGS="--nonet --xinclude --stringparam man.output.quietly 1 --stringparam funcsynopsis.style ansi"
