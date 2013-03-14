@@ -24,7 +24,7 @@
 #define __EVENTD_GLIB_COMPAT_H__
 
 #if ! GLIB_CHECK_VERSION(2, 31, 0)
-#define g_hash_table_contains(h, k) (g_hash_table_lookup_extended(h, k NULL, NULL))
+#define g_hash_table_contains(h, k) (g_hash_table_lookup_extended(h, k, NULL, NULL))
 #define g_thread_try_new(n, f, d, e) g_thread_create(f, d, TRUE, e)
 #define g_thread_new(n, f, d) g_thread_try_new(n, f, d, NULL)
 
