@@ -24,6 +24,10 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif /* HAVE_STRING_H */
+
 #include <glib.h>
 #include <gio/gio.h>
 #ifdef HAVE_GIO_UNIX
