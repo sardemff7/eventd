@@ -101,13 +101,13 @@ uninstall-hook la-files-uninstall-hook: nd-la-files-uninstall-hook
  ifneq (,$(ndbackends_LTLIBRARIES))
 # *.la files cleanup
 nd-la-files-install-hook:
-	cd $(DESTDIR)/$(ndbackendsdir) && \
+	cd $(DESTDIR)$(ndbackendsdir) && \
 		rm $(ndbackends_LTLIBRARIES)
 
 # Remove *.so files at uninstall since
 # we remove *.la files at install
 nd-la-files-uninstall-hook:
-	cd $(DESTDIR)/$(ndbackendsdir) && \
+	cd $(DESTDIR)$(ndbackendsdir) && \
 		rm $(ndbackends_LTLIBRARIES:.la=.so)
-	rmdir $(DESTDIR)/$(ndbackendsdir)
+	rmdir $(DESTDIR)$(ndbackendsdir)
  endif
