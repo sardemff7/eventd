@@ -36,6 +36,7 @@
 #define EVENTDCTL_PATH BUILD_DIR G_DIR_SEPARATOR_S "eventdctl" EXEEXT
 
 struct _EventdTestsEnv {
+    const gchar *dir;
     gchar **env;
     gchar **start_args;
     gchar **stop_args;
@@ -47,14 +48,11 @@ eventd_tests_env_setup()
     const gchar *tmp_dir;
     tmp_dir = g_getenv("EVENTD_TESTS_TMP_DIR");
 
+    if ( tmp_dir == NULL )
+        g_setenv("EVENTD_TESTS_TMP_DIR", tmp_dir = RUN_DIR, TRUE);
+    g_setenv("XDG_RUNTIME_DIR", tmp_dir, TRUE);
+
     g_setenv("EVENTD_CONFIG_DIR", EVENTS_DIR, TRUE);
-    if ( tmp_dir != NULL )
-        g_setenv("XDG_RUNTIME_DIR", tmp_dir, TRUE);
-    else
-    {
-        g_setenv("XDG_RUNTIME_DIR", RUN_DIR, TRUE);
-        g_setenv("EVENTD_TESTS_TMP_DIR", RUN_DIR, TRUE);
-    }
     g_setenv("EVENTD_PLUGINS_DIR", PLUGINS_DIR, TRUE);
     g_unsetenv("EVENTD_PLUGINS_WHITELIST");
     g_unsetenv("EVENTD_PLUGINS_BLACKLIST");
@@ -67,6 +65,8 @@ eventd_tests_env_new(const gchar *plugins, const gchar *port, gchar **argv, gint
     gint i;
 
     self = g_new0(EventdTestsEnv, 1);
+
+    self->dir = g_getenv("EVENTD_TESTS_TMP_DIR");
 
     guint length;
 
@@ -116,11 +116,11 @@ eventd_tests_env_free(EventdTestsEnv *self)
 void
 eventd_tests_env_start_eventd(EventdTestsEnv *self, GError **error)
 {
-    g_spawn_sync(BUILD_DIR, self->start_args, self->env, 0, NULL, NULL, NULL, NULL, NULL, error);
+    g_spawn_sync(self->dir, self->start_args, self->env, 0, NULL, NULL, NULL, NULL, NULL, error);
 }
 
 void
 eventd_tests_env_stop_eventd(EventdTestsEnv *self, GError **error)
 {
-    g_spawn_sync(BUILD_DIR, self->stop_args, self->env, 0, NULL, NULL, NULL, NULL, NULL, error);
+    g_spawn_sync(self->dir, self->stop_args, self->env, 0, NULL, NULL, NULL, NULL, NULL, error);
 }
