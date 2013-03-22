@@ -55,26 +55,6 @@ struct _EventdRelayAvahiServer {
 
 
 static void
-_eventd_relay_avahi_client_callback(AvahiClient *client, AvahiClientState state, void *user_data)
-{
-    EventdRelayAvahi *context = user_data;
-
-    switch ( state )
-    {
-    case AVAHI_CLIENT_S_REGISTERING:
-    case AVAHI_CLIENT_S_RUNNING:
-    break;
-    case AVAHI_CLIENT_FAILURE:
-        avahi_client_free(context->client);
-        context->client = NULL;
-    break;
-    default:
-    break;
-    }
-}
-
-
-static void
 _eventd_relay_avahi_service_resolve_callback(AvahiServiceResolver *r, AvahiIfIndex interface, AvahiProtocol protocol, AvahiResolverEvent event, const gchar *name, const gchar *type, const gchar *domain, const gchar *host_name, const AvahiAddress *address, guint16 port, AvahiStringList *txt, AvahiLookupResultFlags flags, void *user_data)
 {
     EventdRelayAvahiServer *server = user_data;
@@ -136,24 +116,38 @@ _eventd_relay_avahi_service_browser_callback(AvahiServiceBrowser *b, AvahiIfInde
     }
 }
 
+
+static void
+_eventd_relay_avahi_client_callback(AvahiClient *client, AvahiClientState state, void *user_data)
+{
+    EventdRelayAvahi *context = user_data;
+
+    switch ( state )
+    {
+    case AVAHI_CLIENT_S_RUNNING:
+        context->browser = avahi_service_browser_new(client, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, "_event._tcp", NULL, 0, _eventd_relay_avahi_service_browser_callback, context);
+    case AVAHI_CLIENT_S_REGISTERING:
+    break;
+    case AVAHI_CLIENT_FAILURE:
+        avahi_client_free(context->client);
+        context->client = NULL;
+    break;
+    default:
+    break;
+    }
+}
+
+
 EventdRelayAvahi *
-eventd_relay_avahi_init()
+eventd_relay_avahi_init(void)
 {
     EventdRelayAvahi *context;
-    int error;
 
     avahi_set_allocator(avahi_glib_allocator());
 
     context = g_new0(EventdRelayAvahi, 1);
 
     context->glib_poll = avahi_glib_poll_new(NULL, G_PRIORITY_DEFAULT);
-    context->client = avahi_client_new(avahi_glib_poll_get(context->glib_poll), 0, _eventd_relay_avahi_client_callback, context, &error);
-    if ( context->client == NULL )
-    {
-        g_warning("Couldn't initialize Avahi: %s", avahi_strerror(error));
-        eventd_relay_avahi_uninit(context);
-        return NULL;
-    }
 
     context->servers = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 
@@ -168,7 +162,6 @@ eventd_relay_avahi_uninit(EventdRelayAvahi *context)
 
     g_hash_table_unref(context->servers);
 
-    avahi_client_free(context->client);
     avahi_glib_poll_free(context->glib_poll);
 
     g_free(context);
@@ -180,17 +173,23 @@ eventd_relay_avahi_start(EventdRelayAvahi *context)
     if ( context == NULL )
         return;
 
-    context->browser = avahi_service_browser_new(context->client, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, "_event._tcp", NULL, 0, _eventd_relay_avahi_service_browser_callback, context);
+    int error;
+
+    context->client = avahi_client_new(avahi_glib_poll_get(context->glib_poll), 0, _eventd_relay_avahi_client_callback, context, &error);
+    if ( context->client == NULL )
+        g_warning("Couldn't initialize Avahi: %s", avahi_strerror(error));
 }
 
 void
 eventd_relay_avahi_stop(EventdRelayAvahi *context)
 {
-    if ( context == NULL )
+    if ( ( context == NULL ) || ( context->client == NULL ) )
         return;
 
     if ( context->browser != NULL )
         avahi_service_browser_free(context->browser);
+
+    avahi_client_free(context->client);
 }
 
 
