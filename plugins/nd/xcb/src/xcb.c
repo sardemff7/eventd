@@ -290,7 +290,7 @@ _eventd_nd_xcb_events_callback(xcb_generic_event_t *event, gpointer user_data)
     switch ( type - display->randr_event_base )
     {
     case XCB_RANDR_SCREEN_CHANGE_NOTIFY:
-        _eventd_nd_xcb_randr_check_outputs(display);
+        _eventd_nd_xcb_randr_check_geometry(display);
     break;
     case XCB_RANDR_NOTIFY:
     break;
