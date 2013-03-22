@@ -106,5 +106,3 @@ la-files-uninstall-hook:
 		rm $(pkglib_LTLIBRARIES:.la=$(shrext_cmds))
 	cd $(DESTDIR)$(pluginsdir) && \
 		rm $(plugins_LTLIBRARIES:.la=$(shrext_cmds))
-	rmdir $(DESTDIR)$(pluginsdir)
-	rmdir $(DESTDIR)$(pkglibdir)

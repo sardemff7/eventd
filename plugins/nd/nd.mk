@@ -91,6 +91,9 @@ plugins/nd/dbuscapabilities/nd.capabilities: src/config.h
 	$(AM_V_GEN)$(MKDIR_P) $(dir $@) && \
 	echo $(nd_dbus_capabilities) > $@
 
+CLEANFILES += \
+	plugins/nd/dbuscapabilities/nd.capabilities
+
 #
 # Hooks
 #
@@ -109,5 +112,4 @@ nd-la-files-install-hook:
 nd-la-files-uninstall-hook:
 	cd $(DESTDIR)$(ndbackendsdir) && \
 		rm $(ndbackends_LTLIBRARIES:.la=.so)
-	rmdir $(DESTDIR)$(ndbackendsdir)
  endif
