@@ -24,6 +24,10 @@
 #include <config.h>
 #endif /* HAVE_CONFIG_H */
 
+#ifdef HAVE_ERRNO_H
+#include <errno.h>
+#endif /* HAVE_ERRNO_H */
+
 #include <glib.h>
 
 #include <libeventd-test.h>
@@ -51,6 +55,9 @@ eventd_tests_env_setup()
     if ( tmp_dir == NULL )
         g_setenv("EVENTD_TESTS_TMP_DIR", tmp_dir = RUN_DIR, TRUE);
     g_setenv("XDG_RUNTIME_DIR", tmp_dir, TRUE);
+
+    if ( ( ! g_file_test(tmp_dir, G_FILE_TEST_IS_DIR) ) && ( g_mkdir_with_parents(tmp_dir, 0755) < 0 ) )
+        g_warning("Couldn't create the test temp dir '%s': %s", tmp_dir, g_strerror(errno));
 
     g_setenv("EVENTD_CONFIG_DIR", EVENTS_DIR, TRUE);
     g_setenv("EVENTD_PLUGINS_DIR", PLUGINS_DIR, TRUE);
