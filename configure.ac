@@ -216,6 +216,16 @@ if test x$enable_linux_framebuffer = xyes; then
 fi
 AM_CONDITIONAL(ENABLE_LINUX_FB, [test x$enable_linux_framebuffer = xyes])
 
+# IM plugin
+AC_ARG_ENABLE(im, AS_HELP_STRING([--disable-im], [Disable IM support through libpurple]), [], enable_im=yes)
+if test x$enable_im = xyes; then
+    PKG_CHECK_MODULES(PURPLE, [purple])
+    # No existing libpurple allows us to avoid that for now
+    AC_DEFINE([PURPLE_NEEDS_GLOBAL_LOADING], [1], [Needs to load libpurple symbols in the global namespace])
+    DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_im"
+fi
+AM_CONDITIONAL(ENABLE_IM, test x$enable_im = xyes)
+
 # sndfile plugin
 AC_ARG_ENABLE(sndfile, AS_HELP_STRING([--disable-sndfile], [Disable libsndfile support]), [], enable_sndfile=yes)
 if test x$enable_sndfile = xyes; then
@@ -309,6 +319,7 @@ AC_MSG_RESULT([
             Backends:
                 XCB: $enable_xcb
                 Linux framebuffer: $enable_linux_framebuffer
+        IM support through libpurple: $enable_im
         Sound files playing through libsndfile: $enable_sndfile
         Text-to-speech through eSpeak: $enable_espeak
         libnotify proxy: $enable_libnotify

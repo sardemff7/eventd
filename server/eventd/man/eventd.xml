@@ -93,6 +93,11 @@
                     <listitem><para>a notification plugin, aka "bubble" plugin</para></listitem>
                 </varlistentry>
 
+                <varlistentry condition="website;enable_im">
+                    <term><command>im</command> (see <citerefentry><refentrytitle>eventd-im.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry> and <citerefentry><refentrytitle>eventd-im.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
+                    <listitem><para>an IM plugin</para></listitem>
+                </varlistentry>
+
                 <varlistentry condition="website;enable_sndfile">
                     <term><command>sndfile</command> (see <citerefentry><refentrytitle>eventd-sndfile.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
                     <listitem><para>a sound file playing plugin</para></listitem>

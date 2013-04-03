@@ -59,6 +59,7 @@ include plugins/dbus/dbus.mk
 include plugins/relay/relay.mk
 include plugins/exec/exec.mk
 include plugins/nd/nd.mk
+include plugins/im/im.mk
 include plugins/sndfile/sndfile.mk
 include plugins/espeak/espeak.mk
 include plugins/notify/notify.mk

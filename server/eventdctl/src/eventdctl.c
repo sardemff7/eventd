@@ -257,6 +257,7 @@ _eventd_eventdctl_process_command(const gchar *private_socket, gboolean autospaw
               || ( g_strcmp0(argv[0], "relay") == 0 )
               || ( g_strcmp0(argv[0], "exec") == 0 )
               || ( g_strcmp0(argv[0], "nd") == 0 )
+              || ( g_strcmp0(argv[0], "im") == 0 )
               || ( g_strcmp0(argv[0], "sndfile") == 0 )
               || ( g_strcmp0(argv[0], "espeak") == 0 )
               || ( g_strcmp0(argv[0], "notify") == 0 )

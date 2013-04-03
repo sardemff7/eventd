@@ -1,0 +1,100 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % config SYSTEM "config.ent">
+%config;
+]>
+
+<!--
+  eventd - Small daemon to act on remote or local events
+
+  Copyright © 2011-2012 Quentin "Sardem FF7" Glidic
+
+  This file is part of eventd.
+
+  eventd is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  eventd is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with eventd. If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<refentry id="eventd-im.event">
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="common-man.xml" xpointer="refentryinfo" />
+
+    <refmeta>
+        <refentrytitle>eventd-im.event</refentrytitle>
+        <manvolnum>5</manvolnum>
+    </refmeta>
+
+    <refnamediv>
+        <refname>eventd-im.event</refname>
+        <refpurpose>IM plugin event configuration files</refpurpose>
+    </refnamediv>
+
+    <refsynopsisdiv>
+        <para>
+            Event configuration for the IM plugin.
+        </para>
+    </refsynopsisdiv>
+
+    <refsect1>
+        <title>Description</title>
+
+        <para>
+            It controls the IM plugin behavior.
+        </para>
+    </refsect1>
+
+    <refsect1>
+        <title>Sections</title>
+
+        <refsect2>
+            <title>Section <varname>[IM]</varname></title>
+
+            <variablelist>
+                <varlistentry>
+                    <term><varname>Disable=</varname></term>
+                    <listitem>
+                        <para>A <type>boolean</type></para>
+                        <para>If <literal>true</literal>, no message is sent.</para>
+                    </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                    <term><varname>Message=</varname></term>
+                    <listitem>
+                        <para>A <type>string</type> (can contain $data-name references)</para>
+                        <para>The message to be sent.</para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+        </refsect2>
+
+        <refsect2>
+            <title>Section <varname>[IMAccount <replaceable>account name</replaceable>]</varname></title>
+
+            <para>
+                Each section should refer to an account name (see <citerefentry><refentrytitle>eventd-im.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>).
+            </para>
+
+            <variablelist>
+                <varlistentry>
+                    <term><varname>Channels=</varname></term>
+                    <listitem>
+                        <para>A <type>string list</type></para>
+                        <para>The list of channels to connect to.</para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+        </refsect2>
+    </refsect1>
+
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="common-man.xml" xpointer="see-also" />
+</refentry>

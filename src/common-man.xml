@@ -136,6 +136,16 @@
                 </listitem>
             </varlistentry>
 
+            <varlistentry condition="website;enable_im">
+                <term><command>im</command> plugin man pages</term>
+                <listitem>
+                    <para>
+                        <citerefentry><refentrytitle>eventd-im.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                        <citerefentry><refentrytitle>eventd-im.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                    </para>
+                </listitem>
+            </varlistentry>
+
             <varlistentry condition="website;enable_sndfile">
                 <term><command>sndfile</command> plugin man pages</term>
                 <listitem>
