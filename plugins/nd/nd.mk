@@ -4,6 +4,7 @@ AM_CFLAGS += \
 	-I $(srcdir)/plugins/nd/include
 
 
+if ENABLE_NOTIFICATION_DAEMON
 plugins_LTLIBRARIES += \
 	nd.la
 
@@ -13,6 +14,7 @@ pkginclude_HEADERS += \
 man5_MANS += \
 	plugins/nd/man/eventd-nd.conf.5 \
 	plugins/nd/man/eventd-nd.event.5
+endif
 
 
 nd_la_SOURCES = \
@@ -62,13 +64,8 @@ ndbackendsdir = $(pluginsdir)/nd
 
 ndbackends_LTLIBRARIES =
 
-if ENABLE_XCB
 include plugins/nd/xcb/xcb.mk
-endif
-
-if ENABLE_LINUX_FB
 include plugins/nd/linux/linux.mk
-endif
 
 
 if ENABLE_DBUS

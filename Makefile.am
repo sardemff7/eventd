@@ -58,23 +58,13 @@ include server/eventd/eventd.mk
 include server/libeventd-plugin/libeventd-plugin.mk
 include server/eventdctl/eventdctl.mk
 include plugins/evp/evp.mk
-if ENABLE_DBUS
 include plugins/dbus/dbus.mk
-endif
 include plugins/relay/relay.mk
 include plugins/exec/exec.mk
-if ENABLE_NOTIFICATION_DAEMON
 include plugins/nd/nd.mk
-endif
-if ENABLE_SNDFILE
 include plugins/sndfile/sndfile.mk
-endif
-if ENABLE_ESPEAK
 include plugins/espeak/espeak.mk
-endif
-if ENABLE_NOTIFY
 include plugins/notify/notify.mk
-endif
 include client/libeventc/libeventc.mk
 include client/eventc/eventc.mk
 include server/libeventd-test/libeventd-test.mk

@@ -1,7 +1,9 @@
 # Linux framebuffer backend
 
+if ENABLE_LINUX_FB
 ndbackends_LTLIBRARIES += \
 	linux.la
+endif
 
 
 linux_la_SOURCES = \

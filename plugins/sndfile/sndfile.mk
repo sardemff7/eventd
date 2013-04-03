@@ -1,10 +1,12 @@
 # sndfile plugin
 
+if ENABLE_SNDFILE
 plugins_LTLIBRARIES += \
 	sndfile.la
 
 man5_MANS += \
 	plugins/sndfile/man/eventd-sndfile.event.5
+endif
 
 
 sndfile_la_SOURCES = \

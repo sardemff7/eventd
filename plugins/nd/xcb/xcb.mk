@@ -1,10 +1,12 @@
 # XCB backend
 
+if ENABLE_XCB
 ndbackends_LTLIBRARIES += \
 	xcb.la
 
 man5_MANS += \
 	plugins/nd/xcb/man/eventd-nd-xcb.conf.5
+endif
 
 
 xcb_la_SOURCES = \

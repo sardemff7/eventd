@@ -1,5 +1,6 @@
 # notify plugin
 
+if ENABLE_NOTIFY
 plugins_LTLIBRARIES += \
 	notify.la
 
@@ -8,6 +9,7 @@ man5_MANS += \
 
 dist_event_DATA += \
 	plugins/notify/events/libnotify.event
+endif
 
 
 notify_la_SOURCES = \

@@ -1,5 +1,6 @@
 # dbus plugin
 
+if ENABLE_DBUS
 plugins_LTLIBRARIES += \
 	dbus.la
 
@@ -14,6 +15,7 @@ dist_event_DATA += \
 
 dbussessionservice_DATA += \
 	plugins/dbus/services/org.eventd.dbus.service
+endif
 
 
 dbus_la_SOURCES = \

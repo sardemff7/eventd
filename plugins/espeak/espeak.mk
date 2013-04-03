@@ -1,10 +1,12 @@
 # espeak plugin
 
+if ENABLE_ESPEAK
 plugins_LTLIBRARIES += \
 	espeak.la
 
 man5_MANS += \
 	plugins/espeak/man/eventd-espeak.event.5
+endif
 
 
 espeak_la_SOURCES = \
