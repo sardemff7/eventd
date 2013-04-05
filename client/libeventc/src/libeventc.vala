@@ -194,7 +194,7 @@ namespace Eventc
         {
             if ( this.is_connected() )
                 this.evp.send_bye();
-            this.close_internal();
+            yield this.close_internal();
         }
 
         private void *
@@ -229,12 +229,12 @@ namespace Eventc
             this.close_internal();
         }
 
-        private void
+        private async void
         close_internal()
         {
             this.events.remove_all();
             this.handshake_passed = false;
-            this.evp.close();
+            yield this.evp.close();
         }
     }
 }
