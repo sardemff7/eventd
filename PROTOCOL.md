@@ -45,18 +45,13 @@ ERROR unknown
     Inform the client that this message is unknown
 
 [Client]
-EVENT <type>
+EVENT <category> <type>
     Inform the server that an event happened
     The type must contain only the characters
     A-Za-z0-9- as for keys of the
     Desktop Entry Specification files
     http://freedesktop.org/wiki/Specifications/desktop-entry-spec
     The client may specify data using the corresponding messages
-
-[Client]
-CATEGORY <type>
-    Specify the real client type of the event
-    Mainly targeted for relay clients
 
 [Client]
 ANSWER <name>

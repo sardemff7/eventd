@@ -28,7 +28,7 @@ connection_test_internal(Eventc.Connection client) throws GLib.Error
     var filename = GLib.Path.build_filename(GLib.Environment.get_variable("EVENTD_TESTS_TMP_DIR"), "libeventc-reconnection-file");
     var message = "Some other message";
 
-    var event = new Eventd.Event("test");
+    var event = new Eventd.Event("test", "test");
 
     event.add_data("file", filename);
     event.add_data("test", message);

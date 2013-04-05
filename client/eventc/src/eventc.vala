@@ -83,7 +83,7 @@ namespace Eventc
             return;
         }
 
-        var event = new Eventd.Event(name);
+        var event = new Eventd.Event(category, name);
 
         for ( uint i = 0 ; i < n_length ; ++i )
             event.add_data(event_data_name[i], event_data_content[i]);

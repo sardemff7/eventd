@@ -32,8 +32,7 @@ _init_data(gpointer fixture, gconstpointer user_data)
 {
     GettersData *data = fixture;
 
-    data->event = eventd_event_new(EVENTD_EVENT_TEST_NAME);
-    eventd_event_set_category(data->event, EVENTD_EVENT_TEST_CATEGORY);
+    data->event = eventd_event_new(EVENTD_EVENT_TEST_CATEGORY, EVENTD_EVENT_TEST_NAME);
     eventd_event_set_timeout(data->event, EVENTD_EVENT_TEST_TIMEOUT);
     eventd_event_add_answer(data->event, EVENTD_EVENT_TEST_ANSWER);
 }

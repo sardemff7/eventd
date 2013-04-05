@@ -124,14 +124,16 @@ eventd_event_class_init(EventdEventClass *klass)
 
 EVENTD_EXPORT
 EventdEvent *
-eventd_event_new(const gchar *name)
+eventd_event_new(const gchar *category, const gchar *name)
 {
     EventdEvent *event;
 
+    g_return_val_if_fail(category != NULL, NULL);
     g_return_val_if_fail(name != NULL, NULL);
 
     event = g_object_new(EVENTD_TYPE_EVENT, NULL);
 
+    event->priv->category = g_strdup(category);
     event->priv->name = g_strdup(name);
 
     return event;
@@ -239,17 +241,6 @@ eventd_event_set_timeout(EventdEvent *self, gint64 timeout)
     g_return_if_fail(timeout >= -1);
 
     self->priv->timeout = timeout;
-}
-
-EVENTD_EXPORT
-void
-eventd_event_set_category(EventdEvent *self, const gchar *category)
-{
-    g_return_if_fail(EVENTD_IS_EVENT(self));
-    g_return_if_fail(category != NULL);
-
-    g_free(self->priv->category);
-    self->priv->category = g_strdup(category);
 }
 
 

@@ -58,14 +58,13 @@ struct _EventdEventClass
         void (*ended)    (EventdEvent *event, EventdEventEndReason reason);
 };
 
-EventdEvent *eventd_event_new(const gchar *name);
+EventdEvent *eventd_event_new(const gchar *category, const gchar *name);
 
 void eventd_event_update(EventdEvent *event, const gchar *name);
 void eventd_event_answer(EventdEvent *event, const gchar *answer);
 void eventd_event_end(EventdEvent *event, EventdEventEndReason reason);
 
 
-void eventd_event_set_category(EventdEvent *event, const gchar *category);
 void eventd_event_set_timeout(EventdEvent *event, gint64 timeout);
 void eventd_event_add_data(EventdEvent *event, gchar *name, gchar *content);
 void eventd_event_add_answer(EventdEvent *event, const gchar *name);

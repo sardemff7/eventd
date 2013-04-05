@@ -188,9 +188,7 @@ _eventd_dbus_notify(EventdPluginContext *context, const gchar *sender, GVariant 
         event = notification->event;
     }
     else
-        event = eventd_event_new(event_name);
-
-    eventd_event_set_category(event, "libnotify");
+        event = eventd_event_new("libnotify", event_name);
 
     eventd_event_add_data(event, g_strdup("client-name"), g_strdup(app_name));
 

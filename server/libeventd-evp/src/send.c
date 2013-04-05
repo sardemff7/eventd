@@ -180,20 +180,10 @@ libeventd_evp_context_send_event(LibeventdEvpContext *self, EventdEvent *event, 
     gchar *message;
     GError *error = NULL;
 
-    message = g_strdup_printf("EVENT %s", eventd_event_get_name(event));
+    message = g_strdup_printf("EVENT %s %s", eventd_event_get_category(event), eventd_event_get_name(event));
     if ( ! libeventd_evp_context_send_message(self, message, &error) )
         goto fail;
     g_free(message);
-
-    const gchar *category;
-    category = eventd_event_get_category(event);
-    if ( category != NULL )
-    {
-        message = g_strdup_printf("CATEGORY %s", category);
-        if ( ! libeventd_evp_context_send_message(self, message, &error) )
-            goto fail;
-        g_free(message);
-    }
 
     GList *answer_;
     for ( answer_ = eventd_event_get_answers(event) ; answer_ != NULL ; answer_ = g_list_next(answer_) )

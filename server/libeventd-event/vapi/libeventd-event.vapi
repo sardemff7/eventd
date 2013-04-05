@@ -35,7 +35,7 @@ namespace Eventd
     [CCode (cheader_filename = "libeventd-event.h")]
     public class Event : GLib.Object
     {
-        public Event(string name);
+        public Event(string category, string name);
 
         public void add_answer(string answer);
         public void add_data(owned string name, owned string content);

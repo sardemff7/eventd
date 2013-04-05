@@ -28,7 +28,7 @@ connection_test(Eventc.Connection client) throws GLib.Error
     var filename = GLib.Path.build_filename(GLib.Environment.get_variable("EVENTD_TESTS_TMP_DIR"), "relay-connection-file");
     var message = "Some relay message";
 
-    var event = new Eventd.Event("test");
+    var event = new Eventd.Event("test", "test");
 
     event.add_data("file", filename);
     event.add_data("test", message);
@@ -79,7 +79,7 @@ connection_test(Eventc.Connection client) throws GLib.Error
         return r;
 
 
-    event = new Eventd.Event("test");
+    event = new Eventd.Event("test", "test");
 
     event.ended.connect((event, reason) => {
         GLib.Idle.add(connection_test.callback);

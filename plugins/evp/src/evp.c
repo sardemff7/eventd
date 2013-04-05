@@ -157,8 +157,6 @@ _eventd_evp_event(gpointer data, LibeventdEvpContext *evp, EventdEvent *event)
     gchar *rid;
 
     rid = g_strdup_printf("%jx", ++client->id);
-    if ( eventd_event_get_category(event) == NULL )
-        eventd_event_set_category(event, client->category);
 
 #ifdef DEBUG
     g_debug("Received an event (category: %s): %s", eventd_event_get_category(event), eventd_event_get_name(event));

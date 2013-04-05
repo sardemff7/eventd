@@ -239,11 +239,6 @@ _libeventd_evp_context_receive_event_callback(GObject *source_object, GAsyncResu
 
         _libeventd_evp_receive(self, _libeventd_evp_context_receive_callback, self);
     }
-    else if ( g_str_has_prefix(line, "CATEGORY ") )
-    {
-        eventd_event_set_category(data->event, line + strlen("CATEGORY "));
-        _libeventd_evp_receive(self, _libeventd_evp_context_receive_event_callback, data);
-    }
     else if ( g_str_has_prefix(line, "ANSWER ") )
     {
         eventd_event_add_answer(data->event, line + strlen("ANSWER "));
@@ -365,11 +360,17 @@ _libeventd_evp_context_receive_callback(GObject *source_object, GAsyncResult *re
     }
     else if ( self->server && g_str_has_prefix(line, "EVENT ") )
     {
+        gchar *category, *name;
+        category = line + strlen("EVENT ");
+        name = strchr(category, ' ');
+        *name = '\0';
+        name += strlen(" ");
+
         LibeventdEvpReceiveEventData *data;
 
         data = g_new0(LibeventdEvpReceiveEventData, 1);
         data->context = self;
-        data->event = eventd_event_new(line + strlen("EVENT "));
+        data->event = eventd_event_new(category, name);
         data->data_hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 
         _libeventd_evp_receive(self, _libeventd_evp_context_receive_event_callback, data);

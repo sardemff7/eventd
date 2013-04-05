@@ -32,7 +32,7 @@ _init_data(gpointer fixture, gconstpointer user_data)
 {
     SettersData *data = fixture;
 
-    data->event = eventd_event_new(EVENTD_EVENT_TEST_NAME);
+    data->event = eventd_event_new(EVENTD_EVENT_TEST_CATEGORY, EVENTD_EVENT_TEST_NAME);
 }
 
 static void
@@ -44,54 +44,39 @@ _clean_data(gpointer fixture, gconstpointer user_data)
 }
 
 static void
-_test_new_null(gpointer fixture, gconstpointer user_data)
+_test_new_good_good(gpointer fixture, gconstpointer user_data)
 {
     if ( ! g_test_undefined() )
             return;
     if (g_test_trap_fork (0, G_TEST_TRAP_SILENCE_STDOUT | G_TEST_TRAP_SILENCE_STDERR))
     {
-        eventd_event_new(NULL);
-        exit(0);
-    }
-    g_test_trap_assert_failed();
-}
-
-static void
-_test_set_category_notnull_good(gpointer fixture, gconstpointer user_data)
-{
-    SettersData *data = fixture;
-
-    if (g_test_trap_fork (0, G_TEST_TRAP_SILENCE_STDOUT | G_TEST_TRAP_SILENCE_STDERR))
-    {
-        eventd_event_set_category(data->event, EVENTD_EVENT_TEST_CATEGORY);
+        eventd_event_new(EVENTD_EVENT_TEST_CATEGORY, EVENTD_EVENT_TEST_NAME);
         exit(0);
     }
     g_test_trap_assert_passed();
 }
 
 static void
-_test_set_category_null_good(gpointer fixture, gconstpointer user_data)
+_test_new_null_good(gpointer fixture, gconstpointer user_data)
 {
     if ( ! g_test_undefined() )
             return;
     if (g_test_trap_fork (0, G_TEST_TRAP_SILENCE_STDOUT | G_TEST_TRAP_SILENCE_STDERR))
     {
-        eventd_event_set_category(NULL, EVENTD_EVENT_TEST_CATEGORY);
+        eventd_event_new(NULL, EVENTD_EVENT_TEST_NAME);
         exit(0);
     }
     g_test_trap_assert_failed();
 }
 
 static void
-_test_set_category_notnull_bad(gpointer fixture, gconstpointer user_data)
+_test_new_good_null(gpointer fixture, gconstpointer user_data)
 {
-    SettersData *data = fixture;
-
     if ( ! g_test_undefined() )
             return;
     if (g_test_trap_fork (0, G_TEST_TRAP_SILENCE_STDOUT | G_TEST_TRAP_SILENCE_STDERR))
     {
-        eventd_event_set_category(data->event, NULL);
+        eventd_event_new(NULL, NULL);
         exit(0);
     }
     g_test_trap_assert_failed();
@@ -297,11 +282,9 @@ eventd_tests_unit_eventd_event_suite_setters(void)
 
     suite = g_test_create_suite("EventdEvent setters test suite");
 
-    g_test_suite_add(suite, g_test_create_case("new(NULL)",                          sizeof(SettersData), NULL, NULL,       _test_new_null,                          NULL));
-
-    g_test_suite_add(suite, g_test_create_case("set_category(event, name)",          sizeof(SettersData), NULL, _init_data, _test_set_category_notnull_good,         _clean_data));
-    g_test_suite_add(suite, g_test_create_case("set_category(NULL,)",                sizeof(SettersData), NULL, NULL,       _test_set_category_null_good,            NULL));
-    g_test_suite_add(suite, g_test_create_case("set_category(event, NULL)",          sizeof(SettersData), NULL, _init_data, _test_set_category_notnull_bad,          _clean_data));
+    g_test_suite_add(suite, g_test_create_case("new(category, name)",                sizeof(SettersData), NULL, NULL,       _test_new_good_good,                     NULL));
+    g_test_suite_add(suite, g_test_create_case("new(NULL, name)",                    sizeof(SettersData), NULL, NULL,       _test_new_null_good,                     NULL));
+    g_test_suite_add(suite, g_test_create_case("new(category, NULL)",                sizeof(SettersData), NULL, NULL,       _test_new_good_null,                     NULL));
 
     g_test_suite_add(suite, g_test_create_case("set_timeout(event, timeout)",        sizeof(SettersData), NULL, _init_data, _test_set_timeout_notnull_good,          _clean_data));
     g_test_suite_add(suite, g_test_create_case("set_timeout(NULL,)",                 sizeof(SettersData), NULL, NULL,       _test_set_timeout_null_good,             NULL));
