@@ -2,4 +2,4 @@
 Category = test
 Timeout = 10000
 [Relay]
-Servers = localhost:19031;
+Servers = 127.0.0.1:19031;
