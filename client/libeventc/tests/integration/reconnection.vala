@@ -21,7 +21,7 @@
  */
 
 async string?
-connection_test(Eventc.Connection client, bool first) throws GLib.Error
+connection_test_internal(Eventc.Connection client) throws GLib.Error
 {
     yield client.connect();
 
@@ -38,7 +38,7 @@ connection_test(Eventc.Connection client, bool first) throws GLib.Error
     string contents = message;
     GLib.Error e = null;
     event.answered.connect((event, answer) => {
-        GLib.Idle.add(connection_test.callback);
+        GLib.Idle.add(connection_test_internal.callback);
         if ( answer != "test" )
         {
             r = @"Wrond answer to event: $answer";
@@ -56,7 +56,7 @@ connection_test(Eventc.Connection client, bool first) throws GLib.Error
     });
 
     event.ended.connect((event, reason) => {
-        GLib.Idle.add(connection_test.callback);
+        GLib.Idle.add(connection_test_internal.callback);
         if ( reason != Eventd.EventEndReason.RESERVED )
             r = @"Wrong end reason: $reason";
     });
@@ -80,10 +80,16 @@ connection_test(Eventc.Connection client, bool first) throws GLib.Error
 
     yield client.close();
 
-    if ( first )
-        return yield connection_test(client, false);
-
     return null;
+}
+
+async string?
+connection_test(Eventc.Connection client, bool first) throws GLib.Error
+{
+    var r = yield connection_test_internal(client);
+    if ( r != null )
+        return r;
+    return yield connection_test_internal(client);
 }
 
 int
