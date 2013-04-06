@@ -38,58 +38,6 @@
 
 #include "context.h"
 
-static void
-_libeventd_evp_context_send_hello_check_callback(LibeventdEvpContext *self, const gchar *line)
-{
-    g_return_if_fail(self != NULL);
-
-    GSimpleAsyncResult *result = self->waiter.result;
-
-    if ( g_strcmp0(line, "HELLO") != 0 )
-        g_simple_async_result_set_error(result, LIBEVENTD_EVP_ERROR, LIBEVENTD_EVP_ERROR_HELLO, "Wrong HELLO aknowledgement message: %s", line);
-
-    g_simple_async_result_complete_in_idle(result);
-    g_object_unref(result);
-}
-
-void
-libeventd_evp_context_send_hello(LibeventdEvpContext *self, const gchar *category, GAsyncReadyCallback callback, gpointer user_data)
-{
-    g_return_if_fail(self != NULL);
-    g_return_if_fail(category != NULL);
-
-    gboolean r;
-    gchar *message;
-    GError *error = NULL;
-
-    message = g_strdup_printf("HELLO %s", category);
-    r = libeventd_evp_context_send_message(self, message, &error);
-    g_free(message);
-
-    if ( ! r )
-        g_simple_async_report_take_gerror_in_idle(G_OBJECT(self->cancellable), callback, user_data, error);
-    else
-    {
-        self->waiter.callback = _libeventd_evp_context_send_hello_check_callback;
-        self->waiter.result = g_simple_async_result_new(G_OBJECT(self->cancellable), callback, user_data, libeventd_evp_context_send_hello);
-    }
-}
-
-gboolean
-libeventd_evp_context_send_hello_finish(LibeventdEvpContext *self, GAsyncResult *result, GError **error)
-{
-    g_return_val_if_fail(self != NULL, FALSE);
-    g_return_val_if_fail(g_simple_async_result_is_valid(result, G_OBJECT(self->cancellable), NULL), FALSE);
-
-    GSimpleAsyncResult *simple = G_SIMPLE_ASYNC_RESULT(result);
-
-    if ( g_simple_async_result_propagate_error(simple, error) )
-        return FALSE;
-
-    return TRUE;
-}
-
-
 static gboolean
 _libeventd_evp_context_send_data(LibeventdEvpContext *self, GHashTable *all_data, GError **error)
 {

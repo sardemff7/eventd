@@ -29,7 +29,6 @@ namespace Eventc
         CONNECTION_OTHER,
         ALREADY_CONNECTED,
         NOT_CONNECTED,
-        HELLO,
         RECEIVE,
         EVENT,
         END,
@@ -55,8 +54,6 @@ namespace Eventc
 
         public string host { set; private get; }
 
-        private string category;
-
         public uint timeout { get; set; default = 0; }
         public bool enable_proxy { get; set; default = true; }
 
@@ -64,13 +61,10 @@ namespace Eventc
         private GLib.HashTable<string, Eventd.Event> events;
         private GLib.HashTable<Eventd.Event, string> ids;
 
-        private bool handshake_passed;
-
         public
-        Connection(string host, string category)
+        Connection(string host)
         {
             this.host = host;
-            this.category = category;
 
             this.evp = new Libeventd.Evp.Context((void *)this, ref Connection.client_interface);
             this.events = new GLib.HashTable<string, Eventd.Event>(GLib.str_hash, GLib.str_equal);
@@ -82,7 +76,7 @@ namespace Eventc
         {
             try
             {
-                return ( this.evp.is_connected() && this.handshake_passed );
+                return ( this.evp.is_connected() );
             }
             catch ( GLib.Error e )
             {
@@ -96,7 +90,6 @@ namespace Eventc
             if ( this.is_connected() )
                 throw new EventcError.ALREADY_CONNECTED("Already connected, you must disconnect first");
 
-            this.handshake_passed = false;
             GLib.SocketConnectable address;
             try
             {
@@ -125,22 +118,6 @@ namespace Eventc
             this.evp.set_connection(connection);
 
             this.evp.receive_loop_client();
-
-            yield this.hello();
-        }
-
-        private async void
-        hello() throws EventcError
-        {
-            try
-            {
-                yield this.evp.send_hello(this.category);
-            }
-            catch ( GLib.Error e )
-            {
-                throw new EventcError.HELLO(e.message);
-            }
-            this.handshake_passed = true;
         }
 
         public async void
@@ -233,7 +210,6 @@ namespace Eventc
         close_internal()
         {
             this.events.remove_all();
-            this.handshake_passed = false;
             yield this.evp.close();
         }
     }

@@ -59,7 +59,6 @@ struct _EventdPluginContext {
 typedef struct {
     EventdPluginContext *context;
     LibeventdEvpContext *evp;
-    gchar *category;
     guint64 id;
     GHashTable *events;
 } EventdEvpClient;
@@ -85,14 +84,6 @@ _eventd_evp_error(gpointer data, LibeventdEvpContext *evp, GError *error)
 {
     g_warning("Connection error: %s", error->message);
     g_error_free(error);
-}
-
-static void
-_eventd_evp_hello(gpointer data, LibeventdEvpContext *evp, const gchar *category)
-{
-    EventdEvpClient *client = data;
-
-    client->category = g_strdup(category);
 }
 
 static void
@@ -206,10 +197,8 @@ _eventd_evp_bye(gpointer data, LibeventdEvpContext *evp)
     EventdPluginContext *context = client->context;
 
 #ifdef DEBUG
-    g_debug("Client connection closed(category: %s)", client->category);
+    g_debug("Client connection closed");
 #endif /* DEBUG */
-
-    g_free(client->category);
 
     libeventd_evp_context_free(client->evp);
     g_hash_table_unref(client->events);
@@ -238,7 +227,6 @@ static LibeventdEvpClientInterface _eventd_evp_interface = {
     .get_event = _eventd_evp_get_event,
     .error     = _eventd_evp_error,
 
-    .hello     = _eventd_evp_hello,
     .event     = _eventd_evp_event,
     .end       = _eventd_evp_end,
 

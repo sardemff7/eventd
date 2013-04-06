@@ -41,7 +41,6 @@
 static void _libeventd_evp_context_receive_data_callback(GObject *source_object, GAsyncResult *res, gpointer user_data);
 static void _libeventd_evp_context_receive_event_callback(GObject *source_object, GAsyncResult *res, gpointer user_data);
 static void _libeventd_evp_context_receive_answered_callback(GObject *source_object, GAsyncResult *res, gpointer user_data);
-static void _libeventd_evp_context_receive_handshake_callback(GObject *source_object, GAsyncResult *res, gpointer user_data);
 static void _libeventd_evp_context_receive_callback(GObject *source_object, GAsyncResult *res, gpointer user_data);
 static void
 _libeventd_evp_receive(LibeventdEvpContext *self, GAsyncReadyCallback callback, gpointer user_data)
@@ -294,49 +293,6 @@ _libeventd_evp_context_receive_answered_callback(GObject *source_object, GAsyncR
  * General receiving callbacks
  */
 static void
-_libeventd_evp_context_receive_handshake_callback(GObject *source_object, GAsyncResult *res, gpointer user_data)
-{
-    LibeventdEvpContext *self = user_data;
-
-    gchar *line;
-
-    line = _libeventd_evp_receive_finish(self, res);
-    if ( line == NULL )
-        return;
-
-#ifdef DEBUG
-    g_debug("Received handshake line: %s", line);
-#endif /* DEBUG */
-
-    /* We proccess messages … */
-    if ( g_str_has_prefix(line, "HELLO ") )
-    {
-        if ( ! libeventd_evp_context_send_message(self, "HELLO", &self->error) )
-        {
-            self->interface->error(self->client, self, self->error);
-            self->error = NULL;
-            return;
-        }
-        self->interface->hello(self->client, self, line + strlen("HELLO "));
-
-        _libeventd_evp_receive(self, _libeventd_evp_context_receive_callback, self);
-    }
-    /* … then warn if we received something unexpected */
-    else
-    {
-        if ( ! libeventd_evp_context_send_message(self, "ERROR bad-handshake", &self->error) )
-        {
-            self->interface->error(self->client, self, self->error);
-            self->error = NULL;
-            return;
-        }
-        _libeventd_evp_receive(self, _libeventd_evp_context_receive_handshake_callback, self);
-    }
-
-    g_free(line);
-}
-
-static void
 _libeventd_evp_context_receive_callback(GObject *source_object, GAsyncResult *res, gpointer user_data)
 {
     LibeventdEvpContext *self = user_data;
@@ -500,5 +456,5 @@ libeventd_evp_context_receive_loop_server(LibeventdEvpContext *self, gint priori
 
     self->server = TRUE;
 
-    _libeventd_evp_receive(self, _libeventd_evp_context_receive_handshake_callback, self);
+    _libeventd_evp_receive(self, _libeventd_evp_context_receive_callback, self);
 }

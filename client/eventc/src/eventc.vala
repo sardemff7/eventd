@@ -166,7 +166,7 @@ namespace Eventc
         if ( host == null )
             host = "localhost";
 
-        client = new Connection(host, category);
+        client = new Connection(host);
         client.timeout = timeout;
 
         tries = 0;

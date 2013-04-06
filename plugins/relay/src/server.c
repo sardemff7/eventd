@@ -177,18 +177,6 @@ _eventd_relay_reconnect(gpointer user_data)
 }
 
 static void
-_eventd_relay_hello_handler(GObject *obj, GAsyncResult *res, gpointer user_data)
-{
-    EventdRelayServer *server = user_data;
-    GError *error = NULL;
-    if ( ! libeventd_evp_context_send_hello_finish(server->evp, res, &error) )
-    {
-        g_warning("Error while sending handshake; %s", error->message);
-        g_clear_error(&error);
-    }
-}
-
-static void
 _eventd_relay_connection_handler(GObject *obj, GAsyncResult *res, gpointer user_data)
 {
     GError *error = NULL;
@@ -207,7 +195,6 @@ _eventd_relay_connection_handler(GObject *obj, GAsyncResult *res, gpointer user_
     {
         libeventd_evp_context_set_connection(server->evp, connection);
         g_object_unref(connection);
-        libeventd_evp_context_send_hello(server->evp, PACKAGE_NAME, _eventd_relay_hello_handler, server);
         libeventd_evp_context_receive_loop_client(server->evp, G_PRIORITY_DEFAULT);
     }
 }

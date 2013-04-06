@@ -120,7 +120,7 @@ main(string[] args)
         return 99;
     }
 
-    var client = new Eventc.Connection("127.0.0.1:19032", "test");
+    var client = new Eventc.Connection("127.0.0.1:19032");
 
     var loop = new GLib.MainLoop(null);
 

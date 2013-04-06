@@ -2,26 +2,6 @@ This file describes the EVENT protocol
 
 
 
-Handshake
----------------
-
-[Client]
-HELLO <type>
-    Initiate the connection by giving
-    the client application type
-    this type will be used to search for
-    a configuration file
-
-[Server]
-HELLO
-    Answer to the client HELLO message
-
-[Server]
-ERROR bad-handshake
-    Inform the client that the event was rejected
-    due to an erroneous message
-
-
 Data
 ----
 

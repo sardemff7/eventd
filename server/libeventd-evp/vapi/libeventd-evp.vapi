@@ -45,8 +45,6 @@ namespace Libeventd
             public void receive_loop_client(int priority = GLib.Priority.DEFAULT);
             public void receive_loop_server(int priority = GLib.Priority.DEFAULT);
 
-            public async bool send_hello(string category) throws GLib.Error;
-
             public async unowned string? send_event(Eventd.Event event) throws GLib.Error;
 
             public async bool send_end(string id) throws GLib.Error;
@@ -61,8 +59,6 @@ namespace Libeventd
         [CCode (has_target = false)]
         public delegate unowned void ErrorCallback(void *client, Context context, GLib.Error error);
         [CCode (has_target = false)]
-        public delegate unowned string HelloCallback(void *client, Context context, string category);
-        [CCode (has_target = false)]
         public delegate string EventCallback(void *client, Context context, Eventd.Event event);
         [CCode (has_target = false)]
         public delegate void EndCallback(void *client, Context context, void *event);
@@ -76,7 +72,6 @@ namespace Libeventd
             EventGetter get_event;
             ErrorCallback error;
 
-            HelloCallback hello;
             EventCallback event;
             EndCallback end;
 

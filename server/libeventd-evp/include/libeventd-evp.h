@@ -41,7 +41,6 @@ GSocketConnectable *libeventd_evp_get_address(const gchar *host_and_port, GError
  */
 
 typedef enum {
-    LIBEVENTD_EVP_ERROR_HELLO,
     LIBEVENTD_EVP_ERROR_BYE,
     LIBEVENTD_EVP_ERROR_SEND,
     LIBEVENTD_EVP_ERROR_EVENT,
@@ -62,7 +61,6 @@ typedef void LibeventdEvpClientIface;
 typedef gpointer (*LibeventdEvpEventGetter)(gpointer client, LibeventdEvpContext *context, const gchar *id);
 typedef void (*LibeventdEvpErrorCallback)(gpointer client, LibeventdEvpContext *context, GError *error);
 typedef void (*LibeventdEvpCallback)(gpointer client, LibeventdEvpContext *context);
-typedef void (*LibeventdEvpHelloCallback)(gpointer client, LibeventdEvpContext *context, const gchar *category);
 typedef gchar *(*LibeventdEvpEventCallback)(gpointer client, LibeventdEvpContext *context, EventdEvent *event);
 typedef void (*LibeventdEvpEndCallback)(gpointer client, LibeventdEvpContext *context, gpointer event);
 typedef void (*LibeventdEvpAnsweredCallback)(gpointer client, LibeventdEvpContext *context, gpointer event, const gchar *answer, GHashTable *data_hash);
@@ -72,7 +70,6 @@ typedef struct {
     LibeventdEvpEventGetter get_event;
     LibeventdEvpErrorCallback error;
 
-    LibeventdEvpHelloCallback hello;
     LibeventdEvpEventCallback event;
     LibeventdEvpEndCallback end;
 
@@ -94,9 +91,6 @@ void libeventd_evp_context_close_finish(LibeventdEvpContext *context, GAsyncResu
 
 void libeventd_evp_context_receive_loop_client(LibeventdEvpContext *context, gint priority);
 void libeventd_evp_context_receive_loop_server(LibeventdEvpContext *context, gint priority);
-
-void libeventd_evp_context_send_hello(LibeventdEvpContext *context, const gchar *category, GAsyncReadyCallback callback, gpointer user_data);
-gboolean libeventd_evp_context_send_hello_finish(LibeventdEvpContext *context, GAsyncResult *result, GError **error);
 
 void libeventd_evp_context_send_event(LibeventdEvpContext *context, EventdEvent *event, GAsyncReadyCallback callback, gpointer user_data);
 const gchar *libeventd_evp_context_send_event_finish(LibeventdEvpContext *context, GAsyncResult *result, GError **error);

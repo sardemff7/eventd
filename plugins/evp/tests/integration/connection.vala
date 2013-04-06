@@ -25,12 +25,6 @@ connection_test(GLib.DataInputStream input, GLib.DataOutputStream output) throws
 {
     string r;
 
-    output.put_string("HELLO test\n");
-    r = input.read_upto("\n", -1, null);
-    input.read_byte(null);
-    if ( r != "HELLO" )
-        return @"Bad handshake: $r";
-
     var filename = GLib.Path.build_filename(GLib.Environment.get_variable("EVENTD_TESTS_TMP_DIR"), "evp-connection-file");
     var message = "Some message";
 
@@ -97,19 +91,6 @@ string?
 connection_fail_test(GLib.DataInputStream input, GLib.DataOutputStream output) throws GLib.Error
 {
     string r;
-
-    output.put_string("EVENT test\n");
-    r = input.read_upto("\n", -1, null);
-    input.read_byte(null);
-    if ( r != "ERROR bad-handshake" )
-        return @"Not detecting bad handshake: $r";
-
-    output.put_string("HELLO test\n");
-    r = input.read_upto("\n", -1, null);
-    input.read_byte(null);
-    if ( r != "HELLO" )
-        return @"Bad handshake: $r";;
-
 
     output.put_string("some crap\n");
     r = input.read_upto("\n", -1, null);
