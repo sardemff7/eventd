@@ -61,7 +61,7 @@ connection_test_internal(Eventc.Connection client) throws GLib.Error
             r = @"Wrong end reason: $reason";
     });
 
-    yield client.event(event);
+    client.event(event);
 
     // Wait the answer
     yield;

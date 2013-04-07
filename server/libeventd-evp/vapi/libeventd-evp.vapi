@@ -45,15 +45,11 @@ namespace Libeventd
             public void receive_loop_client(int priority = GLib.Priority.DEFAULT);
             public void receive_loop_server(int priority = GLib.Priority.DEFAULT);
 
-            public async unowned bool send_event(string id, Eventd.Event event) throws GLib.Error;
-
-            public async bool send_end(string id) throws GLib.Error;
-
+            public unowned bool send_event(string id, Eventd.Event event) throws GLib.Error;
+            public bool send_end(string id) throws GLib.Error;
             public void send_bye();
         }
 
-        [CCode (has_target = false)]
-        public delegate void *EventGetter(void *client, Context context, string id);
         [CCode (has_target = false)]
         public delegate unowned void Callback(void *client, Context context);
         [CCode (has_target = false)]
@@ -61,15 +57,14 @@ namespace Libeventd
         [CCode (has_target = false)]
         public delegate string EventCallback(void *client, Context context, Eventd.Event event);
         [CCode (has_target = false)]
-        public delegate void EndCallback(void *client, Context context, void *event);
+        public delegate void EndCallback(void *client, Context context, string id);
         [CCode (has_target = false)]
-        public delegate void AnsweredCallback(void *client, Context context, void *event, string answer, GLib.HashTable<string, string> data_hashS);
+        public delegate void AnsweredCallback(void *client, Context context, string id, string answer, GLib.HashTable<string, string> data_hashS);
         [CCode (has_target = false)]
-        public delegate void EndedCallback(void *client, Context context, void *event, Eventd.EventEndReason reason);
+        public delegate void EndedCallback(void *client, Context context, string id, Eventd.EventEndReason reason);
 
         public struct ClientInterface
         {
-            EventGetter get_event;
             ErrorCallback error;
 
             EventCallback event;

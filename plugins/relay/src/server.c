@@ -56,14 +56,6 @@ typedef struct {
     gulong ended_handler;
 } EventdRelayEvent;
 
-static gpointer
-_eventd_relay_get_event(gpointer data, LibeventdEvpContext *evp, const gchar *id)
-{
-    EventdRelayServer *server = data;
-
-    return g_hash_table_lookup(server->events, id);
-}
-
 static void
 _eventd_relay_error(gpointer data, LibeventdEvpContext *evp, GError *error)
 {
@@ -106,9 +98,13 @@ _eventd_relay_event_ended(EventdEvent *event, EventdEventEndReason reason, gpoin
 }
 
 static void
-_eventd_relay_answered(gpointer data, LibeventdEvpContext *evp, gpointer data_event, const gchar *answer, GHashTable *data_hash)
+_eventd_relay_answered(gpointer data, LibeventdEvpContext *evp, const gchar *id, const gchar *answer, GHashTable *data_hash)
 {
-    EventdRelayEvent *relay_event = data_event;
+    EventdRelayServer *server = data;
+    EventdRelayEvent *relay_event;
+    relay_event = g_hash_table_lookup(server->events, id);
+    if ( relay_event == NULL )
+        return;
 
     eventd_event_set_all_answer_data(relay_event->event, g_hash_table_ref(data_hash));
     g_signal_handler_disconnect(relay_event->event, relay_event->answered_handler);
@@ -117,10 +113,13 @@ _eventd_relay_answered(gpointer data, LibeventdEvpContext *evp, gpointer data_ev
 }
 
 static void
-_eventd_relay_ended(gpointer data, LibeventdEvpContext *evp, gpointer data_event, EventdEventEndReason reason)
+_eventd_relay_ended(gpointer data, LibeventdEvpContext *evp, const gchar *id, EventdEventEndReason reason)
 {
     EventdRelayServer *server = data;
-    EventdRelayEvent *relay_event = data_event;
+    EventdRelayEvent *relay_event;
+    relay_event = g_hash_table_lookup(server->events, id);
+    if ( relay_event == NULL )
+        return;
 
     g_signal_handler_disconnect(relay_event->event, relay_event->ended_handler);
     relay_event->ended_handler = 0;
@@ -157,7 +156,6 @@ _eventd_relay_event_free(gpointer data)
 }
 
 static LibeventdEvpClientInterface _eventd_relay_interface = {
-    .get_event = _eventd_relay_get_event,
     .error     = _eventd_relay_error,
 
     .answered  = _eventd_relay_answered,
@@ -286,25 +284,6 @@ eventd_relay_server_stop(EventdRelayServer *server)
     libeventd_evp_context_close(server->evp, _eventd_relay_close_handler, server);
 }
 
-static void
-_eventd_relay_event_handler(GObject *obj, GAsyncResult *res, gpointer user_data)
-{
-    GError *error = NULL;
-    EventdRelayEvent *relay_event = user_data;
-    EventdRelayServer *server = relay_event->server;
-
-    if ( ! libeventd_evp_context_send_event_finish(server->evp, res, &error) )
-    {
-        g_warning("Couldn't send event: %s", error->message);
-        g_clear_error(&error);
-        server->connection_timeout_id = g_timeout_add_seconds(1, _eventd_relay_reconnect, server);
-    }
-
-    g_hash_table_insert(server->events, relay_event->id, relay_event);
-    relay_event->answered_handler = g_signal_connect(relay_event->event, "answered", G_CALLBACK(_eventd_relay_event_answered), relay_event);
-    relay_event->ended_handler = g_signal_connect(relay_event->event, "ended", G_CALLBACK(_eventd_relay_event_ended), relay_event);
-}
-
 void
 eventd_relay_server_event(EventdRelayServer *server, EventdEvent *event)
 {
@@ -327,7 +306,17 @@ eventd_relay_server_event(EventdRelayServer *server, EventdEvent *event)
     relay_event->id = g_strdup_printf("%"G_GINT64_MODIFIER"x", ++server->count);
     relay_event->event = g_object_ref(event);
 
-    libeventd_evp_context_send_event(server->evp, relay_event->id, event, _eventd_relay_event_handler, relay_event);
+    if ( ! libeventd_evp_context_send_event(server->evp, relay_event->id, event, &error) )
+    {
+        g_warning("Couldn't send event: %s", error->message);
+        g_clear_error(&error);
+        server->connection_timeout_id = g_timeout_add_seconds(1, _eventd_relay_reconnect, server);
+        return;
+    }
+
+    g_hash_table_insert(server->events, relay_event->id, relay_event);
+    relay_event->answered_handler = g_signal_connect(relay_event->event, "answered", G_CALLBACK(_eventd_relay_event_answered), relay_event);
+    relay_event->ended_handler = g_signal_connect(relay_event->event, "ended", G_CALLBACK(_eventd_relay_event_ended), relay_event);
 }
 
 void

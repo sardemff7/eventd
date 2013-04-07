@@ -20,10 +20,6 @@ DATAL <name> <data>
 Eventd dispatching
 ------------------
 
-[Server]
-ERROR unknown
-    Inform the client that this message is unknown
-
 [Client]
 EVENT <id> <category> <type>
     Inform the server that an event happened
@@ -42,27 +38,10 @@ ANSWER <name>
     Inform the server of the end of the
     EVENT message
 
-[Server]
-EVENT <id>
-    Acknowledge the event
-    The id may be anything represented as a string
-
-[Server]
-ERROR bad-event
-    Inform the client that the event message was not valid
-
 [Client]
 END <id>
     Force the end of an event before the timeout
     Will trigger an ENDED message with "client-dismiss" reason
-
-[Server]
-ENDING <id>
-    Acknowledge the END message
-
-[Server]
-ERROR bad-id
-    Inform the client that no event has this id
 
 
 

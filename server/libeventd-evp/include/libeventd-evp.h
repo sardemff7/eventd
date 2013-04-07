@@ -58,16 +58,14 @@ GQuark libeventd_evp_error_quark(void);
 typedef struct _LibeventdEvpContext LibeventdEvpContext;
 typedef void LibeventdEvpClientIface;
 
-typedef gpointer (*LibeventdEvpEventGetter)(gpointer client, LibeventdEvpContext *context, const gchar *id);
 typedef void (*LibeventdEvpErrorCallback)(gpointer client, LibeventdEvpContext *context, GError *error);
 typedef void (*LibeventdEvpCallback)(gpointer client, LibeventdEvpContext *context);
 typedef gboolean (*LibeventdEvpEventCallback)(gpointer client, LibeventdEvpContext *context, gchar *id, EventdEvent *event);
-typedef void (*LibeventdEvpEndCallback)(gpointer client, LibeventdEvpContext *context, gpointer event);
-typedef void (*LibeventdEvpAnsweredCallback)(gpointer client, LibeventdEvpContext *context, gpointer event, const gchar *answer, GHashTable *data_hash);
-typedef void (*LibeventdEvpEndedCallback)(gpointer client, LibeventdEvpContext *context, gpointer event, EventdEventEndReason reason);
+typedef void (*LibeventdEvpEndCallback)(gpointer client, LibeventdEvpContext *context, const gchar *id);
+typedef void (*LibeventdEvpAnsweredCallback)(gpointer client, LibeventdEvpContext *context, const gchar *id, const gchar *answer, GHashTable *data_hash);
+typedef void (*LibeventdEvpEndedCallback)(gpointer client, LibeventdEvpContext *context, const gchar *id, EventdEventEndReason reason);
 
 typedef struct {
-    LibeventdEvpEventGetter get_event;
     LibeventdEvpErrorCallback error;
 
     LibeventdEvpEventCallback event;
@@ -92,15 +90,10 @@ void libeventd_evp_context_close_finish(LibeventdEvpContext *context, GAsyncResu
 void libeventd_evp_context_receive_loop_client(LibeventdEvpContext *context, gint priority);
 void libeventd_evp_context_receive_loop_server(LibeventdEvpContext *context, gint priority);
 
-void libeventd_evp_context_send_event(LibeventdEvpContext *context, const gchar *id, EventdEvent *event, GAsyncReadyCallback callback, gpointer user_data);
-gboolean libeventd_evp_context_send_event_finish(LibeventdEvpContext *context, GAsyncResult *result, GError **error);
-
-void libeventd_evp_context_send_end(LibeventdEvpContext *context, const gchar *id, GAsyncReadyCallback callback, gpointer user_data);
-gboolean libeventd_evp_context_send_end_finish(LibeventdEvpContext *context, GAsyncResult *result, GError **error);
-
+gboolean libeventd_evp_context_send_event(LibeventdEvpContext *context, const gchar *id, EventdEvent *event, GError **error);
+gboolean libeventd_evp_context_send_end(LibeventdEvpContext *context, const gchar *id, GError **error);
 gboolean libeventd_evp_context_send_answered(LibeventdEvpContext *context, const gchar *id, const gchar *answer, GHashTable *data, GError **error);
 gboolean libeventd_evp_context_send_ended(LibeventdEvpContext *context, const gchar *id, EventdEventEndReason reason, GError **error);
-
 void libeventd_evp_context_send_bye(LibeventdEvpContext *context);
 
 #endif /* __LIBEVENTD_EVP_H__ */

@@ -201,38 +201,14 @@ _libeventd_evp_context_receive_event_callback(GObject *source_object, GAsyncResu
 
     if ( g_strcmp0(line, ".") == 0 )
     {
-        if ( data->error )
+        if ( ! data->error )
         {
-            if ( ! libeventd_evp_context_send_message(self, "ERROR bad-event", &self->error) )
-            {
-                self->interface->error(self->client, self, self->error);
-                self->error = NULL;
-                return;
-            }
-        }
-        else
-        {
-            gchar *message;
-
             if ( g_hash_table_size(data->data_hash) == 0 )
                 g_hash_table_unref(data->data_hash);
             else
                 eventd_event_set_all_data(data->event, data->data_hash);
 
-            if ( self->interface->event(self->client, self, data->id, data->event) )
-            {
-                message = g_strdup_printf("EVENT %s", data->id);
-
-                if ( ! libeventd_evp_context_send_message(self, message, &self->error) )
-                {
-                    self->interface->error(self->client, self, self->error);
-                    self->error = NULL;
-                    return;
-                }
-
-                g_free(message);
-            }
-            else
+            if ( ! self->interface->event(self->client, self, data->id, data->event) )
             {
                 /*
                  * TODO: send ENDED directly
@@ -278,10 +254,7 @@ _libeventd_evp_context_receive_answered_callback(GObject *source_object, GAsyncR
 
     if ( g_strcmp0(line, ".") == 0 )
     {
-        gpointer event;
-        event = self->interface->get_event(self->client, self, data->id);
-        if ( event != NULL )
-            self->interface->answered(self->client, self, event, data->answer, data->data_hash);
+        self->interface->answered(self->client, self, data->id, data->answer, data->data_hash);
 
         g_free(data->answer);
         g_free(data->id);
@@ -345,59 +318,25 @@ _libeventd_evp_context_receive_callback(GObject *source_object, GAsyncResult *re
         return;
     }
     else if ( self->server && g_str_has_prefix(line, "END ") )
-    {
-        const gchar *id;
-        gpointer event;
-
-        id = line + strlen("END ");
-        event = self->interface->get_event(self->client, self, id);
-        if ( event != NULL )
-        {
-            gchar *message;
-
-            message = g_strdup_printf("ENDING %s", id);
-
-            if ( ! libeventd_evp_context_send_message(self, message, &self->error) )
-            {
-                self->interface->error(self->client, self, self->error);
-                self->error = NULL;
-                return;
-            }
-
-            self->interface->end(self->client, self, event);
-
-            g_free(message);
-        }
-        else if ( ! libeventd_evp_context_send_message(self, "ERROR bad-id", &self->error) )
-        {
-            self->interface->error(self->client, self, self->error);
-            self->error = NULL;
-            return;
-        }
-    }
+        self->interface->end(self->client, self, line + strlen("END "));
     else if ( g_str_has_prefix(line, "ENDED ") )
     {
         gchar **end;
-        gpointer event;
 
         end = g_strsplit(line + strlen("ENDED "), " ", 2);
 
-        event = self->interface->get_event(self->client, self, end[0]);
-        if ( event != NULL )
-        {
-            EventdEventEndReason reason = EVENTD_EVENT_END_REASON_NONE;
+        EventdEventEndReason reason = EVENTD_EVENT_END_REASON_NONE;
 
-             if ( g_strcmp0(end[1], "timeout") == 0 )
-                reason = EVENTD_EVENT_END_REASON_TIMEOUT;
-            else if ( g_strcmp0(end[1], "user-dismiss") == 0 )
-                reason = EVENTD_EVENT_END_REASON_USER_DISMISS;
-            else if ( g_strcmp0(end[1], "client-dismiss") == 0 )
-                reason = EVENTD_EVENT_END_REASON_CLIENT_DISMISS;
-            else if ( g_strcmp0(end[1], "reserved") == 0 )
-                reason = EVENTD_EVENT_END_REASON_RESERVED;
+         if ( g_strcmp0(end[1], "timeout") == 0 )
+            reason = EVENTD_EVENT_END_REASON_TIMEOUT;
+        else if ( g_strcmp0(end[1], "user-dismiss") == 0 )
+            reason = EVENTD_EVENT_END_REASON_USER_DISMISS;
+        else if ( g_strcmp0(end[1], "client-dismiss") == 0 )
+            reason = EVENTD_EVENT_END_REASON_CLIENT_DISMISS;
+        else if ( g_strcmp0(end[1], "reserved") == 0 )
+            reason = EVENTD_EVENT_END_REASON_RESERVED;
 
-            self->interface->ended(self->client, self, event, reason);
-        }
+        self->interface->ended(self->client, self, end[0], reason);
 
         g_strfreev(end);
     }
@@ -418,21 +357,6 @@ _libeventd_evp_context_receive_callback(GObject *source_object, GAsyncResult *re
         _libeventd_evp_receive(self, _libeventd_evp_context_receive_answered_callback, data);
 
         g_free(answer);
-        return;
-    }
-    /* … and just inform for answers … */
-    else if ( self->waiter.callback != NULL )
-    {
-        self->waiter.callback(self, line);
-        self->waiter.callback = NULL;
-        self->waiter.result = NULL;
-        self->waiter.id = NULL;
-    }
-    /* … then warn if we received something unexpected */
-    else if ( ! libeventd_evp_context_send_message(self, "ERROR unknown", &self->error) )
-    {
-        self->interface->error(self->client, self, self->error);
-        self->error = NULL;
         return;
     }
 

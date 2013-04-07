@@ -94,18 +94,16 @@ namespace Eventc
                 disconnect();
             });
         }
-        client.event.begin(event, (source, res) => {
-            try
-            {
-                client.event.end(res);
-            }
-            catch ( EventcError e )
-            {
-                GLib.warning("Couldn't send event '%s': %s", name, e.message);
-            }
-            if ( ! wait )
-                disconnect();
-        });
+        try
+        {
+            client.event(event);
+        }
+        catch ( EventcError e )
+        {
+            GLib.warning("Couldn't send event '%s': %s", name, e.message);
+        }
+        if ( ! wait )
+            disconnect();
     }
 
     private static void

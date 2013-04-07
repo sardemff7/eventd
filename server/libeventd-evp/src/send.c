@@ -103,34 +103,17 @@ fail:
     return FALSE;
 }
 
-static void
-_libeventd_evp_context_send_event_check_callback(LibeventdEvpContext *self, const gchar *line)
+gboolean
+libeventd_evp_context_send_event(LibeventdEvpContext *self, const gchar *id, EventdEvent *event, GError **error)
 {
-    g_return_if_fail(self != NULL);
-
-    GSimpleAsyncResult *result = self->waiter.result;
-
-    if ( ! g_str_has_prefix(line, "EVENT ") )
-        g_simple_async_result_set_error(result, LIBEVENTD_EVP_ERROR, LIBEVENTD_EVP_ERROR_EVENT, "Wrong EVENT aknowledgement message: %s", line);
-    else
-        g_simple_async_result_set_op_res_gpointer(result, g_strdup(line + strlen("EVENT ")), g_free);
-
-    g_simple_async_result_complete_in_idle(result);
-    g_object_unref(result);
-}
-
-void
-libeventd_evp_context_send_event(LibeventdEvpContext *self, const gchar *id, EventdEvent *event, GAsyncReadyCallback callback, gpointer user_data)
-{
-    g_return_if_fail(self != NULL);
-    g_return_if_fail(id != NULL);
-    g_return_if_fail(event != NULL);
+    g_return_val_if_fail(self != NULL, FALSE);
+    g_return_val_if_fail(id != NULL, FALSE);
+    g_return_val_if_fail(event != NULL, FALSE);
 
     gchar *message;
-    GError *error = NULL;
 
     message = g_strdup_printf("EVENT %s %s %s", id, eventd_event_get_category(event), eventd_event_get_name(event));
-    if ( ! libeventd_evp_context_send_message(self, message, &error) )
+    if ( ! libeventd_evp_context_send_message(self, message, error) )
         goto fail;
     g_free(message);
 
@@ -139,98 +122,38 @@ libeventd_evp_context_send_event(LibeventdEvpContext *self, const gchar *id, Eve
     {
         const gchar *answer = answer_->data;
         message = g_strdup_printf("ANSWER %s", answer);
-        if ( ! libeventd_evp_context_send_message(self, message, &error) )
+        if ( ! libeventd_evp_context_send_message(self, message, error) )
             goto fail;
         g_free(message);
     }
 
-    message = NULL;
+    if ( ! _libeventd_evp_context_send_data(self, eventd_event_get_all_data(event), error) )
+        return FALSE;
 
-    if ( ! _libeventd_evp_context_send_data(self, eventd_event_get_all_data(event), &error) )
-        goto fail;
+    if ( ! libeventd_evp_context_send_message(self, ".", error) )
+        return FALSE;
 
-    if ( ! libeventd_evp_context_send_message(self, ".", &error) )
-        goto fail;
-
-    self->waiter.callback = _libeventd_evp_context_send_event_check_callback;
-    self->waiter.result = g_simple_async_result_new(G_OBJECT(self->cancellable), callback, user_data, libeventd_evp_context_send_event);
-
-    return;
+    return TRUE;
 
 fail:
     g_free(message);
-    g_simple_async_report_take_gerror_in_idle(G_OBJECT(self->cancellable), callback, user_data, error);
+    return FALSE;
 }
 
 gboolean
-libeventd_evp_context_send_event_finish(LibeventdEvpContext *self, GAsyncResult *result, GError **error)
+libeventd_evp_context_send_end(LibeventdEvpContext *self, const gchar *id, GError **error)
 {
     g_return_val_if_fail(self != NULL, FALSE);
-    g_return_val_if_fail(g_simple_async_result_is_valid(result, G_OBJECT(self->cancellable), NULL), FALSE);
-
-    GSimpleAsyncResult *simple = G_SIMPLE_ASYNC_RESULT(result);
-
-    if ( g_simple_async_result_propagate_error(simple, error) )
-        return FALSE;
-
-    return TRUE;
-}
-
-static void
-_libeventd_evp_context_send_end_check_callback(LibeventdEvpContext *self, const gchar *line)
-{
-    g_return_if_fail(self != NULL);
-
-    GSimpleAsyncResult *result = self->waiter.result;
-    gchar *id = self->waiter.id;
-
-    if ( ! g_str_has_prefix(line, "ENDING ") )
-        g_simple_async_result_set_error(result, LIBEVENTD_EVP_ERROR, LIBEVENTD_EVP_ERROR_END, "Wrong END aknowledgement message: %s", line);
-    else if ( g_strcmp0(line + strlen("ENDING "), id) != 0 )
-        g_simple_async_result_set_error(result, LIBEVENTD_EVP_ERROR, LIBEVENTD_EVP_ERROR_END, "Wrong event id for END message (wanted '%s'): %s", id, line + strlen("ENDING "));
-
-    g_free(id);
-
-    g_simple_async_result_complete_in_idle(result);
-    g_object_unref(result);
-}
-
-void
-libeventd_evp_context_send_end(LibeventdEvpContext *self, const gchar *id, GAsyncReadyCallback callback, gpointer user_data)
-{
-    g_return_if_fail(self != NULL);
-    g_return_if_fail(id != NULL);
+    g_return_val_if_fail(id != NULL, FALSE);
 
     gboolean r;
     gchar *message;
-    GError *error = NULL;
 
     message = g_strdup_printf("END %s", id);
-    r = libeventd_evp_context_send_message(self, message, &error);
+    r = libeventd_evp_context_send_message(self, message, error);
     g_free(message);
 
-    if ( ! r )
-        g_simple_async_report_take_gerror_in_idle(G_OBJECT(self->cancellable), callback, user_data, error);
-    else
-    {
-        self->waiter.callback = _libeventd_evp_context_send_end_check_callback;
-        self->waiter.result = g_simple_async_result_new(G_OBJECT(self->cancellable), callback, user_data, libeventd_evp_context_send_end);
-        self->waiter.id = g_strdup(id);
-    }
-}
-
-gboolean
-libeventd_evp_context_send_end_finish(LibeventdEvpContext *self, GAsyncResult *result, GError **error)
-{
-    g_return_val_if_fail(self != NULL, FALSE);
-    g_return_val_if_fail(g_simple_async_result_is_valid(result, G_OBJECT(self->cancellable), NULL), FALSE);
-
-    GSimpleAsyncResult *simple = G_SIMPLE_ASYNC_RESULT(result);
-
-    if ( g_simple_async_result_propagate_error(simple, error) )
-        return FALSE;
-
-    return TRUE;
+    return r;
 }
 
 gboolean

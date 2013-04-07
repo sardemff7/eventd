@@ -33,10 +33,6 @@ connection_test(GLib.DataInputStream input, GLib.DataOutputStream output) throws
     output.put_string(@"DATAL file $filename\n");
     output.put_string(@"DATA test\n$message\n.\n");
     output.put_string(".\n");
-    r = input.read_upto("\n", -1, null);
-    input.read_byte(null);
-    if ( r != "EVENT 1" )
-        return @"Bad answer to EVENT: $r";
 
     r = input.read_upto("\n", -1, null);
     input.read_byte(null);
@@ -66,52 +62,13 @@ connection_test(GLib.DataInputStream input, GLib.DataOutputStream output) throws
 
     output.put_string("EVENT 2 test test\n");
     output.put_string(".\n");
-    r = input.read_upto("\n", -1, null);
-    input.read_byte(null);
-    if ( r != "EVENT 2" )
-        return @"Bad answer to EVENT: $r";
 
     output.put_string("END 2\n");
-    r = input.read_upto("\n", -1, null);
-    input.read_byte(null);
-    if ( r != "ENDING 2" )
-        return @"Bad answer to END: $r";
 
     r = input.read_upto("\n", -1, null);
     input.read_byte(null);
     if ( r != "ENDED 2 client-dismiss" )
         return @"No ENDED or bad ENDED to EVENT 2: $r";
-
-    output.put_string("BYE\n");
-
-    return null;
-}
-
-string?
-connection_fail_test(GLib.DataInputStream input, GLib.DataOutputStream output) throws GLib.Error
-{
-    string r;
-
-    output.put_string("some crap\n");
-    r = input.read_upto("\n", -1, null);
-    input.read_byte(null);
-    if ( r != "ERROR unknown" )
-        return @"Not detecting unknown message: $r";
-
-    output.put_string("EVENT 1 test test\n");
-    output.put_string("some crap\n");
-    output.put_string(".\n");
-    r = input.read_upto("\n", -1, null);
-    input.read_byte(null);
-    if ( r != "ERROR bad-event" )
-        return @"Bad answer to bad EVENT: $r";
-
-    output.put_string("END 1\n");
-    r = input.read_upto("\n", -1, null);
-    input.read_byte(null);
-    if ( r != "ERROR bad-id" )
-        return @"Bad answer to bad END: $r";
-
 
     output.put_string("BYE\n");
 
@@ -149,28 +106,6 @@ main(string[] args)
         output = new GLib.DataOutputStream((connection as GLib.IOStream).get_output_stream());
 
         m = connection_test(input, output);
-        if ( m != null )
-        {
-            r = 1;
-            GLib.warning("Test failed: %s", m);
-        }
-
-        connection.close();
-    }
-    catch ( GLib.Error e )
-    {
-        GLib.warning("Test failed: %s", e.message);
-        r = 99;
-    }
-
-    try
-    {
-        connection = client.connect(address, null);
-
-        input = new GLib.DataInputStream((connection as GLib.IOStream).get_input_stream());
-        output = new GLib.DataOutputStream((connection as GLib.IOStream).get_output_stream());
-
-        m = connection_fail_test(input, output);
         if ( m != null )
         {
             r = 1;

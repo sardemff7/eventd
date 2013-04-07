@@ -44,7 +44,6 @@ namespace Eventc
     public class Connection : GLib.Object
     {
         static Libeventd.Evp.ClientInterface client_interface = Libeventd.Evp.ClientInterface() {
-            get_event = Connection.get_event,
             error = Connection.error,
 
             answered = Connection.answered,
@@ -122,7 +121,7 @@ namespace Eventc
             this.evp.receive_loop_client();
         }
 
-        public async void
+        public void
         event(Eventd.Event event) throws EventcError
         {
             if ( ! this.is_connected() )
@@ -131,7 +130,7 @@ namespace Eventc
             string id = (++this.count).to_string("%" + int64.FORMAT_MODIFIER + "x");
             try
             {
-                yield this.evp.send_event(id, event);
+                this.evp.send_event(id, event);
             }
             catch ( GLib.Error e )
             {
@@ -147,7 +146,7 @@ namespace Eventc
             });
         }
 
-        public async void
+        public void
         event_end(Eventd.Event event) throws EventcError
         {
             if ( ! this.is_connected() )
@@ -159,7 +158,7 @@ namespace Eventc
                 return;
             try
             {
-                yield this.evp.send_end(id);
+                this.evp.send_end(id);
             }
             catch ( GLib.Error e )
             {
@@ -176,12 +175,6 @@ namespace Eventc
             yield this.close_internal();
         }
 
-        private void *
-        get_event(Libeventd.Evp.Context context, string id)
-        {
-            return this.events.lookup(id);
-        }
-
         private void
         error(Libeventd.Evp.Context context, GLib.Error error)
         {
@@ -189,17 +182,24 @@ namespace Eventc
         }
 
         private void
-        answered(Libeventd.Evp.Context context, void *data_event, string answer, GLib.HashTable<string, string> data_hash)
+        answered(Libeventd.Evp.Context context, string id, string answer, GLib.HashTable<string, string> data_hash)
         {
-            Eventd.Event event = data_event as Eventd.Event;
+            var event = this.events.lookup(id);
+            if ( event == null )
+                return;
+
             Eventd.PrivateEvent.set_all_answer_data(event, data_hash);
             event.answer(answer);
         }
 
         private void
-        ended(Libeventd.Evp.Context context, void *event, Eventd.EventEndReason reason)
+        ended(Libeventd.Evp.Context context, string id, Eventd.EventEndReason reason)
         {
-            (event as Eventd.Event).end(reason);
+            var event = this.events.lookup(id);
+            if ( event == null )
+                return;
+
+            event.end(reason);
         }
 
         private void
