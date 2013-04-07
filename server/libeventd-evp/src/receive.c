@@ -176,8 +176,8 @@ _libeventd_evp_context_receive_data_handle(LibeventdEvpContext *self, GHashTable
 
         _libeventd_evp_receive(self, callback, user_data);
     }
-    else if ( g_str_has_prefix(line, "DATA ") )
-        _libeventd_evp_context_receive_data(self, data_hash, line + strlen("DATA "), callback, user_data);
+    else if ( g_str_has_prefix(line, ".DATA ") )
+        _libeventd_evp_context_receive_data(self, data_hash, line + strlen(".DATA "), callback, user_data);
     else
         return FALSE;
     return TRUE;
@@ -294,10 +294,10 @@ _libeventd_evp_context_receive_callback(GObject *source_object, GAsyncResult *re
         self->interface->bye(self->client, self);
         return;
     }
-    else if ( self->server && g_str_has_prefix(line, "EVENT ") )
+    else if ( self->server && g_str_has_prefix(line, ".EVENT ") )
     {
         gchar *id, *category = NULL, *name = NULL;
-        id = line + strlen("EVENT ");
+        id = line + strlen(".EVENT ");
         category = strchr(id, ' ');
         *category = '\0';
         category += strlen(" ");
@@ -340,11 +340,11 @@ _libeventd_evp_context_receive_callback(GObject *source_object, GAsyncResult *re
 
         g_strfreev(end);
     }
-    else if ( g_str_has_prefix(line, "ANSWERED ") )
+    else if ( g_str_has_prefix(line, ".ANSWERED ") )
     {
         gchar **answer;
 
-        answer = g_strsplit(line + strlen("ANSWERED "), " ", 2);
+        answer = g_strsplit(line + strlen(".ANSWERED "), " ", 2);
 
         LibeventdEvpReceiveAnsweredData *data;
 

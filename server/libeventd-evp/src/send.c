@@ -62,7 +62,7 @@ _libeventd_evp_context_send_data(LibeventdEvpContext *self, GHashTable *all_data
         }
         else
         {
-            message = g_strdup_printf("DATA %s", name);
+            message = g_strdup_printf(".DATA %s", name);
             if ( ! libeventd_evp_context_send_message(self, message, error) )
                 goto fail;
             g_free(message);
@@ -112,7 +112,7 @@ libeventd_evp_context_send_event(LibeventdEvpContext *self, const gchar *id, Eve
 
     gchar *message;
 
-    message = g_strdup_printf("EVENT %s %s %s", id, eventd_event_get_category(event), eventd_event_get_name(event));
+    message = g_strdup_printf(".EVENT %s %s %s", id, eventd_event_get_category(event), eventd_event_get_name(event));
     if ( ! libeventd_evp_context_send_message(self, message, error) )
         goto fail;
     g_free(message);
@@ -165,7 +165,7 @@ libeventd_evp_context_send_answered(LibeventdEvpContext *self, const gchar *id, 
 
     gchar *message;
 
-    message = g_strdup_printf("ANSWERED %s %s", id, answer);
+    message = g_strdup_printf(".ANSWERED %s %s", id, answer);
     if ( ! libeventd_evp_context_send_message(self, message, error) )
         goto fail;
     g_free(message);

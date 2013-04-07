@@ -5,7 +5,7 @@ This file describes the EVENT protocol
 Data
 ----
 
-DATA <name>
+.DATA <name>
     This message is followed by the corresponding data
     Data end with a line containing "."
     If data contain a line with the first character being ".",
@@ -21,7 +21,7 @@ Eventd dispatching
 ------------------
 
 [Client]
-EVENT <id> <category> <type>
+.EVENT <id> <category> <type>
     Inform the server that an event happened
     The type must contain only the characters
     A-Za-z0-9- as for keys of the
@@ -53,7 +53,7 @@ ENDED <id> <reason>
     Inform the client of an event ending
 
 [Server]
-ANSWERED <id> <name>
+.ANSWERED <id> <name>
     Inform the client of an answer to an event
     The server may specify data using the corresponding messages
 
