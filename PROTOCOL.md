@@ -25,7 +25,7 @@ ERROR unknown
     Inform the client that this message is unknown
 
 [Client]
-EVENT <category> <type>
+EVENT <id> <category> <type>
     Inform the server that an event happened
     The type must contain only the characters
     A-Za-z0-9- as for keys of the

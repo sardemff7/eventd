@@ -141,14 +141,10 @@ _eventd_evp_ended(gpointer data, LibeventdEvpContext *evp, gpointer event_data, 
     g_hash_table_remove(client->events, evp_event->id);
 }
 
-static gchar *
-_eventd_evp_event(gpointer data, LibeventdEvpContext *evp, EventdEvent *event)
+static gboolean
+_eventd_evp_event(gpointer data, LibeventdEvpContext *evp, gchar *id, EventdEvent *event)
 {
     EventdEvpClient *client = data;
-    gchar *rid;
-
-    rid = g_strdup_printf("%jx", ++client->id);
-
 #ifdef DEBUG
     g_debug("Received an event (category: %s): %s", eventd_event_get_category(event), eventd_event_get_name(event));
 #endif /* DEBUG */
@@ -156,31 +152,28 @@ _eventd_evp_event(gpointer data, LibeventdEvpContext *evp, EventdEvent *event)
     const gchar *config_id;
 
     config_id = libeventd_core_get_event_config_id(client->context->core, client->context->core_interface, event);
-    if ( config_id != NULL )
-    {
+    if ( config_id == NULL )
+        return FALSE;
+
 #ifdef DEBUG
-        g_debug("Matched an event (category: %s, name: %s): %s", eventd_event_get_category(event), eventd_event_get_name(event), config_id);
+    g_debug("Matched an event (category: %s, name: %s): %s", eventd_event_get_category(event), eventd_event_get_name(event), config_id);
 #endif /* DEBUG */
 
-        gchar *id;
-        EventdEvpEvent *evp_event;
+    EventdEvpEvent *evp_event;
 
-        id = g_strdup(rid);
+    evp_event = g_new0(EventdEvpEvent, 1);
+    evp_event->client = client;
+    evp_event->id = id;
+    evp_event->event = g_object_ref(event);
 
-        evp_event = g_new0(EventdEvpEvent, 1);
-        evp_event->client = client;
-        evp_event->id = id;
-        evp_event->event = g_object_ref(event);
+    g_hash_table_insert(client->events, id, evp_event);
 
-        g_hash_table_insert(client->events, id, evp_event);
+    evp_event->answered_handler = g_signal_connect(event, "answered", G_CALLBACK(_eventd_evp_event_answered), evp_event);
+    evp_event->ended_handler = g_signal_connect(event, "ended", G_CALLBACK(_eventd_evp_event_ended), evp_event);
 
-        evp_event->answered_handler = g_signal_connect(event, "answered", G_CALLBACK(_eventd_evp_event_answered), evp_event);
-        evp_event->ended_handler = g_signal_connect(event, "ended", G_CALLBACK(_eventd_evp_event_ended), evp_event);
+    libeventd_core_push_event(client->context->core, client->context->core_interface, config_id, event);
 
-        libeventd_core_push_event(client->context->core, client->context->core_interface, config_id, event);
-    }
-
-    return rid;
+    return TRUE;
 }
 
 static void

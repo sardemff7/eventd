@@ -45,7 +45,7 @@ namespace Libeventd
             public void receive_loop_client(int priority = GLib.Priority.DEFAULT);
             public void receive_loop_server(int priority = GLib.Priority.DEFAULT);
 
-            public async unowned string? send_event(Eventd.Event event) throws GLib.Error;
+            public async unowned bool send_event(string id, Eventd.Event event) throws GLib.Error;
 
             public async bool send_end(string id) throws GLib.Error;
 

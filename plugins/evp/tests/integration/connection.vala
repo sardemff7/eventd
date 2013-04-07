@@ -28,7 +28,7 @@ connection_test(GLib.DataInputStream input, GLib.DataOutputStream output) throws
     var filename = GLib.Path.build_filename(GLib.Environment.get_variable("EVENTD_TESTS_TMP_DIR"), "evp-connection-file");
     var message = "Some message";
 
-    output.put_string("EVENT test test\n");
+    output.put_string("EVENT 1 test test\n");
     output.put_string("ANSWER test\n");
     output.put_string(@"DATAL file $filename\n");
     output.put_string(@"DATA test\n$message\n.\n");
@@ -64,7 +64,7 @@ connection_test(GLib.DataInputStream input, GLib.DataOutputStream output) throws
     if ( message != contents )
         return @"Wrong test file contents: $contents";
 
-    output.put_string("EVENT test test\n");
+    output.put_string("EVENT 2 test test\n");
     output.put_string(".\n");
     r = input.read_upto("\n", -1, null);
     input.read_byte(null);
@@ -98,7 +98,7 @@ connection_fail_test(GLib.DataInputStream input, GLib.DataOutputStream output) t
     if ( r != "ERROR unknown" )
         return @"Not detecting unknown message: $r";
 
-    output.put_string("EVENT test test\n");
+    output.put_string("EVENT 1 test test\n");
     output.put_string("some crap\n");
     output.put_string(".\n");
     r = input.read_upto("\n", -1, null);

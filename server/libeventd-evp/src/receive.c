@@ -85,6 +85,7 @@ typedef struct {
 
 typedef struct {
     LibeventdEvpContext *context;
+    gchar *id;
     EventdEvent *event;
     GHashTable *data_hash;
     gboolean error;
@@ -211,7 +212,6 @@ _libeventd_evp_context_receive_event_callback(GObject *source_object, GAsyncResu
         }
         else
         {
-            gchar *id;
             gchar *message;
 
             if ( g_hash_table_size(data->data_hash) == 0 )
@@ -219,18 +219,25 @@ _libeventd_evp_context_receive_event_callback(GObject *source_object, GAsyncResu
             else
                 eventd_event_set_all_data(data->event, data->data_hash);
 
-            id = self->interface->event(self->client, self, data->event);
-            message = g_strdup_printf("EVENT %s", id);
-            g_free(id);
-
-            if ( ! libeventd_evp_context_send_message(self, message, &self->error) )
+            if ( self->interface->event(self->client, self, data->id, data->event) )
             {
-                self->interface->error(self->client, self, self->error);
-                self->error = NULL;
-                return;
-            }
+                message = g_strdup_printf("EVENT %s", data->id);
 
-            g_free(message);
+                if ( ! libeventd_evp_context_send_message(self, message, &self->error) )
+                {
+                    self->interface->error(self->client, self, self->error);
+                    self->error = NULL;
+                    return;
+                }
+
+                g_free(message);
+            }
+            else
+            {
+                /*
+                 * TODO: send ENDED directly
+                 */
+            }
         }
 
         g_object_unref(data->event);
@@ -316,8 +323,11 @@ _libeventd_evp_context_receive_callback(GObject *source_object, GAsyncResult *re
     }
     else if ( self->server && g_str_has_prefix(line, "EVENT ") )
     {
-        gchar *category, *name;
-        category = line + strlen("EVENT ");
+        gchar *id, *category = NULL, *name = NULL;
+        id = line + strlen("EVENT ");
+        category = strchr(id, ' ');
+        *category = '\0';
+        category += strlen(" ");
         name = strchr(category, ' ');
         *name = '\0';
         name += strlen(" ");
@@ -326,6 +336,7 @@ _libeventd_evp_context_receive_callback(GObject *source_object, GAsyncResult *re
 
         data = g_new0(LibeventdEvpReceiveEventData, 1);
         data->context = self;
+        data->id = g_strdup(id);
         data->event = eventd_event_new(category, name);
         data->data_hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 

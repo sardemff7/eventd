@@ -58,6 +58,8 @@ namespace Eventc
         public bool enable_proxy { get; set; default = true; }
 
         private Libeventd.Evp.Context evp;
+
+        private uint64 count;
         private GLib.HashTable<string, Eventd.Event> events;
         private GLib.HashTable<Eventd.Event, string> ids;
 
@@ -126,10 +128,10 @@ namespace Eventc
             if ( ! this.is_connected() )
                 throw new EventcError.NOT_CONNECTED("not connected, you must connect first");
 
-            unowned string id;
+            string id = (++this.count).to_string("%" + int64.FORMAT_MODIFIER + "x");
             try
             {
-                id = yield this.evp.send_event(event);
+                yield this.evp.send_event(id, event);
             }
             catch ( GLib.Error e )
             {

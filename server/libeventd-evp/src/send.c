@@ -120,15 +120,16 @@ _libeventd_evp_context_send_event_check_callback(LibeventdEvpContext *self, cons
 }
 
 void
-libeventd_evp_context_send_event(LibeventdEvpContext *self, EventdEvent *event, GAsyncReadyCallback callback, gpointer user_data)
+libeventd_evp_context_send_event(LibeventdEvpContext *self, const gchar *id, EventdEvent *event, GAsyncReadyCallback callback, gpointer user_data)
 {
     g_return_if_fail(self != NULL);
+    g_return_if_fail(id != NULL);
     g_return_if_fail(event != NULL);
 
     gchar *message;
     GError *error = NULL;
 
-    message = g_strdup_printf("EVENT %s %s", eventd_event_get_category(event), eventd_event_get_name(event));
+    message = g_strdup_printf("EVENT %s %s %s", id, eventd_event_get_category(event), eventd_event_get_name(event));
     if ( ! libeventd_evp_context_send_message(self, message, &error) )
         goto fail;
     g_free(message);
@@ -161,18 +162,18 @@ fail:
     g_simple_async_report_take_gerror_in_idle(G_OBJECT(self->cancellable), callback, user_data, error);
 }
 
-const gchar *
+gboolean
 libeventd_evp_context_send_event_finish(LibeventdEvpContext *self, GAsyncResult *result, GError **error)
 {
-    g_return_val_if_fail(self != NULL, NULL);
-    g_return_val_if_fail(g_simple_async_result_is_valid(result, G_OBJECT(self->cancellable), NULL), NULL);
+    g_return_val_if_fail(self != NULL, FALSE);
+    g_return_val_if_fail(g_simple_async_result_is_valid(result, G_OBJECT(self->cancellable), NULL), FALSE);
 
     GSimpleAsyncResult *simple = G_SIMPLE_ASYNC_RESULT(result);
 
     if ( g_simple_async_result_propagate_error(simple, error) )
-        return NULL;
+        return FALSE;
 
-    return g_simple_async_result_get_op_res_gpointer(simple);
+    return TRUE;
 }
 
 static void

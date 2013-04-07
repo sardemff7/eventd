@@ -42,6 +42,7 @@
 struct _EventdRelayServer {
     GSocketConnectable *address;
     LibeventdEvpContext *evp;
+    guint64 count;
     GHashTable *events;
     guint64 tries;
     guint connection_timeout_id;
@@ -50,7 +51,7 @@ struct _EventdRelayServer {
 typedef struct {
     EventdRelayServer *server;
     EventdEvent *event;
-    const gchar *id;
+    gchar *id;
     gulong answered_handler;
     gulong ended_handler;
 } EventdRelayEvent;
@@ -291,22 +292,15 @@ _eventd_relay_event_handler(GObject *obj, GAsyncResult *res, gpointer user_data)
     GError *error = NULL;
     EventdRelayEvent *relay_event = user_data;
     EventdRelayServer *server = relay_event->server;
-    const gchar *id;
 
-    id = libeventd_evp_context_send_event_finish(server->evp, res, &error);
-    if ( error != NULL )
+    if ( ! libeventd_evp_context_send_event_finish(server->evp, res, &error) )
     {
         g_warning("Couldn't send event: %s", error->message);
         g_clear_error(&error);
         server->connection_timeout_id = g_timeout_add_seconds(1, _eventd_relay_reconnect, server);
     }
 
-    gchar *rid;
-
-    rid = g_strdup(id);
-
-    g_hash_table_insert(server->events, rid, relay_event);
-    relay_event->id = rid;
+    g_hash_table_insert(server->events, relay_event->id, relay_event);
     relay_event->answered_handler = g_signal_connect(relay_event->event, "answered", G_CALLBACK(_eventd_relay_event_answered), relay_event);
     relay_event->ended_handler = g_signal_connect(relay_event->event, "ended", G_CALLBACK(_eventd_relay_event_ended), relay_event);
 }
@@ -330,9 +324,10 @@ eventd_relay_server_event(EventdRelayServer *server, EventdEvent *event)
 
     relay_event = g_new0(EventdRelayEvent, 1);
     relay_event->server = server;
+    relay_event->id = g_strdup_printf("%"G_GINT64_MODIFIER"x", ++server->count);
     relay_event->event = g_object_ref(event);
 
-    libeventd_evp_context_send_event(server->evp, event, _eventd_relay_event_handler, relay_event);
+    libeventd_evp_context_send_event(server->evp, relay_event->id, event, _eventd_relay_event_handler, relay_event);
 }
 
 void
