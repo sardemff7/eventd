@@ -95,10 +95,11 @@ CLEANFILES += \
 # Hooks
 #
 
+ ifneq (,$(strip $(ndbackends_LTLIBRARIES)))
 install-data-hook la-files-install-hook: nd-la-files-install-hook
 uninstall-hook la-files-uninstall-hook: nd-la-files-uninstall-hook
+ endif
 
- ifneq (,$(ndbackends_LTLIBRARIES))
 # *.la files cleanup
 nd-la-files-install-hook:
 	cd $(DESTDIR)$(ndbackendsdir) && \
@@ -109,4 +110,3 @@ nd-la-files-install-hook:
 nd-la-files-uninstall-hook:
 	cd $(DESTDIR)$(ndbackendsdir) && \
 		rm $(ndbackends_LTLIBRARIES:.la=.so)
- endif
