@@ -109,6 +109,7 @@ libeventd_evp_context_send_event(LibeventdEvpContext *self, const gchar *id, Eve
     g_return_val_if_fail(self != NULL, FALSE);
     g_return_val_if_fail(id != NULL, FALSE);
     g_return_val_if_fail(event != NULL, FALSE);
+    g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
     gchar *message;
 
@@ -145,6 +146,7 @@ libeventd_evp_context_send_end(LibeventdEvpContext *self, const gchar *id, GErro
 {
     g_return_val_if_fail(self != NULL, FALSE);
     g_return_val_if_fail(id != NULL, FALSE);
+    g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
     gboolean r;
     gchar *message;
@@ -162,6 +164,7 @@ libeventd_evp_context_send_answered(LibeventdEvpContext *self, const gchar *id, 
     g_return_val_if_fail(self != NULL, FALSE);
     g_return_val_if_fail(id != NULL, FALSE);
     g_return_val_if_fail(answer != NULL, FALSE);
+    g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
     gchar *message;
 
@@ -188,6 +191,7 @@ libeventd_evp_context_send_ended(LibeventdEvpContext *self, const gchar *id, Eve
 {
     g_return_val_if_fail(self != NULL, FALSE);
     g_return_val_if_fail(id != NULL, FALSE);
+    g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
     const gchar *reason_text = "";
     switch ( reason )
@@ -236,6 +240,7 @@ libeventd_evp_context_send_message(LibeventdEvpContext *self, const gchar *messa
 
     g_return_val_if_fail(self != NULL, FALSE);
     g_return_val_if_fail(message != NULL, FALSE);
+    g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
     if ( ! g_data_output_stream_put_string(self->out, message, self->cancellable, &_inner_error_) )
     {
