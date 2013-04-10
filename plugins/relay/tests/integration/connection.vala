@@ -130,7 +130,7 @@ main(string[] args)
                 GLib.warning("Test failed: %s", error);
             }
         }
-        catch ( Eventc.EventcError e )
+        catch ( Eventc.Error e )
         {
             r = 2;
             GLib.warning("Test failed: %s", e.message);

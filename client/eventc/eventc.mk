@@ -17,5 +17,3 @@ eventc_LDADD = \
 	$(GIO_LIBS) \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS)
-
-eventc client/eventc/src/eventc-eventc.o: $(srcdir)/libeventc_la_vala.stamp

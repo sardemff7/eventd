@@ -87,8 +87,7 @@ _eventc_send_event(void)
         g_signal_connect(event, "ended", G_CALLBACK(_eventc_event_end_callback), NULL);
 
     GError *error = NULL;
-    eventc_connection_event(client, event, &error);
-    if ( error != NULL )
+    if ( ! eventc_connection_event(client, event, &error) )
         g_warning("Couldn't send event '%s', '%s': %s", eventd_event_get_category(event), eventd_event_get_name(event), error->message);
     if ( ! wait )
        _eventc_disconnect();
@@ -98,8 +97,7 @@ static void
 _eventc_disconnect_callback(GObject *obj, GAsyncResult *res, gpointer user_data)
 {
     GError *error = NULL;
-    eventc_connection_close_finish(client, res, &error);
-    if ( error != NULL )
+    if ( ! eventc_connection_close_finish(client, res, &error) )
         g_warning("Couldn't disconnect from event: %s", error->message);
     g_main_loop_quit(loop);
 }

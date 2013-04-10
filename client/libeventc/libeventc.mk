@@ -35,25 +35,11 @@ vapi_DATA += \
 
 
 libeventc_la_SOURCES = \
-	src/config.vapi \
-	client/libeventc/src/libeventc.vala
-
-libeventc_la_VALAFLAGS = \
-	$(AM_VALAFLAGS) \
-	--pkg libeventd-event \
-	--pkg libeventd-event-private \
-	--pkg libeventd-evp \
-	--library libeventc \
-	--vapi client/libeventc/vapi/libeventc.vapi \
-	--header client/libeventc/include/libeventc.h \
-	$(GIO_VALAFLAGS) \
-	$(GOBJECT_VALAFLAGS) \
-	$(GLIB_VALAFLAGS)
+	client/libeventc/src/libeventc.c
 
 libeventc_la_CFLAGS = \
 	$(AM_CFLAGS) \
 	-D G_LOG_DOMAIN=\"libeventc\" \
-	$(AM_VALA_CFLAGS) \
 	$(GIO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS)
