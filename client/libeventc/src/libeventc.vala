@@ -53,7 +53,6 @@ namespace Eventc
 
         public string host { set; private get; }
 
-        public uint timeout { get; set; default = 0; }
         public bool enable_proxy { get; set; default = true; }
 
         private Libeventd.Evp.Context evp;

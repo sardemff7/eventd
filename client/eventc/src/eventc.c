@@ -117,7 +117,6 @@ main(int argc, char *argv[])
     int r = 0;
     gchar **event_data_name;
     gchar **event_data_content;
-    gint timeout = 0;
 
     gboolean print_version = FALSE;
 
@@ -127,7 +126,6 @@ main(int argc, char *argv[])
         { "data-content", 'c', 0, G_OPTION_ARG_STRING_ARRAY, &event_data_content, "Event data content to send (must be after a data-name)", "<content>" },
         { "host",         'h', 0, G_OPTION_ARG_STRING,       &host,               "Host to connect to",                                     "<host>" },
         { "max-tries",    'm', 0, G_OPTION_ARG_INT,          &max_tries,          "Maximum connection attempts (0 for infinite)",           "<times>" },
-        { "timeout",      'o', 0, G_OPTION_ARG_INT,          &timeout,            "Connection timeout",                                     "<seconds>" },
         { "wait",         'w', 0, G_OPTION_ARG_NONE,         &wait,               "Wait the end of the event",                              NULL },
         { "version",      'V', 0, G_OPTION_ARG_NONE,         &print_version,      "Print version",                                          NULL },
         { NULL }
@@ -186,7 +184,6 @@ main(int argc, char *argv[])
         host = g_strdup("localhost");
 
     client = eventc_connection_new(host);
-    eventc_connection_set_timeout(client, timeout);
 
     event = eventd_event_new(category, name);
 
