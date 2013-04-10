@@ -27,8 +27,8 @@
 
 G_BEGIN_DECLS
 
-GType eventd_event_get_type(void);
-GType eventd_event_end_reason_get_type(void);
+GType eventd_event_get_type(void) G_GNUC_CONST;
+GType eventd_event_end_reason_get_type(void) G_GNUC_CONST;
 
 #define EVENTD_TYPE_EVENT            (eventd_event_get_type())
 #define EVENTD_EVENT(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), EVENTD_TYPE_EVENT, EventdEvent))
@@ -42,21 +42,22 @@ GType eventd_event_end_reason_get_type(void);
 
 struct _EventdEvent
 {
-        GObject parent_object;
+    GObject parent_object;
 
-        /*< private >*/
-        EventdEventPrivate *priv;
+    /*< private >*/
+    EventdEventPrivate *priv;
 };
 
 struct _EventdEventClass
 {
-        GObjectClass parent_class;
+    GObjectClass parent_class;
 
-        /* Signals */
-        void (*updated)  (EventdEvent *event);
-        void (*answered) (EventdEvent *event, const gchar *answer);
-        void (*ended)    (EventdEvent *event, EventdEventEndReason reason);
+    /* Signals */
+    void (*updated)  (EventdEvent *event);
+    void (*answered) (EventdEvent *event, const gchar *answer);
+    void (*ended)    (EventdEvent *event, EventdEventEndReason reason);
 };
+
 
 EventdEvent *eventd_event_new(const gchar *category, const gchar *name);
 
