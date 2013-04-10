@@ -267,21 +267,19 @@ if test x$enable_libnotify = xyes; then
 fi
 AM_CONDITIONAL(ENABLE_NOTIFY, [test x$enable_libnotify = xyes])
 
-#
-# Client
-#
-AM_PROG_VALAC([$vala_min_version])
-if test -d .git -a -z "${VALAC}"; then
-    AC_MSG_ERROR([*** You need Vala >= $vala_min_version to build from git])
-fi
-
 
 
 #
 # Tests
 #
+AM_PROG_VALAC([$vala_min_version])
 dnl No additional dependencies for tests
-dnl AC_ARG_ENABLE(tests, AS_HELP_STRING([--enable-tests], [Build tests]), [], enable_tests=yes)
+AC_ARG_ENABLE(tests, AS_HELP_STRING([--enable-tests], [Build tests]), [], enable_tests=yes)
+if test x$enable_tests = xyes; then
+    if test -d .git -a -z "${VALAC}"; then
+        AC_MSG_ERROR([*** You need Vala >= $vala_min_version to build tests from git])
+    fi
+fi
 
 
 # Debug flags
