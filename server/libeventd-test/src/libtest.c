@@ -120,14 +120,24 @@ eventd_tests_env_free(EventdTestsEnv *self)
     g_free(self);
 }
 
-void
-eventd_tests_env_start_eventd(EventdTestsEnv *self, GError **error)
+gboolean
+eventd_tests_env_start_eventd(EventdTestsEnv *self)
 {
-    g_spawn_sync(self->dir, self->start_args, self->env, 0, NULL, NULL, NULL, NULL, NULL, error);
+    GError *error = NULL;
+    if ( g_spawn_sync(self->dir, self->start_args, self->env, 0, NULL, NULL, NULL, NULL, NULL, &error) )
+        return TRUE;
+    g_warning("Failed to start eventd: %s", error->message);
+    g_error_free(error);
+    return FALSE;
 }
 
-void
-eventd_tests_env_stop_eventd(EventdTestsEnv *self, GError **error)
+gboolean
+eventd_tests_env_stop_eventd(EventdTestsEnv *self)
 {
-    g_spawn_sync(self->dir, self->stop_args, self->env, 0, NULL, NULL, NULL, NULL, NULL, error);
+    GError *error = NULL;
+    if ( g_spawn_sync(self->dir, self->stop_args, self->env, 0, NULL, NULL, NULL, NULL, NULL, &error) )
+        return TRUE;
+    g_warning("Failed to stop eventd: %s", error->message);
+    g_error_free(error);
+    return FALSE;
 }

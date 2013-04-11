@@ -109,16 +109,10 @@ main(string[] args)
     Eventd.Tests.Env.setup();
     var env = new Eventd.Tests.Env("test-plugin,evp", "18031", { "--event-listen", "tcp:localhost4:19031", "--no-avahi" });
     var relay = new Eventd.Tests.Env("relay,evp", "18032", { "--event-listen", "tcp:localhost4:19032", "--no-avahi", "--no-avahi-browsing" });
-    try
-    {
-        env.start_eventd();
-        relay.start_eventd();
-    }
-    catch ( GLib.Error e )
-    {
-        GLib.warning("Failed to start eventd: %s", e.message);
+    if ( ! env.start_eventd() )
         return 99;
-    }
+    if ( ! relay.start_eventd() )
+        return 99;
 
     var client = new Eventc.Connection("127.0.0.1:19032");
 
@@ -151,15 +145,10 @@ main(string[] args)
 
     loop.run();
 
-    try
-    {
-        relay.stop_eventd();
-        env.stop_eventd();
-    }
-    catch ( GLib.Error e )
-    {
-        GLib.warning("Failed to stop eventd: %s", e.message);
-        r = 99;
-    }
+
+    if ( ! relay.stop_eventd() )
+        return 99;
+    if ( ! env.stop_eventd() )
+        return 99;
     return r;
 }

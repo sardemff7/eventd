@@ -28,7 +28,7 @@ namespace Eventd.Tests
     {
         public Env(string plugins, string port, owned string[] args);
         public static void setup();
-        public void start_eventd() throws GLib.Error;
-        public void stop_eventd() throws GLib.Error;
+        public bool start_eventd();
+        public bool stop_eventd();
     }
 }

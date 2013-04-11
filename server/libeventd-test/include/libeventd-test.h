@@ -30,7 +30,7 @@ typedef struct _EventdTestsEnv EventdTestsEnv;
 void eventd_tests_env_setup(void);
 EventdTestsEnv *eventd_tests_env_new(const gchar *plugins, const gchar *port, gchar **argv, gint argc);
 void eventd_tests_env_free(EventdTestsEnv *env);
-void eventd_tests_env_start_eventd(EventdTestsEnv *env, GError **error);
-void eventd_tests_env_stop_eventd(EventdTestsEnv *env, GError **error);
+gboolean eventd_tests_env_start_eventd(EventdTestsEnv *env);
+gboolean eventd_tests_env_stop_eventd(EventdTestsEnv *env);
 
 #endif /* __EVENTD_LIBEVENTD_TEST_H__ */
