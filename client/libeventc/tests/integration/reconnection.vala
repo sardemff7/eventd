@@ -103,7 +103,7 @@ connection_test_internal(Eventc.Connection client) throws GLib.Error
 }
 
 async string?
-connection_test(Eventc.Connection client, bool first) throws GLib.Error
+connection_test(Eventc.Connection client) throws GLib.Error
 {
     var r = yield connection_test_internal(client);
     if ( r != null )
@@ -133,7 +133,7 @@ main(string[] args)
 
     string error = null;
 
-    connection_test.begin(client, true, (obj, res) => {
+    connection_test.begin(client, (obj, res) => {
         try
         {
             error = connection_test.end(res);
