@@ -80,7 +80,7 @@ main(string[] args)
 {
     int r = 0;
     Eventd.Tests.Env.setup();
-    var env = new Eventd.Tests.Env("test-plugin,evp", "9987", { "--event-listen", "tcp:localhost4:9876", "--no-avahi" });
+    var env = new Eventd.Tests.Env("test-plugin,evp", "18011", { "--event-listen", "tcp:localhost4:19011", "--no-avahi" });
     try
     {
         env.start_eventd();
@@ -92,7 +92,7 @@ main(string[] args)
     }
 
     var client = new GLib.SocketClient();
-    var address = new GLib.InetSocketAddress(new GLib.InetAddress.loopback(GLib.SocketFamily.IPV4), 9876);
+    var address = new GLib.InetSocketAddress(new GLib.InetAddress.loopback(GLib.SocketFamily.IPV4), 19011);
     GLib.SocketConnection connection;
     GLib.DataInputStream input;
     GLib.DataOutputStream output;

@@ -107,7 +107,7 @@ main(string[] args)
 {
     int r = 0;
     Eventd.Tests.Env.setup();
-    var env = new Eventd.Tests.Env("test-plugin,evp", "9988", { "--event-listen", "tcp:localhost4:9877", "--no-avahi" });
+    var env = new Eventd.Tests.Env("test-plugin,evp", "18021", { "--event-listen", "tcp:localhost4:19021", "--no-avahi" });
     try
     {
         env.start_eventd();
@@ -118,7 +118,7 @@ main(string[] args)
         return 99;
     }
 
-    var client = new Eventc.Connection("127.0.0.1:9877");
+    var client = new Eventc.Connection("127.0.0.1:19021");
 
     var loop = new GLib.MainLoop(null);
 
