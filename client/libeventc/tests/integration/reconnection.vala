@@ -78,6 +78,25 @@ connection_test_internal(Eventc.Connection client) throws GLib.Error
     if ( r != null )
         return r;
 
+
+    event = new Eventd.Event("test", "test");
+
+    event.ended.connect((event, reason) => {
+        GLib.Idle.add(connection_test_internal.callback);
+        if ( reason != Eventd.EventEndReason.CLIENT_DISMISS )
+            r = @"Wrong end reason: $reason";
+    });
+
+    client.event(event);
+
+    client.event_end(event);
+
+    // Wait the end
+    yield;
+    if ( r != null )
+        return r;
+
+
     yield client.close();
 
     return null;
