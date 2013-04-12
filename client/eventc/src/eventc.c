@@ -38,7 +38,6 @@ static EventcConnection *client;
 static EventdEvent *event;
 static GMainLoop *loop;
 
-static gchar *host = NULL;
 static gint tries = 0;
 static gint max_tries = 3;
 static gboolean wait = FALSE;
@@ -54,7 +53,7 @@ _eventc_connect_callback(GObject *obj, GAsyncResult *res, gpointer user_data)
     eventc_connection_connect_finish(client, res, &error);
     if ( error != NULL )
     {
-        g_warning("Couldn't connect to host '%s': %s", host, error->message);
+        g_warning("Couldn't connect to host: %s", error->message);
 
         if ( ( max_tries > 0 ) && ( ++tries >= max_tries ) )
         {
@@ -113,6 +112,7 @@ int
 main(int argc, char *argv[])
 {
     int r = 0;
+    gchar *host;
     gchar **event_data_name;
     gchar **event_data_content;
 
