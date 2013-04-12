@@ -19,12 +19,10 @@ pkginclude_HEADERS += \
 	client/libeventc/include/libeventc.h
 
 TESTS += \
-	libeventc-connection.test \
-	libeventc-reconnection.test
+	libeventc-connection.test
 
 check_PROGRAMS += \
-	libeventc-connection.test \
-	libeventc-reconnection.test
+	libeventc-connection.test
 
 pkgconfig_DATA += \
 	client/libeventc/pkgconfig/libeventc.pc
@@ -93,34 +91,6 @@ libeventc_connection_test_CFLAGS = \
 	$(GLIB_CFLAGS)
 
 libeventc_connection_test_LDADD = \
-	libeventd-test.la \
-	libeventd-event.la \
-	libeventc.la \
-	$(GIO_LIBS) \
-	$(GOBJECT_LIBS) \
-	$(GLIB_LIBS)
-
-
-libeventc_reconnection_test_SOURCES = \
-	client/libeventc/tests/integration/reconnection.vala
-
-libeventc_reconnection_test_VALAFLAGS = \
-	$(AM_VALAFLAGS) \
-	--pkg libeventd-test \
-	--pkg libeventd-event \
-	--pkg libeventc \
-	$(GIO_VALAFLAGS) \
-	$(GOBJECT_VALAFLAGS) \
-	$(GLIB_VALAFLAGS)
-
-libeventc_reconnection_test_CFLAGS = \
-	$(AM_CFLAGS) \
-	$(AM_VALA_CFLAGS) \
-	$(GIO_CFLAGS) \
-	$(GOBJECT_CFLAGS) \
-	$(GLIB_CFLAGS)
-
-libeventc_reconnection_test_LDADD = \
 	libeventd-test.la \
 	libeventd-event.la \
 	libeventc.la \
