@@ -44,18 +44,10 @@ evp_la_LIBADD = \
 
 
 evp_connection_test_SOURCES = \
-	plugins/evp/tests/integration/connection.vala
-
-evp_connection_test_VALAFLAGS = \
-	$(AM_VALAFLAGS) \
-	--pkg libeventd-test \
-	$(GIO_VALAFLAGS) \
-	$(GOBJECT_VALAFLAGS) \
-	$(GLIB_VALAFLAGS)
+	plugins/evp/tests/integration/connection.c
 
 evp_connection_test_CFLAGS = \
 	$(AM_CFLAGS) \
-	$(AM_VALA_CFLAGS) \
 	$(GIO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS)
