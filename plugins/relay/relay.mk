@@ -43,20 +43,10 @@ relay_la_LIBADD = \
 
 
 relay_connection_test_SOURCES = \
-	plugins/relay/tests/integration/connection.vala
-
-relay_connection_test_VALAFLAGS = \
-	$(AM_VALAFLAGS) \
-	--pkg libeventd-event \
-	--pkg libeventd-test \
-	--pkg libeventc \
-	$(GIO_VALAFLAGS) \
-	$(GOBJECT_VALAFLAGS) \
-	$(GLIB_VALAFLAGS)
+	plugins/relay/tests/integration/connection.c
 
 relay_connection_test_CFLAGS = \
 	$(AM_CFLAGS) \
-	$(AM_VALA_CFLAGS) \
 	$(GIO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS)
