@@ -136,7 +136,7 @@ fail:
 int
 main(int argc, char *argv[])
 {
-    eventd_tests_env_setup();
+    eventd_tests_env_setup(argv);
 
     gchar **args = g_new(char *, 3);
     args[0] = g_strdup("--event-listen");

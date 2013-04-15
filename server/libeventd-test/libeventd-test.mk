@@ -12,6 +12,7 @@ check_LTLIBRARIES += \
 
 
 libeventd_test_la_SOURCES = \
+	server/libeventd-test/src/libeventc-test.c \
 	server/libeventd-test/src/libtest.c \
 	server/libeventd-test/include/libeventd-test.h
 
@@ -30,6 +31,8 @@ libeventd_test_la_LDFLAGS = \
 	-export-dynamic
 
 libeventd_test_la_LIBADD = \
+	libeventd-event.la \
+	libeventc.la \
 	$(GIO_LIBS) \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS)

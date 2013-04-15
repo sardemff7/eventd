@@ -20,19 +20,28 @@
  *
  */
 
-#ifndef __EVENTD_LIBEVENTD_TEST_H__
-#define __EVENTD_LIBEVENTD_TEST_H__
-
 #include <glib.h>
+#include <libeventd-test.h>
 
-typedef struct _EventdTestsEnv EventdTestsEnv;
+int
+main(int argc, char *argv[])
+{
+    int r = 99;
+    eventd_tests_env_setup(argv);
+    gchar **args = g_new(char *, 3);
+    args[0] = g_strdup("--event-listen");
+    args[1] = g_strdup("tcp:localhost4:19021");
+    args[2] = g_strdup("--no-avahi");
+    EventdTestsEnv *env = eventd_tests_env_new("test-plugin,evp", "18021", args, 3);
+    if ( ! eventd_tests_env_start_eventd(env) )
+        goto end;
 
-void eventd_tests_env_setup(gchar **argv);
-EventdTestsEnv *eventd_tests_env_new(const gchar *plugins, const gchar *port, gchar **argv, gint argc);
-void eventd_tests_env_free(EventdTestsEnv *env);
-gboolean eventd_tests_env_start_eventd(EventdTestsEnv *env);
-gboolean eventd_tests_env_stop_eventd(EventdTestsEnv *env);
+    r = eventd_tests_run_libeventc("127.0.0.1:19021");
 
-int eventd_tests_run_libeventc(const gchar *host);
+    if ( ! eventd_tests_env_stop_eventd(env) )
+        r = 99;
 
-#endif /* __EVENTD_LIBEVENTD_TEST_H__ */
+end:
+    eventd_tests_env_free(env);
+    return r;
+}

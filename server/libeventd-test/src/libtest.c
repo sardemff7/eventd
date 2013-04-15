@@ -47,11 +47,15 @@ struct _EventdTestsEnv {
 };
 
 void
-eventd_tests_env_setup()
+eventd_tests_env_setup(gchar **argv)
 {
 #ifdef DEBUG
     g_setenv("G_MESSAGES_DEBUG", "all", FALSE);
 #endif /* DEBUG */
+
+    gchar *tmp = g_path_get_basename(argv[0]);
+    g_set_prgname(tmp);
+    g_free(tmp);
 
     const gchar *tmp_dir;
     tmp_dir = g_getenv("EVENTD_TESTS_TMP_DIR");

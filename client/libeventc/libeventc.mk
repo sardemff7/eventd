@@ -58,28 +58,14 @@ libeventc_la_LIBADD = \
 
 
 libeventc_connection_test_SOURCES = \
-	client/libeventc/tests/integration/connection.vala
-
-libeventc_connection_test_VALAFLAGS = \
-	$(AM_VALAFLAGS) \
-	--pkg libeventd-test \
-	--pkg libeventd-event \
-	--pkg libeventc \
-	$(GIO_VALAFLAGS) \
-	$(GOBJECT_VALAFLAGS) \
-	$(GLIB_VALAFLAGS)
+	client/libeventc/tests/integration/connection.c
 
 libeventc_connection_test_CFLAGS = \
 	$(AM_CFLAGS) \
-	$(AM_VALA_CFLAGS) \
 	$(GIO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS)
 
 libeventc_connection_test_LDADD = \
 	libeventd-test.la \
-	libeventd-event.la \
-	libeventc.la \
-	$(GIO_LIBS) \
-	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS)
