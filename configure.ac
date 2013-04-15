@@ -57,16 +57,11 @@ libpulse_min_version="0.9.15"
 libnotify_min_version="0.5.0"
 gtk_min_version="3.0"
 
-# Client dependencies
-vala_min_version="0.12"
-
 DOCBOOK_CONDITIONS="installation"
 
 
 AM_CFLAGS="-fvisibility=hidden -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers"
 AM_LDFLAGS="-Wl,--no-undefined"
-AM_VALA_CFLAGS="-fvisibility=default -Wno-unused"
-AM_VALAFLAGS="--target-glib=${glib_min_version}"
 AM_XSLTPROCFLAGS="--nonet --xinclude --stringparam man.output.quietly 1 --stringparam funcsynopsis.style ansi"
 
 
@@ -107,30 +102,22 @@ AC_SUBST([dbuscapabilitiesdir])
 AC_CHECK_HEADERS([fcntl.h errno.h])
 
 PKG_CHECK_MODULES(GLIB, [glib-2.0 >= $glib_min_version])
-GLIB_VALAFLAGS="--pkg glib-2.0"
-AC_SUBST(GLIB_VALAFLAGS)
 AC_DEFINE_UNQUOTED([GLIB_VERSION_MIN_REQUIRED], [(G_ENCODE_VERSION(${glib_min_major},${glib_min_minor}))], [The lower GLib version supported])
 
 PKG_CHECK_MODULES(GOBJECT, [gobject-2.0])
-GOBJECT_VALAFLAGS="--pkg gobject-2.0"
-AC_SUBST(GOBJECT_VALAFLAGS)
 
 PKG_CHECK_MODULES(GTHREAD, [gthread-2.0])
 
 gio_unix=
-gio_unix_vala=
 PKG_CHECK_EXISTS([gio-unix-2.0 >= $gio_min_version], have_gio_unix=yes, have_gio_unix=no)
 if test x$have_gio_unix = xyes; then
     gio_unix="gio-unix-2.0"
-    gio_unix_vala="--pkg gio-unix-2.0 -D HAVE_GIO_UNIX"
     AC_DEFINE([HAVE_GIO_UNIX], [1], [UNIX-specific GIO support])
     DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};have_gio_unix"
 fi
 
 PKG_CHECK_MODULES(GIO, [gio-2.0 >= $gio_min_version $gio_unix])
-GIO_VALAFLAGS="--pkg gio-2.0 $gio_unix_vala"
 AC_SUBST(gio_unix)
-AC_SUBST(GIO_VALAFLAGS)
 
 AC_ARG_ENABLE(avahi, AS_HELP_STRING([--disable-avahi], [Disable Avahi support]), [], enable_avahi=yes)
 if test x$enable_avahi = xyes; then
@@ -272,29 +259,19 @@ AM_CONDITIONAL(ENABLE_NOTIFY, [test x$enable_libnotify = xyes])
 #
 # Tests
 #
-AM_PROG_VALAC([$vala_min_version])
 dnl No additional dependencies for tests
-AC_ARG_ENABLE(tests, AS_HELP_STRING([--enable-tests], [Build tests]), [], enable_tests=yes)
-if test x$enable_tests = xyes; then
-    if test -d .git -a -z "${VALAC}"; then
-        AC_MSG_ERROR([*** You need Vala >= $vala_min_version to build tests from git])
-    fi
-fi
-
+dnl AC_ARG_ENABLE(tests, AS_HELP_STRING([--enable-tests], [Build tests]), [], enable_tests=yes)
 
 # Debug flags
 AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug], [Enable debug]), [], enable_debug=no)
 if test x$enable_debug = xyes; then
     AC_DEFINE([DEBUG], [1], [Activate debug mode])
-    AM_VALAFLAGS="${AM_VALAFLAGS} --debug -D DEBUG"
 fi
 
 AM_XSLTPROCFLAGS="${AM_XSLTPROCFLAGS} --stringparam profile.condition '${DOCBOOK_CONDITIONS}'"
 
 AC_SUBST(AM_CFLAGS)
 AC_SUBST(AM_LDFLAGS)
-AC_SUBST(AM_VALA_CFLAGS)
-AC_SUBST(AM_VALAFLAGS)
 AC_SUBST(AM_XSLTPROCFLAGS)
 
 AM_SUBST_NOTMAKE(LIBS)

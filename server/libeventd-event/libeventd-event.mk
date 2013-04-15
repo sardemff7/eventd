@@ -8,9 +8,6 @@ LIBEVENTD_EVENT_AGE=0
 AM_CFLAGS += \
 	-I $(srcdir)/server/libeventd-event/include
 
-AM_VALAFLAGS += \
-	--vapidir $(srcdir)/server/libeventd-event/vapi
-
 
 lib_LTLIBRARIES += \
 	libeventd-event.la

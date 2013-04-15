@@ -3,9 +3,6 @@
 AM_CFLAGS += \
 	-I $(srcdir)/server/libeventd-evp/include
 
-AM_VALAFLAGS += \
-	--vapidir $(srcdir)/server/libeventd-evp/vapi
-
 
 noinst_LTLIBRARIES += \
 	libeventd-evp.la

@@ -43,9 +43,6 @@ AM_CFLAGS += \
 	-I $(srcdir)/src/ \
 	-I $(builddir)/src/
 
-AM_VALA_CFLAGS += \
-	--include config.h
-
 AM_XSLTPROCFLAGS += \
 	--path "$(srcdir)/src/" \
 	--path "$(builddir)/src/"

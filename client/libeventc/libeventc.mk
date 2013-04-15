@@ -8,9 +8,6 @@ LIBEVENTC_AGE=0
 AM_CFLAGS += \
 	-I $(srcdir)/client/libeventc/include
 
-AM_VALAFLAGS += \
-	--vapidir $(srcdir)/client/libeventc/vapi
-
 
 lib_LTLIBRARIES += \
 	libeventc.la

@@ -3,9 +3,6 @@
 AM_CFLAGS += \
 	-I $(srcdir)/server/libeventd-test/include
 
-AM_VALAFLAGS += \
-	--vapidir $(srcdir)/server/libeventd-test/vapi
-
 
 check_LTLIBRARIES += \
 	libeventd-test.la
