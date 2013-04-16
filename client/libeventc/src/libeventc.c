@@ -472,6 +472,7 @@ _eventc_connection_close_internal_finish(EventcConnection *self, GAsyncResult *r
 }
 
 
+EVENTD_EXPORT
 void
 eventc_connection_set_host(EventcConnection *self, const gchar *host)
 {
@@ -482,6 +483,7 @@ eventc_connection_set_host(EventcConnection *self, const gchar *host)
     self->priv->host = g_strdup(host);
 }
 
+EVENTD_EXPORT
 void
 eventc_connection_set_enable_proxy(EventcConnection *self, gboolean enable_proxy)
 {
@@ -490,6 +492,7 @@ eventc_connection_set_enable_proxy(EventcConnection *self, gboolean enable_proxy
     self->priv->enable_proxy = enable_proxy;
 }
 
+EVENTD_EXPORT
 gboolean
 eventc_connection_get_enable_proxy(EventcConnection *self)
 {
