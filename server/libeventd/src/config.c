@@ -104,6 +104,17 @@ libeventd_config_key_file_get_string(GKeyFile *config_file, const gchar *group, 
 
 EVENTD_EXPORT
 gint8
+libeventd_config_key_file_get_locale_string(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *locale, gchar **value)
+{
+    GError *error = NULL;
+
+    *value = g_key_file_get_locale_string(config_file, group, key, locale, &error);
+
+    return _libeventd_config_key_file_error(&error, group, key);
+}
+
+EVENTD_EXPORT
+gint8
 libeventd_config_key_file_get_string_list(GKeyFile *config_file, const gchar *group, const gchar *key, gchar ***value, gsize *length)
 {
     GError *error = NULL;

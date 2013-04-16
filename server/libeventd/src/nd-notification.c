@@ -91,12 +91,12 @@ libeventd_nd_notification_template_new(GKeyFile *config_file)
 
     gchar *string;
 
-    if ( libeventd_config_key_file_get_string(config_file, "Notification", "Title", &string) == 0 )
+    if ( libeventd_config_key_file_get_locale_string(config_file, "Notification", "Title", NULL, &string) == 0 )
         self->title = string;
     else
         self->title = g_strdup("$name");
 
-    if ( libeventd_config_key_file_get_string(config_file, "Notification", "Message", &string) == 0 )
+    if ( libeventd_config_key_file_get_locale_string(config_file, "Notification", "Message", NULL, &string) == 0 )
         self->message = string;
     else
         self->message = g_strdup("$text");

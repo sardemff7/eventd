@@ -70,7 +70,7 @@
                 <varlistentry>
                     <term><varname>Message=</varname> (defaults to <literal>$message</literal>)</term>
                     <listitem>
-                        <para>A <type>string</type> (can contain $data-name references)</para>
+                        <para>A <type>string</type> (can contain $data-name references, localised)</para>
                         <para>The text which will be read using. You can use <acronym>SSML</acronym><footnote><para>Speech Synthesis Markup Language</para></footnote>.</para>
                     </listitem>
                 </varlistentry>

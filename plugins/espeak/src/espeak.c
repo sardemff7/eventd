@@ -114,7 +114,7 @@ _eventd_espeak_event_parse(EventdPluginContext *context, const gchar *id, GKeyFi
 
     if ( ! disable )
     {
-        if ( libeventd_config_key_file_get_string(config_file, "Espeak", "Message", &message) < 0 )
+        if ( libeventd_config_key_file_get_locale_string(config_file, "Espeak", "Message", NULL, &message) < 0 )
             return;
         if ( message == NULL )
             message = g_strdup("$message");

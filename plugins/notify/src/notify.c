@@ -143,9 +143,9 @@ _eventd_libnotify_event_parse(EventdPluginContext *context, const gchar *id, GKe
 
     if ( libeventd_config_key_file_get_boolean(config_file, "Libnotify", "Disable", &disable) < 0 )
         goto skip;
-    if ( libeventd_config_key_file_get_string(config_file, "Libnotify", "Title", &title) < 0 )
+    if ( libeventd_config_key_file_get_locale_string(config_file, "Libnotify", "Title", NULL, &title) < 0 )
         goto skip;
-    if ( libeventd_config_key_file_get_string(config_file, "Libnotify", "Message", &message) < 0 )
+    if ( libeventd_config_key_file_get_locale_string(config_file, "Libnotify", "Message", NULL, &message) < 0 )
         goto skip;
     if ( libeventd_config_key_file_get_string(config_file, "Libnotify", "Image", &image) < 0 )
         goto skip;
