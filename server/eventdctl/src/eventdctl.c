@@ -198,7 +198,7 @@ _eventd_eventdctl_process_command(const gchar *private_socket, gboolean autospaw
 {
     if ( argc == 0 )
     {
-        g_print("Missing command");
+        g_print("Missing command\n");
         return 2;
     }
 
@@ -263,7 +263,7 @@ _eventd_eventdctl_process_command(const gchar *private_socket, gboolean autospaw
     else if ( g_strcmp0(argv[0], "add-flag") == 0 )
     {
         if ( argc < 2 )
-            g_print("You must specify a flag");
+            g_print("You must specify a flag\n");
         else
             retval = _eventd_eventdctl_send_command(connection, argv[0], 1, argv+1);
     }
