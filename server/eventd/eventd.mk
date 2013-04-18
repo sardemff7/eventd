@@ -1,9 +1,5 @@
 # Server
 
-AM_CFLAGS += \
-	-I $(srcdir)/server/eventd/include
-
-
 bin_PROGRAMS += \
 	eventd
 

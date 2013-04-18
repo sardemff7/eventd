@@ -1,6 +1,6 @@
 # notification plugin
 
-AM_CFLAGS += \
+AM_CPPFLAGS += \
 	-I $(srcdir)/plugins/nd/include
 
 

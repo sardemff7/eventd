@@ -5,7 +5,7 @@ LIBEVENTD_EVENT_REVISION=0
 LIBEVENTD_EVENT_AGE=0
 
 
-AM_CFLAGS += \
+AM_CPPFLAGS += \
 	-I $(srcdir)/server/libeventd-event/include
 
 

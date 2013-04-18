@@ -1,6 +1,6 @@
 # Testing helper library
 
-AM_CFLAGS += \
+AM_CPPFLAGS += \
 	-I $(srcdir)/server/libeventd-test/include
 
 

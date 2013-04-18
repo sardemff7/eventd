@@ -5,7 +5,7 @@ LIBEVENTC_REVISION=0
 LIBEVENTC_AGE=0
 
 
-AM_CFLAGS += \
+AM_CPPFLAGS += \
 	-I $(srcdir)/client/libeventc/include
 
 

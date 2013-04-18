@@ -61,6 +61,7 @@ DOCBOOK_CONDITIONS="installation"
 
 
 AM_CFLAGS="-fvisibility=hidden -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers"
+AM_CPPFLAGS=""
 AM_LDFLAGS="-Wl,--no-undefined"
 AM_XSLTPROCFLAGS="--nonet --xinclude --stringparam man.output.quietly 1 --stringparam funcsynopsis.style ansi"
 
@@ -271,6 +272,7 @@ fi
 AM_XSLTPROCFLAGS="${AM_XSLTPROCFLAGS} --stringparam profile.condition '${DOCBOOK_CONDITIONS}'"
 
 AC_SUBST(AM_CFLAGS)
+AC_SUBST(AM_CPPFLAGS)
 AC_SUBST(AM_LDFLAGS)
 AC_SUBST(AM_XSLTPROCFLAGS)
 

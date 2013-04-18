@@ -5,7 +5,7 @@ LIBEVENTD_PLUGIN_REVISION=0
 LIBEVENTD_PLUGIN_AGE=0
 
 
-AM_CFLAGS += \
+AM_CPPFLAGS += \
 	-I $(srcdir)/server/libeventd-plugin/include
 
 

@@ -1,6 +1,6 @@
 # Internal helper library
 
-AM_CFLAGS += \
+AM_CPPFLAGS += \
 	-I $(srcdir)/server/libeventd/include
 
 
