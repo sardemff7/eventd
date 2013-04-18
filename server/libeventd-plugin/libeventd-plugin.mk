@@ -26,7 +26,7 @@ libeventd_plugin_la_SOURCES = \
 
 libeventd_plugin_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	-D G_LOG_DOMAIN=\"libeventd-event\" \
+	-D G_LOG_DOMAIN=\"libeventd-plugin\" \
 	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS)
 
