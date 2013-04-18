@@ -172,9 +172,12 @@ _eventd_eventdctl_send_command(GIOStream *connection, const gchar *command, gint
         }
         else if ( ( line = g_data_input_stream_read_upto(input, "\0", 1, NULL, NULL, &error) ) == NULL )
         {
-            g_warning("Couldn't read the status message: %s", error->message);
-            g_clear_error(&error);
-            retval = EVENTCTL_RETURN_CODE_CONNECTION_ERROR;
+            if ( error != NULL )
+            {
+                g_warning("Couldn't read the status message: %s", error->message);
+                g_clear_error(&error);
+                retval = EVENTCTL_RETURN_CODE_CONNECTION_ERROR;
+            }
         }
         else
         {
