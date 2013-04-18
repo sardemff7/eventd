@@ -321,10 +321,7 @@ eventd_plugins_control_command(const gchar *id, const gchar *command, const gcha
         r = EVENTCTL_RETURN_CODE_PLUGIN_ERROR;
     }
     else
-    {
-        *status = plugin->interface.control_command(plugin->context, command, args);
-        r = EVENTCTL_RETURN_CODE_OK;
-    }
+        r = plugin->interface.control_command(plugin->context, command, args, status);
 
     return r;
 }

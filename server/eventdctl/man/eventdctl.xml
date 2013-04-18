@@ -228,6 +228,20 @@
                     <para>Plugin error. No plugin or no control command support in plugin.</para>
                 </listitem>
             </varlistentry>
+
+            <varlistentry>
+                <term><literal>20</literal></term>
+                <listitem>
+                    <para>Plugin command error. The plugin command is unknown, or miss an argument.</para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><literal>21</literal></term>
+                <listitem>
+                    <para>Plugin command execution error. The command could not suceed, see <command>eventdctl</command> output for details.</para>
+                </listitem>
+            </varlistentry>
         </variablelist>
     </refsect1>
 

@@ -203,15 +203,15 @@ _eventd_nd_start(EventdPluginContext *context)
  * Control command interface
  */
 
-static char *
-_eventd_nd_control_command(EventdPluginContext *context, const gchar *command, const gchar *args)
+static EventdPluginCommandStatus
+_eventd_nd_control_command(EventdPluginContext *context, const gchar *command, const gchar *args, gchar **status)
 {
     EventdNdDisplay *display;
     GHashTableIter iter;
     const gchar *id;
     EventdNdBackend *backend;
+    EventdPluginCommandStatus r;
 
-    gchar *status = NULL;
     if ( g_strcmp0(command, "attach") == 0 )
     {
         const gchar *attached = NULL;
@@ -234,14 +234,23 @@ _eventd_nd_control_command(EventdPluginContext *context, const gchar *command, c
             }
         }
         if ( attached != NULL )
-            status = g_strdup_printf("Backend attached: %s", attached);
+        {
+            *status = g_strdup_printf("Backend %s attached", attached);
+            r = EVENTD_PLUGIN_COMMAND_STATUS_OK;
+        }
         else
-            status = g_strdup("No backend attached");
+        {
+            *status = g_strdup("No backend attached");
+            r = EVENTD_PLUGIN_COMMAND_STATUS_EXEC_ERROR;
+        }
     }
     else
-        status = g_strdup_printf("Unknown command '%s'", command);
+    {
+        *status = g_strdup_printf("Unknown command '%s'", command);
+        r = EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR;
+    }
 
-    return status;
+    return r;
 }
 
 

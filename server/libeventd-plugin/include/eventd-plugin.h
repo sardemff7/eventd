@@ -31,6 +31,12 @@ typedef struct _EventdCoreInterface EventdCoreInterface;
 typedef struct _EventdPluginContext EventdPluginContext;
 typedef struct EventdPluginInterface EventdPluginInterface;
 
+typedef enum {
+	EVENTD_PLUGIN_COMMAND_STATUS_OK            = 0,
+	EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR = 20,
+	EVENTD_PLUGIN_COMMAND_STATUS_EXEC_ERROR    = 21,
+} EventdPluginCommandStatus;
+
 
 /*
  * eventd plugin interface
@@ -39,7 +45,7 @@ typedef struct EventdPluginInterface EventdPluginInterface;
 typedef EventdPluginContext *(*EventdPluginInitFunc)(EventdCoreContext *core, EventdCoreInterface *interface);
 typedef void (*EventdPluginSimpleFunc)(EventdPluginContext *context);
 typedef GOptionGroup *(*EventdPluginGetOptionGroupFunc)(EventdPluginContext *context);
-typedef gchar *(*EventdPluginControlCommandFunc)(EventdPluginContext *context, const gchar *command, const gchar *args);
+typedef EventdPluginCommandStatus (*EventdPluginControlCommandFunc)(EventdPluginContext *context, const gchar *command, const gchar *args, gchar **status);
 typedef void (*EventdPluginGlobalParseFunc)(EventdPluginContext *context, GKeyFile *);
 typedef void (*EventdPluginEventParseFunc)(EventdPluginContext *context, const gchar *config_id, GKeyFile *key_file);
 typedef void (*EventdPluginEventDispatchFunc)(EventdPluginContext *context, const gchar *config_id, EventdEvent *event);
