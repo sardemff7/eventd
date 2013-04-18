@@ -5,9 +5,9 @@
 ]>
 
 <!--
-  eventd - Small daemon to act on remote or local events
+  eventdctl - Control utility for eventd
 
-  Copyright © 2011-2012 Quentin "Sardem FF7" Glidic
+  Copyright © 2011-2013 Quentin "Sardem FF7" Glidic
 
   This file is part of eventd.
 
@@ -196,7 +196,8 @@
             <varlistentry>
                 <term><literal>0</literal></term>
                 <listitem>
-                    <para>The command was successful. With the <parameter class="command">start</parameter> command, it will return <literal>0</literal> if eventd is already started.</para>
+                    <para>The command was successful.</para>
+                    <para>With the <parameter class="command">start</parameter> command, it will return <literal>0</literal> if eventd is already started.</para>
                 </listitem>
             </varlistentry>
 
@@ -210,14 +211,14 @@
             <varlistentry>
                 <term><literal>2</literal></term>
                 <listitem>
-                    <para>Command error. No command passed, unknown command or missing command argument.</para>
+                    <para>eventd invocation faild. Either with the <parameter class="command">start</parameter> command, or the <option>--auto-spawn</option> option.</para>
                 </listitem>
             </varlistentry>
 
             <varlistentry>
-                <term><literal>3</literal></term>
+                <term><literal>10</literal></term>
                 <listitem>
-                    <para>eventd invocation faild. Either with the <parameter class="command">start</parameter> command, or the <option>--auto-spawn</option> option.</para>
+                    <para>Command error. No command passed, unknown command or missing command argument.</para>
                 </listitem>
             </varlistentry>
         </variablelist>
