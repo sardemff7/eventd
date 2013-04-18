@@ -221,6 +221,13 @@
                     <para>Command error. No command passed, unknown command or missing command argument.</para>
                 </listitem>
             </varlistentry>
+
+            <varlistentry>
+                <term><literal>11</literal></term>
+                <listitem>
+                    <para>Plugin error. No plugin or no control command support in plugin.</para>
+                </listitem>
+            </varlistentry>
         </variablelist>
     </refsect1>
 

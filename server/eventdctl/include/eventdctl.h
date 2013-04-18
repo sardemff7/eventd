@@ -30,6 +30,7 @@ typedef enum {
     EVENTCTL_RETURN_CODE_CONNECTION_ERROR     = 1,
     EVENTCTL_RETURN_CODE_INVOCATION_ERROR     = 2,
     EVENTCTL_RETURN_CODE_COMMAND_ERROR        = 10,
+    EVENTCTL_RETURN_CODE_PLUGIN_ERROR         = 11,
 } EventdctlReturnCode;
 
 #endif /* __EVENTCTL_H__ */

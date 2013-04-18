@@ -113,7 +113,7 @@ _eventd_service_private_connection_handler(GSocketService *socket_service, GSock
                 *(command++) = '\0';
                 args = strchr(command, ' ');
                 *(args++) = '\0';
-                status = eventd_plugins_control_command(line, command, args);
+                code = eventd_plugins_control_command(line, command, args, &status);
             }
             else
             {

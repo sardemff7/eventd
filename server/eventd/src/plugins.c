@@ -36,6 +36,8 @@
 #include <eventd-plugin.h>
 #include <eventd-plugin-interfaces.h>
 
+#include <eventdctl.h>
+
 #include "plugins.h"
 
 typedef struct {
@@ -298,22 +300,33 @@ eventd_plugins_stop_all()
     }
 }
 
-gchar *
-eventd_plugins_control_command(const gchar *id, const gchar *command, const gchar *args)
+EventdctlReturnCode
+eventd_plugins_control_command(const gchar *id, const gchar *command, const gchar *args, gchar **status)
 {
     const gchar *eid;
     EventdPlugin *plugin;
+    EventdctlReturnCode r;;
 
     eid = g_str_has_prefix(id, "eventd-") ? ( id + strlen("eventd-") ) : id;
 
     plugin = g_hash_table_lookup(plugins, id);
     if ( plugin == NULL )
-        return g_strdup_printf("No such plugin '%s'", eid);
+    {
+        *status = g_strdup_printf("No such plugin '%s'", eid);
+        r = EVENTCTL_RETURN_CODE_PLUGIN_ERROR;
+    }
+    else if ( plugin->interface.control_command == NULL )
+    {
+        *status = g_strdup_printf("Plugin '%s' does not support control commands", eid);
+        r = EVENTCTL_RETURN_CODE_PLUGIN_ERROR;
+    }
+    else
+    {
+        *status = plugin->interface.control_command(plugin->context, command, args);
+        r = EVENTCTL_RETURN_CODE_OK;
+    }
 
-    if ( plugin->interface.control_command == NULL )
-        return g_strdup_printf("Plugin '%s' does not support", eid);
-
-    return plugin->interface.control_command(plugin->context, command, args);
+    return r;
 }
 
 void
