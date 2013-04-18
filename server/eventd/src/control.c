@@ -32,6 +32,8 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 
+#include <eventdctl.h>
+
 #include "types.h"
 
 #include "eventd.h"
@@ -66,8 +68,8 @@ _eventd_service_private_connection_handler(GSocketService *socket_service, GSock
     }
     else
     {
-        const gchar *answer = "Done";
-        gchar *plugin_answer = NULL;
+        EventdctlReturnCode code = EVENTCTL_RETURN_CODE_OK;
+        gchar *status = NULL;
 
 #ifdef DEBUG
         g_debug("Received control command: '%s'", line);
@@ -111,19 +113,34 @@ _eventd_service_private_connection_handler(GSocketService *socket_service, GSock
                 *(command++) = '\0';
                 args = strchr(command, ' ');
                 *(args++) = '\0';
-                answer = plugin_answer = eventd_plugins_control_command(line, command, args);
+                status = eventd_plugins_control_command(line, command, args);
             }
             else
-                answer = "No plugin command specified";
+            {
+                status = g_strdup("No plugin command specified");
+                code = EVENTCTL_RETURN_CODE_COMMAND_ERROR;
+            }
         }
-
         g_free(line);
 
-        if ( ! g_output_stream_write_all(g_io_stream_get_output_stream(stream), answer, strlen(answer) + 1, NULL, NULL, &error) )
-            g_warning("Couldn't send answer '%s': %s", answer, error->message);
+        GDataOutputStream *out;
+        out = g_data_output_stream_new(g_io_stream_get_output_stream(stream));
+
+        if ( ! g_data_output_stream_put_uint64(out, code, NULL, &error) )
+            g_warning("Couldn't send return code '%u': %s", code, error->message);
+        else if ( status != NULL )
+        {
+
+            if ( ! g_data_output_stream_put_string(out, status, NULL, &error) )
+                g_warning("Couldn't send status message '%s': %s", status, error->message);
+            else if ( ! g_data_output_stream_put_byte(out, '\0', NULL, &error) )
+                g_warning("Couldn't send status message end byte: %s", error->message);
+
+            g_free(status);
+        }
         g_clear_error(&error);
 
-        g_free(plugin_answer);
+        g_object_unref(out);
     }
 
     g_object_unref(input);

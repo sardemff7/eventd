@@ -163,9 +163,16 @@ _eventd_eventdctl_send_command(GIOStream *connection, const gchar *command, gint
 
         input = g_data_input_stream_new(g_io_stream_get_input_stream(connection));
 
-        if ( ( line = g_data_input_stream_read_upto(input, "\0", 1, NULL, NULL, &error) ) == NULL )
+        retval = g_data_input_stream_read_uint64(input, NULL, &error);
+        if ( error != NULL )
         {
-            g_warning("Couldn't read the answer: %s", error->message);
+            g_warning("Couldn't read the return code: %s", error->message);
+            g_clear_error(&error);
+            retval = EVENTCTL_RETURN_CODE_CONNECTION_ERROR;
+        }
+        else if ( ( line = g_data_input_stream_read_upto(input, "\0", 1, NULL, NULL, &error) ) == NULL )
+        {
+            g_warning("Couldn't read the status message: %s", error->message);
             g_clear_error(&error);
             retval = EVENTCTL_RETURN_CODE_CONNECTION_ERROR;
         }

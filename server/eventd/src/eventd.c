@@ -49,6 +49,7 @@
 #endif /* ENABLE_SYSTEMD */
 
 #include <eventd-plugin-interfaces.h>
+#include <eventdctl.h>
 
 #include "types.h"
 

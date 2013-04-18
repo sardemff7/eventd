@@ -29,6 +29,7 @@
 
 #include <libeventd-event.h>
 #include <libeventd-config.h>
+#include <eventdctl.h>
 
 #include "types.h"
 

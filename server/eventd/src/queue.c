@@ -25,6 +25,7 @@
 #include <glib-object.h>
 
 #include <libeventd-event.h>
+#include <eventdctl.h>
 
 #include "types.h"
 
