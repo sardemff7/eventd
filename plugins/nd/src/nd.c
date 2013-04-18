@@ -204,38 +204,44 @@ _eventd_nd_start(EventdPluginContext *context)
  */
 
 static char *
-_eventd_nd_control_command(EventdPluginContext *context, const gchar *command)
+_eventd_nd_control_command(EventdPluginContext *context, const gchar *command, const gchar *args)
 {
-    const gchar *target = command + strlen("attach ");
     EventdNdDisplay *display;
     GHashTableIter iter;
     const gchar *id;
     EventdNdBackend *backend;
 
-    if ( ! g_str_has_prefix(command, "attach ") )
-        return g_strdup_printf("Unknown command '%s'", command);
-
-    const gchar *status = "No backend attached";
-
-    g_hash_table_iter_init(&iter, context->backends);
-    while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&backend) )
+    gchar *status = NULL;
+    if ( g_strcmp0(command, "attach") == 0 )
     {
-        display = backend->display_new(backend->context, target);
-        if ( display != NULL )
+        const gchar *attached = NULL;
+
+        g_hash_table_iter_init(&iter, context->backends);
+        while ( ( attached == NULL ) && g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&backend) )
         {
-            EventdNdDisplayContext *display_context;
+            display = backend->display_new(backend->context, args);
+            if ( display != NULL )
+            {
+                EventdNdDisplayContext *display_context;
 
-            display_context = g_new(EventdNdDisplayContext, 1);
-            display_context->backend = backend;
-            display_context->display = display;
+                display_context = g_new(EventdNdDisplayContext, 1);
+                display_context->backend = backend;
+                display_context->display = display;
 
-            context->displays = g_list_prepend(context->displays, display_context);
+                context->displays = g_list_prepend(context->displays, display_context);
 
-            status = "Backend attached";
+                attached = id;
+            }
         }
+        if ( attached != NULL )
+            status = g_strdup_printf("Backend attached: %s", attached);
+        else
+            status = g_strdup("No backend attached");
     }
+    else
+        status = g_strdup_printf("Unknown command '%s'", command);
 
-    return g_strdup(status);
+    return status;
 }
 
 

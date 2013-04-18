@@ -102,13 +102,16 @@ _eventd_service_private_connection_handler(GSocketService *socket_service, GSock
         }
         else
         {
-            gchar *space;
+            gchar *command;
 
-            space = strchr(line, ' ');
-            if ( space != NULL )
+            command = strchr(line, ' ');
+            if ( command != NULL )
             {
-                *space = '\0';
-                answer = plugin_answer = eventd_plugins_control_command(line, space+1);
+                gchar *args;
+                *(command++) = '\0';
+                args = strchr(command, ' ');
+                *(args++) = '\0';
+                answer = plugin_answer = eventd_plugins_control_command(line, command, args);
             }
             else
                 answer = "No plugin command specified";

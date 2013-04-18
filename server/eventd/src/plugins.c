@@ -299,7 +299,7 @@ eventd_plugins_stop_all()
 }
 
 gchar *
-eventd_plugins_control_command(const gchar *id, const gchar *command)
+eventd_plugins_control_command(const gchar *id, const gchar *command, const gchar *args)
 {
     const gchar *eid;
     EventdPlugin *plugin;
@@ -313,7 +313,7 @@ eventd_plugins_control_command(const gchar *id, const gchar *command)
     if ( plugin->interface.control_command == NULL )
         return g_strdup_printf("Plugin '%s' does not support", eid);
 
-    return plugin->interface.control_command(plugin->context, command);
+    return plugin->interface.control_command(plugin->context, command, args);
 }
 
 void

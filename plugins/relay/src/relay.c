@@ -157,38 +157,35 @@ _eventd_relay_stop(EventdPluginContext *context)
  */
 
 static char *
-_eventd_relay_control_command(EventdPluginContext *context, const gchar *command)
+_eventd_relay_control_command(EventdPluginContext *context, const gchar *command, const gchar *args)
 {
-    const gchar *name;
     EventdRelayServer *server;
     gchar *message;
 
-    if ( g_str_has_prefix(command, "connect ") )
+    if ( g_strcmp0(command, "connect") == 0 )
     {
-        name = command + strlen("connect ");
-        server = g_hash_table_lookup(context->servers, name);
+        server = g_hash_table_lookup(context->servers, args);
         if ( server == NULL )
-            message = g_strdup_printf("No such server: %s", name);
+            message = g_strdup_printf("No such server: %s", args);
         else
         {
             eventd_relay_server_start(server);
-            message = g_strdup_printf("Connected to server '%s'", name);
+            message = g_strdup_printf("Connected to server '%s'", args);
         }
     }
-    else if ( g_str_has_prefix(command, "disconnect ") )
+    else if ( g_strcmp0(command, "disconnect") == 0 )
     {
-        name = command + strlen("disconnect ");
-        server = g_hash_table_lookup(context->servers, name);
+        server = g_hash_table_lookup(context->servers, args);
         if ( server == NULL )
-            message = g_strdup_printf("No such server: %s", name);
+            message = g_strdup_printf("No such server: %s", args);
         else
         {
             eventd_relay_server_stop(server);
-            message = g_strdup_printf("Discennected from server '%s'", name);
+            message = g_strdup_printf("Discennected from server '%s'", args);
         }
     }
     else
-        message = g_strdup("Unknown command");
+        message = g_strdup_printf("Unknown command '%s'", command);
 
     return message;
 }
