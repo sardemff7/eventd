@@ -1,5 +1,10 @@
+m4_define([eventd_version_major], [0])
+m4_define([eventd_version_minor], [1])
+m4_define([eventd_version_patch], [])
+m4_define([eventd_version], )
+m4_define([eventd_version_git], m4_esyscmd_s([test -d .git && echo " - `git describe --tags --always` (`git describe --tags --always --all | sed -e 's:heads/::'`)"]))
 AC_PREREQ([2.65])
-AC_INIT([eventd],[0.1],[],[])
+AC_INIT([eventd],eventd_version_major.eventd_version_minor[]eventd_version_patch[]eventd_version_git,[],[])
 
 AC_CONFIG_HEADERS([src/config.h])
 AC_CONFIG_SRCDIR([server/eventd/src/eventd.c])
@@ -64,12 +69,6 @@ AM_CFLAGS="-fvisibility=hidden -Wall -Wextra -Wno-unused-parameter -Wno-missing-
 AM_CPPFLAGS=""
 AM_LDFLAGS="-Wl,--no-undefined"
 AM_XSLTPROCFLAGS="--nonet --xinclude --stringparam man.output.quietly 1 --stringparam funcsynopsis.style ansi"
-
-
-if test -d .git; then
-    PACKAGE_VERSION="${PACKAGE_VERSION} - `git describe --tags --always` (`git describe --tags --always --all | sed -e 's:heads/::'`)"
-    AC_DEFINE_UNQUOTED([PACKAGE_VERSION], ["$PACKAGE_VERSION"], [Full version with git information])
-fi
 
 
 #
