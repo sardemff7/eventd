@@ -257,6 +257,7 @@ _eventd_eventdctl_process_command(const gchar *private_socket, gboolean autospaw
          || ( g_strcmp0(argv[0], "reload") == 0 )
          || ( g_strcmp0(argv[0], "pause") == 0 )
          || ( g_strcmp0(argv[0], "resume") == 0 )
+         || ( g_strcmp0(argv[0], "version") == 0 )
        )
         retval = _eventd_eventdctl_send_command(connection, argv[0], 0, null_argv);
     else if ( g_strcmp0(argv[0], "add-flag") == 0 )

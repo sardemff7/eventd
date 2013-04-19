@@ -97,6 +97,13 @@
         <title>Commands</title>
         <variablelist>
             <varlistentry>
+                <term><parameter class="command">version</parameter></term>
+                <listitem>
+                    <para>Query the eventd version.</para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
                 <term><parameter class="command">start</parameter></term>
                 <listitem>
                     <para>Start eventd if needed.</para>

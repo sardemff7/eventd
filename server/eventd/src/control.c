@@ -94,6 +94,10 @@ _eventd_service_private_connection_handler(GSocketService *socket_service, GSock
         {
             eventd_core_resume(control->core);
         }
+        else if ( g_strcmp0(line, "version") == 0 )
+        {
+            status = g_strdup(PACKAGE_NAME " " PACKAGE_VERSION);
+        }
         else if ( g_str_has_prefix(line, "add-flag ") )
         {
             eventd_core_add_flag(control->core, g_quark_from_string(line + strlen("add-flag ")));
