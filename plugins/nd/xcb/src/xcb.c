@@ -54,6 +54,7 @@ struct _EventdNdBackendContext {
 
 struct _EventdNdDisplay {
     EventdNdBackendContext *context;
+    gchar *target;
     GList *link;
     GXcbSource *source;
     xcb_connection_t *xcb_connection;
@@ -281,7 +282,7 @@ _eventd_nd_xcb_events_callback(xcb_generic_event_t *event, gpointer user_data)
 
     if ( event == NULL )
     {
-        display->context->nd_interface->remove_display(display->context->nd, display);
+        display->context->nd_interface->remove_display(display->context->nd, display->target);
         return FALSE;
     }
 
@@ -361,7 +362,8 @@ _eventd_nd_xcb_display_new(EventdNdBackendContext *context, const gchar *target)
     }
     display->context = context;
 
-    context->displays = g_list_prepend(context->displays, g_strdup(target));
+    display->target = g_strdup(target);
+    context->displays = g_list_prepend(context->displays, display->target);
     display->link = context->displays;
 
     display->xcb_connection = g_xcb_source_get_connection(display->source);

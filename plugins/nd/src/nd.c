@@ -64,7 +64,7 @@ struct _EventdPluginContext {
     gint max_height;
     EventdNdStyle *style;
     GHashTable *backends;
-    GList *displays;
+    GHashTable *displays;
     GQueue *queue;
 };
 
@@ -100,20 +100,9 @@ _eventd_nd_backend_display_free(gpointer data)
 }
 
 static void
-_eventd_nd_backend_remove_display(EventdNdContext *context, EventdNdDisplay *display)
+_eventd_nd_backend_remove_display(EventdNdContext *context, const gchar *target)
 {
-    EventdNdDisplayContext *display_context;
-    GList *display_context_;
-    for ( display_context_ = context->displays ; display_context_ != NULL ; display_context_ = g_list_next(display_context_) )
-    {
-        display_context = display_context_->data;
-        if ( display_context->display == display )
-        {
-            _eventd_nd_backend_display_free(display_context);
-            context->displays = g_list_delete_link(context->displays, display_context_);
-            return;
-        }
-    }
+    g_hash_table_remove(context->displays, target);
 }
 
 /*
@@ -129,21 +118,22 @@ _eventd_nd_init(EventdCoreContext *core, EventdCoreInterface *interface)
 
     context->interface.remove_display = _eventd_nd_backend_remove_display;
 
-    context->backends = eventd_nd_backends_load(context, &context->interface);
-
     context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, eventd_nd_style_free);
-
-    context->queue = g_queue_new();
-
-    libeventd_nd_notification_init();
-
-    eventd_nd_cairo_init();
 
     /* default bubble position */
     context->bubble_anchor    = EVENTD_ND_ANCHOR_TOP_RIGHT;
     context->bubble_margin    = 13;
 
     context->style = eventd_nd_style_new(NULL);
+
+    context->backends = eventd_nd_backends_load(context, &context->interface);
+    context->displays = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_nd_backend_display_free);
+
+    context->queue = g_queue_new();
+
+    libeventd_nd_notification_init();
+
+    eventd_nd_cairo_init();
 
     return context;
 }
@@ -161,8 +151,7 @@ _eventd_nd_uninit(EventdPluginContext *context)
 
     g_hash_table_unref(context->events);
 
-    g_list_free_full(context->displays, _eventd_nd_backend_display_free);
-
+    g_hash_table_unref(context->displays);
     g_hash_table_unref(context->backends);
 
     g_free(context);
@@ -199,7 +188,7 @@ _eventd_nd_start(EventdPluginContext *context)
         display_context->backend = backend;
         display_context->display = display;
 
-        g_hash_table_insert(context->displays, g_strdup_printf("%s-%s", id, target), display_context);
+        g_hash_table_insert(context->displays, g_strdup(target), display_context);
     }
 }
 
@@ -234,7 +223,7 @@ _eventd_nd_control_command(EventdPluginContext *context, const gchar *command, c
             display_context->backend = backend;
             display_context->display = display;
 
-            g_hash_table_insert(context->displays, g_strdup_printf("%s-%s", id, args), display_context);
+            g_hash_table_insert(context->displays, g_strdup(args), display_context);
 
             attached = id;
         }
@@ -365,10 +354,12 @@ _eventd_nd_notification_new(EventdPluginContext *context, EventdEvent *event, Ev
 
     _eventd_nd_notification_set(self, context, event, &bubble);
 
-    GList *display_;
-    for ( display_ = context->displays ; display_ != NULL ; display_ = g_list_next(display_) )
+    GHashTableIter iter;
+    EventdNdDisplayContext *display;
+
+    g_hash_table_iter_init(&iter, context->displays);
+    while ( g_hash_table_iter_next(&iter, NULL, (gpointer *)&display) )
     {
-        EventdNdDisplayContext *display = display_->data;
         EventdNdSurfaceContext *surface;
 
         surface = g_new(EventdNdSurfaceContext, 1);
@@ -490,7 +481,7 @@ _eventd_nd_event_action(EventdPluginContext *context, const gchar *config_id, Ev
 {
     EventdNdStyle *style;
 
-    if ( context->displays == NULL )
+    if ( g_hash_table_size(context->displays) == 0 )
         return;
 
     style = g_hash_table_lookup(context->events, config_id);
