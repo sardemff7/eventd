@@ -132,6 +132,8 @@ _ended_close_idle_callback(gpointer user_data)
 static void
 _ended_callback(EventdEvent *e, EventdEventEndReason reason, EventcConnection *client)
 {
+    GEnumValue *reason_value = g_enum_get_value(g_type_class_ref(EVENTD_TYPE_EVENT_END_REASON), reason);
+    g_return_if_fail(reason_value != NULL);
     switch ( state )
     {
     case STATE_1:
@@ -155,7 +157,7 @@ _ended_callback(EventdEvent *e, EventdEventEndReason reason, EventcConnection *c
     default:
         g_warning("Should never be in that state");
     }
-    g_warning("Wrong end reason: %s", g_enum_get_value(g_type_class_ref(EVENTD_TYPE_EVENT_END_REASON), reason)->value_nick);
+    g_warning("Wrong end reason: %s", reason_value->value_nick);
     g_main_loop_quit(loop);
 }
 
