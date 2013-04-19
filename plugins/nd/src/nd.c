@@ -180,21 +180,26 @@ _eventd_nd_start(EventdPluginContext *context)
     GHashTableIter iter;
     const gchar *id;
     EventdNdBackend *backend;
+    const gchar *target;
 
     g_hash_table_iter_init(&iter, context->backends);
     while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&backend) )
     {
-        display = backend->display_new(backend->context, NULL);
-        if ( display != NULL )
-        {
-            EventdNdDisplayContext *display_context;
+        target = backend->default_target(backend->context);
+        if ( target == NULL )
+            continue;
 
-            display_context = g_new(EventdNdDisplayContext, 1);
-            display_context->backend = backend;
-            display_context->display = display;
+        display = backend->display_new(backend->context, target);
+        if ( display == NULL )
+            continue;
 
-            context->displays = g_list_prepend(context->displays, display_context);
-        }
+        EventdNdDisplayContext *display_context;
+
+        display_context = g_new(EventdNdDisplayContext, 1);
+        display_context->backend = backend;
+        display_context->display = display;
+
+        g_hash_table_insert(context->displays, g_strdup_printf("%s-%s", id, target), display_context);
     }
 }
 
@@ -220,18 +225,18 @@ _eventd_nd_control_command(EventdPluginContext *context, const gchar *command, c
         while ( ( attached == NULL ) && g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&backend) )
         {
             display = backend->display_new(backend->context, args);
-            if ( display != NULL )
-            {
-                EventdNdDisplayContext *display_context;
+            if ( display == NULL )
+                continue;
 
-                display_context = g_new(EventdNdDisplayContext, 1);
-                display_context->backend = backend;
-                display_context->display = display;
+            EventdNdDisplayContext *display_context;
 
-                context->displays = g_list_prepend(context->displays, display_context);
+            display_context = g_new(EventdNdDisplayContext, 1);
+            display_context->backend = backend;
+            display_context->display = display;
 
-                attached = id;
-            }
+            g_hash_table_insert(context->displays, g_strdup_printf("%s-%s", id, args), display_context);
+
+            attached = id;
         }
         if ( attached != NULL )
         {

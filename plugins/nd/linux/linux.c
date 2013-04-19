@@ -91,18 +91,20 @@ _eventd_nd_linux_uninit(EventdNdBackendContext *context)
     g_free(context);
 }
 
+static const gchar *
+_eventd_nd_linux_default_target(EventdNdBackendContext *context)
+{
+    return g_getenv("TTY");
+}
+
 static EventdNdDisplay *
 _eventd_nd_linux_display_new(EventdNdBackendContext *context, const gchar *target)
 {
+    g_return_val_if_fail(target != NULL, NULL);
+
     EventdNdDisplay *display;
     struct fb_fix_screeninfo finfo;
     struct fb_var_screeninfo vinfo;
-
-    if ( target == NULL )
-        target = g_getenv("TTY");
-
-    if ( target == NULL )
-        return NULL;
 
     if ( ! g_str_has_prefix(target, FRAMEBUFFER_TARGET_PREFIX) )
         return NULL;
@@ -248,8 +250,9 @@ eventd_nd_backend_get_info(EventdNdBackend *backend)
     backend->init = _eventd_nd_linux_init;
     backend->uninit = _eventd_nd_linux_uninit;
 
-    backend->display_new = _eventd_nd_linux_display_new;
-    backend->display_free = _eventd_nd_linux_display_free;
+    backend->default_target = _eventd_nd_linux_default_target;
+    backend->display_new    = _eventd_nd_linux_display_new;
+    backend->display_free   = _eventd_nd_linux_display_free;
 
     backend->surface_new     = _eventd_nd_linux_surface_new;
     backend->surface_free    = _eventd_nd_linux_surface_free;

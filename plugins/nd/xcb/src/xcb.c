@@ -323,14 +323,16 @@ _eventd_nd_xcb_events_callback(xcb_generic_event_t *event, gpointer user_data)
     return TRUE;
 }
 
+static const gchar *
+_eventd_nd_xcb_default_target(EventdNdBackendContext *context)
+{
+    return g_getenv("DISPLAY");
+}
+
 static EventdNdDisplay *
 _eventd_nd_xcb_display_new(EventdNdBackendContext *context, const gchar *target)
 {
-    if ( target == NULL )
-        target = g_getenv("DISPLAY");
-
-    if ( target == NULL )
-        return NULL;
+    g_return_val_if_fail(target != NULL, NULL);
 
     gint r;
     gchar *h;
@@ -584,8 +586,9 @@ eventd_nd_backend_get_info(EventdNdBackend *backend)
 
     backend->global_parse = _eventd_nd_xcb_global_parse;
 
-    backend->display_new = _eventd_nd_xcb_display_new;
-    backend->display_free = _eventd_nd_xcb_display_free;
+    backend->default_target = _eventd_nd_xcb_default_target;
+    backend->display_new    = _eventd_nd_xcb_display_new;
+    backend->display_free   = _eventd_nd_xcb_display_free;
 
     backend->surface_new     = _eventd_nd_xcb_surface_new;
     backend->surface_free    = _eventd_nd_xcb_surface_free;
