@@ -252,14 +252,13 @@ _eventd_eventdctl_process_command(const gchar *private_socket, gboolean autospaw
     retval = EVENTCTL_RETURN_CODE_COMMAND_ERROR;
 
     gchar **null_argv = { NULL };
-    if ( g_strcmp0(argv[0], "stop") == 0 )
-        retval = _eventd_eventdctl_send_command(connection, "stop", 0, null_argv);
-    else if ( g_strcmp0(argv[0], "reload") == 0 )
-        retval = _eventd_eventdctl_send_command(connection, "reload", 0, null_argv);
-    else if ( g_strcmp0(argv[0], "pause") == 0 )
-        retval = _eventd_eventdctl_send_command(connection, "pause", 0, null_argv);
-    else if ( g_strcmp0(argv[0], "resume") == 0 )
-        retval = _eventd_eventdctl_send_command(connection, "resume", 0, null_argv);
+    if (
+            ( g_strcmp0(argv[0], "stop") == 0 )
+         || ( g_strcmp0(argv[0], "reload") == 0 )
+         || ( g_strcmp0(argv[0], "pause") == 0 )
+         || ( g_strcmp0(argv[0], "resume") == 0 )
+       )
+        retval = _eventd_eventdctl_send_command(connection, argv[0], 0, null_argv);
     else if ( g_strcmp0(argv[0], "add-flag") == 0 )
     {
         if ( argc < 2 )
@@ -271,7 +270,8 @@ _eventd_eventdctl_process_command(const gchar *private_socket, gboolean autospaw
         retval =  _eventd_eventdctl_send_command(connection, "reset-flags", 0, null_argv);
     else if ( g_strcmp0(argv[0], "notification-daemon") == 0 )
         retval = _eventd_eventdctl_send_command(connection, "eventd-nd", argc-1, argv+1);
-    else if ( ( g_strcmp0(argv[0], "evp") == 0 )
+    else if (
+                 ( g_strcmp0(argv[0], "evp") == 0 )
               || ( g_strcmp0(argv[0], "dbus") == 0 )
               || ( g_strcmp0(argv[0], "relay") == 0 )
               || ( g_strcmp0(argv[0], "exec") == 0 )
