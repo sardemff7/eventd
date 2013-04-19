@@ -200,11 +200,11 @@ _eventd_nd_start(EventdPluginContext *context)
 static EventdPluginCommandStatus
 _eventd_nd_control_command(EventdPluginContext *context, const gchar *command, const gchar *args, gchar **status)
 {
-    EventdNdDisplay *display;
+    EventdPluginCommandStatus r;
     GHashTableIter iter;
     const gchar *id;
     EventdNdBackend *backend;
-    EventdPluginCommandStatus r;
+    EventdNdDisplay *display;
 
     if ( g_strcmp0(command, "attach") == 0 )
     {
@@ -218,7 +218,6 @@ _eventd_nd_control_command(EventdPluginContext *context, const gchar *command, c
                 continue;
 
             EventdNdDisplayContext *display_context;
-
             display_context = g_new(EventdNdDisplayContext, 1);
             display_context->backend = backend;
             display_context->display = display;
@@ -235,6 +234,19 @@ _eventd_nd_control_command(EventdPluginContext *context, const gchar *command, c
         else
         {
             *status = g_strdup("No backend attached");
+            r = EVENTD_PLUGIN_COMMAND_STATUS_EXEC_ERROR;
+        }
+    }
+    else if ( g_strcmp0(command, "detach") == 0 )
+    {
+        if ( g_hash_table_remove(context->displays, args) )
+        {
+            *status = g_strdup_printf("Backend detached");
+            r = EVENTD_PLUGIN_COMMAND_STATUS_OK;
+        }
+        else
+        {
+            *status = g_strdup("No backend detached");
             r = EVENTD_PLUGIN_COMMAND_STATUS_EXEC_ERROR;
         }
     }
