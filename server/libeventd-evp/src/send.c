@@ -189,34 +189,16 @@ fail:
 gboolean
 libeventd_evp_context_send_ended(LibeventdEvpContext *self, const gchar *id, EventdEventEndReason reason, GError **error)
 {
+    GEnumValue *reason_value = g_enum_get_value(g_type_class_ref(EVENTD_TYPE_EVENT_END_REASON), reason);
     g_return_val_if_fail(self != NULL, FALSE);
     g_return_val_if_fail(id != NULL, FALSE);
+    g_return_val_if_fail(reason_value != NULL, FALSE);
     g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-    const gchar *reason_text = "";
-    switch ( reason )
-    {
-    case EVENTD_EVENT_END_REASON_NONE:
-        reason_text = "none";
-    break;
-    case EVENTD_EVENT_END_REASON_TIMEOUT:
-        reason_text = "timeout";
-    break;
-    case EVENTD_EVENT_END_REASON_USER_DISMISS:
-        reason_text = "user-dismiss";
-    break;
-    case EVENTD_EVENT_END_REASON_CLIENT_DISMISS:
-        reason_text = "client-dismiss";
-    break;
-    case EVENTD_EVENT_END_REASON_RESERVED:
-        reason_text = "reserved";
-    break;
-    }
 
     gboolean r;
     gchar *message;
 
-    message = g_strdup_printf("ENDED %s %s", id, reason_text);
+    message = g_strdup_printf("ENDED %s %s", id, reason_value->value_nick);
     r = libeventd_evp_context_send_message(self, message, error);
     g_free(message);
 

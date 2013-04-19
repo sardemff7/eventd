@@ -326,15 +326,9 @@ _libeventd_evp_context_receive_callback(GObject *source_object, GAsyncResult *re
         end = g_strsplit(line + strlen("ENDED "), " ", 2);
 
         EventdEventEndReason reason = EVENTD_EVENT_END_REASON_NONE;
-
-         if ( g_strcmp0(end[1], "timeout") == 0 )
-            reason = EVENTD_EVENT_END_REASON_TIMEOUT;
-        else if ( g_strcmp0(end[1], "user-dismiss") == 0 )
-            reason = EVENTD_EVENT_END_REASON_USER_DISMISS;
-        else if ( g_strcmp0(end[1], "client-dismiss") == 0 )
-            reason = EVENTD_EVENT_END_REASON_CLIENT_DISMISS;
-        else if ( g_strcmp0(end[1], "reserved") == 0 )
-            reason = EVENTD_EVENT_END_REASON_RESERVED;
+        GEnumValue *value = g_enum_get_value_by_nick(g_type_class_ref(EVENTD_TYPE_EVENT_END_REASON), end[1]);
+        if ( value != NULL )
+            reason = value->value;
 
         self->interface->ended(self->client, self, end[0], reason);
 
