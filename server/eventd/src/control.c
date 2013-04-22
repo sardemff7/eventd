@@ -54,100 +54,84 @@ _eventd_service_private_connection_handler(GSocketService *socket_service, GSock
     GIOStream *stream = G_IO_STREAM(connection);
 
     GError *error = NULL;
-    GDataInputStream *input = NULL;
+    GDataInputStream *input;
+    GDataOutputStream *output;
     gsize size = 0;
     gchar *line = NULL;
 
     input = g_data_input_stream_new(g_io_stream_get_input_stream(stream));
+    output = g_data_output_stream_new(g_io_stream_get_output_stream(stream));
 
     if ( ( line = g_data_input_stream_read_upto(input, "\0", 1, &size, NULL, &error) ) == NULL )
     {
         if ( error != NULL )
+        {
             g_warning("Couldn't read the command: %s", error->message);
-        g_clear_error(&error);
+            goto fail;
+        }
     }
-    else
-    {
-        EventdctlReturnCode code = EVENTDCTL_RETURN_CODE_OK;
-        gchar *status = NULL;
+    EventdctlReturnCode code = EVENTDCTL_RETURN_CODE_OK;
+    gchar *status = NULL;
 
 #ifdef DEBUG
-        g_debug("Received control command: '%s'", line);
+    g_debug("Received control command: '%s'", line);
 #endif /* DEBUG */
 
-        g_data_input_stream_read_byte(input, NULL, &error);
-        if ( error != NULL )
-            g_clear_error(&error);
-        else if ( g_strcmp0(line, "stop") == 0 )
+    g_data_input_stream_read_byte(input, NULL, &error);
+    if ( error != NULL )
+        g_clear_error(&error);
+    else if ( g_strcmp0(line, "stop") == 0 )
+        eventd_core_stop(control->core);
+    else if ( g_strcmp0(line, "reload") == 0 )
+        eventd_core_config_reload(control->core);
+    else if ( g_strcmp0(line, "pause") == 0 )
+        eventd_core_pause(control->core);
+    else if ( g_strcmp0(line, "resume") == 0 )
+        eventd_core_resume(control->core);
+    else if ( g_strcmp0(line, "version") == 0 )
+        status = g_strdup(PACKAGE_NAME " " PACKAGE_VERSION);
+    else if ( g_str_has_prefix(line, "add-flag ") )
+        eventd_core_add_flag(control->core, g_quark_from_string(line + strlen("add-flag ")));
+    else if ( g_strcmp0(line, "reset-flags") == 0 )
+        eventd_core_reset_flags(control->core);
+    else
+    {
+        gchar *command;
+
+        command = strchr(line, ' ');
+        if ( command != NULL )
         {
-            eventd_core_stop(control->core);
-        }
-        else if ( g_strcmp0(line, "reload") == 0 )
-        {
-            eventd_core_config_reload(control->core);
-        }
-        else if ( g_strcmp0(line, "pause") == 0 )
-        {
-            eventd_core_pause(control->core);
-        }
-        else if ( g_strcmp0(line, "resume") == 0 )
-        {
-            eventd_core_resume(control->core);
-        }
-        else if ( g_strcmp0(line, "version") == 0 )
-        {
-            status = g_strdup(PACKAGE_NAME " " PACKAGE_VERSION);
-        }
-        else if ( g_str_has_prefix(line, "add-flag ") )
-        {
-            eventd_core_add_flag(control->core, g_quark_from_string(line + strlen("add-flag ")));
-        }
-        else if ( g_strcmp0(line, "reset-flags") == 0 )
-        {
-            eventd_core_reset_flags(control->core);
+            gchar *args;
+            *(command++) = '\0';
+            args = strchr(command, ' ');
+            *(args++) = '\0';
+            code = eventd_plugins_control_command(line, command, args, &status);
         }
         else
         {
-            gchar *command;
-
-            command = strchr(line, ' ');
-            if ( command != NULL )
-            {
-                gchar *args;
-                *(command++) = '\0';
-                args = strchr(command, ' ');
-                *(args++) = '\0';
-                code = eventd_plugins_control_command(line, command, args, &status);
-            }
-            else
-            {
-                status = g_strdup("No plugin command specified");
-                code = EVENTDCTL_RETURN_CODE_COMMAND_ERROR;
-            }
+            status = g_strdup("No plugin command specified");
+            code = EVENTDCTL_RETURN_CODE_COMMAND_ERROR;
         }
-        g_free(line);
+    }
+    g_free(line);
 
-        GDataOutputStream *out;
-        out = g_data_output_stream_new(g_io_stream_get_output_stream(stream));
+    if ( ! g_data_output_stream_put_uint64(output, code, NULL, &error) )
+        g_warning("Couldn't send return code '%u': %s", code, error->message);
+    else if ( status != NULL )
+    {
 
-        if ( ! g_data_output_stream_put_uint64(out, code, NULL, &error) )
-            g_warning("Couldn't send return code '%u': %s", code, error->message);
-        else if ( status != NULL )
-        {
+        if ( ! g_data_output_stream_put_string(output, status, NULL, &error) )
+            g_warning("Couldn't send status message '%s': %s", status, error->message);
+        else if ( ! g_data_output_stream_put_byte(output, '\0', NULL, &error) )
+            g_warning("Couldn't send status message end byte: %s", error->message);
 
-            if ( ! g_data_output_stream_put_string(out, status, NULL, &error) )
-                g_warning("Couldn't send status message '%s': %s", status, error->message);
-            else if ( ! g_data_output_stream_put_byte(out, '\0', NULL, &error) )
-                g_warning("Couldn't send status message end byte: %s", error->message);
-
-            g_free(status);
-        }
-        g_clear_error(&error);
-
-        g_object_unref(out);
+        g_free(status);
     }
 
+fail:
+    g_object_unref(output);
     g_object_unref(input);
+    g_clear_error(&error);
 
     if ( ! g_io_stream_close(stream, NULL, &error) )
         g_warning("Can't close the stream: %s", error->message);
