@@ -149,12 +149,12 @@ _eventd_nd_backends_load_dir(EventdNdContext *context, EventdNdInterface *interf
 #endif /* ! DEBUG */
 
         backend = g_new0(EventdNdBackend, 1);
-        backend->module = module;
         get_info(backend);
-
+        backend->module = module;
+        backend->id = g_strdup(*id);
         backend->context = backend->init(context, interface);
 
-        g_hash_table_insert(backends, g_strdup(*id), backend);
+        g_hash_table_insert(backends, backend->id, backend);
     }
     g_dir_close(plugins_dir);
 }

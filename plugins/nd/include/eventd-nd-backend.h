@@ -67,6 +67,7 @@ typedef struct {
 
     /* private */
     gpointer module;
+    gchar *id;
     EventdNdBackendContext *context;
 } EventdNdBackend;
 
