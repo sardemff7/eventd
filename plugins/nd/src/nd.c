@@ -210,7 +210,7 @@ _eventd_nd_control_command(EventdPluginContext *context, guint64 argc, const gch
     {
         if ( argc < 2 )
         {
-            *status = g_strdup("No server specified");
+            *status = g_strdup("No target specified");
             r = EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR;
         }
         else
@@ -251,7 +251,7 @@ _eventd_nd_control_command(EventdPluginContext *context, guint64 argc, const gch
         if ( argc < 2 )
         {
             r = EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR;
-            *status = g_strdup("No backend specified");
+            *status = g_strdup("No target specified");
         }
         else if ( ( display_context = g_hash_table_lookup(context->displays, argv[1]) ) != NULL )
         {
