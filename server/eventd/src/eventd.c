@@ -208,7 +208,7 @@ eventd_core_resume(EventdCoreContext *context)
 }
 
 void
-eventd_core_add_flag(EventdCoreContext *context, GQuark flag)
+eventd_core_flags_add(EventdCoreContext *context, GQuark flag)
 {
     context->flags = g_renew(GQuark, context->flags, ++context->flags_count + 1);
     context->flags[context->flags_count-1] = flag;
@@ -216,7 +216,7 @@ eventd_core_add_flag(EventdCoreContext *context, GQuark flag)
 }
 
 void
-eventd_core_reset_flags(EventdCoreContext *context)
+eventd_core_flags_reset(EventdCoreContext *context)
 {
     g_free(context->flags);
     context->flags = NULL;

@@ -141,16 +141,24 @@
             </varlistentry>
 
             <varlistentry>
-                <term><parameter class="command">add-flag</parameter> <parameter><replaceable class="option">flag</replaceable></parameter></term>
+                <term><parameter class="command">flags</parameter> <parameter class="command"><replaceable class="command">sub-command</replaceable></parameter></term>
                 <listitem>
-                    <para>Add <replaceable class="option">flag</replaceable>  to eventd (see <citerefentry><refentrytitle>eventd.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>).</para>
-                </listitem>
-            </varlistentry>
+                    <para>Control the eventd flags</para>
+                    <variablelist>
+                        <varlistentry>
+                            <term><parameter class="command">add</parameter> <parameter><replaceable class="option">flag</replaceable></parameter></term>
+                            <listitem>
+                                <para>Add <replaceable class="option">flag</replaceable> to eventd (see <citerefentry><refentrytitle>eventd.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>).</para>
+                            </listitem>
+                        </varlistentry>
 
-            <varlistentry>
-                <term><parameter class="command">reset-flags</parameter></term>
-                <listitem>
-                    <para>Reset eventd flags (see <citerefentry><refentrytitle>eventd.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>).</para>
+                        <varlistentry>
+                            <term><parameter class="command">reset</parameter></term>
+                            <listitem>
+                                <para>Reset eventd flags (see <citerefentry><refentrytitle>eventd.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>).</para>
+                            </listitem>
+                        </varlistentry>
+                    </variablelist>
                 </listitem>
             </varlistentry>
 

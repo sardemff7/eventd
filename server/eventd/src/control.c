@@ -98,10 +98,28 @@ _eventd_service_private_connection_handler(GSocketService *socket_service, GSock
         eventd_core_resume(control->core);
     else if ( g_strcmp0(argv[0], "version") == 0 )
         status = g_strdup(PACKAGE_STRING);
-    else if ( g_strcmp0(argv[0], "add-flag") == 0 )
-        eventd_core_add_flag(control->core, g_quark_from_string(argv[1]));
-    else if ( g_strcmp0(argv[0], "reset-flags") == 0 )
-        eventd_core_reset_flags(control->core);
+    else if ( g_strcmp0(argv[0], "flags") == 0 )
+    {
+        if ( argc < 2 )
+        {
+            status = g_strdup("Missing flags command");
+            code = EVENTDCTL_RETURN_CODE_COMMAND_ERROR;
+        }
+        else if ( g_strcmp0(argv[1], "add") == 0 )
+        {
+            if ( argc < 3 )
+            {
+                status = g_strdup("Missing flag");
+                code = EVENTDCTL_RETURN_CODE_COMMAND_ERROR;
+            }
+            else
+                eventd_core_flags_add(control->core, g_quark_from_string(argv[2]));
+        }
+        else if ( g_strcmp0(argv[1], "reset") == 0 )
+        {
+            eventd_core_flags_reset(control->core);
+        }
+    }
     else
     {
         if ( argc < 2 )

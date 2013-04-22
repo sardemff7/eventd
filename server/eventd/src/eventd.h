@@ -30,8 +30,8 @@ void eventd_core_push_event(EventdCoreContext *context, const gchar *config_id, 
 void eventd_core_pause(EventdCoreContext *context);
 void eventd_core_resume(EventdCoreContext *context);
 
-void eventd_core_add_flag(EventdCoreContext *context, GQuark mode);
-void eventd_core_reset_flags(EventdCoreContext *context);
+void eventd_core_flags_add(EventdCoreContext *context, GQuark flag);
+void eventd_core_flags_reset(EventdCoreContext *context);
 
 void eventd_core_config_reload(EventdCoreContext *context);
 
