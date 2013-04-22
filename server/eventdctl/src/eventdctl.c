@@ -162,14 +162,14 @@ _eventd_eventdctl_send_command(GIOStream *connection, const gchar *command, gint
     }
 
     EventdctlReturnCode r;
-    gchar *line;
+    gchar *status;
     r = g_data_input_stream_read_uint64(input, NULL, &error);
     if ( error != NULL )
     {
         g_warning("Couldn't read the return code: %s", error->message);
         goto fail;
     }
-    line = g_data_input_stream_read_upto(input, "\0", 1, NULL, NULL, &error);
+    status = g_data_input_stream_read_upto(input, "\0", 1, NULL, NULL, &error);
     if ( error != NULL )
     {
         g_warning("Couldn't read the status message: %s", error->message);
@@ -177,9 +177,8 @@ _eventd_eventdctl_send_command(GIOStream *connection, const gchar *command, gint
     }
 
     retval = r;
-    g_print("%s\n", line);
-    g_free(line);
-
+    g_printf("%s\n", status);
+    g_free(status);
 
 fail:
     g_string_free(str, TRUE);
