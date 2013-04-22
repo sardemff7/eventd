@@ -266,6 +266,26 @@ _eventd_nd_control_command(EventdPluginContext *context, guint64 argc, const gch
             r = EVENTD_PLUGIN_COMMAND_STATUS_EXEC_ERROR;
         }
     }
+    else if ( g_strcmp0(argv[0], "status") == 0 )
+    {
+        if ( g_hash_table_size(context->displays) > 0 )
+        {
+            GString *list;
+            list = g_string_new("Backends attached:");
+
+            GHashTableIter iter;
+            gchar *target;
+            EventdNdDisplayContext *display_context;
+            g_hash_table_iter_init(&iter, context->displays);
+            while ( g_hash_table_iter_next(&iter, (gpointer *)&target, (gpointer *)&display_context) )
+                    g_string_append_printf(list, "\n    %s to %s", display_context->backend->id, target);
+
+            *status = g_string_free(list, FALSE);
+        }
+        else
+            *status = g_strdup("No backend attached");
+        r = EVENTD_PLUGIN_COMMAND_STATUS_OK;
+    }
     else
     {
         *status = g_strdup_printf("Unknown command '%s'", argv[0]);

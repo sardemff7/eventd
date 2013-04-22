@@ -213,6 +213,13 @@
                                 <para><replaceable class="option">target</replaceable> may be any target attached by the <command>attach</command> command or implicitly as the default backend’s target.</para>
                             </listitem>
                         </varlistentry>
+
+                        <varlistentry>
+                            <term><parameter class="command">status</parameter></term>
+                            <listitem>
+                                <para>List the attached backends and their targets.</para>
+                            </listitem>
+                        </varlistentry>
                     </variablelist>
                 </listitem>
             </varlistentry>
