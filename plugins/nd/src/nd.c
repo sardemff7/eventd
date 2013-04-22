@@ -247,14 +247,17 @@ _eventd_nd_control_command(EventdPluginContext *context, guint64 argc, const gch
     }
     else if ( g_strcmp0(argv[0], "detach") == 0 )
     {
+        EventdNdDisplayContext *display_context;
         if ( argc < 2 )
         {
             r = EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR;
             *status = g_strdup("No backend specified");
         }
-        else if ( g_hash_table_remove(context->displays, argv[1]) )
+        else if ( ( display_context = g_hash_table_lookup(context->displays, argv[1]) ) != NULL )
         {
-            *status = g_strdup_printf("Backend detached");
+            EventdNdBackend *backend = display_context->backend;
+            g_hash_table_remove(context->displays, argv[1]);
+            *status = g_strdup_printf("Backend %s detached from %s", backend->id, argv[1]);
             r = EVENTD_PLUGIN_COMMAND_STATUS_OK;
         }
         else
