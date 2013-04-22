@@ -11,6 +11,9 @@ plugins_LTLIBRARIES += \
 pkginclude_HEADERS += \
 	plugins/nd/include/eventd-nd-backend.h
 
+man1_MANS += \
+	plugins/nd/man/eventdctl-nd.1
+
 man5_MANS += \
 	plugins/nd/man/eventd-nd.conf.5 \
 	plugins/nd/man/eventd-nd.event.5

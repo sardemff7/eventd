@@ -9,6 +9,9 @@ TESTS += \
 check_PROGRAMS += \
 	relay-connection.test
 
+man1_MANS += \
+	plugins/relay/man/eventdctl-relay.1
+
 man5_MANS += \
 	plugins/relay/man/eventd-relay.event.5
 

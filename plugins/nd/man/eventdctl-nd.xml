@@ -1,0 +1,97 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % config SYSTEM "config.ent">
+%config;
+]>
+
+<!--
+  eventdctl - Control utility for eventd
+
+  Copyright © 2011-2013 Quentin "Sardem FF7" Glidic
+
+  This file is part of eventd.
+
+  eventd is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  eventd is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with eventd. If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<refentry id="eventdctl-nd">
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="common-man.xml" xpointer="refentryinfo" />
+
+    <refmeta>
+        <refentrytitle>eventdctl-nd</refentrytitle>
+        <manvolnum>1</manvolnum>
+    </refmeta>
+
+    <refnamediv>
+        <refname>eventdctl-nd</refname>
+        <refpurpose>nd plugin commands</refpurpose>
+    </refnamediv>
+
+    <refsynopsisdiv>
+        <cmdsynopsis>
+            <command>eventdctl</command>
+            <arg choice="opt" rep="repeat">OPTIONS</arg>
+            <arg choice="req">notification-daemon</arg>
+            <arg choice="req"><replaceable class="parameter">command</replaceable></arg>
+            <arg choice="opt" rep="repeat"><replaceable class="option">command arguments</replaceable></arg>
+        </cmdsynopsis>
+    </refsynopsisdiv>
+
+    <refsect1>
+        <title>Description</title>
+
+        <para>
+            These <command>eventdctl</command> commands control the <command>nd</command> plugin behaviour.
+            See <citerefentry><refentrytitle>eventdctl</refentrytitle><manvolnum>1</manvolnum></citerefentry> for more details.
+        </para>
+    </refsect1>
+
+    <refsect1>
+        <title>Commands</title>
+
+        <variablelist>
+            <varlistentry>
+                <term><parameter class="command">attach</parameter> <parameter><replaceable class="option">target</replaceable></parameter></term>
+                <listitem>
+                    <para>Tell the plugin to attach to the specified <replaceable class="option">target</replaceable>.</para>
+                    <para><replaceable class="option">target</replaceable> may be any target recognized by a <command>nd</command> backend. Examples: <literal>:0</literal> (XCB backend) or <filename>/dev/tty1</filename> (Linux framebuffer backend)</para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><parameter class="command">detach</parameter> <parameter><replaceable class="option">target</replaceable></parameter></term>
+                <listitem>
+                    <para>Tell the plugin to detach the backend attached to the specified <replaceable class="option">target</replaceable>.</para>
+                    <para><replaceable class="option">target</replaceable> may be any target attached by the <command>attach</command> command or implicitly as the default backend’s target.</para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><parameter class="command">status</parameter></term>
+                <listitem>
+                    <para>List the attached backends and their targets.</para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><parameter class="command">backends</parameter></term>
+                <listitem>
+                    <para>List the available backends.</para>
+                </listitem>
+            </varlistentry>
+        </variablelist>
+    </refsect1>
+
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="common-man.xml" xpointer="see-also" />
+</refentry>
