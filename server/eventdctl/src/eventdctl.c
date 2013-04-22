@@ -141,8 +141,11 @@ _eventd_eventdctl_get_connection(const gchar *private_socket, GError **error)
 static EventdctlReturnCode
 _eventd_eventdctl_send_command(GIOStream *connection, const gchar *command, gint argc, gchar *argv[])
 {
-    EventdctlReturnCode retval = EVENTDCTL_RETURN_CODE_OK;
+    EventdctlReturnCode retval = EVENTDCTL_RETURN_CODE_CONNECTION_ERROR;
     GError *error = NULL;
+
+    GDataInputStream *input;
+
     GString *str;
     gint i;
 
@@ -150,46 +153,38 @@ _eventd_eventdctl_send_command(GIOStream *connection, const gchar *command, gint
     for ( i = 0 ; i < argc ; ++i )
         g_string_append(g_string_append_c(str, ' '), argv[i]);
 
+    input = g_data_input_stream_new(g_io_stream_get_input_stream(connection));
+
     if ( ! g_output_stream_write_all(g_io_stream_get_output_stream(connection), str->str, str->len + 1, NULL, NULL, &error) )
     {
         g_warning("Couldn't send command '%s': %s", str->str, error->message);
-        g_clear_error(&error);
-        retval = EVENTDCTL_RETURN_CODE_CONNECTION_ERROR;
+        goto fail;
     }
-    else
+
+    EventdctlReturnCode r;
+    gchar *line;
+    r = g_data_input_stream_read_uint64(input, NULL, &error);
+    if ( error != NULL )
     {
-        GDataInputStream *input;
-        gchar *line;
-
-        input = g_data_input_stream_new(g_io_stream_get_input_stream(connection));
-
-        retval = g_data_input_stream_read_uint64(input, NULL, &error);
-        if ( error != NULL )
-        {
-            g_warning("Couldn't read the return code: %s", error->message);
-            g_clear_error(&error);
-            retval = EVENTDCTL_RETURN_CODE_CONNECTION_ERROR;
-        }
-        else if ( ( line = g_data_input_stream_read_upto(input, "\0", 1, NULL, NULL, &error) ) == NULL )
-        {
-            if ( error != NULL )
-            {
-                g_warning("Couldn't read the status message: %s", error->message);
-                g_clear_error(&error);
-                retval = EVENTDCTL_RETURN_CODE_CONNECTION_ERROR;
-            }
-        }
-        else
-        {
-            g_printf("%s\n", line);
-            g_free(line);
-        }
-
-        g_object_unref(input);
+        g_warning("Couldn't read the return code: %s", error->message);
+        goto fail;
+    }
+    line = g_data_input_stream_read_upto(input, "\0", 1, NULL, NULL, &error);
+    if ( error != NULL )
+    {
+        g_warning("Couldn't read the status message: %s", error->message);
+        goto fail;
     }
 
-    g_string_free(str, TRUE);
+    retval = r;
+    g_print("%s\n", line);
+    g_free(line);
 
+
+fail:
+    g_string_free(str, TRUE);
+    g_object_unref(input);
+    g_clear_error(&error);
     return retval;
 }
 
