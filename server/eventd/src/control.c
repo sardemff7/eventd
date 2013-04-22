@@ -68,7 +68,7 @@ _eventd_service_private_connection_handler(GSocketService *socket_service, GSock
     }
     else
     {
-        EventdctlReturnCode code = EVENTCTL_RETURN_CODE_OK;
+        EventdctlReturnCode code = EVENTDCTL_RETURN_CODE_OK;
         gchar *status = NULL;
 
 #ifdef DEBUG
@@ -122,7 +122,7 @@ _eventd_service_private_connection_handler(GSocketService *socket_service, GSock
             else
             {
                 status = g_strdup("No plugin command specified");
-                code = EVENTCTL_RETURN_CODE_COMMAND_ERROR;
+                code = EVENTDCTL_RETURN_CODE_COMMAND_ERROR;
             }
         }
         g_free(line);

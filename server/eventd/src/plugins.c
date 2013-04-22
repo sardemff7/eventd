@@ -313,12 +313,12 @@ eventd_plugins_control_command(const gchar *id, const gchar *command, const gcha
     if ( plugin == NULL )
     {
         *status = g_strdup_printf("No such plugin '%s'", eid);
-        r = EVENTCTL_RETURN_CODE_PLUGIN_ERROR;
+        r = EVENTDCTL_RETURN_CODE_PLUGIN_ERROR;
     }
     else if ( plugin->interface.control_command == NULL )
     {
         *status = g_strdup_printf("Plugin '%s' does not support control commands", eid);
-        r = EVENTCTL_RETURN_CODE_PLUGIN_ERROR;
+        r = EVENTDCTL_RETURN_CODE_PLUGIN_ERROR;
     }
     else
         r = plugin->interface.control_command(plugin->context, command, args, status);

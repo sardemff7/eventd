@@ -141,7 +141,7 @@ _eventd_eventdctl_get_connection(const gchar *private_socket, GError **error)
 static EventdctlReturnCode
 _eventd_eventdctl_send_command(GIOStream *connection, const gchar *command, gint argc, gchar *argv[])
 {
-    EventdctlReturnCode retval = EVENTCTL_RETURN_CODE_OK;
+    EventdctlReturnCode retval = EVENTDCTL_RETURN_CODE_OK;
     GError *error = NULL;
     GString *str;
     gint i;
@@ -154,7 +154,7 @@ _eventd_eventdctl_send_command(GIOStream *connection, const gchar *command, gint
     {
         g_warning("Couldn't send command '%s': %s", str->str, error->message);
         g_clear_error(&error);
-        retval = EVENTCTL_RETURN_CODE_CONNECTION_ERROR;
+        retval = EVENTDCTL_RETURN_CODE_CONNECTION_ERROR;
     }
     else
     {
@@ -168,7 +168,7 @@ _eventd_eventdctl_send_command(GIOStream *connection, const gchar *command, gint
         {
             g_warning("Couldn't read the return code: %s", error->message);
             g_clear_error(&error);
-            retval = EVENTCTL_RETURN_CODE_CONNECTION_ERROR;
+            retval = EVENTDCTL_RETURN_CODE_CONNECTION_ERROR;
         }
         else if ( ( line = g_data_input_stream_read_upto(input, "\0", 1, NULL, NULL, &error) ) == NULL )
         {
@@ -176,7 +176,7 @@ _eventd_eventdctl_send_command(GIOStream *connection, const gchar *command, gint
             {
                 g_warning("Couldn't read the status message: %s", error->message);
                 g_clear_error(&error);
-                retval = EVENTCTL_RETURN_CODE_CONNECTION_ERROR;
+                retval = EVENTDCTL_RETURN_CODE_CONNECTION_ERROR;
             }
         }
         else
@@ -207,7 +207,7 @@ _eventd_eventdctl_process_command(const gchar *private_socket, gboolean autospaw
 
     connection = _eventd_eventdctl_get_connection(private_socket, &error);
 
-    EventdctlReturnCode retval = EVENTCTL_RETURN_CODE_OK;
+    EventdctlReturnCode retval = EVENTDCTL_RETURN_CODE_OK;
 
     if ( g_strcmp0(argv[0], "start") == 0 )
     {
@@ -217,7 +217,7 @@ _eventd_eventdctl_process_command(const gchar *private_socket, gboolean autospaw
         if ( ! _eventd_eventdctl_start_eventd(argc-1, argv+1, &error) )
         {
             g_warning("Couldn't start eventd: %s", error->message);
-            return EVENTCTL_RETURN_CODE_INVOCATION_ERROR;
+            return EVENTDCTL_RETURN_CODE_INVOCATION_ERROR;
         }
         connection = _eventd_eventdctl_get_connection(private_socket, &error);
         if ( connection != NULL )
@@ -237,7 +237,7 @@ _eventd_eventdctl_process_command(const gchar *private_socket, gboolean autospaw
         if ( ! _eventd_eventdctl_start_eventd(a_argc, a_argv, &error) )
         {
             g_warning("Couldn't start eventd: %s", error->message);
-            return EVENTCTL_RETURN_CODE_INVOCATION_ERROR;
+            return EVENTDCTL_RETURN_CODE_INVOCATION_ERROR;
         }
         connection = _eventd_eventdctl_get_connection(private_socket, &error);
     }
@@ -246,10 +246,10 @@ _eventd_eventdctl_process_command(const gchar *private_socket, gboolean autospaw
     {
         if ( error != NULL )
             g_warning("Couldn't connect to eventd: %s", error->message);
-        return EVENTCTL_RETURN_CODE_CONNECTION_ERROR;
+        return EVENTDCTL_RETURN_CODE_CONNECTION_ERROR;
     }
 
-    retval = EVENTCTL_RETURN_CODE_COMMAND_ERROR;
+    retval = EVENTDCTL_RETURN_CODE_COMMAND_ERROR;
 
     gchar **null_argv = { NULL };
     if (
@@ -337,7 +337,7 @@ main(int argc, char *argv[])
     if ( print_version )
     {
         fprintf(stdout, "eventdctl " PACKAGE_VERSION "\n");
-        return EVENTCTL_RETURN_CODE_OK;
+        return EVENTDCTL_RETURN_CODE_OK;
     }
 
     EventdctlReturnCode retval;
