@@ -139,26 +139,37 @@ _eventd_eventdctl_get_connection(const gchar *private_socket, GError **error)
 }
 
 static EventdctlReturnCode
-_eventd_eventdctl_send_command(GIOStream *connection, const gchar *command, gint argc, gchar *argv[])
+_eventd_eventdctl_send_argv(GIOStream *connection, gint argc, gchar *argv[])
 {
     EventdctlReturnCode retval = EVENTDCTL_RETURN_CODE_CONNECTION_ERROR;
     GError *error = NULL;
 
+    GDataOutputStream *output;
     GDataInputStream *input;
 
-    GString *str;
-    gint i;
 
-    str = g_string_new(command);
-    for ( i = 0 ; i < argc ; ++i )
-        g_string_append(g_string_append_c(str, ' '), argv[i]);
-
+    output = g_data_output_stream_new(g_io_stream_get_output_stream(connection));
     input = g_data_input_stream_new(g_io_stream_get_input_stream(connection));
 
-    if ( ! g_output_stream_write_all(g_io_stream_get_output_stream(connection), str->str, str->len + 1, NULL, NULL, &error) )
+    if ( ! g_data_output_stream_put_uint64(output, argc, NULL, &error) )
     {
-        g_warning("Couldn't send command '%s': %s", str->str, error->message);
+        g_warning("Couldn't send argc: %s", error->message);
         goto fail;
+    }
+    gint i;
+    for ( i = 0 ; i < argc ; ++i )
+    {
+        if ( ! g_data_output_stream_put_string(output, argv[i], NULL, &error) )
+        {
+            g_warning("Couldn't send argv[%d] '%s': %s", i, argv[i], error->message);
+            goto fail;
+        }
+        if ( ! g_data_output_stream_put_byte(output, '\0', NULL, &error) )
+        {
+            g_warning("Couldn't send argv[%d] '%s' NUL byte: %s", i, argv[i], error->message);
+            goto fail;
+        }
+
     }
 
     EventdctlReturnCode r;
@@ -181,8 +192,8 @@ _eventd_eventdctl_send_command(GIOStream *connection, const gchar *command, gint
     g_free(status);
 
 fail:
-    g_string_free(str, TRUE);
     g_object_unref(input);
+    g_object_unref(output);
     g_clear_error(&error);
     return retval;
 }
@@ -190,12 +201,6 @@ fail:
 static EventdctlReturnCode
 _eventd_eventdctl_process_command(const gchar *private_socket, gboolean autospawn, int argc, gchar *argv[])
 {
-    if ( argc == 0 )
-    {
-        g_print("Missing command\n");
-        return 2;
-    }
-
     GError *error = NULL;
     GIOStream *connection;
 
@@ -243,28 +248,9 @@ _eventd_eventdctl_process_command(const gchar *private_socket, gboolean autospaw
         return EVENTDCTL_RETURN_CODE_CONNECTION_ERROR;
     }
 
-    retval = EVENTDCTL_RETURN_CODE_COMMAND_ERROR;
-
-    gchar **null_argv = { NULL };
-    if (
-            ( g_strcmp0(argv[0], "stop") == 0 )
-         || ( g_strcmp0(argv[0], "reload") == 0 )
-         || ( g_strcmp0(argv[0], "pause") == 0 )
-         || ( g_strcmp0(argv[0], "resume") == 0 )
-         || ( g_strcmp0(argv[0], "version") == 0 )
-       )
-        retval = _eventd_eventdctl_send_command(connection, argv[0], 0, null_argv);
-    else if ( g_strcmp0(argv[0], "add-flag") == 0 )
-    {
-        if ( argc < 2 )
-            g_print("You must specify a flag\n");
-        else
-            retval = _eventd_eventdctl_send_command(connection, argv[0], 1, argv+1);
-    }
-    else if ( g_strcmp0(argv[0], "reset-flags") == 0 )
-        retval =  _eventd_eventdctl_send_command(connection, "reset-flags", 0, null_argv);
-    else if ( g_strcmp0(argv[0], "notification-daemon") == 0 )
-        retval = _eventd_eventdctl_send_command(connection, "eventd-nd", argc-1, argv+1);
+    gchar *plugin = NULL;
+    if ( g_strcmp0(argv[0], "notification-daemon") == 0 )
+        argv[0] = "eventd-nd";
     else if (
                  ( g_strcmp0(argv[0], "evp") == 0 )
               || ( g_strcmp0(argv[0], "dbus") == 0 )
@@ -276,15 +262,14 @@ _eventd_eventdctl_process_command(const gchar *private_socket, gboolean autospaw
               || ( g_strcmp0(argv[0], "notify") == 0 )
             )
     {
-        gchar *plugin;
 
         plugin = g_strconcat("eventd-", argv[0], NULL);
-        retval = _eventd_eventdctl_send_command(connection, plugin, argc-1, argv+1);
-        g_free(plugin);
+        argv[0] = plugin;
     }
-    else
-        retval = _eventd_eventdctl_send_command(connection, argv[0], argc-1, argv+1);
 
+    retval = _eventd_eventdctl_send_argv(connection, argc, argv);
+
+    g_free(plugin);
 close:
     if ( ! g_io_stream_close(connection, NULL, &error) )
         g_warning("Can't close the stream: %s", error->message);

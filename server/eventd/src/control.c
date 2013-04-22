@@ -56,64 +56,62 @@ _eventd_service_private_connection_handler(GSocketService *socket_service, GSock
     GError *error = NULL;
     GDataInputStream *input;
     GDataOutputStream *output;
-    gsize size = 0;
-    gchar *line = NULL;
 
     input = g_data_input_stream_new(g_io_stream_get_input_stream(stream));
     output = g_data_output_stream_new(g_io_stream_get_output_stream(stream));
 
-    if ( ( line = g_data_input_stream_read_upto(input, "\0", 1, &size, NULL, &error) ) == NULL )
+    guint64 argc, i;
+    gchar *arg, **argv = NULL;
+    argc = g_data_input_stream_read_uint64(input, NULL, &error);
+    if ( error != NULL )
     {
+        g_warning("Couldn't read the command argc: %s", error->message);
+        goto fail;
+    }
+    argv = g_new0(char *, argc + 1);
+    for ( i = 0 ; i < argc ; ++i )
+    {
+        arg = g_data_input_stream_read_upto(input, "\0", 1, NULL, NULL, &error);
+        g_data_input_stream_read_byte(input, NULL, NULL);
         if ( error != NULL )
         {
-            g_warning("Couldn't read the command: %s", error->message);
+            g_warning("Couldn't read the command argv[%ju]: %s", i, error->message);
             goto fail;
         }
+        argv[i] = arg;
     }
-    EventdctlReturnCode code = EVENTDCTL_RETURN_CODE_OK;
+
     gchar *status = NULL;
-
-#ifdef DEBUG
-    g_debug("Received control command: '%s'", line);
-#endif /* DEBUG */
-
-    g_data_input_stream_read_byte(input, NULL, &error);
-    if ( error != NULL )
-        g_clear_error(&error);
-    else if ( g_strcmp0(line, "stop") == 0 )
+    EventdctlReturnCode code = EVENTDCTL_RETURN_CODE_OK;
+    if ( argc == 0 )
+    {
+        status = g_strdup("Missing command");
+        code = EVENTDCTL_RETURN_CODE_COMMAND_ERROR;
+    }
+    else if ( g_strcmp0(argv[0], "stop") == 0 )
         eventd_core_stop(control->core);
-    else if ( g_strcmp0(line, "reload") == 0 )
+    else if ( g_strcmp0(argv[0], "reload") == 0 )
         eventd_core_config_reload(control->core);
-    else if ( g_strcmp0(line, "pause") == 0 )
+    else if ( g_strcmp0(argv[0], "pause") == 0 )
         eventd_core_pause(control->core);
-    else if ( g_strcmp0(line, "resume") == 0 )
+    else if ( g_strcmp0(argv[0], "resume") == 0 )
         eventd_core_resume(control->core);
-    else if ( g_strcmp0(line, "version") == 0 )
-        status = g_strdup(PACKAGE_NAME " " PACKAGE_VERSION);
-    else if ( g_str_has_prefix(line, "add-flag ") )
-        eventd_core_add_flag(control->core, g_quark_from_string(line + strlen("add-flag ")));
-    else if ( g_strcmp0(line, "reset-flags") == 0 )
+    else if ( g_strcmp0(argv[0], "version") == 0 )
+        status = g_strdup(PACKAGE_STRING);
+    else if ( g_strcmp0(argv[0], "add-flag") == 0 )
+        eventd_core_add_flag(control->core, g_quark_from_string(argv[1]));
+    else if ( g_strcmp0(argv[0], "reset-flags") == 0 )
         eventd_core_reset_flags(control->core);
     else
     {
-        gchar *command;
-
-        command = strchr(line, ' ');
-        if ( command != NULL )
-        {
-            gchar *args;
-            *(command++) = '\0';
-            args = strchr(command, ' ');
-            *(args++) = '\0';
-            code = eventd_plugins_control_command(line, command, args, &status);
-        }
-        else
+        if ( argc < 2 )
         {
             status = g_strdup("No plugin command specified");
             code = EVENTDCTL_RETURN_CODE_COMMAND_ERROR;
         }
+        else
+            code = eventd_plugins_control_command(argv[0], argc-1, (const gchar * const *)argv+1, &status);
     }
-    g_free(line);
 
     if ( ! g_data_output_stream_put_uint64(output, code, NULL, &error) )
         g_warning("Couldn't send return code '%u': %s", code, error->message);
@@ -129,6 +127,7 @@ _eventd_service_private_connection_handler(GSocketService *socket_service, GSock
     }
 
 fail:
+    g_strfreev(argv);
     g_object_unref(output);
     g_object_unref(input);
     g_clear_error(&error);

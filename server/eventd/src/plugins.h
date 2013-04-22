@@ -31,7 +31,7 @@ void eventd_plugins_add_option_group_all(GOptionContext *option_context);
 void eventd_plugins_start_all(void);
 void eventd_plugins_stop_all(void);
 
-EventdctlReturnCode eventd_plugins_control_command(const gchar *id, const gchar *command, const gchar *args, gchar **status);
+EventdctlReturnCode eventd_plugins_control_command(const gchar *id, guint64 argc, const gchar * const *argv, gchar **status);
 
 void eventd_plugins_config_reset_all(void);
 

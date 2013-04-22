@@ -301,7 +301,7 @@ eventd_plugins_stop_all()
 }
 
 EventdctlReturnCode
-eventd_plugins_control_command(const gchar *id, const gchar *command, const gchar *args, gchar **status)
+eventd_plugins_control_command(const gchar *id, guint64 argc, const gchar * const *argv, gchar **status)
 {
     const gchar *eid;
     EventdPlugin *plugin;
@@ -321,7 +321,7 @@ eventd_plugins_control_command(const gchar *id, const gchar *command, const gcha
         r = EVENTDCTL_RETURN_CODE_PLUGIN_ERROR;
     }
     else
-        r = plugin->interface.control_command(plugin->context, command, args, status);
+        r = plugin->interface.control_command(plugin->context, argc, argv, status);
 
     return r;
 }

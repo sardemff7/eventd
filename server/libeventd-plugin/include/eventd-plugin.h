@@ -45,7 +45,7 @@ typedef enum {
 typedef EventdPluginContext *(*EventdPluginInitFunc)(EventdCoreContext *core, EventdCoreInterface *interface);
 typedef void (*EventdPluginSimpleFunc)(EventdPluginContext *context);
 typedef GOptionGroup *(*EventdPluginGetOptionGroupFunc)(EventdPluginContext *context);
-typedef EventdPluginCommandStatus (*EventdPluginControlCommandFunc)(EventdPluginContext *context, const gchar *command, const gchar *args, gchar **status);
+typedef EventdPluginCommandStatus (*EventdPluginControlCommandFunc)(EventdPluginContext *context, guint64 argc, const gchar * const *argv, gchar **status);
 typedef void (*EventdPluginGlobalParseFunc)(EventdPluginContext *context, GKeyFile *);
 typedef void (*EventdPluginEventParseFunc)(EventdPluginContext *context, const gchar *config_id, GKeyFile *key_file);
 typedef void (*EventdPluginEventDispatchFunc)(EventdPluginContext *context, const gchar *config_id, EventdEvent *event);

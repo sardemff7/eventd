@@ -157,42 +157,50 @@ _eventd_relay_stop(EventdPluginContext *context)
  */
 
 static EventdPluginCommandStatus
-_eventd_relay_control_command(EventdPluginContext *context, const gchar *command, const gchar *args, gchar **status)
+_eventd_relay_control_command(EventdPluginContext *context, guint64 argc, const gchar * const *argv, gchar **status)
 {
     EventdRelayServer *server;
     EventdPluginCommandStatus r = EVENTD_PLUGIN_COMMAND_STATUS_OK;
 
-    if ( g_strcmp0(command, "connect") == 0 )
+    if ( g_strcmp0(argv[0], "connect") == 0 )
     {
-        server = g_hash_table_lookup(context->servers, args);
-        if ( server == NULL )
+        if ( argc < 2 )
         {
-            *status = g_strdup_printf("No such server '%s'", args);
+            *status = g_strdup("No server specified");
+            r = EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR;
+        }
+        else if ( ( server = g_hash_table_lookup(context->servers, argv[1]) ) == NULL )
+        {
+            *status = g_strdup_printf("No such server '%s'", argv[1]);
             r = EVENTD_PLUGIN_COMMAND_STATUS_EXEC_ERROR;
         }
         else
         {
             eventd_relay_server_start(server);
-            *status = g_strdup_printf("Connected to server '%s'", args);
+            *status = g_strdup_printf("Connected to server '%s'", argv[1]);
         }
     }
-    else if ( g_strcmp0(command, "disconnect") == 0 )
+    else if ( g_strcmp0(argv[0], "disconnect") == 0 )
     {
-        server = g_hash_table_lookup(context->servers, args);
-        if ( server == NULL )
+        if ( argc < 2 )
         {
-            *status = g_strdup_printf("No such server '%s'", args);
+            *status = g_strdup("No server specified");
+            r = EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR;
+        }
+        else if ( ( server = g_hash_table_lookup(context->servers, argv[1]) ) == NULL )
+        {
+            *status = g_strdup_printf("No such server '%s'", argv[1]);
             r = EVENTD_PLUGIN_COMMAND_STATUS_EXEC_ERROR;
         }
         else
         {
             eventd_relay_server_stop(server);
-            *status = g_strdup_printf("Disconnected from server '%s'", args);
+            *status = g_strdup_printf("Disconnected from server '%s'", argv[1]);
         }
     }
     else
     {
-        *status = g_strdup_printf("Unknown command '%s'", command);
+        *status = g_strdup_printf("Unknown command '%s'", argv[0]);
         r = EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR;
     }
 

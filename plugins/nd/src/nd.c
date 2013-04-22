@@ -198,7 +198,7 @@ _eventd_nd_start(EventdPluginContext *context)
  */
 
 static EventdPluginCommandStatus
-_eventd_nd_control_command(EventdPluginContext *context, const gchar *command, const gchar *args, gchar **status)
+_eventd_nd_control_command(EventdPluginContext *context, guint64 argc, const gchar * const *argv, gchar **status)
 {
     EventdPluginCommandStatus r;
     GHashTableIter iter;
@@ -206,40 +206,53 @@ _eventd_nd_control_command(EventdPluginContext *context, const gchar *command, c
     EventdNdBackend *backend;
     EventdNdDisplay *display;
 
-    if ( g_strcmp0(command, "attach") == 0 )
+    if ( g_strcmp0(argv[0], "attach") == 0 )
     {
-        const gchar *attached = NULL;
-
-        g_hash_table_iter_init(&iter, context->backends);
-        while ( ( attached == NULL ) && g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&backend) )
+        if ( argc < 2 )
         {
-            display = backend->display_new(backend->context, args);
-            if ( display == NULL )
-                continue;
-
-            EventdNdDisplayContext *display_context;
-            display_context = g_new(EventdNdDisplayContext, 1);
-            display_context->backend = backend;
-            display_context->display = display;
-
-            g_hash_table_insert(context->displays, g_strdup(args), display_context);
-
-            attached = id;
-        }
-        if ( attached != NULL )
-        {
-            *status = g_strdup_printf("Backend %s attached", attached);
-            r = EVENTD_PLUGIN_COMMAND_STATUS_OK;
+            *status = g_strdup("No server specified");
+            r = EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR;
         }
         else
         {
-            *status = g_strdup("No backend attached");
-            r = EVENTD_PLUGIN_COMMAND_STATUS_EXEC_ERROR;
+            const gchar *attached = NULL;
+
+            g_hash_table_iter_init(&iter, context->backends);
+            while ( ( attached == NULL ) && g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&backend) )
+            {
+                display = backend->display_new(backend->context, argv[1]);
+                if ( display == NULL )
+                    continue;
+
+                EventdNdDisplayContext *display_context;
+                display_context = g_new(EventdNdDisplayContext, 1);
+                display_context->backend = backend;
+                display_context->display = display;
+
+                g_hash_table_insert(context->displays, g_strdup(argv[1]), display_context);
+
+                attached = id;
+            }
+            if ( attached != NULL )
+            {
+                *status = g_strdup_printf("Backend %s attached", attached);
+                r = EVENTD_PLUGIN_COMMAND_STATUS_OK;
+            }
+            else
+            {
+                *status = g_strdup("No backend attached");
+                r = EVENTD_PLUGIN_COMMAND_STATUS_EXEC_ERROR;
+            }
         }
     }
-    else if ( g_strcmp0(command, "detach") == 0 )
+    else if ( g_strcmp0(argv[0], "detach") == 0 )
     {
-        if ( g_hash_table_remove(context->displays, args) )
+        if ( argc < 2 )
+        {
+            r = EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR;
+            *status = g_strdup("No backend specified");
+        }
+        else if ( g_hash_table_remove(context->displays, argv[1]) )
         {
             *status = g_strdup_printf("Backend detached");
             r = EVENTD_PLUGIN_COMMAND_STATUS_OK;
@@ -252,7 +265,7 @@ _eventd_nd_control_command(EventdPluginContext *context, const gchar *command, c
     }
     else
     {
-        *status = g_strdup_printf("Unknown command '%s'", command);
+        *status = g_strdup_printf("Unknown command '%s'", argv[0]);
         r = EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR;
     }
 
