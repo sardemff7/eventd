@@ -235,7 +235,7 @@ _eventd_nd_control_command(EventdPluginContext *context, guint64 argc, const gch
             }
             if ( attached != NULL )
             {
-                *status = g_strdup_printf("Backend %s attached", attached);
+                *status = g_strdup_printf("Backend %s attached to %s", attached, argv[1]);
                 r = EVENTD_PLUGIN_COMMAND_STATUS_OK;
             }
             else
