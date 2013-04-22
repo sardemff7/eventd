@@ -220,6 +220,13 @@
                                 <para>List the attached backends and their targets.</para>
                             </listitem>
                         </varlistentry>
+
+                        <varlistentry>
+                            <term><parameter class="command">backends</parameter></term>
+                            <listitem>
+                                <para>List the available backends.</para>
+                            </listitem>
+                        </varlistentry>
                     </variablelist>
                 </listitem>
             </varlistentry>

@@ -286,6 +286,25 @@ _eventd_nd_control_command(EventdPluginContext *context, guint64 argc, const gch
             *status = g_strdup("No backend attached");
         r = EVENTD_PLUGIN_COMMAND_STATUS_OK;
     }
+    else if ( g_strcmp0(argv[0], "backends") == 0 )
+    {
+        if ( g_hash_table_size(context->backends) > 0 )
+        {
+            GString *list;
+            list = g_string_new("Backends available:");
+
+            GHashTableIter iter;
+            EventdNdBackend *backend;
+            g_hash_table_iter_init(&iter, context->backends);
+            while ( g_hash_table_iter_next(&iter, NULL, (gpointer *)&backend) )
+                    g_string_append_printf(list, "\n    %s", backend->id);
+
+            *status = g_string_free(list, FALSE);
+        }
+        else
+            *status = g_strdup("No backends available");
+        r = EVENTD_PLUGIN_COMMAND_STATUS_OK;
+    }
     else
     {
         *status = g_strdup_printf("Unknown command '%s'", argv[0]);
