@@ -1,32 +1,32 @@
-# sndfile plugin
+# sound plugin
 
-if ENABLE_SNDFILE
+if ENABLE_SOUND
 plugins_LTLIBRARIES += \
-	sndfile.la
+	sound.la
 
 man5_MANS += \
-	plugins/sndfile/man/eventd-sndfile.event.5
+	plugins/sound/man/eventd-sound.event.5
 endif
 
 
-sndfile_la_SOURCES = \
-	plugins/sndfile/src/pulseaudio.h \
-	plugins/sndfile/src/pulseaudio.c \
-	plugins/sndfile/src/sndfile.c
+sound_la_SOURCES = \
+	plugins/sound/src/pulseaudio.h \
+	plugins/sound/src/pulseaudio.c \
+	plugins/sound/src/sound.c
 
-sndfile_la_CFLAGS = \
+sound_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	-D G_LOG_DOMAIN=\"eventd-sndfile\" \
+	-D G_LOG_DOMAIN=\"eventd-sound\" \
 	$(SNDFILE_CFLAGS) \
 	$(PULSEAUDIO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS)
 
-sndfile_la_LDFLAGS = \
+sound_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
 	-avoid-version -module
 
-sndfile_la_LIBADD = \
+sound_la_LIBADD = \
 	libeventd-event.la \
 	libeventd-plugin.la \
 	libeventd.la \

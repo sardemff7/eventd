@@ -230,14 +230,14 @@ if test x$enable_im = xyes; then
 fi
 AM_CONDITIONAL(ENABLE_IM, test x$enable_im = xyes)
 
-# sndfile plugin
-AC_ARG_ENABLE(sndfile, AS_HELP_STRING([--disable-sndfile], [Disable libsndfile support]), [], enable_sndfile=yes)
-if test x$enable_sndfile = xyes; then
+# sound plugin
+AC_ARG_ENABLE(sound, AS_HELP_STRING([--disable-sound], [Disable sound support through libsndfile]), [], enable_sound=yes)
+if test x$enable_sound = xyes; then
     PKG_CHECK_MODULES(SNDFILE, [sndfile])
     PKG_CHECK_MODULES(PULSEAUDIO, [libpulse >= $libpulse_min_version libpulse-mainloop-glib])
-    DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_sndfile"
+    DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_sound"
 fi
-AM_CONDITIONAL(ENABLE_SNDFILE, test x$enable_sndfile = xyes)
+AM_CONDITIONAL(ENABLE_SOUND, test x$enable_sound = xyes)
 
 # espeak plugin
 AC_ARG_ENABLE(espeak, AS_HELP_STRING([--enable-espeak], [Enable eSpeak support]), [], enable_espeak=no)
@@ -324,7 +324,7 @@ AC_MSG_RESULT([
                 XCB: $enable_xcb
                 Linux framebuffer: $enable_linux_framebuffer
         IM support through libpurple: $enable_im
-        Sound files playing through libsndfile: $enable_sndfile
+        Sound files playing through libsndfile: $enable_sound
         Text-to-speech through eSpeak: $enable_espeak
         libnotify proxy: $enable_libnotify
 

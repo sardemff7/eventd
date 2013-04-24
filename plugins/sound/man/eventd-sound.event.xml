@@ -25,22 +25,22 @@
   along with eventd. If not, see <http://www.gnu.org/licenses/>.
 -->
 
-<refentry id="eventd-sndfile.event">
+<refentry id="eventd-sound.event">
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="common-man.xml" xpointer="refentryinfo" />
 
     <refmeta>
-        <refentrytitle>eventd-sndfile.event</refentrytitle>
+        <refentrytitle>eventd-sound.event</refentrytitle>
         <manvolnum>5</manvolnum>
     </refmeta>
 
     <refnamediv>
-        <refname>eventd-sndfile.event</refname>
-        <refpurpose>sndfile plugin event configuration files</refpurpose>
+        <refname>eventd-sound.event</refname>
+        <refpurpose>Sound plugin event configuration files</refpurpose>
     </refnamediv>
 
     <refsynopsisdiv>
         <para>
-            Event configuration for the sndfile plugin.
+            Event configuration for the sound plugin.
         </para>
     </refsynopsisdiv>
 

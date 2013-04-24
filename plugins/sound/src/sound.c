@@ -39,7 +39,7 @@
 
 struct _EventdPluginContext {
     GHashTable *events;
-    EventdSndfilePulseaudioContext *pulseaudio;
+    EventdSoundPulseaudioContext *pulseaudio;
 };
 
 /*
@@ -48,7 +48,7 @@ struct _EventdPluginContext {
 typedef sf_count_t (*sndfile_readf_t)(SNDFILE *sndfile, void *ptr, sf_count_t frames);
 
 static void
-_eventd_sndfile_read_file(const gchar *filename, void **data, gsize *length, gint *format, guint32 *rate, guint8 *channels)
+_eventd_sound_read_file(const gchar *filename, void **data, gsize *length, gint *format, guint32 *rate, guint8 *channels)
 {
     *data = NULL;
     *length = 0;
@@ -120,7 +120,7 @@ out:
  */
 
 static EventdPluginContext *
-_eventd_sndfile_init(EventdCoreContext *core, EventdCoreInterface *interface)
+_eventd_sound_init(EventdCoreContext *core, EventdCoreInterface *interface)
 {
     EventdPluginContext *context;
 
@@ -128,7 +128,7 @@ _eventd_sndfile_init(EventdCoreContext *core, EventdCoreInterface *interface)
 
     context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 
-    context->pulseaudio = eventd_sndfile_pulseaudio_init();
+    context->pulseaudio = eventd_sound_pulseaudio_init();
 
     libeventd_regex_init();
 
@@ -136,9 +136,9 @@ _eventd_sndfile_init(EventdCoreContext *core, EventdCoreInterface *interface)
 }
 
 static void
-_eventd_sndfile_uninit(EventdPluginContext *context)
+_eventd_sound_uninit(EventdPluginContext *context)
 {
-    eventd_sndfile_pulseaudio_uninit(context->pulseaudio);
+    eventd_sound_pulseaudio_uninit(context->pulseaudio);
 
     libeventd_regex_clean();
 
@@ -151,15 +151,15 @@ _eventd_sndfile_uninit(EventdPluginContext *context)
  */
 
 static void
-_eventd_sndfile_start(EventdPluginContext *context)
+_eventd_sound_start(EventdPluginContext *context)
 {
-    eventd_sndfile_pulseaudio_start(context->pulseaudio);
+    eventd_sound_pulseaudio_start(context->pulseaudio);
 }
 
 static void
-_eventd_sndfile_stop(EventdPluginContext *context)
+_eventd_sound_stop(EventdPluginContext *context)
 {
-    eventd_sndfile_pulseaudio_stop(context->pulseaudio);
+    eventd_sound_pulseaudio_stop(context->pulseaudio);
 }
 
 /*
@@ -167,7 +167,7 @@ _eventd_sndfile_stop(EventdPluginContext *context)
  */
 
 static void
-_eventd_sndfile_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile *config_file)
+_eventd_sound_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile *config_file)
 {
     gboolean disable;
     gchar *sound = NULL;
@@ -190,7 +190,7 @@ _eventd_sndfile_event_parse(EventdPluginContext *context, const gchar *id, GKeyF
 }
 
 static void
-_eventd_sndfile_config_reset(EventdPluginContext *context)
+_eventd_sound_config_reset(EventdPluginContext *context)
 {
     g_hash_table_remove_all(context->events);
 }
@@ -201,7 +201,7 @@ _eventd_sndfile_config_reset(EventdPluginContext *context)
  */
 
 static void
-_eventd_sndfile_event_action(EventdPluginContext *context, const gchar *config_id, EventdEvent *event)
+_eventd_sound_event_action(EventdPluginContext *context, const gchar *config_id, EventdEvent *event)
 {
     gchar *sound;
     gchar *file;
@@ -216,10 +216,10 @@ _eventd_sndfile_event_action(EventdPluginContext *context, const gchar *config_i
         return;
 
     if ( ( file = libeventd_config_get_filename(sound, event, "sounds") ) != NULL )
-        _eventd_sndfile_read_file(file, &data, &length, &format, &rate, &channels);
+        _eventd_sound_read_file(file, &data, &length, &format, &rate, &channels);
     // TODO: using event data
 
-    eventd_sndfile_pulseaudio_play_data(context->pulseaudio, data, length, format, rate, channels);
+    eventd_sound_pulseaudio_play_data(context->pulseaudio, data, length, format, rate, channels);
 }
 
 
@@ -227,19 +227,19 @@ _eventd_sndfile_event_action(EventdPluginContext *context, const gchar *config_i
  * Plugin interface
  */
 
-EVENTD_EXPORT const gchar *eventd_plugin_id = "eventd-sndfile";
+EVENTD_EXPORT const gchar *eventd_plugin_id = "eventd-sound";
 EVENTD_EXPORT
 void
 eventd_plugin_get_interface(EventdPluginInterface *interface)
 {
-    libeventd_plugin_interface_add_init_callback(interface, _eventd_sndfile_init);
-    libeventd_plugin_interface_add_uninit_callback(interface, _eventd_sndfile_uninit);
+    libeventd_plugin_interface_add_init_callback(interface, _eventd_sound_init);
+    libeventd_plugin_interface_add_uninit_callback(interface, _eventd_sound_uninit);
 
-    libeventd_plugin_interface_add_start_callback(interface, _eventd_sndfile_start);
-    libeventd_plugin_interface_add_stop_callback(interface, _eventd_sndfile_stop);
+    libeventd_plugin_interface_add_start_callback(interface, _eventd_sound_start);
+    libeventd_plugin_interface_add_stop_callback(interface, _eventd_sound_stop);
 
-    libeventd_plugin_interface_add_event_parse_callback(interface, _eventd_sndfile_event_parse);
-    libeventd_plugin_interface_add_config_reset_callback(interface, _eventd_sndfile_config_reset);
+    libeventd_plugin_interface_add_event_parse_callback(interface, _eventd_sound_event_parse);
+    libeventd_plugin_interface_add_config_reset_callback(interface, _eventd_sound_config_reset);
 
-    libeventd_plugin_interface_add_event_action_callback(interface, _eventd_sndfile_event_action);
+    libeventd_plugin_interface_add_event_action_callback(interface, _eventd_sound_event_action);
 }

@@ -98,8 +98,8 @@
                     <listitem><para>an IM plugin</para></listitem>
                 </varlistentry>
 
-                <varlistentry condition="website;enable_sndfile">
-                    <term><command>sndfile</command> (see <citerefentry><refentrytitle>eventd-sndfile.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
+                <varlistentry condition="website;enable_sound">
+                    <term><command>sound</command> (see <citerefentry><refentrytitle>eventd-sound.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
                     <listitem><para>a sound file playing plugin</para></listitem>
                 </varlistentry>
 

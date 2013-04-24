@@ -35,13 +35,13 @@
 
 #include "pulseaudio.h"
 
-struct _EventdSndfilePulseaudioContext {
+struct _EventdSoundPulseaudioContext {
     pa_context *context;
     pa_glib_mainloop *pa_loop;
 };
 
 static void
-_eventd_sndfile_pulseaudio_context_state_callback(pa_context *c, void *user_data)
+_eventd_sound_pulseaudio_context_state_callback(pa_context *c, void *user_data)
 {
     pa_context_state_t state = pa_context_get_state(c);
     switch ( state )
@@ -56,27 +56,27 @@ _eventd_sndfile_pulseaudio_context_state_callback(pa_context *c, void *user_data
 }
 
 static void
-_eventd_sndfile_pulseaudio_context_notify_callback(pa_context *s, void *user_data)
+eventd_sound_(pa_context *s, void *user_data)
 {
-    EventdSndfilePulseaudioContext *context = user_data;
+    EventdSoundPulseaudioContext *context = user_data;
     pa_context_disconnect(context->context);
 }
 
 typedef struct {
     gpointer data;
     gsize length;
-} EventdSndfilePulseaudioEventData;
+} EventdSoundPulseaudioEventData;
 
 static void
-_eventd_sndfile_pulseaudio_stream_drain_callback(pa_stream *stream, gint success, gpointer user_data)
+_eventd_sound_pulseaudio_stream_drain_callback(pa_stream *stream, gint success, gpointer user_data)
 {
     pa_stream_disconnect(stream);
 }
 
 static void
-_eventd_sndfile_pulseaudio_stream_state_callback(pa_stream *stream, gpointer user_data)
+_eventd_sound_pulseaudio_stream_state_callback(pa_stream *stream, gpointer user_data)
 {
-    EventdSndfilePulseaudioEventData *data = user_data;
+    EventdSoundPulseaudioEventData *data = user_data;
     pa_stream_state_t state = pa_stream_get_state(stream);
     pa_operation *op;
     switch ( state )
@@ -89,7 +89,7 @@ _eventd_sndfile_pulseaudio_stream_state_callback(pa_stream *stream, gpointer use
     break;
     case PA_STREAM_READY:
         pa_stream_write(stream, data->data, data->length, g_free, 0, PA_SEEK_RELATIVE);
-        op = pa_stream_drain(stream, _eventd_sndfile_pulseaudio_stream_drain_callback, NULL);
+        op = pa_stream_drain(stream, _eventd_sound_pulseaudio_stream_drain_callback, NULL);
         if ( op != NULL )
             pa_operation_unref(op);
     default:
@@ -98,11 +98,11 @@ _eventd_sndfile_pulseaudio_stream_state_callback(pa_stream *stream, gpointer use
 }
 
 void
-eventd_sndfile_pulseaudio_play_data(EventdSndfilePulseaudioContext *context, gpointer data, gsize length, gint format, guint32 rate, guint8 channels)
+eventd_sound_pulseaudio_play_data(EventdSoundPulseaudioContext *context, gpointer data, gsize length, gint format, guint32 rate, guint8 channels)
 {
     pa_sample_spec sample_spec;
     pa_stream *stream;
-    EventdSndfilePulseaudioEventData *event_data;
+    EventdSoundPulseaudioEventData *event_data;
 
     if ( data == NULL )
         return;
@@ -146,20 +146,20 @@ eventd_sndfile_pulseaudio_play_data(EventdSndfilePulseaudioContext *context, gpo
 
     stream = pa_stream_new(context->context, "sndfile plugin playback", &sample_spec, NULL);
 
-    event_data = g_new0(EventdSndfilePulseaudioEventData, 1);
+    event_data = g_new0(EventdSoundPulseaudioEventData, 1);
     event_data->data = data;
     event_data->length = length;
 
-    pa_stream_set_state_callback(stream, _eventd_sndfile_pulseaudio_stream_state_callback, event_data);
+    pa_stream_set_state_callback(stream, _eventd_sound_pulseaudio_stream_state_callback, event_data);
     pa_stream_connect_playback(stream, NULL, NULL, 0, NULL, NULL);
 }
 
-EventdSndfilePulseaudioContext *
-eventd_sndfile_pulseaudio_init()
+EventdSoundPulseaudioContext *
+eventd_sound_pulseaudio_init()
 {
-    EventdSndfilePulseaudioContext *context;
+    EventdSoundPulseaudioContext *context;
 
-    context = g_new0(EventdSndfilePulseaudioContext, 1);
+    context = g_new0(EventdSoundPulseaudioContext, 1);
 
     context->pa_loop = pa_glib_mainloop_new(NULL);
 
@@ -172,13 +172,13 @@ eventd_sndfile_pulseaudio_init()
         return NULL;
     }
 
-    pa_context_set_state_callback(context->context, _eventd_sndfile_pulseaudio_context_state_callback, NULL);
+    pa_context_set_state_callback(context->context, _eventd_sound_pulseaudio_context_state_callback, NULL);
 
     return context;
 }
 
 void
-eventd_sndfile_pulseaudio_uninit(EventdSndfilePulseaudioContext *context)
+eventd_sound_pulseaudio_uninit(EventdSoundPulseaudioContext *context)
 {
     if ( context == NULL )
         return;
@@ -189,7 +189,7 @@ eventd_sndfile_pulseaudio_uninit(EventdSndfilePulseaudioContext *context)
 }
 
 void
-eventd_sndfile_pulseaudio_start(EventdSndfilePulseaudioContext *context)
+eventd_sound_pulseaudio_start(EventdSoundPulseaudioContext *context)
 {
     if ( context == NULL )
         return;
@@ -198,7 +198,7 @@ eventd_sndfile_pulseaudio_start(EventdSndfilePulseaudioContext *context)
 }
 
 void
-eventd_sndfile_pulseaudio_stop(EventdSndfilePulseaudioContext *context)
+eventd_sound_pulseaudio_stop(EventdSoundPulseaudioContext *context)
 {
     if ( context == NULL )
         return;
@@ -207,7 +207,7 @@ eventd_sndfile_pulseaudio_stop(EventdSndfilePulseaudioContext *context)
     {
         pa_operation *op;
 
-        op = pa_context_drain(context->context, _eventd_sndfile_pulseaudio_context_notify_callback, context);
+        op = pa_context_drain(context->context, eventd_sound_, context);
         if ( op != NULL )
             pa_operation_unref(op);
     }

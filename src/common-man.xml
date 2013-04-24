@@ -146,11 +146,11 @@
                 </listitem>
             </varlistentry>
 
-            <varlistentry condition="website;enable_sndfile">
-                <term><command>sndfile</command> plugin man pages</term>
+            <varlistentry condition="website;enable_sound">
+                <term><command>sound</command> plugin man pages</term>
                 <listitem>
                     <para>
-                        <citerefentry><refentrytitle>eventd-sndfile.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                        <citerefentry><refentrytitle>eventd-sound.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>
                     </para>
                 </listitem>
             </varlistentry>
