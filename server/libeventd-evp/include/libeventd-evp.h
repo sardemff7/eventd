@@ -87,6 +87,7 @@ void libeventd_evp_context_set_connection(LibeventdEvpContext *context, GSocketC
 void libeventd_evp_context_close(LibeventdEvpContext *context, GAsyncReadyCallback callback, gpointer user_data);
 void libeventd_evp_context_close_finish(LibeventdEvpContext *context, GAsyncResult *result);
 
+gboolean libeventd_evp_context_passive(LibeventdEvpContext *context, GError **error);
 void libeventd_evp_context_receive_loop(LibeventdEvpContext *context, gint priority);
 
 gboolean libeventd_evp_context_send_event(LibeventdEvpContext *context, const gchar *id, EventdEvent *event, GError **error);

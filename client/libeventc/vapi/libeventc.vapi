@@ -40,6 +40,7 @@ namespace Eventc
 	[CCode (cheader_filename = "libeventc.h")]
 	public class Connection : GLib.Object
 	{
+		public bool passive { get; set; }
 		public bool enable_proxy { get; set; }
 		public string host { private get; set; }
 

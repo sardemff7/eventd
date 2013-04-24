@@ -40,7 +40,7 @@ static GMainLoop *loop;
 
 static gint tries = 0;
 static gint max_tries = 3;
-static gboolean wait = FALSE;
+static gboolean wait_event_end = FALSE;
 
 static void _eventc_connect(void);
 static void _eventc_send_event(void);
@@ -82,13 +82,13 @@ _eventc_event_end_callback(EventdEvent *event, EventdEventEndReason reason, gpoi
 static void
 _eventc_send_event(void)
 {
-    if ( wait )
+    if ( wait_event_end )
         g_signal_connect(event, "ended", G_CALLBACK(_eventc_event_end_callback), NULL);
 
     GError *error = NULL;
     if ( ! eventc_connection_event(client, event, &error) )
         g_warning("Couldn't send event '%s', '%s': %s", eventd_event_get_category(event), eventd_event_get_name(event), error->message);
-    if ( ! wait )
+    if ( ! wait_event_end )
        _eventc_disconnect();
 }
 
@@ -124,7 +124,7 @@ main(int argc, char *argv[])
         { "data-content", 'c', 0, G_OPTION_ARG_STRING_ARRAY, &event_data_content, "Event data content to send (must be after a data-name)", "<content>" },
         { "host",         'h', 0, G_OPTION_ARG_STRING,       &host,               "Host to connect to",                                     "<host>" },
         { "max-tries",    'm', 0, G_OPTION_ARG_INT,          &max_tries,          "Maximum connection attempts (0 for infinite)",           "<times>" },
-        { "wait",         'w', 0, G_OPTION_ARG_NONE,         &wait,               "Wait the end of the event",                              NULL },
+        { "wait",         'w', 0, G_OPTION_ARG_NONE,         &wait_event_end,     "Wait the end of the event",                              NULL },
         { "version",      'V', 0, G_OPTION_ARG_NONE,         &print_version,      "Print version",                                          NULL },
         { NULL }
     };
@@ -179,6 +179,7 @@ main(int argc, char *argv[])
     const gchar *name = argv[2];
 
     client = eventc_connection_new(host);
+    eventc_connection_set_passive(client, !wait_event_end);
 
     event = eventd_event_new(category, name);
 

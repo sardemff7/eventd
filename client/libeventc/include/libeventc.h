@@ -83,9 +83,11 @@ gboolean eventc_connection_close_finish (EventcConnection *self, GAsyncResult *r
 
 
 void eventc_connection_set_host(EventcConnection *self, const gchar *value);
+void eventc_connection_set_passive(EventcConnection *self, gboolean value);
 void eventc_connection_set_enable_proxy(EventcConnection *self, gboolean value);
 
 gboolean eventc_connection_is_connected(EventcConnection *self, GError **error);
+gboolean eventc_connection_get_passive(EventcConnection *self);
 gboolean eventc_connection_get_enable_proxy(EventcConnection *self);
 
 G_END_DECLS

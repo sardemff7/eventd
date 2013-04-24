@@ -61,6 +61,11 @@ ENDED <id> <reason>
 Closing the connection
 ----------------------
 
+PASSIVE
+    Go to passive mode. The server will not send any message back to the client.
+    Client may (and should) close the input connection.
+    Must be sent only once.
+
 BYE
     Close the connection.
     The connection is closed immediately and must not be used any more.

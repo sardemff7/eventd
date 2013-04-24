@@ -40,6 +40,7 @@ G_DEFINE_TYPE(EventcConnection, eventc_connection, G_TYPE_OBJECT)
 
 struct _EventcConnectionPrivate {
     gchar* host;
+    gboolean passive;
     gboolean enable_proxy;
     LibeventdEvpContext* evp;
     guint64 count;
@@ -208,11 +209,20 @@ _eventc_connection_connect_callback(GObject *obj, GAsyncResult *res, gpointer us
         g_simple_async_report_error_in_idle(G_OBJECT(self), callback, user_data, EVENTC_ERROR, EVENTC_ERROR_CONNECTION, "Failed to connect: %s", _inner_error_->message);
         g_error_free(_inner_error_);
         return;
-
     }
 
     libeventd_evp_context_set_connection(self->priv->evp, connection);
-    libeventd_evp_context_receive_loop(self->priv->evp, G_PRIORITY_DEFAULT);
+    if ( self->priv->passive )
+    {
+        if ( ! libeventd_evp_context_passive(self->priv->evp, &_inner_error_) )
+        {
+            g_simple_async_report_error_in_idle(G_OBJECT(self), callback, user_data, EVENTC_ERROR, EVENTC_ERROR_CONNECTION, "Failed to go into passive mode: %s", _inner_error_->message);
+            g_error_free(_inner_error_);
+            return;
+        }
+    }
+    else
+        libeventd_evp_context_receive_loop(self->priv->evp, G_PRIORITY_DEFAULT);
 
     GSimpleAsyncResult *result;
     result = g_simple_async_result_new(G_OBJECT(self), callback, user_data, _eventc_connection_connect_callback);
@@ -484,11 +494,29 @@ eventc_connection_set_host(EventcConnection *self, const gchar *host)
 
 EVENTD_EXPORT
 void
+eventc_connection_set_passive(EventcConnection *self, gboolean passive)
+{
+    g_return_if_fail(EVENTC_IS_CONNECTION(self));
+
+    self->priv->passive = passive;
+}
+
+EVENTD_EXPORT
+void
 eventc_connection_set_enable_proxy(EventcConnection *self, gboolean enable_proxy)
 {
     g_return_if_fail(EVENTC_IS_CONNECTION(self));
 
     self->priv->enable_proxy = enable_proxy;
+}
+
+EVENTD_EXPORT
+gboolean
+eventc_connection_get_passive(EventcConnection *self)
+{
+    g_return_val_if_fail(EVENTC_IS_CONNECTION(self), FALSE);
+
+    return self->priv->passive;
 }
 
 EVENTD_EXPORT

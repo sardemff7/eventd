@@ -354,11 +354,41 @@ _libeventd_evp_context_receive_callback(GObject *source_object, GAsyncResult *re
         g_free(answer);
         return;
     }
+    else if ( g_strcmp0(line, "PASSIVE") == 0 )
+    {
+        if ( self->out != NULL )
+            g_warning("Client already in passive mode");
+        else
+            g_object_unref(self->out);
+        self->out = NULL;
+    }
 
 
     g_free(line);
 
     _libeventd_evp_receive(self, _libeventd_evp_context_receive_callback, self);
+}
+
+gboolean
+libeventd_evp_context_passive(LibeventdEvpContext *self, GError **error)
+{
+    g_return_if_fail(self != NULL);
+
+    if ( self->in == NULL )
+    {
+        g_set_error_literal(error, LIBEVENTD_EVP_ERROR, LIBEVENTD_EVP_ERROR_SEND, "Already in passive mode");
+        return FALSE;
+    }
+
+    g_cancellable_reset(self->cancellable);
+
+    if ( ! libeventd_evp_context_send_message(self, "PASSIVE", error) )
+        return FALSE;
+
+    g_object_unref(self->in);
+    self->in = NULL;
+
+    return TRUE;
 }
 
 void

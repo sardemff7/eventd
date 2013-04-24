@@ -120,8 +120,10 @@ libeventd_evp_context_close_finish(LibeventdEvpContext *self, GAsyncResult *resu
     g_return_if_fail(self != NULL);
     g_return_if_fail(g_simple_async_result_is_valid(result, G_OBJECT(self->cancellable), NULL));
 
-    g_object_unref(self->out);
-    g_object_unref(self->in);
+    if ( self->out != NULL )
+        g_object_unref(self->out);
+    if ( self->in != NULL )
+        g_object_unref(self->in);
 
     g_io_stream_close(G_IO_STREAM(self->connection), NULL, NULL);
 
