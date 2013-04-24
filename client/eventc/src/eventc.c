@@ -112,7 +112,7 @@ int
 main(int argc, char *argv[])
 {
     int r = 0;
-    gchar *host;
+    gchar *host = NULL;
     gchar **event_data_name;
     gchar **event_data_content;
 
@@ -177,9 +177,6 @@ main(int argc, char *argv[])
 
     const gchar *category = argv[1];
     const gchar *name = argv[2];
-
-    if ( host == NULL )
-        host = g_strdup("localhost");
 
     client = eventc_connection_new(host);
 
