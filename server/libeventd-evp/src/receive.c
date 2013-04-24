@@ -208,12 +208,7 @@ _libeventd_evp_context_receive_event_callback(GObject *source_object, GAsyncResu
             else
                 eventd_event_set_all_data(data->event, data->data_hash);
 
-            if ( ! self->interface->event(self->client, self, data->id, data->event) )
-            {
-                /*
-                 * TODO: send ENDED directly
-                 */
-            }
+            self->interface->event(self->client, self, data->id, data->event);
         }
 
         g_object_unref(data->event);

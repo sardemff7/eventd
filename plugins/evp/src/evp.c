@@ -142,7 +142,7 @@ _eventd_evp_ended(gpointer data, LibeventdEvpContext *evp, const gchar *id, Even
     g_hash_table_remove(client->events, evp_event->id);
 }
 
-static gboolean
+static void
 _eventd_evp_event(gpointer data, LibeventdEvpContext *evp, gchar *id, EventdEvent *event)
 {
     EventdEvpClient *client = data;
@@ -154,7 +154,16 @@ _eventd_evp_event(gpointer data, LibeventdEvpContext *evp, gchar *id, EventdEven
 
     config_id = libeventd_core_get_event_config_id(client->context->core, client->context->core_interface, event);
     if ( config_id == NULL )
-        return FALSE;
+    {
+        GError *error = NULL;
+        if ( ! libeventd_evp_context_send_ended(evp, id, EVENTD_EVENT_END_REASON_RESERVED, &error) )
+        {
+            g_warning("Couldn't send ENDED message: %s", error->message);
+            g_error_free(error);
+        }
+        g_free(id);
+        return;
+    }
 
 #ifdef DEBUG
     g_debug("Matched an event (category: %s, name: %s): %s", eventd_event_get_category(event), eventd_event_get_name(event), config_id);
@@ -173,8 +182,6 @@ _eventd_evp_event(gpointer data, LibeventdEvpContext *evp, gchar *id, EventdEven
     evp_event->ended_handler = g_signal_connect(event, "ended", G_CALLBACK(_eventd_evp_event_ended), evp_event);
 
     libeventd_core_push_event(client->context->core, client->context->core_interface, config_id, event);
-
-    return TRUE;
 }
 
 static void
