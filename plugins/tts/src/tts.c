@@ -50,7 +50,7 @@ struct _EventdPluginContext {
  */
 
 static EventdPluginContext *
-_eventd_espeak_init(EventdCoreContext *core, EventdCoreInterface *interface)
+_eventd_tts_init(EventdCoreContext *core, EventdCoreInterface *interface)
 {
     gint sample_rate;
     EventdPluginContext *context;
@@ -73,7 +73,7 @@ _eventd_espeak_init(EventdCoreContext *core, EventdCoreInterface *interface)
 }
 
 static void
-_eventd_espeak_uninit(EventdPluginContext *context)
+_eventd_tts_uninit(EventdPluginContext *context)
 {
     g_hash_table_unref(context->events);
 
@@ -90,7 +90,7 @@ _eventd_espeak_uninit(EventdPluginContext *context)
  */
 
 static void
-_eventd_espeak_stop(EventdPluginContext *context)
+_eventd_tts_stop(EventdPluginContext *context)
 {
     espeak_Synchronize();
 }
@@ -101,20 +101,20 @@ _eventd_espeak_stop(EventdPluginContext *context)
  */
 
 static void
-_eventd_espeak_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile *config_file)
+_eventd_tts_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile *config_file)
 {
     gboolean disable;
     gchar *message = NULL;
 
-    if ( ! g_key_file_has_group(config_file, "Espeak") )
+    if ( ! g_key_file_has_group(config_file, "TTS") )
         return;
 
-    if ( libeventd_config_key_file_get_boolean(config_file, "Espeak", "Disable", &disable) < 0 )
+    if ( libeventd_config_key_file_get_boolean(config_file, "TTS", "Disable", &disable) < 0 )
         return;
 
     if ( ! disable )
     {
-        if ( libeventd_config_key_file_get_locale_string(config_file, "Espeak", "Message", NULL, &message) < 0 )
+        if ( libeventd_config_key_file_get_locale_string(config_file, "TTS", "Message", NULL, &message) < 0 )
             return;
         if ( message == NULL )
             message = g_strdup("$message");
@@ -124,7 +124,7 @@ _eventd_espeak_event_parse(EventdPluginContext *context, const gchar *id, GKeyFi
 }
 
 static void
-_eventd_espeak_config_reset(EventdPluginContext *context)
+_eventd_tts_config_reset(EventdPluginContext *context)
 {
     g_hash_table_remove_all(context->events);
 }
@@ -135,7 +135,7 @@ _eventd_espeak_config_reset(EventdPluginContext *context)
  */
 
 static gchar *
-_eventd_espeak_regex_event_data_cb(const gchar *name, EventdEvent *event, gpointer user_data)
+_eventd_tts_regex_event_data_cb(const gchar *name, EventdEvent *event, gpointer user_data)
 {
     const gchar *data;
     gchar *ret;
@@ -165,7 +165,7 @@ _eventd_espeak_regex_event_data_cb(const gchar *name, EventdEvent *event, gpoint
 
 
 static void
-_eventd_espeak_event_action(EventdPluginContext *context, const gchar *config_id, EventdEvent *event)
+_eventd_tts_event_action(EventdPluginContext *context, const gchar *config_id, EventdEvent *event)
 {
     gchar *message;
     gchar *msg;
@@ -175,7 +175,7 @@ _eventd_espeak_event_action(EventdPluginContext *context, const gchar *config_id
     if ( message == NULL )
         return;
 
-    msg = libeventd_regex_replace_event_data(message, event, _eventd_espeak_regex_event_data_cb, NULL);
+    msg = libeventd_regex_replace_event_data(message, event, _eventd_tts_regex_event_data_cb, NULL);
 
     error = espeak_Synth(msg, strlen(msg)+1, 0, POS_CHARACTER, 0, espeakCHARS_UTF8|espeakSSML, NULL, NULL);
 
@@ -198,18 +198,18 @@ _eventd_espeak_event_action(EventdPluginContext *context, const gchar *config_id
  * Plugin interface
  */
 
-EVENTD_EXPORT const gchar *eventd_plugin_id = "eventd-espeak";
+EVENTD_EXPORT const gchar *eventd_plugin_id = "eventd-tts";
 EVENTD_EXPORT
 void
 eventd_plugin_get_interface(EventdPluginInterface *interface)
 {
-    libeventd_plugin_interface_add_init_callback(interface, _eventd_espeak_init);
-    libeventd_plugin_interface_add_uninit_callback(interface, _eventd_espeak_uninit);
+    libeventd_plugin_interface_add_init_callback(interface, _eventd_tts_init);
+    libeventd_plugin_interface_add_uninit_callback(interface, _eventd_tts_uninit);
 
-    libeventd_plugin_interface_add_stop_callback(interface, _eventd_espeak_stop);
+    libeventd_plugin_interface_add_stop_callback(interface, _eventd_tts_stop);
 
-    libeventd_plugin_interface_add_event_parse_callback(interface, _eventd_espeak_event_parse);
-    libeventd_plugin_interface_add_config_reset_callback(interface, _eventd_espeak_config_reset);
+    libeventd_plugin_interface_add_event_parse_callback(interface, _eventd_tts_event_parse);
+    libeventd_plugin_interface_add_config_reset_callback(interface, _eventd_tts_config_reset);
 
-    libeventd_plugin_interface_add_event_action_callback(interface, _eventd_espeak_event_action);
+    libeventd_plugin_interface_add_event_action_callback(interface, _eventd_tts_event_action);
 }

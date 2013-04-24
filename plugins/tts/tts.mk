@@ -1,29 +1,29 @@
-# espeak plugin
+# tts plugin
 
-if ENABLE_ESPEAK
+if ENABLE_TTS
 plugins_LTLIBRARIES += \
-	espeak.la
+	tts.la
 
 man5_MANS += \
-	plugins/espeak/man/eventd-espeak.event.5
+	plugins/tts/man/eventd-tts.event.5
 endif
 
 
-espeak_la_SOURCES = \
-	plugins/espeak/src/espeak.c
+tts_la_SOURCES = \
+	plugins/tts/src/tts.c
 
-espeak_la_CFLAGS = \
+tts_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	-D G_LOG_DOMAIN=\"eventd-espeak\" \
+	-D G_LOG_DOMAIN=\"eventd-tts\" \
 	$(ESPEAK_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS)
 
-espeak_la_LDFLAGS = \
+tts_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
 	-avoid-version -module
 
-espeak_la_LIBADD = \
+tts_la_LIBADD = \
 	libeventd-event.la \
 	libeventd-plugin.la \
 	libeventd.la \

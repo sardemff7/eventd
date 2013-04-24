@@ -103,8 +103,8 @@
                     <listitem><para>a sound file playing plugin</para></listitem>
                 </varlistentry>
 
-                <varlistentry condition="website;enable_espeak">
-                    <term><command>espeak</command> (see <citerefentry><refentrytitle>eventd-espeak.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
+                <varlistentry condition="website;enable_tts">
+                    <term><command>tts</command> (see <citerefentry><refentrytitle>eventd-tts.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
                     <listitem><para>a Text-to-Speech plugin</para></listitem>
                 </varlistentry>
 

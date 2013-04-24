@@ -155,11 +155,11 @@
                 </listitem>
             </varlistentry>
 
-            <varlistentry condition="website;enable_espeak">
-                <term><command>espeak</command> plugin man pages</term>
+            <varlistentry condition="website;enable_tts">
+                <term><command>tts</command> plugin man pages</term>
                 <listitem>
                     <para>
-                        <citerefentry><refentrytitle>eventd-espeak.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                        <citerefentry><refentrytitle>eventd-tts.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>
                     </para>
                 </listitem>
             </varlistentry>

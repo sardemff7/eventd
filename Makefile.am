@@ -61,7 +61,7 @@ include plugins/exec/exec.mk
 include plugins/nd/nd.mk
 include plugins/im/im.mk
 include plugins/sound/sound.mk
-include plugins/espeak/espeak.mk
+include plugins/tts/tts.mk
 include plugins/notify/notify.mk
 include client/libeventc/libeventc.mk
 include client/eventc/eventc.mk

@@ -239,9 +239,9 @@ if test x$enable_sound = xyes; then
 fi
 AM_CONDITIONAL(ENABLE_SOUND, test x$enable_sound = xyes)
 
-# espeak plugin
-AC_ARG_ENABLE(espeak, AS_HELP_STRING([--enable-espeak], [Enable eSpeak support]), [], enable_espeak=no)
-if test x$enable_espeak = xyes; then
+# TTS plugin
+AC_ARG_ENABLE(tts, AS_HELP_STRING([--enable-tts], [Enable Text-to-speech support through eSpeak]), [], enable_tts=no)
+if test x$enable_tts = xyes; then
     ESPEAK_CFLAGS="-I/usr/include/espeak"
     ESPEAK_LIBS="-lespeak"
     AC_SEARCH_LIBS([espeak_Synth], [espeak],
@@ -250,11 +250,11 @@ if test x$enable_espeak = xyes; then
             AC_SUBST(ESPEAK_LIBS)
         ],
         [
-            AC_MSG_ERROR([*** eSpeak support requested but library is missing])
+            AC_MSG_ERROR([*** TTS support requested but eSpeak library is missing])
         ])
-    DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_espeak"
+    DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_tts"
 fi
-AM_CONDITIONAL(ENABLE_ESPEAK, test x$enable_espeak = xyes)
+AM_CONDITIONAL(ENABLE_TTS, test x$enable_tts = xyes)
 
 # libnotify plugin
 AC_ARG_ENABLE(libnotify, AS_HELP_STRING([--enable-libnotify], [Enable libnotify support (client side)]), [], enable_libnotify=no)
@@ -325,7 +325,7 @@ AC_MSG_RESULT([
                 Linux framebuffer: $enable_linux_framebuffer
         IM support through libpurple: $enable_im
         Sound files playing through libsndfile: $enable_sound
-        Text-to-speech through eSpeak: $enable_espeak
+        Text-to-speech through eSpeak: $enable_tts
         libnotify proxy: $enable_libnotify
 
 dnl     Tests: $enable_tests
