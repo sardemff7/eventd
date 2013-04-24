@@ -94,6 +94,7 @@ libeventd_evp_context_set_connection(LibeventdEvpContext *self, GSocketConnectio
 {
     g_return_if_fail(self != NULL);
     g_return_if_fail(connection != NULL);
+    g_return_if_fail(self->connection == NULL);
 
     g_cancellable_reset(self->cancellable);
 
