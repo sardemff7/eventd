@@ -38,13 +38,6 @@ struct _LibeventdEvpContext {
     GError *error;
     gint priority;
     gboolean server;
-
-    struct {
-        LibeventdEvpWaiterCallback callback;
-        GSimpleAsyncResult *result;
-        gchar *id;
-    } waiter;
-
 };
 
 gboolean libeventd_evp_context_send_message(LibeventdEvpContext *context, const gchar *message, GError** error);
