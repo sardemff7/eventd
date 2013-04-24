@@ -40,6 +40,9 @@ libeventd_evp_get_address(const gchar *host_and_port, GError **error)
 {
     GSocketConnectable *address = NULL;
 
+    if ( ( host_and_port == NULL ) || ( *host_and_port == '\0' ) )
+        host_and_port = "localhost";
+
 #ifdef HAVE_GIO_UNIX
     gchar *path = NULL;
     if ( g_strcmp0(host_and_port, "localhost") == 0 )

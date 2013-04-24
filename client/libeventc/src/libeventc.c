@@ -164,8 +164,6 @@ EVENTD_EXPORT
 EventcConnection *
 eventc_connection_new(const gchar *host)
 {
-    g_return_val_if_fail (host != NULL, NULL);
-
     EventcConnection *self;
 
     self = g_object_new(EVENTC_TYPE_CONNECTION, NULL);
