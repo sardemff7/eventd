@@ -158,6 +158,9 @@ _eventd_relay_event_free(gpointer data)
 static LibeventdEvpClientInterface _eventd_relay_interface = {
     .error     = _eventd_relay_error,
 
+    .event     = NULL,
+    .end       = NULL,
+
     .answered  = _eventd_relay_answered,
     .ended     = _eventd_relay_ended,
 
@@ -194,7 +197,7 @@ _eventd_relay_connection_handler(GObject *obj, GAsyncResult *res, gpointer user_
     {
         libeventd_evp_context_set_connection(server->evp, connection);
         g_object_unref(connection);
-        libeventd_evp_context_receive_loop_client(server->evp, G_PRIORITY_DEFAULT);
+        libeventd_evp_context_receive_loop(server->evp, G_PRIORITY_DEFAULT);
     }
 }
 

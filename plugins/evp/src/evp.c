@@ -259,7 +259,7 @@ _eventd_service_connection_handler(GSocketService *socket_service, GSocketConnec
     client->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_evp_event_free);
     client->evp = libeventd_evp_context_new_for_connection(client, &_eventd_evp_interface, connection);
 
-    libeventd_evp_context_receive_loop_server(client->evp, G_PRIORITY_DEFAULT);
+    libeventd_evp_context_receive_loop(client->evp, G_PRIORITY_DEFAULT);
 
     return FALSE;
 }

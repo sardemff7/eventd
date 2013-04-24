@@ -118,8 +118,12 @@ _eventc_connection_bye(gpointer data, LibeventdEvpContext *context)
 static LibeventdEvpClientInterface _eventc_connection_client_interface = {
     .error = _eventc_connection_error,
 
+    .event = NULL,
+    .end = NULL,
+
     .answered = _eventc_connection_answered,
     .ended = _eventc_connection_ended,
+
     .bye = _eventc_connection_bye
 };
 
@@ -210,7 +214,7 @@ _eventc_connection_connect_callback(GObject *obj, GAsyncResult *res, gpointer us
     }
 
     libeventd_evp_context_set_connection(self->priv->evp, connection);
-    libeventd_evp_context_receive_loop_client(self->priv->evp, G_PRIORITY_DEFAULT);
+    libeventd_evp_context_receive_loop(self->priv->evp, G_PRIORITY_DEFAULT);
 
     GSimpleAsyncResult *result;
     result = g_simple_async_result_new(G_OBJECT(self), callback, user_data, _eventc_connection_connect_callback);

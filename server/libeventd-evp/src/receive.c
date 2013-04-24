@@ -208,7 +208,8 @@ _libeventd_evp_context_receive_event_callback(GObject *source_object, GAsyncResu
             else
                 eventd_event_set_all_data(data->event, data->data_hash);
 
-            self->interface->event(self->client, self, data->id, data->event);
+            if ( self->interface->event != NULL )
+                self->interface->event(self->client, self, data->id, data->event);
         }
 
         g_object_unref(data->event);
@@ -249,7 +250,8 @@ _libeventd_evp_context_receive_answered_callback(GObject *source_object, GAsyncR
 
     if ( g_strcmp0(line, ".") == 0 )
     {
-        self->interface->answered(self->client, self, data->id, data->answer, data->data_hash);
+        if ( self->interface->answered != NULL )
+            self->interface->answered(self->client, self, data->id, data->answer, data->data_hash);
 
         g_free(data->answer);
         g_free(data->id);
@@ -289,7 +291,7 @@ _libeventd_evp_context_receive_callback(GObject *source_object, GAsyncResult *re
         self->interface->bye(self->client, self);
         return;
     }
-    else if ( self->server && g_str_has_prefix(line, ".EVENT ") )
+    else if ( g_str_has_prefix(line, ".EVENT ") )
     {
         gchar *id, *category = NULL, *name = NULL;
         id = line + strlen(".EVENT ");
@@ -312,8 +314,11 @@ _libeventd_evp_context_receive_callback(GObject *source_object, GAsyncResult *re
         g_free(line);
         return;
     }
-    else if ( self->server && g_str_has_prefix(line, "END ") )
-        self->interface->end(self->client, self, line + strlen("END "));
+    else if ( g_str_has_prefix(line, "END ") )
+    {
+        if ( self->interface->end != NULL )
+            self->interface->end(self->client, self, line + strlen("END "));
+    }
     else if ( g_str_has_prefix(line, "ENDED ") )
     {
         gchar **end;
@@ -325,7 +330,8 @@ _libeventd_evp_context_receive_callback(GObject *source_object, GAsyncResult *re
         if ( value != NULL )
             reason = value->value;
 
-        self->interface->ended(self->client, self, end[0], reason);
+        if ( self->interface->ended != NULL )
+            self->interface->ended(self->client, self, end[0], reason);
 
         g_strfreev(end);
     }
@@ -356,29 +362,13 @@ _libeventd_evp_context_receive_callback(GObject *source_object, GAsyncResult *re
 }
 
 void
-libeventd_evp_context_receive_loop_client(LibeventdEvpContext *self, gint priority)
+libeventd_evp_context_receive_loop(LibeventdEvpContext *self, gint priority)
 {
     g_return_if_fail(self != NULL);
 
     self->priority = priority;
 
     g_cancellable_reset(self->cancellable);
-
-    self->server = FALSE;
-
-    _libeventd_evp_receive(self, _libeventd_evp_context_receive_callback, self);
-}
-
-void
-libeventd_evp_context_receive_loop_server(LibeventdEvpContext *self, gint priority)
-{
-    g_return_if_fail(self != NULL);
-
-    self->priority = priority;
-
-    g_cancellable_reset(self->cancellable);
-
-    self->server = TRUE;
 
     _libeventd_evp_receive(self, _libeventd_evp_context_receive_callback, self);
 }

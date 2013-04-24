@@ -37,7 +37,6 @@ struct _LibeventdEvpContext {
     GDataOutputStream *out;
     GError *error;
     gint priority;
-    gboolean server;
 };
 
 gboolean libeventd_evp_context_send_message(LibeventdEvpContext *context, const gchar *message, GError** error);
