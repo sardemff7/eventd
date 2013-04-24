@@ -42,16 +42,14 @@ static gint tries = 0;
 static gint max_tries = 3;
 static gboolean wait_event_end = FALSE;
 
-static void _eventc_connect(void);
 static void _eventc_send_event(void);
 static gboolean _eventc_disconnect(gpointer user_data);
 
-static void
-_eventc_connect_callback(GObject *obj, GAsyncResult *res, gpointer user_data)
+static gboolean
+_eventc_connect(gpointer user_data)
 {
     GError *error = NULL;
-    eventc_connection_connect_finish(client, res, &error);
-    if ( error != NULL )
+    if ( ! eventc_connection_connect_sync(client, &error) )
     {
         g_warning("Couldn't connect to host: %s", error->message);
 
@@ -59,18 +57,14 @@ _eventc_connect_callback(GObject *obj, GAsyncResult *res, gpointer user_data)
         {
             g_warning("Too many attempts, aborting");
             g_main_loop_quit(loop);
+            return FALSE;
         }
-        else
-            _eventc_connect();
-        return;
+        return TRUE;
     }
-    _eventc_send_event();
-}
 
-static void
-_eventc_connect(void)
-{
-    eventc_connection_connect(client, _eventc_connect_callback, NULL);
+    _eventc_send_event();
+
+    return FALSE;
 }
 
 static void
@@ -191,7 +185,7 @@ main(int argc, char *argv[])
 
     eventd_event_set_all_data(event, data);
 
-    _eventc_connect();
+    g_idle_add(_eventc_connect, NULL);
 
     loop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(loop);
