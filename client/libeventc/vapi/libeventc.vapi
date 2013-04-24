@@ -47,6 +47,7 @@ namespace Eventc
 		public Connection(string host);
 		public bool close() throws Eventc.Error;
 		public new async void connect() throws Eventc.Error;
+		public new void connect_sync() throws Eventc.Error;
 		public bool event(Eventd.Event event) throws Eventc.Error;
 		public bool event_end(Eventd.Event event) throws Eventc.Error;
 		public bool is_connected() throws Eventc.Error;

@@ -184,6 +184,62 @@ eventc_connection_is_connected(EventcConnection *self, GError **error)
     return FALSE;
 }
 
+static gboolean
+_eventc_connection_connect_before(EventcConnection *self, GSocketClient **client, GSocketConnectable **address, GError **error)
+{
+    GError *_inner_error_ = NULL;
+
+    if ( libeventd_evp_context_is_connected(self->priv->evp, &_inner_error_) )
+    {
+        g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_ALREADY_CONNECTED, "Already connected, you must disconnect first");
+        return FALSE;
+    }
+    if ( _inner_error_ != NULL )
+    {
+        g_propagate_error(error, _inner_error_);
+        return FALSE;
+    }
+
+    *address = libeventd_evp_get_address(self->priv->host, &_inner_error_);
+    if ( *address == NULL )
+    {
+        g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_HOSTNAME, "Couldn't resolve the hostname '%s': %s", self->priv->host, _inner_error_->message);
+        g_error_free(_inner_error_);
+        return FALSE;
+    }
+
+    *client = g_socket_client_new();
+    g_socket_client_set_enable_proxy(*client, self->priv->enable_proxy);
+
+    return TRUE;
+}
+
+static gboolean
+_eventc_connection_connect_after(EventcConnection *self, GSocketConnection *connection, GError *_inner_error_, GError **error)
+{
+    if ( connection == NULL )
+    {
+        g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_CONNECTION, "Failed to connect: %s", _inner_error_->message);
+        g_error_free(_inner_error_);
+        return FALSE;
+    }
+
+    libeventd_evp_context_set_connection(self->priv->evp, connection);
+    if ( self->priv->passive )
+    {
+        if ( ! libeventd_evp_context_passive(self->priv->evp, &_inner_error_) )
+        {
+            g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_CONNECTION, "Failed to go into passive mode: %s", _inner_error_->message);
+            g_error_free(_inner_error_);
+            return FALSE;
+        }
+    }
+    else
+        libeventd_evp_context_receive_loop(self->priv->evp, G_PRIORITY_DEFAULT);
+
+    return TRUE;
+}
+
 static void
 _eventc_connection_connect_callback(GObject *obj, GAsyncResult *res, gpointer user_data)
 {
@@ -194,27 +250,14 @@ _eventc_connection_connect_callback(GObject *obj, GAsyncResult *res, gpointer us
     g_slice_free(EventcConnectionCallbackData, data);
 
     GError *_inner_error_ = NULL;
+    GError *error = NULL;
     GSocketConnection *connection;
     connection = g_socket_client_connect_finish(G_SOCKET_CLIENT(obj), res, &_inner_error_);
-    if ( connection == NULL )
+    if ( ! _eventc_connection_connect_after(self, connection, _inner_error_, &error) )
     {
-        g_simple_async_report_error_in_idle(G_OBJECT(self), callback, user_data, EVENTC_ERROR, EVENTC_ERROR_CONNECTION, "Failed to connect: %s", _inner_error_->message);
-        g_error_free(_inner_error_);
+        g_simple_async_report_take_gerror_in_idle(G_OBJECT(self), callback, user_data, error);
         return;
     }
-
-    libeventd_evp_context_set_connection(self->priv->evp, connection);
-    if ( self->priv->passive )
-    {
-        if ( ! libeventd_evp_context_passive(self->priv->evp, &_inner_error_) )
-        {
-            g_simple_async_report_error_in_idle(G_OBJECT(self), callback, user_data, EVENTC_ERROR, EVENTC_ERROR_CONNECTION, "Failed to go into passive mode: %s", _inner_error_->message);
-            g_error_free(_inner_error_);
-            return;
-        }
-    }
-    else
-        libeventd_evp_context_receive_loop(self->priv->evp, G_PRIORITY_DEFAULT);
 
     GSimpleAsyncResult *result;
     result = g_simple_async_result_new(G_OBJECT(self), callback, user_data, _eventc_connection_connect_callback);
@@ -228,30 +271,15 @@ eventc_connection_connect(EventcConnection *self, GAsyncReadyCallback callback, 
 {
     g_return_if_fail(EVENTC_IS_CONNECTION(self));
 
-    GError *_inner_error_ = NULL;
-    if ( libeventd_evp_context_is_connected(self->priv->evp, &_inner_error_) )
-    {
-        g_simple_async_report_error_in_idle(G_OBJECT(self), callback, user_data, EVENTC_ERROR, EVENTC_ERROR_ALREADY_CONNECTED, "Already connected, you must disconnect first");
-        return;
-    }
-    else if ( _inner_error_ != NULL )
-    {
-        g_simple_async_report_take_gerror_in_idle(G_OBJECT(self), callback, user_data, _inner_error_);
-        return;
-    }
-
-    GSocketConnectable *address;
-    address = libeventd_evp_get_address(self->priv->host, &_inner_error_);
-    if ( address == NULL )
-    {
-        g_simple_async_report_error_in_idle(G_OBJECT(self), callback, user_data, EVENTC_ERROR, EVENTC_ERROR_HOSTNAME, "Couldn't resolve the hostname '%s': %s", self->priv->host, _inner_error_->message);
-        g_error_free(_inner_error_);
-        return;
-    }
+    GError *error = NULL;
 
     GSocketClient *client;
-    client = g_socket_client_new();
-    g_socket_client_set_enable_proxy(client, self->priv->enable_proxy);
+    GSocketConnectable *address;
+    if ( ! _eventc_connection_connect_before(self, &client, &address, &error) )
+    {
+        g_simple_async_report_take_gerror_in_idle(G_OBJECT(self), callback, user_data, error);
+        return;
+    }
 
     EventcConnectionCallbackData *data;
     data = g_slice_new(EventcConnectionCallbackData);
@@ -275,6 +303,29 @@ eventc_connection_connect_finish(EventcConnection *self, GAsyncResult *result, G
     GSimpleAsyncResult *simple = G_SIMPLE_ASYNC_RESULT(result);
 
     if ( g_simple_async_result_propagate_error(simple, error) )
+        return FALSE;
+
+    return TRUE;
+}
+
+EVENTD_EXPORT
+gboolean
+eventc_connection_connect_sync(EventcConnection *self, GError **error)
+{
+    g_return_if_fail(EVENTC_IS_CONNECTION(self));
+
+    GSocketClient *client;
+    GSocketConnectable *address;
+    if ( ! _eventc_connection_connect_before(self, &client, &address, error) )
+        return FALSE;
+
+    GError *_inner_error_ = NULL;
+    GSocketConnection *connection;
+    connection = g_socket_client_connect(client, address, NULL, &_inner_error_);
+    g_object_unref(address);
+    g_object_unref(client);
+
+    if ( ! _eventc_connection_connect_after(self, connection, _inner_error_, error) )
         return FALSE;
 
     return TRUE;
