@@ -40,7 +40,6 @@ G_DEFINE_TYPE(EventcConnection, eventc_connection, G_TYPE_OBJECT)
 
 struct _EventcConnectionPrivate {
     gchar* host;
-    guint timeout;
     gboolean enable_proxy;
     LibeventdEvpContext* evp;
     guint64 count;
@@ -142,8 +141,6 @@ static void
 eventc_connection_init(EventcConnection *self)
 {
     self->priv = EVENTC_CONNECTION_GET_PRIVATE(self);
-
-    self->priv->timeout = -1;
 }
 
 static void
