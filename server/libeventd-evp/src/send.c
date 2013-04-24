@@ -55,7 +55,7 @@ _libeventd_evp_context_send_data(LibeventdEvpContext *self, GHashTable *all_data
     {
         if ( g_utf8_strchr(content, -1, '\n') == NULL )
         {
-            message = g_strdup_printf("DATAL %s %s", name, content);
+            message = g_strdup_printf("DATA %s %s", name, content);
             if ( ! libeventd_evp_context_send_message(self, message, error) )
                 goto fail;
             g_free(message);

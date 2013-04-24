@@ -164,11 +164,11 @@ _libeventd_evp_context_receive_data(LibeventdEvpContext *self, GHashTable *data_
 static gboolean
 _libeventd_evp_context_receive_data_handle(LibeventdEvpContext *self, GHashTable *data_hash, const gchar *line, GAsyncReadyCallback callback, gpointer user_data)
 {
-    if ( g_str_has_prefix(line, "DATAL ") )
+    if ( g_str_has_prefix(line, "DATA ") )
     {
         gchar **sline;
 
-        sline = g_strsplit(line + strlen("DATAL "), " ", 2);
+        sline = g_strsplit(line + strlen("DATA "), " ", 2);
 
         g_hash_table_insert(data_hash, sline[0], sline[1]);
 

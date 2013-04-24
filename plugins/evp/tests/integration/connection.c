@@ -43,7 +43,7 @@ connection_test(GDataInputStream *input, GDataOutputStream *output, const gchar 
 
     if ( ! g_data_output_stream_put_string(output, ".EVENT 1 test test\n", NULL, error) ) goto fail;
     if ( ! g_data_output_stream_put_string(output, "ANSWER test\n", NULL, error) ) goto fail;
-    m = g_strdup_printf("DATAL file %s\n", filename);
+    m = g_strdup_printf("DATA file %s\n", filename);
     if ( ! g_data_output_stream_put_string(output, m, NULL, error) ) goto fail;
     g_free(m);
     m = g_strdup_printf(".DATA test\n%s\n.\n", message);
@@ -64,10 +64,10 @@ connection_test(GDataInputStream *input, GDataOutputStream *output, const gchar 
     r = g_data_input_stream_read_upto(input, "\n", -1, NULL, NULL, error);
     if ( r == NULL ) goto fail;
     if ( ! g_data_input_stream_read_byte(input, NULL, error) ) goto fail;
-    m = g_strdup_printf("DATAL test %s", message);
+    m = g_strdup_printf("DATA test %s", message);
     if ( g_strcmp0(r, m) != 0 )
     {
-        e = g_strdup_printf("Wrong ANSWER DATAL to EVENT 1: %s", r);
+        e = g_strdup_printf("Wrong ANSWER DATA to EVENT 1: %s", r);
         goto fail;
     }
     m = (g_free(m), NULL);
