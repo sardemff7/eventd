@@ -363,18 +363,11 @@ _eventd_evp_start(EventdPluginContext *service)
 }
 
 static void
-_eventd_evp_client_disconnect_finish(GObject *source_object, GAsyncResult *res, gpointer user_data)
-{
-    EventdEvpClient *client = user_data;
-    libeventd_evp_context_close_finish(client->evp, res);
-    _eventd_evp_bye(client, client->evp);
-}
-
-static void
 _eventd_service_client_disconnect(gpointer data)
 {
     EventdEvpClient *client = data;
-    libeventd_evp_context_close(client->evp, _eventd_evp_client_disconnect_finish, client);
+    libeventd_evp_context_close(client->evp);
+    _eventd_evp_bye(client, client->evp);
 }
 
 static void

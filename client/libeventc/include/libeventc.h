@@ -78,8 +78,7 @@ void eventc_connection_connect (EventcConnection *self, GAsyncReadyCallback call
 gboolean eventc_connection_connect_finish (EventcConnection *self, GAsyncResult *result, GError **error);
 gboolean eventc_connection_event (EventcConnection *self, EventdEvent *event, GError **error);
 gboolean eventc_connection_event_end (EventcConnection *self, EventdEvent *event, GError **error);
-void eventc_connection_close (EventcConnection *self, GAsyncReadyCallback callback, gpointer user_data);
-gboolean eventc_connection_close_finish (EventcConnection *self, GAsyncResult *result, GError **error);
+gboolean eventc_connection_close(EventcConnection *self, GError **error);
 
 
 void eventc_connection_set_host(EventcConnection *self, const gchar *value);

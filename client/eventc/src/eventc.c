@@ -44,7 +44,7 @@ static gboolean wait_event_end = FALSE;
 
 static void _eventc_connect(void);
 static void _eventc_send_event(void);
-static void _eventc_disconnect(void);
+static gboolean _eventc_disconnect(gpointer user_data);
 
 static void
 _eventc_connect_callback(GObject *obj, GAsyncResult *res, gpointer user_data)
@@ -76,7 +76,7 @@ _eventc_connect(void)
 static void
 _eventc_event_end_callback(EventdEvent *event, EventdEventEndReason reason, gpointer user_data)
 {
-    _eventc_disconnect();
+    g_idle_add(_eventc_disconnect, NULL);
 }
 
 static void
@@ -89,22 +89,18 @@ _eventc_send_event(void)
     if ( ! eventc_connection_event(client, event, &error) )
         g_warning("Couldn't send event '%s', '%s': %s", eventd_event_get_category(event), eventd_event_get_name(event), error->message);
     if ( ! wait_event_end )
-       _eventc_disconnect();
+       _eventc_disconnect(NULL);
 }
 
-static void
-_eventc_disconnect_callback(GObject *obj, GAsyncResult *res, gpointer user_data)
+static gboolean
+_eventc_disconnect(gpointer user_data)
 {
     GError *error = NULL;
-    if ( ! eventc_connection_close_finish(client, res, &error) )
+    if ( ! eventc_connection_close(client, &error) )
         g_warning("Couldn't disconnect from event: %s", error->message);
     g_main_loop_quit(loop);
-}
 
-static void
-_eventc_disconnect(void)
-{
-    eventc_connection_close(client, _eventc_disconnect_callback, NULL);
+    return FALSE;
 }
 
 

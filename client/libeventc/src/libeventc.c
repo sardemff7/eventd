@@ -54,8 +54,7 @@ typedef struct {
     gpointer user_data;
 } EventcConnectionCallbackData;
 
-static void _eventc_connection_close_internal(EventcConnection *self, GAsyncReadyCallback callback, gpointer user_data);
-static void _eventc_connection_close_internal_finish(EventcConnection *self, GAsyncResult *result);
+static void _eventc_connection_close_internal(EventcConnection *self);
 
 EVENTD_EXPORT
 const gchar *
@@ -103,17 +102,10 @@ _eventc_connection_ended(gpointer data, LibeventdEvpContext *context, const gcha
 }
 
 static void
-_eventc_connection_bye_callback(GObject *obj, GAsyncResult *res, gpointer user_data)
-{
-    EventcConnection *self = EVENTC_CONNECTION(obj);
-    _eventc_connection_close_internal_finish(self, res);
-}
-
-static void
 _eventc_connection_bye(gpointer data, LibeventdEvpContext *context)
 {
     EventcConnection *self = data;
-    _eventc_connection_close_internal(self, _eventc_connection_bye_callback, NULL);
+    _eventc_connection_close_internal(self);
 }
 
 static LibeventdEvpClientInterface _eventc_connection_client_interface = {
@@ -385,26 +377,9 @@ eventc_connection_event_end(EventcConnection *self, EventdEvent *event, GError *
     return TRUE;
 }
 
-static void
-eventc_connection_close_callback(GObject *obj, GAsyncResult *res, gpointer user_data)
-{
-    EventcConnection *self = EVENTC_CONNECTION(obj);
-    EventcConnectionCallbackData *data = user_data;
-    GAsyncReadyCallback callback = data->callback;
-    user_data = data->user_data;
-    g_slice_free(EventcConnectionCallbackData, data);
-
-    _eventc_connection_close_internal_finish(self, res);
-
-    GSimpleAsyncResult *result;
-    result = g_simple_async_result_new(G_OBJECT(self), callback, user_data, eventc_connection_close_callback);
-    g_simple_async_result_complete(result);
-    g_object_unref(result);
-}
-
 EVENTD_EXPORT
-void
-eventc_connection_close(EventcConnection *self, GAsyncReadyCallback callback, gpointer user_data)
+gboolean
+eventc_connection_close(EventcConnection *self, GError **error)
 {
     g_return_if_fail(EVENTC_IS_CONNECTION(self));
 
@@ -413,68 +388,26 @@ eventc_connection_close(EventcConnection *self, GAsyncReadyCallback callback, gp
         libeventd_evp_context_send_bye(self->priv->evp);
     else if ( _inner_error_ != NULL )
     {
-        g_simple_async_report_take_gerror_in_idle(G_OBJECT(self), callback, user_data, _inner_error_);
-        return;
+        g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_BYE, "Couldn't send bye message: %s", _inner_error_->message);
+        g_error_free(_inner_error_);
+        return FALSE;
     }
 
-    EventcConnectionCallbackData *data;
-    data = g_slice_new(EventcConnectionCallbackData);
-    data->callback = callback;
-    data->user_data = user_data;
-
-    _eventc_connection_close_internal(self, eventc_connection_close_callback, data);
-}
-
-EVENTD_EXPORT
-gboolean
-eventc_connection_close_finish(EventcConnection *self, GAsyncResult *result, GError **error)
-{
-    g_return_val_if_fail(EVENTC_IS_CONNECTION(self), FALSE);
-    g_return_val_if_fail(g_simple_async_result_is_valid(result, G_OBJECT(self), NULL), FALSE);
-    g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-    GSimpleAsyncResult *simple = G_SIMPLE_ASYNC_RESULT(result);
-
-    if ( g_simple_async_result_propagate_error(simple, error) )
-        return FALSE;
+    _eventc_connection_close_internal(self);
 
     return TRUE;
 }
 
 static void
-_eventc_connection_close_internal_callback(GObject *obj, GAsyncResult *res, gpointer user_data)
+_eventc_connection_close_internal(EventcConnection *self)
 {
-    EventcConnectionCallbackData *data = user_data;
-    EventcConnection *self = data->self;
-    GAsyncReadyCallback callback = data->callback;
-    user_data = data->user_data;
-    g_slice_free(EventcConnectionCallbackData, data);
+    libeventd_evp_context_close(self->priv->evp);
 
-    libeventd_evp_context_close_finish(self->priv->evp, res);
-
-    GSimpleAsyncResult *result;
-    result = g_simple_async_result_new(G_OBJECT(self), callback, user_data, _eventc_connection_close_internal_callback);
-    g_simple_async_result_complete(result);
-    g_object_unref(result);
-}
-
-static void
-_eventc_connection_close_internal(EventcConnection *self, GAsyncReadyCallback callback, gpointer user_data)
-{
-    EventcConnectionCallbackData *data;
-    data = g_slice_new(EventcConnectionCallbackData);
-    data->self = self;
-    data->callback = callback;
-    data->user_data = user_data;
-
-    libeventd_evp_context_close(self->priv->evp, _eventc_connection_close_internal_callback, data);
-}
-
-static void
-_eventc_connection_close_internal_finish(EventcConnection *self, GAsyncResult *result)
-{
-    g_return_if_fail(EVENTC_IS_CONNECTION(self));
-    g_return_if_fail(g_simple_async_result_is_valid(result, G_OBJECT(self), _eventc_connection_close_internal_callback));
+    GHashTableIter iter;
+    EventdEvent *event;
+    g_hash_table_iter_init(&iter, self->priv->events);
+    while ( g_hash_table_iter_next(&iter, NULL, (gpointer *)&event) )
+        g_signal_handlers_disconnect_by_func(G_OBJECT(event), _eventc_connection_event_end_callback, self);
 
     g_hash_table_remove_all(self->priv->events);
     g_hash_table_remove_all(self->priv->ids);

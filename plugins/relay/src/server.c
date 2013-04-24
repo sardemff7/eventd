@@ -265,14 +265,6 @@ eventd_relay_server_start(EventdRelayServer *server)
     g_object_unref(client);
 }
 
-static void
-_eventd_relay_close_handler(GObject *obj, GAsyncResult *res, gpointer user_data)
-{
-    EventdRelayServer *server = user_data;
-
-    libeventd_evp_context_close_finish(server->evp, res);
-}
-
 void
 eventd_relay_server_stop(EventdRelayServer *server)
 {
@@ -284,7 +276,7 @@ eventd_relay_server_stop(EventdRelayServer *server)
 
     if ( libeventd_evp_context_is_connected(server->evp, NULL) )
         libeventd_evp_context_send_bye(server->evp);
-    libeventd_evp_context_close(server->evp, _eventd_relay_close_handler, server);
+    libeventd_evp_context_close(server->evp);
 }
 
 void

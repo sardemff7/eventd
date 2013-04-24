@@ -41,12 +41,12 @@ static EventdEvent *event = NULL;
 static GMainLoop *loop = NULL;
 
 static enum {
-    STATE_1 = 1,
-    STATE_2 = 2,
-    STATE_3 = 3,
-    STATE_4 = 4,
-    STATE_5 = 5
-} state = STATE_1;
+    STATE_FIRST_CONNECTION_FIRST_EVENT = 1,
+    STATE_FIRST_CONNECTION_SECOND_EVENT = 2,
+    STATE_SECOND_CONNECTION_FIRST_EVENT = 3,
+    STATE_SECOND_CONNECTION_SECOND_EVENT = 4,
+    STATE_END = 5
+} state = STATE_FIRST_CONNECTION_FIRST_EVENT;
 
 static void _ended_callback(EventdEvent *e, EventdEventEndReason reason, EventcConnection *client);
 static void _answered_callback(EventdEvent *e, const gchar *answer, EventcConnection *client);
@@ -76,10 +76,10 @@ _connect_callback(GObject *obj, GAsyncResult *res, gpointer user_data)
     {
         switch ( state )
         {
-        case STATE_3:
+        case STATE_SECOND_CONNECTION_FIRST_EVENT:
             g_object_unref(event);
             _create_event(client, TRUE);
-        case STATE_1:
+        case STATE_FIRST_CONNECTION_FIRST_EVENT:
             if ( ! eventc_connection_event(client, event, &error) )
                 break;
             return;
@@ -121,11 +121,27 @@ fail:
     g_main_loop_quit(loop);
 }
 
-static void _close_callback(GObject *obj, GAsyncResult *res, gpointer user_data);
 static gboolean
 _ended_close_idle_callback(gpointer user_data)
 {
-    eventc_connection_close(user_data, _close_callback, NULL);
+    EventcConnection *client = user_data;
+
+    switch ( state )
+    {
+    case STATE_FIRST_CONNECTION_SECOND_EVENT:
+        if ( ! eventc_connection_close(client, &error) )
+            break;
+        eventc_connection_connect(client, _connect_callback, NULL);
+        state = STATE_SECOND_CONNECTION_FIRST_EVENT;
+        return FALSE;
+    case STATE_SECOND_CONNECTION_SECOND_EVENT:
+        eventc_connection_close(client, &error);
+        state = STATE_END;
+    break;
+    default:
+        g_warning("Should never be in that state");
+    }
+    g_main_loop_quit(loop);
     return FALSE;
 }
 
@@ -136,8 +152,8 @@ _ended_callback(EventdEvent *e, EventdEventEndReason reason, EventcConnection *c
     g_return_if_fail(reason_value != NULL);
     switch ( state )
     {
-    case STATE_1:
-    case STATE_3:
+    case STATE_FIRST_CONNECTION_FIRST_EVENT:
+    case STATE_SECOND_CONNECTION_FIRST_EVENT:
         if ( reason != EVENTD_EVENT_END_REASON_RESERVED )
             break;
         g_object_unref(event);
@@ -148,8 +164,8 @@ _ended_callback(EventdEvent *e, EventdEventEndReason reason, EventcConnection *c
             g_main_loop_quit(loop);
         ++state;
         return;
-    case STATE_2:
-    case STATE_4:
+    case STATE_FIRST_CONNECTION_SECOND_EVENT:
+    case STATE_SECOND_CONNECTION_SECOND_EVENT:
         if ( reason != EVENTD_EVENT_END_REASON_CLIENT_DISMISS )
             break;
         g_idle_add(_ended_close_idle_callback, client);
@@ -158,29 +174,6 @@ _ended_callback(EventdEvent *e, EventdEventEndReason reason, EventcConnection *c
         g_warning("Should never be in that state");
     }
     g_warning("Wrong end reason: %s", reason_value->value_nick);
-    g_main_loop_quit(loop);
-}
-
-static void
-_close_callback(GObject *obj, GAsyncResult *res, gpointer user_data)
-{
-    EventcConnection *client = EVENTC_CONNECTION(obj);
-
-    switch ( state )
-    {
-    case STATE_2:
-        if ( ! eventc_connection_close_finish(client, res, &error) )
-            break;
-        eventc_connection_connect(client, _connect_callback, NULL);
-        state = STATE_3;
-        return;
-    case STATE_4:
-        eventc_connection_close_finish(client, res, &error);
-        state = STATE_5;
-    break;
-    default:
-        g_warning("Should never be in that state");
-    }
     g_main_loop_quit(loop);
 }
 
@@ -198,7 +191,9 @@ eventd_tests_run_libeventc(const gchar *host)
     eventc_connection_connect(client, _connect_callback, NULL);
 
     g_main_loop_run(loop);
-    if ( state != STATE_5 )
+    g_main_loop_unref(loop);
+
+    if ( state != STATE_END )
         r = 1;
 
     g_object_unref(event);

@@ -105,20 +105,11 @@ libeventd_evp_context_set_connection(LibeventdEvpContext *self, GSocketConnectio
 }
 
 void
-libeventd_evp_context_close(LibeventdEvpContext *self, GAsyncReadyCallback callback, gpointer user_data)
+libeventd_evp_context_close(LibeventdEvpContext *self)
 {
     g_return_if_fail(self != NULL);
 
     g_cancellable_cancel(self->cancellable);
-
-    g_simple_async_result_complete_in_idle(g_simple_async_result_new(G_OBJECT(self->cancellable), callback, user_data, libeventd_evp_context_close));
-}
-
-void
-libeventd_evp_context_close_finish(LibeventdEvpContext *self, GAsyncResult *result)
-{
-    g_return_if_fail(self != NULL);
-    g_return_if_fail(g_simple_async_result_is_valid(result, G_OBJECT(self->cancellable), NULL));
 
     if ( self->out != NULL )
         g_object_unref(self->out);
