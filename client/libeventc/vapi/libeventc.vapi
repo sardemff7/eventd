@@ -45,10 +45,10 @@ namespace Eventc
 		public string host { private get; set; }
 
 		public Connection(string host);
-		public async void close() throws Eventc.Error;
+		public bool close() throws Eventc.Error;
 		public new async void connect() throws Eventc.Error;
-		public void event(Eventd.Event event) throws Eventc.Error;
-		public void event_end(Eventd.Event event) throws Eventc.Error;
+		public bool event(Eventd.Event event) throws Eventc.Error;
+		public bool event_end(Eventd.Event event) throws Eventc.Error;
 		public bool is_connected() throws Eventc.Error;
 	}
 }
