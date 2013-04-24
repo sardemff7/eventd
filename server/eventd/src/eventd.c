@@ -436,7 +436,7 @@ main(int argc, char *argv[])
 
     if ( print_version )
     {
-        g_print(PACKAGE_STRING "\n");
+        g_printf(PACKAGE_NAME " " PACKAGE_VERSION "\n");
         goto end;
     }
 
