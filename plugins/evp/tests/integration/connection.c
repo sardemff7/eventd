@@ -41,6 +41,9 @@ connection_test(GDataInputStream *input, GDataOutputStream *output, const gchar 
     gchar *r = NULL;
     gchar *e = NULL;
 
+
+    /* Sending a first event an wait for the answer */
+
     if ( ! g_data_output_stream_put_string(output, ".EVENT 1 test test\n", NULL, error) ) goto fail;
     if ( ! g_data_output_stream_put_string(output, "ANSWER test\n", NULL, error) ) goto fail;
     m = g_strdup_printf("DATA file %s\n", filename);
@@ -107,6 +110,37 @@ connection_test(GDataInputStream *input, GDataOutputStream *output, const gchar 
         m = g_strdup_printf("Couldn't remove the file: %s", g_strerror(errno));
         goto fail;
     }
+
+
+
+    /* Sending unknown messages to test the proper ignoring behaviour */
+
+    /* Single line */
+    if ( ! g_data_output_stream_put_string(output, "TEST\n", NULL, error) ) goto fail;
+
+    /* Dot message */
+    if ( ! g_data_output_stream_put_string(output, ".TEST\n", NULL, error) ) goto fail;
+    if ( ! g_data_output_stream_put_string(output, ".\n", NULL, error) ) goto fail;
+
+    /* Dot message with data */
+    if ( ! g_data_output_stream_put_string(output, ".TEST\n", NULL, error) ) goto fail;
+    if ( ! g_data_output_stream_put_string(output, ".DATA data1\n", NULL, error) ) goto fail;
+    if ( ! g_data_output_stream_put_string(output, "..some data\n", NULL, error) ) goto fail;
+    if ( ! g_data_output_stream_put_string(output, ".\n", NULL, error) ) goto fail;
+    if ( ! g_data_output_stream_put_string(output, "DATA data2\n", NULL, error) ) goto fail;
+    if ( ! g_data_output_stream_put_string(output, ".\n", NULL, error) ) goto fail;
+
+    /* Two nested dot messages with data */
+    if ( ! g_data_output_stream_put_string(output, ".TEST\n", NULL, error) ) goto fail;
+    if ( ! g_data_output_stream_put_string(output, ".EVENT 3 test test\n", NULL, error) ) goto fail;
+    if ( ! g_data_output_stream_put_string(output, ".DATA data1\n", NULL, error) ) goto fail;
+    if ( ! g_data_output_stream_put_string(output, "..some data\n", NULL, error) ) goto fail;
+    if ( ! g_data_output_stream_put_string(output, ".\n", NULL, error) ) goto fail;
+    if ( ! g_data_output_stream_put_string(output, ".\n", NULL, error) ) goto fail;
+    if ( ! g_data_output_stream_put_string(output, ".\n", NULL, error) ) goto fail;
+
+
+    /* Sending a second event to test that everything is fine */
 
     if ( ! g_data_output_stream_put_string(output, ".EVENT 2 test test\n", NULL, error) ) goto fail;
     if ( ! g_data_output_stream_put_string(output, ".\n", NULL, error) ) goto fail;
