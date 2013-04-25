@@ -51,7 +51,7 @@ _libeventd_evp_receive(LibeventdEvpContext *self, GAsyncReadyCallback callback, 
         self->error = NULL;
         return;
     }
-    g_data_input_stream_read_upto_async(self->in, "\n", -1, self->priority, self->cancellable, callback, user_data);
+    g_data_input_stream_read_line_async(self->in, self->priority, self->cancellable, callback, user_data);
 }
 
 static gchar *
@@ -60,16 +60,12 @@ _libeventd_evp_receive_finish(LibeventdEvpContext *self, GAsyncResult *res)
     g_return_val_if_fail(G_IS_ASYNC_RESULT(res), NULL);
     gchar *line;
 
-    line = g_data_input_stream_read_upto_finish(self->in, res, NULL, &self->error);
+    line = g_data_input_stream_read_line_finish(self->in, res, NULL, &self->error);
     if ( line == NULL )
     {
         if ( ( self->error != NULL ) && ( self->error->code == G_IO_ERROR_CANCELLED ) )
             g_clear_error(&self->error);
-        return NULL;
     }
-
-    if ( ! g_data_input_stream_read_byte(self->in, NULL, &self->error) )
-        line = (g_free(line), NULL);
 
     return line;
 }

@@ -102,6 +102,8 @@ libeventd_evp_context_set_connection(LibeventdEvpContext *self, GSocketConnectio
 
     self->in  = g_data_input_stream_new(g_io_stream_get_input_stream(G_IO_STREAM(self->connection)));
     self->out = g_data_output_stream_new(g_io_stream_get_output_stream(G_IO_STREAM(self->connection)));
+
+    g_data_input_stream_set_newline_type(self->in, G_DATA_STREAM_NEWLINE_TYPE_LF);
 }
 
 void
