@@ -383,9 +383,12 @@ eventc_connection_event(EventcConnection *self, EventdEvent *event, GError **err
         return FALSE;
     }
 
-    g_hash_table_insert(self->priv->events, id, g_object_ref(event));
-    g_hash_table_insert(self->priv->ids, g_object_ref(event), id);
-    g_signal_connect_swapped(event, "ended", G_CALLBACK(_eventc_connection_event_end_callback), self);
+    if ( ! self->priv->passive )
+    {
+        g_hash_table_insert(self->priv->events, id, g_object_ref(event));
+        g_hash_table_insert(self->priv->ids, g_object_ref(event), id);
+        g_signal_connect_swapped(event, "ended", G_CALLBACK(_eventc_connection_event_end_callback), self);
+    }
 
     return TRUE;
 }
