@@ -111,6 +111,10 @@ libeventd_evp_context_send_event(LibeventdEvpContext *self, const gchar *id, Eve
     g_return_val_if_fail(event != NULL, FALSE);
     g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
+    if ( self->out == NULL )
+        /* Passive mode */
+        return TRUE;
+
     gchar *message;
 
     message = g_strdup_printf(".EVENT %s %s %s", id, eventd_event_get_category(event), eventd_event_get_name(event));
@@ -148,6 +152,10 @@ libeventd_evp_context_send_end(LibeventdEvpContext *self, const gchar *id, GErro
     g_return_val_if_fail(id != NULL, FALSE);
     g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
+    if ( self->out == NULL )
+        /* Passive mode */
+        return TRUE;
+
     gboolean r;
     gchar *message;
 
@@ -165,6 +173,10 @@ libeventd_evp_context_send_answered(LibeventdEvpContext *self, const gchar *id, 
     g_return_val_if_fail(id != NULL, FALSE);
     g_return_val_if_fail(answer != NULL, FALSE);
     g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
+    if ( self->out == NULL )
+        /* Passive mode */
+        return TRUE;
 
     gchar *message;
 
@@ -195,6 +207,10 @@ libeventd_evp_context_send_ended(LibeventdEvpContext *self, const gchar *id, Eve
     g_return_val_if_fail(reason_value != NULL, FALSE);
     g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
+    if ( self->out == NULL )
+        /* Passive mode */
+        return TRUE;
+
     gboolean r;
     gchar *message;
 
@@ -210,6 +226,10 @@ void
 libeventd_evp_context_send_bye(LibeventdEvpContext *self)
 {
     g_return_if_fail(self != NULL);
+
+    if ( self->out == NULL )
+        /* Passive mode */
+        return;
 
     libeventd_evp_context_send_message(self, "BYE", NULL);
 }
