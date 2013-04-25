@@ -356,7 +356,7 @@ _libeventd_evp_context_receive_callback(GObject *source_object, GAsyncResult *re
     }
     else if ( g_strcmp0(line, "PASSIVE") == 0 )
     {
-        if ( self->out != NULL )
+        if ( self->out == NULL )
             g_warning("Client already in passive mode");
         else
             g_object_unref(self->out);
