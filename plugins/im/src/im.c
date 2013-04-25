@@ -55,7 +55,7 @@ typedef struct {
 typedef struct {
     gchar *message;
     GList *convs;
-} EventdImEvent;
+} EventdImEventAccount;
 
 static void
 _eventd_im_glib_io_free(gpointer data)
@@ -125,17 +125,23 @@ _eventd_im_account_free(gpointer data)
 }
 
 static void
-_eventd_im_event_free(gpointer data)
+_eventd_im_event_account_free(gpointer data)
 {
     if ( data == NULL )
         return;
 
-    EventdImEvent *im_event = data;
+    EventdImEventAccount *account = data;
 
-    g_list_free(im_event->convs);
-    g_free(im_event->message);
+    g_list_free(account->convs);
+    g_free(account->message);
 
-    g_free(im_event);
+    g_slice_free(EventdImEventAccount, account);
+}
+
+static void
+_eventd_im_event_free(gpointer data)
+{
+    g_list_free_full(data, _eventd_im_event_account_free);
 }
 
 /*
@@ -299,26 +305,21 @@ _eventd_im_global_parse(EventdPluginContext *context, GKeyFile *config_file)
 static void
 _eventd_im_event_parse(EventdPluginContext *context, const gchar *config_id, GKeyFile *config_file)
 {
-    if ( ! g_key_file_has_group(config_file, "IM") )
-        return;
-
-    gboolean disable;
-    if ( libeventd_config_key_file_get_boolean(config_file, "IM", "Disable", &disable) < 0 )
-        return;
-
-    if ( disable )
+    if ( g_key_file_has_group(config_file, "IM") )
     {
-        g_hash_table_insert(context->events, g_strdup(config_id), NULL);
-        return;
+        gboolean disable;
+        if ( libeventd_config_key_file_get_boolean(config_file, "IM", "Disable", &disable) < 0 )
+            return;
+
+        if ( disable )
+        {
+            g_hash_table_insert(context->events, g_strdup(config_id), NULL);
+            return;
+        }
     }
 
-    gchar *message;
-    if ( libeventd_config_key_file_get_string(config_file, "IM", "Message", &message) != 0 )
-        return;
-
-    EventdImEvent *im_event;
-    im_event = g_new0(EventdImEvent, 1);
-    im_event->message = message;
+    gboolean have_account = FALSE;
+    GList *event_accounts = NULL;
 
     GHashTableIter iter;
     gchar *name, *section;
@@ -330,9 +331,30 @@ _eventd_im_event_parse(EventdPluginContext *context, const gchar *config_id, GKe
         if ( ! g_key_file_has_group(config_file, section) )
             goto next;
 
+        have_account = TRUE;
+
+        gchar *message;
+        if ( libeventd_config_key_file_get_locale_string(config_file, section, "Message", NULL, &message) != 0 )
+            goto next;
 
         gchar **channels;
-        if ( libeventd_config_key_file_get_string_list(config_file, section, "Channels", &channels, NULL) == 0 )
+        libeventd_config_key_file_get_string_list(config_file, section, "Channels", &channels, NULL);
+
+        /*
+         * TODO: private messages
+         */
+
+        if ( channels == NULL )
+        {
+            g_free(message);
+            goto next;
+        }
+
+        EventdImEventAccount *event_account;
+        event_account = g_slice_new0(EventdImEventAccount);
+        event_account->message = message;
+
+        if ( channels != NULL )
         {
             gchar **channel;
             for ( channel = channels ; *channel != NULL ; ++channel )
@@ -345,16 +367,19 @@ _eventd_im_event_parse(EventdPluginContext *context, const gchar *config_id, GKe
 
                     g_hash_table_insert(account->convs, *channel, conv);
                 }
-                im_event->convs = g_list_prepend(im_event->convs, conv);
+                event_account->convs = g_list_prepend(event_account->convs, conv);
             }
             g_free(channels);
         }
+
+        event_accounts = g_list_prepend(event_accounts, event_account);
 
     next:
         g_free(section);
     }
 
-    g_hash_table_insert(context->events, g_strdup(config_id), im_event);
+    if ( have_account )
+        g_hash_table_insert(context->events, g_strdup(config_id), event_accounts);
 }
 
 static void
@@ -392,31 +417,38 @@ _eventd_im_stop(EventdPluginContext *context)
 static void
 _eventd_im_event_action(EventdPluginContext *context, const gchar *config_id, EventdEvent *event)
 {
-    EventdImEvent *im_event;
+    GList *accounts;
 
-    im_event = g_hash_table_lookup(context->events, config_id);
-    if ( im_event == NULL )
+    accounts = g_hash_table_lookup(context->events, config_id);
+    if ( accounts == NULL )
         return;
 
-    gchar *message;
-    message = libeventd_regex_replace_event_data(im_event->message, event, NULL, NULL);
-
-    GList *conv_;
-    PurpleConversation *conv;
-    for ( conv_ = im_event->convs ; conv_ != NULL ; conv_ = g_list_next(conv_) )
+    GList *account_;
+    EventdImEventAccount *account;
+    for ( account_ = accounts ; account_ != NULL ; account_ = g_list_next(account_) )
     {
-        conv = conv_->data;
-        switch ( purple_conversation_get_type(conv) )
-        {
-        case PURPLE_CONV_TYPE_CHAT:
-            purple_conv_chat_send(PURPLE_CONV_CHAT(conv), message);
-        break;
-        default:
-        break;
-        }
-    }
+        account = account_->data;
 
-    g_free(message);
+        gchar *message;
+        message = libeventd_regex_replace_event_data(account->message, event, NULL, NULL);
+
+        GList *conv_;
+        for ( conv_ = account->convs ; conv_ != NULL ; conv_ = g_list_next(conv_) )
+        {
+            PurpleConversation *conv = conv_->data;
+
+            switch ( purple_conversation_get_type(conv) )
+            {
+            case PURPLE_CONV_TYPE_CHAT:
+                purple_conv_chat_send(PURPLE_CONV_CHAT(conv), message);
+            break;
+            default:
+            break;
+            }
+        }
+
+        g_free(message);
+    }
 }
 
 

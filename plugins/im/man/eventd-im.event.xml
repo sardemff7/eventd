@@ -66,14 +66,6 @@
                         <para>If <literal>true</literal>, no message is sent.</para>
                     </listitem>
                 </varlistentry>
-
-                <varlistentry>
-                    <term><varname>Message=</varname></term>
-                    <listitem>
-                        <para>A <type>string</type> (can contain $data-name references)</para>
-                        <para>The message to be sent.</para>
-                    </listitem>
-                </varlistentry>
             </variablelist>
         </refsect2>
 
@@ -90,6 +82,14 @@
                     <listitem>
                         <para>A <type>string list</type></para>
                         <para>The list of channels to connect to.</para>
+                    </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                    <term><varname>Message=</varname></term>
+                    <listitem>
+                        <para>A <type>string</type> (can contain $data-name references)</para>
+                        <para>The message to be sent.</para>
                     </listitem>
                 </varlistentry>
             </variablelist>
