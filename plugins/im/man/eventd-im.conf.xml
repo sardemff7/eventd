@@ -100,6 +100,14 @@
                         <para>The password of the account, if needed.</para>
                     </listitem>
                 </varlistentry>
+
+                <varlistentry>
+                    <term><varname>Port=</varname></term>
+                    <listitem>
+                        <para>An <type>integer</type></para>
+                        <para>The connection port, needed for some protocols.</para>
+                    </listitem>
+                </varlistentry>
             </variablelist>
         </refsect2>
     </refsect1>

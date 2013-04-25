@@ -268,12 +268,15 @@ _eventd_im_global_parse(EventdPluginContext *context, GKeyFile *config_file)
         gchar *protocol = NULL;
         gchar *username = NULL;
         gchar *password = NULL;
+        Int port;
 
         if ( libeventd_config_key_file_get_string(config_file, section, "Protocol", &protocol) < 0 )
             goto next;
         if ( libeventd_config_key_file_get_string(config_file, section, "Username", &username) < 0 )
             goto next;
         if ( libeventd_config_key_file_get_string(config_file, section, "Password", &password) < 0 )
+            goto next;
+        if ( libeventd_config_key_file_get_int(config_file, section, "Port", &port) < 0 )
             goto next;
 
         EventdImAccount *account;
@@ -286,6 +289,9 @@ _eventd_im_global_parse(EventdPluginContext *context, GKeyFile *config_file)
         purple_accounts_add(account->account);
         purple_account_set_alias(account->account, *name);
         purple_account_set_enabled(account->account, PACKAGE_NAME, TRUE);
+
+        if ( port.set )
+            purple_account_set_int(account->account, "port", CLAMP(port.value, 1, G_MAXUINT16));
 
         account->convs = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) purple_conversation_destroy);
 
