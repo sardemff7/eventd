@@ -115,6 +115,9 @@ connection_test(GDataInputStream *input, GDataOutputStream *output, const gchar 
 
     /* Sending unknown messages to test the proper ignoring behaviour */
 
+    /* Empty line */
+    if ( ! g_data_output_stream_put_string(output, "\n", NULL, error) ) goto fail;
+
     /* Single line */
     if ( ! g_data_output_stream_put_string(output, "TEST\n", NULL, error) ) goto fail;
 
@@ -152,6 +155,25 @@ connection_test(GDataInputStream *input, GDataOutputStream *output, const gchar 
     if ( g_strcmp0(r, "ENDED 2 client-dismiss") != 0 )
     {
         m = g_strdup_printf("No ENDED or bad ENDED to EVENT 2: %s", r);
+        goto fail;
+    }
+    g_free(r);
+
+    /* Sending a third event to test empty newline in DATA */
+
+    if ( ! g_data_output_stream_put_string(output, ".EVENT 3 test test\n", NULL, error) ) goto fail;
+    if ( ! g_data_output_stream_put_string(output, ".DATA test\n", NULL, error) ) goto fail;
+    if ( ! g_data_output_stream_put_string(output, "\n", NULL, error) ) goto fail;
+    if ( ! g_data_output_stream_put_string(output, ".\n", NULL, error) ) goto fail;
+    if ( ! g_data_output_stream_put_string(output, ".\n", NULL, error) ) goto fail;
+
+    if ( ! g_data_output_stream_put_string(output, "END 3\n", NULL, error) ) goto fail;
+
+    r = g_data_input_stream_read_upto(input, "\n", -1, NULL, NULL, error);
+    if ( ! g_data_input_stream_read_byte(input, NULL, error) ) goto fail;
+    if ( g_strcmp0(r, "ENDED 3 client-dismiss") != 0 )
+    {
+        m = g_strdup_printf("No ENDED or bad ENDED to EVENT 3: %s", r);
         goto fail;
     }
     g_free(r);
