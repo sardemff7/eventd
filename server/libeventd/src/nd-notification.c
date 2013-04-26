@@ -235,6 +235,9 @@ libeventd_nd_notification_new(LibeventdNdNotificationTemplate *template, EventdE
     self->title = libeventd_regex_replace_event_data(template->title, event, NULL, NULL);
 
     self->message = libeventd_regex_replace_event_data(template->message, event, NULL, NULL);
+    if ( *self->message == '\0' )
+        /* Empty message, just skip it */
+        self->message = (g_free(self->message), NULL);
 
 #ifdef ENABLE_GDK_PIXBUF
     gchar *path;
