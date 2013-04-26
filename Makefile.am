@@ -39,7 +39,6 @@ CLEANFILES =
 
 
 AM_CPPFLAGS += \
-	-D LOCALEDIR=\"$(localedir)\" \
 	-I $(srcdir)/src/ \
 	-I $(builddir)/src/
 
@@ -72,6 +71,9 @@ include src/man.mk
 include src/units.mk
 include src/services.mk
 
+SUBDIRS = po
+
+@EVENTD_EVENT_RULE@
 
 #
 # Hooks

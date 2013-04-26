@@ -13,6 +13,8 @@ man5_MANS += \
 noarch_pkgconfig_DATA += \
 	server/eventd/pkgconfig/eventd.pc
 
+include server/eventd/events/events.mk
+
 
 eventd_SOURCES = \
 	src/glib-compat.h \

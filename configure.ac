@@ -30,8 +30,8 @@ fi
 GETTEXT_PACKAGE=$PACKAGE_NAME
 AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE], ["$GETTEXT_PACKAGE"], [Gettext Package])
 AC_SUBST(GETTEXT_PACKAGE)
-dnl Not yet useful
-dnl IT_PROG_INTLTOOL([0.40.0])
+IT_PROG_INTLTOOL([0.40.0])
+AM_GLIB_GNU_GETTEXT
 
 AC_PROG_INSTALL
 
@@ -99,6 +99,8 @@ AC_SUBST([pluginsdir])
 AC_SUBST([eventdir])
 AC_SUBST([dbuscapabilitiesdir])
 
+EVENTD_I18N
+GLIB_DEFINE_LOCALEDIR([EVENTD_LOCALEDIR])
 
 #
 # Common dependencies
@@ -300,6 +302,7 @@ AC_CONFIG_FILES([
     client/libeventc/pkgconfig/libeventc.pc
     client/libeventc/vapi/libeventc.deps
     Makefile
+    po/Makefile.in
 ])
 AC_OUTPUT
 

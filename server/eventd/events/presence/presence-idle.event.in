@@ -1,0 +1,6 @@
+[Event]
+Extends=presence.event
+Name=idle
+
+[Notification]
+_Message=is inactive

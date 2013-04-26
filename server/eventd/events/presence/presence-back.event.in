@@ -1,0 +1,6 @@
+[Event]
+Extends=presence.event
+Name=back
+
+[Notification]
+_Message=came back

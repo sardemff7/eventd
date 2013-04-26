@@ -1,0 +1,7 @@
+[Event]
+Extends=presence.event
+Name=away
+
+[Notification]
+Message=went away
+Message[fr]=est parti(e)

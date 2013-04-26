@@ -29,6 +29,12 @@
 #endif /* HAVE_STRING_H */
 
 #include <glib.h>
+#ifdef ENABLE_NLS
+#ifdef HAVE_LOCALE_H
+#include <locale.h>
+#endif
+#include <glib/gi18n.h>
+#endif /* ENABLE_NLS */
 #include <glib/gstdio.h>
 #include <gio/gio.h>
 #ifdef HAVE_GIO_UNIX
@@ -296,7 +302,7 @@ main(int argc, char *argv[])
 
 #ifdef ENABLE_NLS
     setlocale(LC_ALL, "");
-    bindtextdomain(GETTEXT_PACKAGE, LOCALEDIR);
+    bindtextdomain(GETTEXT_PACKAGE, EVENTD_LOCALEDIR);
     bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
 #endif /* ENABLE_NLS */
 

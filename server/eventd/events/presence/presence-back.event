@@ -1,0 +1,7 @@
+[Event]
+Extends=presence.event
+Name=back
+
+[Notification]
+Message=came back
+Message[fr]=est revenu(e)

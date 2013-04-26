@@ -1,1 +1,11 @@
-src/eventd.c
+[type: gettext/ini]server/eventd/events/chat/chat.event.in
+[type: gettext/ini]server/eventd/events/im/im.event.in
+[type: gettext/ini]server/eventd/events/presence/presence-away.event.in
+[type: gettext/ini]server/eventd/events/presence/presence-away-message.event.in
+[type: gettext/ini]server/eventd/events/presence/presence-back.event.in
+[type: gettext/ini]server/eventd/events/presence/presence-back-message.event.in
+[type: gettext/ini]server/eventd/events/presence/presence.event.in
+[type: gettext/ini]server/eventd/events/presence/presence-idle-back.event.in
+[type: gettext/ini]server/eventd/events/presence/presence-idle.event.in
+[type: gettext/ini]server/eventd/events/presence/presence-signed-off.event.in
+[type: gettext/ini]server/eventd/events/presence/presence-signed-on.event.in

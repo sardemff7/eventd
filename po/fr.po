@@ -1,0 +1,70 @@
+# French translations for eventd package.
+# Copyright (C) 2013 Quentin "Sardem FF7" Glidic
+# This file is distributed under the same license as the eventd package.
+# Quentin "Sardem FF7" Glidic <sardemff7@eventd.org>, 2013.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: eventd 0.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2013-04-26 18:06+0200\n"
+"PO-Revision-Date: 2013-04-26 18:14+0200\n"
+"Last-Translator: Quentin \"Sardem FF7\" Glidic <>\n"
+"Language-Team: French\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: ../server/eventd/events/chat/chat.event.in.h:1
+msgid "[${channel}] ${buddy-name}"
+msgstr ""
+
+#: ../server/eventd/events/chat/chat.event.in.h:2
+#: ../server/eventd/events/im/im.event.in.h:2
+msgid "“${message}”"
+msgstr "« ${message} »"
+
+#: ../server/eventd/events/im/im.event.in.h:1
+#: ../server/eventd/events/presence/presence.event.in.h:1
+msgid "${buddy-name}"
+msgstr ""
+
+#: ../server/eventd/events/presence/presence-away.event.in.h:1
+msgid "went away"
+msgstr "est parti(e)"
+
+#: ../server/eventd/events/presence/presence-away-message.event.in.h:1
+msgid "${buddy-name} went away"
+msgstr "${buddy-name} est parti(e)"
+
+#: ../server/eventd/events/presence/presence-away-message.event.in.h:2
+#: ../server/eventd/events/presence/presence-back-message.event.in.h:2
+#: ../server/eventd/events/presence/presence.event.in.h:2
+msgid "${message}"
+msgstr ""
+
+#: ../server/eventd/events/presence/presence-back.event.in.h:1
+msgid "came back"
+msgstr "est revenu(e)"
+
+#: ../server/eventd/events/presence/presence-back-message.event.in.h:1
+msgid "${buddy-name} came back"
+msgstr "${buddy-name} est revenu(e)"
+
+#: ../server/eventd/events/presence/presence-idle-back.event.in.h:1
+msgid "is active"
+msgstr "est actif(ve)"
+
+#: ../server/eventd/events/presence/presence-idle.event.in.h:1
+msgid "is inactive"
+msgstr "est inactif(ve)"
+
+#: ../server/eventd/events/presence/presence-signed-off.event.in.h:1
+msgid "signed off"
+msgstr "s’est déconnecté(e)"
+
+#: ../server/eventd/events/presence/presence-signed-on.event.in.h:1
+msgid "signed on"
+msgstr "s’est connecté(e)"

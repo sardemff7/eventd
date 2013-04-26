@@ -1,0 +1,7 @@
+[Event]
+Extends=presence-away.event
+IfData=message;
+
+[Notification]
+_Title=${buddy-name} went away
+_Message=${message}
