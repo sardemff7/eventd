@@ -103,8 +103,8 @@ main(int argc, char *argv[])
 {
     int r = 0;
     gchar *host = NULL;
-    gchar **event_data_name;
-    gchar **event_data_content;
+    gchar **event_data_name = NULL;
+    gchar **event_data_content = NULL;
 
     gboolean print_version = FALSE;
 
