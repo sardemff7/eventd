@@ -245,6 +245,25 @@ eventd_core_flags_reset(EventdCoreContext *context)
     context->flags_count = 0;
 }
 
+gchar *
+eventd_core_flags_list(EventdCoreContext *context)
+{
+    GString *r;
+
+    r = g_string_new("Flags list: ");
+    guint i;
+    if ( context->flags_count == 0 )
+        g_string_append(r, "(empty)");
+    else
+    {
+        for ( i = 0 ; i < context->flags_count ; ++i )
+            g_string_append(g_string_append(r, g_quark_to_string(context->flags[i])), ", ");
+        g_string_truncate(r, r->len - 2);
+    }
+
+    return g_string_free(r, FALSE);
+}
+
 void
 eventd_core_config_reload(EventdCoreContext *context)
 {

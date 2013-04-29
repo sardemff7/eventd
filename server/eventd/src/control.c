@@ -126,8 +126,13 @@ _eventd_service_private_connection_handler(GSocketService *socket_service, GSock
                 eventd_core_flags_remove(control->core, g_quark_from_string(argv[2]));
         }
         else if ( g_strcmp0(argv[1], "reset") == 0 )
-        {
             eventd_core_flags_reset(control->core);
+        else if ( g_strcmp0(argv[1], "list") == 0 )
+            status = eventd_core_flags_list(control->core);
+        else
+        {
+            status = g_strdup_printf("Unknown command '%s'", argv[1]);
+            code = EVENTDCTL_RETURN_CODE_COMMAND_ERROR;
         }
     }
     else

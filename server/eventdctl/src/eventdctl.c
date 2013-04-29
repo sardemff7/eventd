@@ -194,7 +194,8 @@ _eventd_eventdctl_send_argv(GIOStream *connection, gint argc, gchar *argv[])
     }
 
     retval = r;
-    g_printf("%s\n", status);
+    if ( status != NULL )
+        g_printf("%s\n", status);
     g_free(status);
 
 fail:

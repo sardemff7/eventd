@@ -33,6 +33,7 @@ void eventd_core_resume(EventdCoreContext *context);
 void eventd_core_flags_add(EventdCoreContext *context, GQuark flag);
 void eventd_core_flags_remove(EventdCoreContext *context, GQuark flag);
 void eventd_core_flags_reset(EventdCoreContext *context);
+gchar *eventd_core_flags_list(EventdCoreContext *context);
 
 void eventd_core_config_reload(EventdCoreContext *context);
 
