@@ -312,7 +312,7 @@ EVENTD_EXPORT
 gboolean
 eventc_connection_connect_sync(EventcConnection *self, GError **error)
 {
-    g_return_if_fail(EVENTC_IS_CONNECTION(self));
+    g_return_val_if_fail(EVENTC_IS_CONNECTION(self), FALSE);
 
     GSocketClient *client;
     GSocketConnectable *address;
@@ -435,7 +435,7 @@ EVENTD_EXPORT
 gboolean
 eventc_connection_close(EventcConnection *self, GError **error)
 {
-    g_return_if_fail(EVENTC_IS_CONNECTION(self));
+    g_return_val_if_fail(EVENTC_IS_CONNECTION(self), FALSE);
 
     GError *_inner_error_ = NULL;
     if ( libeventd_evp_context_is_connected(self->priv->evp, &_inner_error_) )

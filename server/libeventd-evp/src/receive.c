@@ -368,7 +368,7 @@ _libeventd_evp_context_receive_callback(GObject *source_object, GAsyncResult *re
 gboolean
 libeventd_evp_context_passive(LibeventdEvpContext *self, GError **error)
 {
-    g_return_if_fail(self != NULL);
+    g_return_val_if_fail(self != NULL, FALSE);
 
     if ( self->in == NULL )
     {
