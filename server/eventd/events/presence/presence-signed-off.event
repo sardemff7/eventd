@@ -1,7 +1,0 @@
-[Event]
-Extends=presence.event
-Name=signed-off
-
-[Notification]
-Message=signed off
-Message[fr]=s’est déconnecté(e)

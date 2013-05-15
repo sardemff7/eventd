@@ -1,7 +1,0 @@
-[Event]
-Extends=presence.event
-Name=signed-on
-
-[Notification]
-Message=signed on
-Message[fr]=s’est connecté(e)

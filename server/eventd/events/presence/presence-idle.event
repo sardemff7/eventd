@@ -1,7 +1,0 @@
-[Event]
-Extends=presence.event
-Name=idle
-
-[Notification]
-Message=is inactive
-Message[fr]=est inactif(ve)

@@ -1,9 +1,0 @@
-[Event]
-Extends=presence-away.event
-IfData=message;
-
-[Notification]
-Title=${buddy-name} went away
-Title[fr]=${buddy-name} est parti(e)
-Message=${message}
-Message[fr]=${message}

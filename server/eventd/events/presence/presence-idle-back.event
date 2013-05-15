@@ -1,7 +1,0 @@
-[Event]
-Extends=presence.event
-Name=idle-back
-
-[Notification]
-Message=is active
-Message[fr]=est actif(ve)

@@ -1,9 +1,0 @@
-[Event]
-Extends=presence-back.event
-IfData=message;
-
-[Notification]
-Title=${buddy-name} came back
-Title[fr]=${buddy-name} est revenu(e)
-Message=${message}
-Message[fr]=${message}
