@@ -19,3 +19,14 @@ imevent_DATA = \
 
 chatevent_DATA = \
 	server/eventd/events/chat/chat.event
+
+
+EXTRA_DIST += \
+	$(chatevent_DATA:.event=.event.in) \
+	$(imevent_DATA:.event=.event.in) \
+	$(presenceevent_DATA:.event=.event.in)
+
+CLEANFILES += \
+	$(chatevent_DATA) \
+	$(imevent_DATA) \
+	$(presenceevent_DATA)
