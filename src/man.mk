@@ -13,6 +13,7 @@ MAN_GEN_RULE = $(AM_V_GEN)$(MKDIR_P) $(dir $@) && \
 	$(XSLTPROC) \
 	-o $(dir $@) \
 	$(AM_XSLTPROCFLAGS) \
+	$(XSLTPROCFLAGS) \
 	http://docbook.sourceforge.net/release/xsl/current/manpages/profile-docbook.xsl \
 	$<
 
