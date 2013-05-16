@@ -47,6 +47,6 @@ EVENTD_EXPORT
 void
 libeventd_core_push_event(EventdCoreContext *context, EventdCoreInterface *interface, const gchar *config_id, EventdEvent *event)
 {
-    return interface->push_event(context, config_id, event);
+    interface->push_event(context, config_id, event);
 
 }
