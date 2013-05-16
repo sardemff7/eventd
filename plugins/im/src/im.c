@@ -71,8 +71,8 @@ _eventd_im_glib_io_invoke(GIOChannel *source, GIOCondition cond, gpointer user_d
 
     if ( cond & PURPLE_GLIB_READ_COND )
         condition |= PURPLE_INPUT_READ;
-    if ( condition & PURPLE_GLIB_WRITE_COND )
-        cond |= PURPLE_INPUT_WRITE;
+    if ( cond & PURPLE_GLIB_WRITE_COND )
+        condition |= PURPLE_INPUT_WRITE;
 
     data->function(data->user_data, g_io_channel_unix_get_fd(source), condition);
 
