@@ -261,13 +261,14 @@ _eventd_im_global_parse(EventdPluginContext *context, GKeyFile *config_file)
     gchar **name, *section;
     for ( name = names ; *name != NULL ; ++name )
     {
+        gchar *protocol = NULL;
+        gchar *username = NULL;
+        gchar *password = NULL;
+
         section = g_strconcat("IMAccount ", *name, NULL);
         if ( ! g_key_file_has_group(config_file, section) )
             goto next;
 
-        gchar *protocol = NULL;
-        gchar *username = NULL;
-        gchar *password = NULL;
         Int port;
 
         if ( libeventd_config_key_file_get_string(config_file, section, "Protocol", &protocol) < 0 )
