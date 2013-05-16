@@ -65,7 +65,7 @@ DOCBOOK_CONDITIONS="installation"
 
 AM_CFLAGS="-fvisibility=hidden -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers"
 AM_CPPFLAGS=""
-AM_LDFLAGS="-Wl,--no-undefined"
+AM_LDFLAGS=""
 AM_XSLTPROCFLAGS="--nonet --xinclude --stringparam man.output.quietly 1 --stringparam funcsynopsis.style ansi"
 
 
