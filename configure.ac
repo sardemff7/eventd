@@ -66,7 +66,7 @@ DOCBOOK_CONDITIONS="installation"
 AM_CFLAGS="-fvisibility=hidden -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers"
 AM_CPPFLAGS=""
 AM_LDFLAGS="-Wl,--no-undefined"
-AM_XSLTPROCFLAGS="--nonet --xinclude --stringparam man.output.quietly 1 --stringparam funcsynopsis.style ansi"
+AM_XSLTPROCFLAGS="--xinclude --stringparam man.output.quietly 1 --stringparam funcsynopsis.style ansi"
 
 
 if test -d .git; then
