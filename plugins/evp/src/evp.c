@@ -347,7 +347,7 @@ _eventd_evp_start(EventdPluginContext *service)
 #ifdef HAVE_GIO_UNIX
     if ( service->default_unix )
     {
-        const gchar *binds[] = { "unix-runtime:" UNIX_SOCKET, NULL };
+        const gchar *binds[] = { "unix-runtime:" EVP_UNIX_SOCKET, NULL };
         sockets = _eventd_evp_add_socket(sockets, service, binds);
     }
 #endif /* HAVE_GIO_UNIX */

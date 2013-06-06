@@ -30,7 +30,7 @@ namespace Eventd
         public const string PACKAGE_VERSION;
 
         public const uint16 DEFAULT_BIND_PORT;
-        public const string UNIX_SOCKET;
+        public const string EVP_UNIX_SOCKET;
 
         public const string LT_OBJDIR;
     }

@@ -3,7 +3,7 @@ Description=eventd EvP Sockets
 
 [Socket]
 Service=eventd.service
-ListenStream=%t/@PACKAGE_NAME@/@UNIX_SOCKET@
+ListenStream=%t/@PACKAGE_NAME@/@EVP_UNIX_SOCKET@
 ListenStream=@DEFAULT_BIND_PORT@
 
 [Install]

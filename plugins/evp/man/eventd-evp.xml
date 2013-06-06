@@ -103,7 +103,7 @@
             </varlistentry>
 
             <varlistentry condition="website;have_gio_unix">
-                <term><filename><varname>$XDG_RUNTIME_DIR</varname>/&PACKAGE_NAME;/&UNIX_SOCKET;</filename></term>
+                <term><filename><varname>$XDG_RUNTIME_DIR</varname>/&PACKAGE_NAME;/&EVP_UNIX_SOCKET;</filename></term>
                 <listitem>
                     <para>Default UNIX socket.</para>
                     <para>If <varname>$XDG_RUNTIME_DIR</varname> is not set, we use <varname>$XDG_CACHE_HOME</varname>, with a fallback to <filename>~/.cache</filename>.</para>

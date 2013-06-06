@@ -46,7 +46,7 @@ libeventd_evp_get_address(const gchar *host_and_port, GError **error)
 #ifdef HAVE_GIO_UNIX
     gchar *path = NULL;
     if ( g_strcmp0(host_and_port, "localhost") == 0 )
-        path = g_build_filename(g_get_user_runtime_dir(), PACKAGE_NAME, UNIX_SOCKET, NULL);
+        path = g_build_filename(g_get_user_runtime_dir(), PACKAGE_NAME, EVP_UNIX_SOCKET, NULL);
     else if ( g_path_is_absolute(host_and_port) )
         path = g_strdup(host_and_port);
     if ( ( path != NULL ) && g_file_test(path, G_FILE_TEST_EXISTS) && ( ! g_file_test(path, G_FILE_TEST_IS_DIR|G_FILE_TEST_IS_REGULAR) ) )

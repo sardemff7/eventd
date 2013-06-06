@@ -31,5 +31,5 @@ src/config.ent: src/config.ent.in src/config.h
 		-e 's:[@]PACKAGE_NAME[@]:$(PACKAGE_NAME):g' \
 		-e 's:[@]PACKAGE_VERSION[@]:$(PACKAGE_VERSION):g' \
 		-e 's:[@]DEFAULT_BIND_PORT[@]:$(DEFAULT_BIND_PORT):g' \
-		-e 's:[@]UNIX_SOCKET[@]:$(UNIX_SOCKET):g' \
+		-e 's:[@]EVP_UNIX_SOCKET[@]:$(EVP_UNIX_SOCKET):g' \
 		< $< > $@ || rm $@
