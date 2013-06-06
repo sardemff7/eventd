@@ -20,6 +20,10 @@
  *
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif /* HAVE_CONFIG_H */
+
 #include <glib.h>
 #include <gio/gio.h>
 #include <avahi-common/error.h>
@@ -82,8 +86,8 @@ _eventd_evp_avahi_create_group(EventdEvpAvahiContext *context, AvahiClient *clie
             goto next;
         }
 
-        if ( ( error = avahi_entry_group_add_service(context->group, AVAHI_IF_UNSPEC, proto, 0, context->name, "_event._tcp", NULL, NULL, g_inet_socket_address_get_port(G_INET_SOCKET_ADDRESS(address)), NULL) ) < 0 )
-            g_warning("Couldn't add _event._tcp service: %s", avahi_strerror(error));
+        if ( ( error = avahi_entry_group_add_service(context->group, AVAHI_IF_UNSPEC, proto, 0, context->name, EVP_SERVICE_TYPE, NULL, NULL, g_inet_socket_address_get_port(G_INET_SOCKET_ADDRESS(address)), NULL) ) < 0 )
+            g_warning("Couldn't add " EVP_SERVICE_TYPE " service: %s", avahi_strerror(error));
 
     next:
         g_object_unref(address);

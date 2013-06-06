@@ -125,7 +125,7 @@ _eventd_relay_avahi_client_callback(AvahiClient *client, AvahiClientState state,
     switch ( state )
     {
     case AVAHI_CLIENT_S_RUNNING:
-        context->browser = avahi_service_browser_new(client, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, "_event._tcp", NULL, 0, _eventd_relay_avahi_service_browser_callback, context);
+        context->browser = avahi_service_browser_new(client, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, EVP_SERVICE_TYPE, NULL, 0, _eventd_relay_avahi_service_browser_callback, context);
     case AVAHI_CLIENT_S_REGISTERING:
     break;
     case AVAHI_CLIENT_FAILURE:
