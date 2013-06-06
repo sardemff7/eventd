@@ -5,14 +5,22 @@ a generic events dispatching protocol
 Messages are UTF-8 text which ends at the "\n" character.
 Messages starting with a dot (".") are multiple-lines messages and ends with a
 single dot on its own line (".\n"). They are referred as "dot messages".
+Any error in the pairing should close the connection. Implementations should
+send a "BYE Wrong dot message" message in this case.
 
-An implementation should ignore unknown messages for backward compatibility.
-Existing messages will not be nested in future messages, thus ignoring lines
-without a known message should be enough.
+An implementation must discard unknown messages for backward compatibility.
+Only dot messages require special handling regarding that: an implementation
+must match any dot message with its corresponding ending line (".\n") and
+ignore it. Nesting is possible and must be handled. Data messages can appear
+at any level of nesting.
+
 
 
 Data
 ----
+
+These messages are always nested. However, implementations must gracefully
+discard them in the root flow.
 
 .DATA <name>
     This message is followed by the corresponding data.
