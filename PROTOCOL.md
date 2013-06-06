@@ -1,4 +1,5 @@
-This file describes the EVENT protocol
+This file describes the EVENT protocol (EvP),
+a generic events dispatching protocol
 
 
 Messages are UTF-8 text which ends at the "\n" character.
