@@ -75,6 +75,9 @@ PASSIVE
     Client may (and should) close the input connection.
     Must be sent only once.
 
-BYE
+BYE <reason>
     Close the connection.
     The connection is closed immediately and must not be used any more.
+    The reason is an human readable reason possibly shown to the user.
+    The reason is optional, thus implementations must check for the exact
+    "BYE" message as well as the "BYE " prefix.

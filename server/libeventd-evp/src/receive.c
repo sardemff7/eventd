@@ -281,8 +281,13 @@ _libeventd_evp_context_receive_callback(GObject *source_object, GAsyncResult *re
 #endif /* DEBUG */
 
     /* We proccess messages … */
-    if ( g_strcmp0(line, "BYE") == 0 )
+    if ( g_str_has_prefix(line, "BYE")
+         && ( ( line[strlen("BYE")] == '\0' ) || ( line[strlen("BYE")] == ' ' ) ) )
     {
+#ifdef DEBUG
+        if ( line[strlen("BYE")] == ' ' )
+            g_debug("Closing connection: %s", line + strlen("BYE "));
+#endif /* DEBUG */
         g_free(line);
         self->interface->bye(self->client, self);
         return;
