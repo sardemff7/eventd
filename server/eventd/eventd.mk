@@ -1,17 +1,21 @@
 # Server
 
 bin_PROGRAMS += \
-	eventd
+	eventd \
+	$(null)
 
 man1_MANS += \
-	server/eventd/man/eventd.1
+	server/eventd/man/eventd.1 \
+	$(null)
 
 man5_MANS += \
 	server/eventd/man/eventd.conf.5 \
-	server/eventd/man/eventd.event.5
+	server/eventd/man/eventd.event.5 \
+	$(null)
 
 noarch_pkgconfig_DATA += \
-	server/eventd/pkgconfig/eventd.pc
+	server/eventd/pkgconfig/eventd.pc \
+	$(null)
 
 include server/eventd/events/events.mk
 
@@ -30,7 +34,8 @@ eventd_SOURCES = \
 	server/eventd/src/sockets.h \
 	server/eventd/src/sockets.c \
 	server/eventd/src/eventd.h \
-	server/eventd/src/eventd.c
+	server/eventd/src/eventd.c \
+	$(null)
 
 eventd_CFLAGS = \
 	$(AM_CFLAGS) \
@@ -43,7 +48,8 @@ eventd_CFLAGS = \
 	$(GIO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
 	$(GMODULE_CFLAGS) \
-	$(GLIB_CFLAGS)
+	$(GLIB_CFLAGS) \
+	$(null)
 
 eventd_LDADD = \
 	libeventd-event.la \
@@ -54,13 +60,15 @@ eventd_LDADD = \
 	$(GIO_LIBS) \
 	$(GOBJECT_LIBS) \
 	$(GMODULE_LIBS) \
-	$(GLIB_LIBS)
+	$(GLIB_LIBS) \
+	$(null)
 
 
 if ENABLE_SYSTEMD
 
 systemduserunit_DATA += \
 	server/eventd/units/eventd-control.socket \
-	server/eventd/units/eventd.service
+	server/eventd/units/eventd.service \
+	$(null)
 
 endif

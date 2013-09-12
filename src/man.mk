@@ -2,12 +2,14 @@ EXTRA_DIST += \
 	src/config.ent.in \
 	src/common-man.xml \
 	$(man1_MANS:.1=.xml) \
-	$(man5_MANS:.5=.xml)
+	$(man5_MANS:.5=.xml) \
+	$(null)
 
 CLEANFILES += \
 	src/config.ent \
 	$(man1_MANS) \
-	$(man5_MANS)
+	$(man5_MANS) \
+	$(null)
 
 MAN_GEN_RULE = $(AM_V_GEN)$(MKDIR_P) $(dir $@) && \
 	$(XSLTPROC) \

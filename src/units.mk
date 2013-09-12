@@ -1,8 +1,10 @@
 EXTRA_DIST += \
-	$(systemduserunit_DATA:=.in)
+	$(systemduserunit_DATA:=.in) \
+	$(null)
 
 CLEANFILES += \
-	$(systemduserunit_DATA)
+	$(systemduserunit_DATA) \
+	$(null)
 
 $(systemduserunit_DATA): %: %.in src/config.h
 	$(AM_V_GEN)$(MKDIR_P) $(dir $@) && \

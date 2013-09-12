@@ -1,22 +1,27 @@
 # notification plugin
 
 AM_CPPFLAGS += \
-	-I $(srcdir)/plugins/nd/include
+	-I $(srcdir)/plugins/nd/include \
+	$(null)
 
 
 if ENABLE_NOTIFICATION_DAEMON
 plugins_LTLIBRARIES += \
-	nd.la
+	nd.la \
+	$(null)
 
 pkginclude_HEADERS += \
-	plugins/nd/include/eventd-nd-backend.h
+	plugins/nd/include/eventd-nd-backend.h \
+	$(null)
 
 man1_MANS += \
-	plugins/nd/man/eventdctl-nd.1
+	plugins/nd/man/eventdctl-nd.1 \
+	$(null)
 
 man5_MANS += \
 	plugins/nd/man/eventd-nd.conf.5 \
-	plugins/nd/man/eventd-nd.event.5
+	plugins/nd/man/eventd-nd.event.5 \
+	$(null)
 endif
 
 
@@ -28,7 +33,8 @@ nd_la_SOURCES = \
 	plugins/nd/src/style.h \
 	plugins/nd/src/backends.c \
 	plugins/nd/src/backends.h \
-	plugins/nd/src/nd.c
+	plugins/nd/src/nd.c \
+	$(null)
 
 nd_la_CFLAGS = \
 	$(AM_CFLAGS) \
@@ -41,11 +47,13 @@ nd_la_CFLAGS = \
 	$(PANGO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
 	$(GMODULE_CFLAGS) \
-	$(GLIB_CFLAGS)
+	$(GLIB_CFLAGS) \
+	$(null)
 
 nd_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
-	-avoid-version -module
+	-avoid-version -module \
+	$(null)
 
 nd_la_LIBADD = \
 	libeventd-event.la \
@@ -56,11 +64,13 @@ nd_la_LIBADD = \
 	$(PANGO_LIBS) \
 	$(GOBJECT_LIBS) \
 	$(GMODULE_LIBS) \
-	$(GLIB_LIBS)
+	$(GLIB_LIBS) \
+	$(null)
 
 if ENABLE_GDK_PIXBUF
 nd_la_SOURCES += \
-	plugins/nd/src/icon.c
+	plugins/nd/src/icon.c \
+	$(null)
 endif
 
 ndbackendsdir = $(pluginsdir)/nd
@@ -73,18 +83,21 @@ include plugins/nd/linux/linux.mk
 
 if ENABLE_DBUS
 dbuscapabilities_DATA += \
-	plugins/nd/dbuscapabilities/nd.capabilities
+	plugins/nd/dbuscapabilities/nd.capabilities \
+	$(null)
 endif
 
 nd_dbus_capabilities = \
 	body \
-	body-markup
+	body-markup \
+	$(null)
 
 if ENABLE_GDK_PIXBUF
 nd_dbus_capabilities += \
 	icon-static \
 	image/svg+xml \
-	x-eventd-overlay-icon
+	x-eventd-overlay-icon \
+	$(null)
 endif
 
 plugins/nd/dbuscapabilities/nd.capabilities: src/config.h
@@ -92,7 +105,8 @@ plugins/nd/dbuscapabilities/nd.capabilities: src/config.h
 	echo $(nd_dbus_capabilities) > $@
 
 CLEANFILES += \
-	plugins/nd/dbuscapabilities/nd.capabilities
+	plugins/nd/dbuscapabilities/nd.capabilities \
+	$(null)
 
 #
 # Hooks

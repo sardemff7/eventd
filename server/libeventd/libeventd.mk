@@ -1,35 +1,42 @@
 # Internal helper library
 
 AM_CPPFLAGS += \
-	-I $(srcdir)/server/libeventd/include
+	-I $(srcdir)/server/libeventd/include \
+	$(null)
 
 
 pkglib_LTLIBRARIES += \
-	libeventd.la
+	libeventd.la \
+	$(null)
 
 pkginclude_HEADERS += \
 	server/libeventd/include/libeventd-regex.h \
-	server/libeventd/include/libeventd-config.h
+	server/libeventd/include/libeventd-config.h \
+	$(null)
 
 
 libeventd_la_SOURCES = \
 	server/libeventd/src/regex.c \
-	server/libeventd/src/config.c
+	server/libeventd/src/config.c \
+	$(null)
 
 libeventd_la_CFLAGS = \
 	$(AM_CFLAGS) \
 	-D G_LOG_DOMAIN=\"eventd-libeventd\" \
 	$(GOBJECT_CFLAGS) \
-	$(GLIB_CFLAGS)
+	$(GLIB_CFLAGS) \
+	$(null)
 
 libeventd_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
-	-avoid-version
+	-avoid-version \
+	$(null)
 
 libeventd_la_LIBADD = \
 	libeventd-event.la \
 	$(GOBJECT_LIBS) \
-	$(GLIB_LIBS)
+	$(GLIB_LIBS) \
+	$(null)
 
 
 if ENABLE_NOTIFICATION_DAEMON
@@ -37,20 +44,25 @@ if ENABLE_NOTIFICATION_DAEMON
 pkginclude_HEADERS += \
 	server/libeventd/include/libeventd-nd-notification-template.h \
 	server/libeventd/include/libeventd-nd-notification.h \
-	server/libeventd/include/libeventd-nd-notification-types.h
+	server/libeventd/include/libeventd-nd-notification-types.h \
+	$(null)
 
 libeventd_la_SOURCES += \
-	server/libeventd/src/nd-notification.c
+	server/libeventd/src/nd-notification.c \
+	$(null)
 
 libeventd_la_CFLAGS += \
-	$(GDK_PIXBUF_CFLAGS)
+	$(GDK_PIXBUF_CFLAGS) \
+	$(null)
 
 libeventd_la_LIBADD += \
-	$(GDK_PIXBUF_LIBS)
+	$(GDK_PIXBUF_LIBS) \
+	$(null)
 
 if ENABLE_GDK_PIXBUF
 pkginclude_HEADERS += \
-	server/libeventd/include/libeventd-nd-notification-icon.h
+	server/libeventd/include/libeventd-nd-notification-icon.h \
+	$(null)
 endif
 
 endif

@@ -2,17 +2,20 @@
 
 if ENABLE_SOUND
 plugins_LTLIBRARIES += \
-	sound.la
+	sound.la \
+	$(null)
 
 man5_MANS += \
-	plugins/sound/man/eventd-sound.event.5
+	plugins/sound/man/eventd-sound.event.5 \
+	$(null)
 endif
 
 
 sound_la_SOURCES = \
 	plugins/sound/src/pulseaudio.h \
 	plugins/sound/src/pulseaudio.c \
-	plugins/sound/src/sound.c
+	plugins/sound/src/sound.c \
+	$(null)
 
 sound_la_CFLAGS = \
 	$(AM_CFLAGS) \
@@ -20,11 +23,13 @@ sound_la_CFLAGS = \
 	$(SNDFILE_CFLAGS) \
 	$(PULSEAUDIO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
-	$(GLIB_CFLAGS)
+	$(GLIB_CFLAGS) \
+	$(null)
 
 sound_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
-	-avoid-version -module
+	-avoid-version -module \
+	$(null)
 
 sound_la_LIBADD = \
 	libeventd-event.la \
@@ -33,4 +38,5 @@ sound_la_LIBADD = \
 	$(SNDFILE_LIBS) \
 	$(PULSEAUDIO_LIBS) \
 	$(GOBJECT_LIBS) \
-	$(GLIB_LIBS)
+	$(GLIB_LIBS) \
+	$(null)

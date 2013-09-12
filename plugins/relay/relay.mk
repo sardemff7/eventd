@@ -1,26 +1,32 @@
 # relay plugin
 
 plugins_LTLIBRARIES += \
-	relay.la
+	relay.la \
+	$(null)
 
 TESTS += \
-	relay-connection.test
+	relay-connection.test \
+	$(null)
 
 check_PROGRAMS += \
-	relay-connection.test
+	relay-connection.test \
+	$(null)
 
 man1_MANS += \
-	plugins/relay/man/eventdctl-relay.1
+	plugins/relay/man/eventdctl-relay.1 \
+	$(null)
 
 man5_MANS += \
-	plugins/relay/man/eventd-relay.event.5
+	plugins/relay/man/eventd-relay.event.5 \
+	$(null)
 
 
 relay_la_SOURCES = \
 	plugins/relay/src/avahi.h \
 	plugins/relay/src/server.h \
 	plugins/relay/src/server.c \
-	plugins/relay/src/relay.c
+	plugins/relay/src/relay.c \
+	$(null)
 
 relay_la_CFLAGS = \
 	$(AM_CFLAGS) \
@@ -28,11 +34,13 @@ relay_la_CFLAGS = \
 	$(AVAHI_CFLAGS) \
 	$(GIO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
-	$(GLIB_CFLAGS)
+	$(GLIB_CFLAGS) \
+	$(null)
 
 relay_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
-	-avoid-version -module
+	-avoid-version -module \
+	$(null)
 
 relay_la_LIBADD = \
 	libeventd-event.la \
@@ -42,17 +50,20 @@ relay_la_LIBADD = \
 	$(AVAHI_LIBS) \
 	$(GIO_LIBS) \
 	$(GOBJECT_LIBS) \
-	$(GLIB_LIBS)
+	$(GLIB_LIBS) \
+	$(null)
 
 
 relay_connection_test_SOURCES = \
-	plugins/relay/tests/integration/connection.c
+	plugins/relay/tests/integration/connection.c \
+	$(null)
 
 relay_connection_test_CFLAGS = \
 	$(AM_CFLAGS) \
 	$(GIO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
-	$(GLIB_CFLAGS)
+	$(GLIB_CFLAGS) \
+	$(null)
 
 relay_connection_test_LDADD = \
 	libeventd-test.la \
@@ -60,12 +71,14 @@ relay_connection_test_LDADD = \
 	libeventc.la \
 	$(GIO_LIBS) \
 	$(GOBJECT_LIBS) \
-	$(GLIB_LIBS)
+	$(GLIB_LIBS) \
+	$(null)
 
 
 if ENABLE_AVAHI
 
 relay_la_SOURCES += \
-	plugins/relay/src/avahi.c
+	plugins/relay/src/avahi.c \
+	$(null)
 
 endif

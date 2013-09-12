@@ -1,11 +1,13 @@
 # EvP implementation library
 
 AM_CPPFLAGS += \
-	-I $(srcdir)/server/libeventd-evp/include
+	-I $(srcdir)/server/libeventd-evp/include \
+	$(null)
 
 
 noinst_LTLIBRARIES += \
-	libeventd-evp.la
+	libeventd-evp.la \
+	$(null)
 
 
 libeventd_evp_la_SOURCES = \
@@ -15,19 +17,23 @@ libeventd_evp_la_SOURCES = \
 	server/libeventd-evp/src/context.c \
 	server/libeventd-evp/src/context.h \
 	server/libeventd-evp/src/helpers.c \
-	server/libeventd-evp/include/libeventd-evp.h
+	server/libeventd-evp/include/libeventd-evp.h \
+	$(null)
 
 libeventd_evp_la_CFLAGS = \
 	$(AM_CFLAGS) \
 	-D G_LOG_DOMAIN=\"libeventd-evp\" \
 	$(GIO_CFLAGS) \
-	$(GLIB_CFLAGS)
+	$(GLIB_CFLAGS) \
+	$(null)
 
 libeventd_evp_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
-	-avoid-version
+	-avoid-version \
+	$(null)
 
 libeventd_evp_la_LIBADD = \
 	libeventd-event.la \
 	$(GIO_LIBS) \
-	$(GLIB_LIBS)
+	$(GLIB_LIBS) \
+	$(null)

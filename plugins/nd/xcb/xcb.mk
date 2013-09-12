@@ -2,15 +2,18 @@
 
 if ENABLE_XCB
 ndbackends_LTLIBRARIES += \
-	xcb.la
+	xcb.la \
+	$(null)
 
 man5_MANS += \
-	plugins/nd/xcb/man/eventd-nd-xcb.conf.5
+	plugins/nd/xcb/man/eventd-nd-xcb.conf.5 \
+	$(null)
 endif
 
 
 xcb_la_SOURCES = \
-	plugins/nd/xcb/src/xcb.c
+	plugins/nd/xcb/src/xcb.c \
+	$(null)
 
 xcb_la_CFLAGS = \
 	$(AM_CFLAGS) \
@@ -18,11 +21,13 @@ xcb_la_CFLAGS = \
 	$(XCB_CFLAGS) \
 	$(CAIRO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
-	$(GLIB_CFLAGS)
+	$(GLIB_CFLAGS) \
+	$(null)
 
 xcb_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
-	-avoid-version -module
+	-avoid-version -module \
+	$(null)
 
 xcb_la_LIBADD = \
 	libeventd-event.la \
@@ -30,4 +35,5 @@ xcb_la_LIBADD = \
 	$(XCB_LIBS) \
 	$(CAIRO_LIBS) \
 	$(GOBJECT_LIBS) \
-	$(GLIB_LIBS)
+	$(GLIB_LIBS) \
+	$(null)

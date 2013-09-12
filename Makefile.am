@@ -40,11 +40,13 @@ CLEANFILES =
 
 AM_CPPFLAGS += \
 	-I $(srcdir)/src/ \
-	-I $(builddir)/src/
+	-I $(builddir)/src/ \
+	$(null)
 
 AM_XSLTPROCFLAGS += \
 	--path "$(srcdir)/src/" \
-	--path "$(builddir)/src/"
+	--path "$(builddir)/src/" \
+	$(null)
 
 
 include server/libeventd-event/libeventd-event.mk

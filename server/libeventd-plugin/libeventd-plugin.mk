@@ -6,34 +6,42 @@ LIBEVENTD_PLUGIN_AGE=0
 
 
 AM_CPPFLAGS += \
-	-I $(srcdir)/server/libeventd-plugin/include
+	-I $(srcdir)/server/libeventd-plugin/include \
+	$(null)
 
 
 lib_LTLIBRARIES += \
-	libeventd-plugin.la
+	libeventd-plugin.la \
+	$(null)
 
 pkginclude_HEADERS += \
-	server/libeventd-plugin/include/eventd-plugin.h
+	server/libeventd-plugin/include/eventd-plugin.h \
+	$(null)
 
 pkgconfig_DATA += \
-	server/libeventd-plugin/pkgconfig/libeventd-plugin.pc
+	server/libeventd-plugin/pkgconfig/libeventd-plugin.pc \
+	$(null)
 
 
 libeventd_plugin_la_SOURCES = \
 	server/libeventd-plugin/include/eventd-plugin-interfaces.h \
 	server/libeventd-plugin/src/core.c \
-	server/libeventd-plugin/src/plugin.c
+	server/libeventd-plugin/src/plugin.c \
+	$(null)
 
 libeventd_plugin_la_CFLAGS = \
 	$(AM_CFLAGS) \
 	-D G_LOG_DOMAIN=\"libeventd-plugin\" \
 	$(GOBJECT_CFLAGS) \
-	$(GLIB_CFLAGS)
+	$(GLIB_CFLAGS) \
+	$(null)
 
 libeventd_plugin_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
-	-version-info $(LIBEVENTD_PLUGIN_CURRENT):$(LIBEVENTD_PLUGIN_REVISION):$(LIBEVENTD_PLUGIN_AGE)
+	-version-info $(LIBEVENTD_PLUGIN_CURRENT):$(LIBEVENTD_PLUGIN_REVISION):$(LIBEVENTD_PLUGIN_AGE) \
+	$(null)
 
 libeventd_plugin_la_LIBADD = \
 	$(GOBJECT_LIBS) \
-	$(GLIB_LIBS)
+	$(GLIB_LIBS) \
+	$(null)

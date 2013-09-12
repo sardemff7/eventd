@@ -2,24 +2,30 @@
 
 if ENABLE_DBUS
 plugins_LTLIBRARIES += \
-	dbus.la
+	dbus.la \
+	$(null)
 
 man1_MANS += \
-	plugins/dbus/man/eventd-dbus.1
+	plugins/dbus/man/eventd-dbus.1 \
+	$(null)
 
 pkgconfig_DATA += \
-	plugins/dbus/pkgconfig/eventd-dbus.pc
+	plugins/dbus/pkgconfig/eventd-dbus.pc \
+	$(null)
 
 dist_event_DATA += \
-	plugins/dbus/events/libnotify.event
+	plugins/dbus/events/libnotify.event \
+	$(null)
 
 dbussessionservice_DATA += \
-	plugins/dbus/services/org.eventd.dbus.service
+	plugins/dbus/services/org.eventd.dbus.service \
+	$(null)
 endif
 
 
 dbus_la_SOURCES = \
-	plugins/dbus/src/dbus.c
+	plugins/dbus/src/dbus.c \
+	$(null)
 
 dbus_la_CFLAGS = \
 	$(AM_CFLAGS) \
@@ -27,15 +33,18 @@ dbus_la_CFLAGS = \
 	-D DBUSCAPABILITIESDIR=\"$(dbuscapabilitiesdir)\" \
 	$(GIO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
-	$(GLIB_CFLAGS)
+	$(GLIB_CFLAGS) \
+	$(null)
 
 dbus_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
-	-avoid-version -module
+	-avoid-version -module \
+	$(null)
 
 dbus_la_LIBADD = \
 	libeventd-event.la \
 	libeventd-plugin.la \
 	$(GIO_LIBS) \
 	$(GOBJECT_LIBS) \
-	$(GLIB_LIBS)
+	$(GLIB_LIBS) \
+	$(null)
