@@ -1,6 +1,7 @@
 prefix=@prefix@
 datarootdir=@datarootdir@
 datadir=@datadir@
+
 pkgdatadir=@pkgdatadir@
 
 eventdir=@eventdir@
