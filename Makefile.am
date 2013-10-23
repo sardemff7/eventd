@@ -77,6 +77,8 @@ SUBDIRS = po
 
 @EVENTD_EVENT_RULE@
 
+-include local-rules.mk
+
 #
 # Hooks
 #
