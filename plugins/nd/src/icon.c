@@ -33,8 +33,6 @@
 #include <pango/pangocairo.h>
 
 #include <libeventd-config.h>
-#include <libeventd-nd-notification.h>
-#include <libeventd-nd-notification-icon.h>
 
 #include "style.h"
 
@@ -255,13 +253,13 @@ _eventd_nd_cairo_icon_process_background(GdkPixbuf *pixbuf, EventdNdStyle *style
 }
 
 void
-eventd_nd_cairo_image_and_icon_process(LibeventdNdNotification *notification, EventdNdStyle *style, gint max_width, cairo_surface_t **image, cairo_surface_t **icon, gint *text_margin, gint *width, gint *height)
+eventd_nd_cairo_image_and_icon_process(EventdNdNotificationContents *notification, EventdNdStyle *style, gint max_width, cairo_surface_t **image, cairo_surface_t **icon, gint *text_margin, gint *width, gint *height)
 {
     GdkPixbuf *image_pixbuf;
     GdkPixbuf *icon_pixbuf;
 
-    image_pixbuf = libeventd_nd_notification_get_image(notification);
-    icon_pixbuf = libeventd_nd_notification_get_icon(notification);
+    image_pixbuf = eventd_nd_notification_contents_get_image(notification);
+    icon_pixbuf = eventd_nd_notification_contents_get_icon(notification);
 
     switch ( eventd_nd_style_get_icon_placement(style) )
     {

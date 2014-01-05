@@ -31,15 +31,13 @@
 #include <glib.h>
 #include <glib-object.h>
 
-//#include <gdk-pixbuf/gdk-pixbuf.h>
 #include <pango/pango.h>
 #include <cairo.h>
 
 #include <eventd-plugin.h>
 #include <libeventd-event.h>
 #include <libeventd-config.h>
-#include <libeventd-nd-notification.h>
-#include <libeventd-nd-notification-template.h>
+#include <libeventd-regex.h>
 
 #include <eventd-nd-backend.h>
 
@@ -131,7 +129,7 @@ _eventd_nd_init(EventdCoreContext *core, EventdCoreInterface *interface)
 
     context->queue = g_queue_new();
 
-    libeventd_nd_notification_init();
+    libeventd_regex_init();
 
     eventd_nd_cairo_init();
 
@@ -145,7 +143,7 @@ _eventd_nd_uninit(EventdPluginContext *context)
 
     eventd_nd_cairo_uninit();
 
-    libeventd_nd_notification_uninit();
+    libeventd_regex_clean();
 
     g_queue_free(context->queue);
 
@@ -398,11 +396,11 @@ _eventd_nd_config_reset(EventdPluginContext *context)
 static void
 _eventd_nd_notification_set(EventdNdNotification *self, EventdPluginContext *context, EventdEvent *event, cairo_surface_t **bubble)
 {
-    LibeventdNdNotification *notification;
+    EventdNdNotificationContents *notification;
 
-    notification = libeventd_nd_notification_new(eventd_nd_style_get_template(self->style), event, context->max_width, context->max_height);
+    notification = eventd_nd_notification_contents_new(self->style, event, context->max_width, context->max_height);
     *bubble = eventd_nd_cairo_get_surface(event, notification, self->style);
-    libeventd_nd_notification_free(notification);
+    eventd_nd_notification_contents_free(notification);
 
     self->width = cairo_image_surface_get_width(*bubble);
     self->height = cairo_image_surface_get_height(*bubble);

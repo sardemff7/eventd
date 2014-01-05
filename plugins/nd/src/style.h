@@ -24,6 +24,7 @@
 #define __EVENTD_ND_STYLE_H__
 
 typedef struct _EventdNdStyle EventdNdStyle;
+typedef struct _EventdNdNotificationContents EventdNdNotificationContents;
 
 typedef enum {
     EVENTD_ND_ANCHOR_TOP     = 1<<0,
@@ -45,7 +46,10 @@ void eventd_nd_style_free(gpointer style);
 
 void eventd_nd_style_update(EventdNdStyle *style, GKeyFile *config_file, gint *max_width, gint *max_height);
 
-LibeventdNdNotificationTemplate *eventd_nd_style_get_template(EventdNdStyle *style);
+const gchar *eventd_nd_style_get_template_title(EventdNdStyle *style);
+const gchar *eventd_nd_style_get_template_message(EventdNdStyle *style);
+const gchar *eventd_nd_style_get_template_image(EventdNdStyle *style);
+const gchar *eventd_nd_style_get_template_icon(EventdNdStyle *style);
 
 gint eventd_nd_style_get_bubble_min_width(EventdNdStyle *style);
 gint eventd_nd_style_get_bubble_max_width(EventdNdStyle *style);
@@ -72,5 +76,12 @@ gint eventd_nd_style_get_message_spacing(EventdNdStyle *style);
 guint8 eventd_nd_style_get_message_max_lines(EventdNdStyle *style);
 const PangoFontDescription *eventd_nd_style_get_message_font(EventdNdStyle *style);
 Colour eventd_nd_style_get_message_colour(EventdNdStyle *style);
+
+
+EventdNdNotificationContents *eventd_nd_notification_contents_new(EventdNdStyle *style, EventdEvent *event, gint width, gint height);
+void eventd_nd_notification_contents_free(EventdNdNotificationContents *notification);
+
+const gchar *eventd_nd_notification_contents_get_title(EventdNdNotificationContents *notification);
+const gchar *eventd_nd_notification_contents_get_message(EventdNdNotificationContents *notification);
 
 #endif /* __EVENTD_ND_STYLE_H__ */

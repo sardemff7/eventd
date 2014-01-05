@@ -40,10 +40,10 @@
 
 #include <libeventd-event-types.h>
 #include <libeventd-config.h>
-#include <libeventd-nd-notification.h>
 
 #include "style.h"
 #ifdef ENABLE_GDK_PIXBUF
+#include <gdk-pixbuf/gdk-pixbuf.h>
 #include "icon.h"
 #endif /* ENABLE_GDK_PIXBUF */
 
@@ -173,7 +173,7 @@ _eventd_nd_cairo_get_message(const gchar *message, guint8 max)
 }
 
 static void
-_eventd_nd_cairo_text_process(LibeventdNdNotification *notification, EventdNdStyle *style, gint max_width, PangoLayout **title, PangoLayout **message, gint *text_height, gint *text_width)
+_eventd_nd_cairo_text_process(EventdNdNotificationContents *notification, EventdNdStyle *style, gint max_width, PangoLayout **title, PangoLayout **message, gint *text_height, gint *text_width)
 {
     PangoContext *pango_context;
 
@@ -185,11 +185,11 @@ _eventd_nd_cairo_text_process(LibeventdNdNotification *notification, EventdNdSty
     pango_layout_set_ellipsize(*title, PANGO_ELLIPSIZE_MIDDLE);
     if ( max_width > -1 )
         pango_layout_set_width(*title, max_width * PANGO_SCALE);
-    pango_layout_set_text(*title, libeventd_nd_notification_get_title(notification), -1);
+    pango_layout_set_text(*title, eventd_nd_notification_contents_get_title(notification), -1);
     pango_layout_get_pixel_size(*title, text_width, text_height);
 
     const gchar *tmp;
-    tmp = libeventd_nd_notification_get_message(notification);
+    tmp = eventd_nd_notification_contents_get_message(notification);
     if ( tmp != NULL )
     {
         gchar *text;
@@ -294,7 +294,7 @@ _eventd_nd_cairo_text_draw(cairo_t *cr, EventdNdStyle *style, PangoLayout *title
 }
 
 cairo_surface_t *
-eventd_nd_cairo_get_surface(EventdEvent *event, LibeventdNdNotification *notification, EventdNdStyle *style)
+eventd_nd_cairo_get_surface(EventdEvent *event, EventdNdNotificationContents *notification, EventdNdStyle *style)
 {
     gint padding;
     gint min_width, max_width;

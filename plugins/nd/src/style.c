@@ -27,15 +27,29 @@
 #include <glib.h>
 #include <pango/pango.h>
 
+#ifdef ENABLE_GDK_PIXBUF
+#include <gdk-pixbuf/gdk-pixbuf.h>
+#endif /* ENABLE_GDK_PIXBUF */
+
+#include <libeventd-event.h>
 #include <libeventd-config.h>
-#include <libeventd-nd-notification-template.h>
+#include <libeventd-regex.h>
 
 #include "style.h"
 
 struct _EventdNdStyle {
-    LibeventdNdNotificationTemplate *template;
-
     EventdNdStyle *parent;
+
+    struct {
+        gboolean set;
+
+        gchar *title;
+        gchar *message;
+#ifdef ENABLE_GDK_PIXBUF
+        gchar *image;
+        gchar *icon;
+#endif /* ENABLE_GDK_PIXBUF */
+    } template;
 
     struct {
         gboolean set;
@@ -84,6 +98,15 @@ struct _EventdNdStyle {
         PangoFontDescription *font;
         Colour colour;
     } message;
+};
+
+struct _EventdNdNotificationContents {
+    gchar *title;
+    gchar *message;
+#ifdef ENABLE_GDK_PIXBUF
+    GdkPixbuf *image;
+    GdkPixbuf *icon;
+#endif /* ENABLE_GDK_PIXBUF */
 };
 
 static void
@@ -157,7 +180,38 @@ eventd_nd_style_new(EventdNdStyle *parent)
 void
 eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_max_width, gint *images_max_height)
 {
-    self->template = libeventd_nd_notification_template_new(config_file);
+    if ( g_key_file_has_group(config_file, "Notification") )
+    {
+        self->template.set = TRUE;
+
+        gchar *string;
+
+        g_free(self->template.title);
+        if ( libeventd_config_key_file_get_locale_string(config_file, "Notification", "Title", NULL, &string) == 0 )
+            self->template.title = string;
+        else if ( self->parent != NULL )
+            self->template.title = g_strdup(eventd_nd_style_get_template_title(self->parent));
+
+        g_free(self->template.message);
+        if ( libeventd_config_key_file_get_locale_string(config_file, "Notification", "Message", NULL, &string) == 0 )
+            self->template.message = string;
+        else if ( self->parent != NULL )
+            self->template.message = g_strdup(eventd_nd_style_get_template_message(self->parent));
+
+#ifdef ENABLE_GDK_PIXBUF
+        g_free(self->template.image);
+        if ( libeventd_config_key_file_get_string(config_file, "Notification", "Image", &string) == 0 )
+            self->template.image = string;
+        else if ( self->parent != NULL )
+            self->template.image = g_strdup(eventd_nd_style_get_template_image(self->parent));
+
+        g_free(self->template.icon);
+        if ( libeventd_config_key_file_get_string(config_file, "Notification", "Icon", &string) == 0 )
+            self->template.icon = string;
+        else if ( self->parent != NULL )
+            self->template.icon = g_strdup(eventd_nd_style_get_template_icon(self->parent));
+#endif /* ENABLE_GDK_PIXBUF */
+    }
 
     if ( g_key_file_has_group(config_file, "NotificationBubble") )
     {
@@ -370,16 +424,53 @@ eventd_nd_style_free(gpointer data)
     pango_font_description_free(style->title.font);
     pango_font_description_free(style->message.font);
 
-    libeventd_nd_notification_template_free(style->template);
+    g_free(style->template.title);
+    g_free(style->template.message);
+    g_free(style->template.image);
+    g_free(style->template.icon);
 
     g_free(style);
 }
 
 
-LibeventdNdNotificationTemplate *
-eventd_nd_style_get_template(EventdNdStyle *self)
+const gchar *
+eventd_nd_style_get_template_title(EventdNdStyle *self)
 {
-    return self->template;
+    if ( self->template.set )
+        return self->template.title;
+    if ( self->parent == NULL )
+        return "$name";
+    return eventd_nd_style_get_template_title(self->parent);
+}
+
+const gchar *
+eventd_nd_style_get_template_message(EventdNdStyle *self)
+{
+    if ( self->template.set )
+        return self->template.message;
+    if ( self->parent == NULL )
+        return "$text";
+    return eventd_nd_style_get_template_message(self->parent);
+}
+
+const gchar *
+eventd_nd_style_get_template_image(EventdNdStyle *self)
+{
+    if ( self->template.set )
+        return self->template.image;
+    if ( self->parent == NULL )
+        return "image";
+    return eventd_nd_style_get_template_image(self->parent);
+}
+
+const gchar *
+eventd_nd_style_get_template_icon(EventdNdStyle *self)
+{
+    if ( self->template.set )
+        return self->template.icon;
+    if ( self->parent == NULL )
+        return "icon";
+    return eventd_nd_style_get_template_icon(self->parent);
 }
 
 gint
@@ -543,3 +634,188 @@ eventd_nd_style_get_message_colour(EventdNdStyle *self)
         return self->message.colour;
     return eventd_nd_style_get_message_colour(self->parent);
 }
+
+
+/* EventdNdNotificationContents */
+
+
+#ifdef ENABLE_GDK_PIXBUF
+static GdkPixbuf *
+_eventd_nd_notification_contents_pixbuf_from_file(const gchar *path, gint width, gint height)
+{
+    GError *error = NULL;
+    GdkPixbufFormat *format;
+    GdkPixbuf *pixbuf;
+
+    if ( *path == 0 )
+        return NULL;
+
+    if ( ( ( width > 0 ) || ( height > 0 ) ) && ( ( format = gdk_pixbuf_get_file_info(path, NULL, NULL) ) != NULL ) && gdk_pixbuf_format_is_scalable(format) )
+        pixbuf = gdk_pixbuf_new_from_file_at_size(path, width, height, &error);
+    else
+        pixbuf = gdk_pixbuf_new_from_file(path, &error);
+
+    if ( pixbuf == NULL )
+        g_warning("Couldn't load file '%s': %s", path, error->message);
+    g_clear_error(&error);
+
+    return pixbuf;
+}
+
+static void
+_eventd_nd_notification_contents_pixbuf_data_free(guchar *pixels, gpointer data)
+{
+    g_free(pixels);
+}
+
+static GdkPixbuf *
+_eventd_nd_notification_contents_pixbuf_from_base64(EventdEvent *event, const gchar *name)
+{
+    GdkPixbuf *pixbuf = NULL;
+    const gchar *base64;
+    guchar *data;
+    gsize length;
+    const gchar *format;
+    gchar *format_name;
+
+    base64 = eventd_event_get_data(event, name);
+    if ( base64 == NULL )
+        return NULL;
+    data = g_base64_decode(base64, &length);
+
+    format_name = g_strconcat(name, "-format", NULL);
+    format = eventd_event_get_data(event, format_name);
+    g_free(format_name);
+
+    if ( format != NULL )
+    {
+        gint width, height;
+        gint stride;
+        gboolean alpha;
+        gchar *f;
+
+        width = g_ascii_strtoll(format, &f, 16);
+        height = g_ascii_strtoll(f+1, &f, 16);
+        stride = g_ascii_strtoll(f+1, &f, 16);
+        alpha = g_ascii_strtoll(f+1, &f, 16);
+
+        pixbuf = gdk_pixbuf_new_from_data(data, GDK_COLORSPACE_RGB, alpha, 8, width, height, stride, _eventd_nd_notification_contents_pixbuf_data_free, NULL);
+    }
+    else
+    {
+        GError *error = NULL;
+        GdkPixbufLoader *loader;
+
+        loader = gdk_pixbuf_loader_new();
+
+        if ( ! gdk_pixbuf_loader_write(loader, data, length, &error) )
+        {
+            g_warning("Couldn't write image data: %s", error->message);
+            g_clear_error(&error);
+            goto error;
+        }
+
+        if ( ! gdk_pixbuf_loader_close(loader, &error) )
+        {
+            g_warning("Couldn't load image data: %s", error->message);
+            g_clear_error(&error);
+            goto error;
+        }
+
+        pixbuf = g_object_ref(gdk_pixbuf_loader_get_pixbuf(loader));
+
+    error:
+        g_object_unref(loader);
+        g_free(data);
+    }
+
+    return pixbuf;
+}
+#endif /* ENABLE_GDK_PIXBUF */
+
+EventdNdNotificationContents *
+eventd_nd_notification_contents_new(EventdNdStyle *style, EventdEvent *event, gint width, gint height)
+{
+    EventdNdNotificationContents *self;
+
+    const gchar *title = ( style->template.title != NULL ) ? style->template.title : "$name";
+    const gchar *message = ( style->template.message != NULL ) ? style->template.message : "$text";
+    const gchar *image = ( style->template.image != NULL ) ? style->template.image : "image";
+    const gchar *icon = ( style->template.icon != NULL ) ? style->template.icon : "icon";
+
+    self = g_new0(EventdNdNotificationContents, 1);
+
+    self->title = libeventd_regex_replace_event_data(title, event, NULL, NULL);
+
+    self->message = libeventd_regex_replace_event_data(message, event, NULL, NULL);
+    if ( *self->message == '\0' )
+        /* Empty message, just skip it */
+        self->message = (g_free(self->message), NULL);
+
+#ifdef ENABLE_GDK_PIXBUF
+    gchar *path;
+
+    if ( ( path = libeventd_config_get_filename(image, event, "icons") ) != NULL )
+    {
+        self->image = _eventd_nd_notification_contents_pixbuf_from_file(path, width, height);
+        g_free(path);
+    }
+    else
+       self->image =  _eventd_nd_notification_contents_pixbuf_from_base64(event, image);
+
+    if ( ( path = libeventd_config_get_filename(icon, event, "icons") ) != NULL )
+    {
+        self->icon = _eventd_nd_notification_contents_pixbuf_from_file(path, width, height);
+        g_free(path);
+    }
+    else
+        self->icon = _eventd_nd_notification_contents_pixbuf_from_base64(event, icon);
+#endif /* ENABLE_GDK_PIXBUF */
+
+    return self;
+}
+
+void
+eventd_nd_notification_contents_free(EventdNdNotificationContents *self)
+{
+    if ( self == NULL )
+        return;
+
+#ifdef ENABLE_GDK_PIXBUF
+    if ( self->icon != NULL )
+        g_object_unref(self->icon);
+    if ( self->image != NULL )
+        g_object_unref(self->image);
+#endif /* ENABLE_GDK_PIXBUF */
+    g_free(self->message);
+    g_free(self->title);
+
+    g_free(self);
+}
+
+const gchar *
+eventd_nd_notification_contents_get_title(EventdNdNotificationContents *self)
+{
+    return self->title;
+}
+
+const gchar *
+eventd_nd_notification_contents_get_message(EventdNdNotificationContents *self)
+{
+    return self->message;
+}
+
+#ifdef ENABLE_GDK_PIXBUF
+GdkPixbuf *
+eventd_nd_notification_contents_get_image(EventdNdNotificationContents *self)
+{
+    return self->image;
+}
+
+GdkPixbuf *
+eventd_nd_notification_contents_get_icon(EventdNdNotificationContents *self)
+{
+    return self->icon;
+}
+#endif /* ENABLE_GDK_PIXBUF */
+

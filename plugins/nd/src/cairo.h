@@ -26,6 +26,6 @@
 void eventd_nd_cairo_init(void);
 void eventd_nd_cairo_uninit(void);
 
-cairo_surface_t *eventd_nd_cairo_get_surface(EventdEvent *event, LibeventdNdNotification *notification, EventdNdStyle *style);
+cairo_surface_t *eventd_nd_cairo_get_surface(EventdEvent *event, EventdNdNotificationContents *notification, EventdNdStyle *style);
 
 #endif /* __EVENTD_ND_CAIRO_H__ */

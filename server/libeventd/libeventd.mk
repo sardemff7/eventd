@@ -37,32 +37,3 @@ libeventd_la_LIBADD = \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS) \
 	$(null)
-
-
-if ENABLE_NOTIFICATION_DAEMON
-
-pkginclude_HEADERS += \
-	server/libeventd/include/libeventd-nd-notification-template.h \
-	server/libeventd/include/libeventd-nd-notification.h \
-	server/libeventd/include/libeventd-nd-notification-types.h \
-	$(null)
-
-libeventd_la_SOURCES += \
-	server/libeventd/src/nd-notification.c \
-	$(null)
-
-libeventd_la_CFLAGS += \
-	$(GDK_PIXBUF_CFLAGS) \
-	$(null)
-
-libeventd_la_LIBADD += \
-	$(GDK_PIXBUF_LIBS) \
-	$(null)
-
-if ENABLE_GDK_PIXBUF
-pkginclude_HEADERS += \
-	server/libeventd/include/libeventd-nd-notification-icon.h \
-	$(null)
-endif
-
-endif
