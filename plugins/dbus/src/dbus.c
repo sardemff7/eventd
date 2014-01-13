@@ -465,6 +465,53 @@ _eventd_dbus_get_option_group(EventdPluginContext *context)
 /*
  * Configuration interface
  */
+static void
+_eventd_dbus_load_capabilities_dir(const gchar *dir_name, GHashTable *capabilities_set)
+{
+    GDir *capabilities_dir;
+    GError *error = NULL;
+    capabilities_dir = g_dir_open(dir_name, 0, &error);
+    if ( capabilities_dir == NULL )
+    {
+        g_warning("Couldn't read the D-Bus plugin capabilities directory: %s", error->message);
+        g_clear_error(&error);
+        return;
+    }
+
+    const gchar *file;
+    while ( ( file = g_dir_read_name(capabilities_dir) ) != NULL )
+    {
+        if ( g_str_has_prefix(file, "." ) || ( ! g_str_has_suffix(file, ".capabilities") ) )
+            continue;
+
+        gchar *full_filename;
+
+        full_filename = g_build_filename(DBUSCAPABILITIESDIR, file, NULL);
+        if ( ! g_file_test(full_filename, G_FILE_TEST_IS_REGULAR) )
+            goto next;
+
+        gchar *capabilities;
+        if ( ! g_file_get_contents(full_filename, &capabilities, NULL, &error) )
+        {
+            g_warning("Could not read capability file '%s': %s", file, error->message);
+            g_clear_error(&error);
+            goto next;
+        }
+
+        gchar **capabilitiesv;
+        capabilitiesv = g_strsplit_set(capabilities, " \n,", -1);
+        g_free(capabilities);
+
+        gchar **capability;
+        for ( capability = capabilitiesv ; *capability != NULL ; ++capability )
+            g_hash_table_insert(capabilities_set, *capability, NULL);
+        g_free(capabilitiesv);
+
+    next:
+        g_free(full_filename);
+    }
+    g_dir_close(capabilities_dir);
+}
 
 static void
 _eventd_dbus_config_init(EventdPluginContext *context)
@@ -478,50 +525,7 @@ _eventd_dbus_config_init(EventdPluginContext *context)
     g_hash_table_insert(capabilities_set, "actions", NULL);
      */
 
-    GDir *capabilities_dir;
-    GError *error = NULL;
-    capabilities_dir = g_dir_open(DBUSCAPABILITIESDIR, 0, &error);
-    if ( capabilities_dir != NULL )
-    {
-        const gchar *file;
-        while ( ( file = g_dir_read_name(capabilities_dir) ) != NULL )
-        {
-            if ( g_str_has_prefix(file, "." ) || ( ! g_str_has_suffix(file, ".capabilities") ) )
-                continue;
-
-            gchar *full_filename;
-
-            full_filename = g_build_filename(DBUSCAPABILITIESDIR, file, NULL);
-            if ( ! g_file_test(full_filename, G_FILE_TEST_IS_REGULAR) )
-                goto next;
-
-            gchar *capabilities;
-            if ( ! g_file_get_contents(full_filename, &capabilities, NULL, &error) )
-            {
-                g_warning("Could not read capability file '%s': %s", file, error->message);
-                g_clear_error(&error);
-                goto next;
-            }
-
-            gchar **capabilitiesv;
-            capabilitiesv = g_strsplit_set(capabilities, " \n,", -1);
-            g_free(capabilities);
-
-            gchar **capability;
-            for ( capability = capabilitiesv ; *capability != NULL ; ++capability )
-                g_hash_table_insert(capabilities_set, *capability, NULL);
-            g_free(capabilitiesv);
-
-        next:
-            g_free(full_filename);
-        }
-        g_dir_close(capabilities_dir);
-    }
-    else
-    {
-        g_warning("Couldn't read the D-Bus plugin capabilities directory: %s", error->message);
-        g_clear_error(&error);
-    }
+    _eventd_dbus_load_capabilities_dir(DBUSCAPABILITIESDIR, capabilities_set);
 
     GVariantBuilder *builder;
 
