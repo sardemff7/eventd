@@ -466,7 +466,7 @@ _eventd_dbus_get_option_group(EventdPluginContext *context)
  * Configuration interface
  */
 
-void
+static void
 _eventd_dbus_config_init(EventdPluginContext *context)
 {
     GHashTable *capabilities_set;
@@ -544,7 +544,7 @@ _eventd_dbus_config_init(EventdPluginContext *context)
     g_variant_builder_unref(builder);
 }
 
-void
+static void
 _eventd_dbus_config_reset(EventdPluginContext *context)
 {
     g_variant_unref(context->capabilities);
