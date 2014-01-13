@@ -467,7 +467,7 @@ _eventd_dbus_get_option_group(EventdPluginContext *context)
  */
 
 void
-_eventd_dbus_global_parse(EventdPluginContext *context, GKeyFile *config_file)
+_eventd_dbus_config_init(EventdPluginContext *context)
 {
     GHashTable *capabilities_set;
 
@@ -589,7 +589,7 @@ eventd_plugin_get_interface(EventdPluginInterface *interface)
 
     libeventd_plugin_interface_add_get_option_group_callback(interface, _eventd_dbus_get_option_group);
 
-    libeventd_plugin_interface_add_global_parse_callback(interface, _eventd_dbus_global_parse);
+    libeventd_plugin_interface_add_config_init_callback(interface, _eventd_dbus_config_init);
     libeventd_plugin_interface_add_config_reset_callback(interface, _eventd_dbus_config_reset);
 
     libeventd_plugin_interface_add_start_callback(interface, _eventd_dbus_start);
