@@ -327,6 +327,20 @@ eventd_plugins_control_command(const gchar *id, guint64 argc, const gchar * cons
 }
 
 void
+eventd_plugins_config_init_all(void)
+{
+    GHashTableIter iter;
+    const gchar *id;
+    EventdPlugin *plugin;
+    g_hash_table_iter_init(&iter, plugins);
+    while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&plugin) )
+    {
+        if ( plugin->interface.config_init != NULL )
+            plugin->interface.config_init(plugin->context);
+    }
+}
+
+void
 eventd_plugins_config_reset_all()
 {
     GHashTableIter iter;

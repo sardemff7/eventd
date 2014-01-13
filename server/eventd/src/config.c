@@ -567,6 +567,7 @@ eventd_config_parse(EventdConfig *config)
     config->loaded = TRUE;
 
     _eventd_config_defaults(config);
+    eventd_plugins_config_init_all();
 
     GHashTable *config_files;
 

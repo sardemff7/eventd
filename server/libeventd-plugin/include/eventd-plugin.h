@@ -62,6 +62,7 @@ void libeventd_plugin_interface_add_stop_callback(EventdPluginInterface *interfa
 
 void libeventd_plugin_interface_add_control_command_callback(EventdPluginInterface *interface, EventdPluginControlCommandFunc callback);
 
+void libeventd_plugin_interface_add_config_init_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback);
 void libeventd_plugin_interface_add_global_parse_callback(EventdPluginInterface *interface, EventdPluginGlobalParseFunc callback);
 void libeventd_plugin_interface_add_event_parse_callback(EventdPluginInterface *interface, EventdPluginEventParseFunc callback);
 void libeventd_plugin_interface_add_config_reset_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback);
