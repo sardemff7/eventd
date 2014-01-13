@@ -468,6 +468,9 @@ _eventd_dbus_get_option_group(EventdPluginContext *context)
 static void
 _eventd_dbus_load_capabilities_dir(const gchar *dir_name, GHashTable *capabilities_set)
 {
+    if ( ! g_file_test(dir_name, G_FILE_TEST_EXISTS | G_FILE_TEST_IS_DIR) )
+        return;
+
     GDir *capabilities_dir;
     GError *error = NULL;
     capabilities_dir = g_dir_open(dir_name, 0, &error);
