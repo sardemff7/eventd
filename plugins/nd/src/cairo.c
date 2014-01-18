@@ -229,10 +229,10 @@ _eventd_nd_cairo_bubble_draw(cairo_t *cr, Colour colour, gint radius, gint width
 
     gint limit;
 
-    limit = MIN(width, height);
+    limit = MIN(width, height) / 2;
 
-    if ( ( radius * 2 ) > limit )
-        radius = (gdouble) limit / 2.;
+    if ( radius > limit )
+        radius = limit;
 
     cairo_new_path(cr);
 
