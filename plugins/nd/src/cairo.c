@@ -333,7 +333,7 @@ eventd_nd_cairo_get_surface(EventdEvent *event, EventdNdNotificationContents *no
 #endif /* ENABLE_GDK_PIXBUF */
 
     /* We are sure that min_width < max_width */
-    if ( ( min_width > -1 ) && ( min_width > width ) )
+    if ( min_width > width )
     {
         width = min_width;
         /* Let the text take the remaining space if needed (e.g. Right-to-Left) */
