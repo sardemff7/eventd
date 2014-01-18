@@ -219,6 +219,14 @@ _eventd_nd_cairo_text_process(EventdNdNotificationContents *notification, Eventd
 static void
 _eventd_nd_cairo_bubble_draw(cairo_t *cr, Colour colour, gint radius, gint width, gint height)
 {
+    cairo_set_source_rgba(cr, colour.r, colour.g, colour.b, colour.a);
+
+    if ( radius < 1 )
+    {
+        cairo_paint(cr);
+        return;
+    }
+
     gint limit;
 
     limit = MIN(width, height);
@@ -250,7 +258,6 @@ _eventd_nd_cairo_bubble_draw(cairo_t *cr, Colour colour, gint radius, gint width
               M_PI / 2.0, M_PI);
     cairo_close_path(cr);
 
-    cairo_set_source_rgba(cr, colour.r, colour.g, colour.b, colour.a);
     cairo_fill(cr);
 }
 
