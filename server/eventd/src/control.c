@@ -88,6 +88,8 @@ _eventd_service_private_connection_handler(GSocketService *socket_service, GSock
         status = g_strdup("Missing command");
         code = EVENTDCTL_RETURN_CODE_COMMAND_ERROR;
     }
+    else if ( g_strcmp0(argv[0], "start") == 0 )
+        /* No-op */;
     else if ( g_strcmp0(argv[0], "stop") == 0 )
         eventd_core_stop(control->core);
     else if ( g_strcmp0(argv[0], "reload") == 0 )
