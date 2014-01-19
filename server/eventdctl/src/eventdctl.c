@@ -215,32 +215,34 @@ _eventd_eventdctl_process_command(const gchar *private_socket, gboolean autospaw
 
     EventdctlReturnCode retval = EVENTDCTL_RETURN_CODE_OK;
 
-    if ( g_strcmp0(argv[0], "start") == 0 )
+    if ( connection == NULL )
     {
-        if ( connection != NULL )
-            goto close;
-        g_clear_error(&error);
-        if ( ! _eventd_eventdctl_start_eventd(argc-1, argv+1, &error) )
+        if ( error != NULL )
         {
-            g_warning("Couldn't start eventd: %s", error->message);
-            return EVENTDCTL_RETURN_CODE_INVOCATION_ERROR;
+            g_warning("Couldn't connect to eventd: %s", error->message);
+            return EVENTDCTL_RETURN_CODE_CONNECTION_ERROR;
         }
-        connection = _eventd_eventdctl_get_connection(private_socket, &error);
-        if ( connection != NULL )
-            goto close;
-    }
 
-    if ( ( connection == NULL ) && autospawn )
-    {
-        int a_argc = 0;
-        gchar *a_argv[2];
-        if ( private_socket != NULL )
+        int s_argc = 0;
+        gchar **s_argv = NULL, *a_argv[2] = {
+            "--private-socket",
+            (gchar *)private_socket,
+        };
+
+        if ( g_strcmp0(argv[0], "start") == 0 )
         {
-            a_argc = 2;
-            a_argv[0] = "--private-socket";
-            a_argv[1] = (gchar *)private_socket;
+            s_argc = argc - 1;
+            s_argv = argv + 1;
         }
-        if ( ! _eventd_eventdctl_start_eventd(a_argc, a_argv, &error) )
+        else if ( ! autospawn )
+            return EVENTDCTL_RETURN_CODE_CONNECTION_ERROR;
+        else if ( private_socket != NULL )
+        {
+            s_argc = 2;
+            s_argv = a_argv;
+        }
+
+        if ( ! _eventd_eventdctl_start_eventd(s_argc, s_argv, &error) )
         {
             g_warning("Couldn't start eventd: %s", error->message);
             return EVENTDCTL_RETURN_CODE_INVOCATION_ERROR;
@@ -270,7 +272,6 @@ _eventd_eventdctl_process_command(const gchar *private_socket, gboolean autospaw
               || ( g_strcmp0(argv[0], "notify") == 0 )
             )
     {
-
         plugin = g_strconcat("eventd-", argv[0], NULL);
         argv[0] = plugin;
     }
@@ -278,7 +279,6 @@ _eventd_eventdctl_process_command(const gchar *private_socket, gboolean autospaw
     retval = _eventd_eventdctl_send_argv(connection, argc, argv);
 
     g_free(plugin);
-close:
     if ( ! g_io_stream_close(connection, NULL, &error) )
         g_warning("Can't close the stream: %s", error->message);
     g_clear_error(&error);
