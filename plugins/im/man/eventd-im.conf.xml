@@ -108,6 +108,14 @@
                         <para>The connection port, needed for some protocols.</para>
                     </listitem>
                 </varlistentry>
+
+                <varlistentry>
+                    <term><varname>ChatLeaveTimeout=</varname></term>
+                    <listitem>
+                        <para>A time in <type>seconds</type> (<literal>-1</literal> for infinite)</para>
+                        <para>The number of seconds the plugin will remain connected to a chat room.</para>
+                    </listitem>
+                </varlistentry>
             </variablelist>
         </refsect2>
     </refsect1>

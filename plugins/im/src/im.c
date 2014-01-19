@@ -50,12 +50,21 @@ typedef struct {
     EventdPluginContext *context;
     PurpleAccount *account;
     GHashTable *convs;
+    gint64 leave_timeout;
 } EventdImAccount;
 
 typedef struct {
+    EventdImAccount *account;
     gchar *message;
     GList *convs;
 } EventdImEventAccount;
+
+typedef struct {
+    EventdImAccount *account;
+    PurpleConversation *conv;
+    gboolean joined;
+    guint leave_timeout;
+} EventdImConv;
 
 static void
 _eventd_im_glib_io_free(gpointer data)
@@ -125,6 +134,20 @@ _eventd_im_account_free(gpointer data)
 }
 
 static void
+_eventd_im_conv_free(gpointer data)
+{
+    if ( data == NULL )
+        return;
+
+    EventdImConv *conv = data;
+
+    if ( conv->leave_timeout > 0 )
+        g_source_remove(conv->leave_timeout);
+
+    g_slice_free(EventdImConv, conv);
+}
+
+static void
 _eventd_im_event_account_free(gpointer data)
 {
     if ( data == NULL )
@@ -132,7 +155,7 @@ _eventd_im_event_account_free(gpointer data)
 
     EventdImEventAccount *account = data;
 
-    g_list_free(account->convs);
+    g_list_free_full(account->convs, _eventd_im_conv_free);
     g_free(account->message);
 
     g_slice_free(EventdImEventAccount, account);
@@ -144,35 +167,43 @@ _eventd_im_event_free(gpointer data)
     g_list_free_full(data, _eventd_im_event_account_free);
 }
 
+static gboolean
+_eventd_im_conv_timeout(gpointer user_data)
+{
+    EventdImConv *conv = user_data;
+    PurpleConnection *gc;
+    PurplePluginProtocolInfo *prpl_info;
+
+    gc = purple_account_get_connection(conv->account->account);
+    prpl_info = PURPLE_PLUGIN_PROTOCOL_INFO(purple_connection_get_prpl(gc));
+
+    if ( prpl_info->chat_leave == NULL )
+        g_warning("The libpurple protocol plugin %s (%s) does not implement chat_leave", purple_account_get_protocol_id(conv->account->account), purple_account_get_protocol_name(conv->account->account));
+    else
+    {
+        gint id = purple_conv_chat_get_id(PURPLE_CONV_CHAT(conv->conv));
+        prpl_info->chat_leave(gc, id);
+        conv->joined = FALSE;
+    }
+
+    conv->leave_timeout = 0;
+    return FALSE;
+}
+
+static void
+_eventd_im_conv_joined(PurpleConversation *_conv, EventdImConv *conv)
+{
+    if ( conv->account->leave_timeout < 0 )
+        return;
+
+    if ( conv->leave_timeout > 0 )
+        g_source_remove(conv->leave_timeout);
+    conv->leave_timeout = g_timeout_add_seconds(conv->account->leave_timeout, _eventd_im_conv_timeout, conv);
+}
+
 /*
  * Initialization interface
  */
-
-static void
-_eventd_im_signed_on_callback(PurpleConnection *gc, EventdPluginContext *context)
-{
-    PurplePluginProtocolInfo *prpl_info = PURPLE_PLUGIN_PROTOCOL_INFO(purple_connection_get_prpl(gc));
-    if ( prpl_info->join_chat == NULL )
-        return;
-
-    EventdImAccount *account;
-    account = g_hash_table_lookup(context->accounts, purple_account_get_alias(purple_connection_get_account(gc)));
-    g_return_if_fail(account != NULL);
-
-    GHashTable *comps;
-    comps = g_hash_table_new(g_str_hash, g_str_equal);
-
-    GHashTableIter iter;
-    PurpleConversation *conv;
-    g_hash_table_iter_init(&iter, account->convs);
-    while ( g_hash_table_iter_next(&iter, NULL, (gpointer *)&conv) )
-    {
-        g_hash_table_replace(comps, (gpointer) "channel", (gpointer) purple_conversation_get_name(conv));
-        prpl_info->join_chat(gc, comps);
-    }
-
-    g_hash_table_unref(comps);
-}
 
 static void
 _eventd_im_on_error(PurpleAccount *ac, const PurpleConnectionErrorInfo *old_error, const PurpleConnectionErrorInfo *current_error, EventdPluginContext *context)
@@ -227,7 +258,6 @@ _eventd_im_init(EventdCoreContext *core, EventdCoreInterface *interface)
 
     libeventd_regex_init();
 
-    purple_signal_connect(purple_connections_get_handle(), "signed-on", context, PURPLE_CALLBACK(_eventd_im_signed_on_callback), context);
     purple_signal_connect(purple_connections_get_handle(), "error-changed", context, PURPLE_CALLBACK(_eventd_im_on_error), context);
 
     return context;
@@ -264,12 +294,12 @@ _eventd_im_global_parse(EventdPluginContext *context, GKeyFile *config_file)
         gchar *protocol = NULL;
         gchar *username = NULL;
         gchar *password = NULL;
+        Int port;
+        Int leave_timeout;
 
         section = g_strconcat("IMAccount ", *name, NULL);
         if ( ! g_key_file_has_group(config_file, section) )
             goto next;
-
-        Int port;
 
         if ( libeventd_config_key_file_get_string(config_file, section, "Protocol", &protocol) < 0 )
             goto next;
@@ -278,6 +308,8 @@ _eventd_im_global_parse(EventdPluginContext *context, GKeyFile *config_file)
         if ( libeventd_config_key_file_get_string(config_file, section, "Password", &password) < 0 )
             goto next;
         if ( libeventd_config_key_file_get_int(config_file, section, "Port", &port) < 0 )
+            goto next;
+        if ( libeventd_config_key_file_get_int(config_file, section, "ChatLeaveTimeout", &leave_timeout) < 0 )
             goto next;
 
         EventdImAccount *account;
@@ -295,6 +327,8 @@ _eventd_im_global_parse(EventdPluginContext *context, GKeyFile *config_file)
             purple_account_set_int(account->account, "port", CLAMP(port.value, 1, G_MAXUINT16));
 
         account->convs = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) purple_conversation_destroy);
+
+        account->leave_timeout = ( leave_timeout.set ) ? leave_timeout.value : 1200;
 
         g_hash_table_insert(context->accounts, *name, account);
         *name = NULL;
@@ -359,6 +393,7 @@ _eventd_im_event_parse(EventdPluginContext *context, const gchar *config_id, GKe
 
         EventdImEventAccount *event_account;
         event_account = g_slice_new0(EventdImEventAccount);
+        event_account->account = account;
         event_account->message = message;
 
         if ( channels != NULL )
@@ -366,11 +401,14 @@ _eventd_im_event_parse(EventdPluginContext *context, const gchar *config_id, GKe
             gchar **channel;
             for ( channel = channels ; *channel != NULL ; ++channel )
             {
-                PurpleConversation *conv;
+                EventdImConv *conv;
                 conv = g_hash_table_lookup(account->convs, *channel);
                 if ( conv == NULL )
                 {
-                    conv = purple_conversation_new(PURPLE_CONV_TYPE_CHAT, account->account, *channel);
+                    conv = g_slice_new0(EventdImConv);
+                    conv->account = account;
+                    conv->conv = purple_conversation_new(PURPLE_CONV_TYPE_CHAT, account->account, *channel);
+                    purple_signal_connect(purple_conversations_get_handle(), "chat-joined", context, PURPLE_CALLBACK(_eventd_im_conv_joined), conv);
 
                     g_hash_table_insert(account->convs, *channel, conv);
                 }
@@ -430,24 +468,42 @@ _eventd_im_event_action(EventdPluginContext *context, const gchar *config_id, Ev
     if ( accounts == NULL )
         return;
 
+    GHashTable *comps;
+    comps = g_hash_table_new(g_str_hash, g_str_equal);
+
     GList *account_;
     EventdImEventAccount *account;
     for ( account_ = accounts ; account_ != NULL ; account_ = g_list_next(account_) )
     {
         account = account_->data;
 
+        if ( ! purple_account_is_connected(account->account->account) )
+            continue;
+
+        PurpleConnection *gc;
+        PurplePluginProtocolInfo *prpl_info;
         gchar *message;
+
+        gc = purple_account_get_connection(account->account->account);
+        prpl_info = PURPLE_PLUGIN_PROTOCOL_INFO(purple_connection_get_prpl(gc));
+
         message = libeventd_regex_replace_event_data(account->message, event, NULL, NULL);
 
         GList *conv_;
         for ( conv_ = account->convs ; conv_ != NULL ; conv_ = g_list_next(conv_) )
         {
-            PurpleConversation *conv = conv_->data;
+            EventdImConv *conv = conv_->data;
 
-            switch ( purple_conversation_get_type(conv) )
+            switch ( purple_conversation_get_type(conv->conv) )
             {
             case PURPLE_CONV_TYPE_CHAT:
-                purple_conv_chat_send(PURPLE_CONV_CHAT(conv), message);
+                if ( ( prpl_info->join_chat != NULL ) && ( ! conv->joined ) )
+                {
+                    g_hash_table_replace(comps, (gpointer) "channel", (gpointer) purple_conversation_get_name(conv->conv));
+                    prpl_info->join_chat(gc, comps);
+                    conv->joined = TRUE;
+                }
+                purple_conv_chat_send(PURPLE_CONV_CHAT(conv->conv), message);
             break;
             default:
             break;
@@ -456,6 +512,8 @@ _eventd_im_event_action(EventdPluginContext *context, const gchar *config_id, Ev
 
         g_free(message);
     }
+
+    g_hash_table_unref(comps);
 }
 
 
