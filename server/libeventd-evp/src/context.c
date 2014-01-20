@@ -118,9 +118,11 @@ libeventd_evp_context_close(LibeventdEvpContext *self)
     if ( self->in != NULL )
         g_object_unref(self->in);
 
-    g_io_stream_close(G_IO_STREAM(self->connection), NULL, NULL);
-
-    g_object_unref(self->connection);
+    if ( self->connection != NULL)
+    {
+        g_io_stream_close(G_IO_STREAM(self->connection), NULL, NULL);
+        g_object_unref(self->connection);
+    }
 
     self->out = NULL;
     self->in = NULL;
