@@ -48,6 +48,7 @@ typedef struct {
 
 typedef struct {
     EventdPluginContext *context;
+    PurplePluginProtocolInfo *prpl_info;
     PurpleAccount *account;
     GHashTable *convs;
     gint64 leave_timeout;
@@ -60,10 +61,11 @@ typedef struct {
 } EventdImEventAccount;
 
 typedef struct {
-    EventdImAccount *account;
+    PurpleConversationType type;
+    const gchar *channel;
     PurpleConversation *conv;
-    gboolean joined;
     guint leave_timeout;
+    GList *pending_messages;
 } EventdImConv;
 
 static void
@@ -171,34 +173,37 @@ static gboolean
 _eventd_im_conv_timeout(gpointer user_data)
 {
     EventdImConv *conv = user_data;
-    PurpleConnection *gc;
-    PurplePluginProtocolInfo *prpl_info;
 
-    gc = purple_account_get_connection(conv->account->account);
-    prpl_info = PURPLE_PLUGIN_PROTOCOL_INFO(purple_connection_get_prpl(gc));
-
-    if ( prpl_info->chat_leave == NULL )
-        g_warning("The libpurple protocol plugin %s (%s) does not implement chat_leave", purple_account_get_protocol_id(conv->account->account), purple_account_get_protocol_name(conv->account->account));
-    else
-    {
-        gint id = purple_conv_chat_get_id(PURPLE_CONV_CHAT(conv->conv));
-        prpl_info->chat_leave(gc, id);
-        conv->joined = FALSE;
-    }
-
+    purple_conversation_destroy(conv->conv);
+    conv->conv = NULL;
     conv->leave_timeout = 0;
     return FALSE;
 }
 
 static void
-_eventd_im_conv_joined(PurpleConversation *_conv, EventdImConv *conv)
+_eventd_im_conv_joined(PurpleConversation *_conv, EventdPluginContext *context)
 {
-    if ( conv->account->leave_timeout < 0 )
+    EventdImAccount *account;
+    EventdImConv *conv;
+
+    account = purple_conversation_get_account(_conv)->ui_data;
+    conv = g_hash_table_lookup(account->convs, purple_conversation_get_name(_conv));
+    g_return_if_fail(conv != NULL);
+
+    conv->conv = _conv;
+
+    GList *msg;
+    for ( msg = conv->pending_messages ; msg != NULL ; msg = g_list_next(msg) )
+        purple_conv_chat_send(PURPLE_CONV_CHAT(conv->conv), msg->data);
+    g_list_free_full(conv->pending_messages, g_free);
+    conv->pending_messages = NULL;
+
+    if ( account->leave_timeout < 0 )
         return;
 
     if ( conv->leave_timeout > 0 )
         g_source_remove(conv->leave_timeout);
-    conv->leave_timeout = g_timeout_add_seconds(conv->account->leave_timeout, _eventd_im_conv_timeout, conv);
+    conv->leave_timeout = g_timeout_add_seconds(account->leave_timeout, _eventd_im_conv_timeout, conv);
 }
 
 /*
@@ -258,6 +263,7 @@ _eventd_im_init(EventdCoreContext *core, EventdCoreInterface *interface)
 
     libeventd_regex_init();
 
+    purple_signal_connect(purple_conversations_get_handle(), "chat-joined", context, PURPLE_CALLBACK(_eventd_im_conv_joined), context);
     purple_signal_connect(purple_connections_get_handle(), "error-changed", context, PURPLE_CALLBACK(_eventd_im_on_error), context);
 
     return context;
@@ -296,6 +302,7 @@ _eventd_im_global_parse(EventdPluginContext *context, GKeyFile *config_file)
         gchar *password = NULL;
         Int port;
         Int leave_timeout;
+        PurplePlugin *prpl;
 
         section = g_strconcat("IMAccount ", *name, NULL);
         if ( ! g_key_file_has_group(config_file, section) )
@@ -312,11 +319,20 @@ _eventd_im_global_parse(EventdPluginContext *context, GKeyFile *config_file)
         if ( libeventd_config_key_file_get_int(config_file, section, "ChatLeaveTimeout", &leave_timeout) < 0 )
             goto next;
 
+        prpl = purple_find_prpl(protocol);
+        if ( prpl == NULL )
+        {
+            g_warning("Unknown protocol %s", protocol);
+            goto next;
+        }
+
         EventdImAccount *account;
         account = g_new0(EventdImAccount, 1);
         account->context = context;
 
+        account->prpl_info = PURPLE_PLUGIN_PROTOCOL_INFO(prpl);
         account->account = purple_account_new(username, protocol);
+        account->account->ui_data = account;
         if ( password != NULL )
             purple_account_set_password(account->account, password);
         purple_accounts_add(account->account);
@@ -406,10 +422,10 @@ _eventd_im_event_parse(EventdPluginContext *context, const gchar *config_id, GKe
                 if ( conv == NULL )
                 {
                     conv = g_slice_new0(EventdImConv);
-                    conv->account = account;
-                    conv->conv = purple_conversation_new(PURPLE_CONV_TYPE_CHAT, account->account, *channel);
-                    purple_signal_connect(purple_conversations_get_handle(), "chat-joined", context, PURPLE_CALLBACK(_eventd_im_conv_joined), conv);
-
+                    conv->type = PURPLE_CONV_TYPE_CHAT;
+                    conv->channel = *channel;
+                    if ( account->prpl_info->join_chat == NULL )
+                        conv->conv = purple_conversation_new(PURPLE_CONV_TYPE_CHAT, account->account, *channel);
                     g_hash_table_insert(account->convs, *channel, conv);
                 }
                 event_account->convs = g_list_prepend(event_account->convs, conv);
@@ -481,12 +497,9 @@ _eventd_im_event_action(EventdPluginContext *context, const gchar *config_id, Ev
             continue;
 
         PurpleConnection *gc;
-        PurplePluginProtocolInfo *prpl_info;
         gchar *message;
 
         gc = purple_account_get_connection(account->account->account);
-        prpl_info = PURPLE_PLUGIN_PROTOCOL_INFO(purple_connection_get_prpl(gc));
-
         message = libeventd_regex_replace_event_data(account->message, event, NULL, NULL);
 
         GList *conv_;
@@ -494,16 +507,21 @@ _eventd_im_event_action(EventdPluginContext *context, const gchar *config_id, Ev
         {
             EventdImConv *conv = conv_->data;
 
-            switch ( purple_conversation_get_type(conv->conv) )
+            switch ( conv->type )
             {
             case PURPLE_CONV_TYPE_CHAT:
-                if ( ( prpl_info->join_chat != NULL ) && ( ! conv->joined ) )
+                if ( conv->conv != NULL )
                 {
-                    g_hash_table_replace(comps, (gpointer) "channel", (gpointer) purple_conversation_get_name(conv->conv));
-                    prpl_info->join_chat(gc, comps);
-                    conv->joined = TRUE;
+                    purple_conv_chat_send(PURPLE_CONV_CHAT(conv->conv), message);
+                    break;
                 }
-                purple_conv_chat_send(PURPLE_CONV_CHAT(conv->conv), message);
+
+                if ( conv->pending_messages == NULL )
+                {
+                    g_hash_table_replace(comps, (gpointer) "channel", (gpointer) conv->channel);
+                    account->account->prpl_info->join_chat(gc, comps);
+                }
+                conv->pending_messages = g_list_prepend(conv->pending_messages, g_strdup(message));
             break;
             default:
             break;
