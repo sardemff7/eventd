@@ -143,8 +143,13 @@ _eventd_im_conv_free(gpointer data)
 
     EventdImConv *conv = data;
 
+    if ( conv->conv != NULL )
+        purple_conversation_destroy(conv->conv);
+
     if ( conv->leave_timeout > 0 )
         g_source_remove(conv->leave_timeout);
+
+    g_list_free_full(conv->pending_messages, g_free);
 
     g_slice_free(EventdImConv, conv);
 }
