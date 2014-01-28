@@ -395,6 +395,9 @@ main(int argc, char *argv[])
     g_type_init();
 #endif /* ! GLIB_CHECK_VERSION(2,35,1) */
 
+    if ( ! g_get_filename_charsets(NULL) )
+        g_error(PACKAGE_NAME " does not support non-UTF-8 filename encoding");
+
 #ifdef DEBUG
     const gchar *debug_log_filename =  g_getenv("EVENTD_DEBUG_LOG_FILENAME");
     GDataOutputStream *debug_stream = NULL;
