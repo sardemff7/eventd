@@ -36,7 +36,7 @@
 #define PURPLE_GLIB_WRITE_COND (G_IO_OUT | G_IO_HUP | G_IO_ERR | G_IO_NVAL)
 
 struct _EventdPluginContext {
-    GHashTable *accounts;
+    GList *accounts;
     GHashTable *events;
 };
 
@@ -48,6 +48,7 @@ typedef struct {
 
 typedef struct {
     EventdPluginContext *context;
+    gchar *name;
     PurplePluginProtocolInfo *prpl_info;
     PurpleAccount *account;
     GHashTable *convs;
@@ -131,6 +132,7 @@ _eventd_im_account_free(gpointer data)
     EventdImAccount *account = data;
 
     purple_account_destroy(account->account);
+    g_free(account->name);
 
     g_free(account);
 }
@@ -218,7 +220,8 @@ _eventd_im_conv_joined(PurpleConversation *_conv, EventdPluginContext *context)
 static void
 _eventd_im_on_error(PurpleAccount *ac, const PurpleConnectionErrorInfo *old_error, const PurpleConnectionErrorInfo *current_error, EventdPluginContext *context)
 {
-    g_debug("Error on account %s: %s", purple_account_get_username(ac), current_error->description);
+    EventdImAccount *account = ac->ui_data;
+    g_debug("Error on account %s: %s", account->name, current_error->description);
     /*
      * TODO: Reconnect
      */
@@ -263,7 +266,6 @@ _eventd_im_init(EventdCoreContext *core, EventdCoreInterface *interface)
 
     context = g_new0(EventdPluginContext, 1);
 
-    context->accounts = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_im_account_free);
     context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_im_event_free);
 
     libeventd_regex_init();
@@ -277,7 +279,7 @@ _eventd_im_init(EventdCoreContext *core, EventdCoreInterface *interface)
 static void
 _eventd_im_uninit(EventdPluginContext *context)
 {
-    g_hash_table_unref(context->accounts);
+    g_list_free_full(context->accounts, _eventd_im_account_free);
     g_hash_table_unref(context->events);
 
     libeventd_regex_clean();
@@ -334,6 +336,8 @@ _eventd_im_global_parse(EventdPluginContext *context, GKeyFile *config_file)
         EventdImAccount *account;
         account = g_new0(EventdImAccount, 1);
         account->context = context;
+        account->name = *name;
+        *name = NULL;
 
         account->prpl_info = PURPLE_PLUGIN_PROTOCOL_INFO(prpl);
         account->account = purple_account_new(username, protocol);
@@ -341,7 +345,7 @@ _eventd_im_global_parse(EventdPluginContext *context, GKeyFile *config_file)
         if ( password != NULL )
             purple_account_set_password(account->account, password);
         purple_accounts_add(account->account);
-        purple_account_set_alias(account->account, *name);
+        purple_account_set_alias(account->account, account->name);
         purple_account_set_enabled(account->account, PACKAGE_NAME, TRUE);
 
         if ( port.set )
@@ -351,8 +355,7 @@ _eventd_im_global_parse(EventdPluginContext *context, GKeyFile *config_file)
 
         account->leave_timeout = leave_timeout;
 
-        g_hash_table_insert(context->accounts, *name, account);
-        *name = NULL;
+        context->accounts = g_list_prepend(context->accounts, account);
 
     next:
         g_free(password);
@@ -383,13 +386,13 @@ _eventd_im_event_parse(EventdPluginContext *context, const gchar *config_id, GKe
     gboolean have_account = FALSE;
     GList *event_accounts = NULL;
 
-    GHashTableIter iter;
-    gchar *name, *section;
-    EventdImAccount *account;
-    g_hash_table_iter_init(&iter, context->accounts);
-    while ( g_hash_table_iter_next(&iter, (gpointer *)&name, (gpointer *)&account) )
+    GList *account_;
+    gchar *section;
+    for ( account_ = context->accounts ; account_ != NULL ; account_ = g_list_next(account_) )
     {
-        section = g_strconcat("IMAccount ", name, NULL);
+        EventdImAccount *account = account_->data;
+
+        section = g_strconcat("IMAccount ", account->name, NULL);
         if ( ! g_key_file_has_group(config_file, section) )
             goto next;
 
@@ -452,27 +455,30 @@ static void
 _eventd_im_config_reset(EventdPluginContext *context)
 {
     g_hash_table_remove_all(context->events);
-    g_hash_table_remove_all(context->accounts);
+    g_list_free_full(context->accounts, _eventd_im_account_free);
+    context->accounts = NULL;
 }
 
 static void
 _eventd_im_start(EventdPluginContext *context)
 {
-    GHashTableIter iter;
-    EventdImAccount *account;
-    g_hash_table_iter_init(&iter, context->accounts);
-    while ( g_hash_table_iter_next(&iter, NULL, (gpointer *)&account) )
+    GList *account_;
+    for ( account_ = context->accounts ; account_ != NULL ; account_ = g_list_next(account_) )
+    {
+        EventdImAccount *account = account_->data;
         purple_account_connect(account->account);
+    }
 }
 
 static void
 _eventd_im_stop(EventdPluginContext *context)
 {
-    GHashTableIter iter;
-    EventdImAccount *account;
-    g_hash_table_iter_init(&iter, context->accounts);
-    while ( g_hash_table_iter_next(&iter, NULL, (gpointer *)&account) )
+    GList *account_;
+    for ( account_ = context->accounts ; account_ != NULL ; account_ = g_list_next(account_) )
+    {
+        EventdImAccount *account = account_->data;
         purple_account_disconnect(account->account);
+    }
 }
 
 
