@@ -97,6 +97,8 @@ _eventd_nd_backend_display_free(gpointer data)
     g_free(display);
 }
 
+static void _eventd_nd_update_notifications(EventdNdContext *context);
+
 static void
 _eventd_nd_backend_remove_display(EventdNdContext *context, const gchar *target)
 {
@@ -114,6 +116,7 @@ _eventd_nd_init(EventdCoreContext *core, EventdCoreInterface *interface)
 
     context = g_new0(EventdPluginContext, 1);
 
+    context->interface.update_notifications = _eventd_nd_update_notifications;
     context->interface.remove_display = _eventd_nd_backend_remove_display;
 
     context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, eventd_nd_style_free);
