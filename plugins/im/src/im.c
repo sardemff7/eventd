@@ -31,6 +31,7 @@
 #include <eventd-plugin.h>
 #include <libeventd-config.h>
 #include <libeventd-regex.h>
+#include <libeventd-reconnect.h>
 
 #define PURPLE_GLIB_READ_COND  (G_IO_IN | G_IO_HUP | G_IO_ERR)
 #define PURPLE_GLIB_WRITE_COND (G_IO_OUT | G_IO_HUP | G_IO_ERR | G_IO_NVAL)
@@ -52,7 +53,9 @@ typedef struct {
     PurplePluginProtocolInfo *prpl_info;
     PurpleAccount *account;
     GHashTable *convs;
+    LibeventdReconnectHandler *reconnect;
     gint64 leave_timeout;
+    gboolean started;
 } EventdImAccount;
 
 typedef struct {
@@ -138,6 +141,18 @@ _eventd_im_account_free(gpointer data)
 }
 
 static void
+_eventd_im_account_connect(EventdImAccount *account)
+{
+    if ( ! account->started )
+        return;
+
+    if ( purple_account_is_connected(account->account) || purple_account_is_connecting(account->account) )
+        return;
+
+    purple_account_connect(account->account);
+}
+
+static void
 _eventd_im_conv_free(gpointer data)
 {
     if ( data == NULL )
@@ -174,6 +189,34 @@ static void
 _eventd_im_event_free(gpointer data)
 {
     g_list_free_full(data, _eventd_im_event_account_free);
+}
+
+static void
+_eventd_im_account_reconnect_callback(LibeventdReconnectHandler *handler, gpointer user_data)
+{
+    EventdImAccount *account = user_data;
+
+    _eventd_im_account_connect(account);
+}
+
+static void
+_eventd_im_signed_on_callback(PurpleConnection *gc, EventdPluginContext *context)
+{
+    EventdImAccount *account = purple_connection_get_account(gc)->ui_data;
+
+    libeventd_reconnect_reset(account->reconnect);
+}
+
+static void
+_eventd_im_error_callback(PurpleAccount *ac, const PurpleConnectionErrorInfo *old_error, const PurpleConnectionErrorInfo *current_error, EventdPluginContext *context)
+{
+    EventdImAccount *account = ac->ui_data;
+    g_debug("Error on account %s: %s", account->name, current_error->description);
+    if ( account->started && ( ! purple_account_is_connecting(account->account) ) )
+    {
+        if ( ! libeventd_reconnect_try(account->reconnect) )
+            g_warning("Too many reconnect tries for account %s", account->name);
+    }
 }
 
 static gboolean
@@ -216,16 +259,6 @@ _eventd_im_conv_joined(PurpleConversation *_conv, EventdPluginContext *context)
 /*
  * Initialization interface
  */
-
-static void
-_eventd_im_on_error(PurpleAccount *ac, const PurpleConnectionErrorInfo *old_error, const PurpleConnectionErrorInfo *current_error, EventdPluginContext *context)
-{
-    EventdImAccount *account = ac->ui_data;
-    g_debug("Error on account %s: %s", account->name, current_error->description);
-    /*
-     * TODO: Reconnect
-     */
-}
 
 static EventdPluginContext *
 _eventd_im_init(EventdCoreContext *core, EventdCoreInterface *interface)
@@ -270,8 +303,9 @@ _eventd_im_init(EventdCoreContext *core, EventdCoreInterface *interface)
 
     libeventd_regex_init();
 
+    purple_signal_connect(purple_connections_get_handle(), "signed-on", context, PURPLE_CALLBACK(_eventd_im_signed_on_callback), context);
+    purple_signal_connect(purple_connections_get_handle(), "error-changed", context, PURPLE_CALLBACK(_eventd_im_error_callback), context);
     purple_signal_connect(purple_conversations_get_handle(), "chat-joined", context, PURPLE_CALLBACK(_eventd_im_conv_joined), context);
-    purple_signal_connect(purple_connections_get_handle(), "error-changed", context, PURPLE_CALLBACK(_eventd_im_on_error), context);
 
     return context;
 }
@@ -308,6 +342,8 @@ _eventd_im_global_parse(EventdPluginContext *context, GKeyFile *config_file)
         gchar *username = NULL;
         gchar *password = NULL;
         Int port;
+        gint64 reconnect_timeout;
+        gint64 reconnect_max_tries;
         gint64 leave_timeout;
         PurplePlugin *prpl;
 
@@ -322,6 +358,10 @@ _eventd_im_global_parse(EventdPluginContext *context, GKeyFile *config_file)
         if ( libeventd_config_key_file_get_string(config_file, section, "Password", &password) < 0 )
             goto next;
         if ( libeventd_config_key_file_get_int(config_file, section, "Port", &port) < 0 )
+            goto next;
+        if ( libeventd_config_key_file_get_int_with_default(config_file, section, "ReconnectTimeout", 5, &reconnect_timeout) < 0 )
+            goto next;
+        if ( libeventd_config_key_file_get_int_with_default(config_file, section, "ReconnectMaxTries", 10, &reconnect_max_tries) < 0 )
             goto next;
         if ( libeventd_config_key_file_get_int_with_default(config_file, section, "ChatLeaveTimeout", 1200, &leave_timeout) < 0 )
             goto next;
@@ -352,6 +392,8 @@ _eventd_im_global_parse(EventdPluginContext *context, GKeyFile *config_file)
             purple_account_set_int(account->account, "port", CLAMP(port.value, 1, G_MAXUINT16));
 
         account->convs = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) purple_conversation_destroy);
+
+        account->reconnect = libeventd_reconnect_new(reconnect_timeout, reconnect_max_tries, _eventd_im_account_reconnect_callback, account);
 
         account->leave_timeout = leave_timeout;
 
@@ -466,7 +508,8 @@ _eventd_im_start(EventdPluginContext *context)
     for ( account_ = context->accounts ; account_ != NULL ; account_ = g_list_next(account_) )
     {
         EventdImAccount *account = account_->data;
-        purple_account_connect(account->account);
+        account->started = TRUE;
+        _eventd_im_account_connect(account);
     }
 }
 
@@ -477,6 +520,8 @@ _eventd_im_stop(EventdPluginContext *context)
     for ( account_ = context->accounts ; account_ != NULL ; account_ = g_list_next(account_) )
     {
         EventdImAccount *account = account_->data;
+        account->started = FALSE;
+        libeventd_reconnect_reset(account->reconnect);
         purple_account_disconnect(account->account);
     }
 }
