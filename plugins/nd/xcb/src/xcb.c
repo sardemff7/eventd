@@ -268,6 +268,8 @@ _eventd_nd_xcb_randr_check_geometry(EventdNdDisplay *display)
         found = _eventd_nd_xcb_randr_check_primary(display);
     if ( ! found )
         _eventd_nd_xcb_geometry_fallback(display);
+
+    display->context->nd_interface->update_notifications(display->context->nd);
 }
 
 static void _eventd_nd_xcb_surface_expose_event(EventdNdSurface *self, xcb_expose_event_t *event);
