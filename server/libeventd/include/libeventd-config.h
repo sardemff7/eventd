@@ -41,7 +41,7 @@ gint8 libeventd_config_key_file_get_boolean(GKeyFile *config_file, const gchar *
 gint8 libeventd_config_key_file_get_string(GKeyFile *config_file, const gchar *group, const gchar *key, gchar **value);
 gint8 libeventd_config_key_file_get_locale_string(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *locale, gchar **value);
 gint8 libeventd_config_key_file_get_int(GKeyFile *config_file, const gchar *group, const gchar *key, Int *value);
-gint64 libeventd_config_key_file_get_int_with_default(GKeyFile *config_file, const gchar *group, const gchar *key, gint64 default_value);
+gint8 libeventd_config_key_file_get_int_with_default(GKeyFile *config_file, const gchar *group, const gchar *key, gint64 default_value, gint64 *value);
 gint8 libeventd_config_key_file_get_string_list(GKeyFile *config_file, const gchar *group, const gchar *key, gchar ***value, gsize *length);
 gint8 libeventd_config_key_file_get_colour(GKeyFile *config_file, const gchar *group, const gchar *key, Colour *value);
 

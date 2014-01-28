@@ -370,7 +370,7 @@ _eventd_config_parse_event_file(EventdConfig *config, const gchar *id, GKeyFile 
         match->flags_blacklist = _eventd_config_parse_event_flags(flags, length);
 
     if ( ( match->if_data != NULL ) || ( match->if_data_matches != NULL ) || ( match->flags_whitelist != NULL ) || ( match->flags_blacklist != NULL ) )
-        match->importance = libeventd_config_key_file_get_int_with_default(config_file, "Event", "Importance", G_MAXINT64);
+        libeventd_config_key_file_get_int_with_default(config_file, "Event", "Importance", G_MAXINT64, &match->importance);
 
     gchar *internal_name;
 

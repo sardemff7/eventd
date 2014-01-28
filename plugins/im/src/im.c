@@ -306,7 +306,7 @@ _eventd_im_global_parse(EventdPluginContext *context, GKeyFile *config_file)
         gchar *username = NULL;
         gchar *password = NULL;
         Int port;
-        Int leave_timeout;
+        gint64 leave_timeout;
         PurplePlugin *prpl;
 
         section = g_strconcat("IMAccount ", *name, NULL);
@@ -321,7 +321,7 @@ _eventd_im_global_parse(EventdPluginContext *context, GKeyFile *config_file)
             goto next;
         if ( libeventd_config_key_file_get_int(config_file, section, "Port", &port) < 0 )
             goto next;
-        if ( libeventd_config_key_file_get_int(config_file, section, "ChatLeaveTimeout", &leave_timeout) < 0 )
+        if ( libeventd_config_key_file_get_int_with_default(config_file, section, "ChatLeaveTimeout", 1200, &leave_timeout) < 0 )
             goto next;
 
         prpl = purple_find_prpl(protocol);
@@ -349,7 +349,7 @@ _eventd_im_global_parse(EventdPluginContext *context, GKeyFile *config_file)
 
         account->convs = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) purple_conversation_destroy);
 
-        account->leave_timeout = ( leave_timeout.set ) ? leave_timeout.value : 1200;
+        account->leave_timeout = leave_timeout;
 
         g_hash_table_insert(context->accounts, *name, account);
         *name = NULL;

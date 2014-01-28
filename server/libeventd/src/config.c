@@ -78,17 +78,16 @@ libeventd_config_key_file_get_int(GKeyFile *config_file, const gchar *group, con
 }
 
 EVENTD_EXPORT
-gint64
-libeventd_config_key_file_get_int_with_default(GKeyFile *config_file, const gchar *group, const gchar *key, gint64 default_value)
+gint8
+libeventd_config_key_file_get_int_with_default(GKeyFile *config_file, const gchar *group, const gchar *key, gint64 default_value, gint64 *ret_value)
 {
+    gint8 r;
     Int value;
 
-    libeventd_config_key_file_get_int(config_file, group, key, &value);
+    r = libeventd_config_key_file_get_int(config_file, group, key, &value);
+    *ret_value = value.set ? value.value : default_value;
 
-    if ( value.set )
-        return value.value;
-
-    return default_value;
+    return r;
 }
 
 EVENTD_EXPORT
