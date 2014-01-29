@@ -252,11 +252,13 @@ libeventd_evp_context_send_message(LibeventdEvpContext *self, const gchar *messa
     if ( ! g_data_output_stream_put_string(self->out, message, self->cancellable, &_inner_error_) )
     {
         g_propagate_error(error, _inner_error_);
+        libeventd_evp_context_close(self);
         return FALSE;
     }
     if ( ! g_data_output_stream_put_byte(self->out, '\n', self->cancellable, &_inner_error_) )
     {
         g_propagate_error(error, _inner_error_);
+        libeventd_evp_context_close(self);
         return FALSE;
     }
 

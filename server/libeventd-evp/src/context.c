@@ -73,6 +73,7 @@ libeventd_evp_context_is_connected(LibeventdEvpContext *self, GError **error)
     {
         g_propagate_error(error, self->error);
         self->error = NULL;
+        libeventd_evp_context_close(self);
         return FALSE;
     }
 
