@@ -187,6 +187,66 @@
                 </variablelist>
             </refsect3>
 
+            <refsect3>
+                <title>Section <varname>[NotificationTitle]</varname></title>
+
+                <variablelist>
+                    <varlistentry>
+                        <term><varname>Font=</varname> (defaults to <literal>Linux Libertine O Bold 9</literal>)</term>
+                        <listitem>
+                            <para>A <type>Pango font description string</type></para>
+                            <para>Fonts for the bubble's title.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>Colour=</varname> (defaults to <literal>#262626</literal>)</term>
+                        <listitem>
+                            <para>A <type>colour string</type>, either #RRGGBBAA or rgba(r, g, b, a) form</para>
+                            <para>Colour of bubble's title.</para>
+                        </listitem>
+                    </varlistentry>
+                </variablelist>
+            </refsect3>
+
+            <refsect3>
+                <title>Section <varname>[NotificationMessage]</varname></title>
+
+                <variablelist>
+                    <varlistentry>
+                        <term><varname>Spacing=</varname> (defaults to <literal>5</literal>)</term>
+                        <listitem>
+                            <para>An <type>integer</type></para>
+                            <para>Spacing between bubble's title and message.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>MaxLines=</varname> (defaults to <literal>10</literal>)</term>
+                        <listitem>
+                            <para>An <type>integer</type></para>
+                            <para>Maximum lines of bubble's message to print.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>Font=</varname> (defaults to <literal>Linux Libertine O 9</literal>)</term>
+                        <listitem>
+                            <para>A <type>Pango font description string</type></para>
+                            <para>Fonts for the bubble's message.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>Colour=</varname> (defaults to <literal>#262626</literal>)</term>
+                        <listitem>
+                            <para>A <type>colour string</type>, either #RRGGBBAA or rgba(r, g, b, a) form</para>
+                            <para>Colour of bubble's message.</para>
+                        </listitem>
+                    </varlistentry>
+                </variablelist>
+            </refsect3>
+
             <refsect3 condition="website;enable_gdk_pixbuf">
                 <title>Section <varname>[NotificationImage]</varname></title>
 
@@ -278,66 +338,6 @@
                             <para>A <type>percentage</type> as an <type>integer</type></para>
                             <para>Determines the fading width when the icon is placed in background.</para>
                             <para>Used only if placement is <literal>Background</literal>.</para>
-                        </listitem>
-                    </varlistentry>
-                </variablelist>
-            </refsect3>
-
-            <refsect3>
-                <title>Section <varname>[NotificationTitle]</varname></title>
-
-                <variablelist>
-                    <varlistentry>
-                        <term><varname>Font=</varname> (defaults to <literal>Linux Libertine O Bold 9</literal>)</term>
-                        <listitem>
-                            <para>A <type>Pango font description string</type></para>
-                            <para>Fonts for the bubble's title.</para>
-                        </listitem>
-                    </varlistentry>
-
-                    <varlistentry>
-                        <term><varname>Colour=</varname> (defaults to <literal>#262626</literal>)</term>
-                        <listitem>
-                            <para>A <type>colour string</type>, either #RRGGBBAA or rgba(r, g, b, a) form</para>
-                            <para>Colour of bubble's title.</para>
-                        </listitem>
-                    </varlistentry>
-                </variablelist>
-            </refsect3>
-
-            <refsect3>
-                <title>Section <varname>[NotificationMessage]</varname></title>
-
-                <variablelist>
-                    <varlistentry>
-                        <term><varname>Spacing=</varname> (defaults to <literal>5</literal>)</term>
-                        <listitem>
-                            <para>An <type>integer</type></para>
-                            <para>Spacing between bubble's title and message.</para>
-                        </listitem>
-                    </varlistentry>
-
-                    <varlistentry>
-                        <term><varname>MaxLines=</varname> (defaults to <literal>10</literal>)</term>
-                        <listitem>
-                            <para>An <type>integer</type></para>
-                            <para>Maximum lines of bubble's message to print.</para>
-                        </listitem>
-                    </varlistentry>
-
-                    <varlistentry>
-                        <term><varname>Font=</varname> (defaults to <literal>Linux Libertine O 9</literal>)</term>
-                        <listitem>
-                            <para>A <type>Pango font description string</type></para>
-                            <para>Fonts for the bubble's message.</para>
-                        </listitem>
-                    </varlistentry>
-
-                    <varlistentry>
-                        <term><varname>Colour=</varname> (defaults to <literal>#262626</literal>)</term>
-                        <listitem>
-                            <para>A <type>colour string</type>, either #RRGGBBAA or rgba(r, g, b, a) form</para>
-                            <para>Colour of bubble's message.</para>
                         </listitem>
                     </varlistentry>
                 </variablelist>

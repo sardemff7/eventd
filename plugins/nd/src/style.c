@@ -126,23 +126,6 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
     style->bubble.colour.b = 0.15;
     style->bubble.colour.a = 1.0;
 
-#ifdef ENABLE_GDK_PIXBUF
-    /* image */
-    style->image.set = TRUE;
-    style->image.max_width  = 50;
-    style->image.max_height = 50;
-    style->image.margin     = 10;
-
-    /* icon */
-    style->icon.set = TRUE;
-    style->icon.placement  = EVENTD_ND_STYLE_ICON_PLACEMENT_BACKGROUND;
-    style->icon.anchor     = EVENTD_ND_ANCHOR_VCENTER;
-    style->icon.max_width  = 50;
-    style->icon.max_height = 50;
-    style->icon.margin     = 10;
-    style->icon.fade_width = 0.75;
-#endif /* ENABLE_GDK_PIXBUF */
-
     /* title */
     style->title.set = TRUE;
     style->title.font        = pango_font_description_from_string("Linux Libertine O Bold 9");
@@ -160,6 +143,23 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
     style->message.colour.g    = 0.9;
     style->message.colour.b    = 0.9;
     style->message.colour.a    = 1.0;
+
+#ifdef ENABLE_GDK_PIXBUF
+    /* image */
+    style->image.set = TRUE;
+    style->image.max_width  = 50;
+    style->image.max_height = 50;
+    style->image.margin     = 10;
+
+    /* icon */
+    style->icon.set = TRUE;
+    style->icon.placement  = EVENTD_ND_STYLE_ICON_PLACEMENT_BACKGROUND;
+    style->icon.anchor     = EVENTD_ND_ANCHOR_VCENTER;
+    style->icon.max_width  = 50;
+    style->icon.max_height = 50;
+    style->icon.margin     = 10;
+    style->icon.fade_width = 0.75;
+#endif /* ENABLE_GDK_PIXBUF */
 }
 
 EventdNdStyle *
@@ -513,6 +513,54 @@ eventd_nd_style_get_bubble_colour(EventdNdStyle *self)
     return eventd_nd_style_get_bubble_colour(self->parent);
 }
 
+const PangoFontDescription *
+eventd_nd_style_get_title_font(EventdNdStyle *self)
+{
+    if ( self->title.set )
+        return self->title.font;
+    return eventd_nd_style_get_title_font(self->parent);
+}
+
+Colour
+eventd_nd_style_get_title_colour(EventdNdStyle *self)
+{
+    if ( self->title.set )
+        return self->title.colour;
+    return eventd_nd_style_get_title_colour(self->parent);
+}
+
+gint
+eventd_nd_style_get_message_spacing(EventdNdStyle *self)
+{
+    if ( self->message.set )
+        return self->message.spacing;
+    return eventd_nd_style_get_message_spacing(self->parent);
+}
+
+guint8
+eventd_nd_style_get_message_max_lines(EventdNdStyle *self)
+{
+    if ( self->message.set )
+        return self->message.max_lines;
+    return eventd_nd_style_get_message_max_lines(self->parent);
+}
+
+const PangoFontDescription *
+eventd_nd_style_get_message_font(EventdNdStyle *self)
+{
+    if ( self->message.set )
+        return self->message.font;
+    return eventd_nd_style_get_message_font(self->parent);
+}
+
+Colour
+eventd_nd_style_get_message_colour(EventdNdStyle *self)
+{
+    if ( self->message.set )
+        return self->message.colour;
+    return eventd_nd_style_get_message_colour(self->parent);
+}
+
 #ifdef ENABLE_GDK_PIXBUF
 gint
 eventd_nd_style_get_image_max_width(EventdNdStyle *self)
@@ -586,54 +634,6 @@ eventd_nd_style_get_icon_fade_width(EventdNdStyle *self)
     return eventd_nd_style_get_icon_fade_width(self->parent);
 }
 #endif /* ENABLE_GDK_PIXBUF */
-
-const PangoFontDescription *
-eventd_nd_style_get_title_font(EventdNdStyle *self)
-{
-    if ( self->title.set )
-        return self->title.font;
-    return eventd_nd_style_get_title_font(self->parent);
-}
-
-Colour
-eventd_nd_style_get_title_colour(EventdNdStyle *self)
-{
-    if ( self->title.set )
-        return self->title.colour;
-    return eventd_nd_style_get_title_colour(self->parent);
-}
-
-gint
-eventd_nd_style_get_message_spacing(EventdNdStyle *self)
-{
-    if ( self->message.set )
-        return self->message.spacing;
-    return eventd_nd_style_get_message_spacing(self->parent);
-}
-
-guint8
-eventd_nd_style_get_message_max_lines(EventdNdStyle *self)
-{
-    if ( self->message.set )
-        return self->message.max_lines;
-    return eventd_nd_style_get_message_max_lines(self->parent);
-}
-
-const PangoFontDescription *
-eventd_nd_style_get_message_font(EventdNdStyle *self)
-{
-    if ( self->message.set )
-        return self->message.font;
-    return eventd_nd_style_get_message_font(self->parent);
-}
-
-Colour
-eventd_nd_style_get_message_colour(EventdNdStyle *self)
-{
-    if ( self->message.set )
-        return self->message.colour;
-    return eventd_nd_style_get_message_colour(self->parent);
-}
 
 
 /* EventdNdNotificationContents */
