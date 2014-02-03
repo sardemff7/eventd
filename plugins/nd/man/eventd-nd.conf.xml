@@ -74,7 +74,7 @@
                     </varlistentry>
 
                     <varlistentry>
-                        <term><varname>Message=</varname> (defaults to <literal>$name</literal>)</term>
+                        <term><varname>Message=</varname> (defaults to <literal>$text</literal>)</term>
                         <listitem>
                             <para>A <type>string</type> (can contain $data-name references, localised)</para>
                             <para>The notification's message.</para>
@@ -106,7 +106,7 @@
 
                 <variablelist>
                     <varlistentry>
-                        <term><varname>Anchor=</varname> (defaults to <literal>$name</literal>)</term>
+                        <term><varname>Anchor=</varname> (defaults to <literal>top-right</literal>)</term>
                         <listitem>
                             <para>
                                 An <type>enumeration</type>:
@@ -130,7 +130,7 @@
                     </varlistentry>
 
                     <varlistentry>
-                        <term><varname>Margin=</varname> (defaults to <literal>image</literal>)</term>
+                        <term><varname>Margin=</varname> (defaults to <literal>13</literal>)</term>
                         <listitem>
                             <para>An <type>integer</type></para>
                             <para>Margin between bubble and screen's edge.</para>
