@@ -331,13 +331,13 @@ _eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
 
         if ( libeventd_config_key_file_get_string(config_file, "Notification", "Anchor", &string) == 0 )
         {
-            if ( g_strcmp0(string, "top left") == 0 )
+            if ( g_ascii_strcasecmp(string, "top left") == 0 )
                 context->bubble_anchor = EVENTD_ND_ANCHOR_TOP_LEFT;
-            else if ( g_strcmp0(string, "top right") == 0 )
+            else if ( g_ascii_strcasecmp(string, "top right") == 0 )
                 context->bubble_anchor = EVENTD_ND_ANCHOR_TOP_RIGHT;
-            else if ( g_strcmp0(string, "bottom left") == 0 )
+            else if ( g_ascii_strcasecmp(string, "bottom left") == 0 )
                 context->bubble_anchor = EVENTD_ND_ANCHOR_BOTTOM_LEFT;
-            else if ( g_strcmp0(string, "bottom right") == 0 )
+            else if ( g_ascii_strcasecmp(string, "bottom right") == 0 )
                 context->bubble_anchor = EVENTD_ND_ANCHOR_BOTTOM_RIGHT;
             else
                 g_warning("Wrong anchor value '%s'", string);

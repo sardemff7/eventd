@@ -350,11 +350,11 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
 
         if ( libeventd_config_key_file_get_string(config_file, "NotificationIcon", "Placement", &string) == 0 )
         {
-            if ( g_strcmp0(string, "Background") == 0 )
+            if ( g_ascii_strcasecmp(string, "Background") == 0 )
                 self->icon.placement = EVENTD_ND_STYLE_ICON_PLACEMENT_BACKGROUND;
-            else if ( g_strcmp0(string, "Overlay") == 0 )
+            else if ( g_ascii_strcasecmp(string, "Overlay") == 0 )
                 self->icon.placement = EVENTD_ND_STYLE_ICON_PLACEMENT_OVERLAY;
-            else if ( g_strcmp0(string, "Foreground") == 0 )
+            else if ( g_ascii_strcasecmp(string, "Foreground") == 0 )
                 self->icon.placement = EVENTD_ND_STYLE_ICON_PLACEMENT_FOREGROUND;
             else
                 g_warning("Wrong placement value '%s'", string);
@@ -365,11 +365,11 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
 
         if ( libeventd_config_key_file_get_string(config_file, "NotificationIcon", "Anchor", &string) == 0 )
         {
-            if ( g_strcmp0(string, "Top") == 0 )
+            if ( g_ascii_strcasecmp(string, "Top") == 0 )
                 self->icon.anchor = EVENTD_ND_ANCHOR_TOP;
-            else if ( g_strcmp0(string, "Bottom") == 0 )
+            else if ( g_ascii_strcasecmp(string, "Bottom") == 0 )
                 self->icon.anchor = EVENTD_ND_ANCHOR_BOTTOM;
-            else if ( g_strcmp0(string, "Center") == 0 )
+            else if ( g_ascii_strcasecmp(string, "Center") == 0 )
                 self->icon.anchor = EVENTD_ND_ANCHOR_VCENTER;
             else
                 g_warning("Wrong anchor value '%s'", string);
