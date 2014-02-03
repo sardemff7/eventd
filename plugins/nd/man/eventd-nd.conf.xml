@@ -136,6 +136,14 @@
                             <para>Margin between bubble and screen's edge.</para>
                         </listitem>
                     </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>Spacing=</varname> (defaults to <literal>13</literal>)</term>
+                        <listitem>
+                            <para>An <type>integer</type></para>
+                            <para>Spacing between each bubble.</para>
+                        </listitem>
+                    </varlistentry>
                 </variablelist>
             </refsect3>
         </refsect2>

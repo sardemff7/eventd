@@ -58,6 +58,7 @@ struct _EventdPluginContext {
     GHashTable *events;
     EventdNdCornerAnchor bubble_anchor;
     gint bubble_margin;
+    gint bubble_spacing;
     gint max_width;
     gint max_height;
     EventdNdStyle *style;
@@ -124,6 +125,7 @@ _eventd_nd_init(EventdCoreContext *core, EventdCoreInterface *interface)
     /* default bubble position */
     context->bubble_anchor    = EVENTD_ND_ANCHOR_TOP_RIGHT;
     context->bubble_margin    = 13;
+    context->bubble_spacing   = 13;
 
     context->style = eventd_nd_style_new(NULL);
 
@@ -349,6 +351,9 @@ _eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
 
         if ( libeventd_config_key_file_get_int(config_file, "Notification", "Margin", &integer) == 0 )
             context->bubble_margin = integer.value;
+
+        if ( libeventd_config_key_file_get_int(config_file, "Notification", "Spacing", &integer) == 0 )
+            context->bubble_spacing = integer.value;
     }
 
     eventd_nd_style_update(context->style, config_file, &context->max_width, &context->max_height);
@@ -519,9 +524,9 @@ _eventd_nd_update_notifications(EventdPluginContext *context)
         if ( right )
             x += notification->width;
         if ( bottom )
-            y -= context->bubble_margin;
+            y -= context->bubble_spacing;
         else
-            y += notification->height + context->bubble_margin;
+            y += notification->height + context->bubble_spacing;
     }
 }
 
