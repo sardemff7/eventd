@@ -182,6 +182,7 @@ _eventd_nd_cairo_text_process(EventdNdNotificationContents *notification, Eventd
 
     *title = pango_layout_new(pango_context);
     pango_layout_set_font_description(*title, eventd_nd_style_get_title_font(style));
+    pango_layout_set_alignment(*title, eventd_nd_style_get_title_align(style));
     pango_layout_set_ellipsize(*title, PANGO_ELLIPSIZE_MIDDLE);
     if ( max_width > -1 )
         pango_layout_set_width(*title, max_width * PANGO_SCALE);
@@ -200,6 +201,7 @@ _eventd_nd_cairo_text_process(EventdNdNotificationContents *notification, Eventd
 
         *message = pango_layout_new(pango_context);
         pango_layout_set_font_description(*message, eventd_nd_style_get_message_font(style));
+        pango_layout_set_alignment(*message, eventd_nd_style_get_message_align(style));
         pango_layout_set_ellipsize(*message, PANGO_ELLIPSIZE_MIDDLE);
         pango_layout_set_height(*message, -eventd_nd_style_get_message_max_lines(style));
         if ( max_width > -1 )

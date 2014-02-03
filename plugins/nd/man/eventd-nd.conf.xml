@@ -200,6 +200,21 @@
                     </varlistentry>
 
                     <varlistentry>
+                        <term><varname>Alignment=</varname> (defaults to <literal>Left</literal>)</term>
+                        <listitem>
+                            <para>
+                                An <type>enumeration</type>:
+                                <simplelist type='inline'>
+                                    <member><literal>Left</literal></member>
+                                    <member><literal>Right</literal></member>
+                                    <member><literal>Center</literal></member>
+                                </simplelist>
+                            </para>
+                            <para>Title text horizontal aligment.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
                         <term><varname>Colour=</varname> (defaults to <literal>#262626</literal>)</term>
                         <listitem>
                             <para>A <type>colour string</type>, either #RRGGBBAA or rgba(r, g, b, a) form</para>
@@ -234,6 +249,21 @@
                         <listitem>
                             <para>A <type>Pango font description string</type></para>
                             <para>Fonts for the bubble's message.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>Alignment=</varname> (defaults to <literal>Left</literal>)</term>
+                        <listitem>
+                            <para>
+                                An <type>enumeration</type>:
+                                <simplelist type='inline'>
+                                    <member><literal>Left</literal></member>
+                                    <member><literal>Right</literal></member>
+                                    <member><literal>Center</literal></member>
+                                </simplelist>
+                            </para>
+                            <para>Message text horizontal aligment.</para>
                         </listitem>
                     </varlistentry>
 

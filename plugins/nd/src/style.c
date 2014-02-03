@@ -87,6 +87,7 @@ struct _EventdNdStyle {
         gboolean set;
 
         PangoFontDescription *font;
+        PangoAlignment align;
         Colour colour;
     } title;
 
@@ -96,6 +97,7 @@ struct _EventdNdStyle {
         gint   spacing;
         guint8 max_lines;
         PangoFontDescription *font;
+        PangoAlignment align;
         Colour colour;
     } message;
 };
@@ -129,6 +131,7 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
     /* title */
     style->title.set = TRUE;
     style->title.font        = pango_font_description_from_string("Linux Libertine O Bold 9");
+    style->title.align       = PANGO_ALIGN_LEFT;
     style->title.colour.r    = 0.9;
     style->title.colour.g    = 0.9;
     style->title.colour.b    = 0.9;
@@ -139,6 +142,7 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
     style->message.spacing     = 5;
     style->message.max_lines   = 10;
     style->message.font        = pango_font_description_from_string("Linux Libertine O 9");
+    style->message.align       = PANGO_ALIGN_LEFT;
     style->message.colour.r    = 0.9;
     style->message.colour.g    = 0.9;
     style->message.colour.b    = 0.9;
@@ -268,6 +272,21 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
             self->title.font = pango_font_description_copy_static(eventd_nd_style_get_title_font(self->parent));
         }
 
+        if ( libeventd_config_key_file_get_string(config_file, "NotificationTitle", "Alignment", &string) == 0 )
+        {
+            if ( g_ascii_strcasecmp(string, "Left") == 0 )
+                self->title.align = PANGO_ALIGN_LEFT;
+            else if ( g_ascii_strcasecmp(string, "Right") == 0 )
+                self->title.align = PANGO_ALIGN_RIGHT;
+            else if ( g_ascii_strcasecmp(string, "Center") == 0 )
+                self->title.align = PANGO_ALIGN_CENTER;
+            else
+                g_warning("Wrong alignment value '%s'", string);
+            g_free(string);
+        }
+        else if ( self->parent != NULL )
+            self->title.align = eventd_nd_style_get_title_align(self->parent);
+
         if ( libeventd_config_key_file_get_colour(config_file, "NotificationTitle", "Colour", &colour) == 0 )
             self->title.colour = colour;
         else if ( self->parent != NULL )
@@ -303,6 +322,21 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
             pango_font_description_free(self->message.font);
             self->message.font = pango_font_description_copy_static(eventd_nd_style_get_message_font(self->parent));
         }
+
+        if ( libeventd_config_key_file_get_string(config_file, "NotificationMessage", "Alignment", &string) == 0 )
+        {
+            if ( g_ascii_strcasecmp(string, "Left") == 0 )
+                self->message.align = PANGO_ALIGN_LEFT;
+            else if ( g_ascii_strcasecmp(string, "Right") == 0 )
+                self->message.align = PANGO_ALIGN_RIGHT;
+            else if ( g_ascii_strcasecmp(string, "Center") == 0 )
+                self->message.align = PANGO_ALIGN_CENTER;
+            else
+                g_warning("Wrong alignment value '%s'", string);
+            g_free(string);
+        }
+        else if ( self->parent != NULL )
+            self->message.align = eventd_nd_style_get_message_align(self->parent);
 
         if ( libeventd_config_key_file_get_colour(config_file, "NotificationMessage", "Colour", &colour) == 0 )
             self->message.colour = colour;
@@ -521,6 +555,14 @@ eventd_nd_style_get_title_font(EventdNdStyle *self)
     return eventd_nd_style_get_title_font(self->parent);
 }
 
+PangoAlignment
+eventd_nd_style_get_title_align(EventdNdStyle *self)
+{
+    if ( self->title.set )
+        return self->title.align;
+    return eventd_nd_style_get_title_align(self->parent);
+}
+
 Colour
 eventd_nd_style_get_title_colour(EventdNdStyle *self)
 {
@@ -551,6 +593,14 @@ eventd_nd_style_get_message_font(EventdNdStyle *self)
     if ( self->message.set )
         return self->message.font;
     return eventd_nd_style_get_message_font(self->parent);
+}
+
+PangoAlignment
+eventd_nd_style_get_message_align(EventdNdStyle *self)
+{
+    if ( self->message.set )
+        return self->message.align;
+    return eventd_nd_style_get_message_align(self->parent);
 }
 
 Colour
