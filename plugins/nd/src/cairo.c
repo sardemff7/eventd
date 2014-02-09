@@ -53,7 +53,7 @@ static GRegex *regex_amp = NULL;
 static GRegex *regex_markup = NULL;
 
 void
-eventd_nd_cairo_init()
+eventd_nd_cairo_init(void)
 {
     GError *error = NULL;
 
@@ -79,7 +79,7 @@ eventd_nd_cairo_init()
 }
 
 void
-eventd_nd_cairo_uninit()
+eventd_nd_cairo_uninit(void)
 {
     if ( regex_markup != NULL )
         g_regex_unref(regex_markup);

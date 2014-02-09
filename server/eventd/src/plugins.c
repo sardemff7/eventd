@@ -244,7 +244,7 @@ eventd_plugins_load(EventdCoreContext *core, EventdCoreInterface *interface)
 }
 
 void
-eventd_plugins_unload()
+eventd_plugins_unload(void)
 {
     if ( plugins == NULL )
         return;
@@ -273,7 +273,7 @@ eventd_plugins_add_option_group_all(GOptionContext *option_context)
 }
 
 void
-eventd_plugins_start_all()
+eventd_plugins_start_all(void)
 {
     GHashTableIter iter;
     const gchar *id;
@@ -287,7 +287,7 @@ eventd_plugins_start_all()
 }
 
 void
-eventd_plugins_stop_all()
+eventd_plugins_stop_all(void)
 {
     GHashTableIter iter;
     const gchar *id;
@@ -341,7 +341,7 @@ eventd_plugins_config_init_all(void)
 }
 
 void
-eventd_plugins_config_reset_all()
+eventd_plugins_config_reset_all(void)
 {
     GHashTableIter iter;
     const gchar *id;

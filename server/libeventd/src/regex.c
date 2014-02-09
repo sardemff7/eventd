@@ -37,7 +37,7 @@ static GRegex *regex_event_data = NULL;
 
 EVENTD_EXPORT
 void
-libeventd_regex_init()
+libeventd_regex_init(void)
 {
     GError *error = NULL;
     if ( ++regex_refcount > 1 )
@@ -51,7 +51,7 @@ libeventd_regex_init()
 
 EVENTD_EXPORT
 void
-libeventd_regex_clean()
+libeventd_regex_clean(void)
 {
     if ( --regex_refcount > 0 )
         return;

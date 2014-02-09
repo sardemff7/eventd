@@ -287,7 +287,7 @@ fail:
 #endif /* HAVE_GIO_UNIX */
 
 EventdSockets *
-eventd_sockets_new()
+eventd_sockets_new(void)
 {
     EventdSockets *sockets;
 

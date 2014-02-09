@@ -535,7 +535,7 @@ fail:
 }
 
 EventdConfig *
-eventd_config_new()
+eventd_config_new(void)
 {
     EventdConfig *config;
 

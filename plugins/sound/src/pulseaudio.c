@@ -155,7 +155,7 @@ eventd_sound_pulseaudio_play_data(EventdSoundPulseaudioContext *context, gpointe
 }
 
 EventdSoundPulseaudioContext *
-eventd_sound_pulseaudio_init()
+eventd_sound_pulseaudio_init(void)
 {
     EventdSoundPulseaudioContext *context;
 

@@ -37,7 +37,7 @@ G_DEFINE_TYPE(EventdEvent, eventd_event, G_TYPE_OBJECT)
 
 EVENTD_EXPORT
 GType
-eventd_event_end_reason_get_type()
+eventd_event_end_reason_get_type(void)
 {
     static volatile gsize g_define_type_id__volatile = 0;
 

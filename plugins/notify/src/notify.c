@@ -90,7 +90,7 @@ _eventd_libnotify_event_free(gpointer data)
  */
 
 static EventdPluginContext *
-_eventd_libnotify_init()
+_eventd_libnotify_init(EventdCoreContext *core, EventdCoreInterface *interface)
 {
     EventdPluginContext *context;
 
