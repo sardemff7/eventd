@@ -85,7 +85,8 @@ libeventd_config_key_file_get_int_with_default(GKeyFile *config_file, const gcha
     Int value;
 
     r = libeventd_config_key_file_get_int(config_file, group, key, &value);
-    *ret_value = value.set ? value.value : default_value;
+    if ( r >= 0 )
+        *ret_value = value.set ? value.value : default_value;
 
     return r;
 }
@@ -103,6 +104,19 @@ libeventd_config_key_file_get_string(GKeyFile *config_file, const gchar *group, 
 
 EVENTD_EXPORT
 gint8
+libeventd_config_key_file_get_string_with_default(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *default_value, gchar **ret_value)
+{
+    gint8 r;
+
+    r = libeventd_config_key_file_get_string(config_file, group, key, ret_value);
+    if ( r > 0 )
+        *ret_value = g_strdup(default_value);
+
+    return r;
+}
+
+EVENTD_EXPORT
+gint8
 libeventd_config_key_file_get_locale_string(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *locale, gchar **value)
 {
     GError *error = NULL;
@@ -110,6 +124,19 @@ libeventd_config_key_file_get_locale_string(GKeyFile *config_file, const gchar *
     *value = g_key_file_get_locale_string(config_file, group, key, locale, &error);
 
     return _libeventd_config_key_file_error(&error, group, key);
+}
+
+EVENTD_EXPORT
+gint8
+libeventd_config_key_file_get_locale_string_with_default(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *locale, const gchar *default_value, gchar **ret_value)
+{
+    gint8 r;
+
+    r = libeventd_config_key_file_get_locale_string(config_file, group, key, locale, ret_value);
+    if ( r > 0 )
+        *ret_value = g_strdup(default_value);
+
+    return r;
 }
 
 EVENTD_EXPORT
