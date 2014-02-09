@@ -541,7 +541,7 @@ _eventd_dbus_config_init(EventdPluginContext *context)
     while ( g_hash_table_iter_next(&iter, (gpointer *)&capability, &dummy) )
     {
         if ( *capability != '\0' )
-            /* Do not add empty capabilitys */
+            /* Do not add empty capabilities */
             g_variant_builder_add(builder, "s", capability);
     }
 
