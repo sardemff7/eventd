@@ -127,6 +127,9 @@ _eventd_dbus_notify(EventdPluginContext *context, const gchar *sender, GVariant 
     gint16 urgency = -1;
     GVariant *image_data = NULL;
     const gchar *image_path = NULL;
+    const gchar *sound_name = NULL;
+    const gchar *sound_file = NULL;
+    gboolean no_sound = FALSE;
 
     gint timeout;
 
@@ -165,8 +168,12 @@ _eventd_dbus_notify(EventdPluginContext *context, const gchar *sender, GVariant 
         else if ( ( g_strcmp0(hint_name, "icon_data") == 0 )
                   && image_data == NULL )
             image_data = g_variant_ref(hint);
+        else if ( g_strcmp0(hint_name, "sound-name") == 0 )
+            sound_name = g_variant_get_string(hint, NULL);
         else if ( g_strcmp0(hint_name, "sound-file") == 0 )
-            {}
+            sound_file = g_variant_get_string(hint, NULL);
+        else if ( g_strcmp0(hint_name, "suppress-sound") == 0 )
+            no_sound = g_variant_get_boolean(hint);
 
         g_variant_unref(hint);
     }
@@ -230,6 +237,15 @@ _eventd_dbus_notify(EventdPluginContext *context, const gchar *sender, GVariant 
     {
         if ( g_str_has_prefix(image_path, "file://") )
             eventd_event_add_data(event, g_strdup("image"), g_strdup(image_path));
+    }
+
+    if ( ! no_sound )
+    {
+        if ( sound_name != NULL )
+            eventd_event_add_data(event, g_strdup("sound-name"), g_strdup(sound_name));
+
+        if ( sound_file != NULL )
+            eventd_event_add_data(event, g_strdup("sound-file"), g_strdup_printf("file://%s", sound_file));
     }
 
 
