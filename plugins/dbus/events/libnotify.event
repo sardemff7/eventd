@@ -4,3 +4,5 @@ Category = libnotify
 [Notification]
 Title = $summary
 Message = $body
+
+[Sound]

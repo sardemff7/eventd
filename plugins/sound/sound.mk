@@ -40,3 +40,22 @@ sound_la_LIBADD = \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS) \
 	$(null)
+
+
+if ENABLE_DBUS
+dbuscapabilities_DATA += \
+	plugins/sound/dbuscapabilities/sound.capabilities \
+	$(null)
+endif
+
+sound_dbus_capabilities = \
+	sound \
+	$(null)
+
+plugins/sound/dbuscapabilities/sound.capabilities: src/config.h
+	$(AM_V_GEN)$(MKDIR_P) $(dir $@) && \
+	echo $(sound_dbus_capabilities) > $@
+
+CLEANFILES += \
+	plugins/sound/dbuscapabilities/sound.capabilities \
+	$(null)
