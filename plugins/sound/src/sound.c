@@ -180,7 +180,7 @@ _eventd_sound_event_parse(EventdPluginContext *context, const gchar *id, GKeyFil
 
     if ( ! disable )
     {
-        if ( libeventd_config_key_file_get_string_with_default(config_file, "Sound", "Sound", "sound-file", &sound) < 0 )
+        if ( libeventd_config_key_file_get_string_with_default(config_file, "Sound", "File", "sound-file", &sound) < 0 )
             return;
     }
 
