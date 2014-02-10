@@ -43,7 +43,6 @@ struct _EventdPluginContext {
 };
 
 typedef struct {
-    gboolean disable;
     gchar *title;
     gchar *message;
     gchar *image;
@@ -57,17 +56,17 @@ typedef struct {
  */
 
 static EventdLibnotifyEvent *
-_eventd_libnotify_event_new(gboolean disable, const char *title, const char *message, const char *image, const char *icon, Int *scale)
+_eventd_libnotify_event_new(char *title, char *message, char *image, char *icon, gint64 scale)
 {
     EventdLibnotifyEvent *event;
 
     event = g_new0(EventdLibnotifyEvent, 1);
 
-    event->title = g_strdup(( title != NULL ) ? title : "$summary");
-    event->message = g_strdup(( message != NULL ) ? message : "$body");
-    event->image = g_strdup(( image != NULL ) ? image : "image");
-    event->icon = g_strdup(( icon != NULL ) ? icon : "icon");
-    event->scale = scale->set ? ( scale->value / 100. ) : 0.5;
+    event->title = title;
+    event->message = message;
+    event->image = image;
+    event->icon = icon;
+    event->scale = (gdouble) scale / 100.;
 
     return event;
 }
@@ -132,29 +131,37 @@ static void
 _eventd_libnotify_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile *config_file)
 {
     gboolean disable;
+    EventdLibnotifyEvent *libnotify_event = NULL;
     gchar *title = NULL;
     gchar *message = NULL;
     gchar *image = NULL;
     gchar *icon = NULL;
-    Int scale;
+    gint64 scale;
 
     if ( ! g_key_file_has_group(config_file, "Libnotify") )
         return;
 
     if ( libeventd_config_key_file_get_boolean(config_file, "Libnotify", "Disable", &disable) < 0 )
-        goto skip;
-    if ( libeventd_config_key_file_get_locale_string(config_file, "Libnotify", "Title", NULL, &title) < 0 )
-        goto skip;
-    if ( libeventd_config_key_file_get_locale_string(config_file, "Libnotify", "Message", NULL, &message) < 0 )
-        goto skip;
-    if ( libeventd_config_key_file_get_string(config_file, "Libnotify", "Image", &image) < 0 )
-        goto skip;
-    if ( libeventd_config_key_file_get_string(config_file, "Libnotify", "Icon", &icon) < 0 )
-        goto skip;
-    if ( libeventd_config_key_file_get_int(config_file, "Libnotify", "OverlayScale", &scale) < 0 )
-        goto skip;
+        return;
 
-    g_hash_table_insert(context->events, g_strdup(id), _eventd_libnotify_event_new(disable, title, message, image, icon, &scale));
+    if ( ! disable )
+    {
+        if ( libeventd_config_key_file_get_locale_string_with_default(config_file, "Libnotify", "Title", NULL, "$summary", &title) < 0 )
+            goto skip;
+        if ( libeventd_config_key_file_get_locale_string_with_default(config_file, "Libnotify", "Message", NULL, "$body", &message) < 0 )
+            goto skip;
+        if ( libeventd_config_key_file_get_string_with_default(config_file, "Libnotify", "Image", "image", &image) < 0 )
+            goto skip;
+        if ( libeventd_config_key_file_get_string_with_default(config_file, "Libnotify", "Icon", "icon", &icon) < 0 )
+            goto skip;
+        if ( libeventd_config_key_file_get_int_with_default(config_file, "Libnotify", "OverlayScale", 50, &scale) < 0 )
+            goto skip;
+
+        libnotify_event = _eventd_libnotify_event_new(title, message, image, icon, scale);
+        title = message = image = icon = NULL;
+    }
+
+    g_hash_table_insert(context->events, g_strdup(id), libnotify_event);
 
 skip:
     g_free(icon);
