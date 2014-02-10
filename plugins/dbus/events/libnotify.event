@@ -6,3 +6,5 @@ Title = $summary
 Message = $body
 
 [Sound]
+
+[Libcanberra]

@@ -244,6 +244,7 @@ AC_ARG_ENABLE(sound, AS_HELP_STRING([--disable-sound], [Disable sound support th
 if test x$enable_sound = xyes; then
     PKG_CHECK_MODULES(SNDFILE, [sndfile])
     PKG_CHECK_MODULES(PULSEAUDIO, [libpulse >= $libpulse_min_version libpulse-mainloop-glib])
+    AC_DEFINE([ENABLE_SOUND], [1], [Enable sound plugin])
     DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_sound"
 fi
 AM_CONDITIONAL(ENABLE_SOUND, test x$enable_sound = xyes)
@@ -276,6 +277,14 @@ if test x$enable_libnotify = xyes; then
     DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_notify"
 fi
 AM_CONDITIONAL(ENABLE_NOTIFY, [test x$enable_libnotify = xyes])
+
+# libcanberra plugin
+AC_ARG_ENABLE(libcanberra, AS_HELP_STRING([--enable-libcanberra], [Enable libcanberra support]), [], enable_libcanberra=no)
+if test x$enable_libcanberra = xyes; then
+    PKG_CHECK_MODULES(CANBERRA, [libcanberra])
+    DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_canberra"
+fi
+AM_CONDITIONAL(ENABLE_CANBERRA, [test x$enable_libcanberra = xyes])
 
 
 
@@ -337,6 +346,7 @@ AC_MSG_RESULT([
         Sound files playing through libsndfile: $enable_sound
         Text-to-speech through eSpeak: $enable_tts
         libnotify proxy: $enable_libnotify
+        libcanberra: $enable_libcanberra
 
 dnl     Tests: $enable_tests
     Debug mode: $enable_debug
