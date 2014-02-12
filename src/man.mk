@@ -15,6 +15,7 @@ MAN_GEN_RULE = $(AM_V_GEN)$(MKDIR_P) $(dir $@) && \
 	$(XSLTPROC) \
 	-o $(dir $@) \
 	$(AM_XSLTPROCFLAGS) \
+	--stringparam profile.condition '${AM_DOCBOOK_CONDITIONS}' \
 	$(XSLTPROCFLAGS) \
 	http://docbook.sourceforge.net/release/xsl/current/manpages/profile-docbook.xsl \
 	$<

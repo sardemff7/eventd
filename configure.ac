@@ -67,13 +67,12 @@ libpulse_min_version="0.9.15"
 libnotify_min_version="0.5.0"
 gtk_min_version="3.0"
 
-DOCBOOK_CONDITIONS="installation"
-
 
 AM_CFLAGS="-fvisibility=hidden -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers"
 AM_CPPFLAGS=""
 AM_LDFLAGS=""
 AM_XSLTPROCFLAGS="--nonet --xinclude --stringparam man.output.quietly 1 --stringparam funcsynopsis.style ansi"
+AM_DOCBOOK_CONDITIONS="installation"
 
 
 if test -d .git; then
@@ -126,7 +125,7 @@ PKG_CHECK_EXISTS([gio-unix-2.0 >= $gio_min_version], have_gio_unix=yes, have_gio
 if test x$have_gio_unix = xyes; then
     gio_unix="gio-unix-2.0"
     AC_DEFINE([HAVE_GIO_UNIX], [1], [UNIX-specific GIO support])
-    DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};have_gio_unix"
+    AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};have_gio_unix"
 fi
 
 PKG_CHECK_MODULES(GIO, [gio-2.0 >= $gio_min_version $gio_unix])
@@ -136,7 +135,7 @@ AC_ARG_ENABLE(avahi, AS_HELP_STRING([--disable-avahi], [Disable Avahi support]),
 if test x$enable_avahi = xyes; then
     PKG_CHECK_MODULES(AVAHI, [avahi-client avahi-glib])
     AC_DEFINE([ENABLE_AVAHI], [1], [Enable Avahi support])
-    DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_avahi"
+    AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_avahi"
 fi
 AM_CONDITIONAL(ENABLE_AVAHI, test x$enable_avahi = xyes)
 
@@ -172,7 +171,7 @@ if test x$enable_dbus = xyes; then
         *) dbussessionservicedir="$with_dbussessionservicedir" ;;
     esac
     AC_SUBST(dbussessionservicedir)
-    DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_dbus"
+    AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_dbus"
     AC_CONFIG_FILES([
         plugins/dbus/pkgconfig/eventd-dbus.pc
     ])
@@ -185,7 +184,7 @@ if test x$enable_notification_daemon = xyes; then
     AC_CHECK_HEADERS([math.h])
     PKG_CHECK_MODULES(CAIRO, [cairo])
     PKG_CHECK_MODULES(PANGO, [pango pangocairo])
-    DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_notification_daemon"
+    AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_notification_daemon"
 fi
 AM_CONDITIONAL(ENABLE_NOTIFICATION_DAEMON, [test x$enable_notification_daemon = xyes])
 
@@ -196,7 +195,7 @@ if test x$enable_gdk_pixbuf = xyes; then
     fi
     PKG_CHECK_MODULES(GDK_PIXBUF, [gdk-pixbuf-2.0])
     AC_DEFINE([ENABLE_GDK_PIXBUF], [1], [Enable image and icon support for notification-daemon through gdk-pixbuf])
-    DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_gdk_pixbuf"
+    AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_gdk_pixbuf"
 fi
 AM_CONDITIONAL(ENABLE_GDK_PIXBUF, [test x$enable_gdk_pixbuf = xyes])
 
@@ -215,9 +214,9 @@ fi
 if test x$enable_xcb = xyes; then
     PKG_CHECK_MODULES(XCB, [cairo-xcb xcb xcb-aux libxcb-glib xcb-randr xcb-shape])
     AC_DEFINE([ENABLE_XCB], [1], [Enable XCB backend for notification-daemon plugin])
-    DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_xcb"
+    AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_xcb"
     if test x$enable_dbus = xyes; then
-        DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_full_notification_daemon"
+        AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_full_notification_daemon"
     fi
 fi
 AM_CONDITIONAL(ENABLE_XCB, [test x$enable_xcb = xyes])
@@ -225,7 +224,7 @@ AM_CONDITIONAL(ENABLE_XCB, [test x$enable_xcb = xyes])
 # Linux framebuffer backend
 if test x$enable_linux_framebuffer = xyes; then
     AC_CHECK_HEADER([linux/fb.h])
-    DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_linux_framebuffer"
+    AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_linux_framebuffer"
 fi
 AM_CONDITIONAL(ENABLE_LINUX_FB, [test x$enable_linux_framebuffer = xyes])
 
@@ -235,7 +234,7 @@ if test x$enable_im = xyes; then
     PKG_CHECK_MODULES(PURPLE, [purple])
     # No existing libpurple allows us to avoid that for now
     AC_DEFINE([PURPLE_NEEDS_GLOBAL_LOADING], [1], [Needs to load libpurple symbols in the global namespace])
-    DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_im"
+    AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_im"
 fi
 AM_CONDITIONAL(ENABLE_IM, test x$enable_im = xyes)
 
@@ -245,7 +244,7 @@ if test x$enable_sound = xyes; then
     PKG_CHECK_MODULES(SNDFILE, [sndfile])
     PKG_CHECK_MODULES(PULSEAUDIO, [libpulse >= $libpulse_min_version libpulse-mainloop-glib])
     AC_DEFINE([ENABLE_SOUND], [1], [Enable sound plugin])
-    DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_sound"
+    AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_sound"
 fi
 AM_CONDITIONAL(ENABLE_SOUND, test x$enable_sound = xyes)
 
@@ -262,7 +261,7 @@ if test x$enable_tts = xyes; then
         [
             AC_MSG_ERROR([*** TTS support requested but eSpeak library is missing])
         ])
-    DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_tts"
+    AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_tts"
 fi
 AM_CONDITIONAL(ENABLE_TTS, test x$enable_tts = xyes)
 
@@ -274,7 +273,7 @@ if test x$enable_libnotify = xyes; then
     fi
     PKG_CHECK_MODULES(NOTIFY, [libnotify >= $libnotify_min_version])
     PKG_CHECK_MODULES(GDK_PIXBUF, [gdk-pixbuf-2.0])
-    DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_notify"
+    AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_notify"
 fi
 AM_CONDITIONAL(ENABLE_NOTIFY, [test x$enable_libnotify = xyes])
 
@@ -282,7 +281,7 @@ AM_CONDITIONAL(ENABLE_NOTIFY, [test x$enable_libnotify = xyes])
 AC_ARG_ENABLE(libcanberra, AS_HELP_STRING([--enable-libcanberra], [Enable libcanberra support]), [], enable_libcanberra=no)
 if test x$enable_libcanberra = xyes; then
     PKG_CHECK_MODULES(CANBERRA, [libcanberra])
-    DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_canberra"
+    AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_canberra"
 fi
 AM_CONDITIONAL(ENABLE_CANBERRA, [test x$enable_libcanberra = xyes])
 
@@ -300,12 +299,11 @@ if test x$enable_debug = xyes; then
     AC_DEFINE([DEBUG], [1], [Activate debug mode])
 fi
 
-AM_XSLTPROCFLAGS="${AM_XSLTPROCFLAGS} --stringparam profile.condition '${DOCBOOK_CONDITIONS}'"
-
 AC_SUBST(AM_CFLAGS)
 AC_SUBST(AM_CPPFLAGS)
 AC_SUBST(AM_LDFLAGS)
 AC_SUBST(AM_XSLTPROCFLAGS)
+AC_SUBST(AM_DOCBOOK_CONDITIONS)
 
 AM_SUBST_NOTMAKE(LIBS)
 AC_SUBST(shrext_cmds)
