@@ -16,3 +16,5 @@
 *.service
 
 /eventd-*.tar.xz
+
+/local-rules.mk
