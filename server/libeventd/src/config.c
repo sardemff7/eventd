@@ -245,10 +245,10 @@ libeventd_config_key_file_get_colour(GKeyFile *config_file, const gchar *section
             ha[0] = rgb[6]; ha[1] = rgb[7];
         break;
         case 4: /* rgba */
-            hr[0] = rgb[0];
-            hg[0] = rgb[1];
-            hb[0] = rgb[2];
-            ha[0] = rgb[3];
+            hr[0] = hr[1] = rgb[0];
+            hg[0] = hg[1] = rgb[1];
+            hb[0] = hb[1] = rgb[2];
+            ha[0] = ha[1] = rgb[3];
         break;
         case 6: /* rrggbb */
             hr[0] = rgb[0]; hr[1] = rgb[1];
@@ -256,9 +256,9 @@ libeventd_config_key_file_get_colour(GKeyFile *config_file, const gchar *section
             hb[0] = rgb[4]; hb[1] = rgb[5];
         break;
         case 3: /* rgb */
-            hr[0] = rgb[0];
-            hg[0] = rgb[1];
-            hb[0] = rgb[2];
+            hr[0] = hr[1] = rgb[0];
+            hg[0] = hg[1] = rgb[1];
+            hb[0] = hb[1] = rgb[2];
         break;
         }
         r = _eventd_nd_style_parse_colour(hr, hg, hb, ( ha[0] == '\0' ) ? NULL : ha, 16, colour);
