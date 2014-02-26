@@ -9,8 +9,6 @@ AM_DISTCHECK_CONFIGURE_FLAGS = \
 ACLOCAL_AMFLAGS = -I m4 ${ACLOCAL_FLAGS}
 AM_MAKEFLAGS = --no-print-directory
 
-vapidir = $(datadir)/vala/vapi
-
 bin_PROGRAMS =
 noinst_LTLIBRARIES =
 lib_LTLIBRARIES =

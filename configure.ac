@@ -97,6 +97,10 @@ AC_SUBST([pkgdatadir])
 PKG_INSTALLDIR
 PKG_NOARCH_INSTALLDIR
 
+# VAPI directory
+vapidir='${datadir}/vala/vapi'
+AC_SUBST([vapidir])
+
 # eventd specific dirs
 pluginsdir='${pkglibdir}/plugins'
 eventdir='${pkgdatadir}'
