@@ -113,7 +113,7 @@ _eventd_exec_event_action(EventdPluginContext *context, const gchar *config_id, 
 
     cmd = libeventd_regex_replace_event_data(command, event, NULL, NULL);
 
-    if ( ! g_spawn_command_line_sync(cmd, NULL, NULL, NULL, &error) )
+    if ( ! g_spawn_command_line_async(cmd, &error) )
     {
         g_warning("Couldn't spawn '%s': %s", cmd, error->message);
         g_clear_error(&error);

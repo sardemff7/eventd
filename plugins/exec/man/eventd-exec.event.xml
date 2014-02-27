@@ -71,7 +71,7 @@
                     <term><varname>Command=</varname></term>
                     <listitem>
                         <para>A <type>string</type> (can contain $data-name references)</para>
-                        <para>The command to exec when an event occurs. Be warned it is run synchronously.</para>
+                        <para>The command to exec when an event occurs. It is run asynchronously.</para>
                     </listitem>
                 </varlistentry>
             </variablelist>
