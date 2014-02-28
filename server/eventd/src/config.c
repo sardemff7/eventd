@@ -481,6 +481,8 @@ _eventd_config_process_config_file(GHashTable *config_files, const gchar *id, GK
     break;
     }
 
+    GKeyFile *new_config_file = NULL;
+
     GError *error = NULL;
     if ( ! g_key_file_remove_key(config_file, "Event", "Extends", &error) )
     {
@@ -511,8 +513,6 @@ _eventd_config_process_config_file(GHashTable *config_files, const gchar *id, GK
     g_string_append(merged_data, data);
     g_free(data);
 
-    GKeyFile *new_config_file;
-
     new_config_file = g_key_file_new();
     if ( g_key_file_load_from_data(new_config_file, merged_data->str, -1, G_KEY_FILE_NONE, &error) )
         g_hash_table_insert(config_files, g_strdup(id), new_config_file);
@@ -525,13 +525,11 @@ _eventd_config_process_config_file(GHashTable *config_files, const gchar *id, GK
     }
 
     g_string_free(merged_data, TRUE);
-    g_free(parent_id);
-
-    return new_config_file;
 
 fail:
     g_free(parent_id);
-    return NULL;
+
+    return new_config_file;
 }
 
 EventdConfig *
