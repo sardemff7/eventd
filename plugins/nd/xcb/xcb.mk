@@ -8,6 +8,8 @@ ndbackends_LTLIBRARIES += \
 man5_MANS += \
 	plugins/nd/xcb/man/eventd-nd-xcb.conf.5 \
 	$(null)
+
+include libgwater/xcb.mk
 endif
 
 

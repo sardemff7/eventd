@@ -36,7 +36,7 @@
 #include <cairo-xcb.h>
 #include <xcb/xcb.h>
 #include <xcb/xcb_aux.h>
-#include <libxcb-glib.h>
+#include <libgwater-xcb.h>
 #include <xcb/randr.h>
 #include <xcb/shape.h>
 
@@ -56,7 +56,7 @@ struct _EventdNdDisplay {
     EventdNdBackendContext *context;
     gchar *target;
     GList *link;
-    GXcbSource *source;
+    GWaterXcbSource *source;
     xcb_connection_t *xcb_connection;
     xcb_screen_t *screen;
     struct {
@@ -355,7 +355,7 @@ _eventd_nd_xcb_display_new(EventdNdBackendContext *context, const gchar *target)
 
     display = g_new0(EventdNdDisplay, 1);
 
-    display->source = g_xcb_source_new(NULL, target, &screen, _eventd_nd_xcb_events_callback, display, NULL);
+    display->source = g_water_xcb_source_new(NULL, target, &screen, _eventd_nd_xcb_events_callback, display, NULL);
     if ( display->source == NULL )
     {
         g_warning("Couldn't initialize X connection for '%s'", target);
@@ -368,7 +368,7 @@ _eventd_nd_xcb_display_new(EventdNdBackendContext *context, const gchar *target)
     context->displays = g_list_prepend(context->displays, display->target);
     display->link = context->displays;
 
-    display->xcb_connection = g_xcb_source_get_connection(display->source);
+    display->xcb_connection = g_water_xcb_source_get_connection(display->source);
 
     display->screen = xcb_aux_get_screen(display->xcb_connection, screen);
 
@@ -406,7 +406,7 @@ static void
 _eventd_nd_xcb_display_free(EventdNdDisplay *display)
 {
     g_hash_table_unref(display->bubbles);
-    g_xcb_source_unref(display->source);
+    g_water_xcb_source_unref(display->source);
     display->context->displays = g_list_delete_link(display->context->displays, display->link);
     g_free(display);
 }
