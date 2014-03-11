@@ -376,7 +376,7 @@ main(int argc, char *argv[])
     gboolean daemonize = FALSE;
     gboolean print_version = FALSE;
 
-    int retval = 0;
+    EventdReturnCode retval = EVENTD_RETURN_CODE_OK;
     GError *error = NULL;
     GOptionContext *option_context = NULL;
     GOptionGroup *option_group;
@@ -526,6 +526,7 @@ main(int argc, char *argv[])
     }
     else
     {
+        retval = EVENTD_RETURN_CODE_CONTROL_INTERFACE_ERROR;
 #ifdef ENABLE_SYSTEMD
         sd_notify(1,
             "STATUS=Failed to start the control interface\n"

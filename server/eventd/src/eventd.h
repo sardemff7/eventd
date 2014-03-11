@@ -23,6 +23,11 @@
 #ifndef __EVENTD_CORE_H__
 #define __EVENTD_CORE_H__
 
+typedef enum {
+    EVENTD_RETURN_CODE_OK = 0,
+    EVENTD_RETURN_CODE_CONTROL_INTERFACE_ERROR    = 10,
+} EventdReturnCode;
+
 GList *eventd_core_get_sockets(EventdCoreContext *context, const gchar * const *binds);
 
 void eventd_core_push_event(EventdCoreContext *context, const gchar *config_id, EventdEvent *event);
