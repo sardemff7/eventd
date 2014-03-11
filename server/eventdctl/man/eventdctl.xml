@@ -193,40 +193,47 @@
             <varlistentry>
                 <term><literal>1</literal></term>
                 <listitem>
-                    <para>Impossible to connect to eventd. May be returned if no eventd is started or if our started eventd exited early.</para>
-                </listitem>
-            </varlistentry>
-
-            <varlistentry>
-                <term><literal>2</literal></term>
-                <listitem>
-                    <para>eventd invocation faild. Either with the <parameter class="command">start</parameter> command, or the <option>--auto-spawn</option> option.</para>
+                    <para>Failed to parse command line paramaters.</para>
                 </listitem>
             </varlistentry>
 
             <varlistentry>
                 <term><literal>10</literal></term>
                 <listitem>
-                    <para>Command error. No command passed, unknown command or missing command argument.</para>
+                    <para>Impossible to connect to eventd. May be returned if no eventd is started or if our started eventd exited early.</para>
                 </listitem>
             </varlistentry>
 
             <varlistentry>
                 <term><literal>11</literal></term>
                 <listitem>
-                    <para>Plugin error. No plugin or no control command support in plugin.</para>
+                    <para>eventd invocation faild. Either with the <parameter class="command">start</parameter> command, or the <option>--auto-spawn</option> option.</para>
                 </listitem>
             </varlistentry>
 
             <varlistentry>
                 <term><literal>20</literal></term>
                 <listitem>
-                    <para>Plugin command error. The plugin command is unknown, or miss an argument.</para>
+                    <para>Command error. No command passed, unknown command or missing command argument.</para>
                 </listitem>
             </varlistentry>
 
             <varlistentry>
                 <term><literal>21</literal></term>
+                <listitem>
+                    <para>Plugin error. No plugin or no control command support in plugin.</para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><literal>30</literal></term>
+                <listitem>
+                    <para>Plugin command error. The plugin command is unknown, or miss an argument.</para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><literal>31</literal></term>
                 <listitem>
                     <para>Plugin command execution error. The command could not suceed, see <command>eventdctl</command> output for details.</para>
                 </listitem>
