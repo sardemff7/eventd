@@ -168,6 +168,20 @@
             </varlistentry>
 
             <varlistentry>
+                <term><literal>1</literal></term>
+                <listitem>
+                    <para>Failed to parse command line paramaters.</para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><literal>2</literal></term>
+                <listitem>
+                    <para>Filesystem is not UTF-8 encoded.</para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
                 <term><literal>10</literal></term>
                 <listitem>
                     <para>Failed to start the control interface.</para>

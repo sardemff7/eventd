@@ -396,7 +396,10 @@ main(int argc, char *argv[])
 #endif /* ! GLIB_CHECK_VERSION(2,35,1) */
 
     if ( ! g_get_filename_charsets(NULL) )
-        g_error(PACKAGE_NAME " does not support non-UTF-8 filename encoding");
+    {
+        g_warning(PACKAGE_NAME " does not support non-UTF-8 filename encoding");
+        return EVENTD_RETURN_CODE_FILESYSTEM_ENCODING_ERROR;
+    }
 
 #ifdef DEBUG
     const gchar *debug_log_filename =  g_getenv("EVENTD_DEBUG_LOG_FILENAME");
@@ -459,7 +462,11 @@ main(int argc, char *argv[])
     eventd_plugins_add_option_group_all(option_context);
 
     if ( ! g_option_context_parse(option_context, &argc, &argv, &error) )
-        g_error("Option parsing failed: %s\n", error->message);
+    {
+        g_warning("Option parsing failed: %s\n", error->message);
+        retval = EVENTD_RETURN_CODE_ARGV_ERROR;
+        goto end;
+    }
     g_option_context_free(option_context);
 
     if ( print_version )
