@@ -111,7 +111,7 @@ AC_SUBST([dbuscapabilitiesdir])
 
 EVENTD_I18N
 GLIB_DEFINE_LOCALEDIR([EVENTD_LOCALEDIR])
-GW_INIT([libgwater])
+GW_INIT([src/libgwater])
 
 #
 # Common dependencies
