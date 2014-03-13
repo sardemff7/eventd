@@ -320,7 +320,7 @@ main(int argc, char *argv[])
     if ( ! g_option_context_parse(context, &argc, &argv, &error) )
     {
         g_warning("Option parsing failed: %s\n", error->message);
-        return EVENTDCTL_RETURN_CODE_COMMAND_ERROR
+        return EVENTDCTL_RETURN_CODE_COMMAND_ERROR;
     }
     g_option_context_free(context);
 
