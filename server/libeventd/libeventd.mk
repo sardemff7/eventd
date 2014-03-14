@@ -25,6 +25,7 @@ libeventd_la_SOURCES = \
 libeventd_la_CFLAGS = \
 	$(AM_CFLAGS) \
 	-D G_LOG_DOMAIN=\"eventd-libeventd\" \
+	$(NKUTILS_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(null)
@@ -36,6 +37,7 @@ libeventd_la_LDFLAGS = \
 
 libeventd_la_LIBADD = \
 	libeventd-event.la \
+	$(NKUTILS_LIBS) \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS) \
 	$(null)

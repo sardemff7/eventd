@@ -1,7 +1,7 @@
 /*
  * libeventd - Internal helper
  *
- * Copyright © 2011-2012 Quentin "Sardem FF7" Glidic
+ * Copyright © 2011-2014 Quentin "Sardem FF7" Glidic
  *
  * This file is part of eventd.
  *
@@ -33,6 +33,8 @@
 
 #include <libeventd-event.h>
 #include <libeventd-regex.h>
+
+#include <nkutils-colour.h>
 
 #include <libeventd-config.h>
 
@@ -150,71 +152,6 @@ libeventd_config_key_file_get_string_list(GKeyFile *config_file, const gchar *gr
     return _libeventd_config_key_file_error(&error, group, key);
 }
 
-static gboolean
-_eventd_nd_style_parse_colour_value(const gchar *str, guint base, gdouble *r)
-{
-    gchar *next;
-    guint64 v;
-    v = g_ascii_strtoull(str, &next, base);
-    *r = (gdouble) MIN(v, 255) / 255.;
-    return ( str != next );
-}
-
-static gint
-_eventd_nd_style_parse_colour(const gchar *sr, const gchar *sg, const gchar *sb, const gchar *sa, guint base, Colour *colour)
-{
-    gdouble r, g, b, a = 1.0;
-
-    if ( ! _eventd_nd_style_parse_colour_value(sr, base, &r) )
-        return 1;
-    if ( ! _eventd_nd_style_parse_colour_value(sg, base, &g) )
-        return 1;
-    if ( ! _eventd_nd_style_parse_colour_value(sb, base, &b) )
-        return 1;
-    if ( ( sa != NULL ) && ( ! _eventd_nd_style_parse_colour_value(sa, base, &a) ) )
-        return 1;
-
-    colour->r = r;
-    colour->g = g;
-    colour->b = b;
-    colour->a = a;
-
-    return 0;
-}
-
-static gint
-_eventd_nd_style_parse_rgba_colour(gchar *rgb, gboolean alpha, Colour *colour)
-{
-    const gchar *sr;
-    const gchar *sg;
-    const gchar *sb;
-    const gchar *sa = NULL;
-
-    sr = rgb;
-    rgb = strchr(rgb, ',');
-    *rgb = '\0';
-    do ++rgb; while ( *rgb == ' ' );
-
-    sg = rgb;
-    rgb = strchr(rgb, ',');
-    *rgb = '\0';
-    do ++rgb; while ( *rgb == ' ' );
-
-    sb = rgb;
-    if ( alpha )
-    {
-        rgb = strchr(rgb, ',');
-        *rgb = '\0';
-        do ++rgb; while ( *rgb == ' ' );
-
-        sa = rgb;
-    }
-    rgb = strchr(rgb, ')');
-    *rgb = '\0';
-
-    return _eventd_nd_style_parse_colour(sr, sg, sb, sa, 10, colour);
-}
-
 EVENTD_EXPORT
 gint8
 libeventd_config_key_file_get_colour(GKeyFile *config_file, const gchar *section, const gchar *key, Colour *colour)
@@ -227,46 +164,15 @@ libeventd_config_key_file_get_colour(GKeyFile *config_file, const gchar *section
 
     r = 1;
 
-    if ( g_str_has_prefix(string, "#") )
+    NkColourDouble colour_;
+    if ( nk_colour_double_parse(string, &colour_) )
     {
-        gchar *rgb = string;
-        gchar hr[3] = {0};
-        gchar hg[3] = {0};
-        gchar hb[3] = {0};
-        gchar ha[3] = {0};
-
-        rgb += strlen("#");
-        switch ( strlen(rgb) )
-        {
-        case 8: /* rrggbbaa */
-            hr[0] = rgb[0]; hr[1] = rgb[1];
-            hg[0] = rgb[2]; hg[1] = rgb[3];
-            hb[0] = rgb[4]; hb[1] = rgb[5];
-            ha[0] = rgb[6]; ha[1] = rgb[7];
-        break;
-        case 4: /* rgba */
-            hr[0] = hr[1] = rgb[0];
-            hg[0] = hg[1] = rgb[1];
-            hb[0] = hb[1] = rgb[2];
-            ha[0] = ha[1] = rgb[3];
-        break;
-        case 6: /* rrggbb */
-            hr[0] = rgb[0]; hr[1] = rgb[1];
-            hg[0] = rgb[2]; hg[1] = rgb[3];
-            hb[0] = rgb[4]; hb[1] = rgb[5];
-        break;
-        case 3: /* rgb */
-            hr[0] = hr[1] = rgb[0];
-            hg[0] = hg[1] = rgb[1];
-            hb[0] = hb[1] = rgb[2];
-        break;
-        }
-        r = _eventd_nd_style_parse_colour(hr, hg, hb, ( ha[0] == '\0' ) ? NULL : ha, 16, colour);
+        colour->r = colour_.red;
+        colour->g = colour_.green;
+        colour->b = colour_.blue;
+        colour->a = colour_.alpha;
+        r = 0;
     }
-    else if ( g_str_has_prefix(string, "rgb(") && g_str_has_suffix(string, ")") )
-        r = _eventd_nd_style_parse_rgba_colour(string + strlen("rgb("), FALSE, colour);
-    else if ( g_str_has_prefix(string, "rgba(") && g_str_has_suffix(string, ")") )
-        r = _eventd_nd_style_parse_rgba_colour(string + strlen("rgba("), TRUE, colour);
 
     g_free(string);
 
