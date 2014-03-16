@@ -31,7 +31,6 @@
 
 #include <libeventd-event.h>
 #include <eventd-plugin.h>
-#include <libeventd-regex.h>
 #include <libeventd-config.h>
 
 struct _EventdPluginContext {
@@ -41,8 +40,8 @@ struct _EventdPluginContext {
 };
 
 typedef struct {
-    gchar *sound_name;
-    gchar *sound_file;
+    FormatString *sound_name;
+    Filename *sound_file;
 } EventdCanberraEvent;
 
 
@@ -51,7 +50,7 @@ typedef struct {
  */
 
 static EventdCanberraEvent *
-_eventd_canberra_event_new(char *sound_name, char *sound_file)
+_eventd_canberra_event_new(FormatString *sound_name, Filename *sound_file)
 {
     EventdCanberraEvent *event;
 
@@ -68,8 +67,9 @@ _eventd_canberra_event_free(gpointer data)
 {
     EventdCanberraEvent *event = data;
 
-    g_free(event->sound_file);
-    g_free(event->sound_name);
+    libeventd_filename_unref(event->sound_file);
+    libeventd_format_string_unref(event->sound_name);
+
     g_free(event);
 }
 
@@ -82,8 +82,6 @@ static EventdPluginContext *
 _eventd_libcanberra_init(EventdCoreContext *core, EventdCoreInterface *interface)
 {
     EventdPluginContext *context;
-
-    libeventd_regex_init();
 
     context = g_new0(EventdPluginContext, 1);
 
@@ -109,8 +107,6 @@ _eventd_libcanberra_uninit(EventdPluginContext *context)
     ca_context_destroy(context->context);
 
     g_free(context);
-
-    libeventd_regex_clean();
 }
 
 
@@ -168,8 +164,8 @@ _eventd_libcanberra_event_parse(EventdPluginContext *context, const gchar *id, G
 {
     gboolean disable;
     EventdCanberraEvent *canberra_event = NULL;
-    gchar *sound_name = NULL;
-    gchar *sound_file = NULL;
+    FormatString *sound_name = NULL;
+    Filename *sound_file = NULL;
 
     if ( ! g_key_file_has_group(config_file, "Libcanberra") )
         return;
@@ -179,22 +175,23 @@ _eventd_libcanberra_event_parse(EventdPluginContext *context, const gchar *id, G
 
     if ( ! disable )
     {
-        if ( libeventd_config_key_file_get_string_with_default(config_file, "Libcanberra", "Name", "${sound-name}", &sound_name) < 0 )
+        if ( libeventd_config_key_file_get_format_string_with_default(config_file, "Libcanberra", "Name", "${sound-name}", &sound_name) < 0 )
             goto fail;
 #ifndef ENABLE_SOUND
-        if ( libeventd_config_key_file_get_string_with_default(config_file, "Libcanberra", "File", "${sound-file}", &sound_file) < 0 )
+        if ( libeventd_config_key_file_get_filename_with_default(config_file, "Libcanberra", "File", "sound-file", &sound_file) < 0 )
             goto fail;
 #endif /* ! ENABLE_SOUND */
 
         canberra_event = _eventd_canberra_event_new(sound_name, sound_file);
-        sound_file = sound_name = NULL;
+        sound_file = NULL;
+        sound_name = NULL;
     }
 
     g_hash_table_insert(context->events, g_strdup(id), canberra_event);
 
 fail:
-    g_free(sound_file);
-    g_free(sound_name);
+    libeventd_filename_unref(sound_file);
+    libeventd_format_string_unref(sound_name);
 }
 
 static void
@@ -219,20 +216,28 @@ _eventd_libcanberra_event_action(EventdPluginContext *context, const gchar *conf
 
     int error;
 
+    gchar *sound_name;
+    sound_name = libeventd_format_string_get_string(canberra_event->sound_name, event, NULL, NULL);
     error = ca_context_play(context->context, 1,
-        CA_PROP_EVENT_ID, canberra_event->sound_name,
+        CA_PROP_EVENT_ID, sound_name,
         CA_PROP_MEDIA_ROLE, "event",
         NULL);
     if ( error < 0 )
-        g_warning("Couldn't play named sound '%s': %s", canberra_event->sound_name, ca_strerror(error));
+        g_warning("Couldn't play named sound '%s': %s", sound_name, ca_strerror(error));
+    g_free(sound_name);
 
 #ifndef ENABLE_SOUND
-    error = ca_context_play(context->context, 1,
-        CA_PROP_MEDIA_FILENAME, canberra_event->sound_file,
-        CA_PROP_MEDIA_ROLE, "event",
-        NULL);
-    if ( error < 0 )
-        g_warning("Couldn't play sound file '%s': %s", canberra_event->sound_file, ca_strerror(error));
+    gchar *sound_file;
+    if ( libeventd_filename_get_path(canberra_event->sound_file, event, "sounds", NULL, &sound_file) )
+    {
+        error = ca_context_play(context->context, 1,
+            CA_PROP_MEDIA_FILENAME, sound_file,
+            CA_PROP_MEDIA_ROLE, "event",
+            NULL);
+        if ( error < 0 )
+            g_warning("Couldn't play sound file '%s': %s", sound_file, ca_strerror(error));
+        g_free(sound_file);
+    }
 #endif /* ! ENABLE_SOUND */
 }
 
