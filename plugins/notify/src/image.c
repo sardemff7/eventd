@@ -83,25 +83,26 @@ fail:
 }
 
 GdkPixbuf *
-eventd_libnotify_get_image(EventdEvent *event, const gchar *image_name, const gchar *icon_name, gdouble overlay_scale, gchar **icon_uri)
+eventd_libnotify_get_image(EventdEvent *event, const Filename *image_name, const Filename *icon_name, gdouble overlay_scale, gchar **icon_uri)
 {
     gchar *file;
-    GdkPixbuf *image;
-    GdkPixbuf *icon;
+    const gchar *data;
+    GdkPixbuf *image = NULL;
+    GdkPixbuf *icon = NULL;
 
-    if ( ( file = libeventd_config_get_filename(image_name, event, "icons") ) != NULL )
+    if ( libeventd_filename_get_path(image_name, event, "icons", &data, &file) )
         image = _eventd_libnotify_icon_get_pixbuf_from_file(file);
-    else
-        image = _eventd_libnotify_icon_get_pixbuf_from_base64(eventd_event_get_data(event, image_name));
+    else if ( data != NULL )
+        image = _eventd_libnotify_icon_get_pixbuf_from_base64(eventd_event_get_data(event, data));
     g_free(file);
 
-    if ( ( file = libeventd_config_get_filename(icon_name, event, "icons") ) != NULL )
+    if ( libeventd_filename_get_path(icon_name, event, "icons", &data, &file) )
     {
         *icon_uri = g_strconcat("file://", file, NULL);
         icon = _eventd_libnotify_icon_get_pixbuf_from_file(file);
     }
-    else
-        icon = _eventd_libnotify_icon_get_pixbuf_from_base64(eventd_event_get_data(event, icon_name));
+    else if ( data != NULL )
+        icon = _eventd_libnotify_icon_get_pixbuf_from_base64(eventd_event_get_data(event, data));
     g_free(file);
 
     if ( ( image != NULL ) && ( icon != NULL ) )

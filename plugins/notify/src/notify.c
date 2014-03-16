@@ -33,7 +33,6 @@
 
 #include <libeventd-event.h>
 #include <eventd-plugin.h>
-#include <libeventd-regex.h>
 #include <libeventd-config.h>
 
 #include "image.h"
@@ -43,10 +42,10 @@ struct _EventdPluginContext {
 };
 
 typedef struct {
-    gchar *title;
-    gchar *message;
-    gchar *image;
-    gchar *icon;
+    FormatString *title;
+    FormatString *message;
+    Filename *image;
+    Filename *icon;
     gdouble scale;
 } EventdLibnotifyEvent;
 
@@ -56,7 +55,7 @@ typedef struct {
  */
 
 static EventdLibnotifyEvent *
-_eventd_libnotify_event_new(char *title, char *message, char *image, char *icon, gint64 scale)
+_eventd_libnotify_event_new(FormatString *title, FormatString *message, Filename *image, Filename *icon, gint64 scale)
 {
     EventdLibnotifyEvent *event;
 
@@ -76,10 +75,11 @@ _eventd_libnotify_event_free(gpointer data)
 {
     EventdLibnotifyEvent *event = data;
 
-    g_free(event->image);
-    g_free(event->icon);
-    g_free(event->message);
-    g_free(event->title);
+    libeventd_filename_unref(event->image);
+    libeventd_filename_unref(event->icon);
+    libeventd_format_string_unref(event->message);
+    libeventd_format_string_unref(event->title);
+
     g_free(event);
 }
 
@@ -101,8 +101,6 @@ _eventd_libnotify_init(EventdCoreContext *core, EventdCoreInterface *interface)
         return NULL;
     }
 
-    libeventd_regex_init();
-
     context = g_new0(EventdPluginContext, 1);
 
     context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_libnotify_event_free);
@@ -117,8 +115,6 @@ _eventd_libnotify_uninit(EventdPluginContext *context)
 
     g_free(context);
 
-    libeventd_regex_clean();
-
     notify_uninit();
 }
 
@@ -132,10 +128,10 @@ _eventd_libnotify_event_parse(EventdPluginContext *context, const gchar *id, GKe
 {
     gboolean disable;
     EventdLibnotifyEvent *libnotify_event = NULL;
-    gchar *title = NULL;
-    gchar *message = NULL;
-    gchar *image = NULL;
-    gchar *icon = NULL;
+    FormatString *title = NULL;
+    FormatString *message = NULL;
+    Filename *image = NULL;
+    Filename *icon = NULL;
     gint64 scale;
 
     if ( ! g_key_file_has_group(config_file, "Libnotify") )
@@ -146,19 +142,20 @@ _eventd_libnotify_event_parse(EventdPluginContext *context, const gchar *id, GKe
 
     if ( ! disable )
     {
-        if ( libeventd_config_key_file_get_locale_string_with_default(config_file, "Libnotify", "Title", NULL, "${summary}", &title) < 0 )
+        if ( libeventd_config_key_file_get_locale_format_string_with_default(config_file, "Libnotify", "Title", NULL, "${summary}", &title) < 0 )
             goto skip;
-        if ( libeventd_config_key_file_get_locale_string_with_default(config_file, "Libnotify", "Message", NULL, "${body}", &message) < 0 )
+        if ( libeventd_config_key_file_get_locale_format_string_with_default(config_file, "Libnotify", "Message", NULL, "${body}", &message) < 0 )
             goto skip;
-        if ( libeventd_config_key_file_get_string_with_default(config_file, "Libnotify", "Image", "image", &image) < 0 )
+        if ( libeventd_config_key_file_get_filename_with_default(config_file, "Libnotify", "Image", "image", &image) < 0 )
             goto skip;
-        if ( libeventd_config_key_file_get_string_with_default(config_file, "Libnotify", "Icon", "icon", &icon) < 0 )
+        if ( libeventd_config_key_file_get_filename_with_default(config_file, "Libnotify", "Icon", "icon", &icon) < 0 )
             goto skip;
         if ( libeventd_config_key_file_get_int_with_default(config_file, "Libnotify", "OverlayScale", 50, &scale) < 0 )
             goto skip;
 
         libnotify_event = _eventd_libnotify_event_new(title, message, image, icon, scale);
-        title = message = image = icon = NULL;
+        title = message = NULL;
+        image = icon = NULL;
     }
 
     g_hash_table_insert(context->events, g_strdup(id), libnotify_event);
@@ -196,9 +193,8 @@ _eventd_libnotify_event_action(EventdPluginContext *context, const gchar *config
     if ( libnotify_event == NULL )
         return;
 
-    title = libeventd_regex_replace_event_data(libnotify_event->title, event, NULL, NULL);
-
-    message = libeventd_regex_replace_event_data(libnotify_event->message, event, NULL, NULL);
+    title = libeventd_format_string_get_string(libnotify_event->title, event, NULL, NULL);
+    message = libeventd_format_string_get_string(libnotify_event->message, event, NULL, NULL);
 
     image = eventd_libnotify_get_image(event, libnotify_event->image, libnotify_event->icon, libnotify_event->scale, &icon_uri);
 
