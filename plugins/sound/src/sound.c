@@ -31,7 +31,6 @@
 
 #include <eventd-plugin.h>
 #include <libeventd-event.h>
-#include <libeventd-regex.h>
 #include <libeventd-config.h>
 
 #include "pulseaudio.h"
@@ -126,11 +125,9 @@ _eventd_sound_init(EventdCoreContext *core, EventdCoreInterface *interface)
 
     context = g_new0(EventdPluginContext, 1);
 
-    context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+    context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)libeventd_filename_unref);
 
     context->pulseaudio = eventd_sound_pulseaudio_init();
-
-    libeventd_regex_init();
 
     return context;
 }
@@ -139,8 +136,6 @@ static void
 _eventd_sound_uninit(EventdPluginContext *context)
 {
     eventd_sound_pulseaudio_uninit(context->pulseaudio);
-
-    libeventd_regex_clean();
 
     g_free(context);
 }
@@ -170,7 +165,7 @@ static void
 _eventd_sound_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile *config_file)
 {
     gboolean disable;
-    gchar *sound = NULL;
+    Filename *sound = NULL;
 
     if ( ! g_key_file_has_group(config_file, "Sound") )
         return;
@@ -180,7 +175,7 @@ _eventd_sound_event_parse(EventdPluginContext *context, const gchar *id, GKeyFil
 
     if ( ! disable )
     {
-        if ( libeventd_config_key_file_get_string_with_default(config_file, "Sound", "File", "sound-file", &sound) < 0 )
+        if ( libeventd_config_key_file_get_filename_with_default(config_file, "Sound", "File", "sound-file", &sound) < 0 )
             return;
     }
 
@@ -201,7 +196,7 @@ _eventd_sound_config_reset(EventdPluginContext *context)
 static void
 _eventd_sound_event_action(EventdPluginContext *context, const gchar *config_id, EventdEvent *event)
 {
-    gchar *sound;
+    Filename *sound;
     gchar *file;
     gpointer data = NULL;
     gsize length = 0;
@@ -213,7 +208,7 @@ _eventd_sound_event_action(EventdPluginContext *context, const gchar *config_id,
     if ( sound == NULL )
         return;
 
-    if ( ( file = libeventd_config_get_filename(sound, event, "sounds") ) != NULL )
+    if ( libeventd_filename_get_path(sound, event, "sounds", NULL, &file) )
         _eventd_sound_read_file(file, &data, &length, &format, &rate, &channels);
     // TODO: using event data
 
