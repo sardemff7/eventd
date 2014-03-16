@@ -30,7 +30,6 @@
 
 #include <eventd-plugin.h>
 #include <libeventd-config.h>
-#include <libeventd-regex.h>
 #include <libeventd-reconnect.h>
 
 #define PURPLE_GLIB_READ_COND  (G_IO_IN | G_IO_HUP | G_IO_ERR)
@@ -60,7 +59,7 @@ typedef struct {
 
 typedef struct {
     EventdImAccount *account;
-    gchar *message;
+    FormatString *message;
     GList *convs;
 } EventdImEventAccount;
 
@@ -180,7 +179,7 @@ _eventd_im_event_account_free(gpointer data)
     EventdImEventAccount *account = data;
 
     g_list_free_full(account->convs, _eventd_im_conv_free);
-    g_free(account->message);
+    libeventd_format_string_unref(account->message);
 
     g_slice_free(EventdImEventAccount, account);
 }
@@ -301,8 +300,6 @@ _eventd_im_init(EventdCoreContext *core, EventdCoreInterface *interface)
 
     context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_im_event_free);
 
-    libeventd_regex_init();
-
     purple_signal_connect(purple_connections_get_handle(), "signed-on", context, PURPLE_CALLBACK(_eventd_im_signed_on_callback), context);
     purple_signal_connect(purple_connections_get_handle(), "error-changed", context, PURPLE_CALLBACK(_eventd_im_error_callback), context);
     purple_signal_connect(purple_conversations_get_handle(), "chat-joined", context, PURPLE_CALLBACK(_eventd_im_conv_joined), context);
@@ -315,8 +312,6 @@ _eventd_im_uninit(EventdPluginContext *context)
 {
     g_list_free_full(context->accounts, _eventd_im_account_free);
     g_hash_table_unref(context->events);
-
-    libeventd_regex_clean();
 
     g_free(context);
 }
@@ -440,8 +435,8 @@ _eventd_im_event_parse(EventdPluginContext *context, const gchar *config_id, GKe
 
         have_account = TRUE;
 
-        gchar *message;
-        if ( libeventd_config_key_file_get_locale_string(config_file, section, "Message", NULL, &message) != 0 )
+        FormatString *message;
+        if ( libeventd_config_key_file_get_locale_format_string(config_file, section, "Message", NULL, &message) != 0 )
             goto next;
 
         gchar **channels;
@@ -556,7 +551,7 @@ _eventd_im_event_action(EventdPluginContext *context, const gchar *config_id, Ev
         gchar *message;
 
         gc = purple_account_get_connection(account->account->account);
-        message = libeventd_regex_replace_event_data(account->message, event, NULL, NULL);
+        message = libeventd_format_string_get_string(account->message, event, NULL, NULL);
 
         GList *conv_;
         for ( conv_ = account->convs ; conv_ != NULL ; conv_ = g_list_next(conv_) )
