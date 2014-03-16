@@ -71,12 +71,12 @@ void eventd_event_add_data(EventdEvent *event, gchar *name, gchar *content);
 void eventd_event_add_answer(EventdEvent *event, const gchar *name);
 void eventd_event_add_answer_data(EventdEvent *event, gchar *name, gchar *content);
 
-const gchar *eventd_event_get_category(EventdEvent *event);
-const gchar *eventd_event_get_name(EventdEvent *event);
-gint64 eventd_event_get_timeout(EventdEvent *event);
-gboolean eventd_event_has_data(EventdEvent *event, const gchar *name);
-const gchar *eventd_event_get_data(EventdEvent *event, const gchar *name);
-const gchar *eventd_event_get_answer_data(EventdEvent *event, const gchar *name);
+const gchar *eventd_event_get_category(const EventdEvent *event);
+const gchar *eventd_event_get_name(const EventdEvent *event);
+gint64 eventd_event_get_timeout(const EventdEvent *event);
+gboolean eventd_event_has_data(const EventdEvent *event, const gchar *name);
+const gchar *eventd_event_get_data(const EventdEvent *event, const gchar *name);
+const gchar *eventd_event_get_answer_data(const EventdEvent *event, const gchar *name);
 
 G_END_DECLS
 

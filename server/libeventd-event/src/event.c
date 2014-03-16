@@ -246,7 +246,7 @@ eventd_event_set_timeout(EventdEvent *self, gint64 timeout)
 
 EVENTD_EXPORT
 const gchar *
-eventd_event_get_category(EventdEvent *self)
+eventd_event_get_category(const EventdEvent *self)
 {
     g_return_val_if_fail(EVENTD_IS_EVENT(self), NULL);
 
@@ -255,7 +255,7 @@ eventd_event_get_category(EventdEvent *self)
 
 EVENTD_EXPORT
 const gchar *
-eventd_event_get_name(EventdEvent *self)
+eventd_event_get_name(const EventdEvent *self)
 {
     g_return_val_if_fail(EVENTD_IS_EVENT(self), NULL);
 
@@ -264,7 +264,7 @@ eventd_event_get_name(EventdEvent *self)
 
 EVENTD_EXPORT
 gint64
-eventd_event_get_timeout(EventdEvent *self)
+eventd_event_get_timeout(const EventdEvent *self)
 {
     g_return_val_if_fail(EVENTD_IS_EVENT(self), G_MININT64);
 
@@ -273,7 +273,7 @@ eventd_event_get_timeout(EventdEvent *self)
 
 EVENTD_EXPORT
 gboolean
-eventd_event_has_data(EventdEvent *self, const gchar *name)
+eventd_event_has_data(const EventdEvent *self, const gchar *name)
 {
     g_return_val_if_fail(EVENTD_IS_EVENT(self), FALSE);
     g_return_val_if_fail(name != NULL, FALSE);
@@ -286,7 +286,7 @@ eventd_event_has_data(EventdEvent *self, const gchar *name)
 
 EVENTD_EXPORT
 const gchar *
-eventd_event_get_data(EventdEvent *self, const gchar *name)
+eventd_event_get_data(const EventdEvent *self, const gchar *name)
 {
     g_return_val_if_fail(EVENTD_IS_EVENT(self), NULL);
     g_return_val_if_fail(name != NULL, NULL);
@@ -299,7 +299,7 @@ eventd_event_get_data(EventdEvent *self, const gchar *name)
 
 EVENTD_EXPORT
 const gchar *
-eventd_event_get_answer_data(EventdEvent *self, const gchar *name)
+eventd_event_get_answer_data(const EventdEvent *self, const gchar *name)
 {
     g_return_val_if_fail(EVENTD_IS_EVENT(self), NULL);
     g_return_val_if_fail(name != NULL, NULL);
