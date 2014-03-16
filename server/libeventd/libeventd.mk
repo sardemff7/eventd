@@ -11,14 +11,12 @@ pkglib_LTLIBRARIES += \
 
 pkginclude_HEADERS += \
 	server/libeventd/include/libeventd-reconnect.h \
-	server/libeventd/include/libeventd-regex.h \
 	server/libeventd/include/libeventd-config.h \
 	$(null)
 
 
 libeventd_la_SOURCES = \
 	server/libeventd/src/reconnect.c \
-	server/libeventd/src/regex.c \
 	server/libeventd/src/config.c \
 	$(null)
 
