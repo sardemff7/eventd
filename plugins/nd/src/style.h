@@ -46,10 +46,10 @@ void eventd_nd_style_free(gpointer style);
 
 void eventd_nd_style_update(EventdNdStyle *style, GKeyFile *config_file, gint *max_width, gint *max_height);
 
-const gchar *eventd_nd_style_get_template_title(EventdNdStyle *style);
-const gchar *eventd_nd_style_get_template_message(EventdNdStyle *style);
-const gchar *eventd_nd_style_get_template_image(EventdNdStyle *style);
-const gchar *eventd_nd_style_get_template_icon(EventdNdStyle *style);
+FormatString *eventd_nd_style_get_template_title(EventdNdStyle *style);
+FormatString *eventd_nd_style_get_template_message(EventdNdStyle *style);
+Filename *eventd_nd_style_get_template_image(EventdNdStyle *style);
+Filename *eventd_nd_style_get_template_icon(EventdNdStyle *style);
 
 gint eventd_nd_style_get_bubble_min_width(EventdNdStyle *style);
 gint eventd_nd_style_get_bubble_max_width(EventdNdStyle *style);

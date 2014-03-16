@@ -33,7 +33,6 @@
 
 #include <libeventd-event.h>
 #include <libeventd-config.h>
-#include <libeventd-regex.h>
 
 #include "style.h"
 
@@ -43,11 +42,11 @@ struct _EventdNdStyle {
     struct {
         gboolean set;
 
-        gchar *title;
-        gchar *message;
+        FormatString *title;
+        FormatString *message;
 #ifdef ENABLE_GDK_PIXBUF
-        gchar *image;
-        gchar *icon;
+        Filename *image;
+        Filename *icon;
 #endif /* ENABLE_GDK_PIXBUF */
     } template;
 
@@ -114,6 +113,16 @@ struct _EventdNdNotificationContents {
 static void
 _eventd_nd_style_init_defaults(EventdNdStyle *style)
 {
+    /* template */
+    style->template.set     = TRUE;
+    style->template.title   = libeventd_format_string_new(g_strdup("${name}"));
+    style->template.message = libeventd_format_string_new(g_strdup("${text}"));
+#ifdef ENABLE_GDK_PIXBUF
+    style->template.image   = libeventd_filename_new(g_strdup("image"));
+    style->template.icon    = libeventd_filename_new(g_strdup("icon"));
+#endif /* ENABLE_GDK_PIXBUF */
+
+    /* bubble */
     style->bubble.set = TRUE;
 
     /* bubble geometry */
@@ -188,32 +197,35 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
     {
         self->template.set = TRUE;
 
-        gchar *string;
+        FormatString *string;
 
-        g_free(self->template.title);
-        if ( libeventd_config_key_file_get_locale_string(config_file, "Notification", "Title", NULL, &string) == 0 )
+        libeventd_format_string_unref(self->template.title);
+        if ( libeventd_config_key_file_get_locale_format_string(config_file, "Notification", "Title", NULL, &string) == 0 )
             self->template.title = string;
         else if ( self->parent != NULL )
-            self->template.title = g_strdup(eventd_nd_style_get_template_title(self->parent));
+            self->template.title = libeventd_format_string_ref(eventd_nd_style_get_template_title(self->parent));
 
-        g_free(self->template.message);
-        if ( libeventd_config_key_file_get_locale_string(config_file, "Notification", "Message", NULL, &string) == 0 )
+        libeventd_format_string_unref(self->template.message);
+        if ( libeventd_config_key_file_get_locale_format_string(config_file, "Notification", "Message", NULL, &string) == 0 )
             self->template.message = string;
         else if ( self->parent != NULL )
-            self->template.message = g_strdup(eventd_nd_style_get_template_message(self->parent));
+            self->template.message = libeventd_format_string_ref(eventd_nd_style_get_template_message(self->parent));
 
 #ifdef ENABLE_GDK_PIXBUF
-        g_free(self->template.image);
-        if ( libeventd_config_key_file_get_string(config_file, "Notification", "Image", &string) == 0 )
-            self->template.image = string;
-        else if ( self->parent != NULL )
-            self->template.image = g_strdup(eventd_nd_style_get_template_image(self->parent));
+        Filename *filename = NULL;
 
-        g_free(self->template.icon);
-        if ( libeventd_config_key_file_get_string(config_file, "Notification", "Icon", &string) == 0 )
-            self->template.icon = string;
+        libeventd_filename_unref(self->template.image);
+        if ( libeventd_config_key_file_get_filename(config_file, "Notification", "Image", &filename) == 0 )
+            self->template.image = filename;
         else if ( self->parent != NULL )
-            self->template.icon = g_strdup(eventd_nd_style_get_template_icon(self->parent));
+            self->template.image = libeventd_filename_ref(eventd_nd_style_get_template_image(self->parent));
+
+        filename = NULL;
+        libeventd_filename_unref(self->template.icon);
+        if ( libeventd_config_key_file_get_filename(config_file, "Notification", "Icon", &filename) == 0 )
+            self->template.icon = filename;
+        else if ( self->parent != NULL )
+            self->template.icon = libeventd_filename_ref(eventd_nd_style_get_template_icon(self->parent));
 #endif /* ENABLE_GDK_PIXBUF */
     }
 
@@ -467,43 +479,35 @@ eventd_nd_style_free(gpointer data)
 }
 
 
-const gchar *
+FormatString *
 eventd_nd_style_get_template_title(EventdNdStyle *self)
 {
     if ( self->template.set )
         return self->template.title;
-    if ( self->parent == NULL )
-        return "${name}";
     return eventd_nd_style_get_template_title(self->parent);
 }
 
-const gchar *
+FormatString *
 eventd_nd_style_get_template_message(EventdNdStyle *self)
 {
     if ( self->template.set )
         return self->template.message;
-    if ( self->parent == NULL )
-        return "${text}";
     return eventd_nd_style_get_template_message(self->parent);
 }
 
-const gchar *
+Filename *
 eventd_nd_style_get_template_image(EventdNdStyle *self)
 {
     if ( self->template.set )
         return self->template.image;
-    if ( self->parent == NULL )
-        return "image";
     return eventd_nd_style_get_template_image(self->parent);
 }
 
-const gchar *
+Filename *
 eventd_nd_style_get_template_icon(EventdNdStyle *self)
 {
     if ( self->template.set )
         return self->template.icon;
-    if ( self->parent == NULL )
-        return "icon";
     return eventd_nd_style_get_template_icon(self->parent);
 }
 
@@ -788,38 +792,39 @@ eventd_nd_notification_contents_new(EventdNdStyle *style, EventdEvent *event, gi
 {
     EventdNdNotificationContents *self;
 
-    const gchar *title = ( style->template.title != NULL ) ? style->template.title : "${name}";
-    const gchar *message = ( style->template.message != NULL ) ? style->template.message : "${text}";
-    const gchar *image = ( style->template.image != NULL ) ? style->template.image : "image";
-    const gchar *icon = ( style->template.icon != NULL ) ? style->template.icon : "icon";
+    const FormatString *title = eventd_nd_style_get_template_title(style);
+    const FormatString *message = eventd_nd_style_get_template_message(style);
 
     self = g_new0(EventdNdNotificationContents, 1);
 
-    self->title = libeventd_regex_replace_event_data(title, event, NULL, NULL);
+    self->title = libeventd_format_string_get_string(title, event, NULL, NULL);
 
-    self->message = libeventd_regex_replace_event_data(message, event, NULL, NULL);
+    self->message = libeventd_format_string_get_string(message, event, NULL, NULL);
     if ( *self->message == '\0' )
         /* Empty message, just skip it */
         self->message = (g_free(self->message), NULL);
 
 #ifdef ENABLE_GDK_PIXBUF
+    const Filename *image = eventd_nd_style_get_template_image(style);
+    const Filename *icon = eventd_nd_style_get_template_icon(style);
     gchar *path;
+    const gchar *data;
 
-    if ( ( path = libeventd_config_get_filename(image, event, "icons") ) != NULL )
+    if ( libeventd_filename_get_path(image, event, "images", &data, &path) )
     {
         self->image = _eventd_nd_notification_contents_pixbuf_from_file(path, width, height);
         g_free(path);
     }
-    else
-       self->image =  _eventd_nd_notification_contents_pixbuf_from_base64(event, image);
+    else if ( data != NULL )
+       self->image =  _eventd_nd_notification_contents_pixbuf_from_base64(event, data);
 
-    if ( ( path = libeventd_config_get_filename(icon, event, "icons") ) != NULL )
+    if ( libeventd_filename_get_path(icon, event, "icons", &data, &path) )
     {
         self->icon = _eventd_nd_notification_contents_pixbuf_from_file(path, width, height);
         g_free(path);
     }
-    else
-        self->icon = _eventd_nd_notification_contents_pixbuf_from_base64(event, icon);
+    else if ( data != NULL )
+        self->icon = _eventd_nd_notification_contents_pixbuf_from_base64(event, data);
 #endif /* ENABLE_GDK_PIXBUF */
 
     return self;

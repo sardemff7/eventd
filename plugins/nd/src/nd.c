@@ -37,7 +37,6 @@
 #include <eventd-plugin.h>
 #include <libeventd-event.h>
 #include <libeventd-config.h>
-#include <libeventd-regex.h>
 
 #include <eventd-nd-backend.h>
 
@@ -134,8 +133,6 @@ _eventd_nd_init(EventdCoreContext *core, EventdCoreInterface *interface)
 
     context->queue = g_queue_new();
 
-    libeventd_regex_init();
-
     eventd_nd_cairo_init();
 
     return context;
@@ -147,8 +144,6 @@ _eventd_nd_uninit(EventdPluginContext *context)
     eventd_nd_style_free(context->style);
 
     eventd_nd_cairo_uninit();
-
-    libeventd_regex_clean();
 
     g_queue_free(context->queue);
 
