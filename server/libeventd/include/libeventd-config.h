@@ -60,7 +60,6 @@ gint8 libeventd_config_key_file_get_locale_filename(GKeyFile *config_file, const
 gint8 libeventd_config_key_file_get_locale_filename_with_default(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *locale, const gchar *default_value, Filename **value);
 gint8 libeventd_config_key_file_get_colour(GKeyFile *config_file, const gchar *group, const gchar *key, Colour *value);
 
-gchar *libeventd_config_get_filename(const gchar *filename, EventdEvent *event, const gchar *subdir);
 gchar *libeventd_format_string_get_string(const FormatString *format_string, EventdEvent *event, FormatStringReplaceCallback callback, gconstpointer user_data);
 gboolean libeventd_filename_get_path(const Filename *filename, EventdEvent *event, const gchar *subdir, const gchar **data, gchar **path);
 

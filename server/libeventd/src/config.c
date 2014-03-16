@@ -32,7 +32,6 @@
 #include <glib-object.h>
 
 #include <libeventd-event.h>
-#include <libeventd-regex.h>
 
 #include <nkutils-token.h>
 #include <nkutils-colour.h>
@@ -392,38 +391,6 @@ libeventd_config_key_file_get_colour(GKeyFile *config_file, const gchar *section
     return r;
 }
 
-
-EVENTD_EXPORT
-gchar *
-libeventd_config_get_filename(const gchar *filename, EventdEvent *event, const gchar *subdir)
-{
-    gchar *real_filename;
-
-    if ( ! g_str_has_prefix(filename, "file://") )
-    {
-        filename = eventd_event_get_data(event, filename);
-        if ( ( filename != NULL ) && g_str_has_prefix(filename, "file://") )
-            real_filename = g_strdup(filename+7);
-        else
-            return NULL;
-    }
-    else
-        real_filename = libeventd_regex_replace_event_data(filename+7, event, NULL, NULL);
-
-    if ( ! g_path_is_absolute(real_filename) )
-    {
-        gchar *tmp;
-        tmp = real_filename;
-        real_filename = g_build_filename(g_get_user_data_dir(), PACKAGE_NAME, subdir, tmp, NULL);
-        g_free(tmp);
-    }
-
-    if ( g_file_test(real_filename, G_FILE_TEST_IS_REGULAR) )
-        return real_filename;
-
-    g_free(real_filename);
-    return g_strdup("");
-}
 
 typedef struct {
     EventdEvent *event;
