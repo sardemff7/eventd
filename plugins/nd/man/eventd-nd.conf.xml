@@ -66,7 +66,7 @@
 
                 <variablelist>
                     <varlistentry>
-                        <term><varname>Title=</varname> (defaults to <literal>$name</literal>)</term>
+                        <term><varname>Title=</varname> (defaults to <literal>${name}</literal>)</term>
                         <listitem>
                             <para>A <type>string</type> (can contain $data-name references, localised)</para>
                             <para>The notification's title. It will be highlighted compared to the message.</para>
@@ -74,7 +74,7 @@
                     </varlistentry>
 
                     <varlistentry>
-                        <term><varname>Message=</varname> (defaults to <literal>$text</literal>)</term>
+                        <term><varname>Message=</varname> (defaults to <literal>${text}</literal>)</term>
                         <listitem>
                             <para>A <type>string</type> (can contain $data-name references, localised)</para>
                             <para>The notification's message.</para>

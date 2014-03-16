@@ -179,10 +179,10 @@ _eventd_libcanberra_event_parse(EventdPluginContext *context, const gchar *id, G
 
     if ( ! disable )
     {
-        if ( libeventd_config_key_file_get_string_with_default(config_file, "Libcanberra", "Name", "$sound-name", &sound_name) < 0 )
+        if ( libeventd_config_key_file_get_string_with_default(config_file, "Libcanberra", "Name", "${sound-name}", &sound_name) < 0 )
             goto fail;
 #ifndef ENABLE_SOUND
-        if ( libeventd_config_key_file_get_string_with_default(config_file, "Libcanberra", "File", "$sound-name", &sound_file) < 0 )
+        if ( libeventd_config_key_file_get_string_with_default(config_file, "Libcanberra", "File", "${sound-file}", &sound_file) < 0 )
             goto fail;
 #endif /* ! ENABLE_SOUND */
 

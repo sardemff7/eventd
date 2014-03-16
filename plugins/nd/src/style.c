@@ -473,7 +473,7 @@ eventd_nd_style_get_template_title(EventdNdStyle *self)
     if ( self->template.set )
         return self->template.title;
     if ( self->parent == NULL )
-        return "$name";
+        return "${name}";
     return eventd_nd_style_get_template_title(self->parent);
 }
 
@@ -483,7 +483,7 @@ eventd_nd_style_get_template_message(EventdNdStyle *self)
     if ( self->template.set )
         return self->template.message;
     if ( self->parent == NULL )
-        return "$text";
+        return "${text}";
     return eventd_nd_style_get_template_message(self->parent);
 }
 
@@ -788,8 +788,8 @@ eventd_nd_notification_contents_new(EventdNdStyle *style, EventdEvent *event, gi
 {
     EventdNdNotificationContents *self;
 
-    const gchar *title = ( style->template.title != NULL ) ? style->template.title : "$name";
-    const gchar *message = ( style->template.message != NULL ) ? style->template.message : "$text";
+    const gchar *title = ( style->template.title != NULL ) ? style->template.title : "${name}";
+    const gchar *message = ( style->template.message != NULL ) ? style->template.message : "${text}";
     const gchar *image = ( style->template.image != NULL ) ? style->template.image : "image";
     const gchar *icon = ( style->template.icon != NULL ) ? style->template.icon : "icon";
 

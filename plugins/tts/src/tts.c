@@ -114,10 +114,8 @@ _eventd_tts_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile 
 
     if ( ! disable )
     {
-        if ( libeventd_config_key_file_get_locale_string(config_file, "TTS", "Message", NULL, &message) < 0 )
+        if ( libeventd_config_key_file_get_locale_string_with_default(config_file, "TTS", "Message", NULL, "${message}", &message) < 0 )
             return;
-        if ( message == NULL )
-            message = g_strdup("$message");
     }
 
     g_hash_table_insert(context->events, g_strdup(id), message);
