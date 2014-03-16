@@ -28,7 +28,6 @@
 
 #include <eventd-plugin.h>
 #include <libeventd-config.h>
-#include <libeventd-regex.h>
 
 struct _EventdPluginContext {
     GHashTable *events;
@@ -46,9 +45,7 @@ _eventd_exec_init(EventdCoreContext *core, EventdCoreInterface *interface)
 
     context = g_new0(EventdPluginContext, 1);
 
-    context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-
-    libeventd_regex_init();
+    context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)libeventd_format_string_unref);
 
     return context;
 }
@@ -57,8 +54,6 @@ static void
 _eventd_exec_uninit(EventdPluginContext *context)
 {
     g_hash_table_unref(context->events);
-
-    libeventd_regex_clean();
 
     g_free(context);
 }
@@ -72,7 +67,7 @@ static void
 _eventd_exec_event_parse(EventdPluginContext *context, const gchar *config_id, GKeyFile *config_file)
 {
     gboolean disable;
-    gchar *command = NULL;
+    FormatString *command = NULL;
 
     if ( ! g_key_file_has_group(config_file, "Exec") )
         return;
@@ -82,7 +77,7 @@ _eventd_exec_event_parse(EventdPluginContext *context, const gchar *config_id, G
 
     if ( ! disable )
     {
-        if ( libeventd_config_key_file_get_string(config_file, "Exec", "Command", &command) < 0 )
+        if ( libeventd_config_key_file_get_format_string(config_file, "Exec", "Command", &command) < 0 )
             return;
     }
 
@@ -103,7 +98,7 @@ _eventd_exec_config_reset(EventdPluginContext *context)
 static void
 _eventd_exec_event_action(EventdPluginContext *context, const gchar *config_id, EventdEvent *event)
 {
-    gchar *command;
+    const FormatString *command;
     gchar *cmd;
     GError *error;
 
@@ -111,7 +106,7 @@ _eventd_exec_event_action(EventdPluginContext *context, const gchar *config_id, 
     if ( command == NULL )
         return;
 
-    cmd = libeventd_regex_replace_event_data(command, event, NULL, NULL);
+    cmd = libeventd_format_string_get_string(command, event, NULL, NULL);
 
     if ( ! g_spawn_command_line_async(cmd, &error) )
     {
