@@ -112,7 +112,7 @@ AC_SUBST([dbuscapabilitiesdir])
 EVENTD_I18N
 GLIB_DEFINE_LOCALEDIR([EVENTD_LOCALEDIR])
 GW_INIT([src/libgwater])
-NK_INIT([src/libnkutils], [GLIB], [colour/double])
+NK_INIT([src/libnkutils], [GLIB], [token colour/alpha colour/double], [AM_DOCBOOK_CONDITIONS])
 
 #
 # Common dependencies

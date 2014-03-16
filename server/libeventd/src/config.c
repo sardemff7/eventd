@@ -34,9 +34,94 @@
 #include <libeventd-event.h>
 #include <libeventd-regex.h>
 
+#include <nkutils-token.h>
 #include <nkutils-colour.h>
 
 #include <libeventd-config.h>
+
+struct _Filename {
+    guint64 ref_count;
+    gchar *data_name;
+    FormatString *file_uri;
+};
+
+EVENTD_EXPORT
+FormatString *
+libeventd_format_string_new(gchar *string)
+{
+    return nk_token_list_parse(string);
+}
+
+EVENTD_EXPORT
+FormatString *
+libeventd_format_string_ref(FormatString *format_string)
+{
+    if ( format_string == NULL )
+        return NULL;
+    return nk_token_list_ref(format_string);
+}
+
+EVENTD_EXPORT
+void
+libeventd_format_string_unref(FormatString *format_string)
+{
+    if ( format_string == NULL )
+        return;
+    nk_token_list_unref(format_string);
+}
+
+EVENTD_EXPORT
+Filename *
+libeventd_filename_new(gchar *string)
+{
+    gchar *data_name = NULL;
+    FormatString *file_uri = NULL;
+
+    if ( g_str_has_prefix(string, "file://") )
+        file_uri = libeventd_format_string_new(string);
+    else if ( g_utf8_strchr(string, -1, ' ') == NULL )
+        data_name = string;
+    else
+    {
+        g_free(string);
+        return NULL;
+    }
+    Filename *filename;
+
+    filename = g_new0(Filename, 1);
+    filename->ref_count = 1;
+
+    filename->data_name = data_name;
+    filename->file_uri = file_uri;
+
+    return filename;
+}
+
+EVENTD_EXPORT
+Filename *
+libeventd_filename_ref(Filename *filename)
+{
+    if ( filename != NULL )
+        ++filename->ref_count;
+    return filename;
+}
+
+EVENTD_EXPORT
+void
+libeventd_filename_unref(Filename *filename)
+{
+    if ( filename == NULL )
+        return;
+
+    if ( --filename->ref_count > 0 )
+        return;
+
+    libeventd_format_string_unref(filename->file_uri);
+    g_free(filename->data_name);
+
+    g_free(filename);
+}
+
 
 static gint8
 _libeventd_config_key_file_error(GError **error, const gchar *group, const gchar *key)
@@ -152,6 +237,134 @@ libeventd_config_key_file_get_string_list(GKeyFile *config_file, const gchar *gr
     return _libeventd_config_key_file_error(&error, group, key);
 }
 
+static gint8
+_libeventd_config_key_file_get_format_string(gchar *string, FormatString **format_string)
+{
+    nk_token_list_unref(*format_string);
+    *format_string = nk_token_list_parse(string);
+
+    return 0;
+}
+
+EVENTD_EXPORT
+gint8
+libeventd_config_key_file_get_format_string(GKeyFile *config_file, const gchar *group, const gchar *key, FormatString **value)
+{
+    gchar *string;
+    gint8 r;
+
+    if ( ( r = libeventd_config_key_file_get_string(config_file, group, key, &string) ) != 0 )
+        return r;
+
+    return _libeventd_config_key_file_get_format_string(string, value);
+}
+
+EVENTD_EXPORT
+gint8
+libeventd_config_key_file_get_format_string_with_default(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *default_value, FormatString **value)
+{
+    gchar *string;
+    gint8 r;
+
+    if ( ( r = libeventd_config_key_file_get_string_with_default(config_file, group, key, default_value, &string) ) != 0 )
+        return r;
+
+    return _libeventd_config_key_file_get_format_string(string, value);
+}
+
+EVENTD_EXPORT
+gint8
+libeventd_config_key_file_get_locale_format_string(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *locale, FormatString **value)
+{
+    gchar *string;
+    gint8 r;
+
+    if ( ( r = libeventd_config_key_file_get_locale_string(config_file, group, key, locale, &string) ) != 0 )
+        return r;
+
+    return _libeventd_config_key_file_get_format_string(string, value);
+}
+
+EVENTD_EXPORT
+gint8
+libeventd_config_key_file_get_locale_format_string_with_default(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *locale, const gchar *default_value, FormatString **value)
+{
+    gchar *string;
+    gint8 r;
+
+    if ( ( r = libeventd_config_key_file_get_locale_string_with_default(config_file, group, key, locale, default_value, &string) ) != 0 )
+        return r;
+
+    return _libeventd_config_key_file_get_format_string(string, value);
+}
+
+static gint8
+_libeventd_config_key_file_get_filename(gchar *string, Filename **value)
+{
+    Filename *filename;
+
+    filename = libeventd_filename_new(string);
+    if ( filename == NULL )
+        return 1;
+
+    libeventd_filename_unref(*value);
+    *value = filename;
+
+    return 0;
+}
+
+EVENTD_EXPORT
+gint8
+libeventd_config_key_file_get_filename(GKeyFile *config_file, const gchar *group, const gchar *key, Filename **value)
+{
+    gchar *string;
+    gint8 r;
+
+    if ( ( r = libeventd_config_key_file_get_string(config_file, group, key, &string) ) != 0 )
+        return r;
+
+    return _libeventd_config_key_file_get_filename(string, value);
+}
+
+EVENTD_EXPORT
+gint8
+libeventd_config_key_file_get_filename_with_default(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *default_value, Filename **value)
+{
+    gchar *string;
+    gint8 r;
+
+    if ( ( r = libeventd_config_key_file_get_string_with_default(config_file, group, key, default_value, &string) ) != 0 )
+        return r;
+
+    return _libeventd_config_key_file_get_filename(string, value);
+}
+
+EVENTD_EXPORT
+gint8
+libeventd_config_key_file_get_locale_filename(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *locale, Filename **value)
+{
+    gchar *string;
+    gint8 r;
+
+    if ( ( r = libeventd_config_key_file_get_locale_string(config_file, group, key, locale, &string) ) != 0 )
+        return r;
+
+    return _libeventd_config_key_file_get_filename(string, value);
+}
+
+EVENTD_EXPORT
+gint8
+libeventd_config_key_file_get_locale_filename_with_default(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *locale, const gchar *default_value, Filename **value)
+{
+    gchar *string;
+    gint8 r;
+
+    if ( ( r = libeventd_config_key_file_get_locale_string_with_default(config_file, group, key, locale, default_value, &string) ) != 0 )
+        return r;
+
+    return _libeventd_config_key_file_get_filename(string, value);
+}
+
 EVENTD_EXPORT
 gint8
 libeventd_config_key_file_get_colour(GKeyFile *config_file, const gchar *section, const gchar *key, Colour *colour)
@@ -178,6 +391,7 @@ libeventd_config_key_file_get_colour(GKeyFile *config_file, const gchar *section
 
     return r;
 }
+
 
 EVENTD_EXPORT
 gchar *
@@ -209,4 +423,78 @@ libeventd_config_get_filename(const gchar *filename, EventdEvent *event, const g
 
     g_free(real_filename);
     return g_strdup("");
+}
+
+typedef struct {
+    EventdEvent *event;
+    FormatStringReplaceCallback callback;
+    gconstpointer user_data;
+} FormatStringReplaceData;
+
+static const gchar *
+_libeventd_token_list_callback(const gchar *token, guint64 value, gconstpointer user_data)
+{
+    const FormatStringReplaceData *data = user_data;
+
+    if ( data->callback != NULL )
+        return data->callback(token, data->event, data->user_data);
+
+    return eventd_event_get_data(data->event, token);
+}
+
+EVENTD_EXPORT
+gchar *
+libeventd_format_string_get_string(const FormatString *format_string, EventdEvent *event, FormatStringReplaceCallback callback, gconstpointer user_data)
+{
+    FormatStringReplaceData data;
+
+    data.event = event;
+    data.callback = callback;
+    data.user_data = user_data;
+
+    return nk_token_list_replace(format_string, _libeventd_token_list_callback, &data);
+}
+
+EVENTD_EXPORT
+gboolean
+libeventd_filename_get_path(const Filename *filename, EventdEvent *event, const gchar *subdir, const gchar **ret_data, gchar **ret_path)
+{
+    g_return_val_if_fail(filename != NULL, FALSE);
+    g_return_val_if_fail(event != NULL, FALSE);
+    g_return_val_if_fail(subdir != NULL, FALSE);
+    g_return_val_if_fail(ret_path != NULL, FALSE);
+
+    const gchar *path = NULL;
+    gchar *path_ = NULL;
+
+    if ( filename->data_name != NULL )
+    {
+        if ( ret_data != NULL )
+            *ret_data = filename->data_name;
+        path = eventd_event_get_data(event, filename->data_name);
+        if ( ( path == NULL ) || ( ! g_str_has_prefix(path, "file://") ) )
+            return FALSE;
+    }
+    else if ( filename->file_uri != NULL )
+        path = path_ = libeventd_format_string_get_string(filename->file_uri, event, NULL, NULL);
+    else
+    {
+        g_assert_not_reached();
+        return FALSE;
+    }
+    path += strlen("file://");
+
+    if ( ! g_path_is_absolute(path) )
+    {
+        gchar *tmp = path_;
+        path = path_ = g_build_filename(g_get_user_data_dir(), PACKAGE_NAME, subdir, path, NULL);
+        g_free(tmp);
+    }
+
+    if ( g_file_test(path, G_FILE_TEST_IS_REGULAR) )
+        *ret_path = g_strdup(path);
+
+    g_free(path_);
+
+    return TRUE;
 }
