@@ -75,10 +75,6 @@
         </orderedlist>
         <para>
             Plugins may parse their own section(s) in this file for their event configuration.
-            They may use a localised version of certain keys.
-        </para>
-        <para>
-            Many configuration keys will use event data. They can either be just the data name or use in-string replacement. Data may be referenced using <replaceable>$data-name</replaceable> or <replaceable>${data-name}</replaceable> forms.
         </para>
     </refsect1>
 

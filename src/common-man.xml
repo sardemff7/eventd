@@ -64,6 +64,7 @@
                             <term><citerefentry><refentrytitle>eventd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry></term>
                             <listitem>
                                 <para>Main eventd configuration file</para>
+                                <para>Contains information about configuration key types</para>
                             </listitem>
                         </varlistentry>
                         <varlistentry>

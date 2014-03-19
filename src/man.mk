@@ -20,10 +20,10 @@ MAN_GEN_RULE = $(AM_V_GEN)$(MKDIR_P) $(dir $@) && \
 	http://docbook.sourceforge.net/release/xsl/current/manpages/profile-docbook.xsl \
 	$<
 
-$(man1_MANS): %.1: %.xml src/common-man.xml src/config.ent
+$(man1_MANS): %.1: %.xml $(NKUTILS_MANFILES) src/common-man.xml src/config.ent
 	$(MAN_GEN_RULE)
 
-$(man5_MANS): %.5: %.xml src/common-man.xml src/config.ent
+$(man5_MANS): %.5: %.xml $(NKUTILS_MANFILES) src/common-man.xml src/config.ent
 	$(MAN_GEN_RULE)
 
 src/config.ent: src/config.ent.in src/config.h
