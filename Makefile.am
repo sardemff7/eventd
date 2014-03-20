@@ -6,7 +6,7 @@ AM_DISTCHECK_CONFIGURE_FLAGS = \
 	--with-systemduserunitdir="$$dc_install_base/$(systemduserunitdir)" \
 	--with-dbussessionservicedir="$$dc_install_base/$(dbussessionservicedir)"
 
-ACLOCAL_AMFLAGS = -I m4 -I src/libgwater -I src/libnkutils ${ACLOCAL_FLAGS}
+ACLOCAL_AMFLAGS = -I m4 -I src/libnkutils -I src/libgwater ${ACLOCAL_FLAGS}
 AM_MAKEFLAGS = --no-print-directory
 
 bin_PROGRAMS =
