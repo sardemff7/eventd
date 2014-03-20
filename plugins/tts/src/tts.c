@@ -114,7 +114,7 @@ _eventd_tts_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile 
 
     if ( ! disable )
     {
-        if ( libeventd_config_key_file_get_locale_string_with_default(config_file, "TTS", "Message", NULL, "${message}", &message) < 0 )
+        if ( libeventd_config_key_file_get_locale_string_with_default(config_file, "TTS", "Message", NULL, "<voice name=\"${message-lang}\">${message}</voice>", &message) < 0 )
             return;
     }
 
@@ -132,36 +132,6 @@ _eventd_tts_config_reset(EventdPluginContext *context)
  * Event action interface
  */
 
-static gchar *
-_eventd_tts_regex_event_data_cb(const gchar *name, EventdEvent *event, gpointer user_data)
-{
-    const gchar *data;
-    gchar *ret;
-
-    data = eventd_event_get_data(event, name);
-    if ( data != NULL )
-    {
-        gchar *lang_name;
-        const gchar *lang_data;
-
-        lang_name = g_strconcat(name, "-lang", NULL);
-        lang_data = eventd_event_get_data(event, lang_name);
-        g_free(lang_name);
-
-        if ( lang_data != NULL )
-        {
-            ret = g_strdup_printf("<voice name=\"%s\">%s</voice>", lang_data, data);
-        }
-        else
-            ret = g_strdup(data);
-    }
-    else
-        ret = g_strdup("");
-
-    return ret;
-}
-
-
 static void
 _eventd_tts_event_action(EventdPluginContext *context, const gchar *config_id, EventdEvent *event)
 {
@@ -173,7 +143,7 @@ _eventd_tts_event_action(EventdPluginContext *context, const gchar *config_id, E
     if ( message == NULL )
         return;
 
-    msg = libeventd_regex_replace_event_data(message, event, _eventd_tts_regex_event_data_cb, NULL);
+    msg = libeventd_regex_replace_event_data(message, event, NULL, NULL);
 
     error = espeak_Synth(msg, strlen(msg)+1, 0, POS_CHARACTER, 0, espeakCHARS_UTF8|espeakSSML, NULL, NULL);
 

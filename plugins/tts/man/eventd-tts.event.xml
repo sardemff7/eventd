@@ -68,7 +68,7 @@
                 </varlistentry>
 
                 <varlistentry>
-                    <term><varname>Message=</varname> (defaults to <literal>${message}</literal>)</term>
+                    <term><varname>Message=</varname> (defaults to <literal>&lt;voice name="${message-lang}"&gt;${message}&lt;/voice&gt;</literal>)</term>
                     <listitem>
                         <para>A <type>string</type> (can contain $data-name references, localised)</para>
                         <para>The text which will be read using. You can use <acronym>SSML</acronym><footnote><para>Speech Synthesis Markup Language</para></footnote>.</para>
