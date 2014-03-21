@@ -81,7 +81,7 @@
                     <term><varname>Protocol=</varname></term>
                     <listitem>
                         <para>A <type>string</type></para>
-                        <para>A libpurple protocol name, e.g. <literal>prpl-irc</literal>.</para>
+                        <para>A libpurple protocol name, e.g. <literal>"prpl-irc"</literal>.</para>
                     </listitem>
                 </varlistentry>
 
@@ -89,7 +89,7 @@
                     <term><varname>Username=</varname></term>
                     <listitem>
                         <para>A <type>string</type></para>
-                        <para>A libpurple user name, the exact format is protocol-dependant, e.g. <literal>bot@chat.freenode.net</literal>.</para>
+                        <para>A libpurple user name, the exact format is protocol-dependant, e.g. <literal>"bot@chat.freenode.net"</literal>.</para>
                     </listitem>
                 </varlistentry>
 
@@ -112,7 +112,7 @@
                 <varlistentry>
                     <term><varname>ChatLeaveTimeout=</varname></term>
                     <listitem>
-                        <para>A time in <type>seconds</type> (<literal>-1</literal> for infinite)</para>
+                        <para>A time in <type>seconds</type> (<literal>-1</literal> for infinity)</para>
                         <para>The number of seconds the plugin will remain connected to a chat room.</para>
                     </listitem>
                 </varlistentry>

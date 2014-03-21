@@ -70,7 +70,7 @@
                 <varlistentry>
                     <term><varname>Command=</varname></term>
                     <listitem>
-                        <para>A <type>string</type> (can contain $data-name references)</para>
+                        <para>A <type>format string</type></para>
                         <para>The command to exec when an event occurs. It is run asynchronously.</para>
                     </listitem>
                 </varlistentry>

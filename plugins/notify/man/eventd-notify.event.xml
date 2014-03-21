@@ -68,41 +68,41 @@
                 </varlistentry>
 
                 <varlistentry>
-                    <term><varname>Title=</varname> (defaults to <literal>${summary}</literal>)</term>
+                    <term><varname>Title=</varname> (defaults to <literal>"${summary}"</literal>)</term>
                     <listitem>
-                        <para>A <type>string</type> (can contain $data-name references, localised)</para>
+                        <para>A <type>localised format string</type></para>
                         <para>The notification's title. It will be highlighted compared to the message.</para>
                     </listitem>
                 </varlistentry>
 
                 <varlistentry>
-                    <term><varname>Message=</varname> (defaults to <literal>${body}</literal>)</term>
+                    <term><varname>Message=</varname> (defaults to <literal>"${body}"</literal>)</term>
                     <listitem>
-                        <para>A <type>string</type> (can contain $data-name references, localised)</para>
+                        <para>A <type>localised format string</type></para>
                         <para>The notification's message.</para>
                     </listitem>
                 </varlistentry>
 
                 <varlistentry>
-                    <term><varname>Image=</varname> (defaults to <literal>image</literal>)</term>
+                    <term><varname>Image=</varname> (defaults to <literal>"image"</literal>)</term>
                     <listitem>
-                        <para>A <type>data name</type>, or a <type>file:// URI</type> (which can contain $data-name references)</para>
+                        <para>A <type>file URI</type></para>
                         <para>The notification's image. Generally event-specific.</para>
                         <para>If no image is provided, the icon is used instead.</para>
                     </listitem>
                 </varlistentry>
 
                 <varlistentry>
-                    <term><varname>Icon=</varname> (defaults to <literal>icon</literal>)</term>
+                    <term><varname>Icon=</varname> (defaults to <literal>"icon"</literal>)</term>
                     <listitem>
-                        <para>A <type>data name</type>, or a <type>file:// URI</type> (which can contain $data-name references)</para>
+                        <para>A <type>file URI</type></para>
                         <para>The notification's icon. Generally application-specific or category-specific.</para>
                         <para>If the notification daemon does not support displaying both image and icon, or the icon not being an URI, it will be rendered overlaying the image.</para>
                     </listitem>
                 </varlistentry>
 
                 <varlistentry>
-                    <term><varname>OverlayScale=</varname> (defaults to <literal>50%</literal>)</term>
+                    <term><varname>OverlayScale=</varname> (defaults to <literal>50</literal>)</term>
                     <listitem>
                         <para>A <type>percentage</type> as an <type>integer</type></para>
                         <para>Scale factor used if the icon is rendered as an overlay to the image.</para>

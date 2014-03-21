@@ -68,9 +68,9 @@
                 </varlistentry>
 
                 <varlistentry>
-                    <term><varname>File=</varname> (defaults to <literal>sound-file</literal>)</term>
+                    <term><varname>File=</varname> (defaults to <literal>"sound-file"</literal>)</term>
                     <listitem>
-                        <para>A <type>data name</type>, or a <type>file:// URI</type> (which can contain $data-name references)</para>
+                        <para>A <type>file URI</type></para>
                         <para>The sound data or file to read on event.</para>
                     </listitem>
                 </varlistentry>

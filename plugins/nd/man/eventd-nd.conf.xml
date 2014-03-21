@@ -66,33 +66,33 @@
 
                 <variablelist>
                     <varlistentry>
-                        <term><varname>Title=</varname> (defaults to <literal>${name}</literal>)</term>
+                        <term><varname>Title=</varname> (defaults to <literal>"${name}"</literal>)</term>
                         <listitem>
-                            <para>A <type>string</type> (can contain $data-name references, localised)</para>
+                            <para>A <type>localised format string</type></para>
                             <para>The notification's title. It will be highlighted compared to the message.</para>
                         </listitem>
                     </varlistentry>
 
                     <varlistentry>
-                        <term><varname>Message=</varname> (defaults to <literal>${text}</literal>)</term>
+                        <term><varname>Message=</varname> (defaults to <literal>"${text}"</literal>)</term>
                         <listitem>
-                            <para>A <type>string</type> (can contain $data-name references, localised)</para>
+                            <para>A <type>localised format string</type></para>
                             <para>The notification's message.</para>
                         </listitem>
                     </varlistentry>
 
                     <varlistentry condition="website;enable_gdk_pixbuf">
-                        <term><varname>Image=</varname> (defaults to <literal>image</literal>)</term>
+                        <term><varname>Image=</varname> (defaults to <literal>"image"</literal>)</term>
                         <listitem>
-                            <para>A <type>data name</type>, or a <type>file:// URI</type> (which can contain $data-name references)</para>
+                            <para>A <type>file URI</type></para>
                             <para>The notification's image. Generally event-specific.</para>
                         </listitem>
                     </varlistentry>
 
                     <varlistentry condition="website;enable_gdk_pixbuf">
-                        <term><varname>Icon=</varname> (defaults to <literal>icon</literal>)</term>
+                        <term><varname>Icon=</varname> (defaults to <literal>"icon"</literal>)</term>
                         <listitem>
-                            <para>A <type>data name</type>, or a <type>file:// URI</type> (which can contain $data-name references)</para>
+                            <para>A <type>file URI</type></para>
                             <para>The notification's icon. Generally application-specific or category-specific.</para>
                         </listitem>
                     </varlistentry>
@@ -186,9 +186,9 @@
                     </varlistentry>
 
                     <varlistentry>
-                        <term><varname>Colour=</varname> (defaults to <literal>#262626</literal>)</term>
+                        <term><varname>Colour=</varname> (defaults to <literal>"#262626"</literal>)</term>
                         <listitem>
-                            <para>A <type>colour string</type>, either #RRGGBBAA or rgba(r, g, b, a) form</para>
+                            <para>A <type>colour string</type></para>
                             <para>Colour of bubble's background.</para>
                         </listitem>
                     </varlistentry>
@@ -200,7 +200,7 @@
 
                 <variablelist>
                     <varlistentry>
-                        <term><varname>Font=</varname> (defaults to <literal>Linux Libertine O Bold 9</literal>)</term>
+                        <term><varname>Font=</varname> (defaults to <literal>"Linux Libertine O Bold 9"</literal>)</term>
                         <listitem>
                             <para>A <type>Pango font description string</type></para>
                             <para>Fonts for the bubble's title.</para>
@@ -223,9 +223,9 @@
                     </varlistentry>
 
                     <varlistentry>
-                        <term><varname>Colour=</varname> (defaults to <literal>#262626</literal>)</term>
+                        <term><varname>Colour=</varname> (defaults to <literal>"#262626"</literal>)</term>
                         <listitem>
-                            <para>A <type>colour string</type>, either #RRGGBBAA or rgba(r, g, b, a) form</para>
+                            <para>A <type>colour string</type></para>
                             <para>Colour of bubble's title.</para>
                         </listitem>
                     </varlistentry>
@@ -253,7 +253,7 @@
                     </varlistentry>
 
                     <varlistentry>
-                        <term><varname>Font=</varname> (defaults to <literal>Linux Libertine O 9</literal>)</term>
+                        <term><varname>Font=</varname> (defaults to <literal>"Linux Libertine O 9"</literal>)</term>
                         <listitem>
                             <para>A <type>Pango font description string</type></para>
                             <para>Fonts for the bubble's message.</para>
@@ -276,9 +276,9 @@
                     </varlistentry>
 
                     <varlistentry>
-                        <term><varname>Colour=</varname> (defaults to <literal>#262626</literal>)</term>
+                        <term><varname>Colour=</varname> (defaults to <literal>"#262626"</literal>)</term>
                         <listitem>
-                            <para>A <type>colour string</type>, either #RRGGBBAA or rgba(r, g, b, a) form</para>
+                            <para>A <type>colour string</type></para>
                             <para>Colour of bubble's message.</para>
                         </listitem>
                     </varlistentry>

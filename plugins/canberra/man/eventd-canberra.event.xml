@@ -68,17 +68,17 @@
                 </varlistentry>
 
                 <varlistentry>
-                    <term><varname>Name=</varname> (defaults to <literal>${sound-name}</literal>)</term>
+                    <term><varname>Name=</varname> (defaults to <literal>"${sound-name}"</literal>)</term>
                     <listitem>
-                        <para>A <type>string</type> (can contain $data-name references)</para>
+                        <para>A <type>format string</type></para>
                         <para>The sound name to play.</para>
                     </listitem>
                 </varlistentry>
 
                 <varlistentry>
-                    <term><varname>File=</varname> (defaults to <literal>sound-file</literal>)</term>
+                    <term><varname>File=</varname> (defaults to <literal>"sound-file"</literal>)</term>
                     <listitem>
-                        <para>A <type>data name</type>, or a <type>file:// URI</type> (which can contain $data-name references)</para>
+                        <para>A <type>file URI</type></para>
                         <para>The sound file to play.</para>
                     </listitem>
                 </varlistentry>
