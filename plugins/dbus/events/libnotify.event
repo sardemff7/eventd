@@ -2,8 +2,8 @@
 Category = libnotify
 
 [Notification]
-Title = $summary
-Message = $body
+Title = ${summary}
+Message = ${body}
 
 [Sound]
 
