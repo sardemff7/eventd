@@ -221,7 +221,7 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
     {
         self->template.set = TRUE;
 
-        FormatString *string;
+        FormatString *string = NULL;
 
         libeventd_format_string_unref(self->template.title);
         if ( libeventd_config_key_file_get_locale_format_string(config_file, "Notification", "Title", NULL, &string) == 0 )

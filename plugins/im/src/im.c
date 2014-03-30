@@ -435,7 +435,7 @@ _eventd_im_event_parse(EventdPluginContext *context, const gchar *config_id, GKe
 
         have_account = TRUE;
 
-        FormatString *message;
+        FormatString *message = NULL;
         if ( libeventd_config_key_file_get_locale_format_string(config_file, section, "Message", NULL, &message) != 0 )
             goto next;
 

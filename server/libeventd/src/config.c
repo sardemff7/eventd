@@ -259,8 +259,8 @@ libeventd_config_key_file_get_string_list(GKeyFile *config_file, const gchar *gr
 static gint8
 _libeventd_config_key_file_get_format_string(gchar *string, FormatString **format_string)
 {
-    nk_token_list_unref(*format_string);
-    *format_string = nk_token_list_parse(string);
+    libeventd_format_string_unref(*format_string);
+    *format_string = libeventd_format_string_new(string);
 
     return 0;
 }
@@ -433,6 +433,9 @@ EVENTD_EXPORT
 gchar *
 libeventd_format_string_get_string(const FormatString *format_string, EventdEvent *event, FormatStringReplaceCallback callback, gconstpointer user_data)
 {
+    if ( format_string == NULL )
+        return NULL;
+
     FormatStringReplaceData data;
 
     data.event = event;
