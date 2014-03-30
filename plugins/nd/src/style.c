@@ -229,6 +229,7 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
         else if ( self->parent != NULL )
             self->template.title = libeventd_format_string_ref(eventd_nd_style_get_template_title(self->parent));
 
+        string = NULL;
         libeventd_format_string_unref(self->template.message);
         if ( libeventd_config_key_file_get_locale_format_string(config_file, "Notification", "Message", NULL, &string) == 0 )
             self->template.message = string;
