@@ -36,6 +36,30 @@
 
 #include "style.h"
 
+static const gchar * const _eventd_nd_style_pango_alignments[] = {
+    [PANGO_ALIGN_LEFT]   = "left",
+    [PANGO_ALIGN_RIGHT]  = "right",
+    [PANGO_ALIGN_CENTER] = "center",
+};
+
+static const gchar * const _eventd_nd_style_anchors_vertical[] = {
+    [EVENTD_ND_ANCHOR_TOP]     = "top",
+    [EVENTD_ND_ANCHOR_BOTTOM]  = "bottom",
+    [EVENTD_ND_ANCHOR_VCENTER] = "center",
+};
+
+static const gchar * const _eventd_nd_style_anchors_horizontal[] = {
+    [EVENTD_ND_ANCHOR_LEFT]    = "left",
+    [EVENTD_ND_ANCHOR_RIGHT]   = "right",
+    [EVENTD_ND_ANCHOR_HCENTER] = "center",
+};
+
+static const gchar * const _eventd_nd_style_icon_placements[] = {
+    [EVENTD_ND_STYLE_ICON_PLACEMENT_BACKGROUND] = "background",
+    [EVENTD_ND_STYLE_ICON_PLACEMENT_OVERLAY]    = "overlay",
+    [EVENTD_ND_STYLE_ICON_PLACEMENT_FOREGROUND] = "foreground",
+};
+
 struct _EventdNdStyle {
     EventdNdStyle *parent;
 
@@ -74,7 +98,7 @@ struct _EventdNdStyle {
         gboolean set;
 
         EventdNdStyleIconPlacement placement;
-        EventdNdAnchor             anchor;
+        EventdNdAnchorVertical     anchor;
         gint                       max_width;
         gint                       max_height;
         gint                       margin;
@@ -271,6 +295,7 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
         self->title.set = TRUE;
 
         gchar *string;
+        guint64 enum_value;
         Colour colour;
 
         if ( libeventd_config_key_file_get_string(config_file, "NotificationTitle", "Font", &string) == 0 )
@@ -284,18 +309,8 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
             self->title.font = pango_font_description_copy_static(eventd_nd_style_get_title_font(self->parent));
         }
 
-        if ( libeventd_config_key_file_get_string(config_file, "NotificationTitle", "Alignment", &string) == 0 )
-        {
-            if ( g_ascii_strcasecmp(string, "Left") == 0 )
-                self->title.align = PANGO_ALIGN_LEFT;
-            else if ( g_ascii_strcasecmp(string, "Right") == 0 )
-                self->title.align = PANGO_ALIGN_RIGHT;
-            else if ( g_ascii_strcasecmp(string, "Center") == 0 )
-                self->title.align = PANGO_ALIGN_CENTER;
-            else
-                g_warning("Wrong alignment value '%s'", string);
-            g_free(string);
-        }
+        if ( libeventd_config_key_file_get_enum(config_file, "NotificationTitle", "Alignment", _eventd_nd_style_pango_alignments, G_N_ELEMENTS(_eventd_nd_style_pango_alignments), &enum_value) == 0 )
+            self->title.align = enum_value;
         else if ( self->parent != NULL )
             self->title.align = eventd_nd_style_get_title_align(self->parent);
 
@@ -312,6 +327,7 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
 
         Int integer;
         gchar *string;
+        guint64 enum_value;
         Colour colour;
 
         if ( libeventd_config_key_file_get_int(config_file, "NotificationMessage", "Spacing", &integer) == 0 )
@@ -335,18 +351,8 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
             self->message.font = pango_font_description_copy_static(eventd_nd_style_get_message_font(self->parent));
         }
 
-        if ( libeventd_config_key_file_get_string(config_file, "NotificationMessage", "Alignment", &string) == 0 )
-        {
-            if ( g_ascii_strcasecmp(string, "Left") == 0 )
-                self->message.align = PANGO_ALIGN_LEFT;
-            else if ( g_ascii_strcasecmp(string, "Right") == 0 )
-                self->message.align = PANGO_ALIGN_RIGHT;
-            else if ( g_ascii_strcasecmp(string, "Center") == 0 )
-                self->message.align = PANGO_ALIGN_CENTER;
-            else
-                g_warning("Wrong alignment value '%s'", string);
-            g_free(string);
-        }
+        if ( libeventd_config_key_file_get_enum(config_file, "NotificationMessage", "Alignment", _eventd_nd_style_pango_alignments, G_N_ELEMENTS(_eventd_nd_style_pango_alignments), &enum_value) == 0 )
+            self->message.align = enum_value;
         else if ( self->parent != NULL )
             self->message.align = eventd_nd_style_get_message_align(self->parent);
 
@@ -392,35 +398,16 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
         self->icon.set = TRUE;
 
         gchar *string;
+        guint64 enum_value;
         Int integer;
 
-        if ( libeventd_config_key_file_get_string(config_file, "NotificationIcon", "Placement", &string) == 0 )
-        {
-            if ( g_ascii_strcasecmp(string, "Background") == 0 )
-                self->icon.placement = EVENTD_ND_STYLE_ICON_PLACEMENT_BACKGROUND;
-            else if ( g_ascii_strcasecmp(string, "Overlay") == 0 )
-                self->icon.placement = EVENTD_ND_STYLE_ICON_PLACEMENT_OVERLAY;
-            else if ( g_ascii_strcasecmp(string, "Foreground") == 0 )
-                self->icon.placement = EVENTD_ND_STYLE_ICON_PLACEMENT_FOREGROUND;
-            else
-                g_warning("Wrong placement value '%s'", string);
-            g_free(string);
-        }
+        if ( libeventd_config_key_file_get_enum(config_file, "NotificationIcon", "Placement", _eventd_nd_style_icon_placements, G_N_ELEMENTS(_eventd_nd_style_icon_placements), &enum_value) == 0 )
+            self->icon.placement = enum_value;
         else if ( self->parent != NULL )
             self->icon.placement = eventd_nd_style_get_icon_placement(self->parent);
 
-        if ( libeventd_config_key_file_get_string(config_file, "NotificationIcon", "Anchor", &string) == 0 )
-        {
-            if ( g_ascii_strcasecmp(string, "Top") == 0 )
-                self->icon.anchor = EVENTD_ND_ANCHOR_TOP;
-            else if ( g_ascii_strcasecmp(string, "Bottom") == 0 )
-                self->icon.anchor = EVENTD_ND_ANCHOR_BOTTOM;
-            else if ( g_ascii_strcasecmp(string, "Center") == 0 )
-                self->icon.anchor = EVENTD_ND_ANCHOR_VCENTER;
-            else
-                g_warning("Wrong anchor value '%s'", string);
-            g_free(string);
-        }
+        if ( libeventd_config_key_file_get_enum(config_file, "NotificationIcon", "Anche", _eventd_nd_style_anchors_vertical, G_N_ELEMENTS(_eventd_nd_style_anchors_vertical), &enum_value) == 0 )
+            self->icon.anchor = enum_value;
         else if ( self->parent != NULL )
             self->icon.anchor = eventd_nd_style_get_icon_anchor(self->parent);
 
@@ -648,7 +635,7 @@ eventd_nd_style_get_icon_placement(EventdNdStyle *self)
     return eventd_nd_style_get_icon_placement(self->parent);
 }
 
-EventdNdAnchor
+EventdNdAnchorVertical
 eventd_nd_style_get_icon_anchor(EventdNdStyle *self)
 {
     if ( self->icon.set )

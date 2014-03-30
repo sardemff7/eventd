@@ -27,13 +27,16 @@ typedef struct _EventdNdStyle EventdNdStyle;
 typedef struct _EventdNdNotificationContents EventdNdNotificationContents;
 
 typedef enum {
-    EVENTD_ND_ANCHOR_TOP     = 1<<0,
-    EVENTD_ND_ANCHOR_BOTTOM  = 1<<1,
-    EVENTD_ND_ANCHOR_VCENTER = 3<<0,
-    EVENTD_ND_ANCHOR_LEFT    = 1<<2,
-    EVENTD_ND_ANCHOR_RIGHT   = 1<<3,
-    EVENTD_ND_ANCHOR_HCENTER = 3<<2
-} EventdNdAnchor;
+    EVENTD_ND_ANCHOR_LEFT,
+    EVENTD_ND_ANCHOR_RIGHT,
+    EVENTD_ND_ANCHOR_VCENTER,
+} EventdNdAnchorVertical;
+
+typedef enum {
+    EVENTD_ND_ANCHOR_TOP,
+    EVENTD_ND_ANCHOR_BOTTOM,
+    EVENTD_ND_ANCHOR_HCENTER,
+} EventdNdAnchorHorizontal;
 
 typedef enum {
     EVENTD_ND_STYLE_ICON_PLACEMENT_BACKGROUND,
@@ -73,7 +76,7 @@ gint eventd_nd_style_get_image_max_height(EventdNdStyle *style);
 gint eventd_nd_style_get_image_margin(EventdNdStyle *style);
 
 EventdNdStyleIconPlacement eventd_nd_style_get_icon_placement(EventdNdStyle *style);
-EventdNdAnchor eventd_nd_style_get_icon_anchor(EventdNdStyle *style);
+EventdNdAnchorVertical eventd_nd_style_get_icon_anchor(EventdNdStyle *style);
 gint eventd_nd_style_get_icon_max_width(EventdNdStyle *style);
 gint eventd_nd_style_get_icon_max_height(EventdNdStyle *style);
 gint eventd_nd_style_get_icon_margin(EventdNdStyle *style);

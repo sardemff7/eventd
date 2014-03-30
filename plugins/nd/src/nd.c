@@ -45,17 +45,24 @@
 #include "cairo.h"
 
 typedef enum {
-    EVENTD_ND_ANCHOR_TOP_LEFT     = EVENTD_ND_ANCHOR_TOP    | EVENTD_ND_ANCHOR_LEFT,
-    EVENTD_ND_ANCHOR_TOP_RIGHT    = EVENTD_ND_ANCHOR_TOP    | EVENTD_ND_ANCHOR_RIGHT,
-    EVENTD_ND_ANCHOR_BOTTOM_LEFT  = EVENTD_ND_ANCHOR_BOTTOM | EVENTD_ND_ANCHOR_LEFT,
-    EVENTD_ND_ANCHOR_BOTTOM_RIGHT = EVENTD_ND_ANCHOR_BOTTOM | EVENTD_ND_ANCHOR_RIGHT,
-    EVENTD_ND_ANCHOR_REVERSE      = 1<<4
+    EVENTD_ND_ANCHOR_TOP_LEFT,
+    EVENTD_ND_ANCHOR_TOP_RIGHT,
+    EVENTD_ND_ANCHOR_BOTTOM_LEFT,
+    EVENTD_ND_ANCHOR_BOTTOM_RIGHT,
 } EventdNdCornerAnchor;
+
+static const gchar * const _eventd_nd_corner_anchors[] = {
+    [EVENTD_ND_ANCHOR_TOP_LEFT]     = "top left",
+    [EVENTD_ND_ANCHOR_TOP_RIGHT]    = "top right",
+    [EVENTD_ND_ANCHOR_BOTTOM_LEFT]  = "bottom left",
+    [EVENTD_ND_ANCHOR_BOTTOM_RIGHT] = "bottom right",
+};
 
 struct _EventdPluginContext {
     EventdNdInterface interface;
     GHashTable *events;
     EventdNdCornerAnchor bubble_anchor;
+    gboolean bubble_reverse;
     gint bubble_margin;
     gint bubble_spacing;
     gint max_width;
@@ -323,26 +330,14 @@ _eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
     if ( g_key_file_has_group(config_file, "Notification") )
     {
         Int integer;
-        gchar *string;
+        guint64 enum_value;
         gboolean boolean;
 
-        if ( libeventd_config_key_file_get_string(config_file, "Notification", "Anchor", &string) == 0 )
-        {
-            if ( g_ascii_strcasecmp(string, "top left") == 0 )
-                context->bubble_anchor = EVENTD_ND_ANCHOR_TOP_LEFT;
-            else if ( g_ascii_strcasecmp(string, "top right") == 0 )
-                context->bubble_anchor = EVENTD_ND_ANCHOR_TOP_RIGHT;
-            else if ( g_ascii_strcasecmp(string, "bottom left") == 0 )
-                context->bubble_anchor = EVENTD_ND_ANCHOR_BOTTOM_LEFT;
-            else if ( g_ascii_strcasecmp(string, "bottom right") == 0 )
-                context->bubble_anchor = EVENTD_ND_ANCHOR_BOTTOM_RIGHT;
-            else
-                g_warning("Wrong anchor value '%s'", string);
-            g_free(string);
-        }
+        if ( libeventd_config_key_file_get_enum(config_file, "Notification", "Anchor", _eventd_nd_corner_anchors, G_N_ELEMENTS(_eventd_nd_corner_anchors), &enum_value) == 0 )
+                context->bubble_anchor = enum_value;
 
-        if ( ( libeventd_config_key_file_get_boolean(config_file, "Notification", "OldestFirst", &boolean) == 0 ) && boolean )
-            context->bubble_anchor |= EVENTD_ND_ANCHOR_REVERSE;
+        if ( libeventd_config_key_file_get_boolean(config_file, "Notification", "OldestFirst", &boolean) == 0 )
+            context->bubble_reverse = boolean;
 
         if ( libeventd_config_key_file_get_int(config_file, "Notification", "Margin", &integer) == 0 )
             context->bubble_margin = integer.value;
@@ -494,8 +489,8 @@ _eventd_nd_update_notifications(EventdPluginContext *context)
 
     gboolean right;
     gboolean bottom;
-    right = context->bubble_anchor & EVENTD_ND_ANCHOR_RIGHT;
-    bottom = context->bubble_anchor & EVENTD_ND_ANCHOR_BOTTOM;
+    right = ( context->bubble_anchor == EVENTD_ND_ANCHOR_TOP_RIGHT ) || ( context->bubble_anchor == EVENTD_ND_ANCHOR_BOTTOM_RIGHT );
+    bottom = ( context->bubble_anchor == EVENTD_ND_ANCHOR_BOTTOM_LEFT ) || ( context->bubble_anchor == EVENTD_ND_ANCHOR_BOTTOM_RIGHT );
 
     gint x, y;
     x = y = context->bubble_margin;
@@ -562,7 +557,7 @@ _eventd_nd_event_action(EventdPluginContext *context, const gchar *config_id, Ev
     g_signal_connect(event, "updated", G_CALLBACK(_eventd_nd_event_updated), notification);
     g_signal_connect(event, "ended", G_CALLBACK(_eventd_nd_event_ended), notification);
 
-    if ( context->bubble_anchor & EVENTD_ND_ANCHOR_REVERSE )
+    if ( context->bubble_reverse )
     {
         g_queue_push_tail(context->queue, notification);
         notification->notification = g_queue_peek_tail_link(context->queue);

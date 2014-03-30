@@ -310,7 +310,7 @@ eventd_nd_cairo_image_and_icon_process(EventdNdNotificationContents *notificatio
 }
 
 static gint
-_eventd_nd_cairo_get_valign(EventdNdAnchor anchor, gint height, gint padding, gint surface_height)
+_eventd_nd_cairo_get_valign(EventdNdAnchorVertical anchor, gint height, gint padding, gint surface_height)
 {
     switch ( anchor )
     {
@@ -320,9 +320,8 @@ _eventd_nd_cairo_get_valign(EventdNdAnchor anchor, gint height, gint padding, gi
         return ( height / 2 ) - (surface_height / 2);
     case EVENTD_ND_ANCHOR_BOTTOM:
         return height - padding - surface_height;
-    default:
-        g_assert_not_reached();
     }
+    g_assert_not_reached();
 }
 
 static void
