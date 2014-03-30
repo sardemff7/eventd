@@ -33,6 +33,7 @@
 
 #include <libeventd-event.h>
 
+#include <nkutils-enum.h>
 #include <nkutils-token.h>
 #include <nkutils-colour.h>
 
@@ -221,6 +222,25 @@ libeventd_config_key_file_get_locale_string_with_default(GKeyFile *config_file, 
     r = libeventd_config_key_file_get_locale_string(config_file, group, key, locale, ret_value);
     if ( r > 0 )
         *ret_value = g_strdup(default_value);
+
+    return r;
+}
+
+EVENTD_EXPORT
+gint8
+libeventd_config_key_file_get_enum(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar * const *values, guint64 size, guint64 *value)
+{
+    gint8 r;
+    gchar *string;
+
+    r = libeventd_config_key_file_get_string(config_file, group, key, &string);
+    if ( r != 0 )
+        return r;
+
+    if ( ! nk_enum_parse(string, values, size, TRUE, value) )
+        r = -1;
+
+    g_free(string);
 
     return r;
 }
