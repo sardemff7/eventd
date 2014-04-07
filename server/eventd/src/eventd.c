@@ -287,12 +287,27 @@ eventd_core_stop(EventdCoreContext *context)
 static void
 _eventd_core_debug_log_handler(const gchar *log_domain, GLogLevelFlags log_level, const gchar *message, gpointer user_data)
 {
-    GDataOutputStream *debug_stream = user_data;
+    GDataOutputStream *stream = user_data;
 
     g_log_default_handler(log_domain, log_level, message, NULL);
 
-    const gchar *log_level_message = "";
+    const gchar *prg_name;
+    gchar pid[128];
+    prg_name = g_get_prgname();
+    g_sprintf(pid, "%lu", (gulong) getpid());
 
+    g_data_output_stream_put_string(stream, "(", NULL, NULL);
+    if ( prg_name != NULL )
+    {
+        g_data_output_stream_put_string(stream, prg_name, NULL, NULL);
+        g_data_output_stream_put_string(stream, ":", NULL, NULL);
+    }
+    else
+        g_data_output_stream_put_string(stream, "process:", NULL, NULL);
+    g_data_output_stream_put_string(stream, pid, NULL, NULL);
+    g_data_output_stream_put_string(stream, ")", NULL, NULL);
+
+    const gchar *log_level_message = "";
     switch ( log_level & G_LOG_LEVEL_MASK )
     {
         case G_LOG_LEVEL_ERROR:
@@ -314,30 +329,18 @@ _eventd_core_debug_log_handler(const gchar *log_domain, GLogLevelFlags log_level
             log_level_message = "DEBUG";
         break;
     }
-
-    GString *full_message;
-    const gchar *prg_name;
-
-    full_message = g_string_new(NULL);
-    prg_name = g_get_prgname();
-
-    if ( prg_name != NULL )
-        g_string_append_printf(full_message, "(%s:%lu): ", prg_name, (gulong) getpid());
-    else
-        g_string_append_printf(full_message, "(process:%lu): ", (gulong) getpid());
-
-    g_string_append(full_message, log_level_message);
+    g_data_output_stream_put_string(stream, log_level_message, NULL, NULL);
 
     if ( log_domain != NULL )
-        g_string_append_printf(full_message, " [%s]", log_domain);
+    {
+        g_data_output_stream_put_string(stream, " [", NULL, NULL);
+        g_data_output_stream_put_string(stream, log_level_message, NULL, NULL);
+        g_data_output_stream_put_string(stream, "]", NULL, NULL);
+    }
 
-    g_string_append(full_message, ": ");
-    g_string_append(full_message, message);
-    g_string_append(full_message, "\n");
-
-    g_data_output_stream_put_string(debug_stream, full_message->str, NULL, NULL);
-
-    g_string_free(full_message, TRUE);
+    g_data_output_stream_put_string(stream, ": ", NULL, NULL);
+    g_data_output_stream_put_string(stream, message, NULL, NULL);
+    g_data_output_stream_put_byte(stream, '\n', NULL, NULL);
 }
 
 #endif /* ! DEBUG */
