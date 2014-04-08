@@ -334,7 +334,7 @@ _eventd_core_debug_log_handler(const gchar *log_domain, GLogLevelFlags log_level
     if ( log_domain != NULL )
     {
         g_data_output_stream_put_string(stream, " [", NULL, NULL);
-        g_data_output_stream_put_string(stream, log_level_message, NULL, NULL);
+        g_data_output_stream_put_string(stream, log_domain, NULL, NULL);
         g_data_output_stream_put_string(stream, "]", NULL, NULL);
     }
 
