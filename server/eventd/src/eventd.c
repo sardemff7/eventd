@@ -305,7 +305,7 @@ _eventd_core_debug_log_handler(const gchar *log_domain, GLogLevelFlags log_level
     else
         g_data_output_stream_put_string(stream, "process:", NULL, NULL);
     g_data_output_stream_put_string(stream, pid, NULL, NULL);
-    g_data_output_stream_put_string(stream, ")", NULL, NULL);
+    g_data_output_stream_put_string(stream, ") ", NULL, NULL);
 
     const gchar *log_level_message = "";
     switch ( log_level & G_LOG_LEVEL_MASK )
