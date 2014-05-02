@@ -14,7 +14,7 @@ You can also browse man pages online here:
 http://www.eventd.org/man/
 
 
-Build from git
+Build from Git
 --------------
 
 To build eventd from Git, you will need some additional dependencies:
