@@ -178,8 +178,11 @@ eventc_connection_is_connected(EventcConnection *self, GError **error)
     if ( libeventd_evp_context_is_connected(self->priv->evp, &_inner_error_) )
         return TRUE;
 
-    g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_CONNECTION, "Connection error: %s", _inner_error_->message);
-    g_error_free(_inner_error_);
+    if ( _inner_error_ != NULL )
+    {
+        g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_CONNECTION, "Connection error: %s", _inner_error_->message);
+        g_error_free(_inner_error_);
+    }
 
     return FALSE;
 }
