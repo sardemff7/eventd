@@ -209,8 +209,12 @@ _eventd_sound_event_action(EventdPluginContext *context, const gchar *config_id,
         return;
 
     if ( libeventd_filename_get_path(sound, event, "sounds", NULL, &file) )
-        _eventd_sound_read_file(file, &data, &length, &format, &rate, &channels);
-    // TODO: using event data
+    {
+        if ( file != NULL )
+            _eventd_sound_read_file(file, &data, &length, &format, &rate, &channels);
+        // TODO: using event data
+        g_free(file);
+    }
 
     eventd_sound_pulseaudio_play_data(context->pulseaudio, data, length, format, rate, channels);
 }

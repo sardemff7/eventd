@@ -454,14 +454,14 @@ libeventd_filename_get_path(const Filename *filename, EventdEvent *event, const 
     g_return_val_if_fail(subdir != NULL, FALSE);
     g_return_val_if_fail(ret_path != NULL, FALSE);
 
+    const gchar *data = NULL;
     const gchar *path = NULL;
     gchar *path_ = NULL;
 
     if ( filename->data_name != NULL )
     {
-        if ( ret_data != NULL )
-            *ret_data = filename->data_name;
-        path = eventd_event_get_data(event, filename->data_name);
+        data = filename->data_name;
+        path = eventd_event_get_data(event, data);
         if ( ( path == NULL ) || ( ! g_str_has_prefix(path, "file://") ) )
             return FALSE;
     }
@@ -483,6 +483,10 @@ libeventd_filename_get_path(const Filename *filename, EventdEvent *event, const 
 
     if ( g_file_test(path, G_FILE_TEST_IS_REGULAR) )
         *ret_path = g_strdup(path);
+    else
+        *ret_path = NULL;
+    if ( ret_data != NULL )
+        *ret_data = data;
 
     g_free(path_);
 

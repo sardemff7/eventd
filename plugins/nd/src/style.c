@@ -799,19 +799,21 @@ eventd_nd_notification_contents_new(EventdNdStyle *style, EventdEvent *event, gi
 
     if ( libeventd_filename_get_path(image, event, "images", &data, &path) )
     {
-        self->image = _eventd_nd_notification_contents_pixbuf_from_file(path, width, height);
+        if ( path != NULL )
+            self->image = _eventd_nd_notification_contents_pixbuf_from_file(path, width, height);
+        else if ( data != NULL )
+           self->image =  _eventd_nd_notification_contents_pixbuf_from_base64(event, data);
         g_free(path);
     }
-    else if ( data != NULL )
-       self->image =  _eventd_nd_notification_contents_pixbuf_from_base64(event, data);
 
     if ( libeventd_filename_get_path(icon, event, "icons", &data, &path) )
     {
-        self->icon = _eventd_nd_notification_contents_pixbuf_from_file(path, width, height);
+        if ( path != NULL )
+            self->icon = _eventd_nd_notification_contents_pixbuf_from_file(path, width, height);
+        else if ( data != NULL )
+            self->icon = _eventd_nd_notification_contents_pixbuf_from_base64(event, data);
         g_free(path);
     }
-    else if ( data != NULL )
-        self->icon = _eventd_nd_notification_contents_pixbuf_from_base64(event, data);
 #endif /* ENABLE_GDK_PIXBUF */
 
     return self;

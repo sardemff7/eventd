@@ -230,12 +230,15 @@ _eventd_libcanberra_event_action(EventdPluginContext *context, const gchar *conf
     gchar *sound_file;
     if ( libeventd_filename_get_path(canberra_event->sound_file, event, "sounds", NULL, &sound_file) )
     {
-        error = ca_context_play(context->context, 1,
-            CA_PROP_MEDIA_FILENAME, sound_file,
-            CA_PROP_MEDIA_ROLE, "event",
-            NULL);
-        if ( error < 0 )
-            g_warning("Couldn't play sound file '%s': %s", sound_file, ca_strerror(error));
+        if ( sound_file != NULL )
+        {
+            error = ca_context_play(context->context, 1,
+                CA_PROP_MEDIA_FILENAME, sound_file,
+                CA_PROP_MEDIA_ROLE, "event",
+                NULL);
+            if ( error < 0 )
+                g_warning("Couldn't play sound file '%s': %s", sound_file, ca_strerror(error));
+        }
         g_free(sound_file);
     }
 #endif /* ! ENABLE_SOUND */
