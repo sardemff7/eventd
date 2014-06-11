@@ -398,7 +398,6 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
     {
         self->icon.set = TRUE;
 
-        gchar *string;
         guint64 enum_value;
         Int integer;
 
