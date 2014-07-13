@@ -276,7 +276,10 @@ eventdctl relay disconnect your.distant.computer
             </para>
             <para>
                 You need to configure <command>relay</command> and <command>dbus</command> plugins on the remote computer and <command>evp</command> and <command>notify</command> plugins on the local one.
-                Default provided configurations for <command>dbus</command> and <command>notify</command>
+            </para>
+            <para>
+                The default provided configurations for the <command>notify</command> plugin is enough on your local computer.
+                On the remote one, you will need to configure a relay to your local computer using the <literal>libnotify.event</literal> event id (see <citerefentry><refentrytitle>eventd.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>).
             </para>
         </example>
     </refsect1>
