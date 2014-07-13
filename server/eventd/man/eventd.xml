@@ -56,9 +56,32 @@
             eventd is composed by a core, the daemon itself, and various plugins.
             Plugins may be event collecting plugins or action plugins.
         </para>
+    </refsect1>
+
+    <refsect1>
+        <title>Events</title>
+
+        <para>
+            The core daemon will not dispatch unknown events to action plugins.
+            Default events are distributed with eventd in
+            <xi:include href="eventd.event.xml" xpointer="default-events-dir" />.
+        </para>
+        <para>
+            Official actions plugins will require at least a section in the matching event file to act on a specific event.
+            Third party plugin are advised to do the same for consistency.
+        </para>
+        <para>
+            See <citerefentry><refentrytitle>eventd.event</refentrytitle><manvolnum>5</manvolnum></citerefentry> for detailed information.
+        </para>
+    </refsect1>
+
+    <refsect1>
+        <title>Plugins</title>
 
         <refsect2>
             <title>Event collection plugins</title>
+
+            <para>An event collection plugin will listen to clients and queue events in eventd.</para>
 
             <para>The following event collection plugins are <phrase condition="website">distributed</phrase><phrase condition="installation">installed</phrase> with eventd:</para>
             <variablelist>
@@ -76,6 +99,8 @@
 
         <refsect2>
             <title>Action plugins</title>
+
+            <para>An action plugin will do something when an event is dispatched by eventd.</para>
 
             <para>The following action plugins are <phrase condition="website">distributed</phrase><phrase condition="installation">installed</phrase> with eventd:</para>
             <variablelist>

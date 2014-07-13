@@ -49,7 +49,7 @@
         </para>
         <para>eventd will search for event files in following directories:</para>
         <orderedlist>
-            <listitem><para><filename>&datadir;/&PACKAGE_NAME;</filename></para></listitem>
+            <listitem><para><filename id="default-events-dir">&datadir;/&PACKAGE_NAME;</filename></para></listitem>
             <listitem><para><filename>&sysconfdir;/&PACKAGE_NAME;</filename></para></listitem>
             <listitem><para><filename><varname>$XDG_CONFIG_HOME</varname>/&PACKAGE_NAME;</filename> (fallback to <filename>~/.config/&PACKAGE_NAME;/<replaceable>id</replaceable>.event</filename>)</para></listitem>
             <listitem><para><filename><varname>$EVENTD_CONFIG_DIR</varname></filename> (see <citerefentry><refentrytitle>eventd</refentrytitle><manvolnum>1</manvolnum></citerefentry>)</para></listitem>
@@ -76,6 +76,7 @@
         </orderedlist>
         <para>
             Plugins may parse their own section(s) in this file for their event configuration.
+            Official action plugins <emphasis>require</emphasis> at least their own configuration section to do something.
         </para>
     </refsect1>
 
