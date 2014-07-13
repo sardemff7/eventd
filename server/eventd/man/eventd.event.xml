@@ -181,10 +181,12 @@
                     </varlistentry>
 
                     <varlistentry>
-                        <term><varname>Importance=</varname></term>
+                        <term><varname>Importance=</varname> (defaults to <literal id="default-importance-nomatch">9223372036854775807</literal> or <literal id="default-importance-match">0</literal>, see below)</term>
                         <listitem>
                             <para>An <type>integer</type> (can be negative)</para>
                             <para>The less you put here, the more important this event configuration is. It allows you to order alternative configurations, as the first matching configuration is taken.</para>
+                            <para>If you only have <varname>Category</varname> and/or <varname>Name</varname> keys, the default value is <xi:include xpointer="default-importance-nomatch" />.</para>
+                            <para>If you have more precise matching keys, the default value is then <xi:include xpointer="default-importance-match" />.</para>
                         </listitem>
                     </varlistentry>
                 </variablelist>

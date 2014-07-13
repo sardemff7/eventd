@@ -330,7 +330,6 @@ _eventd_config_parse_event_file(EventdConfig *config, const gchar *id, GKeyFile 
 
     EventdConfigMatch *match;
     match = g_new0(EventdConfigMatch, 1);
-    match->importance = G_MAXINT64;
     match->id = g_strdup(id);
 
     gchar **if_data_matches;
@@ -369,8 +368,13 @@ _eventd_config_parse_event_file(EventdConfig *config, const gchar *id, GKeyFile 
     if ( libeventd_config_key_file_get_string_list(config_file, "Event", "NotIfFlags", &flags, &length) == 0 )
         match->flags_blacklist = _eventd_config_parse_event_flags(flags, length);
 
+    gint64 default_importance;
+
     if ( ( match->if_data != NULL ) || ( match->if_data_matches != NULL ) || ( match->flags_whitelist != NULL ) || ( match->flags_blacklist != NULL ) )
-        libeventd_config_key_file_get_int_with_default(config_file, "Event", "Importance", G_MAXINT64, &match->importance);
+        default_importance = 0;
+    else
+        default_importance = G_MAXINT64;
+    libeventd_config_key_file_get_int_with_default(config_file, "Event", "Importance", default_importance, &match->importance);
 
     gchar *internal_name;
 
