@@ -238,6 +238,25 @@
             </para>
         </example>
 
+        <example condition="website;enable_notify">
+            <title>As a relay to a notification daemon</title>
+
+            <para>
+                With its <command>notify</command> plugin, eventd can relay events to a notification daemon.
+            </para>
+            <para>
+                eventd allow a lot of flexibility in events and configuration.
+                You can use these features while still having your usual notification daemon to display notifications.
+                It may be useful for highly integrated notification daemons.
+            </para>
+            <para>
+                eventd <command>notify</command> plugin also has support for displaying a small icon over the usual notification image.
+            </para>
+            <para>
+                See <citerefentry><refentrytitle>eventd-notify.event</refentrytitle><manvolnum>5</manvolnum></citerefentry> for the <command>notify</command> plugin configuration.
+            </para>
+        </example>
+
         <example>
             <title>Relaying remote events: static relay</title>
 
@@ -271,25 +290,6 @@ eventdctl relay disconnect your.distant.computer
             </para>
             <para>
                 The <command>relay</command> plugin will connect to configured servers when advertised.
-            </para>
-        </example>
-
-        <example condition="website;enable_notify">
-            <title>As a relay to a notification daemon</title>
-
-            <para>
-                With its <command>notify</command> plugin, eventd can relay events to a notification daemon.
-            </para>
-            <para>
-                eventd allow a lot of flexibility in events and configuration.
-                You can use these features while still having your usual notification daemon to display notifications.
-                It may be useful for highly integrated notification daemons.
-            </para>
-            <para>
-                eventd <command>notify</command> plugin also has support for displaying a small icon over the usual notification image.
-            </para>
-            <para>
-                See <citerefentry><refentrytitle>eventd-notify.event</refentrytitle><manvolnum>5</manvolnum></citerefentry> for the <command>notify</command> plugin configuration.
             </para>
         </example>
 
