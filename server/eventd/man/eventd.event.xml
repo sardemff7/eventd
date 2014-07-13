@@ -41,6 +41,10 @@
 
     <refsynopsisdiv>
         <para>
+            <emphasis>An event file is <emphasis>mandatory</emphasis> for the event to be processed by eventd.</emphasis>
+            Unknown events are ignored.
+        </para>
+        <para>
             Each file is named using the following scheme: <filename><replaceable>id</replaceable>.event</filename>.
         </para>
         <para>eventd will search for event files in following directories:</para>
@@ -55,10 +59,6 @@
         </para>
         <para>
             If the same file is found in several places, the last one is used.
-        </para>
-        <para>
-            <emphasis>An event file is <emphasis>mandatory</emphasis> for the event to be processed by eventd.</emphasis>
-            Unknown events are ignored.
         </para>
     </refsynopsisdiv>
 
