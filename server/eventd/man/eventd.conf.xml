@@ -25,8 +25,9 @@
   along with eventd. If not, see <http://www.gnu.org/licenses/>.
 -->
 
-<refentry id="eventd.conf">
-    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="common-man.xml" xpointer="refentryinfo" />
+<refentry xmlns:xi="http://www.w3.org/2001/XInclude"
+    id="eventd.conf">
+    <xi:include href="common-man.xml" xpointer="refentryinfo" />
 
     <refmeta>
         <refentrytitle>eventd.conf</refentrytitle>
@@ -87,7 +88,7 @@
 
             <para>A <type>format string</type> can contain references to event data.</para>
 
-            <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="libnkutils-man.xml" xpointer="xpointer(id('nk-token-reference-description')/*)" />
+            <xi:include href="libnkutils-man.xml" xpointer="xpointer(id('nk-token-reference-description')/*)" />
         </refsect2>
 
         <refsect2>
@@ -97,7 +98,7 @@
             <para>In the former case, named data can be an URI with the <literal>file://</literal> scheme or file data encoded in <ulink href="https://en.wikipedia.org/wiki/Base64">Base64</ulink>.</para>
         </refsect2>
 
-        <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="libnkutils-man.xml" xpointer="nk-colour-type-description" />
+        <xi:include href="libnkutils-man.xml" xpointer="nk-colour-type-description" />
 
         <refsect2>
             <title>Other types</title>
@@ -132,5 +133,5 @@
         </refsect2>
     </refsect1>
 
-    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="common-man.xml" xpointer="see-also" />
+    <xi:include href="common-man.xml" xpointer="see-also" />
 </refentry>

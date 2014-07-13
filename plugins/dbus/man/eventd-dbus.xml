@@ -25,8 +25,9 @@
   along with eventd. If not, see <http://www.gnu.org/licenses/>.
 -->
 
-<refentry id="eventd-dbus">
-    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="common-man.xml" xpointer="refentryinfo" />
+<refentry xmlns:xi="http://www.w3.org/2001/XInclude"
+    id="eventd-dbus">
+    <xi:include href="common-man.xml" xpointer="refentryinfo" />
 
     <refmeta>
         <refentrytitle>eventd-dbus</refentrytitle>
@@ -66,5 +67,5 @@
         </variablelist>
     </refsect1>
 
-    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="common-man.xml" xpointer="see-also" />
+    <xi:include href="common-man.xml" xpointer="see-also" />
 </refentry>

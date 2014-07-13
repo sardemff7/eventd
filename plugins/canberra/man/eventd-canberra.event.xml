@@ -25,8 +25,9 @@
   along with eventd. If not, see <http://www.gnu.org/licenses/>.
 -->
 
-<refentry id="eventd-canberra.event">
-    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="common-man.xml" xpointer="refentryinfo" />
+<refentry xmlns:xi="http://www.w3.org/2001/XInclude"
+    id="eventd-canberra.event">
+    <xi:include href="common-man.xml" xpointer="refentryinfo" />
 
     <refmeta>
         <refentrytitle>eventd-canberra.event</refentrytitle>
@@ -86,5 +87,5 @@
         </refsect2>
     </refsect1>
 
-    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="common-man.xml" xpointer="see-also" />
+    <xi:include href="common-man.xml" xpointer="see-also" />
 </refentry>
