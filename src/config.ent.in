@@ -24,6 +24,7 @@
 <!ENTITY srcdir "@scrdir@">
 
 <!ENTITY sysconfdir "@sysconfdir@">
+<!ENTITY libdir "@libdir@">
 <!ENTITY datadir "@datadir@">
 
 <!ENTITY DEFAULT_BIND_PORT "@DEFAULT_BIND_PORT@">

@@ -30,6 +30,7 @@ src/config.ent: src/config.ent.in src/config.h
 	$(AM_V_GEN)$(MKDIR_P) $(dir $@) && \
 		$(SED) \
 		-e 's:[@]sysconfdir[@]:$(sysconfdir):g' \
+		-e 's:[@]libdir[@]:$(libdir):g' \
 		-e 's:[@]datadir[@]:$(datadir):g' \
 		-e 's:[@]PACKAGE_NAME[@]:$(PACKAGE_NAME):g' \
 		-e 's:[@]PACKAGE_VERSION[@]:$(PACKAGE_VERSION):g' \
