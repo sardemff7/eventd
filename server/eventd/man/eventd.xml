@@ -46,7 +46,7 @@
         </cmdsynopsis>
     </refsynopsisdiv>
 
-    <refsect1>
+    <refsect1 id="description">
         <title>Description</title>
 
         <para>
@@ -58,7 +58,7 @@
         </para>
     </refsect1>
 
-    <refsect1>
+    <refsect1 id="events">
         <title>Events</title>
 
         <para>
@@ -75,7 +75,7 @@
         </para>
     </refsect1>
 
-    <refsect1>
+    <refsect1 id="plugins">
         <title>Plugins</title>
 
         <refsect2>
@@ -142,7 +142,7 @@
         </refsect2>
     </refsect1>
 
-    <refsect1>
+    <refsect1 id="options">
         <title>Options</title>
 
         <variablelist>
@@ -182,7 +182,7 @@
         </variablelist>
     </refsect1>
 
-    <refsect1>
+    <refsect1 id="exit-status">
         <title>Exit status</title>
 
         <variablelist>
@@ -216,7 +216,7 @@
         </variablelist>
     </refsect1>
 
-    <refsect1>
+    <refsect1 id="examples">
         <title>Examples</title>
 
         <example condition="website;enable_full_notification_daemon">
@@ -307,7 +307,7 @@ eventdctl relay disconnect your.distant.computer</programlisting>
         </example>
     </refsect1>
 
-    <refsect1>
+    <refsect1 id="environment">
         <title>Environment</title>
 
         <variablelist>
@@ -353,7 +353,7 @@ eventdctl relay disconnect your.distant.computer</programlisting>
         </variablelist>
     </refsect1>
 
-    <refsect1>
+    <refsect1 id="sockets">
         <title>Sockets</title>
 
         <variablelist>

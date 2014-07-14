@@ -46,14 +46,14 @@
         </cmdsynopsis>
     </refsynopsisdiv>
 
-    <refsect1>
+    <refsect1 id="description">
         <title>Description</title>
         <para>
             This plugin implements our own EVENT protocol.
         </para>
     </refsect1>
 
-    <refsect1>
+    <refsect1 id="options">
         <title>Options</title>
 
         <variablelist>
@@ -92,7 +92,7 @@
         </variablelist>
     </refsect1>
 
-    <refsect1>
+    <refsect1 id="sockets">
         <title>Sockets</title>
 
         <variablelist>

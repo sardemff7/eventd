@@ -49,7 +49,7 @@
         </orderedlist>
     </refsynopsisdiv>
 
-    <refsect1>
+    <refsect1 id="description">
         <title>Description</title>
 
         <para>
@@ -69,7 +69,7 @@
         </para>
     </refsect1>
 
-    <refsect1>
+    <refsect1 id="configuration-key-types">
         <title>Configuration key types</title>
 
         <para>Each key can be of a specified type. Basic types are <type>integer</type>, <type>boolean</type> or <type>string</type>, sometimes constrained like <type>milliseconds</type> or <type>percentage</type>.</para>
@@ -107,7 +107,7 @@
         </refsect2>
     </refsect1>
 
-    <refsect1>
+    <refsect1 id="sections">
         <title>Sections</title>
 
         <refsect2>

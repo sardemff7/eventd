@@ -62,7 +62,7 @@
         </para>
     </refsynopsisdiv>
 
-    <refsect1>
+    <refsect1 id="description">
         <title>Description</title>
 
         <para>
@@ -80,7 +80,7 @@
         </para>
     </refsect1>
 
-    <refsect1>
+    <refsect1 id="configuration-ids-and-event-matching">
         <title>Configuration ids and event matching</title>
 
         <para>
@@ -104,7 +104,7 @@
         </para>
     </refsect1>
 
-    <refsect1>
+    <refsect1 id="sections">
         <title>Sections</title>
 
         <refsect2>

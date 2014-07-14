@@ -45,7 +45,7 @@
         </para>
     </refsynopsisdiv>
 
-    <refsect1>
+    <refsect1 id="description">
         <title>Description</title>
 
         <para>
@@ -53,7 +53,7 @@
         </para>
     </refsect1>
 
-    <refsect1>
+    <refsect1 id="sections">
         <title>Sections</title>
 
         <refsect2 id="main-section">

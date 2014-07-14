@@ -46,14 +46,14 @@
         </cmdsynopsis>
     </refsynopsisdiv>
 
-    <refsect1>
+    <refsect1 id="description">
         <title>Description</title>
         <para>
             This plugin implements the org.freedesktop.Notification D-Bus interface.
         </para>
     </refsect1>
 
-    <refsect1>
+    <refsect1 id="options">
         <title>Options</title>
 
         <variablelist>

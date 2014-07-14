@@ -49,7 +49,7 @@
         </cmdsynopsis>
     </refsynopsisdiv>
 
-    <refsect1>
+    <refsect1 id="description">
         <title>Description</title>
 
         <para>
@@ -58,7 +58,7 @@
         </para>
     </refsect1>
 
-    <refsect1>
+    <refsect1 id="commands">
         <title>Commands</title>
 
         <variablelist>
