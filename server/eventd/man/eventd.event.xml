@@ -51,7 +51,7 @@
         <orderedlist>
             <listitem><para><filename id="default-events-dir">&datadir;/&PACKAGE_NAME;</filename></para></listitem>
             <listitem><para><filename>&sysconfdir;/&PACKAGE_NAME;</filename></para></listitem>
-            <listitem><para><filename><varname>$XDG_CONFIG_HOME</varname>/&PACKAGE_NAME;</filename> (fallback to <filename>~/.config/&PACKAGE_NAME;/<replaceable>id</replaceable>.event</filename>)</para></listitem>
+            <listitem><para><phrase id="home-events-dir"><filename><varname>$XDG_CONFIG_HOME</varname>/&PACKAGE_NAME;</filename> (fallback to <filename>~/.config/&PACKAGE_NAME;</filename>)</phrase></para></listitem>
             <listitem><para><filename><varname>$EVENTD_CONFIG_DIR</varname></filename> (see <citerefentry><refentrytitle>eventd</refentrytitle><manvolnum>1</manvolnum></citerefentry>)</para></listitem>
         </orderedlist>
         <para>

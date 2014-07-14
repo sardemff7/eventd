@@ -246,6 +246,102 @@
             </para>
         </example>
 
+        <example>
+            <title>Custom event: notify the end of a command</title>
+
+            <para>
+                Here is a complete example of a custom event.
+                Please refer to the relevant man page for further information.
+            </para>
+            <para>
+                We will use three files: one for the category <literal>"command"</literal> and one for each event, <literal>"success"</literal> and <literal>"failure"</literal>.
+                These files will be placed in <xi:include href="eventd.event.xml" xpointer="home-events-dir" />.
+                Here is their contents:
+            </para>
+            <programlisting><literal>"<filename>command.event</filename>"</literal>:
+    [Event]
+    Category=command
+
+    [Relay]
+    Server=myothercomputer.local<phrase condition="website;enable_notification_daemon;enable_sound;enable_canberra;enable_libnotify">
+
+<literal>"<filename>command-success.event</filename>"</literal>;
+    [Event]
+    Extends=command.event
+    Name=success<phrase condition="website;enable_notification_daemon">
+
+    [Notification]
+    Title=${command} succeeded
+    Message=${time}</phrase><phrase condition="website;enable_sound">
+
+    [Sound]
+    File=file://command-success.ogg</phrase><phrase condition="website;enable_notify">
+
+    [Libnotify]
+    Title=${command} succeeded
+    Message=${time}</phrase><phrase condition="website;enable_canberra">
+
+    [Libcanberra]
+    Name=command-success</phrase>
+
+<literal>"<filename>command-failure.event</filename>"</literal>;
+    [Event]
+    Extends=command.event
+    Name=failure<phrase condition="website;enable_notification_daemon">
+
+    [Notification]
+    Title=${command} failed
+    Message=${time}
+
+    [NotificationBubble]
+    Colour=#ff0000</phrase><phrase condition="website;enable_sound">
+
+    [Sound]
+    File=file://command-failure.ogg</phrase><phrase condition="website;enable_notify">
+
+    [Libnotify]
+    Title=${command} failed
+    Message=${time}</phrase><phrase condition="website;enable_canberra">
+
+    [Libcanberra]
+    Name=command-failure</phrase></phrase></programlisting>
+            <para>This configuration will:</para>
+            <itemizedlist>
+                <listitem><para>relay any event in the <literal>"command"</literal> category to <literal>"myothercomputer.local"</literal></para></listitem>
+                <listitem condition="website;enable_notification_daemon"><para>Display a grey (default colour) bubble when a command succeeds, with the <literal>"<replaceable>command</replaceable> succeded"</literal> message and time</para></listitem>
+                <listitem condition="website;enable_notification_daemon"><para>Display a red bubble when a command fails, with the <literal>"<replaceable>command</replaceable> failed"</literal> message and time</para></listitem>
+                <listitem condition="website;enable_sound"><para>Play the <literal>"<filename>command-success.ogg</filename>"</literal> sound when a command succeeds</para></listitem>
+                <listitem condition="website;enable_sound"><para>Play the <literal>"<filename>command-failure.ogg</filename>"</literal> sound when a command fails</para></listitem>
+                <listitem condition="website;enable_notify"><para>Display a notification with your favorite notification daemon when a command succeeds, with the <literal>"<replaceable>command</replaceable> succeded"</literal> message and time</para></listitem>
+                <listitem condition="website;enable_notify"><para>Display a notification with your favorite notification daemon when a command fails, with the <literal>"<replaceable>command</replaceable> failed"</literal> message and time</para></listitem>
+                <listitem condition="website;enable_canberra"><para>Play the <literal>"command-success"</literal> sound when a command succeeds</para></listitem>
+                <listitem condition="website;enable_canberra"><para>Play the <literal>"command-failure"</literal> sound when a command fails</para></listitem>
+            </itemizedlist>
+            <para>You can trigger the event manually using a command like that:</para>
+            <programlisting>make; eventc command $([ $? -eq 0 ] &amp;&amp; echo sucess || echo failure) -d command -c make</programlisting>
+            <para>You can also hook your favorite shell to make it automatic. Here are some example for Zshell, Bash or Fish:</para>
+            <programlisting>Zshell zshrc:
+    precmd() {
+        eventc command $([ $? -eq 0 ] &amp;&amp; echo sucess || echo failure) -d command -c "!!"
+    }
+
+Bash bashrc:
+    precmd() {
+        command=$(history -1)
+        [[ -z "${command} ]] &amp;&amp; return
+        eventc command $([ $? -eq 0 ] &amp;&amp; echo sucess || echo failure) -d command -c "${command}"
+    }
+    # This command is called anytime the prompt is displayed
+    # so this may not work perfectly as expected
+    PROMPT_COMMAND=precmd
+
+Fish config:
+    function notify_on_command_duration --on-variable CMD_DURATION
+        eventc command $([ $? -eq 0 ] &amp;&amp; echo sucess || echo failure) -d command -c "$_" -d time -c "$CMD_DURATION"
+    end
+            </programlisting>
+        </example>
+
         <example condition="website;enable_notify">
             <title>As a relay to a notification daemon</title>
 
