@@ -86,6 +86,8 @@ _eventd_dbus_notification_new(EventdPluginContext *context, const gchar *sender,
     notification->sender = g_strdup(sender);
     notification->event = event;
 
+    eventd_event_add_data(event, g_strdup("id"), g_strdup_printf("%u", notification->id));
+
     g_hash_table_insert(context->notifications, GUINT_TO_POINTER(notification->id), notification);
     g_signal_connect(event, "ended", G_CALLBACK(_eventd_dbus_event_ended), notification);
 
