@@ -30,15 +30,15 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
+#ifdef HAVE_LOCALE_H
+#include <locale.h>
+#endif /* HAVE_LOCALE_H */
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
 #endif /* HAVE_FCNTL_H */
 
 #include <glib.h>
 #ifdef ENABLE_NLS
-#ifdef HAVE_LOCALE_H
-#include <locale.h>
-#endif
 #include <glib/gi18n.h>
 #endif /* ENABLE_NLS */
 #include <glib-object.h>
@@ -388,8 +388,8 @@ main(int argc, char *argv[])
     g_setenv("G_MESSAGES_DEBUG", "all", FALSE);
 #endif /* DEBUG */
 
-#ifdef ENABLE_NLS
     setlocale(LC_ALL, "");
+#ifdef ENABLE_NLS
     bindtextdomain(GETTEXT_PACKAGE, EVENTD_LOCALEDIR);
     bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
 #endif /* ENABLE_NLS */
