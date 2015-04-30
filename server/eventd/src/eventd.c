@@ -528,6 +528,8 @@ main(int argc, char *argv[])
         sigaction(SIGTERM, &action, NULL);
         sigaction(SIGINT, &action, NULL);
 #endif /* ! GLIB_CHECK_VERSION(2,32,0) */
+        /* Ignore SIGPIPE as it is useless */
+        signal(SIGPIPE, SIG_IGN);
 #endif /* G_OS_UNIX */
 
         context->loop = g_main_loop_new(NULL, FALSE);
