@@ -227,7 +227,7 @@ _eventd_config_parse_global(EventdConfig *config, GKeyFile *config_file)
         config->stack = integer.value;
 
     if ( libeventd_config_key_file_get_int(config_file, "Event", "Timeout", &integer) == 0 )
-        config->timeout = integer.value;
+        config->timeout = MAX(0, integer.value);
 }
 
 static void
