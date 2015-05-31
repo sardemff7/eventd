@@ -83,14 +83,11 @@ _eventd_queue_event_timeout(gpointer user_data)
 }
 
 static gboolean
-_eventd_queue_event_set_timeout(EventdQueue *queue, const gchar *config_id, EventdQueueEvent *event)
+_eventd_queue_event_set_timeout(EventdQueue *queue, EventdQueueEvent *event)
 {
     gint64 timeout;
 
     timeout = eventd_event_get_timeout(event->event);
-    if ( timeout < 0 )
-        timeout = eventd_config_event_get_timeout(queue->config, config_id);
-    eventd_event_set_timeout(event->event, timeout);
 
     if ( timeout > 0 )
     {
@@ -109,7 +106,7 @@ _eventd_queue_event_updated(GObject *object, gpointer user_data)
         g_source_remove(event->timeout_id);
     event->timeout_id = 0;
 
-    _eventd_queue_event_set_timeout(event->queue, event->config_id, event);
+    _eventd_queue_event_set_timeout(event->queue, event);
 }
 
 static void
@@ -134,7 +131,7 @@ _eventd_queue_source_dispatch(EventdQueue *queue, EventdQueueEvent *event)
 
     event->answered_handler = g_signal_connect(event->event, "updated", G_CALLBACK(_eventd_queue_event_updated), event);
     event->ended_handler = g_signal_connect(event->event, "ended", G_CALLBACK(_eventd_queue_event_ended), event);
-    _eventd_queue_event_set_timeout(queue, event->config_id, event);
+    _eventd_queue_event_set_timeout(queue, event);
 }
 
 static gboolean
@@ -199,9 +196,13 @@ eventd_queue_resume(EventdQueue *queue)
     }
 }
 
-void
-eventd_queue_push(EventdQueue *queue, const gchar *config_id, EventdEvent *event)
+gboolean
+eventd_queue_push(EventdQueue *queue, EventdEvent *event, GQuark *flags)
 {
+    const gchar *config_id;
+    if ( ! eventd_config_process_event(queue->config, event, flags, &config_id) )
+        return FALSE;
+
     EventdQueueEvent *queue_event;
 
     queue_event = g_new0(EventdQueueEvent, 1);
@@ -211,4 +212,6 @@ eventd_queue_push(EventdQueue *queue, const gchar *config_id, EventdEvent *event
 
     g_queue_push_tail(queue->queue, queue_event);
     _eventd_queue_source_try_dispatch(queue);
+
+    return TRUE;
 }

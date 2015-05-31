@@ -76,8 +76,11 @@ _eventd_dbus_event_ended(EventdEvent *event, EventdEventEndReason reason, Eventd
  */
 
 static guint32
-_eventd_dbus_notification_new(EventdPluginContext *context, const gchar *sender, const gchar *config_id, EventdEvent *event)
+_eventd_dbus_notification_new(EventdPluginContext *context, const gchar *sender, EventdEvent *event)
 {
+    if ( ! libeventd_core_push_event(context->core, context->core_interface, event) )
+        return 0;
+
     EventdDbusNotification *notification;
 
     notification = g_new0(EventdDbusNotification, 1);
@@ -90,8 +93,6 @@ _eventd_dbus_notification_new(EventdPluginContext *context, const gchar *sender,
 
     g_hash_table_insert(context->notifications, GUINT_TO_POINTER(notification->id), notification);
     g_signal_connect(event, "ended", G_CALLBACK(_eventd_dbus_event_ended), notification);
-
-    libeventd_core_push_event(context->core, context->core_interface, config_id, event);
 
     return notification->id;
 }
@@ -253,21 +254,17 @@ _eventd_dbus_notify(EventdPluginContext *context, const gchar *sender, GVariant 
 
     eventd_event_set_timeout(event, ( timeout > -1 ) ? timeout : ( urgency > -1 ) ? ( 3000 + urgency * 2000 ) : -1);
 
-    const gchar *config_id;
+    if ( id > 0 )
+        eventd_event_update(event, NULL);
+    else
+        id = _eventd_dbus_notification_new(context, sender, event);
 
-    config_id = libeventd_core_get_event_config_id(context->core, context->core_interface, event);
-
-    if ( config_id == NULL )
+    if ( id == 0 )
     {
         g_object_unref(event);
         g_dbus_method_invocation_return_dbus_error(invocation, NOTIFICATION_BUS_NAME ".InvalidNotification", "Invalid notification type");
         return;
     }
-
-    if ( id > 0 )
-        eventd_event_update(event, NULL);
-    else
-        id = _eventd_dbus_notification_new(context, sender, config_id, event);
 
     g_dbus_method_invocation_return_value(invocation, g_variant_new("(u)", id));
 }

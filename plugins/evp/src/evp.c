@@ -150,10 +150,7 @@ _eventd_evp_event(gpointer data, LibeventdEvpContext *evp, gchar *id, EventdEven
     g_debug("Received an event (category: %s): %s", eventd_event_get_category(event), eventd_event_get_name(event));
 #endif /* DEBUG */
 
-    const gchar *config_id;
-
-    config_id = libeventd_core_get_event_config_id(client->context->core, client->context->core_interface, event);
-    if ( config_id == NULL )
+    if ( ! libeventd_core_push_event(client->context->core, client->context->core_interface, event) )
     {
         GError *error = NULL;
         if ( ! libeventd_evp_context_send_ended(evp, id, EVENTD_EVENT_END_REASON_RESERVED, &error) )
@@ -164,10 +161,6 @@ _eventd_evp_event(gpointer data, LibeventdEvpContext *evp, gchar *id, EventdEven
         g_free(id);
         return;
     }
-
-#ifdef DEBUG
-    g_debug("Matched an event (category: %s, name: %s): %s", eventd_event_get_category(event), eventd_event_get_name(event), config_id);
-#endif /* DEBUG */
 
     EventdEvpEvent *evp_event;
 
@@ -180,8 +173,6 @@ _eventd_evp_event(gpointer data, LibeventdEvpContext *evp, gchar *id, EventdEven
 
     evp_event->answered_handler = g_signal_connect(event, "answered", G_CALLBACK(_eventd_evp_event_answered), evp_event);
     evp_event->ended_handler = g_signal_connect(event, "ended", G_CALLBACK(_eventd_evp_event_ended), evp_event);
-
-    libeventd_core_push_event(client->context->core, client->context->core_interface, config_id, event);
 }
 
 static void

@@ -32,7 +32,7 @@ typedef enum {
 
 GList *eventd_core_get_sockets(EventdCoreContext *context, const gchar * const *binds);
 
-void eventd_core_push_event(EventdCoreContext *context, const gchar *config_id, EventdEvent *event);
+gboolean eventd_core_push_event(EventdCoreContext *context, EventdEvent *event);
 
 void eventd_core_pause(EventdCoreContext *context);
 void eventd_core_resume(EventdCoreContext *context);

@@ -29,7 +29,7 @@ void eventd_queue_free(EventdQueue *queue);
 void eventd_queue_pause(EventdQueue *queue);
 void eventd_queue_resume(EventdQueue *queue);
 
-void eventd_queue_push(EventdQueue *queue, const gchar *config_id, EventdEvent *event);
+gboolean eventd_queue_push(EventdQueue *queue, EventdEvent *event, GQuark *flags);
 void eventd_queue_event_ended(EventdQueue *queue);
 
 #endif /* __EVENTD_QUEUE_H__ */

@@ -76,7 +76,6 @@ void libeventd_plugin_interface_add_event_action_callback(EventdPluginInterface 
 
 GList *libeventd_core_get_sockets(EventdCoreContext *context, EventdCoreInterface *interface, const gchar * const *binds);
 
-const gchar *libeventd_core_get_event_config_id(EventdCoreContext *context, EventdCoreInterface *interface, EventdEvent *event);
-void libeventd_core_push_event(EventdCoreContext *context, EventdCoreInterface *interface, const gchar *config_id, EventdEvent *event);
+gboolean libeventd_core_push_event(EventdCoreContext *context, EventdCoreInterface *interface, EventdEvent *event);
 
 #endif /* __EVENTD_EVENTD_PLUGIN_H__ */

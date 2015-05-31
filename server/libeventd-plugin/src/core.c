@@ -37,16 +37,9 @@ libeventd_core_get_sockets(EventdCoreContext *context, EventdCoreInterface *inte
 }
 
 EVENTD_EXPORT
-const gchar *
-libeventd_core_get_event_config_id(EventdCoreContext *context, EventdCoreInterface *interface, EventdEvent *event)
+gboolean
+libeventd_core_push_event(EventdCoreContext *context, EventdCoreInterface *interface, EventdEvent *event)
 {
-    return interface->get_event_config_id(context, event);
-}
-
-EVENTD_EXPORT
-void
-libeventd_core_push_event(EventdCoreContext *context, EventdCoreInterface *interface, const gchar *config_id, EventdEvent *event)
-{
-    interface->push_event(context, config_id, event);
+    return interface->push_event(context, event);
 
 }

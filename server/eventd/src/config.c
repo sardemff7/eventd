@@ -148,8 +148,8 @@ _eventd_config_get_best_match(GList *list, EventdEvent *event, GQuark *current_f
     return NULL;
 }
 
-const gchar *
-eventd_config_get_event_config_id(EventdConfig *config, EventdEvent *event, GQuark *current_flags)
+static const gchar *
+_eventd_config_get_event_config_id(EventdConfig *config, EventdEvent *event, GQuark *current_flags)
 {
     const gchar *category;
     GList *list;
@@ -189,17 +189,30 @@ _eventd_config_event_free(gpointer data)
     g_free(event);
 }
 
-gint64
-eventd_config_event_get_timeout(EventdConfig *config, const gchar *config_id)
+gboolean
+eventd_config_process_event(EventdConfig *config, EventdEvent *event, GQuark *flags, const gchar **config_id)
 {
+    *config_id = _eventd_config_get_event_config_id(config, event, flags);
+
+    if ( *config_id == NULL )
+        return FALSE;
+
     EventdConfigEvent *config_event;
+    gint64 timeout;
 
-    config_event = g_hash_table_lookup(config->events, config_id);
+    config_event = g_hash_table_lookup(config->events, *config_id);
 
-    if ( ( config_event == NULL ) || ( config_event->timeout < 0 ) )
-        return config->timeout;
-    else
-        return config_event->timeout;
+    timeout = eventd_event_get_timeout(event);
+    if ( timeout < 0 )
+    {
+        if ( ( config_event == NULL ) || ( config_event->timeout < 0 ) )
+            timeout = config->timeout;
+        else
+            timeout = config_event->timeout;
+    }
+    eventd_event_set_timeout(event, timeout);
+
+    return TRUE;
 }
 
 

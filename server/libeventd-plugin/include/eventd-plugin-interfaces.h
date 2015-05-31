@@ -28,12 +28,11 @@
 typedef GList *(*EventdCoreGetSocketsFunc)(EventdCoreContext *context, const gchar * const *binds);
 
 typedef const gchar *(*EventdCoreGetEventConfigIdFunc)(EventdCoreContext *context, EventdEvent *event);
-typedef void (*EventdCorePushEventFunc)(EventdCoreContext *context, const gchar *config_id, EventdEvent *event);
+typedef gboolean (*EventdCorePushEventFunc)(EventdCoreContext *context, EventdEvent *event);
 
 struct _EventdCoreInterface {
     EventdCoreGetSocketsFunc get_sockets;
 
-    EventdCoreGetEventConfigIdFunc get_event_config_id;
     EventdCorePushEventFunc push_event;
 };
 
