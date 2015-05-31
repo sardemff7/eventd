@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef __EVENTD_EVENTS_H__
-#define __EVENTD_EVENTS_H__
+#ifndef __EVENTD_CONFIG_H__
+#define __EVENTD_CONFIG_H__
 
 EventdConfig *eventd_config_new(void);
 void eventd_config_parse(EventdConfig *config);
@@ -31,4 +31,4 @@ gboolean eventd_config_process_event(EventdConfig *self, EventdEvent *event, GQu
 
 guint64 eventd_config_get_stack(EventdConfig *config);
 
-#endif /* __EVENTD_EVENTS_H__ */
+#endif /* __EVENTD_CONFIG_H__ */
