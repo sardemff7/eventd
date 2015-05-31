@@ -476,24 +476,27 @@ _eventd_config_load_dir(EventdConfig *config, GHashTable *config_files, const gc
 }
 
 static GKeyFile *
-_eventd_config_process_config_file(GHashTable *config_files, const gchar *id, GKeyFile *config_file)
+_eventd_config_process_config_file(GHashTable *files, const gchar *id, GKeyFile *file)
 {
+    if ( ! g_key_file_has_group(file, "File") )
+        return file;
+
     gchar *parent_id;
 
-    switch ( libeventd_config_key_file_get_string(config_file, "Event", "Extends", &parent_id) )
+    switch ( libeventd_config_key_file_get_string(file, "File", "Extends", &parent_id) )
     {
     case 1:
-        return config_file;
+        return file;
     case -1:
         return NULL;
     case 0:
     break;
     }
 
-    GKeyFile *new_config_file = NULL;
+    GKeyFile *new_file = NULL;
 
     GError *error = NULL;
-    if ( ! g_key_file_remove_key(config_file, "Event", "Extends", &error) )
+    if ( ! g_key_file_remove_key(file, "File", "Extends", &error) )
     {
         g_warning("Couldn't clean event file '%s': %s", id, error->message);
         g_clear_error(&error);
@@ -501,14 +504,14 @@ _eventd_config_process_config_file(GHashTable *config_files, const gchar *id, GK
     }
 
     GKeyFile *parent;
-    parent = g_hash_table_lookup(config_files, parent_id);
+    parent = g_hash_table_lookup(files, parent_id);
     if ( parent == NULL )
     {
         g_warning("Event file '%s' has no parent file '%s'", id, parent_id);
         goto fail;
     }
 
-    if ( ( parent = _eventd_config_process_config_file(config_files, parent_id, parent) ) == NULL )
+    if ( ( parent = _eventd_config_process_config_file(files, parent_id, parent) ) == NULL )
         goto fail;
 
     GString *merged_data;
@@ -518,19 +521,19 @@ _eventd_config_process_config_file(GHashTable *config_files, const gchar *id, GK
     merged_data = g_string_new(data);
     g_free(data);
 
-    data = g_key_file_to_data(config_file, NULL, NULL);
+    data = g_key_file_to_data(file, NULL, NULL);
     g_string_append(merged_data, data);
     g_free(data);
 
-    new_config_file = g_key_file_new();
-    if ( g_key_file_load_from_data(new_config_file, merged_data->str, -1, G_KEY_FILE_NONE, &error) )
-        g_hash_table_insert(config_files, g_strdup(id), new_config_file);
+    new_file = g_key_file_new();
+    if ( g_key_file_load_from_data(new_file, merged_data->str, -1, G_KEY_FILE_NONE, &error) )
+        g_hash_table_insert(files, g_strdup(id), new_file);
     else
     {
         g_warning("Couldn't merge '%s' and '%s': %s", id, parent_id, error->message);
         g_clear_error(&error);
-        g_key_file_free(new_config_file);
-        new_config_file = NULL;
+        g_key_file_free(new_file);
+        new_file = NULL;
     }
 
     g_string_free(merged_data, TRUE);
@@ -538,7 +541,7 @@ _eventd_config_process_config_file(GHashTable *config_files, const gchar *id, GK
 fail:
     g_free(parent_id);
 
-    return new_config_file;
+    return new_file;
 }
 
 EventdConfig *

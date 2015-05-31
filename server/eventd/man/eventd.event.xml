@@ -108,26 +108,31 @@
         <title>Sections</title>
 
         <refsect2>
+            <title>Section <varname>[File]</varname></title>
+
+            <para>
+                This section if for file inclusion.
+                It allows a more customised management of your event files.
+            </para>
+
+            <variablelist>
+                <varlistentry>
+                    <term><varname>Extends=</varname></term>
+                    <listitem>
+                        <para>A <type>configuration id</type></para>
+                        <para>Prepend the configuration of the specified event to this event.</para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+        </refsect2>
+
+        <refsect2>
             <title>Section <varname>[Event]</varname></title>
 
             <para>
                 This is the main event configuration section.
                 It contains the core related settings.
             </para>
-
-            <refsect3>
-                <title>Configuration file related key</title>
-
-                <variablelist>
-                    <varlistentry>
-                        <term><varname>Extends=</varname></term>
-                        <listitem>
-                            <para>A <type>configuration id</type></para>
-                            <para>Prepend the configuration of the specified event to this event.</para>
-                        </listitem>
-                    </varlistentry>
-                </variablelist>
-            </refsect3>
 
             <refsect3>
                 <title>Matching keys</title>
