@@ -181,14 +181,6 @@ _eventd_config_get_event_config_id(EventdConfig *config, EventdEvent *event, GQu
     return NULL;
 }
 
-static void
-_eventd_config_event_free(gpointer data)
-{
-    EventdConfigEvent *event = data;
-
-    g_free(event);
-}
-
 gboolean
 eventd_config_process_event(EventdConfig *config, EventdEvent *event, GQuark *flags, const gchar **config_id)
 {
@@ -557,7 +549,7 @@ eventd_config_new(void)
     config = g_new0(EventdConfig, 1);
 
     config->event_ids = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_config_matches_free);
-    config->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_config_event_free);
+    config->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 
     return config;
 }
