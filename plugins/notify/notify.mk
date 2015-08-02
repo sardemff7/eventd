@@ -9,9 +9,11 @@ man5_MANS += \
 	plugins/notify/man/eventd-notify.event.5 \
 	$(null)
 
+if !ENABLE_DBUS
 dist_event_DATA += \
 	plugins/notify/events/libnotify.event \
 	$(null)
+endif
 endif
 
 
