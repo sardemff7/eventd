@@ -33,6 +33,7 @@ pkgconfig_DATA += \
 	$(null)
 
 dist_vapi_DATA += \
+	server/libeventd-event/vapi/libeventd-event-private.vapi \
 	server/libeventd-event/vapi/libeventd-event.vapi \
 	$(null)
 

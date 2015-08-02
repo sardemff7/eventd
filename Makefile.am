@@ -32,7 +32,11 @@ systemduserunit_DATA =
 dbussessionservice_DATA =
 dbuscapabilities_DATA =
 
-EXTRA_DIST =
+EXTRA_DIST = \
+	autogen.sh \
+	README.md \
+	PROTOCOL.md \
+	$(null)
 CLEANFILES =
 
 
