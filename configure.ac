@@ -274,9 +274,6 @@ AM_CONDITIONAL(ENABLE_TTS, test x$enable_tts = xyes)
 # libnotify plugin
 AC_ARG_ENABLE(libnotify, AS_HELP_STRING([--enable-libnotify], [Enable libnotify support (client side)]), [], enable_libnotify=no)
 if test x$enable_libnotify = xyes; then
-    if test x$enable_dbus = xyes; then
-        AC_MSG_ERROR([*** You can’t activate both org.freedesktop.Notifications server and libnotify client at the same time])
-    fi
     PKG_CHECK_MODULES(NOTIFY, [libnotify >= $libnotify_min_version])
     PKG_CHECK_MODULES(GDK_PIXBUF, [gdk-pixbuf-2.0])
     AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_notify"

@@ -101,6 +101,19 @@ _eventd_libnotify_init(EventdCoreContext *core, EventdCoreInterface *interface)
         return NULL;
     }
 
+    gchar *server_name;
+    notify_get_server_info(&server_name, NULL, NULL, NULL);
+
+    if ( g_strcmp0(server_name, PACKAGE_NAME) == 0 )
+    {
+        g_debug("We would send notifications to ourselves: quitting");
+
+        g_free(server_name);
+        notify_uninit();
+        return NULL;
+    }
+    g_free(server_name);
+
     context = g_new0(EventdPluginContext, 1);
 
     context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_libnotify_event_free);
