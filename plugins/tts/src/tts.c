@@ -49,7 +49,7 @@ struct _EventdPluginContext {
  */
 
 static EventdPluginContext *
-_eventd_tts_init(EventdCoreContext *core, EventdCoreInterface *interface)
+_eventd_tts_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *interface)
 {
     gint sample_rate;
     EventdPluginContext *context;
@@ -166,13 +166,13 @@ EVENTD_EXPORT
 void
 eventd_plugin_get_interface(EventdPluginInterface *interface)
 {
-    libeventd_plugin_interface_add_init_callback(interface, _eventd_tts_init);
-    libeventd_plugin_interface_add_uninit_callback(interface, _eventd_tts_uninit);
+    eventd_plugin_interface_add_init_callback(interface, _eventd_tts_init);
+    eventd_plugin_interface_add_uninit_callback(interface, _eventd_tts_uninit);
 
-    libeventd_plugin_interface_add_stop_callback(interface, _eventd_tts_stop);
+    eventd_plugin_interface_add_stop_callback(interface, _eventd_tts_stop);
 
-    libeventd_plugin_interface_add_event_parse_callback(interface, _eventd_tts_event_parse);
-    libeventd_plugin_interface_add_config_reset_callback(interface, _eventd_tts_config_reset);
+    eventd_plugin_interface_add_event_parse_callback(interface, _eventd_tts_event_parse);
+    eventd_plugin_interface_add_config_reset_callback(interface, _eventd_tts_config_reset);
 
-    libeventd_plugin_interface_add_event_action_callback(interface, _eventd_tts_event_action);
+    eventd_plugin_interface_add_event_action_callback(interface, _eventd_tts_event_action);
 }

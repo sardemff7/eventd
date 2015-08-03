@@ -260,7 +260,7 @@ _eventd_im_conv_joined(PurpleConversation *_conv, EventdPluginContext *context)
  */
 
 static EventdPluginContext *
-_eventd_im_init(EventdCoreContext *core, EventdCoreInterface *interface)
+_eventd_im_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *interface)
 {
 #ifdef PURPLE_NEEDS_GLOBAL_LOADING
     /* Some ugly workaround for libpurple plugins that do not link to it */
@@ -595,15 +595,15 @@ EVENTD_EXPORT
 void
 eventd_plugin_get_interface(EventdPluginInterface *interface)
 {
-    libeventd_plugin_interface_add_init_callback(interface, _eventd_im_init);
-    libeventd_plugin_interface_add_uninit_callback(interface, _eventd_im_uninit);
+    eventd_plugin_interface_add_init_callback(interface, _eventd_im_init);
+    eventd_plugin_interface_add_uninit_callback(interface, _eventd_im_uninit);
 
-    libeventd_plugin_interface_add_global_parse_callback(interface, _eventd_im_global_parse);
-    libeventd_plugin_interface_add_event_parse_callback(interface, _eventd_im_event_parse);
-    libeventd_plugin_interface_add_config_reset_callback(interface, _eventd_im_config_reset);
+    eventd_plugin_interface_add_global_parse_callback(interface, _eventd_im_global_parse);
+    eventd_plugin_interface_add_event_parse_callback(interface, _eventd_im_event_parse);
+    eventd_plugin_interface_add_config_reset_callback(interface, _eventd_im_config_reset);
 
-    libeventd_plugin_interface_add_start_callback(interface, _eventd_im_start);
-    libeventd_plugin_interface_add_stop_callback(interface, _eventd_im_stop);
+    eventd_plugin_interface_add_start_callback(interface, _eventd_im_start);
+    eventd_plugin_interface_add_stop_callback(interface, _eventd_im_stop);
 
-    libeventd_plugin_interface_add_event_action_callback(interface, _eventd_im_event_action);
+    eventd_plugin_interface_add_event_action_callback(interface, _eventd_im_event_action);
 }

@@ -25,8 +25,8 @@
 
 #include <libeventd-event-types.h>
 
-typedef struct _EventdCoreContext EventdCoreContext;
-typedef struct _EventdCoreInterface EventdCoreInterface;
+typedef struct _EventdCoreContext EventdPluginCoreContext;
+typedef struct _EventdPluginCoreInterface EventdPluginCoreInterface;
 
 typedef struct _EventdPluginContext EventdPluginContext;
 typedef struct EventdPluginInterface EventdPluginInterface;
@@ -42,7 +42,7 @@ typedef enum {
  * eventd plugin interface
  */
 
-typedef EventdPluginContext *(*EventdPluginInitFunc)(EventdCoreContext *core, EventdCoreInterface *interface);
+typedef EventdPluginContext *(*EventdPluginInitFunc)(EventdPluginCoreContext *core, EventdPluginCoreInterface *interface);
 typedef void (*EventdPluginSimpleFunc)(EventdPluginContext *context);
 typedef GOptionGroup *(*EventdPluginGetOptionGroupFunc)(EventdPluginContext *context);
 typedef EventdPluginCommandStatus (*EventdPluginControlCommandFunc)(EventdPluginContext *context, guint64 argc, const gchar * const *argv, gchar **status);
@@ -52,30 +52,30 @@ typedef void (*EventdPluginEventDispatchFunc)(EventdPluginContext *context, cons
 
 typedef void (*EventdPluginGetInterfaceFunc)(EventdPluginInterface *interface);
 
-void libeventd_plugin_interface_add_init_callback(EventdPluginInterface *interface, EventdPluginInitFunc callback);
-void libeventd_plugin_interface_add_uninit_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback);
+void eventd_plugin_interface_add_init_callback(EventdPluginInterface *interface, EventdPluginInitFunc callback);
+void eventd_plugin_interface_add_uninit_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback);
 
-void libeventd_plugin_interface_add_get_option_group_callback(EventdPluginInterface *interface, EventdPluginGetOptionGroupFunc callback);
+void eventd_plugin_interface_add_get_option_group_callback(EventdPluginInterface *interface, EventdPluginGetOptionGroupFunc callback);
 
-void libeventd_plugin_interface_add_start_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback);
-void libeventd_plugin_interface_add_stop_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback);
+void eventd_plugin_interface_add_start_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback);
+void eventd_plugin_interface_add_stop_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback);
 
-void libeventd_plugin_interface_add_control_command_callback(EventdPluginInterface *interface, EventdPluginControlCommandFunc callback);
+void eventd_plugin_interface_add_control_command_callback(EventdPluginInterface *interface, EventdPluginControlCommandFunc callback);
 
-void libeventd_plugin_interface_add_config_init_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback);
-void libeventd_plugin_interface_add_global_parse_callback(EventdPluginInterface *interface, EventdPluginGlobalParseFunc callback);
-void libeventd_plugin_interface_add_event_parse_callback(EventdPluginInterface *interface, EventdPluginEventParseFunc callback);
-void libeventd_plugin_interface_add_config_reset_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback);
+void eventd_plugin_interface_add_config_init_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback);
+void eventd_plugin_interface_add_global_parse_callback(EventdPluginInterface *interface, EventdPluginGlobalParseFunc callback);
+void eventd_plugin_interface_add_event_parse_callback(EventdPluginInterface *interface, EventdPluginEventParseFunc callback);
+void eventd_plugin_interface_add_config_reset_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback);
 
-void libeventd_plugin_interface_add_event_action_callback(EventdPluginInterface *interface, EventdPluginEventDispatchFunc callback);
+void eventd_plugin_interface_add_event_action_callback(EventdPluginInterface *interface, EventdPluginEventDispatchFunc callback);
 
 
 /*
  * eventd core interface
  */
 
-GList *libeventd_core_get_sockets(EventdCoreContext *context, EventdCoreInterface *interface, const gchar * const *binds);
+GList *eventd_plugin_core_get_sockets(EventdPluginCoreContext *context, EventdPluginCoreInterface *interface, const gchar * const *binds);
 
-gboolean libeventd_core_push_event(EventdCoreContext *context, EventdCoreInterface *interface, EventdEvent *event);
+gboolean eventd_plugin_core_push_event(EventdPluginCoreContext *context, EventdPluginCoreInterface *interface, EventdEvent *event);
 
 #endif /* __EVENTD_EVENTD_PLUGIN_H__ */

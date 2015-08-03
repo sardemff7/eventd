@@ -25,15 +25,14 @@
 
 #include <eventd-plugin.h>
 
-typedef GList *(*EventdCoreGetSocketsFunc)(EventdCoreContext *context, const gchar * const *binds);
+typedef GList *(*EventdPluginCoreGetSocketsFunc)(EventdPluginCoreContext *context, const gchar * const *binds);
 
-typedef const gchar *(*EventdCoreGetEventConfigIdFunc)(EventdCoreContext *context, EventdEvent *event);
-typedef gboolean (*EventdCorePushEventFunc)(EventdCoreContext *context, EventdEvent *event);
+typedef gboolean (*EventdPluginCorePushEventFunc)(EventdPluginCoreContext *context, EventdEvent *event);
 
-struct _EventdCoreInterface {
-    EventdCoreGetSocketsFunc get_sockets;
+struct _EventdPluginCoreInterface {
+    EventdPluginCoreGetSocketsFunc get_sockets;
 
-    EventdCorePushEventFunc push_event;
+    EventdPluginCorePushEventFunc push_event;
 };
 
 struct EventdPluginInterface {

@@ -36,8 +36,8 @@
 #define NOTIFICATION_SPEC_VERSION  "1.2"
 
 struct _EventdPluginContext {
-    EventdCoreContext *core;
-    EventdCoreInterface *core_interface;
+    EventdPluginCoreContext *core;
+    EventdPluginCoreInterface *core_interface;
     GDBusNodeInfo *introspection_data;
     gboolean disabled;
     guint id;
@@ -78,7 +78,7 @@ _eventd_dbus_event_ended(EventdEvent *event, EventdEventEndReason reason, Eventd
 static guint32
 _eventd_dbus_notification_new(EventdPluginContext *context, const gchar *sender, EventdEvent *event)
 {
-    if ( ! libeventd_core_push_event(context->core, context->core_interface, event) )
+    if ( ! eventd_plugin_core_push_event(context->core, context->core_interface, event) )
         return 0;
 
     EventdDbusNotification *notification;
@@ -412,7 +412,7 @@ _eventd_dbus_on_name_lost(GDBusConnection *connection, const gchar *name, gpoint
  */
 
 static EventdPluginContext *
-_eventd_dbus_init(EventdCoreContext *core, EventdCoreInterface *core_interface)
+_eventd_dbus_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *core_interface)
 {
     EventdPluginContext *context;
     GError *error = NULL;
@@ -606,14 +606,14 @@ EVENTD_EXPORT
 void
 eventd_plugin_get_interface(EventdPluginInterface *interface)
 {
-    libeventd_plugin_interface_add_init_callback(interface, _eventd_dbus_init);
-    libeventd_plugin_interface_add_uninit_callback(interface, _eventd_dbus_uninit);
+    eventd_plugin_interface_add_init_callback(interface, _eventd_dbus_init);
+    eventd_plugin_interface_add_uninit_callback(interface, _eventd_dbus_uninit);
 
-    libeventd_plugin_interface_add_get_option_group_callback(interface, _eventd_dbus_get_option_group);
+    eventd_plugin_interface_add_get_option_group_callback(interface, _eventd_dbus_get_option_group);
 
-    libeventd_plugin_interface_add_config_init_callback(interface, _eventd_dbus_config_init);
-    libeventd_plugin_interface_add_config_reset_callback(interface, _eventd_dbus_config_reset);
+    eventd_plugin_interface_add_config_init_callback(interface, _eventd_dbus_config_init);
+    eventd_plugin_interface_add_config_reset_callback(interface, _eventd_dbus_config_reset);
 
-    libeventd_plugin_interface_add_start_callback(interface, _eventd_dbus_start);
-    libeventd_plugin_interface_add_stop_callback(interface, _eventd_dbus_stop);
+    eventd_plugin_interface_add_start_callback(interface, _eventd_dbus_start);
+    eventd_plugin_interface_add_stop_callback(interface, _eventd_dbus_stop);
 }

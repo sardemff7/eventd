@@ -79,7 +79,7 @@ _eventd_canberra_event_free(gpointer data)
  */
 
 static EventdPluginContext *
-_eventd_libcanberra_init(EventdCoreContext *core, EventdCoreInterface *interface)
+_eventd_libcanberra_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *interface)
 {
     EventdPluginContext *context;
 
@@ -254,16 +254,16 @@ EVENTD_EXPORT
 void
 eventd_plugin_get_interface(EventdPluginInterface *interface)
 {
-    libeventd_plugin_interface_add_init_callback(interface, _eventd_libcanberra_init);
-    libeventd_plugin_interface_add_uninit_callback(interface, _eventd_libcanberra_uninit);
+    eventd_plugin_interface_add_init_callback(interface, _eventd_libcanberra_init);
+    eventd_plugin_interface_add_uninit_callback(interface, _eventd_libcanberra_uninit);
 
-    libeventd_plugin_interface_add_start_callback(interface, _eventd_libcanberra_start);
-    libeventd_plugin_interface_add_stop_callback(interface, _eventd_libcanberra_stop);
+    eventd_plugin_interface_add_start_callback(interface, _eventd_libcanberra_start);
+    eventd_plugin_interface_add_stop_callback(interface, _eventd_libcanberra_stop);
 
-    libeventd_plugin_interface_add_global_parse_callback(interface, _eventd_libcanberra_global_parse);
-    libeventd_plugin_interface_add_event_parse_callback(interface, _eventd_libcanberra_event_parse);
-    libeventd_plugin_interface_add_config_reset_callback(interface, _eventd_libcanberra_config_reset);
+    eventd_plugin_interface_add_global_parse_callback(interface, _eventd_libcanberra_global_parse);
+    eventd_plugin_interface_add_event_parse_callback(interface, _eventd_libcanberra_event_parse);
+    eventd_plugin_interface_add_config_reset_callback(interface, _eventd_libcanberra_config_reset);
 
-    libeventd_plugin_interface_add_event_action_callback(interface, _eventd_libcanberra_event_action);
+    eventd_plugin_interface_add_event_action_callback(interface, _eventd_libcanberra_event_action);
 }
 

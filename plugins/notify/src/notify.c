@@ -89,7 +89,7 @@ _eventd_libnotify_event_free(gpointer data)
  */
 
 static EventdPluginContext *
-_eventd_libnotify_init(EventdCoreContext *core, EventdCoreInterface *interface)
+_eventd_libnotify_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *interface)
 {
     EventdPluginContext *context;
 
@@ -242,12 +242,12 @@ EVENTD_EXPORT
 void
 eventd_plugin_get_interface(EventdPluginInterface *interface)
 {
-    libeventd_plugin_interface_add_init_callback(interface, _eventd_libnotify_init);
-    libeventd_plugin_interface_add_uninit_callback(interface, _eventd_libnotify_uninit);
+    eventd_plugin_interface_add_init_callback(interface, _eventd_libnotify_init);
+    eventd_plugin_interface_add_uninit_callback(interface, _eventd_libnotify_uninit);
 
-    libeventd_plugin_interface_add_event_parse_callback(interface, _eventd_libnotify_event_parse);
-    libeventd_plugin_interface_add_config_reset_callback(interface, _eventd_libnotify_config_reset);
+    eventd_plugin_interface_add_event_parse_callback(interface, _eventd_libnotify_event_parse);
+    eventd_plugin_interface_add_config_reset_callback(interface, _eventd_libnotify_config_reset);
 
-    libeventd_plugin_interface_add_event_action_callback(interface, _eventd_libnotify_event_action);
+    eventd_plugin_interface_add_event_action_callback(interface, _eventd_libnotify_event_action);
 }
 

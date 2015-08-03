@@ -50,7 +50,7 @@ static GHashTable *plugins = NULL;
 
 
 static void
-_eventd_plugins_load_dir(EventdCoreContext *core, EventdCoreInterface *interface, const gchar *plugins_dir_name,  gchar **whitelist,  gchar **blacklist)
+_eventd_plugins_load_dir(EventdPluginCoreContext *core, EventdPluginCoreInterface *interface, const gchar *plugins_dir_name,  gchar **whitelist,  gchar **blacklist)
 {
     GError *error;
     GDir *plugins_dir;
@@ -186,7 +186,7 @@ _eventd_plugins_plugin_free(gpointer data)
 }
 
 void
-eventd_plugins_load(EventdCoreContext *core, EventdCoreInterface *interface)
+eventd_plugins_load(EventdPluginCoreContext *core, EventdPluginCoreInterface *interface)
 {
     const gchar *env_whitelist;
     const gchar *env_blacklist;

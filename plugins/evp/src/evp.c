@@ -43,8 +43,8 @@
 #endif /* ! ENABLE_AVAHI */
 
 struct _EventdPluginContext {
-    EventdCoreContext *core;
-    EventdCoreInterface *core_interface;
+    EventdPluginCoreContext *core;
+    EventdPluginCoreInterface *core_interface;
     EventdEvpAvahiContext *avahi;
     gboolean default_bind;
     gboolean default_unix;
@@ -150,7 +150,7 @@ _eventd_evp_event(gpointer data, LibeventdEvpContext *evp, gchar *id, EventdEven
     g_debug("Received an event (category: %s): %s", eventd_event_get_category(event), eventd_event_get_name(event));
 #endif /* DEBUG */
 
-    if ( ! libeventd_core_push_event(client->context->core, client->context->core_interface, event) )
+    if ( ! eventd_plugin_core_push_event(client->context->core, client->context->core_interface, event) )
     {
         GError *error = NULL;
         if ( ! libeventd_evp_context_send_ended(evp, id, EVENTD_EVENT_END_REASON_RESERVED, &error) )
@@ -261,7 +261,7 @@ _eventd_service_connection_handler(GSocketService *socket_service, GSocketConnec
  */
 
 static EventdPluginContext *
-_eventd_evp_init(EventdCoreContext *core, EventdCoreInterface *core_interface)
+_eventd_evp_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *core_interface)
 {
     EventdPluginContext *service;
 
@@ -299,7 +299,7 @@ static GList *
 _eventd_evp_add_socket(GList *used_sockets, EventdPluginContext *context, const gchar * const *binds)
 {
     GList *sockets;
-    sockets = libeventd_core_get_sockets(context->core, context->core_interface, binds);
+    sockets = eventd_plugin_core_get_sockets(context->core, context->core_interface, binds);
 
     GList *socket_;
     for ( socket_ = sockets ; socket_ != NULL ; socket_ = g_list_next(socket_) )
@@ -456,15 +456,15 @@ EVENTD_EXPORT
 void
 eventd_plugin_get_interface(EventdPluginInterface *interface)
 {
-    libeventd_plugin_interface_add_init_callback(interface, _eventd_evp_init);
-    libeventd_plugin_interface_add_uninit_callback(interface, _eventd_evp_uninit);
+    eventd_plugin_interface_add_init_callback(interface, _eventd_evp_init);
+    eventd_plugin_interface_add_uninit_callback(interface, _eventd_evp_uninit);
 
-    libeventd_plugin_interface_add_get_option_group_callback(interface, _eventd_evp_get_option_group);
+    eventd_plugin_interface_add_get_option_group_callback(interface, _eventd_evp_get_option_group);
 
-    libeventd_plugin_interface_add_start_callback(interface, _eventd_evp_start);
-    libeventd_plugin_interface_add_stop_callback(interface, _eventd_evp_stop);
+    eventd_plugin_interface_add_start_callback(interface, _eventd_evp_start);
+    eventd_plugin_interface_add_stop_callback(interface, _eventd_evp_stop);
 
-    libeventd_plugin_interface_add_global_parse_callback(interface, _eventd_evp_global_parse);
-    libeventd_plugin_interface_add_event_parse_callback(interface, _eventd_evp_event_parse);
-    libeventd_plugin_interface_add_config_reset_callback(interface, _eventd_evp_config_reset);
+    eventd_plugin_interface_add_global_parse_callback(interface, _eventd_evp_global_parse);
+    eventd_plugin_interface_add_event_parse_callback(interface, _eventd_evp_event_parse);
+    eventd_plugin_interface_add_config_reset_callback(interface, _eventd_evp_config_reset);
 }

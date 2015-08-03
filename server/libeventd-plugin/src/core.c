@@ -31,14 +31,14 @@
 
 EVENTD_EXPORT
 GList *
-libeventd_core_get_sockets(EventdCoreContext *context, EventdCoreInterface *interface, const gchar * const *binds)
+eventd_plugin_core_get_sockets(EventdPluginCoreContext *context, EventdPluginCoreInterface *interface, const gchar * const *binds)
 {
     return interface->get_sockets(context, binds);
 }
 
 EVENTD_EXPORT
 gboolean
-libeventd_core_push_event(EventdCoreContext *context, EventdCoreInterface *interface, EventdEvent *event)
+eventd_plugin_core_push_event(EventdPluginCoreContext *context, EventdPluginCoreInterface *interface, EventdEvent *event)
 {
     return interface->push_event(context, event);
 

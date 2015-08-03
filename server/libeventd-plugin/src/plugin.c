@@ -29,19 +29,19 @@
 #include <eventd-plugin.h>
 #include <eventd-plugin-interfaces.h>
 
-EVENTD_EXPORT void libeventd_plugin_interface_add_init_callback(EventdPluginInterface *interface, EventdPluginInitFunc callback) { interface->init = callback; }
-EVENTD_EXPORT void libeventd_plugin_interface_add_uninit_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback) { interface->uninit = callback; }
+EVENTD_EXPORT void eventd_plugin_interface_add_init_callback(EventdPluginInterface *interface, EventdPluginInitFunc callback) { interface->init = callback; }
+EVENTD_EXPORT void eventd_plugin_interface_add_uninit_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback) { interface->uninit = callback; }
 
-EVENTD_EXPORT void libeventd_plugin_interface_add_get_option_group_callback(EventdPluginInterface *interface, EventdPluginGetOptionGroupFunc callback) { interface->get_option_group = callback; }
+EVENTD_EXPORT void eventd_plugin_interface_add_get_option_group_callback(EventdPluginInterface *interface, EventdPluginGetOptionGroupFunc callback) { interface->get_option_group = callback; }
 
-EVENTD_EXPORT void libeventd_plugin_interface_add_start_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback) { interface->start = callback; }
-EVENTD_EXPORT void libeventd_plugin_interface_add_stop_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback) { interface->stop = callback; }
+EVENTD_EXPORT void eventd_plugin_interface_add_start_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback) { interface->start = callback; }
+EVENTD_EXPORT void eventd_plugin_interface_add_stop_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback) { interface->stop = callback; }
 
-EVENTD_EXPORT void libeventd_plugin_interface_add_control_command_callback(EventdPluginInterface *interface, EventdPluginControlCommandFunc callback) { interface->control_command = callback; }
+EVENTD_EXPORT void eventd_plugin_interface_add_control_command_callback(EventdPluginInterface *interface, EventdPluginControlCommandFunc callback) { interface->control_command = callback; }
 
-EVENTD_EXPORT void libeventd_plugin_interface_add_config_init_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback) { interface->config_init = callback; }
-EVENTD_EXPORT void libeventd_plugin_interface_add_global_parse_callback(EventdPluginInterface *interface, EventdPluginGlobalParseFunc callback) { interface->global_parse = callback; }
-EVENTD_EXPORT void libeventd_plugin_interface_add_event_parse_callback(EventdPluginInterface *interface, EventdPluginEventParseFunc callback) { interface->event_parse = callback; }
-EVENTD_EXPORT void libeventd_plugin_interface_add_config_reset_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback) { interface->config_reset = callback; }
+EVENTD_EXPORT void eventd_plugin_interface_add_config_init_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback) { interface->config_init = callback; }
+EVENTD_EXPORT void eventd_plugin_interface_add_global_parse_callback(EventdPluginInterface *interface, EventdPluginGlobalParseFunc callback) { interface->global_parse = callback; }
+EVENTD_EXPORT void eventd_plugin_interface_add_event_parse_callback(EventdPluginInterface *interface, EventdPluginEventParseFunc callback) { interface->event_parse = callback; }
+EVENTD_EXPORT void eventd_plugin_interface_add_config_reset_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback) { interface->config_reset = callback; }
 
-EVENTD_EXPORT void libeventd_plugin_interface_add_event_action_callback(EventdPluginInterface *interface, EventdPluginEventDispatchFunc callback) { interface->event_action = callback; }
+EVENTD_EXPORT void eventd_plugin_interface_add_event_action_callback(EventdPluginInterface *interface, EventdPluginEventDispatchFunc callback) { interface->event_action = callback; }

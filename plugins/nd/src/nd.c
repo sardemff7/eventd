@@ -117,7 +117,7 @@ _eventd_nd_backend_remove_display(EventdNdContext *context, const gchar *target)
  */
 
 static EventdPluginContext *
-_eventd_nd_init(EventdCoreContext *core, EventdCoreInterface *interface)
+_eventd_nd_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *interface)
 {
     EventdPluginContext *context;
 
@@ -581,17 +581,17 @@ EVENTD_EXPORT
 void
 eventd_plugin_get_interface(EventdPluginInterface *interface)
 {
-    libeventd_plugin_interface_add_init_callback(interface, _eventd_nd_init);
-    libeventd_plugin_interface_add_uninit_callback(interface, _eventd_nd_uninit);
+    eventd_plugin_interface_add_init_callback(interface, _eventd_nd_init);
+    eventd_plugin_interface_add_uninit_callback(interface, _eventd_nd_uninit);
 
-    libeventd_plugin_interface_add_start_callback(interface, _eventd_nd_start);
+    eventd_plugin_interface_add_start_callback(interface, _eventd_nd_start);
 
-    libeventd_plugin_interface_add_control_command_callback(interface, _eventd_nd_control_command);
+    eventd_plugin_interface_add_control_command_callback(interface, _eventd_nd_control_command);
 
-    libeventd_plugin_interface_add_global_parse_callback(interface, _eventd_nd_global_parse);
-    libeventd_plugin_interface_add_event_parse_callback(interface, _eventd_nd_event_parse);
-    libeventd_plugin_interface_add_config_reset_callback(interface, _eventd_nd_config_reset);
+    eventd_plugin_interface_add_global_parse_callback(interface, _eventd_nd_global_parse);
+    eventd_plugin_interface_add_event_parse_callback(interface, _eventd_nd_event_parse);
+    eventd_plugin_interface_add_config_reset_callback(interface, _eventd_nd_config_reset);
 
-    libeventd_plugin_interface_add_event_action_callback(interface, _eventd_nd_event_action);
+    eventd_plugin_interface_add_event_action_callback(interface, _eventd_nd_event_action);
 }
 

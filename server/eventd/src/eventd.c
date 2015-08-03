@@ -361,7 +361,7 @@ int
 main(int argc, char *argv[])
 {
     EventdCoreContext *context;
-    EventdCoreInterface interface =
+    EventdPluginCoreInterface interface =
     {
         .get_sockets = eventd_core_get_sockets,
 

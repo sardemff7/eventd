@@ -23,7 +23,7 @@
 #ifndef __EVENTD_PLUGINS_H__
 #define __EVENTD_PLUGINS_H__
 
-void eventd_plugins_load(EventdCoreContext *core, EventdCoreInterface *interface);
+void eventd_plugins_load(EventdPluginCoreContext *core, EventdPluginCoreInterface *interface);
 void eventd_plugins_unload(void);
 
 void eventd_plugins_add_option_group_all(GOptionContext *option_context);
