@@ -99,7 +99,7 @@ static void
 _eventd_tts_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile *config_file)
 {
     gboolean disable;
-    FormatString *message = NULL;
+    LibeventdFormatString *message = NULL;
 
     if ( ! g_key_file_has_group(config_file, "TTS") )
         return;
@@ -130,7 +130,7 @@ _eventd_tts_config_reset(EventdPluginContext *context)
 static void
 _eventd_tts_event_action(EventdPluginContext *context, const gchar *config_id, EventdEvent *event)
 {
-    const FormatString *message;
+    const LibeventdFormatString *message;
     gchar *msg;
     espeak_ERROR error;
 

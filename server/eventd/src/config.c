@@ -218,7 +218,7 @@ _eventd_config_defaults(EventdConfig *config)
 static void
 _eventd_config_parse_global(EventdConfig *config, GKeyFile *config_file)
 {
-    Int integer;
+    LibeventdInt integer;
 
     if ( ! g_key_file_has_group(config_file, "Event") )
         return;
@@ -235,7 +235,7 @@ _eventd_config_parse_client(EventdConfig *config, const gchar *id, GKeyFile *con
 {
     EventdConfigEvent *event;
     gboolean disable;
-    Int timeout;
+    LibeventdInt timeout;
 
     if ( ( libeventd_config_key_file_get_boolean(config_file, "Event", "Disable", &disable) == 0 ) && disable )
     {

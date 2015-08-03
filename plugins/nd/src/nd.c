@@ -329,7 +329,7 @@ _eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
 {
     if ( g_key_file_has_group(config_file, "Notification") )
     {
-        Int integer;
+        LibeventdInt integer;
         guint64 enum_value;
         gboolean boolean;
 

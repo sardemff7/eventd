@@ -67,7 +67,7 @@ static void
 _eventd_exec_event_parse(EventdPluginContext *context, const gchar *config_id, GKeyFile *config_file)
 {
     gboolean disable;
-    FormatString *command = NULL;
+    LibeventdFormatString *command = NULL;
 
     if ( ! g_key_file_has_group(config_file, "Exec") )
         return;
@@ -98,7 +98,7 @@ _eventd_exec_config_reset(EventdPluginContext *context)
 static void
 _eventd_exec_event_action(EventdPluginContext *context, const gchar *config_id, EventdEvent *event)
 {
-    const FormatString *command;
+    const LibeventdFormatString *command;
     gchar *cmd;
     GError *error;
 

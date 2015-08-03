@@ -25,51 +25,51 @@
 
 #include <libeventd-event-types.h>
 
-typedef struct _NkTokenList FormatString;
-typedef const gchar *(*FormatStringReplaceCallback)(const gchar *name, const EventdEvent *event, gconstpointer user_data);
+typedef struct _NkTokenList LibeventdFormatString;
+typedef const gchar *(*LibeventdFormatStringReplaceCallback)(const gchar *name, const EventdEvent *event, gconstpointer user_data);
 
 typedef struct {
     gint64 value;
     gboolean set;
-} Int;
+} LibeventdInt;
 
 typedef struct {
     gdouble r;
     gdouble g;
     gdouble b;
     gdouble a;
-} Colour;
+} LibeventdColour;
 
-typedef struct _Filename Filename;
+typedef struct _Filename LibeventdFilename;
 
 gint8 libeventd_config_key_file_get_boolean(GKeyFile *config_file, const gchar *group, const gchar *key, gboolean *value);
 gint8 libeventd_config_key_file_get_string(GKeyFile *config_file, const gchar *group, const gchar *key, gchar **value);
 gint8 libeventd_config_key_file_get_string_with_default(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *default_value, gchar **value);
 gint8 libeventd_config_key_file_get_locale_string(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *locale, gchar **value);
 gint8 libeventd_config_key_file_get_locale_string_with_default(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *locale, const gchar *default_value, gchar **value);
-gint8 libeventd_config_key_file_get_int(GKeyFile *config_file, const gchar *group, const gchar *key, Int *value);
+gint8 libeventd_config_key_file_get_int(GKeyFile *config_file, const gchar *group, const gchar *key, LibeventdInt *value);
 gint8 libeventd_config_key_file_get_int_with_default(GKeyFile *config_file, const gchar *group, const gchar *key, gint64 default_value, gint64 *value);
 gint8 libeventd_config_key_file_get_enum(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar * const *values, guint64 size, guint64 *value);
 gint8 libeventd_config_key_file_get_string_list(GKeyFile *config_file, const gchar *group, const gchar *key, gchar ***value, gsize *length);
-gint8 libeventd_config_key_file_get_format_string(GKeyFile *config_file, const gchar *group, const gchar *key, FormatString **value);
-gint8 libeventd_config_key_file_get_format_string_with_default(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *default_value, FormatString **value);
-gint8 libeventd_config_key_file_get_locale_format_string(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *locale, FormatString **value);
-gint8 libeventd_config_key_file_get_locale_format_string_with_default(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *locale, const gchar *default_value, FormatString **value);
-gint8 libeventd_config_key_file_get_filename(GKeyFile *config_file, const gchar *group, const gchar *key, Filename **value);
-gint8 libeventd_config_key_file_get_filename_with_default(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *default_value, Filename **value);
-gint8 libeventd_config_key_file_get_locale_filename(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *locale, Filename **value);
-gint8 libeventd_config_key_file_get_locale_filename_with_default(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *locale, const gchar *default_value, Filename **value);
-gint8 libeventd_config_key_file_get_colour(GKeyFile *config_file, const gchar *group, const gchar *key, Colour *value);
+gint8 libeventd_config_key_file_get_format_string(GKeyFile *config_file, const gchar *group, const gchar *key, LibeventdFormatString **value);
+gint8 libeventd_config_key_file_get_format_string_with_default(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *default_value, LibeventdFormatString **value);
+gint8 libeventd_config_key_file_get_locale_format_string(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *locale, LibeventdFormatString **value);
+gint8 libeventd_config_key_file_get_locale_format_string_with_default(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *locale, const gchar *default_value, LibeventdFormatString **value);
+gint8 libeventd_config_key_file_get_filename(GKeyFile *config_file, const gchar *group, const gchar *key, LibeventdFilename **value);
+gint8 libeventd_config_key_file_get_filename_with_default(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *default_value, LibeventdFilename **value);
+gint8 libeventd_config_key_file_get_locale_filename(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *locale, LibeventdFilename **value);
+gint8 libeventd_config_key_file_get_locale_filename_with_default(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *locale, const gchar *default_value, LibeventdFilename **value);
+gint8 libeventd_config_key_file_get_colour(GKeyFile *config_file, const gchar *group, const gchar *key, LibeventdColour *value);
 
-gchar *libeventd_format_string_get_string(const FormatString *format_string, EventdEvent *event, FormatStringReplaceCallback callback, gconstpointer user_data);
-gboolean libeventd_filename_get_path(const Filename *filename, EventdEvent *event, const gchar *subdir, const gchar **data, gchar **path);
+gchar *libeventd_format_string_get_string(const LibeventdFormatString *format_string, EventdEvent *event, LibeventdFormatStringReplaceCallback callback, gconstpointer user_data);
+gboolean libeventd_filename_get_path(const LibeventdFilename *filename, EventdEvent *event, const gchar *subdir, const gchar **data, gchar **path);
 
-FormatString *libeventd_format_string_new(gchar *string);
-FormatString *libeventd_format_string_ref(FormatString *format_string);
-void libeventd_format_string_unref(FormatString *format_string);
+LibeventdFormatString *libeventd_format_string_new(gchar *string);
+LibeventdFormatString *libeventd_format_string_ref(LibeventdFormatString *format_string);
+void libeventd_format_string_unref(LibeventdFormatString *format_string);
 
-Filename *libeventd_filename_new(gchar *string);
-Filename *libeventd_filename_ref(Filename *filename);
-void libeventd_filename_unref(Filename *filename);
+LibeventdFilename *libeventd_filename_new(gchar *string);
+LibeventdFilename *libeventd_filename_ref(LibeventdFilename *filename);
+void libeventd_filename_unref(LibeventdFilename *filename);
 
 #endif /* __LIBEVENTD_CONFIG_H__ */

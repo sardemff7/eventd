@@ -42,10 +42,10 @@ struct _EventdPluginContext {
 };
 
 typedef struct {
-    FormatString *title;
-    FormatString *message;
-    Filename *image;
-    Filename *icon;
+    LibeventdFormatString *title;
+    LibeventdFormatString *message;
+    LibeventdFilename *image;
+    LibeventdFilename *icon;
     gdouble scale;
 } EventdLibnotifyEvent;
 
@@ -55,7 +55,7 @@ typedef struct {
  */
 
 static EventdLibnotifyEvent *
-_eventd_libnotify_event_new(FormatString *title, FormatString *message, Filename *image, Filename *icon, gint64 scale)
+_eventd_libnotify_event_new(LibeventdFormatString *title, LibeventdFormatString *message, LibeventdFilename *image, LibeventdFilename *icon, gint64 scale)
 {
     EventdLibnotifyEvent *event;
 
@@ -141,10 +141,10 @@ _eventd_libnotify_event_parse(EventdPluginContext *context, const gchar *id, GKe
 {
     gboolean disable;
     EventdLibnotifyEvent *libnotify_event = NULL;
-    FormatString *title = NULL;
-    FormatString *message = NULL;
-    Filename *image = NULL;
-    Filename *icon = NULL;
+    LibeventdFormatString *title = NULL;
+    LibeventdFormatString *message = NULL;
+    LibeventdFilename *image = NULL;
+    LibeventdFilename *icon = NULL;
     gint64 scale;
 
     if ( ! g_key_file_has_group(config_file, "Libnotify") )

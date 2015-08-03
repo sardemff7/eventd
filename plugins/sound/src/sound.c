@@ -165,7 +165,7 @@ static void
 _eventd_sound_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile *config_file)
 {
     gboolean disable;
-    Filename *sound = NULL;
+    LibeventdFilename *sound = NULL;
 
     if ( ! g_key_file_has_group(config_file, "Sound") )
         return;
@@ -196,7 +196,7 @@ _eventd_sound_config_reset(EventdPluginContext *context)
 static void
 _eventd_sound_event_action(EventdPluginContext *context, const gchar *config_id, EventdEvent *event)
 {
-    Filename *sound;
+    LibeventdFilename *sound;
     gchar *file;
     gpointer data = NULL;
     gsize length = 0;

@@ -66,11 +66,11 @@ struct _EventdNdStyle {
     struct {
         gboolean set;
 
-        FormatString *title;
-        FormatString *message;
+        LibeventdFormatString *title;
+        LibeventdFormatString *message;
 #ifdef ENABLE_GDK_PIXBUF
-        Filename *image;
-        Filename *icon;
+        LibeventdFilename *image;
+        LibeventdFilename *icon;
 #endif /* ENABLE_GDK_PIXBUF */
     } template;
 
@@ -82,7 +82,7 @@ struct _EventdNdStyle {
 
         gint   padding;
         gint   radius;
-        Colour colour;
+        LibeventdColour colour;
     } bubble;
 
 #ifdef ENABLE_GDK_PIXBUF
@@ -111,7 +111,7 @@ struct _EventdNdStyle {
 
         PangoFontDescription *font;
         PangoAlignment align;
-        Colour colour;
+        LibeventdColour colour;
     } title;
 
     struct {
@@ -121,7 +121,7 @@ struct _EventdNdStyle {
         guint8 max_lines;
         PangoFontDescription *font;
         PangoAlignment align;
-        Colour colour;
+        LibeventdColour colour;
     } message;
 };
 
@@ -221,7 +221,7 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
     {
         self->template.set = TRUE;
 
-        FormatString *string = NULL;
+        LibeventdFormatString *string = NULL;
 
         libeventd_format_string_unref(self->template.title);
         if ( libeventd_config_key_file_get_locale_format_string(config_file, "Notification", "Title", NULL, &string) == 0 )
@@ -237,7 +237,7 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
             self->template.message = libeventd_format_string_ref(eventd_nd_style_get_template_message(self->parent));
 
 #ifdef ENABLE_GDK_PIXBUF
-        Filename *filename = NULL;
+        LibeventdFilename *filename = NULL;
 
         libeventd_filename_unref(self->template.image);
         if ( libeventd_config_key_file_get_filename(config_file, "Notification", "Image", &filename) == 0 )
@@ -258,8 +258,8 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
     {
         self->bubble.set = TRUE;
 
-        Int integer;
-        Colour colour;
+        LibeventdInt integer;
+        LibeventdColour colour;
 
         if ( libeventd_config_key_file_get_int(config_file, "NotificationBubble", "MinWidth", &integer) == 0 )
             self->bubble.min_width = ( integer.value > 0 ) ? integer.value : 0;
@@ -297,7 +297,7 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
 
         gchar *string;
         guint64 enum_value;
-        Colour colour;
+        LibeventdColour colour;
 
         if ( libeventd_config_key_file_get_string(config_file, "NotificationTitle", "Font", &string) == 0 )
         {
@@ -326,10 +326,10 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
     {
         self->message.set = TRUE;
 
-        Int integer;
+        LibeventdInt integer;
         gchar *string;
         guint64 enum_value;
-        Colour colour;
+        LibeventdColour colour;
 
         if ( libeventd_config_key_file_get_int(config_file, "NotificationMessage", "Spacing", &integer) == 0 )
             self->message.spacing = integer.value;
@@ -369,7 +369,7 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
     {
         self->image.set = TRUE;
 
-        Int integer;
+        LibeventdInt integer;
 
         if ( libeventd_config_key_file_get_int(config_file, "NotificationImage", "MaxWidth", &integer) == 0 )
         {
@@ -399,7 +399,7 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
         self->icon.set = TRUE;
 
         guint64 enum_value;
-        Int integer;
+        LibeventdInt integer;
 
         if ( libeventd_config_key_file_get_enum(config_file, "NotificationIcon", "Placement", _eventd_nd_style_icon_placements, G_N_ELEMENTS(_eventd_nd_style_icon_placements), &enum_value) == 0 )
             self->icon.placement = enum_value;
@@ -466,7 +466,7 @@ eventd_nd_style_free(gpointer data)
 }
 
 
-FormatString *
+LibeventdFormatString *
 eventd_nd_style_get_template_title(EventdNdStyle *self)
 {
     if ( self->template.set )
@@ -474,7 +474,7 @@ eventd_nd_style_get_template_title(EventdNdStyle *self)
     return eventd_nd_style_get_template_title(self->parent);
 }
 
-FormatString *
+LibeventdFormatString *
 eventd_nd_style_get_template_message(EventdNdStyle *self)
 {
     if ( self->template.set )
@@ -482,7 +482,7 @@ eventd_nd_style_get_template_message(EventdNdStyle *self)
     return eventd_nd_style_get_template_message(self->parent);
 }
 
-Filename *
+LibeventdFilename *
 eventd_nd_style_get_template_image(EventdNdStyle *self)
 {
     if ( self->template.set )
@@ -490,7 +490,7 @@ eventd_nd_style_get_template_image(EventdNdStyle *self)
     return eventd_nd_style_get_template_image(self->parent);
 }
 
-Filename *
+LibeventdFilename *
 eventd_nd_style_get_template_icon(EventdNdStyle *self)
 {
     if ( self->template.set )
@@ -530,7 +530,7 @@ eventd_nd_style_get_bubble_radius(EventdNdStyle *self)
     return eventd_nd_style_get_bubble_radius(self->parent);
 }
 
-Colour
+LibeventdColour
 eventd_nd_style_get_bubble_colour(EventdNdStyle *self)
 {
     if ( self->bubble.set )
@@ -554,7 +554,7 @@ eventd_nd_style_get_title_align(EventdNdStyle *self)
     return eventd_nd_style_get_title_align(self->parent);
 }
 
-Colour
+LibeventdColour
 eventd_nd_style_get_title_colour(EventdNdStyle *self)
 {
     if ( self->title.set )
@@ -594,7 +594,7 @@ eventd_nd_style_get_message_align(EventdNdStyle *self)
     return eventd_nd_style_get_message_align(self->parent);
 }
 
-Colour
+LibeventdColour
 eventd_nd_style_get_message_colour(EventdNdStyle *self)
 {
     if ( self->message.set )
@@ -779,8 +779,8 @@ eventd_nd_notification_contents_new(EventdNdStyle *style, EventdEvent *event, gi
 {
     EventdNdNotificationContents *self;
 
-    const FormatString *title = eventd_nd_style_get_template_title(style);
-    const FormatString *message = eventd_nd_style_get_template_message(style);
+    const LibeventdFormatString *title = eventd_nd_style_get_template_title(style);
+    const LibeventdFormatString *message = eventd_nd_style_get_template_message(style);
 
     self = g_new0(EventdNdNotificationContents, 1);
 
@@ -792,8 +792,8 @@ eventd_nd_notification_contents_new(EventdNdStyle *style, EventdEvent *event, gi
         self->message = (g_free(self->message), NULL);
 
 #ifdef ENABLE_GDK_PIXBUF
-    const Filename *image = eventd_nd_style_get_template_image(style);
-    const Filename *icon = eventd_nd_style_get_template_icon(style);
+    const LibeventdFilename *image = eventd_nd_style_get_template_image(style);
+    const LibeventdFilename *icon = eventd_nd_style_get_template_icon(style);
     gchar *path;
     const gchar *data;
 
