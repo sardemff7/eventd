@@ -40,8 +40,8 @@ struct _EventdPluginContext {
 };
 
 typedef struct {
-    FormatString *sound_name;
-    Filename *sound_file;
+    LibeventdFormatString *sound_name;
+    LibeventdFilename *sound_file;
 } EventdCanberraEvent;
 
 
@@ -50,7 +50,7 @@ typedef struct {
  */
 
 static EventdCanberraEvent *
-_eventd_canberra_event_new(FormatString *sound_name, Filename *sound_file)
+_eventd_canberra_event_new(LibeventdFormatString *sound_name, LibeventdFilename *sound_file)
 {
     EventdCanberraEvent *event;
 
@@ -164,8 +164,8 @@ _eventd_libcanberra_event_parse(EventdPluginContext *context, const gchar *id, G
 {
     gboolean disable;
     EventdCanberraEvent *canberra_event = NULL;
-    FormatString *sound_name = NULL;
-    Filename *sound_file = NULL;
+    LibeventdFormatString *sound_name = NULL;
+    LibeventdFilename *sound_file = NULL;
 
     if ( ! g_key_file_has_group(config_file, "Libcanberra") )
         return;

@@ -219,7 +219,7 @@ _eventd_nd_cairo_text_process(EventdNdNotificationContents *notification, Eventd
 }
 
 static void
-_eventd_nd_cairo_bubble_draw(cairo_t *cr, Colour colour, gint radius, gint width, gint height)
+_eventd_nd_cairo_bubble_draw(cairo_t *cr, LibeventdColour colour, gint radius, gint width, gint height)
 {
     cairo_set_source_rgba(cr, colour.r, colour.g, colour.b, colour.a);
 
@@ -273,7 +273,7 @@ _eventd_nd_cairo_text_draw(cairo_t *cr, EventdNdStyle *style, PangoLayout *title
         offset_y += ( max_height - title_height ) / 2;
     pango_layout_set_width(title, max_width * PANGO_SCALE);
 
-    Colour colour;
+    LibeventdColour colour;
 
     colour = eventd_nd_style_get_title_colour(style);
     cairo_set_source_rgba(cr, colour.r, colour.g, colour.b, colour.a);

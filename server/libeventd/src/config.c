@@ -42,19 +42,19 @@
 struct _Filename {
     guint64 ref_count;
     gchar *data_name;
-    FormatString *file_uri;
+    LibeventdFormatString *file_uri;
 };
 
 EVENTD_EXPORT
-FormatString *
+LibeventdFormatString *
 libeventd_format_string_new(gchar *string)
 {
     return nk_token_list_parse(string);
 }
 
 EVENTD_EXPORT
-FormatString *
-libeventd_format_string_ref(FormatString *format_string)
+LibeventdFormatString *
+libeventd_format_string_ref(LibeventdFormatString *format_string)
 {
     if ( format_string == NULL )
         return NULL;
@@ -63,7 +63,7 @@ libeventd_format_string_ref(FormatString *format_string)
 
 EVENTD_EXPORT
 void
-libeventd_format_string_unref(FormatString *format_string)
+libeventd_format_string_unref(LibeventdFormatString *format_string)
 {
     if ( format_string == NULL )
         return;
@@ -71,11 +71,11 @@ libeventd_format_string_unref(FormatString *format_string)
 }
 
 EVENTD_EXPORT
-Filename *
+LibeventdFilename *
 libeventd_filename_new(gchar *string)
 {
     gchar *data_name = NULL;
-    FormatString *file_uri = NULL;
+    LibeventdFormatString *file_uri = NULL;
 
     if ( g_str_has_prefix(string, "file://") )
         file_uri = libeventd_format_string_new(string);
@@ -86,9 +86,9 @@ libeventd_filename_new(gchar *string)
         g_free(string);
         return NULL;
     }
-    Filename *filename;
+    LibeventdFilename *filename;
 
-    filename = g_new0(Filename, 1);
+    filename = g_new0(LibeventdFilename, 1);
     filename->ref_count = 1;
 
     filename->data_name = data_name;
@@ -98,8 +98,8 @@ libeventd_filename_new(gchar *string)
 }
 
 EVENTD_EXPORT
-Filename *
-libeventd_filename_ref(Filename *filename)
+LibeventdFilename *
+libeventd_filename_ref(LibeventdFilename *filename)
 {
     if ( filename != NULL )
         ++filename->ref_count;
@@ -108,7 +108,7 @@ libeventd_filename_ref(Filename *filename)
 
 EVENTD_EXPORT
 void
-libeventd_filename_unref(Filename *filename)
+libeventd_filename_unref(LibeventdFilename *filename)
 {
     if ( filename == NULL )
         return;
@@ -154,7 +154,7 @@ libeventd_config_key_file_get_boolean(GKeyFile *config_file, const gchar *group,
 
 EVENTD_EXPORT
 gint8
-libeventd_config_key_file_get_int(GKeyFile *config_file, const gchar *group, const gchar *key, Int *value)
+libeventd_config_key_file_get_int(GKeyFile *config_file, const gchar *group, const gchar *key, LibeventdInt *value)
 {
     GError *error = NULL;
 
@@ -169,7 +169,7 @@ gint8
 libeventd_config_key_file_get_int_with_default(GKeyFile *config_file, const gchar *group, const gchar *key, gint64 default_value, gint64 *ret_value)
 {
     gint8 r;
-    Int value;
+    LibeventdInt value;
 
     r = libeventd_config_key_file_get_int(config_file, group, key, &value);
     if ( r >= 0 )
@@ -257,7 +257,7 @@ libeventd_config_key_file_get_string_list(GKeyFile *config_file, const gchar *gr
 }
 
 static gint8
-_libeventd_config_key_file_get_format_string(gchar *string, FormatString **format_string)
+_libeventd_config_key_file_get_format_string(gchar *string, LibeventdFormatString **format_string)
 {
     libeventd_format_string_unref(*format_string);
     *format_string = libeventd_format_string_new(string);
@@ -267,7 +267,7 @@ _libeventd_config_key_file_get_format_string(gchar *string, FormatString **forma
 
 EVENTD_EXPORT
 gint8
-libeventd_config_key_file_get_format_string(GKeyFile *config_file, const gchar *group, const gchar *key, FormatString **value)
+libeventd_config_key_file_get_format_string(GKeyFile *config_file, const gchar *group, const gchar *key, LibeventdFormatString **value)
 {
     gchar *string;
     gint8 r;
@@ -280,7 +280,7 @@ libeventd_config_key_file_get_format_string(GKeyFile *config_file, const gchar *
 
 EVENTD_EXPORT
 gint8
-libeventd_config_key_file_get_format_string_with_default(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *default_value, FormatString **value)
+libeventd_config_key_file_get_format_string_with_default(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *default_value, LibeventdFormatString **value)
 {
     gchar *string;
     gint8 r;
@@ -293,7 +293,7 @@ libeventd_config_key_file_get_format_string_with_default(GKeyFile *config_file, 
 
 EVENTD_EXPORT
 gint8
-libeventd_config_key_file_get_locale_format_string(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *locale, FormatString **value)
+libeventd_config_key_file_get_locale_format_string(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *locale, LibeventdFormatString **value)
 {
     gchar *string;
     gint8 r;
@@ -306,7 +306,7 @@ libeventd_config_key_file_get_locale_format_string(GKeyFile *config_file, const 
 
 EVENTD_EXPORT
 gint8
-libeventd_config_key_file_get_locale_format_string_with_default(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *locale, const gchar *default_value, FormatString **value)
+libeventd_config_key_file_get_locale_format_string_with_default(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *locale, const gchar *default_value, LibeventdFormatString **value)
 {
     gchar *string;
     gint8 r;
@@ -318,9 +318,9 @@ libeventd_config_key_file_get_locale_format_string_with_default(GKeyFile *config
 }
 
 static gint8
-_libeventd_config_key_file_get_filename(gchar *string, Filename **value)
+_libeventd_config_key_file_get_filename(gchar *string, LibeventdFilename **value)
 {
-    Filename *filename;
+    LibeventdFilename *filename;
 
     filename = libeventd_filename_new(string);
     if ( filename == NULL )
@@ -334,7 +334,7 @@ _libeventd_config_key_file_get_filename(gchar *string, Filename **value)
 
 EVENTD_EXPORT
 gint8
-libeventd_config_key_file_get_filename(GKeyFile *config_file, const gchar *group, const gchar *key, Filename **value)
+libeventd_config_key_file_get_filename(GKeyFile *config_file, const gchar *group, const gchar *key, LibeventdFilename **value)
 {
     gchar *string;
     gint8 r;
@@ -347,7 +347,7 @@ libeventd_config_key_file_get_filename(GKeyFile *config_file, const gchar *group
 
 EVENTD_EXPORT
 gint8
-libeventd_config_key_file_get_filename_with_default(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *default_value, Filename **value)
+libeventd_config_key_file_get_filename_with_default(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *default_value, LibeventdFilename **value)
 {
     gchar *string;
     gint8 r;
@@ -360,7 +360,7 @@ libeventd_config_key_file_get_filename_with_default(GKeyFile *config_file, const
 
 EVENTD_EXPORT
 gint8
-libeventd_config_key_file_get_locale_filename(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *locale, Filename **value)
+libeventd_config_key_file_get_locale_filename(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *locale, LibeventdFilename **value)
 {
     gchar *string;
     gint8 r;
@@ -373,7 +373,7 @@ libeventd_config_key_file_get_locale_filename(GKeyFile *config_file, const gchar
 
 EVENTD_EXPORT
 gint8
-libeventd_config_key_file_get_locale_filename_with_default(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *locale, const gchar *default_value, Filename **value)
+libeventd_config_key_file_get_locale_filename_with_default(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *locale, const gchar *default_value, LibeventdFilename **value)
 {
     gchar *string;
     gint8 r;
@@ -386,7 +386,7 @@ libeventd_config_key_file_get_locale_filename_with_default(GKeyFile *config_file
 
 EVENTD_EXPORT
 gint8
-libeventd_config_key_file_get_colour(GKeyFile *config_file, const gchar *section, const gchar *key, Colour *colour)
+libeventd_config_key_file_get_colour(GKeyFile *config_file, const gchar *section, const gchar *key, LibeventdColour *colour)
 {
     gchar *string;
     gint8 r;
@@ -414,7 +414,7 @@ libeventd_config_key_file_get_colour(GKeyFile *config_file, const gchar *section
 
 typedef struct {
     EventdEvent *event;
-    FormatStringReplaceCallback callback;
+    LibeventdFormatStringReplaceCallback callback;
     gconstpointer user_data;
 } FormatStringReplaceData;
 
@@ -431,7 +431,7 @@ _libeventd_token_list_callback(const gchar *token, guint64 value, gconstpointer 
 
 EVENTD_EXPORT
 gchar *
-libeventd_format_string_get_string(const FormatString *format_string, EventdEvent *event, FormatStringReplaceCallback callback, gconstpointer user_data)
+libeventd_format_string_get_string(const LibeventdFormatString *format_string, EventdEvent *event, LibeventdFormatStringReplaceCallback callback, gconstpointer user_data)
 {
     if ( format_string == NULL )
         return NULL;
@@ -447,7 +447,7 @@ libeventd_format_string_get_string(const FormatString *format_string, EventdEven
 
 EVENTD_EXPORT
 gboolean
-libeventd_filename_get_path(const Filename *filename, EventdEvent *event, const gchar *subdir, const gchar **ret_data, gchar **ret_path)
+libeventd_filename_get_path(const LibeventdFilename *filename, EventdEvent *event, const gchar *subdir, const gchar **ret_data, gchar **ret_path)
 {
     g_return_val_if_fail(filename != NULL, FALSE);
     g_return_val_if_fail(event != NULL, FALSE);

@@ -83,7 +83,7 @@ fail:
 }
 
 GdkPixbuf *
-eventd_libnotify_get_image(EventdEvent *event, const Filename *image_name, const Filename *icon_name, gdouble overlay_scale, gchar **icon_uri)
+eventd_libnotify_get_image(EventdEvent *event, const LibeventdFilename *image_name, const LibeventdFilename *icon_name, gdouble overlay_scale, gchar **icon_uri)
 {
     gchar *file;
     const gchar *data;

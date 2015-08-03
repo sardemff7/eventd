@@ -59,7 +59,7 @@ typedef struct {
 
 typedef struct {
     EventdImAccount *account;
-    FormatString *message;
+    LibeventdFormatString *message;
     GList *convs;
 } EventdImEventAccount;
 
@@ -336,7 +336,7 @@ _eventd_im_global_parse(EventdPluginContext *context, GKeyFile *config_file)
         gchar *protocol = NULL;
         gchar *username = NULL;
         gchar *password = NULL;
-        Int port;
+        LibeventdInt port;
         gint64 reconnect_timeout;
         gint64 reconnect_max_tries;
         gint64 leave_timeout;
@@ -435,7 +435,7 @@ _eventd_im_event_parse(EventdPluginContext *context, const gchar *config_id, GKe
 
         have_account = TRUE;
 
-        FormatString *message = NULL;
+        LibeventdFormatString *message = NULL;
         if ( libeventd_config_key_file_get_locale_format_string(config_file, section, "Message", NULL, &message) != 0 )
             goto next;
 
