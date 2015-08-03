@@ -31,6 +31,7 @@ nd_la_SOURCES = \
 	plugins/nd/src/cairo.h \
 	plugins/nd/src/style.c \
 	plugins/nd/src/style.h \
+	plugins/nd/include/eventd-nd-backend.h \
 	plugins/nd/src/backends.c \
 	plugins/nd/src/backends.h \
 	plugins/nd/src/nd.c \
