@@ -40,6 +40,7 @@ vapi_DATA += \
 
 
 libeventc_la_SOURCES = \
+	client/libeventc/include/libeventc.h \
 	client/libeventc/src/libeventc.c \
 	$(null)
 
