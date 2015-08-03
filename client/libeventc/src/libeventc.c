@@ -55,6 +55,13 @@ typedef struct {
 
 static void _eventc_connection_close_internal(EventcConnection *self);
 
+/**
+ * eventc_get_version:
+ *
+ * Retrieves the runtime-version of libeventc.
+ *
+ * Returns: (transfer none): the version of libeventc
+ */
 EVENTD_EXPORT
 const gchar *
 eventc_get_version(void)
@@ -152,6 +159,14 @@ _eventc_connection_finalize(GObject *object)
     G_OBJECT_CLASS(eventc_connection_parent_class)->finalize(object);
 }
 
+/**
+ * eventc_connection_new:
+ * @host: the host running the eventd instance to connect to
+ *
+ * Creates a new connection to an eventd daemon.
+ *
+ * Returns: (transfer full): a new connection
+ */
 EVENTD_EXPORT
 EventcConnection *
 eventc_connection_new(const gchar *host)
@@ -169,6 +184,16 @@ eventc_connection_new(const gchar *host)
     return self;
 }
 
+/**
+ * eventc_connection_is_connected:
+ * @self: an #EventcConnection
+ * @error: (out) (optional): a #GError or %NULL
+ *
+ * Retrieves whether a given connection is actually connected to a server or
+ * not.
+ *
+ * Returns: %TRUE if the connection was successful
+ */
 EVENTD_EXPORT
 gboolean
 eventc_connection_is_connected(EventcConnection *self, GError **error)
@@ -267,6 +292,14 @@ _eventc_connection_connect_callback(GObject *obj, GAsyncResult *res, gpointer us
     g_object_unref(result);
 }
 
+/**
+ * eventc_connection_connect:
+ * @self: an #EventcConnection
+ * @callback: (scope async): a #GAsyncReadyCallback to call when the request is satisfied
+ * @user_data: (closure): the data to pass to callback function
+ *
+ * Initializes the connection to the stored host.
+ */
 EVENTD_EXPORT
 void
 eventc_connection_connect(EventcConnection *self, GAsyncReadyCallback callback, gpointer user_data)
@@ -294,6 +327,16 @@ eventc_connection_connect(EventcConnection *self, GAsyncReadyCallback callback, 
     g_object_unref(client);
 }
 
+/**
+ * eventc_connection_connect_finish:
+ * @self: an #EventcConnection
+ * @result: a #GAsyncResult
+ * @error: (out) (optional): return location for error or %NULL to ignore
+ *
+ * Finish an asynchronous operation started with eventc_connection_connect().
+ *
+ * Returns: %TRUE if the connection completed successfully
+ */
 EVENTD_EXPORT
 gboolean
 eventc_connection_connect_finish(EventcConnection *self, GAsyncResult *result, GError **error)
@@ -310,6 +353,15 @@ eventc_connection_connect_finish(EventcConnection *self, GAsyncResult *result, G
     return TRUE;
 }
 
+/**
+ * eventc_connection_connect_sync:
+ * @self: an #EventcConnection
+ * @error: (out) (optional): return location for error or %NULL to ignore
+ *
+ * Synchronously initializes the connection to the stored host.
+ *
+ * Returns: %TRUE if the connection completed successfully
+ */
 EVENTD_EXPORT
 gboolean
 eventc_connection_connect_sync(EventcConnection *self, GError **error)
@@ -346,6 +398,16 @@ _eventc_connection_event_end_callback(EventcConnection *self, EventdEventEndReas
     g_signal_handlers_disconnect_by_func(G_OBJECT(event), _eventc_connection_event_end_callback, self);
 }
 
+/**
+ * eventc_connection_event:
+ * @self: an #EventcConnection
+ * @event: an #EventdEvent to send to the server
+ * @error: (out) (optional): return location for error or %NULL to ignore
+ *
+ * Sends an event across the connection.
+ *
+ * Returns: %TRUE if the event was sent successfully
+ */
 EVENTD_EXPORT
 gboolean
 eventc_connection_event(EventcConnection *self, EventdEvent *event, GError **error)
@@ -395,6 +457,16 @@ eventc_connection_event(EventcConnection *self, EventdEvent *event, GError **err
     return TRUE;
 }
 
+/**
+ * eventc_connection_event_end:
+ * @self: an #EventcConnection
+ * @event: an #EventdEvent to send to the server
+ * @error: (out) (optional): return location for error or %NULL to ignore
+ *
+ * End the event (e.g., close the notification popup).
+ *
+ * Returns: %TRUE if the event was ended successfully
+ */
 EVENTD_EXPORT
 gboolean
 eventc_connection_event_end(EventcConnection *self, EventdEvent *event, GError **error)
@@ -433,6 +505,15 @@ eventc_connection_event_end(EventcConnection *self, EventdEvent *event, GError *
     return TRUE;
 }
 
+/**
+ * eventc_connection_event_close:
+ * @self: an #EventcConnection
+ * @error: (out) (optional): return location for error or %NULL to ignore
+ *
+ * Closes the connection.
+ *
+ * Returns: %TRUE if the connection was successfully closed
+ */
 EVENTD_EXPORT
 gboolean
 eventc_connection_close(EventcConnection *self, GError **error)
@@ -470,6 +551,13 @@ _eventc_connection_close_internal(EventcConnection *self)
 }
 
 
+/**
+ * eventc_connection_set_host:
+ * @self: an #EventcConnection
+ * @value: the host running the eventd instance to connect to
+ *
+ * Sets the host for the connection.
+ */
 EVENTD_EXPORT
 void
 eventc_connection_set_host(EventcConnection *self, const gchar *host)
@@ -481,6 +569,15 @@ eventc_connection_set_host(EventcConnection *self, const gchar *host)
     self->priv->host = g_strdup(host);
 }
 
+/**
+ * eventc_connection_set_passive:
+ * @self: an #EventcConnection
+ * @value: the passive setting
+ *
+ * Sets whether the connection is passive or not. A passive connection does not
+ * receive events back from the server so that the client does not require an
+ * event loop.
+ */
 EVENTD_EXPORT
 void
 eventc_connection_set_passive(EventcConnection *self, gboolean passive)
@@ -490,6 +587,14 @@ eventc_connection_set_passive(EventcConnection *self, gboolean passive)
     self->priv->passive = passive;
 }
 
+/**
+ * eventc_connection_set_enable_proxy:
+ * @self: an #EventcConnection
+ * @value: the passive setting
+ *
+ * Sets whether the connection is to use a proxy or not on the underlying
+ * #GSocketClient.
+ */
 EVENTD_EXPORT
 void
 eventc_connection_set_enable_proxy(EventcConnection *self, gboolean enable_proxy)
@@ -499,6 +604,14 @@ eventc_connection_set_enable_proxy(EventcConnection *self, gboolean enable_proxy
     self->priv->enable_proxy = enable_proxy;
 }
 
+/**
+ * eventc_connection_get_passive:
+ * @self: an #EventcConnection
+ *
+ * Retrieves whether the connection is passive or not.
+ *
+ * Returns: %TRUE if the connection is passive
+ */
 EVENTD_EXPORT
 gboolean
 eventc_connection_get_passive(EventcConnection *self)
@@ -508,6 +621,14 @@ eventc_connection_get_passive(EventcConnection *self)
     return self->priv->passive;
 }
 
+/**
+ * eventc_connection_get_enable_proxy:
+ * @self: an #EventcConnection
+ *
+ * Retrieves whether the connection is to use a proxy or not.
+ *
+ * Returns: %TRUE if the connection is using a proxy
+ */
 EVENTD_EXPORT
 gboolean
 eventc_connection_get_enable_proxy(EventcConnection *self)
