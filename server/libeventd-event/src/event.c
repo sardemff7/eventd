@@ -122,6 +122,15 @@ eventd_event_class_init(EventdEventClass *klass)
                      1, EVENTD_TYPE_EVENT_END_REASON);
 }
 
+/**
+ * eventd_event_new:
+ * @category: the category of the event
+ * @name: the name of the event
+ *
+ * Creates a new #EventdEvent.
+ *
+ * Returns: (transfer full): a new #EventdEvent
+ */
 EVENTD_EXPORT
 EventdEvent *
 eventd_event_new(const gchar *category, const gchar *name)
@@ -160,6 +169,13 @@ _eventd_event_finalize(GObject *object)
     G_OBJECT_CLASS(eventd_event_parent_class)->finalize(object);
 }
 
+/**
+ * eventd_event_update:
+ * @event: an #EventdEvent
+ * @name: the new name of the event
+ *
+ * Updates the name of @event.
+ */
 EVENTD_EXPORT
 void
 eventd_event_update(EventdEvent *self, const gchar *name)
@@ -175,6 +191,13 @@ eventd_event_update(EventdEvent *self, const gchar *name)
     g_signal_emit(self, _eventd_event_signals[SIGNAL_UPDATED], 0);
 }
 
+/**
+ * eventd_event_answer:
+ * @event: an #EventdEvent
+ * @answer: the answer to the event
+ *
+ * Responds to the event with the given answer.
+ */
 EVENTD_EXPORT
 void
 eventd_event_answer(EventdEvent *self, const gchar *answer)
@@ -187,6 +210,13 @@ eventd_event_answer(EventdEvent *self, const gchar *answer)
     g_signal_emit(self, _eventd_event_signals[SIGNAL_ANSWERED], 0, answer_->data);
 }
 
+/**
+ * eventd_event_end:
+ * @event: an #EventdEvent
+ * @reason: the reason for ending the event
+ *
+ * Terminates an event.
+ */
 EVENTD_EXPORT
 void
 eventd_event_end(EventdEvent *self, EventdEventEndReason reason)
@@ -197,6 +227,14 @@ eventd_event_end(EventdEvent *self, EventdEventEndReason reason)
     g_signal_emit(self, _eventd_event_signals[SIGNAL_ENDED], 0, reason);
 }
 
+/**
+ * eventd_event_add_data:
+ * @event: an #EventdEvent
+ * @name: (transfer full): a name for the data
+ * @content: (transfer full): the data to add
+ *
+ * Attaches named data to the event.
+ */
 EVENTD_EXPORT
 void
 eventd_event_add_data(EventdEvent *self, gchar *name, gchar *content)
@@ -210,6 +248,13 @@ eventd_event_add_data(EventdEvent *self, gchar *name, gchar *content)
     g_hash_table_insert(self->priv->data, name, content);
 }
 
+/**
+ * eventd_event_add_answer:
+ * @event: an #EventdEvent
+ * @name: an answer for the event
+ *
+ * Adds a valid answer value for the event.
+ */
 EVENTD_EXPORT
 void
 eventd_event_add_answer(EventdEvent *self, const gchar *name)
@@ -220,6 +265,14 @@ eventd_event_add_answer(EventdEvent *self, const gchar *name)
     self->priv->answers = g_list_prepend(self->priv->answers, g_strdup(name));
 }
 
+/**
+ * eventd_event_add_answer_data:
+ * @event: an #EventdEvent
+ * @name: (transfer full): a name for the data
+ * @content: (transfer full): the data to add
+ *
+ * Attaches named data to the answer.
+ */
 EVENTD_EXPORT
 void
 eventd_event_add_answer_data(EventdEvent *self, gchar *name, gchar *content)
@@ -233,6 +286,13 @@ eventd_event_add_answer_data(EventdEvent *self, gchar *name, gchar *content)
     g_hash_table_insert(self->priv->answer_data, name, content);
 }
 
+/**
+ * eventd_event_set_timeout:
+ * @event: an #EventdEvent
+ * @timeout: the event timeout (in milliseconds)
+ *
+ * Sets how long the event before be active before it timesout.
+ */
 EVENTD_EXPORT
 void
 eventd_event_set_timeout(EventdEvent *self, gint64 timeout)
@@ -244,6 +304,14 @@ eventd_event_set_timeout(EventdEvent *self, gint64 timeout)
 }
 
 
+/**
+ * eventd_event_get_category:
+ * @event: an #EventdEvent
+ *
+ * Retrieves the category for the event.
+ *
+ * Returns: (transfer none): the category of the event
+ */
 EVENTD_EXPORT
 const gchar *
 eventd_event_get_category(const EventdEvent *self)
@@ -253,6 +321,14 @@ eventd_event_get_category(const EventdEvent *self)
     return self->priv->category;
 }
 
+/**
+ * eventd_event_get_name:
+ * @event: an #EventdEvent
+ *
+ * Retrieves the name for the event.
+ *
+ * Returns: (transfer none): the name of the event
+ */
 EVENTD_EXPORT
 const gchar *
 eventd_event_get_name(const EventdEvent *self)
@@ -262,6 +338,14 @@ eventd_event_get_name(const EventdEvent *self)
     return self->priv->name;
 }
 
+/**
+ * eventd_event_get_timeout:
+ * @event: an #EventdEvent
+ *
+ * Retrieves the timeout for the event.
+ *
+ * Returns: the timeout of the event
+ */
 EVENTD_EXPORT
 gint64
 eventd_event_get_timeout(const EventdEvent *self)
@@ -271,6 +355,15 @@ eventd_event_get_timeout(const EventdEvent *self)
     return self->priv->timeout;
 }
 
+/**
+ * eventd_event_has_data:
+ * @event: an #EventdEvent
+ * @name: a name of the data
+ *
+ * Retrieves whether the event has data with a given name.
+ *
+ * Returns: %TRUE if the event has data named @name
+ */
 EVENTD_EXPORT
 gboolean
 eventd_event_has_data(const EventdEvent *self, const gchar *name)
@@ -284,6 +377,15 @@ eventd_event_has_data(const EventdEvent *self, const gchar *name)
     return g_hash_table_contains(self->priv->data, name);
 }
 
+/**
+ * eventd_event_get_data:
+ * @event: an #EventdEvent
+ * @name: a name of the data
+ *
+ * Retrieves the event data with a given name.
+ *
+ * Returns: (transfer none): the data in the event
+ */
 EVENTD_EXPORT
 const gchar *
 eventd_event_get_data(const EventdEvent *self, const gchar *name)
@@ -297,6 +399,15 @@ eventd_event_get_data(const EventdEvent *self, const gchar *name)
     return g_hash_table_lookup(self->priv->data, name);
 }
 
+/**
+ * eventd_event_get_answer_data:
+ * @event: an #EventdEvent
+ * @name: a name of the answer data
+ *
+ * Retrieves the answer data with a given name.
+ *
+ * Returns: (transfer none): the data in the event for the answer
+ */
 EVENTD_EXPORT
 const gchar *
 eventd_event_get_answer_data(const EventdEvent *self, const gchar *name)
@@ -311,6 +422,15 @@ eventd_event_get_answer_data(const EventdEvent *self, const gchar *name)
 }
 
 
+/**
+ * eventd_event_set_all_data:
+ * @event: an #EventdEvent
+ * @data (transfer full): the data table
+ *
+ * Sets the data table within the event.
+ *
+ * Generally intended for event collection plugins.
+ */
 EVENTD_EXPORT
 void
 eventd_event_set_all_data(EventdEvent *self, GHashTable *data)
@@ -322,6 +442,15 @@ eventd_event_set_all_data(EventdEvent *self, GHashTable *data)
     self->priv->data = data;
 }
 
+/**
+ * eventd_event_set_all_answer_data:
+ * @event: an #EventdEvent
+ * @data (transfer full): the answer data table
+ *
+ * Sets the answer data table within the event.
+ *
+ * Generally intended for event collection plugins.
+ */
 EVENTD_EXPORT
 void
 eventd_event_set_all_answer_data(EventdEvent *self, GHashTable *data)
@@ -333,6 +462,16 @@ eventd_event_set_all_answer_data(EventdEvent *self, GHashTable *data)
     self->priv->answer_data = data;
 }
 
+/**
+ * eventd_event_get_all_data:
+ * @event: an #EventdEvent
+ *
+ * Retrieves the data table from the event.
+ *
+ * Generally intended for event collection plugins.
+ *
+ * Returns: (transfer none): the data table
+ */
 EVENTD_EXPORT
 GHashTable *
 eventd_event_get_all_data(EventdEvent *self)
@@ -342,6 +481,16 @@ eventd_event_get_all_data(EventdEvent *self)
     return self->priv->data;
 }
 
+/**
+ * eventd_event_get_answers:
+ * @event: an #EventdEvent
+ *
+ * Retrieves the list of answers from the event.
+ *
+ * Generally intended for event collection plugins.
+ *
+ * Returns: (element-type utf8) (transfer none): the answer data table
+ */
 EVENTD_EXPORT
 GList *
 eventd_event_get_answers(EventdEvent *self)
@@ -351,6 +500,16 @@ eventd_event_get_answers(EventdEvent *self)
     return self->priv->answers;
 }
 
+/**
+ * eventd_event_get_all_answer_data:
+ * @event: an #EventdEvent
+ *
+ * Retrieves the answer data table from the event.
+ *
+ * Generally intended for event collection plugins.
+ *
+ * Returns: (transfer none): the answer data table
+ */
 EVENTD_EXPORT
 GHashTable *
 eventd_event_get_all_answer_data(EventdEvent *self)

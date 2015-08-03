@@ -25,6 +25,8 @@
 
 #include <libeventd-event-types.h>
 
+#include <glib-object.h>
+
 G_BEGIN_DECLS
 
 GType eventd_event_get_type(void) G_GNUC_CONST;

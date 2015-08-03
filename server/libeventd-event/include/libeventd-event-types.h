@@ -23,6 +23,8 @@
 #ifndef __EVENTD_EVENT_TYPES_H__
 #define __EVENTD_EVENT_TYPES_H__
 
+#include <glib.h>
+
 G_BEGIN_DECLS
 
 typedef struct _EventdEvent EventdEvent;
