@@ -16,7 +16,9 @@ pkginclude_HEADERS += \
 
 
 libeventd_la_SOURCES = \
+	server/libeventd/include/libeventd-reconnect.h \
 	server/libeventd/src/reconnect.c \
+	server/libeventd/include/libeventd-config.h \
 	server/libeventd/src/config.c \
 	$(null)
 
