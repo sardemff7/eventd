@@ -318,6 +318,7 @@ eventd_event_get_answer_data(const EventdEvent *self, const gchar *name)
     return g_hash_table_lookup(self->priv->answer_data, name);
 }
 
+/* Private methods */
 
 EVENTD_EXPORT
 void
