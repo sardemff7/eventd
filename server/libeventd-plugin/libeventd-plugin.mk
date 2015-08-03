@@ -24,6 +24,7 @@ pkgconfig_DATA += \
 
 
 libeventd_plugin_la_SOURCES = \
+	server/libeventd-plugin/include/eventd-plugin.h \
 	server/libeventd-plugin/include/eventd-plugin-interfaces.h \
 	server/libeventd-plugin/src/core.c \
 	server/libeventd-plugin/src/plugin.c \
