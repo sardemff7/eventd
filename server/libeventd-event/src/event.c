@@ -175,13 +175,18 @@ eventd_event_update(EventdEvent *self, const gchar *name)
     g_signal_emit(self, _eventd_event_signals[SIGNAL_UPDATED], 0);
 }
 
+static GList *
+_eventd_find_answer(EventdEvent* self, const gchar *answer)
+{
+    return g_list_find_custom(self->priv->answers, answer, (GCompareFunc)g_strcmp0);
+}
+
 EVENTD_EXPORT
 void
 eventd_event_answer(EventdEvent *self, const gchar *answer)
 {
     g_return_if_fail(EVENTD_IS_EVENT(self));
-    GList *answer_;
-    answer_ = g_list_find_custom(self->priv->answers, answer, (GCompareFunc)g_strcmp0);
+    GList *answer_ = _eventd_find_answer(self, answer);
     g_return_if_fail(answer_ != NULL);
 
     g_signal_emit(self, _eventd_event_signals[SIGNAL_ANSWERED], 0, answer_->data);
@@ -227,6 +232,9 @@ eventd_event_add_answer_data(EventdEvent *self, gchar *name, gchar *content)
     g_return_if_fail(EVENTD_IS_EVENT(self));
     g_return_if_fail(name != NULL);
     g_return_if_fail(content != NULL);
+
+    GList *answer_ = _eventd_find_answer(self, name);
+    g_return_if_fail(answer_ != NULL);
 
     if ( self->priv->answer_data == NULL )
         self->priv->answer_data = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
@@ -310,6 +318,7 @@ eventd_event_get_answer_data(const EventdEvent *self, const gchar *name)
     return g_hash_table_lookup(self->priv->answer_data, name);
 }
 
+/* Private methods */
 
 EVENTD_EXPORT
 void
