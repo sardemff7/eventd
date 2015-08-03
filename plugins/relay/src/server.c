@@ -209,7 +209,7 @@ eventd_relay_server_new(void)
     server = g_new0(EventdRelayServer, 1);
 
     server->evp = libeventd_evp_context_new(server, &_eventd_relay_interface);
-    server->reconnect = libeventd_reconnect_new(5, 10,_eventd_relay_reconnect_callback, server);
+    server->reconnect = libeventd_reconnect_new(5, 10,_eventd_relay_reconnect_callback, server, g_free);
     server->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_relay_event_free);
 
     return server;

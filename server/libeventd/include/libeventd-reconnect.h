@@ -27,7 +27,7 @@ typedef struct _LibeventdReconnectHandler LibeventdReconnectHandler;
 
 typedef void (*LibeventdReconnectTryCallback)(LibeventdReconnectHandler *handler, gpointer user_data);
 
-LibeventdReconnectHandler *libeventd_reconnect_new(gint64 timeout, gint64 max_tries, LibeventdReconnectTryCallback callback, gpointer user_data);
+LibeventdReconnectHandler *libeventd_reconnect_new(gint64 timeout, gint64 max_tries, LibeventdReconnectTryCallback callback, gpointer user_data, GDestroyNotify notify);
 void libeventd_reconnect_free(LibeventdReconnectHandler *handler);
 
 gboolean libeventd_reconnect_try(LibeventdReconnectHandler *handler);

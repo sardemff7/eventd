@@ -35,11 +35,12 @@ struct _LibeventdReconnectHandler {
     gpointer user_data;
     guint64 try;
     guint timeout_tag;
+    GDestroyNotify notify;
 };
 
 EVENTD_EXPORT
 LibeventdReconnectHandler *
-libeventd_reconnect_new(gint64 timeout, gint64 max_tries, LibeventdReconnectTryCallback callback, gpointer user_data)
+libeventd_reconnect_new(gint64 timeout, gint64 max_tries, LibeventdReconnectTryCallback callback, gpointer user_data, GDestroyNotify notify)
 {
     g_return_val_if_fail(callback != NULL, NULL);
 
@@ -51,6 +52,7 @@ libeventd_reconnect_new(gint64 timeout, gint64 max_tries, LibeventdReconnectTryC
     self->max_tries = max_tries;
     self->callback = callback;
     self->user_data = user_data;
+    self->notify = notify;
 
     return self;
 }
@@ -59,6 +61,15 @@ EVENTD_EXPORT
 void
 libeventd_reconnect_free(LibeventdReconnectHandler *self)
 {
+    /* dispose of the reconnection data */
+    if (self->notify != NULL)
+    {
+      self->notify(self->user_data);
+
+      self->user_data = NULL;
+      self->notify = NULL;
+    }
+
     if ( self->timeout_tag > 0 )
         g_source_remove(self->timeout_tag);
     g_slice_free(LibeventdReconnectHandler, self);
