@@ -46,3 +46,10 @@ libeventd_plugin_la_LIBADD = \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS) \
 	$(null)
+
+EventdPlugin-0.gir: EventdEvent-0.gir libeventd-plugin.la
+EventdPlugin_0_gir_INCLUDES = GObject-2.0 Gio-2.0 EventdEvent-0
+EventdPlugin_0_gir_CFLAGS = $(AM_CPPFLAGS) $(libeventd_plugin_la_CFLAGS) $(CPPFLAGS) $(CFLAGS)
+EventdPlugin_0_gir_LIBS = libeventd-plugin.la
+EventdPlugin_0_gir_FILES = $(libeventd_plugin_la_SOURCES)
+INTROSPECTION_GIRS += EventdPlugin-0.gir

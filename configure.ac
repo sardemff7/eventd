@@ -145,6 +145,28 @@ if test x$enable_avahi = xyes; then
 fi
 AM_CONDITIONAL(ENABLE_AVAHI, test x$enable_avahi = xyes)
 
+m4_ifdef([GOBJECT_INTROSPECTION_CHECK], [
+    GOBJECT_INTROSPECTION_CHECK([1.30.0])
+    if test x$enable_introspection = xyes; then
+        AC_ARG_WITH(girdir, AS_HELP_STRING([--with-girdir=DIR], [Directory for gobject introspection gir files]), [], with_girdir=yes)
+        AC_ARG_WITH(typelibdir, AS_HELP_STRING([--with-typelibdir=DIR], [Directory for gobject introspection typelib files]), [], with_typelibdir=yes)
+        case "$with_girdir" in
+            no|"") AC_MSG_ERROR([*** You must define girdir when compiling gobject introspection support]) ;;
+            yes) girdir="`$PKG_CONFIG --variable=girdir gobject-introspection-1.0`" ;;
+            *) girdir="$with_girdir" ;;
+        esac
+        case "$with_typelibdir" in
+            no|"") AC_MSG_ERROR([*** You must define typelibdir when compiling gobject introspection support]) ;;
+            yes) typelibdir="`$PKG_CONFIG --variable=typelibdir gobject-introspection-1.0`" ;;
+            *) typelibdir="$with_typelibdir" ;;
+        esac
+        AC_SUBST(girdir)
+        AC_SUBST(typelibdir)
+    fi
+], [
+    AM_CONDITIONAL(ENABLE_INTROSPECTION, false)
+])
+
 
 #
 # Server and plugins
@@ -330,6 +352,7 @@ AC_MSG_RESULT([
         Avahi support: $enable_avahi
         systemd support: $enable_systemd
         UNIX sockets support: $have_gio_unix
+        GObject introspection: $enable_introspection
 
     Event collection plugins:
         EVENT protocol: yes

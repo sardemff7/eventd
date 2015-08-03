@@ -87,3 +87,11 @@ libeventd_event_test_LDADD = \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS) \
 	$(null)
+
+EventdEvent-0.gir: libeventd-event.la
+EventdEvent_0_gir_INCLUDES = GObject-2.0
+EventdEvent_0_gir_CFLAGS = $(AM_CPPFLAGS) $(libeventd_event_la_CFLAGS) $(CPPFLAGS) $(CFLAGS)
+EventdEvent_0_gir_SCANNERFLAGS = --identifier-prefix=Eventd
+EventdEvent_0_gir_LIBS = libeventd-event.la
+EventdEvent_0_gir_FILES = $(libeventd_event_la_SOURCES)
+INTROSPECTION_GIRS += EventdEvent-0.gir

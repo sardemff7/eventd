@@ -4,7 +4,10 @@ space := $(empty) $(empty)
 
 AM_DISTCHECK_CONFIGURE_FLAGS = \
 	--with-systemduserunitdir="$$dc_install_base/$(systemduserunitdir)" \
-	--with-dbussessionservicedir="$$dc_install_base/$(dbussessionservicedir)"
+	--with-dbussessionservicedir="$$dc_install_base/$(dbussessionservicedir)" \
+	--with-girdir="$$dc_install_base/$(girdir)" \
+	--with-typelibdir="$$dc_install_base/$(typelibdir)" \
+	$(null)
 
 ACLOCAL_AMFLAGS = -I m4 -I src/libnkutils -I src/libgwater ${ACLOCAL_FLAGS}
 AM_MAKEFLAGS = --no-print-directory
@@ -31,6 +34,10 @@ dist_event_DATA =
 systemduserunit_DATA =
 dbussessionservice_DATA =
 dbuscapabilities_DATA =
+
+INTROSPECTION_GIRS =
+INTROSPECTION_SCANNER_ARGS = --add-include-path=$(srcdir) --warn-all
+INTROSPECTION_COMPILER_ARGS = --includedir=$(srcdir)
 
 EXTRA_DIST = \
 	autogen.sh \
@@ -73,6 +80,7 @@ include server/libeventd-test/libeventd-test.mk
 include plugins/test-plugin/test-plugin.mk
 
 include src/man.mk
+include src/introspection.mk
 include src/units.mk
 include src/services.mk
 
