@@ -50,5 +50,15 @@ namespace Eventd
 
         public signal void answered(string answer);
         public signal void ended(EventEndReason reason);
+
+        /*
+         * Special accessors meant for plugins
+         * Do *not* use in regular client code
+         */
+        public void set_all_data(owned GLib.HashTable<string, string> data);
+        public void set_all_answer_data(owned GLib.HashTable<string, string> data);
+        public unowned GLib.List<string> get_answers();
+        public unowned GLib.HashTable<string, string> get_all_data();
+        public unowned GLib.HashTable<string, string> get_all_answer_data();
     }
 }

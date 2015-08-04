@@ -30,7 +30,6 @@
 
 #include <libeventd-evp.h>
 #include <libeventd-event.h>
-#include <libeventd-event-private.h>
 
 #include <libeventc.h>
 #define EVENTC_CONNECTION_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), EVENTC_TYPE_CONNECTION, EventcConnectionPrivate))

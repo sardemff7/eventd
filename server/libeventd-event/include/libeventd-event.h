@@ -78,6 +78,17 @@ gboolean eventd_event_has_data(const EventdEvent *event, const gchar *name);
 const gchar *eventd_event_get_data(const EventdEvent *event, const gchar *name);
 const gchar *eventd_event_get_answer_data(const EventdEvent *event, const gchar *name);
 
+
+/*
+ * Special accessors meant for plugins
+ * Do *not* use in regular client code
+ */
+void eventd_event_set_all_data(EventdEvent *event, GHashTable *data);
+void eventd_event_set_all_answer_data(EventdEvent *event, GHashTable *data);
+GHashTable *eventd_event_get_all_data(EventdEvent *event);
+GList *eventd_event_get_answers(EventdEvent *event);
+GHashTable *eventd_event_get_all_answer_data(EventdEvent *event);
+
 G_END_DECLS
 
 #endif /* __EVENTD_EVENT_H__ */

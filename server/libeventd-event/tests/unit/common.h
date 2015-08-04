@@ -28,7 +28,6 @@
 #include <glib-compat.h>
 #include <glib-object.h>
 #include <libeventd-event.h>
-#include <libeventd-event-private.h>
 
 #define EVENTD_EVENT_TEST_NAME "test-name"
 #define EVENTD_EVENT_TEST_CATEGORY "test-category"
