@@ -43,7 +43,7 @@ typedef enum  {
 	EVENTC_ERROR_EVENT,
 	EVENTC_ERROR_END,
 	EVENTC_ERROR_BYE
-} EventcEventcError;
+} EventcError;
 
 
 GType eventc_connection_get_type(void) G_GNUC_CONST;
