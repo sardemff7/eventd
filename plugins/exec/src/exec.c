@@ -100,7 +100,7 @@ _eventd_exec_event_action(EventdPluginContext *context, const gchar *config_id, 
 {
     const FormatString *command;
     gchar *cmd;
-    GError *error;
+    GError *error = NULL;
 
     command = g_hash_table_lookup(context->events, config_id);
     if ( command == NULL )
