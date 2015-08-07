@@ -182,7 +182,7 @@ _eventd_dbus_notify(EventdPluginContext *context, const gchar *sender, GVariant 
     }
 
 #ifdef DEBUG
-    g_debug("Creanting event '%s' for client '%s' ", event_name, app_name);
+    g_debug("Creating event '%s' for client '%s' ", event_name, app_name);
 #endif /* DEBUG */
 
     if ( id > 0 )
