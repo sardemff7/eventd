@@ -91,6 +91,12 @@ eventd_event_class_init(EventdEventClass *klass)
 
     object_class->finalize = _eventd_event_finalize;
 
+    /**
+     * EventdEvent::updated:
+     * @event: the #EventdEvent that was updated
+     *
+     * Emitted when an event is updated with a new name.
+     */
     _eventd_event_signals[SIGNAL_UPDATED] =
         g_signal_new("updated",
                      G_TYPE_FROM_CLASS(object_class),
@@ -101,6 +107,13 @@ eventd_event_class_init(EventdEventClass *klass)
                      G_TYPE_NONE,
                      0);
 
+    /**
+     * EventdEvent::answered:
+     * @event: the #EventdEvent that was answered
+     * @answer (transfer none): the answer given
+     *
+     * Emitted when an event is answered.
+     */
     _eventd_event_signals[SIGNAL_ANSWERED] =
         g_signal_new("answered",
                      G_TYPE_FROM_CLASS(object_class),
@@ -111,6 +124,13 @@ eventd_event_class_init(EventdEventClass *klass)
                      G_TYPE_NONE,
                      1, G_TYPE_STRING);
 
+    /**
+     * EventdEvent::ended:
+     * @event: the #EventdEvent that ended
+     * @reason: an #EventdEventEndReason for the end
+     *
+     * Emitted when an event is complete.
+     */
     _eventd_event_signals[SIGNAL_ENDED] =
         g_signal_new("ended",
                      G_TYPE_FROM_CLASS(object_class),
@@ -209,6 +229,15 @@ eventd_event_answer(EventdEvent *self, const gchar *answer)
 
     g_signal_emit(self, _eventd_event_signals[SIGNAL_ANSWERED], 0, answer_->data);
 }
+
+/**
+ * EventdEventEndReason:
+ * @EVENTD_EVENT_END_REASON_NONE: No reason given.
+ * @EVENTD_EVENT_END_REASON_TIMEOUT: The event timed out.
+ * @EVENTD_EVENT_END_REASON_USER_DISMISS: The user dismissed the event.
+ * @EVENTD_EVENT_END_REASON_CLIENT_DISMISS: The source of the event dismissed the event.
+ * @EVENTD_EVENT_END_REASON_RESERVED: Internal use only.
+ */
 
 /**
  * eventd_event_end:
