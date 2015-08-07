@@ -18,5 +18,6 @@
 /*.typelib
 
 /eventd-*.tar.xz
+/eventd-*/
 
 /local-rules.mk
