@@ -21,7 +21,7 @@
 <!ENTITY PACKAGE_NAME "@PACKAGE_NAME@">
 <!ENTITY PACKAGE_VERSION "@PACKAGE_VERSION@">
 
-<!ENTITY srcdir "@scrdir@">
+<!ENTITY srcdir "@srcdir@">
 
 <!ENTITY sysconfdir "@sysconfdir@">
 <!ENTITY libdir "@libdir@">
