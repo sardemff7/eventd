@@ -89,7 +89,15 @@
                 <listitem>
                     <para>
                         <citerefentry><refentrytitle>eventd-evp</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
                         <citerefentry><refentrytitle>eventd-evp.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
                         <citerefentry><refentrytitle>eventd-evp.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>
                     </para>
                 </listitem>
@@ -127,6 +135,10 @@
                 <listitem>
                     <para>
                         <citerefentry><refentrytitle>eventd-nd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
                         <citerefentry><refentrytitle>eventd-nd.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>
                     </para>
                 </listitem>
@@ -142,6 +154,10 @@
                 <listitem>
                     <para>
                         <citerefentry><refentrytitle>eventd-im.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
                         <citerefentry><refentrytitle>eventd-im.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>
                     </para>
                 </listitem>

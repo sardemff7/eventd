@@ -49,7 +49,7 @@
     <refsect1 id="description">
         <title>Description</title>
         <para>
-            This plugin implements the eventd EVENT protocol.
+            This plugin implements the EvP EVENT protocol.
         </para>
     </refsect1>
 
