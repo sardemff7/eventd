@@ -76,8 +76,8 @@
                     </variablelist>
                     <para>
                         Plugins <phrase condition="website">distributed</phrase><phrase condition="installation">installed</phrase> with eventd will use the same scheme:
-                        eventd-<replaceable>plugin-name</replaceable> for their additionnal <command>eventd</command> command-line options,
-                        eventdctl-<replaceable>plugin-name</replaceable> for their additionnal <command>eventdctl</command> command-line options,
+                        eventd-<replaceable>plugin-name</replaceable> for their additional <command>eventd</command> command-line options,
+                        eventdctl-<replaceable>plugin-name</replaceable> for their additional <command>eventdctl</command> command-line options,
                         eventd-<replaceable>plugin-name</replaceable>.conf for their global configuration,
                         eventd-<replaceable>plugin-name</replaceable>.event for their event configuration.
                     </para>

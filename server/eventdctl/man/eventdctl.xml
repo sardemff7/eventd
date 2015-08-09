@@ -72,7 +72,7 @@
                 <term><option>--auto-spawn</option></term>
                 <listitem>
                     <para>Spawn eventd if needed</para>
-                    <para>It will pass the <option>--private-socket</option> option to eventd with the socket specified to the <command>eventdctl</command> <option>--socket</option> option.</para>
+                    <para>It will pass the <option>--private-socket</option> option to eventd with the socket specified to the <command>eventdctl</command>&nbsp;<option>--socket</option> option.</para>
                 </listitem>
             </varlistentry>
 

@@ -318,18 +318,18 @@
                 <listitem condition="website;enable_canberra"><para>Play the <literal>"command-failure"</literal> sound when a command fails</para></listitem>
             </itemizedlist>
             <para>You can trigger the event manually using a command like that:</para>
-            <programlisting>make; eventc command $([ $? -eq 0 ] &amp;&amp; echo sucess || echo failure) -d command -c make</programlisting>
+            <programlisting>make; eventc command $([ $? -eq 0 ] &amp;&amp; echo success || echo failure) -d command -c make</programlisting>
             <para>You can also hook your favorite shell to make it automatic. Here are some example for Zshell, Bash or Fish:</para>
             <programlisting>Zshell zshrc:
     precmd() {
-        eventc command $([ $? -eq 0 ] &amp;&amp; echo sucess || echo failure) -d command -c "!!"
+        eventc command $([ $? -eq 0 ] &amp;&amp; echo success || echo failure) -d command -c "!!"
     }
 
 Bash bashrc:
     precmd() {
         command=$(history -1)
         [[ -z "${command} ]] &amp;&amp; return
-        eventc command $([ $? -eq 0 ] &amp;&amp; echo sucess || echo failure) -d command -c "${command}"
+        eventc command $([ $? -eq 0 ] &amp;&amp; echo success || echo failure) -d command -c "${command}"
     }
     # This command is called anytime the prompt is displayed
     # so this may not work perfectly as expected
@@ -337,7 +337,7 @@ Bash bashrc:
 
 Fish config:
     function notify_on_command_duration --on-variable CMD_DURATION
-        eventc command $([ $? -eq 0 ] &amp;&amp; echo sucess || echo failure) -d command -c "$_" -d time -c "$CMD_DURATION"
+        eventc command $([ $? -eq 0 ] &amp;&amp; echo success || echo failure) -d command -c "$_" -d time -c "$CMD_DURATION"
     end
             </programlisting>
         </example>
@@ -434,7 +434,7 @@ eventdctl relay disconnect your.distant.computer</programlisting>
                 <term><varname>$EVENTD_PLUGINS_WHITELIST</varname></term>
                 <listitem>
                     <para>Comma-separated list of filename prefixes</para>
-                    <para>If a plugin does not match (by filename) any prefix, it will not be loaded.</para>
+                    <para>If a plugin does not match (by filename) any prefix, it will not be loaded. If empty, all plugins are allowed.</para>
                 </listitem>
             </varlistentry>
 
@@ -442,7 +442,7 @@ eventdctl relay disconnect your.distant.computer</programlisting>
                 <term><varname>$EVENTD_PLUGINS_BLACKLIST</varname></term>
                 <listitem>
                     <para>Comma-separated list of filename prefixes</para>
-                    <para>If a plugin matches (by filename) any prefix, it will not be loaded.</para>
+                    <para>If a plugin matches (by filename) any prefix, it will not be loaded. If empty, no plugins are disallowed.</para>
                     <para>This blacklist is tested after the whitelist.</para>
                 </listitem>
             </varlistentry>

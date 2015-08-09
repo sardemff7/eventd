@@ -66,10 +66,10 @@
         <title>Description</title>
 
         <para>
-            These files are used to configure eventd reaction on a per-event basis. The file name is used as a configuration id.
+            These files are used to configure eventd's reaction on a per-event basis. The file name is used as a configuration id.
             They use the same syntax as the main configuration file.
         </para>
-        <para>This configuration mechanism is seperated in two steps:</para>
+        <para>This configuration mechanism is separated in two steps:</para>
         <orderedlist>
             <listitem><para>Define a set of configuration ids with matching and configuration information</para></listitem>
             <listitem><para>When an event is received, get the best matching id to associate its configuration to the event</para></listitem>
@@ -165,7 +165,7 @@
                     <varlistentry>
                         <term><varname>IfDataMatches=</varname></term>
                         <listitem>
-                            <para>A <type>list of <type>(data name,regex)</type> couples</type></para>
+                            <para>A <type>list of <type>(data name,regex)</type> tuples</type></para>
                             <para>If the named data is present, it must match the provided regex. All present data must match for this event id to match.</para>
                         </listitem>
                     </varlistentry>
