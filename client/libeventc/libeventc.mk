@@ -87,5 +87,5 @@ Eventc-0.gir: EventdEvent-0.gir libeventc.la
 Eventc_0_gir_INCLUDES = GObject-2.0 Gio-2.0 EventdEvent-0
 Eventc_0_gir_CFLAGS = $(AM_CPPFLAGS) $(libeventc_la_CFLAGS) $(CPPFLAGS) $(CFLAGS)
 Eventc_0_gir_LIBS = libeventc.la
-Eventc_0_gir_FILES = $(libeventc_la_SOURCES)
+Eventc_0_gir_FILES = $(filter-out %-private.h,$(libeventc_la_SOURCES))
 INTROSPECTION_GIRS += Eventc-0.gir
