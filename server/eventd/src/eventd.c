@@ -54,7 +54,7 @@
 #include <systemd/sd-daemon.h>
 #endif /* ENABLE_SYSTEMD */
 
-#include <eventd-plugin-interfaces.h>
+#include <eventd-plugin-private.h>
 #include <eventdctl.h>
 
 #include "types.h"

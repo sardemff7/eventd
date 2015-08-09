@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef __EVENTD_EVENTD_PLUGIN_INTERFACES_H__
-#define __EVENTD_EVENTD_PLUGIN_INTERFACES_H__
+#ifndef __EVENTD_EVENTD_PLUGIN_PRIVATE_H__
+#define __EVENTD_EVENTD_PLUGIN_PRIVATE_H__
 
 #include <eventd-plugin.h>
 
@@ -54,4 +54,4 @@ struct EventdPluginInterface {
     EventdPluginEventDispatchFunc event_action;
 };
 
-#endif /* __EVENTD_EVENTD_PLUGIN_INTERFACES_H__ */
+#endif /* __EVENTD_EVENTD_PLUGIN_PRIVATE_H__ */

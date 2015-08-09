@@ -34,7 +34,7 @@
 #include <gmodule.h>
 
 #include <eventd-plugin.h>
-#include <eventd-plugin-interfaces.h>
+#include <eventd-plugin-private.h>
 
 #include <eventdctl.h>
 
