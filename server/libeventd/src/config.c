@@ -285,8 +285,10 @@ libeventd_config_key_file_get_format_string_with_default(GKeyFile *config_file, 
     gchar *string;
     gint8 r;
 
-    if ( ( r = libeventd_config_key_file_get_string_with_default(config_file, group, key, default_value, &string) ) != 0 )
+    if ( ( r = libeventd_config_key_file_get_string_with_default(config_file, group, key, default_value, &string) ) != 0 ) {
+        g_free(string);
         return r;
+    }
 
     return _libeventd_config_key_file_get_format_string(string, value);
 }
@@ -311,8 +313,10 @@ libeventd_config_key_file_get_locale_format_string_with_default(GKeyFile *config
     gchar *string;
     gint8 r;
 
-    if ( ( r = libeventd_config_key_file_get_locale_string_with_default(config_file, group, key, locale, default_value, &string) ) != 0 )
+    if ( ( r = libeventd_config_key_file_get_locale_string_with_default(config_file, group, key, locale, default_value, &string) ) != 0 ) {
+        g_free(string);
         return r;
+    }
 
     return _libeventd_config_key_file_get_format_string(string, value);
 }
@@ -352,8 +356,10 @@ libeventd_config_key_file_get_filename_with_default(GKeyFile *config_file, const
     gchar *string;
     gint8 r;
 
-    if ( ( r = libeventd_config_key_file_get_string_with_default(config_file, group, key, default_value, &string) ) != 0 )
+    if ( ( r = libeventd_config_key_file_get_string_with_default(config_file, group, key, default_value, &string) ) != 0 ) {
+        g_free(string);
         return r;
+    }
 
     return _libeventd_config_key_file_get_filename(string, value);
 }
@@ -378,8 +384,10 @@ libeventd_config_key_file_get_locale_filename_with_default(GKeyFile *config_file
     gchar *string;
     gint8 r;
 
-    if ( ( r = libeventd_config_key_file_get_locale_string_with_default(config_file, group, key, locale, default_value, &string) ) != 0 )
+    if ( ( r = libeventd_config_key_file_get_locale_string_with_default(config_file, group, key, locale, default_value, &string) ) != 0 ) {
+        g_free(string);
         return r;
+    }
 
     return _libeventd_config_key_file_get_filename(string, value);
 }
