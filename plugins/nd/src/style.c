@@ -459,8 +459,10 @@ eventd_nd_style_free(gpointer data)
 
     g_free(style->template.title);
     g_free(style->template.message);
+#ifdef ENABLE_GDK_PIXBUF
     g_free(style->template.image);
     g_free(style->template.icon);
+#endif /* ENABLE_GDK_PIXBUF */
 
     g_free(style);
 }
