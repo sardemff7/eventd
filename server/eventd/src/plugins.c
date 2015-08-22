@@ -58,7 +58,7 @@ _eventd_plugins_load_dir(EventdPluginCoreContext *core, EventdPluginCoreInterfac
 
 
 #ifdef DEBUG
-    g_debug("Scannig plugins dir: %s", plugins_dir_name);
+    g_debug("Scanning plugins dir: %s", plugins_dir_name);
 #endif /* DEBUG */
 
     plugins_dir = g_dir_open(plugins_dir_name, 0, &error);

@@ -53,7 +53,7 @@ _eventd_nd_backends_load_dir(EventdNdContext *context, EventdNdInterface *interf
 
 
 #ifdef DEBUG
-    g_debug("Scannig notification backends dir: %s", backends_dir_name);
+    g_debug("Scanning notification backends dir: %s", backends_dir_name);
 #endif /* DEBUG */
 
     plugins_dir = g_dir_open(backends_dir_name, 0, &error);
