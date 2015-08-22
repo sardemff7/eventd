@@ -268,6 +268,7 @@ eventd_sockets_get_unix_socket(EventdSockets *sockets, const gchar *path, gboole
         g_warning("Unable to bind the UNIX socket: %s", error->message);
         goto fail;
     }
+    g_object_unref(address);
 
     if ( ! g_socket_listen(socket, &error) )
     {
@@ -279,6 +280,8 @@ eventd_sockets_get_unix_socket(EventdSockets *sockets, const gchar *path, gboole
     return socket;
 
 fail:
+    if ( address != NULL )
+        g_object_unref(address);
     if ( socket != NULL )
         g_object_unref(socket);
     g_clear_error(&error);
