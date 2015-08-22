@@ -385,10 +385,11 @@ _eventd_config_parse_event_file(EventdConfig *config, const gchar *id, GKeyFile 
 
     internal_name = _eventd_config_events_get_name(category, name);
 
-    GList *list;
-
-    list = g_hash_table_lookup(config->event_ids, internal_name);
+    GList *list = NULL;
+    gchar *old_key = NULL;
+    g_hash_table_lookup_extended(config->event_ids, internal_name, (gpointer *)&old_key, (gpointer *)&list);
     g_hash_table_steal(config->event_ids, internal_name);
+    g_free(old_key);
     list = g_list_insert_sorted(list, match, _eventd_config_compare_matches);
     g_hash_table_insert(config->event_ids, internal_name, list);
 
