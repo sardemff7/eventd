@@ -88,7 +88,7 @@
         </para>
 
         <orderedlist>
-            <listitem><para>eventd will get the list of configurations ids matching both the category and the name of the event</para></listitem>
+            <listitem><para>eventd will get the list of configuration ids matching both the category and the name of the event</para></listitem>
             <listitem><para>If the list is empty, jump to step <xref linkend="matching-step-category" /></para></listitem>
             <listitem><para>Test all configuration ids in user-configured order to find the best match</para></listitem>
             <listitem><para>If an id matches, use it when passing the event to the plugins, otherwise continue</para></listitem>
