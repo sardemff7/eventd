@@ -190,10 +190,10 @@ _eventd_libnotify_event_parse(EventdPluginContext *context, const gchar *id, GKe
 
 skip:
     g_free(urgency);
-    g_free(icon);
-    g_free(image);
-    g_free(message);
-    g_free(title);
+    libeventd_filename_unref(icon);
+    libeventd_filename_unref(image);
+    libeventd_format_string_unref(message);
+    libeventd_format_string_unref(title);
 }
 
 static void

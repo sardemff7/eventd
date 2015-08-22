@@ -457,11 +457,11 @@ eventd_nd_style_free(gpointer data)
     pango_font_description_free(style->title.font);
     pango_font_description_free(style->message.font);
 
-    g_free(style->template.title);
-    g_free(style->template.message);
+    libeventd_format_string_unref(style->template.title);
+    libeventd_format_string_unref(style->template.message);
 #ifdef ENABLE_GDK_PIXBUF
-    g_free(style->template.image);
-    g_free(style->template.icon);
+    libeventd_filename_unref(style->template.image);
+    libeventd_filename_unref(style->template.icon);
 #endif /* ENABLE_GDK_PIXBUF */
 
     g_free(style);
