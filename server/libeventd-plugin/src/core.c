@@ -44,6 +44,16 @@ eventd_plugin_core_get_sockets(EventdPluginCoreContext *context, EventdPluginCor
     return interface->get_sockets(context, binds);
 }
 
+/**
+ * eventd_plugin_core_push_event:
+ * @context: an #EventdPluginCoreContext
+ * @interface: an #EventdPluginCoreInterface
+ * @event: an #EventdEvent
+ *
+ * Pushes an event into the queue.
+ *
+ * Returns: %TRUE if the event was pushed successfully.
+ */
 EVENTD_EXPORT
 gboolean
 eventd_plugin_core_push_event(EventdPluginCoreContext *context, EventdPluginCoreInterface *interface, EventdEvent *event)
