@@ -42,6 +42,12 @@ typedef struct {
 
 typedef struct _Filename Filename;
 
+/*
+ * These functions will return:
+ *     0 on success: the key is there and the value is valid
+ *     1 on missing: the key is not there; for _with_default functions, the default value is returned
+ *     -1 on error: the key is there and the value is invalid
+ */
 gint8 libeventd_config_key_file_get_boolean(GKeyFile *config_file, const gchar *group, const gchar *key, gboolean *value);
 gint8 libeventd_config_key_file_get_string(GKeyFile *config_file, const gchar *group, const gchar *key, gchar **value);
 gint8 libeventd_config_key_file_get_string_with_default(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *default_value, gchar **value);

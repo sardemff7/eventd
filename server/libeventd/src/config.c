@@ -257,12 +257,15 @@ libeventd_config_key_file_get_string_list(GKeyFile *config_file, const gchar *gr
 }
 
 static gint8
-_libeventd_config_key_file_get_format_string(gchar *string, FormatString **format_string)
+_libeventd_config_key_file_get_format_string(gchar *string, FormatString **format_string, gint8 r)
 {
+    if ( r < 0 )
+        return r;
+
     libeventd_format_string_unref(*format_string);
     *format_string = libeventd_format_string_new(string);
 
-    return 0;
+    return r;
 }
 
 EVENTD_EXPORT
@@ -275,7 +278,7 @@ libeventd_config_key_file_get_format_string(GKeyFile *config_file, const gchar *
     if ( ( r = libeventd_config_key_file_get_string(config_file, group, key, &string) ) != 0 )
         return r;
 
-    return _libeventd_config_key_file_get_format_string(string, value);
+    return _libeventd_config_key_file_get_format_string(string, value, 0);
 }
 
 EVENTD_EXPORT
@@ -285,10 +288,9 @@ libeventd_config_key_file_get_format_string_with_default(GKeyFile *config_file, 
     gchar *string;
     gint8 r;
 
-    if ( ( r = libeventd_config_key_file_get_string_with_default(config_file, group, key, default_value, &string) ) != 0 )
-        return r;
+    r = libeventd_config_key_file_get_string_with_default(config_file, group, key, default_value, &string);
 
-    return _libeventd_config_key_file_get_format_string(string, value);
+    return _libeventd_config_key_file_get_format_string(string, value, r);
 }
 
 EVENTD_EXPORT
@@ -301,7 +303,7 @@ libeventd_config_key_file_get_locale_format_string(GKeyFile *config_file, const 
     if ( ( r = libeventd_config_key_file_get_locale_string(config_file, group, key, locale, &string) ) != 0 )
         return r;
 
-    return _libeventd_config_key_file_get_format_string(string, value);
+    return _libeventd_config_key_file_get_format_string(string, value, 0);
 }
 
 EVENTD_EXPORT
@@ -311,15 +313,17 @@ libeventd_config_key_file_get_locale_format_string_with_default(GKeyFile *config
     gchar *string;
     gint8 r;
 
-    if ( ( r = libeventd_config_key_file_get_locale_string_with_default(config_file, group, key, locale, default_value, &string) ) != 0 )
-        return r;
+    r = libeventd_config_key_file_get_locale_string_with_default(config_file, group, key, locale, default_value, &string);
 
-    return _libeventd_config_key_file_get_format_string(string, value);
+    return _libeventd_config_key_file_get_format_string(string, value, r);
 }
 
 static gint8
-_libeventd_config_key_file_get_filename(gchar *string, Filename **value, const gchar *group, const gchar *key)
+_libeventd_config_key_file_get_filename(gchar *string, Filename **value, const gchar *group, const gchar *key, gint8 r)
 {
+    if ( r < 0 )
+        return r;
+
     Filename *filename;
 
     filename = libeventd_filename_new(string);
@@ -332,7 +336,7 @@ _libeventd_config_key_file_get_filename(gchar *string, Filename **value, const g
     libeventd_filename_unref(*value);
     *value = filename;
 
-    return 0;
+    return r;
 }
 
 EVENTD_EXPORT
@@ -345,7 +349,7 @@ libeventd_config_key_file_get_filename(GKeyFile *config_file, const gchar *group
     if ( ( r = libeventd_config_key_file_get_string(config_file, group, key, &string) ) != 0 )
         return r;
 
-    return _libeventd_config_key_file_get_filename(string, value, group, key);
+    return _libeventd_config_key_file_get_filename(string, value, group, key, 0);
 }
 
 EVENTD_EXPORT
@@ -355,10 +359,9 @@ libeventd_config_key_file_get_filename_with_default(GKeyFile *config_file, const
     gchar *string;
     gint8 r;
 
-    if ( ( r = libeventd_config_key_file_get_string_with_default(config_file, group, key, default_value, &string) ) != 0 )
-        return r;
+    r = libeventd_config_key_file_get_string_with_default(config_file, group, key, default_value, &string);
 
-    return _libeventd_config_key_file_get_filename(string, value, group, key);
+    return _libeventd_config_key_file_get_filename(string, value, group, key, r);
 }
 
 EVENTD_EXPORT
@@ -371,7 +374,7 @@ libeventd_config_key_file_get_locale_filename(GKeyFile *config_file, const gchar
     if ( ( r = libeventd_config_key_file_get_locale_string(config_file, group, key, locale, &string) ) != 0 )
         return r;
 
-    return _libeventd_config_key_file_get_filename(string, value, group, key);
+    return _libeventd_config_key_file_get_filename(string, value, group, key, 0);
 }
 
 EVENTD_EXPORT
@@ -381,10 +384,9 @@ libeventd_config_key_file_get_locale_filename_with_default(GKeyFile *config_file
     gchar *string;
     gint8 r;
 
-    if ( ( r = libeventd_config_key_file_get_locale_string_with_default(config_file, group, key, locale, default_value, &string) ) != 0 )
-        return r;
+    r = libeventd_config_key_file_get_locale_string_with_default(config_file, group, key, locale, default_value, &string);
 
-    return _libeventd_config_key_file_get_filename(string, value, group, key);
+    return _libeventd_config_key_file_get_filename(string, value, group, key, r);
 }
 
 EVENTD_EXPORT
