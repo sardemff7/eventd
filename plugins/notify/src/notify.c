@@ -47,6 +47,7 @@ typedef struct {
     Filename *image;
     Filename *icon;
     gdouble scale;
+    NotifyUrgency urgency;
 } EventdLibnotifyEvent;
 
 
@@ -55,7 +56,7 @@ typedef struct {
  */
 
 static EventdLibnotifyEvent *
-_eventd_libnotify_event_new(FormatString *title, FormatString *message, Filename *image, Filename *icon, gint64 scale)
+_eventd_libnotify_event_new(FormatString *title, FormatString *message, Filename *image, Filename *icon, gint64 scale, gchar *urgency)
 {
     EventdLibnotifyEvent *event;
 
@@ -66,6 +67,16 @@ _eventd_libnotify_event_new(FormatString *title, FormatString *message, Filename
     event->image = image;
     event->icon = icon;
     event->scale = (gdouble) scale / 100.;
+    event->urgency = NOTIFY_URGENCY_NORMAL;
+    if ( g_strcmp0(urgency, "low") == 0 )
+        event->urgency = NOTIFY_URGENCY_LOW;
+    else if ( g_strcmp0(urgency, "normal") == 0 )
+        event->urgency = NOTIFY_URGENCY_NORMAL;
+    else if ( g_strcmp0(urgency, "critical") == 0 )
+        event->urgency = NOTIFY_URGENCY_CRITICAL;
+    else
+        g_warning("Unknown urgency: %s", urgency);
+    g_free(urgency);
 
     return event;
 }
@@ -146,6 +157,7 @@ _eventd_libnotify_event_parse(EventdPluginContext *context, const gchar *id, GKe
     Filename *image = NULL;
     Filename *icon = NULL;
     gint64 scale;
+    gchar *urgency = NULL;
 
     if ( ! g_key_file_has_group(config_file, "Libnotify") )
         return;
@@ -165,15 +177,19 @@ _eventd_libnotify_event_parse(EventdPluginContext *context, const gchar *id, GKe
             goto skip;
         if ( libeventd_config_key_file_get_int_with_default(config_file, "Libnotify", "OverlayScale", 50, &scale) < 0 )
             goto skip;
+        if ( libeventd_config_key_file_get_string_with_default(config_file, "Libnotify", "Urgency", "normal", &urgency) < 0 )
+            goto skip;
 
-        libnotify_event = _eventd_libnotify_event_new(title, message, image, icon, scale);
+        libnotify_event = _eventd_libnotify_event_new(title, message, image, icon, scale, urgency);
         title = message = NULL;
         image = icon = NULL;
+        urgency = NULL;
     }
 
     g_hash_table_insert(context->events, g_strdup(id), libnotify_event);
 
 skip:
+    g_free(urgency);
     g_free(icon);
     g_free(image);
     g_free(message);
@@ -222,7 +238,7 @@ _eventd_libnotify_event_action(EventdPluginContext *context, const gchar *config
         g_object_unref(image);
     }
 
-
+    notify_notification_set_urgency(notification, libnotify_event->urgency);
     notify_notification_set_timeout(notification, eventd_event_get_timeout(event));
 
     if ( ! notify_notification_show(notification, &error) )
