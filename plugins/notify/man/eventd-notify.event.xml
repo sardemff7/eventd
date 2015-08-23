@@ -109,6 +109,14 @@
                         <para>Scale factor used if the icon is rendered as an overlay to the image.</para>
                     </listitem>
                 </varlistentry>
+
+                <varlistentry>
+                    <term><varname>Urgency=</varname> (defaults to <literal>normal</literal>)</term>
+                    <listitem>
+                        <para>An <type>enumeration</type></para>
+                        <para>The urgency of the notification. One of <literal>low</literal>, <literal>normal</literal>, or <literal>critical</literal>.</para>
+                    </listitem>
+                </varlistentry>
             </variablelist>
         </refsect2>
     </refsect1>
