@@ -318,13 +318,16 @@ libeventd_config_key_file_get_locale_format_string_with_default(GKeyFile *config
 }
 
 static gint8
-_libeventd_config_key_file_get_filename(gchar *string, Filename **value)
+_libeventd_config_key_file_get_filename(gchar *string, Filename **value, const gchar *group, const gchar *key)
 {
     Filename *filename;
 
     filename = libeventd_filename_new(string);
     if ( filename == NULL )
-        return 1;
+    {
+        g_warning("Couldn't read the key [%s] '%s': Filename key must be either a data-name or a file:// URI format string", group, key);
+        return -1;
+    }
 
     libeventd_filename_unref(*value);
     *value = filename;
@@ -342,7 +345,7 @@ libeventd_config_key_file_get_filename(GKeyFile *config_file, const gchar *group
     if ( ( r = libeventd_config_key_file_get_string(config_file, group, key, &string) ) != 0 )
         return r;
 
-    return _libeventd_config_key_file_get_filename(string, value);
+    return _libeventd_config_key_file_get_filename(string, value, group, key);
 }
 
 EVENTD_EXPORT
@@ -355,7 +358,7 @@ libeventd_config_key_file_get_filename_with_default(GKeyFile *config_file, const
     if ( ( r = libeventd_config_key_file_get_string_with_default(config_file, group, key, default_value, &string) ) != 0 )
         return r;
 
-    return _libeventd_config_key_file_get_filename(string, value);
+    return _libeventd_config_key_file_get_filename(string, value, group, key);
 }
 
 EVENTD_EXPORT
@@ -368,7 +371,7 @@ libeventd_config_key_file_get_locale_filename(GKeyFile *config_file, const gchar
     if ( ( r = libeventd_config_key_file_get_locale_string(config_file, group, key, locale, &string) ) != 0 )
         return r;
 
-    return _libeventd_config_key_file_get_filename(string, value);
+    return _libeventd_config_key_file_get_filename(string, value, group, key);
 }
 
 EVENTD_EXPORT
@@ -381,7 +384,7 @@ libeventd_config_key_file_get_locale_filename_with_default(GKeyFile *config_file
     if ( ( r = libeventd_config_key_file_get_locale_string_with_default(config_file, group, key, locale, default_value, &string) ) != 0 )
         return r;
 
-    return _libeventd_config_key_file_get_filename(string, value);
+    return _libeventd_config_key_file_get_filename(string, value, group, key);
 }
 
 EVENTD_EXPORT
