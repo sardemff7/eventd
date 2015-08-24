@@ -43,6 +43,7 @@ EXTRA_DIST = \
 	autogen.sh \
 	README.md \
 	PROTOCOL.md \
+	COPYING.LGPLv3 \
 	$(null)
 CLEANFILES =
 
