@@ -1,5 +1,5 @@
 m4_define([eventd_version_major], [0])
-m4_define([eventd_version_minor], [3])
+m4_define([eventd_version_minor], [4])
 m4_define([eventd_version_patch], [])
 AC_PREREQ([2.65])
 AC_INIT([eventd],eventd_version_major.eventd_version_minor[]eventd_version_patch,[],[])
