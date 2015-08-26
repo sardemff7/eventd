@@ -96,10 +96,10 @@
             </varlistentry>
 
             <varlistentry>
-                <term><command>dbus</command> plugin man pages</term>
+                <term><command>fdo-notifications</command> plugin man pages</term>
                 <listitem>
                     <para>
-                        <citerefentry><refentrytitle>eventd-dbus</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+                        <citerefentry><refentrytitle>eventd-fdo-notifications</refentrytitle><manvolnum>1</manvolnum></citerefentry>
                     </para>
                 </listitem>
             </varlistentry>

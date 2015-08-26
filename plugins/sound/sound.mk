@@ -9,8 +9,8 @@ man5_MANS += \
 	plugins/sound/man/eventd-sound.event.5 \
 	$(null)
 
-dbuscapabilities_DATA += \
-	plugins/sound/dbuscapabilities/sound.capabilities \
+fdonotificationscapabilities_DATA += \
+	plugins/sound/fdonotificationscapabilities/sound.capabilities \
 	$(null)
 endif
 
@@ -46,14 +46,14 @@ sound_la_LIBADD = \
 	$(null)
 
 
-sound_dbus_capabilities = \
+sound_fdo_notifications_capabilities = \
 	sound \
 	$(null)
 
-plugins/sound/dbuscapabilities/sound.capabilities: src/config.h
+plugins/sound/fdonotificationscapabilities/sound.capabilities: src/config.h
 	$(AM_V_GEN)$(MKDIR_P) $(dir $@) && \
-	echo $(sound_dbus_capabilities) > $@
+	echo $(sound_fdo_notifications_capabilities) > $@
 
 CLEANFILES += \
-	plugins/sound/dbuscapabilities/sound.capabilities \
+	plugins/sound/fdonotificationscapabilities/sound.capabilities \
 	$(null)

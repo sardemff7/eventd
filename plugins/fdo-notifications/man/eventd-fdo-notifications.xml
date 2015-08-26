@@ -26,16 +26,16 @@
 -->
 
 <refentry xmlns:xi="http://www.w3.org/2001/XInclude"
-    id="eventd-dbus">
+    id="eventd-fdo-notifications">
     <xi:include href="common-man.xml" xpointer="refentryinfo" />
 
     <refmeta>
-        <refentrytitle>eventd-dbus</refentrytitle>
+        <refentrytitle>eventd-fdo-notifications</refentrytitle>
         <manvolnum>1</manvolnum>
     </refmeta>
 
     <refnamediv>
-        <refname>eventd-dbus</refname>
+        <refname>eventd-fdo-notifications</refname>
         <refpurpose>eventd org.freedesktop.Notification D-Bus interface plugin</refpurpose>
     </refnamediv>
 
@@ -58,10 +58,9 @@
 
         <variablelist>
             <varlistentry>
-                <term><option>-D</option></term>
-                <term><option>--no-dbus</option></term>
+                <term><option>--no-fdo-notifications</option></term>
                 <listitem>
-                    <para>Disable D-Bus interface</para>
+                    <para>Disable Freedesktop.org Notifications D-Bus interface</para>
                 </listitem>
             </varlistentry>
         </variablelist>

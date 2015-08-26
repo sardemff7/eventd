@@ -33,7 +33,7 @@ vapi_DATA =
 dist_event_DATA =
 systemduserunit_DATA =
 dbussessionservice_DATA =
-dbuscapabilities_DATA =
+fdonotificationscapabilities_DATA =
 
 INTROSPECTION_GIRS =
 INTROSPECTION_SCANNER_ARGS = --add-include-path=$(srcdir) --warn-all
@@ -66,7 +66,7 @@ include server/eventd/eventd.mk
 include server/libeventd-plugin/libeventd-plugin.mk
 include server/eventdctl/eventdctl.mk
 include plugins/evp/evp.mk
-include plugins/dbus/dbus.mk
+include plugins/fdo-notifications/fdo-notifications.mk
 include plugins/relay/relay.mk
 include plugins/exec/exec.mk
 include plugins/nd/nd.mk

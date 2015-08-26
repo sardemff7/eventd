@@ -7,7 +7,7 @@ pkglibdir=@pkglibdir@
 pkgincludedir=@pkgincludedir@
 
 plugindir=@pluginsdir@
-dbuscapabilitiesdir=@dbuscapabilitiesdir@
+fdonotificationscapabilitiesdir=@fdonotificationscapabilitiesdir@
 
 Name: libeventd-plugin
 Description: Library to implement an eventd plugin

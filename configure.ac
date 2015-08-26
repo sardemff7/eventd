@@ -104,10 +104,10 @@ AC_SUBST([vapidir])
 # eventd specific dirs
 pluginsdir='${pkglibdir}/plugins'
 eventdir='${pkgdatadir}'
-dbuscapabilitiesdir='${pluginsdir}/dbus'
+fdonotificationscapabilitiesdir='${pluginsdir}/fdo-notifications'
 AC_SUBST([pluginsdir])
 AC_SUBST([eventdir])
-AC_SUBST([dbuscapabilitiesdir])
+AC_SUBST([fdonotificationscapabilitiesdir])
 
 EVENTD_I18N
 GLIB_DEFINE_LOCALEDIR([EVENTD_LOCALEDIR])

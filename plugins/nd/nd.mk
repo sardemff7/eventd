@@ -23,8 +23,8 @@ man5_MANS += \
 	plugins/nd/man/eventd-nd.event.5 \
 	$(null)
 
-dbuscapabilities_DATA += \
-	plugins/nd/dbuscapabilities/nd.capabilities \
+fdonotificationscapabilities_DATA += \
+	plugins/nd/fdonotificationscapabilities/nd.capabilities \
 	$(null)
 endif
 
@@ -86,25 +86,25 @@ include plugins/nd/xcb/xcb.mk
 include plugins/nd/linux/linux.mk
 
 
-nd_dbus_capabilities = \
+nd_fdo_notifications_capabilities = \
 	body \
 	body-markup \
 	$(null)
 
 if ENABLE_GDK_PIXBUF
-nd_dbus_capabilities += \
+nd_fdo_notifications_capabilities += \
 	icon-static \
 	image/svg+xml \
 	x-eventd-overlay-icon \
 	$(null)
 endif
 
-plugins/nd/dbuscapabilities/nd.capabilities: src/config.h
+plugins/nd/fdonotificationscapabilities/nd.capabilities: src/config.h
 	$(AM_V_GEN)$(MKDIR_P) $(dir $@) && \
-	echo $(nd_dbus_capabilities) > $@
+	echo $(nd_fdo_notifications_capabilities) > $@
 
 CLEANFILES += \
-	plugins/nd/dbuscapabilities/nd.capabilities \
+	plugins/nd/fdonotificationscapabilities/nd.capabilities \
 	$(null)
 
 #

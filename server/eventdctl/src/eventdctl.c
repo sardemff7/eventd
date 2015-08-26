@@ -262,7 +262,7 @@ _eventd_eventdctl_process_command(const gchar *private_socket, gboolean autospaw
         argv[0] = "eventd-nd";
     else if (
                  ( g_strcmp0(argv[0], "evp") == 0 )
-              || ( g_strcmp0(argv[0], "dbus") == 0 )
+              || ( g_strcmp0(argv[0], "fdo-notifications") == 0 )
               || ( g_strcmp0(argv[0], "relay") == 0 )
               || ( g_strcmp0(argv[0], "exec") == 0 )
               || ( g_strcmp0(argv[0], "nd") == 0 )

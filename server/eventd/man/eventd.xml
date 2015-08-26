@@ -99,7 +99,7 @@
                 </varlistentry>
 
                 <varlistentry>
-                    <term><command>dbus</command> (see <citerefentry><refentrytitle>eventd-dbus</refentrytitle><manvolnum>1</manvolnum></citerefentry>)</term>
+                    <term><command>fdo-notifications</command> (see <citerefentry><refentrytitle>eventd-fdo-notifications</refentrytitle><manvolnum>1</manvolnum></citerefentry>)</term>
                     <listitem><para>which implements the <ulink url="http://people.gnome.org/~mccann/docs/notification-spec/notification-spec-latest.html">Desktop Notifications Specification</ulink></para></listitem>
                 </varlistentry>
             </variablelist>
@@ -231,7 +231,7 @@
             <title>As a notification daemon</title>
 
             <para>
-                With its <command>dbus</command> plugin and <command>nd</command> plugin with <command>xcb</command> backend, eventd can act as a notification daemon.
+                With its <command>fdo-notifications</command> plugin and <command>nd</command> plugin with <command>xcb</command> backend, eventd can act as a notification daemon.
                 The generated notifications looks a lot like notify-osd’s ones.
             </para>
             <para>
@@ -399,10 +399,10 @@ eventdctl relay disconnect your.distant.computer</programlisting>
             <title>Relaying remote D-Bus notifications</title>
 
             <para>
-                Combining <command>dbus</command>, <command>evp</command>, <command>relay</command> and <command>notify</command> plugins, you can easily relay remote D-Bus notifications to your local computer.
+                Combining <command>fdo-notifications</command>, <command>evp</command>, <command>relay</command> and <command>notify</command> plugins, you can easily relay remote D-Bus notifications to your local computer.
             </para>
             <para>
-                You need to configure <command>relay</command> and <command>dbus</command> plugins on the remote computer and <command>evp</command> and <command>notify</command> plugins on the local one.
+                You need to configure <command>relay</command> and <command>fdo-notifications</command> plugins on the remote computer and <command>evp</command> and <command>notify</command> plugins on the local one.
             </para>
             <para>
                 The default provided configurations for the <command>notify</command> plugin is enough on your local computer.

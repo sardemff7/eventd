@@ -9,8 +9,8 @@ man5_MANS += \
 	plugins/canberra/man/eventd-canberra.event.5 \
 	$(null)
 
-dbuscapabilities_DATA += \
-	plugins/canberra/dbuscapabilities/canberra.capabilities \
+fdonotificationscapabilities_DATA += \
+	plugins/canberra/fdonotificationscapabilities/canberra.capabilities \
 	$(null)
 endif
 
@@ -40,14 +40,14 @@ canberra_la_LIBADD = \
 	$(null)
 
 
-canberra_dbus_capabilities = \
+canberra_fdo_notifications_capabilities = \
 	sound \
 	$(null)
 
-plugins/canberra/dbuscapabilities/canberra.capabilities: src/config.h
+plugins/canberra/fdonotificationscapabilities/canberra.capabilities: src/config.h
 	$(AM_V_GEN)$(MKDIR_P) $(dir $@) && \
-	echo $(canberra_dbus_capabilities) > $@
+	echo $(canberra_fdo_notifications_capabilities) > $@
 
 CLEANFILES += \
-	plugins/canberra/dbuscapabilities/canberra.capabilities \
+	plugins/canberra/fdonotificationscapabilities/canberra.capabilities \
 	$(null)

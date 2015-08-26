@@ -57,7 +57,7 @@ typedef struct {
 } EventdDbusNotification;
 
 static void
-_eventd_dbus_event_ended(EventdEvent *event, EventdEventEndReason reason, EventdDbusNotification *notification)
+_eventd_fdo_notifications_event_ended(EventdEvent *event, EventdEventEndReason reason, EventdDbusNotification *notification)
 {
     /*
      * We have to emit the NotificationClosed signal for our D-Bus client
@@ -76,7 +76,7 @@ _eventd_dbus_event_ended(EventdEvent *event, EventdEventEndReason reason, Eventd
  */
 
 static guint32
-_eventd_dbus_notification_new(EventdPluginContext *context, const gchar *sender, EventdEvent *event)
+_eventd_fdo_notifications_notification_new(EventdPluginContext *context, const gchar *sender, EventdEvent *event)
 {
     if ( ! eventd_plugin_core_push_event(context->core, context->core_interface, event) )
         return 0;
@@ -92,13 +92,13 @@ _eventd_dbus_notification_new(EventdPluginContext *context, const gchar *sender,
     eventd_event_add_data(event, g_strdup("id"), g_strdup_printf("%u", notification->id));
 
     g_hash_table_insert(context->notifications, GUINT_TO_POINTER(notification->id), notification);
-    g_signal_connect(event, "ended", G_CALLBACK(_eventd_dbus_event_ended), notification);
+    g_signal_connect(event, "ended", G_CALLBACK(_eventd_fdo_notifications_event_ended), notification);
 
     return notification->id;
 }
 
 static void
-_eventd_dbus_notification_free(gpointer user_data)
+_eventd_fdo_notifications_notification_free(gpointer user_data)
 {
     EventdDbusNotification *notification = user_data;
 
@@ -115,7 +115,7 @@ _eventd_dbus_notification_free(gpointer user_data)
  */
 
 static void
-_eventd_dbus_notify(EventdPluginContext *context, const gchar *sender, GVariant *parameters, GDBusMethodInvocation *invocation)
+_eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *sender, GVariant *parameters, GDBusMethodInvocation *invocation)
 {
     const gchar *app_name;
     guint32 id;
@@ -257,7 +257,7 @@ _eventd_dbus_notify(EventdPluginContext *context, const gchar *sender, GVariant 
     if ( id > 0 )
         eventd_event_update(event, NULL);
     else
-        id = _eventd_dbus_notification_new(context, sender, event);
+        id = _eventd_fdo_notifications_notification_new(context, sender, event);
 
     if ( id == 0 )
     {
@@ -270,7 +270,7 @@ _eventd_dbus_notify(EventdPluginContext *context, const gchar *sender, GVariant 
 }
 
 static void
-_eventd_dbus_close_notification(EventdPluginContext *context, GVariant *parameters, GDBusMethodInvocation *invocation)
+_eventd_fdo_notifications_close_notification(EventdPluginContext *context, GVariant *parameters, GDBusMethodInvocation *invocation)
 {
     guint32 id;
     EventdDbusNotification *notification;
@@ -292,20 +292,20 @@ _eventd_dbus_close_notification(EventdPluginContext *context, GVariant *paramete
 }
 
 static void
-_eventd_dbus_get_capabilities(EventdPluginContext *context, GDBusMethodInvocation *invocation)
+_eventd_fdo_notifications_get_capabilities(EventdPluginContext *context, GDBusMethodInvocation *invocation)
 {
     g_dbus_method_invocation_return_value(invocation, g_variant_ref(context->capabilities));
 }
 
 static void
-_eventd_dbus_get_server_information(EventdPluginContext *context, GDBusMethodInvocation *invocation)
+_eventd_fdo_notifications_get_server_information(EventdPluginContext *context, GDBusMethodInvocation *invocation)
 {
     g_dbus_method_invocation_return_value(invocation, g_variant_ref(context->server_information));
 }
 
 /* D-Bus method callback */
 static void
-_eventd_dbus_method(GDBusConnection       *connection,
+_eventd_fdo_notifications_method(GDBusConnection       *connection,
                     const char            *sender,
                     const char            *object_path,
                     const char            *interface_name,
@@ -321,13 +321,13 @@ _eventd_dbus_method(GDBusConnection       *connection,
      */
 
     if ( g_strcmp0(method_name, "Notify") == 0 )
-        _eventd_dbus_notify(context, sender, parameters, invocation);
+        _eventd_fdo_notifications_notify(context, sender, parameters, invocation);
     else if ( g_strcmp0(method_name, "CloseNotification") == 0 )
-        _eventd_dbus_close_notification(context, parameters, invocation);
+        _eventd_fdo_notifications_close_notification(context, parameters, invocation);
     else if ( g_strcmp0(method_name, "GetCapabilities") == 0 )
-        _eventd_dbus_get_capabilities(context, invocation);
+        _eventd_fdo_notifications_get_capabilities(context, invocation);
     else if ( g_strcmp0(method_name, "GetServerInformation") == 0 )
-        _eventd_dbus_get_server_information(context, invocation);
+        _eventd_fdo_notifications_get_server_information(context, invocation);
 }
 
 
@@ -365,7 +365,7 @@ static const gchar introspection_xml[] =
 "</node>";
 
 static GDBusInterfaceVTable interface_vtable = {
-    .method_call = _eventd_dbus_method
+    .method_call = _eventd_fdo_notifications_method
 };
 
 
@@ -374,7 +374,7 @@ static GDBusInterfaceVTable interface_vtable = {
  */
 
 static void
-_eventd_dbus_on_bus_acquired(GDBusConnection *connection, const gchar *name, gpointer user_data)
+_eventd_fdo_notifications_on_bus_acquired(GDBusConnection *connection, const gchar *name, gpointer user_data)
 {
     EventdPluginContext *context = user_data;
     GError *error = NULL;
@@ -391,7 +391,7 @@ _eventd_dbus_on_bus_acquired(GDBusConnection *connection, const gchar *name, gpo
 }
 
 static void
-_eventd_dbus_on_name_acquired(GDBusConnection *connection, const gchar *name, gpointer user_data)
+_eventd_fdo_notifications_on_name_acquired(GDBusConnection *connection, const gchar *name, gpointer user_data)
 {
 #ifdef DEBUG
     g_debug("Acquired the name %s on the session bus", name);
@@ -399,7 +399,7 @@ _eventd_dbus_on_name_acquired(GDBusConnection *connection, const gchar *name, gp
 }
 
 static void
-_eventd_dbus_on_name_lost(GDBusConnection *connection, const gchar *name, gpointer user_data)
+_eventd_fdo_notifications_on_name_lost(GDBusConnection *connection, const gchar *name, gpointer user_data)
 {
 #ifdef DEBUG
     g_debug("Lost the name %s on the session bus", name);
@@ -412,7 +412,7 @@ _eventd_dbus_on_name_lost(GDBusConnection *connection, const gchar *name, gpoint
  */
 
 static EventdPluginContext *
-_eventd_dbus_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *core_interface)
+_eventd_fdo_notifications_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *core_interface)
 {
     EventdPluginContext *context;
     GError *error = NULL;
@@ -435,13 +435,13 @@ _eventd_dbus_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *core
 
     context->server_information = g_variant_new("(ssss)", PACKAGE_NAME, "Quentin 'Sardem FF7' Glidic", PACKAGE_VERSION, NOTIFICATION_SPEC_VERSION);
 
-    context->notifications = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, _eventd_dbus_notification_free);
+    context->notifications = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, _eventd_fdo_notifications_notification_free);
 
     return context;
 }
 
 static void
-_eventd_dbus_uninit(EventdPluginContext *context)
+_eventd_fdo_notifications_uninit(EventdPluginContext *context)
 {
     if ( context == NULL )
         return;
@@ -461,16 +461,16 @@ _eventd_dbus_uninit(EventdPluginContext *context)
  */
 
 static GOptionGroup *
-_eventd_dbus_get_option_group(EventdPluginContext *context)
+_eventd_fdo_notifications_get_option_group(EventdPluginContext *context)
 {
     GOptionGroup *option_group;
     GOptionEntry entries[] =
     {
-        { "no-dbus", 'D', 0, G_OPTION_ARG_NONE, &context->disabled, "Disable D-Bus interface", NULL },
+        { "no-fdo-notifications", 0, 0, G_OPTION_ARG_NONE, &context->disabled, "Disable Freedesktop.org Notifications D-Bus interface", NULL },
         { NULL }
     };
 
-    option_group = g_option_group_new("dbus", "D-Bus plugin options", "Show D-Bus plugin help options", NULL, NULL);
+    option_group = g_option_group_new("fdo-notifications", "Freedesktop.org Notifications plugin options", "Show Freedesktop.org Notifications plugin help options", NULL, NULL);
     g_option_group_set_translation_domain(option_group, GETTEXT_PACKAGE);
     g_option_group_add_entries(option_group, entries);
     return option_group;
@@ -481,7 +481,7 @@ _eventd_dbus_get_option_group(EventdPluginContext *context)
  * Configuration interface
  */
 static void
-_eventd_dbus_load_capabilities_dir(const gchar *dir_name, GHashTable *capabilities_set)
+_eventd_fdo_notifications_load_capabilities_dir(const gchar *dir_name, GHashTable *capabilities_set)
 {
     if ( ! g_file_test(dir_name, G_FILE_TEST_EXISTS | G_FILE_TEST_IS_DIR) )
         return;
@@ -504,7 +504,7 @@ _eventd_dbus_load_capabilities_dir(const gchar *dir_name, GHashTable *capabiliti
 
         gchar *full_filename;
 
-        full_filename = g_build_filename(DBUSCAPABILITIESDIR, file, NULL);
+        full_filename = g_build_filename(FDONOTIFICATIONSCAPABILITIESDIR, file, NULL);
         if ( ! g_file_test(full_filename, G_FILE_TEST_IS_REGULAR) )
             goto next;
 
@@ -532,7 +532,7 @@ _eventd_dbus_load_capabilities_dir(const gchar *dir_name, GHashTable *capabiliti
 }
 
 static void
-_eventd_dbus_config_init(EventdPluginContext *context)
+_eventd_fdo_notifications_config_init(EventdPluginContext *context)
 {
     GHashTable *capabilities_set;
 
@@ -543,7 +543,7 @@ _eventd_dbus_config_init(EventdPluginContext *context)
     g_hash_table_insert(capabilities_set, "actions", NULL);
      */
 
-    _eventd_dbus_load_capabilities_dir(DBUSCAPABILITIESDIR, capabilities_set);
+    _eventd_fdo_notifications_load_capabilities_dir(FDONOTIFICATIONSCAPABILITIESDIR, capabilities_set);
 
     GVariantBuilder *builder;
 
@@ -567,7 +567,7 @@ _eventd_dbus_config_init(EventdPluginContext *context)
 }
 
 static void
-_eventd_dbus_config_reset(EventdPluginContext *context)
+_eventd_fdo_notifications_config_reset(EventdPluginContext *context)
 {
     g_variant_unref(context->capabilities);
     context->capabilities = NULL;
@@ -579,16 +579,16 @@ _eventd_dbus_config_reset(EventdPluginContext *context)
  */
 
 static void
-_eventd_dbus_start(EventdPluginContext *context)
+_eventd_fdo_notifications_start(EventdPluginContext *context)
 {
     if ( ( context == NULL ) || context->disabled )
         return;
 
-    context->id = g_bus_own_name(G_BUS_TYPE_SESSION, NOTIFICATION_BUS_NAME, G_BUS_NAME_OWNER_FLAGS_NONE, _eventd_dbus_on_bus_acquired, _eventd_dbus_on_name_acquired, _eventd_dbus_on_name_lost, context, NULL);
+    context->id = g_bus_own_name(G_BUS_TYPE_SESSION, NOTIFICATION_BUS_NAME, G_BUS_NAME_OWNER_FLAGS_NONE, _eventd_fdo_notifications_on_bus_acquired, _eventd_fdo_notifications_on_name_acquired, _eventd_fdo_notifications_on_name_lost, context, NULL);
 }
 
 static void
-_eventd_dbus_stop(EventdPluginContext *context)
+_eventd_fdo_notifications_stop(EventdPluginContext *context)
 {
     if ( ( context == NULL ) || context->disabled )
         return;
@@ -601,19 +601,19 @@ _eventd_dbus_stop(EventdPluginContext *context)
  * Plugin interface
  */
 
-EVENTD_EXPORT const gchar *eventd_plugin_id = "eventd-dbus";
+EVENTD_EXPORT const gchar *eventd_plugin_id = "eventd-fdo-notifications";
 EVENTD_EXPORT
 void
 eventd_plugin_get_interface(EventdPluginInterface *interface)
 {
-    eventd_plugin_interface_add_init_callback(interface, _eventd_dbus_init);
-    eventd_plugin_interface_add_uninit_callback(interface, _eventd_dbus_uninit);
+    eventd_plugin_interface_add_init_callback(interface, _eventd_fdo_notifications_init);
+    eventd_plugin_interface_add_uninit_callback(interface, _eventd_fdo_notifications_uninit);
 
-    eventd_plugin_interface_add_get_option_group_callback(interface, _eventd_dbus_get_option_group);
+    eventd_plugin_interface_add_get_option_group_callback(interface, _eventd_fdo_notifications_get_option_group);
 
-    eventd_plugin_interface_add_config_init_callback(interface, _eventd_dbus_config_init);
-    eventd_plugin_interface_add_config_reset_callback(interface, _eventd_dbus_config_reset);
+    eventd_plugin_interface_add_config_init_callback(interface, _eventd_fdo_notifications_config_init);
+    eventd_plugin_interface_add_config_reset_callback(interface, _eventd_fdo_notifications_config_reset);
 
-    eventd_plugin_interface_add_start_callback(interface, _eventd_dbus_start);
-    eventd_plugin_interface_add_stop_callback(interface, _eventd_dbus_stop);
+    eventd_plugin_interface_add_start_callback(interface, _eventd_fdo_notifications_start);
+    eventd_plugin_interface_add_stop_callback(interface, _eventd_fdo_notifications_stop);
 }
