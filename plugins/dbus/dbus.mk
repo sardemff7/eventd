@@ -1,16 +1,11 @@
 # dbus plugin
 
-if ENABLE_DBUS
 plugins_LTLIBRARIES += \
 	dbus.la \
 	$(null)
 
 man1_MANS += \
 	plugins/dbus/man/eventd-dbus.1 \
-	$(null)
-
-pkgconfig_DATA += \
-	plugins/dbus/pkgconfig/eventd-dbus.pc \
 	$(null)
 
 dist_event_DATA += \
@@ -20,7 +15,6 @@ dist_event_DATA += \
 dbussessionservice_DATA += \
 	plugins/dbus/services/org.eventd.dbus.service \
 	$(null)
-endif
 
 
 dbus_la_SOURCES = \

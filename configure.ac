@@ -104,7 +104,7 @@ AC_SUBST([vapidir])
 # eventd specific dirs
 pluginsdir='${pkglibdir}/plugins'
 eventdir='${pkgdatadir}'
-dbuscapabilitiesdir="${pluginsdir}/dbus"
+dbuscapabilitiesdir='${pluginsdir}/dbus'
 AC_SUBST([pluginsdir])
 AC_SUBST([eventdir])
 AC_SUBST([dbuscapabilitiesdir])
@@ -190,21 +190,13 @@ if test x$enable_systemd = xyes; then
 fi
 AM_CONDITIONAL(ENABLE_SYSTEMD, test x$enable_systemd = xyes)
 
-AC_ARG_ENABLE(dbus, AS_HELP_STRING([--disable-dbus], [Disable D-Bus support (org.freedesktop.Notifications interface)]), [], enable_dbus=yes)
 AC_ARG_WITH(dbussessionservicedir, AS_HELP_STRING([--with-dbussessionservicedir=DIR], [Directory for D-Bus session service files]), [], with_dbussessionservicedir=yes)
-if test x$enable_dbus = xyes; then
-    case "$with_dbussessionservicedir" in
-        no|"") AC_MSG_ERROR([*** You must define dbussessionservicedir when compiling D-Bus support]) ;;
-        yes) dbussessionservicedir="`$PKG_CONFIG --variable=session_bus_services_dir dbus-1`" ;;
-        *) dbussessionservicedir="$with_dbussessionservicedir" ;;
-    esac
-    AC_SUBST(dbussessionservicedir)
-    AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_dbus"
-    AC_CONFIG_FILES([
-        plugins/dbus/pkgconfig/eventd-dbus.pc
-    ])
-fi
-AM_CONDITIONAL(ENABLE_DBUS, test x$enable_dbus = xyes)
+case "$with_dbussessionservicedir" in
+    no|"") AC_MSG_ERROR([*** You must define dbussessionservicedir when compiling D-Bus support]) ;;
+    yes) dbussessionservicedir="`$PKG_CONFIG --variable=session_bus_services_dir dbus-1`" ;;
+    *) dbussessionservicedir="$with_dbussessionservicedir" ;;
+esac
+AC_SUBST(dbussessionservicedir)
 
 # notification-daemon plugin
 AC_ARG_ENABLE(notification-daemon, AS_HELP_STRING([--disable-notification-daemon], [Disable notification-daemon plugin]), [], enable_notification_daemon=yes)
@@ -243,9 +235,6 @@ if test x$enable_xcb = xyes; then
     GW_CHECK_XCB(XCB, [cairo-xcb xcb xcb-aux xcb-randr xcb-shape])
     AC_DEFINE([ENABLE_XCB], [1], [Enable XCB backend for notification-daemon plugin])
     AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_xcb"
-    if test x$enable_dbus = xyes; then
-        AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_full_notification_daemon"
-    fi
 fi
 AM_CONDITIONAL(ENABLE_XCB, [test x$enable_xcb = xyes])
 
@@ -356,7 +345,7 @@ AC_MSG_RESULT([
 
     Event collection plugins:
         EVENT protocol: yes
-        org.freedesktop.Notifications interface: $enable_dbus
+        org.freedesktop.Notifications interface: yes
 
     Action plugins:
         EVENT protocol relay: yes

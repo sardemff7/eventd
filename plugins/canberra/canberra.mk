@@ -8,6 +8,10 @@ plugins_LTLIBRARIES += \
 man5_MANS += \
 	plugins/canberra/man/eventd-canberra.event.5 \
 	$(null)
+
+dbuscapabilities_DATA += \
+	plugins/canberra/dbuscapabilities/canberra.capabilities \
+	$(null)
 endif
 
 
@@ -35,12 +39,6 @@ canberra_la_LIBADD = \
 	$(GLIB_LIBS) \
 	$(null)
 
-
-if ENABLE_DBUS
-dbuscapabilities_DATA += \
-	plugins/canberra/dbuscapabilities/canberra.capabilities \
-	$(null)
-endif
 
 canberra_dbus_capabilities = \
 	sound \

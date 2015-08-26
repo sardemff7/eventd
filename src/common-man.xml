@@ -95,7 +95,7 @@
                 </listitem>
             </varlistentry>
 
-            <varlistentry condition="website;enable_dbus">
+            <varlistentry>
                 <term><command>dbus</command> plugin man pages</term>
                 <listitem>
                     <para>

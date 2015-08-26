@@ -8,6 +8,10 @@ plugins_LTLIBRARIES += \
 man5_MANS += \
 	plugins/sound/man/eventd-sound.event.5 \
 	$(null)
+
+dbuscapabilities_DATA += \
+	plugins/sound/dbuscapabilities/sound.capabilities \
+	$(null)
 endif
 
 
@@ -41,12 +45,6 @@ sound_la_LIBADD = \
 	$(GLIB_LIBS) \
 	$(null)
 
-
-if ENABLE_DBUS
-dbuscapabilities_DATA += \
-	plugins/sound/dbuscapabilities/sound.capabilities \
-	$(null)
-endif
 
 sound_dbus_capabilities = \
 	sound \

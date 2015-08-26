@@ -22,6 +22,10 @@ man5_MANS += \
 	plugins/nd/man/eventd-nd.conf.5 \
 	plugins/nd/man/eventd-nd.event.5 \
 	$(null)
+
+dbuscapabilities_DATA += \
+	plugins/nd/dbuscapabilities/nd.capabilities \
+	$(null)
 endif
 
 
@@ -81,12 +85,6 @@ ndbackends_LTLIBRARIES =
 include plugins/nd/xcb/xcb.mk
 include plugins/nd/linux/linux.mk
 
-
-if ENABLE_DBUS
-dbuscapabilities_DATA += \
-	plugins/nd/dbuscapabilities/nd.capabilities \
-	$(null)
-endif
 
 nd_dbus_capabilities = \
 	body \

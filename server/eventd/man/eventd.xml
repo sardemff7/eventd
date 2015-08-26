@@ -98,7 +98,7 @@
                     <listitem><para>which implements our own EVENT protocol</para></listitem>
                 </varlistentry>
 
-                <varlistentry condition="website;enable_dbus">
+                <varlistentry>
                     <term><command>dbus</command> (see <citerefentry><refentrytitle>eventd-dbus</refentrytitle><manvolnum>1</manvolnum></citerefentry>)</term>
                     <listitem><para>which implements the <ulink url="http://people.gnome.org/~mccann/docs/notification-spec/notification-spec-latest.html">Desktop Notifications Specification</ulink></para></listitem>
                 </varlistentry>
@@ -227,7 +227,7 @@
     <refsect1 id="examples">
         <title>Examples</title>
 
-        <example condition="website;enable_full_notification_daemon">
+        <example condition="website;enable_xcb">
             <title>As a notification daemon</title>
 
             <para>
@@ -395,7 +395,7 @@ eventdctl relay disconnect your.distant.computer</programlisting>
             </para>
         </example>
 
-        <example condition="website;enable_dbus;enable_notify">
+        <example>
             <title>Relaying remote D-Bus notifications</title>
 
             <para>
