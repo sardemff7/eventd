@@ -11,7 +11,11 @@ CLEANFILES += \
 	$(man5_MANS) \
 	$(null)
 
-MAN_GEN_RULE = $(AM_V_GEN)$(MKDIR_P) $(dir $@) && \
+EV_V_MAN = $(ev__v_man_@AM_V@)
+ev__v_man_ = $(ev__v_man_@AM_DEFAULT_V@)
+ev__v_man_0 = @echo "  XSLT    " $@;
+
+MAN_GEN_RULE = $(EV_V_MAN)$(MKDIR_P) $(dir $@) && \
 	$(XSLTPROC) \
 	-o $(dir $@) \
 	$(AM_XSLTPROCFLAGS) \
@@ -27,7 +31,7 @@ $(man5_MANS): %.5: %.xml $(NKUTILS_MANFILES) src/common-man.xml src/config.ent
 	$(MAN_GEN_RULE)
 
 src/config.ent: src/config.ent.in src/config.h
-	$(AM_V_GEN)$(MKDIR_P) $(dir $@) && \
+	$(EV_V_MAN)$(MKDIR_P) $(dir $@) && \
 		$(SED) \
 		-e 's:[@]sysconfdir[@]:$(sysconfdir):g' \
 		-e 's:[@]libdir[@]:$(libdir):g' \
