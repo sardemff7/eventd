@@ -27,12 +27,12 @@
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif /* HAVE_STRING_H */
-
-#include <glib.h>
-#ifdef ENABLE_NLS
 #ifdef HAVE_LOCALE_H
 #include <locale.h>
 #endif
+
+#include <glib.h>
+#ifdef ENABLE_NLS
 #include <glib/gi18n.h>
 #endif /* ENABLE_NLS */
 #include <glib/gstdio.h>
@@ -301,8 +301,8 @@ main(int argc, char *argv[])
         { NULL }
     };
 
-#ifdef ENABLE_NLS
     setlocale(LC_ALL, "");
+#ifdef ENABLE_NLS
     bindtextdomain(GETTEXT_PACKAGE, EVENTD_LOCALEDIR);
     bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
 #endif /* ENABLE_NLS */
