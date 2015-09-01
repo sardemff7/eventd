@@ -21,7 +21,6 @@ include server/eventd/events/events.mk
 
 
 eventd_SOURCES = \
-	src/glib-compat.h \
 	server/eventd/src/types.h \
 	server/eventd/src/config.h \
 	server/eventd/src/config.c \

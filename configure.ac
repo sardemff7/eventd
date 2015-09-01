@@ -57,7 +57,7 @@ AC_DEFINE([EVENTD_EXPORT], [__attribute__((visibility("default")))], [Export sym
 
 # Common dependencies
 glib_min_major="2"
-glib_min_minor="28"
+glib_min_minor="40"
 glib_min_version="${glib_min_major}.${glib_min_minor}"
 gio_min_version="$glib_min_version"
 

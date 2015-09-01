@@ -23,7 +23,6 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <glib.h>
-#include <glib-compat.h>
 #include <glib-object.h>
 
 #include <libeventd-event.h>

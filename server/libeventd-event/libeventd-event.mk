@@ -65,7 +65,6 @@ libeventd_event_la_LIBADD = \
 
 
 libeventd_event_test_SOURCES = \
-	src/glib-compat.h \
 	server/libeventd-event/tests/unit/getters.c \
 	server/libeventd-event/tests/unit/getters.h \
 	server/libeventd-event/tests/unit/setters.c \

@@ -11,7 +11,6 @@ noinst_LTLIBRARIES += \
 
 
 libeventd_evp_la_SOURCES = \
-	src/glib-compat.h \
 	server/libeventd-evp/src/send.c \
 	server/libeventd-evp/src/receive.c \
 	server/libeventd-evp/src/context.c \

@@ -27,15 +27,9 @@
 int
 main(int argc, char *argv[])
 {
-#if !GLIB_CHECK_VERSION (2, 35, 1)
-    g_type_init();
-#endif /* ! GLIB_CHECK_VERSION(2,35,1) */
-
     g_test_init(&argc, &argv, NULL);
 
-#if GLIB_CHECK_VERSION(2,38,0)
     g_test_set_nonfatal_assertions();
-#endif /* GLIB_CHECK_VERSION(2,38,0) */
 
     eventd_tests_unit_eventd_event_suite_setters();
     eventd_tests_unit_eventd_event_suite_getters();

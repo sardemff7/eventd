@@ -29,7 +29,6 @@
 #endif /* HAVE_STRING_H */
 
 #include <glib.h>
-#include <glib-compat.h>
 #include <glib-object.h>
 #include <gmodule.h>
 

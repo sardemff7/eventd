@@ -60,19 +60,7 @@ _eventd_sockets_inet_address_equal(GInetSocketAddress *socket_address1, GInetAdd
 
     GInetAddress *address1 = g_inet_socket_address_get_address(socket_address1);
 
-#if GLIB_CHECK_VERSION(2,30,0)
     return g_inet_address_equal(address1, address2);
-#else /* ! GLIB_CHECK_VERSION(2,30,0) */
-    /*
-     * Backport from gio 2.30 which is:
-     *     Copyright (C) 2008 Christian Kellner, Samuel Cormier-Iijima
-     */
-    if ( g_inet_address_get_family(address1) != g_inet_address_get_family(address2) )
-        return FALSE;
-    if ( memcmp(g_inet_address_to_bytes(address1), g_inet_address_to_bytes(address2), g_inet_address_get_native_size(address1)) != 0 )
-        return FALSE;
-    return TRUE;
-#endif /* ! GLIB_CHECK_VERSION(2,30,0) */
 }
 
 static GSocket *

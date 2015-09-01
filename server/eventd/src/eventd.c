@@ -44,9 +44,7 @@
 #include <glib-object.h>
 #include <glib/gprintf.h>
 #ifdef G_OS_UNIX
-#if GLIB_CHECK_VERSION(2,32,0)
 #include <glib-unix.h>
-#endif /* GLIB_CHECK_VERSION(2,32,0) */
 #endif /* G_OS_UNIX */
 #include <gio/gio.h>
 
@@ -341,21 +339,12 @@ _eventd_core_debug_log_handler(const gchar *log_domain, GLogLevelFlags log_level
 #endif /* ! DEBUG */
 
 #ifdef G_OS_UNIX
-#if GLIB_CHECK_VERSION(2,32,0)
 static gboolean
 _eventd_core_stop(gpointer user_data)
 {
     eventd_core_stop(user_data);
     return FALSE;
 }
-#else /* ! GLIB_CHECK_VERSION(2,32,0) */
-static EventdCoreContext *_eventd_core_sigaction_context = NULL;
-static void
-_eventd_core_sigaction_stop(int sig, siginfo_t *info, void *data)
-{
-    eventd_core_stop(_eventd_core_sigaction_context);
-}
-#endif /* ! GLIB_CHECK_VERSION(2,32,0) */
 #endif /* G_OS_UNIX */
 
 int
@@ -387,10 +376,6 @@ main(int argc, char *argv[])
     bindtextdomain(GETTEXT_PACKAGE, EVENTD_LOCALEDIR);
     bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
 #endif /* ENABLE_NLS */
-
-#if ! GLIB_CHECK_VERSION(2,35,1)
-    g_type_init();
-#endif /* ! GLIB_CHECK_VERSION(2,35,1) */
 
     if ( ! g_get_filename_charsets(NULL) )
     {

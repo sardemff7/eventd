@@ -60,11 +60,12 @@ _test_get_name_null(gpointer fixture, gconstpointer user_data)
 {
     if ( ! g_test_undefined() )
             return;
-    if (g_test_trap_fork (0, G_TEST_TRAP_SILENCE_STDOUT | G_TEST_TRAP_SILENCE_STDERR))
+    if ( g_test_subprocess() )
     {
         eventd_event_get_name(NULL);
         exit(0);
     }
+    g_test_trap_subprocess(NULL, 0, 0);
     g_test_trap_assert_failed();
 }
 
@@ -89,11 +90,12 @@ _test_get_category_null(gpointer fixture, gconstpointer user_data)
 {
     if ( ! g_test_undefined() )
             return;
-    if (g_test_trap_fork (0, G_TEST_TRAP_SILENCE_STDOUT | G_TEST_TRAP_SILENCE_STDERR))
+    if ( g_test_subprocess() )
     {
         eventd_event_get_category(NULL);
         exit(0);
     }
+    g_test_trap_subprocess(NULL, 0, 0);
     g_test_trap_assert_failed();
 }
 
@@ -110,11 +112,12 @@ _test_get_timeout_null(gpointer fixture, gconstpointer user_data)
 {
     if ( ! g_test_undefined() )
             return;
-    if (g_test_trap_fork (0, G_TEST_TRAP_SILENCE_STDOUT | G_TEST_TRAP_SILENCE_STDERR))
+    if ( g_test_subprocess() )
     {
         eventd_event_get_timeout(NULL);
         exit(0);
     }
+    g_test_trap_subprocess(NULL, 0, 0);
     g_test_trap_assert_failed();
 }
 
@@ -136,11 +139,12 @@ _test_get_answers_null(gpointer fixture, gconstpointer user_data)
 {
     if ( ! g_test_undefined() )
             return;
-    if (g_test_trap_fork (0, G_TEST_TRAP_SILENCE_STDOUT | G_TEST_TRAP_SILENCE_STDERR))
+    if ( g_test_subprocess() )
     {
         eventd_event_get_timeout(NULL);
         exit(0);
     }
+    g_test_trap_subprocess(NULL, 0, 0);
     g_test_trap_assert_failed();
 }
 
@@ -173,11 +177,12 @@ _test_get_data_null_good__null(gpointer fixture, gconstpointer user_data)
 {
     if ( ! g_test_undefined() )
             return;
-    if (g_test_trap_fork (0, G_TEST_TRAP_SILENCE_STDOUT | G_TEST_TRAP_SILENCE_STDERR))
+    if ( g_test_subprocess() )
     {
         eventd_event_get_data(NULL, EVENTD_EVENT_TEST_DATA_NAME);
         exit(0);
     }
+    g_test_trap_subprocess(NULL, 0, 0);
     g_test_trap_assert_failed();
 }
 
@@ -188,11 +193,12 @@ _test_get_data_notnull_bad__null(gpointer fixture, gconstpointer user_data)
 
     if ( ! g_test_undefined() )
             return;
-    if (g_test_trap_fork (0, G_TEST_TRAP_SILENCE_STDOUT | G_TEST_TRAP_SILENCE_STDERR))
+    if ( g_test_subprocess() )
     {
         eventd_event_get_data(data->event, NULL);
         exit(0);
     }
+    g_test_trap_subprocess(NULL, 0, 0);
     g_test_trap_assert_failed();
 }
 
@@ -225,11 +231,12 @@ _test_get_answer_data_null_good__null(gpointer fixture, gconstpointer user_data)
 {
     if ( ! g_test_undefined() )
             return;
-    if (g_test_trap_fork (0, G_TEST_TRAP_SILENCE_STDOUT | G_TEST_TRAP_SILENCE_STDERR))
+    if ( g_test_subprocess() )
     {
         eventd_event_get_answer_data(NULL, EVENTD_EVENT_TEST_DATA_NAME);
         exit(0);
     }
+    g_test_trap_subprocess(NULL, 0, 0);
     g_test_trap_assert_failed();
 }
 
@@ -240,11 +247,12 @@ _test_get_answer_data_notnull_bad__null(gpointer fixture, gconstpointer user_dat
 
     if ( ! g_test_undefined() )
             return;
-    if (g_test_trap_fork (0, G_TEST_TRAP_SILENCE_STDOUT | G_TEST_TRAP_SILENCE_STDERR))
+    if ( g_test_subprocess() )
     {
         eventd_event_get_answer_data(data->event, NULL);
         exit(0);
     }
+    g_test_trap_subprocess(NULL, 0, 0);
     g_test_trap_assert_failed();
 }
 
