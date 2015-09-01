@@ -41,9 +41,10 @@ Eventd dispatching
     Inform the server that an event happened
     The id is an arbritary string representing the event on the client side.
     The type must contain only the characters
-    A-Za-z0-9- as for keys of the
-    [Desktop Entry Specification files
-    http://freedesktop.org/wiki/Specifications/desktop-entry-spec].
+    "A-Za-z0-9-." (without the quotes).
+    The category can use the same characters as the type,
+    with the addition of "/" to separate subcategories.
+    An arbitrary number of subcategories is accepted.
     The message may contain data using the corresponding messages.
     The message may contain possible answers using the corresponding message.
 
