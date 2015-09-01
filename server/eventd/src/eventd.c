@@ -278,6 +278,7 @@ eventd_core_stop(EventdCoreContext *context)
 }
 
 #ifdef DEBUG
+#define PID_MAXLEN 128 + 1 /* \0 */
 static void
 _eventd_core_debug_log_handler(const gchar *log_domain, GLogLevelFlags log_level, const gchar *message, gpointer user_data)
 {
@@ -286,9 +287,9 @@ _eventd_core_debug_log_handler(const gchar *log_domain, GLogLevelFlags log_level
     g_log_default_handler(log_domain, log_level, message, NULL);
 
     const gchar *prg_name;
-    gchar pid[128];
+    gchar pid[PID_MAXLEN];
     prg_name = g_get_prgname();
-    g_sprintf(pid, "%lu", (gulong) getpid());
+    g_snprintf(pid, PID_MAXLEN, "%lu", (gulong) getpid());
 
     g_data_output_stream_put_string(stream, "(", NULL, NULL);
     if ( prg_name != NULL )
