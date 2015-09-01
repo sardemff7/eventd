@@ -30,9 +30,11 @@
 /**
  * SECTION: Plugins
  *
- * Eventd plugins are used for distributing events over various channels. A
- * plugin should have a symbol named eventd_plugin_id which is a name for the
- * plugin. In addition, an eventd_plugin_get_interface function matching
+ * Eventd plugins are used for distributing events over various channels.
+ * A plugin should have a symbol named eventd_plugin_id which is a name for the
+ * plugin. This id is prefixed with "eventd-" for official plugins maitained
+ * along with eventd. Unofficial plugins must not use this prefix.
+ * In addition, an eventd_plugin_get_interface function matching
  * #EventdPluginGetInterfaceFunc is called to initialize the plugin.
  */
 
