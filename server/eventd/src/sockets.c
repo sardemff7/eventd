@@ -292,6 +292,7 @@ eventd_sockets_new(void)
             g_warning("Failed to acquire systemd sockets: %s", g_strerror(-sockets->systemd_fds));
     }
 
+    GError *error = NULL;
     gint fd;
     for ( fd = SD_LISTEN_FDS_START ; fd < SD_LISTEN_FDS_START + sockets->systemd_fds ; ++fd )
     {
@@ -306,11 +307,13 @@ eventd_sockets_new(void)
         if ( r == 0 )
             continue;
 
-        GError *error = NULL;
         GSocket *socket;
 
         if ( ( socket = g_socket_new_from_fd(fd, &error) ) == NULL )
+        {
             g_warning("Failed to take a socket from systemd: %s", error->message);
+            g_clear_error(&error);
+        }
         else
             sockets->list = g_list_prepend(sockets->list, socket);
     }
