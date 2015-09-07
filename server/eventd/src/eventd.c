@@ -495,18 +495,9 @@ main(int argc, char *argv[])
 #endif /* ENABLE_SYSTEMD */
 
 #ifdef G_OS_UNIX
-#if GLIB_CHECK_VERSION(2,32,0)
         g_unix_signal_add(SIGTERM, _eventd_core_stop, context);
         g_unix_signal_add(SIGINT, _eventd_core_stop, context);
-#else /* ! GLIB_CHECK_VERSION(2,32,0) */
-        _eventd_core_sigaction_context = context;
-        struct sigaction action;
-        action.sa_sigaction = _eventd_core_sigaction_stop;
-        action.sa_flags = SA_SIGINFO;
-        sigemptyset(&action.sa_mask);
-        sigaction(SIGTERM, &action, NULL);
-        sigaction(SIGINT, &action, NULL);
-#endif /* ! GLIB_CHECK_VERSION(2,32,0) */
+
         /* Ignore SIGPIPE as it is useless */
         signal(SIGPIPE, SIG_IGN);
 #endif /* G_OS_UNIX */
