@@ -14,7 +14,6 @@ endif
 notify_la_SOURCES = \
 	plugins/notify/src/image.h \
 	plugins/notify/src/image.c \
-	plugins/notify/src/libnotify-compat.h \
 	plugins/notify/src/notify.c \
 	$(null)
 
