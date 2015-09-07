@@ -60,6 +60,7 @@ glib_min_major="2"
 glib_min_minor="40"
 glib_min_version="${glib_min_major}.${glib_min_minor}"
 gio_min_version="$glib_min_version"
+gobject_introspection_min_version="1.30.0"
 
 # Server dependencies
 gmodule_min_version="$glib_min_version"
@@ -146,7 +147,7 @@ fi
 AM_CONDITIONAL(ENABLE_AVAHI, test x$enable_avahi = xyes)
 
 m4_ifdef([GOBJECT_INTROSPECTION_CHECK], [
-    GOBJECT_INTROSPECTION_CHECK([1.30.0])
+    GOBJECT_INTROSPECTION_CHECK([${gobject_introspection_min_version}])
     if test x$enable_introspection = xyes; then
         AC_ARG_WITH(girdir, AS_HELP_STRING([--with-girdir=DIR], [Directory for gobject introspection gir files]), [], with_girdir=yes)
         AC_ARG_WITH(typelibdir, AS_HELP_STRING([--with-typelibdir=DIR], [Directory for gobject introspection typelib files]), [], with_typelibdir=yes)
