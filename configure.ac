@@ -23,12 +23,12 @@ AC_PROG_MKDIR_P
 LT_INIT([disable-static pic-only])
 PKG_PROG_PKG_CONFIG
 AC_PATH_PROG([XSLTPROC], [xsltproc])
-if test -z "$XSLTPROC"; then
+if test -z "${XSLTPROC}"; then
     AC_MSG_ERROR([xsltproc not found])
 fi
 
-GETTEXT_PACKAGE=$PACKAGE_NAME
-AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE], ["$GETTEXT_PACKAGE"], [Gettext Package])
+GETTEXT_PACKAGE=${PACKAGE_NAME}
+AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE], ["${GETTEXT_PACKAGE}"], [Gettext Package])
 AC_SUBST(GETTEXT_PACKAGE)
 IT_PROG_INTLTOOL([0.40.0])
 AM_GLIB_GNU_GETTEXT
@@ -39,18 +39,18 @@ EVP_SERVICE_NAME="evp"
 EVP_TRANSPORT_NAME="tcp"
 EVP_SERVICE_TYPE='"_" EVP_SERVICE_NAME "._" EVP_TRANSPORT_NAME'
 EVP_UNIX_SOCKET="${EVP_SERVICE_NAME}"
-AC_DEFINE_UNQUOTED([EVP_SERVICE_NAME],   ["$EVP_SERVICE_NAME"],   [EvP service name])
-AC_DEFINE_UNQUOTED([EVP_TRANSPORT_NAME], ["$EVP_TRANSPORT_NAME"], [EvP transport name])
-AC_DEFINE_UNQUOTED([EVP_SERVICE_TYPE],   [$EVP_SERVICE_TYPE],     [EvP service type (for SRV DNS records)])
-AC_DEFINE_UNQUOTED([EVP_UNIX_SOCKET],    ["$EVP_UNIX_SOCKET"],   [EvP UNIX socket name])
+AC_DEFINE_UNQUOTED([EVP_SERVICE_NAME],   ["${EVP_SERVICE_NAME}"],   [EvP service name])
+AC_DEFINE_UNQUOTED([EVP_TRANSPORT_NAME], ["${EVP_TRANSPORT_NAME}"], [EvP transport name])
+AC_DEFINE_UNQUOTED([EVP_SERVICE_TYPE],   [${EVP_SERVICE_TYPE}],     [EvP service type (for SRV DNS records)])
+AC_DEFINE_UNQUOTED([EVP_UNIX_SOCKET],    ["${EVP_UNIX_SOCKET}"],   [EvP UNIX socket name])
 AC_SUBST(EVP_UNIX_SOCKET)
 
 DEFAULT_BIND_PORT="7100"
 DEFAULT_CONTROL_PORT="7101"
-AC_DEFINE_UNQUOTED([DEFAULT_BIND_PORT], [$DEFAULT_BIND_PORT], [Default TCP port to bind])
-AC_DEFINE_UNQUOTED([DEFAULT_BIND_PORT_STR], ["$DEFAULT_BIND_PORT"], [Default TCP port to bind])
-AC_DEFINE_UNQUOTED([DEFAULT_CONTROL_PORT], [$DEFAULT_CONTROL_PORT], [Default TCP port for the control interface])
-AC_DEFINE_UNQUOTED([DEFAULT_CONTROL_PORT_STR], ["$DEFAULT_CONTROL_PORT"], [Default TCP port for the control interface])
+AC_DEFINE_UNQUOTED([DEFAULT_BIND_PORT], [${DEFAULT_BIND_PORT}], [Default TCP port to bind])
+AC_DEFINE_UNQUOTED([DEFAULT_BIND_PORT_STR], ["${DEFAULT_BIND_PORT}"], [Default TCP port to bind])
+AC_DEFINE_UNQUOTED([DEFAULT_CONTROL_PORT], [${DEFAULT_CONTROL_PORT}], [Default TCP port for the control interface])
+AC_DEFINE_UNQUOTED([DEFAULT_CONTROL_PORT_STR], ["${DEFAULT_CONTROL_PORT}"], [Default TCP port for the control interface])
 AC_SUBST(DEFAULT_BIND_PORT)
 
 AC_DEFINE([EVENTD_EXPORT], [__attribute__((visibility("default")))], [Export symbol])
@@ -59,11 +59,11 @@ AC_DEFINE([EVENTD_EXPORT], [__attribute__((visibility("default")))], [Export sym
 glib_min_major="2"
 glib_min_minor="40"
 glib_min_version="${glib_min_major}.${glib_min_minor}"
-gio_min_version="$glib_min_version"
+gio_min_version="${glib_min_version}"
 gobject_introspection_min_version="1.30.0"
 
 # Server dependencies
-gmodule_min_version="$glib_min_version"
+gmodule_min_version="${glib_min_version}"
 libpulse_min_version="0.9.15"
 libnotify_min_version="0.7.0"
 gtk_min_version="3.0"
@@ -78,7 +78,7 @@ AM_DOCBOOK_CONDITIONS="installation"
 
 if test -d .git; then
     PACKAGE_VERSION="${PACKAGE_VERSION} - `git describe --tags --always` (`git describe --tags --always --all | sed -e 's:heads/::'`)"
-    AC_DEFINE_UNQUOTED([PACKAGE_VERSION], ["$PACKAGE_VERSION"], [Full version with git information])
+    AC_DEFINE_UNQUOTED([PACKAGE_VERSION], ["${PACKAGE_VERSION}"], [Full version with git information])
 fi
 
 
@@ -120,7 +120,7 @@ NK_INIT([src/libnkutils], [GLIB], [enum token colour/alpha colour/double], [AM_D
 #
 AC_CHECK_HEADERS([fcntl.h errno.h])
 
-PKG_CHECK_MODULES(GLIB, [glib-2.0 >= $glib_min_version])
+PKG_CHECK_MODULES(GLIB, [glib-2.0 >= ${glib_min_version}])
 AC_DEFINE_UNQUOTED([GLIB_VERSION_MIN_REQUIRED], [(G_ENCODE_VERSION(${glib_min_major},${glib_min_minor}))], [The lower GLib version supported])
 
 PKG_CHECK_MODULES(GOBJECT, [gobject-2.0])
@@ -128,38 +128,38 @@ PKG_CHECK_MODULES(GOBJECT, [gobject-2.0])
 PKG_CHECK_MODULES(GTHREAD, [gthread-2.0])
 
 gio_unix=
-PKG_CHECK_EXISTS([gio-unix-2.0 >= $gio_min_version], have_gio_unix=yes, have_gio_unix=no)
-if test x$have_gio_unix = xyes; then
+PKG_CHECK_EXISTS([gio-unix-2.0 >= ${gio_min_version}], have_gio_unix=yes, have_gio_unix=no)
+if test x${have_gio_unix} = xyes; then
     gio_unix="gio-unix-2.0"
     AC_DEFINE([HAVE_GIO_UNIX], [1], [UNIX-specific GIO support])
     AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};have_gio_unix"
 fi
 
-PKG_CHECK_MODULES(GIO, [gio-2.0 >= $gio_min_version $gio_unix])
+PKG_CHECK_MODULES(GIO, [gio-2.0 >= ${gio_min_version} ${gio_unix}])
 AC_SUBST(gio_unix)
 
 AC_ARG_ENABLE(avahi, AS_HELP_STRING([--disable-avahi], [Disable Avahi support]), [], enable_avahi=yes)
-if test x$enable_avahi = xyes; then
+if test x${enable_avahi} = xyes; then
     PKG_CHECK_MODULES(AVAHI, [avahi-client avahi-glib])
     AC_DEFINE([ENABLE_AVAHI], [1], [Enable Avahi support])
     AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_avahi"
 fi
-AM_CONDITIONAL(ENABLE_AVAHI, test x$enable_avahi = xyes)
+AM_CONDITIONAL(ENABLE_AVAHI, test x${enable_avahi} = xyes)
 
 m4_ifdef([GOBJECT_INTROSPECTION_CHECK], [
     GOBJECT_INTROSPECTION_CHECK([${gobject_introspection_min_version}])
-    if test x$enable_introspection = xyes; then
+    if test x${enable_introspection} = xyes; then
         AC_ARG_WITH(girdir, AS_HELP_STRING([--with-girdir=DIR], [Directory for gobject introspection gir files]), [], with_girdir=yes)
         AC_ARG_WITH(typelibdir, AS_HELP_STRING([--with-typelibdir=DIR], [Directory for gobject introspection typelib files]), [], with_typelibdir=yes)
-        case "$with_girdir" in
+        case "${with_girdir}" in
             no|"") AC_MSG_ERROR([*** You must define girdir when compiling gobject introspection support]) ;;
-            yes) girdir="`$PKG_CONFIG --variable=girdir gobject-introspection-1.0`" ;;
-            *) girdir="$with_girdir" ;;
+            yes) girdir="`${PKG_CONFIG} --variable=girdir gobject-introspection-1.0`" ;;
+            *) girdir="${with_girdir}" ;;
         esac
-        case "$with_typelibdir" in
+        case "${with_typelibdir}" in
             no|"") AC_MSG_ERROR([*** You must define typelibdir when compiling gobject introspection support]) ;;
-            yes) typelibdir="`$PKG_CONFIG --variable=typelibdir gobject-introspection-1.0`" ;;
-            *) typelibdir="$with_typelibdir" ;;
+            yes) typelibdir="`${PKG_CONFIG} --variable=typelibdir gobject-introspection-1.0`" ;;
+            *) typelibdir="${with_typelibdir}" ;;
         esac
         AC_SUBST(girdir)
         AC_SUBST(typelibdir)
@@ -174,101 +174,101 @@ m4_ifdef([GOBJECT_INTROSPECTION_CHECK], [
 #
 
 # Server
-PKG_CHECK_MODULES(GMODULE, [gmodule-2.0 >= $gmodule_min_version])
+PKG_CHECK_MODULES(GMODULE, [gmodule-2.0 >= ${gmodule_min_version}])
 
 AC_ARG_ENABLE(systemd, AS_HELP_STRING([--enable-systemd], [Enable systemd activation support]), [], enable_systemd=no)
 AC_ARG_WITH(systemduserunitdir, AS_HELP_STRING([--with-systemduserunitdir=DIR], [Directory for systemd user unit files]), [], with_systemduserunitdir=yes)
-if test x$enable_systemd = xyes; then
-    case "$with_systemduserunitdir" in
+if test x${enable_systemd} = xyes; then
+    case "${with_systemduserunitdir}" in
         no|"") AC_MSG_ERROR([*** You must define systemduserunitdir when compiling systemd support]) ;;
-        yes) systemduserunitdir="`$PKG_CONFIG --variable=systemduserunitdir systemd`" ;;
-        *) systemduserunitdir="$with_systemduserunitdir" ;;
+        yes) systemduserunitdir="`${PKG_CONFIG} --variable=systemduserunitdir systemd`" ;;
+        *) systemduserunitdir="${with_systemduserunitdir}" ;;
     esac
     AC_CHECK_HEADERS([sys/socket.h])
     PKG_CHECK_MODULES(SYSTEMD, [libsystemd >= 209],, [PKG_CHECK_MODULES(SYSTEMD, [libsystemd-daemon])])
     AC_DEFINE([ENABLE_SYSTEMD], [1], [Enable systemd activation support])
     AC_SUBST(systemduserunitdir)
 fi
-AM_CONDITIONAL(ENABLE_SYSTEMD, test x$enable_systemd = xyes)
+AM_CONDITIONAL(ENABLE_SYSTEMD, test x${enable_systemd} = xyes)
 
 AC_ARG_WITH(dbussessionservicedir, AS_HELP_STRING([--with-dbussessionservicedir=DIR], [Directory for D-Bus session service files]), [], with_dbussessionservicedir=yes)
-case "$with_dbussessionservicedir" in
+case "${with_dbussessionservicedir}" in
     no|"") AC_MSG_ERROR([*** You must define dbussessionservicedir when compiling D-Bus support]) ;;
-    yes) dbussessionservicedir="`$PKG_CONFIG --variable=session_bus_services_dir dbus-1`" ;;
-    *) dbussessionservicedir="$with_dbussessionservicedir" ;;
+    yes) dbussessionservicedir="`${PKG_CONFIG} --variable=session_bus_services_dir dbus-1`" ;;
+    *) dbussessionservicedir="${with_dbussessionservicedir}" ;;
 esac
 AC_SUBST(dbussessionservicedir)
 
 # notification-daemon plugin
 AC_ARG_ENABLE(notification-daemon, AS_HELP_STRING([--disable-notification-daemon], [Disable notification-daemon plugin]), [], enable_notification_daemon=yes)
-if test x$enable_notification_daemon = xyes; then
+if test x${enable_notification_daemon} = xyes; then
     AC_CHECK_HEADERS([math.h])
     PKG_CHECK_MODULES(CAIRO, [cairo])
     PKG_CHECK_MODULES(PANGO, [pango pangocairo])
     AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_notification_daemon"
 fi
-AM_CONDITIONAL(ENABLE_NOTIFICATION_DAEMON, [test x$enable_notification_daemon = xyes])
+AM_CONDITIONAL(ENABLE_NOTIFICATION_DAEMON, [test x${enable_notification_daemon} = xyes])
 
 AC_ARG_ENABLE(gdk-pixbuf, AS_HELP_STRING([--disable-gdk-pixbuf], [Disable image and icon support for notification-daemon through gdk-pixbuf]), [], enable_gdk_pixbuf=yes)
-if test x$enable_gdk_pixbuf = xyes; then
-    if test x$enable_notification_daemon = xno; then
+if test x${enable_gdk_pixbuf} = xyes; then
+    if test x${enable_notification_daemon} = xno; then
         AC_MSG_ERROR([*** image and icon support required but not notification-daemon plugin])
     fi
     PKG_CHECK_MODULES(GDK_PIXBUF, [gdk-pixbuf-2.0])
     AC_DEFINE([ENABLE_GDK_PIXBUF], [1], [Enable image and icon support for notification-daemon through gdk-pixbuf])
     AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_gdk_pixbuf"
 fi
-AM_CONDITIONAL(ENABLE_GDK_PIXBUF, [test x$enable_gdk_pixbuf = xyes])
+AM_CONDITIONAL(ENABLE_GDK_PIXBUF, [test x${enable_gdk_pixbuf} = xyes])
 
 # nd backends
 AC_ARG_ENABLE(xcb, AS_HELP_STRING([--disable-xcb], [Disable XCB graphical backend]), [], enable_xcb=yes)
 AC_ARG_ENABLE(linux-framebuffer, AS_HELP_STRING([--disable-linux-framebuffer], [Disable Linux framebuffer backend]), [], enable_linux_framebuffer=yes)
 
 # Common
-if test x$enable_xcb = xyes -o x$enable_linux_framebuffer = xyes; then
-    if test x$enable_notification_daemon = xno; then
+if test x${enable_xcb} = xyes -o x${enable_linux_framebuffer} = xyes; then
+    if test x${enable_notification_daemon} = xno; then
         AC_MSG_ERROR([*** XCB or Linux framebuffer backends required but not notification-daemon plugin])
     fi
 fi
 
 # XCB backend
-if test x$enable_xcb = xyes; then
+if test x${enable_xcb} = xyes; then
     GW_CHECK_XCB(XCB, [cairo-xcb xcb xcb-aux xcb-randr xcb-shape])
     AC_DEFINE([ENABLE_XCB], [1], [Enable XCB backend for notification-daemon plugin])
     AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_xcb"
 fi
-AM_CONDITIONAL(ENABLE_XCB, [test x$enable_xcb = xyes])
+AM_CONDITIONAL(ENABLE_XCB, [test x${enable_xcb} = xyes])
 
 # Linux framebuffer backend
-if test x$enable_linux_framebuffer = xyes; then
+if test x${enable_linux_framebuffer} = xyes; then
     AC_CHECK_HEADER([linux/fb.h])
     AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_linux_framebuffer"
 fi
-AM_CONDITIONAL(ENABLE_LINUX_FB, [test x$enable_linux_framebuffer = xyes])
+AM_CONDITIONAL(ENABLE_LINUX_FB, [test x${enable_linux_framebuffer} = xyes])
 
 # IM plugin
 AC_ARG_ENABLE(im, AS_HELP_STRING([--disable-im], [Disable IM support through libpurple]), [], enable_im=yes)
-if test x$enable_im = xyes; then
+if test x${enable_im} = xyes; then
     PKG_CHECK_MODULES(PURPLE, [purple])
     # No existing libpurple allows us to avoid that for now
     AC_DEFINE([PURPLE_NEEDS_GLOBAL_LOADING], [1], [Needs to load libpurple symbols in the global namespace])
     AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_im"
 fi
-AM_CONDITIONAL(ENABLE_IM, test x$enable_im = xyes)
+AM_CONDITIONAL(ENABLE_IM, test x${enable_im} = xyes)
 
 # sound plugin
 AC_ARG_ENABLE(sound, AS_HELP_STRING([--disable-sound], [Disable sound support through libsndfile]), [], enable_sound=yes)
-if test x$enable_sound = xyes; then
+if test x${enable_sound} = xyes; then
     PKG_CHECK_MODULES(SNDFILE, [sndfile])
-    PKG_CHECK_MODULES(PULSEAUDIO, [libpulse >= $libpulse_min_version libpulse-mainloop-glib])
+    PKG_CHECK_MODULES(PULSEAUDIO, [libpulse >= ${libpulse_min_version} libpulse-mainloop-glib])
     AC_DEFINE([ENABLE_SOUND], [1], [Enable sound plugin])
     AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_sound"
 fi
-AM_CONDITIONAL(ENABLE_SOUND, test x$enable_sound = xyes)
+AM_CONDITIONAL(ENABLE_SOUND, test x${enable_sound} = xyes)
 
 # TTS plugin
 AC_ARG_ENABLE(tts, AS_HELP_STRING([--enable-tts], [Enable Text-to-speech support through eSpeak]), [], enable_tts=no)
-if test x$enable_tts = xyes; then
+if test x${enable_tts} = xyes; then
     ESPEAK_CFLAGS="-I/usr/include/espeak"
     ESPEAK_LIBS="-lespeak"
     AC_SEARCH_LIBS([espeak_Synth], [espeak],
@@ -281,24 +281,24 @@ if test x$enable_tts = xyes; then
         ])
     AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_tts"
 fi
-AM_CONDITIONAL(ENABLE_TTS, test x$enable_tts = xyes)
+AM_CONDITIONAL(ENABLE_TTS, test x${enable_tts} = xyes)
 
 # libnotify plugin
 AC_ARG_ENABLE(libnotify, AS_HELP_STRING([--enable-libnotify], [Enable libnotify support (client side)]), [], enable_libnotify=no)
-if test x$enable_libnotify = xyes; then
-    PKG_CHECK_MODULES(NOTIFY, [libnotify >= $libnotify_min_version])
+if test x${enable_libnotify} = xyes; then
+    PKG_CHECK_MODULES(NOTIFY, [libnotify >= ${libnotify_min_version}])
     PKG_CHECK_MODULES(GDK_PIXBUF, [gdk-pixbuf-2.0])
     AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_notify"
 fi
-AM_CONDITIONAL(ENABLE_NOTIFY, [test x$enable_libnotify = xyes])
+AM_CONDITIONAL(ENABLE_NOTIFY, [test x${enable_libnotify} = xyes])
 
 # libcanberra plugin
 AC_ARG_ENABLE(libcanberra, AS_HELP_STRING([--enable-libcanberra], [Enable libcanberra support]), [], enable_libcanberra=no)
-if test x$enable_libcanberra = xyes; then
+if test x${enable_libcanberra} = xyes; then
     PKG_CHECK_MODULES(CANBERRA, [libcanberra])
     AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_canberra"
 fi
-AM_CONDITIONAL(ENABLE_CANBERRA, [test x$enable_libcanberra = xyes])
+AM_CONDITIONAL(ENABLE_CANBERRA, [test x${enable_libcanberra} = xyes])
 
 
 
@@ -310,7 +310,7 @@ dnl AC_ARG_ENABLE(tests, AS_HELP_STRING([--enable-tests], [Build tests]), [], en
 
 # Debug flags
 AC_ARG_ENABLE(debug, AS_HELP_STRING([--enable-debug], [Enable debug]), [], enable_debug=no)
-if test x$enable_debug = xyes; then
+if test x${enable_debug} = xyes; then
     AC_DEFINE([DEBUG], [1], [Activate debug mode])
 fi
 
@@ -339,10 +339,10 @@ AC_MSG_RESULT([
     ${PACKAGE_NAME} ${PACKAGE_VERSION}
 
     Core features:
-        Avahi support: $enable_avahi
-        systemd support: $enable_systemd
-        UNIX sockets support: $have_gio_unix
-        GObject introspection: $enable_introspection
+        Avahi support: ${enable_avahi}
+        systemd support: ${enable_systemd}
+        UNIX sockets support: ${have_gio_unix}
+        GObject introspection: ${enable_introspection}
 
     Event collection plugins:
         EVENT protocol: yes
@@ -351,17 +351,17 @@ AC_MSG_RESULT([
     Action plugins:
         EVENT protocol relay: yes
         exec plugin: yes
-        notification-daemon: $enable_notification_daemon
-            Icon support: $enable_gdk_pixbuf
+        notification-daemon: ${enable_notification_daemon}
+            Icon support: ${enable_gdk_pixbuf}
             Backends:
-                XCB: $enable_xcb
-                Linux framebuffer: $enable_linux_framebuffer
-        IM support through libpurple: $enable_im
-        Sound files playing through libsndfile: $enable_sound
-        Text-to-speech through eSpeak: $enable_tts
-        libnotify proxy: $enable_libnotify
-        libcanberra: $enable_libcanberra
+                XCB: ${enable_xcb}
+                Linux framebuffer: ${enable_linux_framebuffer}
+        IM support through libpurple: ${enable_im}
+        Sound files playing through libsndfile: ${enable_sound}
+        Text-to-speech through eSpeak: ${enable_tts}
+        libnotify proxy: ${enable_libnotify}
+        libcanberra: ${enable_libcanberra}
 
-dnl     Tests: $enable_tests
-    Debug mode: $enable_debug
+dnl     Tests: ${enable_tests}
+    Debug mode: ${enable_debug}
 ])
