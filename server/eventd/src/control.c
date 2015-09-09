@@ -189,6 +189,8 @@ eventd_control_new(EventdCoreContext *core)
 void
 eventd_control_free(EventdControl *control)
 {
+    g_free(control->socket);
+
     g_free(control);
 }
 
@@ -217,7 +219,6 @@ eventd_control_start(EventdControl *control)
         sockets = eventd_core_get_sockets(control->core, binds);
 
         g_free(bind);
-        g_free(control->socket);
     }
 
     if ( sockets == NULL )
