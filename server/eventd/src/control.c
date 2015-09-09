@@ -204,31 +204,28 @@ eventd_control_start(EventdControl *control)
     control->socket_service = g_socket_service_new();
 
     const gchar *binds[] = { NULL, NULL };
+    gchar *bind = NULL;
 
     if ( control->socket != NULL )
     {
-        gchar *bind;
-
 #ifdef HAVE_GIO_UNIX
         bind = g_strconcat("unix:", control->socket, NULL);
 #else /* ! HAVE_GIO_UNIX */
         bind = g_strconcat("tcp:localhost:", control->socket, NULL);
 #endif /* ! HAVE_GIO_UNIX */
         binds[0] = bind;
-        sockets = eventd_core_get_sockets(control->core, binds);
-
-        g_free(bind);
     }
-
-    if ( sockets == NULL )
+    else
     {
 #ifdef HAVE_GIO_UNIX
         binds[0] = "unix-runtime:private";
 #else /* ! HAVE_GIO_UNIX */
         binds[0] = "tcp:localhost:" DEFAULT_CONTROL_PORT_STR;
 #endif /* ! HAVE_GIO_UNIX */
-        sockets = eventd_core_get_sockets(control->core, binds);
     }
+    sockets = eventd_core_get_sockets(control->core, binds);
+
+    g_free(bind);
 
     if ( sockets == NULL )
     {
