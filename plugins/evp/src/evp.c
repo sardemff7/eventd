@@ -45,7 +45,6 @@ struct _EventdPluginContext {
     EventdPluginCoreContext *core;
     EventdPluginCoreInterface *core_interface;
     EventdEvpAvahiContext *avahi;
-    gboolean default_bind;
     gboolean default_unix;
     gchar **binds;
     gboolean no_avahi;
@@ -328,12 +327,6 @@ _eventd_evp_start(EventdPluginContext *service)
     if ( service->binds != NULL )
         sockets = _eventd_evp_add_socket(sockets, service, (const gchar * const *)service->binds);
 
-    if ( service->default_bind )
-    {
-        const gchar *binds[] = { "tcp:" DEFAULT_BIND_PORT_STR, NULL };
-        sockets = _eventd_evp_add_socket(sockets, service, binds);
-    }
-
 #ifdef HAVE_GIO_UNIX
     if ( service->default_unix )
     {
@@ -385,12 +378,11 @@ _eventd_evp_get_option_group(EventdPluginContext *context)
     GOptionGroup *option_group;
     GOptionEntry entries[] =
     {
-        { "listen-default",      'L', 0,                 G_OPTION_ARG_NONE,         &context->default_bind, "Listen on default interface",   NULL },
-        { "listen",              'l', 0,                 G_OPTION_ARG_STRING_ARRAY, &context->binds,        "Add a socket to listen to",     "<socket>" },
+        { "listen",         'l', 0,                 G_OPTION_ARG_STRING_ARRAY, &context->binds,        "Add a socket to listen to",     "<socket>" },
 #ifdef HAVE_GIO_UNIX
-        { "listen-default-unix", 'u', 0,                 G_OPTION_ARG_NONE,         &context->default_unix, "Listen on default UNIX socket", NULL },
+        { "listen-default", 'u', 0,                 G_OPTION_ARG_NONE,         &context->default_unix, "Listen on default UNIX socket", NULL },
 #endif /* HAVE_GIO_UNIX */
-        { "no-avahi",            'A', AVAHI_OPTION_FLAG, G_OPTION_ARG_NONE,         &context->no_avahi,     "Disable avahi publishing",      NULL },
+        { "no-avahi",       'A', AVAHI_OPTION_FLAG, G_OPTION_ARG_NONE,         &context->no_avahi,     "Disable avahi publishing",      NULL },
         { NULL }
     };
 

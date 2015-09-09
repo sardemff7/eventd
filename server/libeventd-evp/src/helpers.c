@@ -55,7 +55,7 @@ libeventd_evp_get_address(const gchar *host_and_port, GError **error)
 #endif /* HAVE_GIO_UNIX */
 
     if ( address == NULL )
-        address = g_network_address_parse(host_and_port, DEFAULT_BIND_PORT, error);
+        address = g_network_address_parse(host_and_port, 0, error);
 
     return address;
 }

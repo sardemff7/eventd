@@ -48,11 +48,6 @@ AC_SUBST([EVP_TRANSPORT_NAME])
 AC_SUBST([EVP_SERVICE_TYPE])
 AC_SUBST([EVP_UNIX_SOCKET])
 
-DEFAULT_BIND_PORT="7100"
-AC_DEFINE_UNQUOTED([DEFAULT_BIND_PORT], [${DEFAULT_BIND_PORT}], [Default TCP port to bind])
-AC_DEFINE_UNQUOTED([DEFAULT_BIND_PORT_STR], ["${DEFAULT_BIND_PORT}"], [Default TCP port to bind])
-AC_SUBST([DEFAULT_BIND_PORT])
-
 AC_DEFINE([EVENTD_EXPORT], [__attribute__((visibility("default")))], [Export symbol])
 
 # Common dependencies

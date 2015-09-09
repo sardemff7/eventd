@@ -96,13 +96,6 @@
         <title>Sockets</title>
 
         <variablelist>
-            <varlistentry>
-                <term><literal>0.0.0.0:&DEFAULT_BIND_PORT;</literal></term>
-                <listitem>
-                    <para>Default TCP socket.</para>
-                </listitem>
-            </varlistentry>
-
             <varlistentry condition="website;have_gio_unix">
                 <term><filename><varname>$XDG_RUNTIME_DIR</varname>/&PACKAGE_NAME;/&EVP_UNIX_SOCKET;</filename></term>
                 <listitem>

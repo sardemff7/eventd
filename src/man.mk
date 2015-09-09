@@ -41,6 +41,5 @@ src/config.ent: src/config.ent.in src/config.h
 		-e 's:[@]EVP_SERVICE_NAME[@]:$(EVP_SERVICE_NAME):g' \
 		-e 's:[@]EVP_TRANSPORT_NAME[@]:$(EVP_TRANSPORT_NAME):g' \
 		-e 's:[@]EVP_SERVICE_TYPE[@]:$(EVP_SERVICE_TYPE):g' \
-		-e 's:[@]DEFAULT_BIND_PORT[@]:$(DEFAULT_BIND_PORT):g' \
 		-e 's:[@]EVP_UNIX_SOCKET[@]:$(EVP_UNIX_SOCKET):g' \
 		< $< > $@ || rm $@
