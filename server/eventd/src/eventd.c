@@ -99,9 +99,6 @@ _eventd_core_get_inet_address(const gchar *bind, gchar **address, guint16 *port)
     parsed_value = g_ascii_strtoll(address_port, NULL, 10);
     *port = CLAMP(parsed_value, 0, 65535);
 
-    if ( *port == 0 )
-        return FALSE;
-
     if ( bind[0] == '[' )
     {
         /*
