@@ -108,33 +108,33 @@ _eventd_eventdctl_get_connection(const gchar *private_socket, GError **error)
     GSocketClient *client;
     GSocketConnection *connection;
 
-#ifdef HAVE_GIO_UNIX
     const gchar *real_socket = private_socket;
     gchar *default_socket = NULL;
     if ( private_socket == NULL )
         real_socket = default_socket = g_build_filename(g_get_user_runtime_dir(), PACKAGE_NAME, "private", NULL);
 
+#ifdef HAVE_GIO_UNIX
     if ( ( ! g_file_test(real_socket, G_FILE_TEST_EXISTS) ) || g_file_test(real_socket, G_FILE_TEST_IS_DIR|G_FILE_TEST_IS_REGULAR) )
-    {
-        g_free(default_socket);
-        return NULL;
-    }
+        goto error;
 
     address = g_unix_socket_address_new(real_socket);
-    g_free(default_socket);
 #else /* ! HAVE_GIO_UNIX */
+    if ( ! g_file_test(real_socket, G_FILE_TEST_EXISTS|G_FILE_TEST_IS_REGULAR) )
+        goto error;
+
+    gchar *contents = NULL;
+    if ( ! g_file_get_contents(real_socket, &contents, NULL, error) )
+        goto error;
+    guint64 parsed_port;
+    parsed_port = g_ascii_strtoull(contents, NULL, 10);
+    g_free(contents);
+
     GInetAddress *inet_address;
-    guint16 port = DEFAULT_CONTROL_PORT;
     inet_address = g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV6);
-    if ( private_socket != NULL )
-    {
-        guint64 parsed_port;
-        parsed_port = g_ascii_strtoull(private_socket, NULL, 10);
-        port = CLAMP(parsed_port, 1, 65535);
-    }
-    address = g_inet_socket_address_new(inet_address, port);
+    address = g_inet_socket_address_new(inet_address, CLAMP(parsed_port, 1, 65535));
     g_object_unref(inet_address);
 #endif /* ! HAVE_GIO_UNIX */
+    g_free(default_socket);
 
     client = g_socket_client_new();
     connection = g_socket_client_connect(client, G_SOCKET_CONNECTABLE(address), NULL, error);
@@ -142,6 +142,10 @@ _eventd_eventdctl_get_connection(const gchar *private_socket, GError **error)
     g_object_unref(client);
 
     return G_IO_STREAM(connection);
+
+error:
+    g_free(default_socket);
+    return NULL;
 }
 
 static EventdctlReturnCode

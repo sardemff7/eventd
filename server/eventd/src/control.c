@@ -30,6 +30,10 @@
 
 #include <glib.h>
 #include <glib-object.h>
+#ifndef HAVE_GIO_UNIX
+#include <glib/gprintf.h>
+#include <glib/gstdio.h>
+#endif /* ! HAVE_GIO_UNIX */
 #include <gio/gio.h>
 
 #include <eventdctl.h>
@@ -206,23 +210,18 @@ eventd_control_start(EventdControl *control)
     const gchar *binds[] = { NULL, NULL };
     gchar *bind = NULL;
 
+#ifdef HAVE_GIO_UNIX
     if ( control->socket != NULL )
     {
-#ifdef HAVE_GIO_UNIX
         bind = g_strconcat("unix:", control->socket, NULL);
-#else /* ! HAVE_GIO_UNIX */
-        bind = g_strconcat("tcp:localhost:", control->socket, NULL);
-#endif /* ! HAVE_GIO_UNIX */
         binds[0] = bind;
     }
     else
-    {
-#ifdef HAVE_GIO_UNIX
         binds[0] = "unix-runtime:private";
 #else /* ! HAVE_GIO_UNIX */
-        binds[0] = "tcp:localhost:" DEFAULT_CONTROL_PORT_STR;
+    binds[0] = "tcp:localhost:0";
 #endif /* ! HAVE_GIO_UNIX */
-    }
+
     sockets = eventd_core_get_sockets(control->core, binds);
 
     g_free(bind);
@@ -240,7 +239,34 @@ eventd_control_start(EventdControl *control)
     if ( ! g_socket_listener_add_socket(G_SOCKET_LISTENER(control->socket_service), socket, NULL, &error) )
         g_warning("Unable to add private socket: %s", error->message);
     else
+#ifdef HAVE_GIO_UNIX
         ret = TRUE;
+#else /* ! HAVE_GIO_UNIX */
+    {
+        if ( control->socket == NULL )
+            control->socket = g_build_filename(g_get_user_runtime_dir(), PACKAGE_NAME, "private", NULL);
+
+        if ( g_file_test(control->socket, G_FILE_TEST_EXISTS) )
+            g_warning("File to write port exists already");
+        else
+        {
+            GSocketAddress *address;
+            address = g_socket_get_local_address(socket, &error);
+            if ( address == NULL )
+                g_warning("Couldn't get local address: %s", error->message);
+            else
+            {
+                gchar port_str[6];
+                g_sprintf(port_str, "%u", g_inet_socket_address_get_port(G_INET_SOCKET_ADDRESS(address)));
+
+                if ( g_file_set_contents(control->socket, port_str, -1, &error) )
+                    ret = TRUE;
+                else
+                    g_warning("Couldn't write port to file: %s", error->message);
+            }
+        }
+    }
+#endif /* ! HAVE_GIO_UNIX */
     g_clear_error(&error);
 
     g_list_free_full(sockets, g_object_unref);
@@ -256,6 +282,11 @@ eventd_control_start(EventdControl *control)
 void
 eventd_control_stop(EventdControl *control)
 {
+#ifndef HAVE_GIO_UNIX
+    if ( g_file_test(control->socket, G_FILE_TEST_EXISTS) )
+        g_unlink(control->socket);
+#endif /* ! HAVE_GIO_UNIX */
+
     g_socket_service_stop(control->socket_service);
     g_socket_listener_close(G_SOCKET_LISTENER(control->socket_service));
     g_object_unref(control->socket_service);
