@@ -74,8 +74,9 @@ eventd_tests_env_setup(gchar **argv)
 }
 
 EventdTestsEnv *
-eventd_tests_env_new(const gchar *plugins, const gchar *port, gchar **argv, gint argc)
+eventd_tests_env_new(const gchar *plugins, gchar **argv, gint argc)
 {
+    static guint instance = 0;
     EventdTestsEnv *self;
     gint i;
 
@@ -91,17 +92,18 @@ eventd_tests_env_new(const gchar *plugins, const gchar *port, gchar **argv, gint
     self->env[length] = g_strdup_printf("EVENTD_PLUGINS_WHITELIST=%s", plugins);
     self->env[length+1] = NULL;
 
+    gchar *socket = g_strdup_printf("%s-%u.private", g_get_prgname(), ++instance);
 
     self->start_args = g_new(char *, 10+argc);
     self->start_args[0] = g_strdup(EVENTDCTL_PATH);
     self->start_args[1] = g_strdup("--socket");
-    self->start_args[2] = g_strdup(port);
+    self->start_args[2] = socket;
     self->start_args[3] = g_strdup("start");
     self->start_args[4] = g_strdup("--argv0");
     self->start_args[5] = g_strdup(EVENTD_PATH);
     self->start_args[6] = g_strdup("--take-over");
     self->start_args[7] = g_strdup("--private-socket");
-    self->start_args[8] = g_strdup(port);
+    self->start_args[8] = g_strdup(socket);
     for ( i = 0 ; i < argc ; ++i )
         self->start_args[9+i] = argv[i];
     self->start_args[9+i] = NULL;
@@ -111,7 +113,7 @@ eventd_tests_env_new(const gchar *plugins, const gchar *port, gchar **argv, gint
     self->stop_args = g_new(char *, 5);
     self->stop_args[0] = g_strdup(EVENTDCTL_PATH);
     self->stop_args[1] = g_strdup("--socket");
-    self->stop_args[2] = g_strdup(port);
+    self->stop_args[2] = g_strdup(socket);
     self->stop_args[3] = g_strdup("stop");
     self->stop_args[4] = NULL;
 

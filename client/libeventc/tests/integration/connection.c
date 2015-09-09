@@ -32,7 +32,7 @@ main(int argc, char *argv[])
     args[0] = g_strdup("--event-listen");
     args[1] = g_strdup("tcp:localhost4:19021");
     args[2] = g_strdup("--no-avahi");
-    EventdTestsEnv *env = eventd_tests_env_new("test-plugin,evp", "18021", args, 3);
+    EventdTestsEnv *env = eventd_tests_env_new("test-plugin,evp", args, 3);
     if ( ! eventd_tests_env_start_eventd(env) )
         goto end;
 
