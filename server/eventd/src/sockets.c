@@ -155,8 +155,9 @@ eventd_sockets_get_inet_sockets(EventdSockets *sockets, const gchar *address, gu
         inet_address = g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV6);
         socket = _eventd_sockets_get_inet_socket(sockets, inet_address, port);
         g_object_unref(inet_address);
+        /* IPv6 is sufficient for localhost, but fallback to IPv4 if needed */
         if ( socket != NULL )
-            ret_sockets = g_list_prepend(ret_sockets, socket);
+            return g_list_prepend(ret_sockets, socket);
 
         inet_address = g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV4);
         socket = _eventd_sockets_get_inet_socket(sockets, inet_address, port);
