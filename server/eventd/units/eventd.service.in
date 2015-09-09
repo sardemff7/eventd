@@ -4,7 +4,7 @@ Description=eventd
 [Service]
 Type=notify
 Sockets=eventd-control.socket eventd-evp.socket
-ExecStart=@bindir@/eventd --listen-default --listen-default-unix
+ExecStart=@bindir@/eventd --listen systemd
 ExecReload=@bindir@/eventdctl reload
 
 [Install]

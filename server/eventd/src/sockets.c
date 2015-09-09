@@ -52,6 +52,14 @@ struct _EventdSockets {
     GSList *created;
 };
 
+GList *
+eventd_sockets_get_systemd_sockets(EventdSockets *sockets)
+{
+    GList *list = sockets->list;
+    sockets->list = NULL;
+    return list;
+}
+
 static gboolean
 _eventd_sockets_inet_address_equal(GInetSocketAddress *socket_address1, GInetAddress *address2, guint16 port)
 {

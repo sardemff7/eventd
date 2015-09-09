@@ -132,7 +132,14 @@ eventd_core_get_sockets(EventdCoreContext *context, const gchar * const *binds)
         if ( *bind == 0 )
             continue;
 
-        if ( g_str_has_prefix(bind, "tcp:") )
+        if ( g_strcmp0(bind, "systemd") == 0 )
+        {
+            GList *systemd_sockets;
+            systemd_sockets = eventd_sockets_get_systemd_sockets(context->sockets);
+            if ( systemd_sockets != NULL )
+                sockets = g_list_concat(sockets, systemd_sockets);
+        }
+        else if ( g_str_has_prefix(bind, "tcp:") )
         {
             if ( bind[4] == 0 )
                 continue;
