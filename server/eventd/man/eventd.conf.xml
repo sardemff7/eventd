@@ -119,7 +119,7 @@
                     <term><varname>Stack=</varname> (defaults to <literal>1</literal>)</term>
                     <listitem>
                         <para>An <type>integer</type></para>
-                        <para>The number of event dispatched at the same time.</para>
+                        <para>The number of events to dispatch at the same time.</para>
                     </listitem>
                 </varlistentry>
 
@@ -127,7 +127,7 @@
                     <term><varname>Timeout=</varname> (defaults to <literal>3000</literal>)</term>
                     <listitem>
                         <para>A time in <type>milliseconds</type></para>
-                        <para>Global event's timeout.</para>
+                        <para>Global event timeout.</para>
                     </listitem>
                 </varlistentry>
             </variablelist>

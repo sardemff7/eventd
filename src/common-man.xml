@@ -76,8 +76,8 @@
                     </variablelist>
                     <para>
                         Plugins <phrase condition="website">distributed</phrase><phrase condition="installation">installed</phrase> with eventd will use the same scheme:
-                        eventd-<replaceable>plugin-name</replaceable> for their additionnal <command>eventd</command> command-line options,
-                        eventdctl-<replaceable>plugin-name</replaceable> for their additionnal <command>eventdctl</command> command-line options,
+                        eventd-<replaceable>plugin-name</replaceable> for their additional <command>eventd</command> command-line options,
+                        eventdctl-<replaceable>plugin-name</replaceable> for their additional <command>eventdctl</command> command-line options,
                         eventd-<replaceable>plugin-name</replaceable>.conf for their global configuration,
                         eventd-<replaceable>plugin-name</replaceable>.event for their event configuration.
                     </para>
@@ -89,7 +89,15 @@
                 <listitem>
                     <para>
                         <citerefentry><refentrytitle>eventd-evp</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
                         <citerefentry><refentrytitle>eventd-evp.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
                         <citerefentry><refentrytitle>eventd-evp.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>
                     </para>
                 </listitem>
@@ -127,6 +135,10 @@
                 <listitem>
                     <para>
                         <citerefentry><refentrytitle>eventd-nd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
                         <citerefentry><refentrytitle>eventd-nd.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>
                     </para>
                 </listitem>
@@ -142,6 +154,10 @@
                 <listitem>
                     <para>
                         <citerefentry><refentrytitle>eventd-im.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>
                         <citerefentry><refentrytitle>eventd-im.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>
                     </para>
                 </listitem>
