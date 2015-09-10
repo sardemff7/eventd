@@ -21,7 +21,10 @@
 #ifndef __EVENTD_EVENTD_PLUGIN_H__
 #define __EVENTD_EVENTD_PLUGIN_H__
 
+#include <glib.h>
 #include <libeventd-event-types.h>
+
+G_BEGIN_DECLS
 
 typedef struct _EventdCoreContext EventdPluginCoreContext;
 typedef struct _EventdPluginCoreInterface EventdPluginCoreInterface;
@@ -75,5 +78,7 @@ void eventd_plugin_interface_add_event_action_callback(EventdPluginInterface *in
 GList *eventd_plugin_core_get_sockets(EventdPluginCoreContext *context, EventdPluginCoreInterface *interface, const gchar * const *binds);
 
 gboolean eventd_plugin_core_push_event(EventdPluginCoreContext *context, EventdPluginCoreInterface *interface, EventdEvent *event);
+
+G_END_DECLS
 
 #endif /* __EVENTD_EVENTD_PLUGIN_H__ */
