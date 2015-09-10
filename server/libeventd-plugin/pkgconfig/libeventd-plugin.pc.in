@@ -6,7 +6,7 @@ includedir=@includedir@
 pkglibdir=@pkglibdir@
 pkgincludedir=@pkgincludedir@
 
-plugindir=@pluginsdir@
+pluginsdir=@pluginsdir@
 fdonotificationscapabilitiesdir=@fdonotificationscapabilitiesdir@
 
 Name: libeventd-plugin
