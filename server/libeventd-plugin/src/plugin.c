@@ -157,7 +157,7 @@ EVENTD_EXPORT void eventd_plugin_interface_add_stop_callback(EventdPluginInterfa
  * @interface: an #EventdPluginInterface
  * @callback: (scope async): a function to call when a plugin subcommand is called
  *
- * This callback is used to handle `eventdctl <pluginid> <command> <args>`.
+ * This callback is used to handle `eventdctl &lt;pluginid&gt; &lt;command&gt; &lt;args&gt;`.
  */
 EVENTD_EXPORT void eventd_plugin_interface_add_control_command_callback(EventdPluginInterface *interface, EventdPluginControlCommandFunc callback) { interface->control_command = callback; }
 
