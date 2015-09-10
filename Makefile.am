@@ -36,7 +36,7 @@ dbussessionservice_DATA =
 fdonotificationscapabilities_DATA =
 
 INTROSPECTION_GIRS =
-INTROSPECTION_SCANNER_ARGS = --add-include-path=$(srcdir) --warn-all
+INTROSPECTION_SCANNER_ARGS = --add-include-path=$(builddir) --warn-all
 INTROSPECTION_COMPILER_ARGS = --includedir=$(srcdir)
 
 EXTRA_DIST = \
