@@ -26,9 +26,17 @@ evp_la_SOURCES = \
 	plugins/evp/src/evp.c \
 	$(null)
 
+evp_la_CPPFLAGS = \
+	$(AM_CPPFLAGS) \
+	-D G_LOG_DOMAIN=\"eventd-evp\" \
+	$(AVAHI_CPPFLAGS) \
+	$(GIO_CPPFLAGS) \
+	$(GOBJECT_CPPFLAGS) \
+	$(GLIB_CPPFLAGS) \
+	$(null)
+
 evp_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	-D G_LOG_DOMAIN=\"eventd-evp\" \
 	$(AVAHI_CFLAGS) \
 	$(GIO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \

@@ -21,9 +21,17 @@ sound_la_SOURCES = \
 	plugins/sound/src/sound.c \
 	$(null)
 
+sound_la_CPPFLAGS = \
+	$(AM_CPPFLAGS) \
+	-D G_LOG_DOMAIN=\"eventd-sound\" \
+	$(SNDFILE_CPPFLAGS) \
+	$(PULSEAUDIO_CPPFLAGS) \
+	$(GOBJECT_CPPFLAGS) \
+	$(GLIB_CPPFLAGS) \
+	$(null)
+
 sound_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	-D G_LOG_DOMAIN=\"eventd-sound\" \
 	$(SNDFILE_CFLAGS) \
 	$(PULSEAUDIO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \

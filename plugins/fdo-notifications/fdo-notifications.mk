@@ -21,10 +21,17 @@ fdo_notifications_la_SOURCES = \
 	plugins/fdo-notifications/src/fdo-notifications.c \
 	$(null)
 
-fdo_notifications_la_CFLAGS = \
-	$(AM_CFLAGS) \
+fdo_notifications_la_CPPFLAGS = \
+	$(AM_CPPFLAGS) \
 	-D G_LOG_DOMAIN=\"eventd-fdo-notifications\" \
 	-D FDONOTIFICATIONSCAPABILITIESDIR=\"$(fdonotificationscapabilitiesdir)\" \
+	$(GIO_CPPFLAGS) \
+	$(GOBJECT_CPPFLAGS) \
+	$(GLIB_CPPFLAGS) \
+	$(null)
+
+fdo_notifications_la_CFLAGS = \
+	$(AM_CFLAGS) \
 	$(GIO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS) \

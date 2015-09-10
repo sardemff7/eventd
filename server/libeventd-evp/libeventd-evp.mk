@@ -19,9 +19,15 @@ libeventd_evp_la_SOURCES = \
 	server/libeventd-evp/include/libeventd-evp.h \
 	$(null)
 
+libeventd_evp_la_CPPFLAGS = \
+	$(AM_CPPFLAGS) \
+	-D G_LOG_DOMAIN=\"libeventd-evp\" \
+	$(GIO_CPPFLAGS) \
+	$(GLIB_CPPFLAGS) \
+	$(null)
+
 libeventd_evp_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	-D G_LOG_DOMAIN=\"libeventd-evp\" \
 	$(GIO_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(null)

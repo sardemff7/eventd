@@ -30,9 +30,15 @@ libeventd_plugin_la_SOURCES = \
 	server/libeventd-plugin/src/plugin.c \
 	$(null)
 
+libeventd_plugin_la_CPPFLAGS = \
+	$(AM_CPPFLAGS) \
+	-D G_LOG_DOMAIN=\"libeventd-plugin\" \
+	$(GOBJECT_CPPFLAGS) \
+	$(GLIB_CPPFLAGS) \
+	$(null)
+
 libeventd_plugin_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	-D G_LOG_DOMAIN=\"libeventd-plugin\" \
 	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(null)
