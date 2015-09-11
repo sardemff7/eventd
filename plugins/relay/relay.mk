@@ -28,9 +28,17 @@ relay_la_SOURCES = \
 	plugins/relay/src/relay.c \
 	$(null)
 
+relay_la_CPPFLAGS = \
+	$(AM_CPPFLAGS) \
+	-D G_LOG_DOMAIN=\"eventd-relay\" \
+	$(AVAHI_CPPFLAGS) \
+	$(GIO_CPPFLAGS) \
+	$(GOBJECT_CPPFLAGS) \
+	$(GLIB_CPPFLAGS) \
+	$(null)
+
 relay_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	-D G_LOG_DOMAIN=\"eventd-relay\" \
 	$(AVAHI_CFLAGS) \
 	$(GIO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \

@@ -17,9 +17,17 @@ xcb_la_SOURCES = \
 	plugins/nd/xcb/src/xcb.c \
 	$(null)
 
+xcb_la_CPPFLAGS = \
+	$(AM_CPPFLAGS) \
+	-D G_LOG_DOMAIN=\"eventd-nd-xcb-backend\" \
+	$(XCB_CPPFLAGS) \
+	$(CAIRO_CPPFLAGS) \
+	$(GOBJECT_CPPFLAGS) \
+	$(GLIB_CPPFLAGS) \
+	$(null)
+
 xcb_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	-D G_LOG_DOMAIN=\"eventd-nd-xcb-backend\" \
 	$(XCB_CFLAGS) \
 	$(CAIRO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \

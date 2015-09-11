@@ -15,9 +15,16 @@ tts_la_SOURCES = \
 	plugins/tts/src/tts.c \
 	$(null)
 
+tts_la_CPPFLAGS = \
+	$(AM_CPPFLAGS) \
+	-D G_LOG_DOMAIN=\"eventd-tts\" \
+	$(ESPEAK_CPPFLAGS) \
+	$(GOBJECT_CPPFLAGS) \
+	$(GLIB_CPPFLAGS) \
+	$(null)
+
 tts_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	-D G_LOG_DOMAIN=\"eventd-tts\" \
 	$(ESPEAK_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS) \

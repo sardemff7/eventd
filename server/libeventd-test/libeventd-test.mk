@@ -16,11 +16,18 @@ libeventd_test_la_SOURCES = \
 	server/libeventd-test/include/libeventd-test.h \
 	$(null)
 
-libeventd_test_la_CFLAGS = \
-	$(AM_CFLAGS) \
+libeventd_test_la_CPPFLAGS = \
+	$(AM_CPPFLAGS) \
 	-D SRC_DIR=\"$(abs_srcdir)\" \
 	-D BUILD_DIR=\"$(abs_builddir)\" \
 	-D EXEEXT=\"$(EXEEXT)\" \
+	$(GIO_CPPFLAGS) \
+	$(GOBJECT_CPPFLAGS) \
+	$(GLIB_CPPFLAGS) \
+	$(null)
+
+libeventd_test_la_CFLAGS = \
+	$(AM_CFLAGS) \
 	$(GIO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS) \

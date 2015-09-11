@@ -17,9 +17,17 @@ notify_la_SOURCES = \
 	plugins/notify/src/notify.c \
 	$(null)
 
+notify_la_CPPFLAGS = \
+	$(AM_CPPFLAGS) \
+	-D G_LOG_DOMAIN=\"eventd-notify\" \
+	$(NOTIFY_CPPFLAGS) \
+	$(GDK_PIXBUF_CPPFLAGS) \
+	$(GOBJECT_CPPFLAGS) \
+	$(GLIB_CPPFLAGS) \
+	$(null)
+
 notify_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	-D G_LOG_DOMAIN=\"eventd-notify\" \
 	$(NOTIFY_CFLAGS) \
 	$(GDK_PIXBUF_CFLAGS) \
 	$(GOBJECT_CFLAGS) \

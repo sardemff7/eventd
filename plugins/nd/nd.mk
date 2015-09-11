@@ -41,12 +41,22 @@ nd_la_SOURCES = \
 	plugins/nd/src/nd.c \
 	$(null)
 
-nd_la_CFLAGS = \
-	$(AM_CFLAGS) \
+nd_la_CPPFLAGS = \
+	$(AM_CPPFLAGS) \
 	-D G_LOG_DOMAIN=\"eventd-nd\" \
 	-D SYSCONFDIR=\"$(sysconfdir)\" \
 	-D LIBDIR=\"$(libdir)\" \
 	-D DATADIR=\"$(datadir)\" \
+	$(GDK_PIXBUF_CPPFLAGS) \
+	$(CAIRO_CPPFLAGS) \
+	$(PANGO_CPPFLAGS) \
+	$(GOBJECT_CPPFLAGS) \
+	$(GMODULE_CPPFLAGS) \
+	$(GLIB_CPPFLAGS) \
+	$(null)
+
+nd_la_CFLAGS = \
+	$(AM_CFLAGS) \
 	$(GDK_PIXBUF_CFLAGS) \
 	$(CAIRO_CFLAGS) \
 	$(PANGO_CFLAGS) \

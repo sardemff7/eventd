@@ -11,9 +11,15 @@ linux_la_SOURCES = \
 	plugins/nd/linux/linux.c \
 	$(null)
 
+linux_la_CPPFLAGS = \
+	$(AM_CPPFLAGS) \
+	-D G_LOG_DOMAIN=\"eventd-nd-linux-backend\" \
+	$(CAIRO_CPPFLAGS) \
+	$(GLIB_CPPFLAGS) \
+	$(null)
+
 linux_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	-D G_LOG_DOMAIN=\"eventd-nd-linux-backend\" \
 	$(CAIRO_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(null)
