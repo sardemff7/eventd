@@ -22,7 +22,6 @@
 #define __EVENTD_EVENT_H__
 
 #include <libeventd-event-types.h>
-
 #include <glib-object.h>
 
 G_BEGIN_DECLS

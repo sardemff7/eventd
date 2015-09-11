@@ -21,8 +21,8 @@
 #ifndef __EVENTD_EVENTD_PLUGIN_H__
 #define __EVENTD_EVENTD_PLUGIN_H__
 
-#include <glib.h>
 #include <libeventd-event-types.h>
+#include <glib-object.h>
 
 G_BEGIN_DECLS
 
@@ -38,6 +38,8 @@ typedef enum {
 	EVENTD_PLUGIN_COMMAND_STATUS_EXEC_ERROR    = 31,
 } EventdPluginCommandStatus;
 
+GType eventd_plugin_command_status_get_type(void) G_GNUC_CONST;
+#define EVENTD_PLUGIN_TYPE_COMMAND_STATUS (eventd_plugin_command_status_get_type())
 
 /*
  * eventd plugin interface

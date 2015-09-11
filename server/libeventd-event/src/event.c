@@ -32,6 +32,15 @@
 EVENTD_EXPORT GType eventd_event_get_type(void);
 G_DEFINE_TYPE(EventdEvent, eventd_event, G_TYPE_OBJECT)
 
+/**
+ * EventdEventEndReason:
+ * @EVENTD_EVENT_END_REASON_NONE: No reason given.
+ * @EVENTD_EVENT_END_REASON_TIMEOUT: The event timed out.
+ * @EVENTD_EVENT_END_REASON_USER_DISMISS: The user dismissed the event.
+ * @EVENTD_EVENT_END_REASON_CLIENT_DISMISS: The source of the event dismissed the event.
+ * @EVENTD_EVENT_END_REASON_RESERVED: Internal use only.
+ */
+
 EVENTD_EXPORT
 GType
 eventd_event_end_reason_get_type(void)
@@ -226,15 +235,6 @@ eventd_event_answer(EventdEvent *self, const gchar *answer)
 
     g_signal_emit(self, _eventd_event_signals[SIGNAL_ANSWERED], 0, answer_->data);
 }
-
-/**
- * EventdEventEndReason:
- * @EVENTD_EVENT_END_REASON_NONE: No reason given.
- * @EVENTD_EVENT_END_REASON_TIMEOUT: The event timed out.
- * @EVENTD_EVENT_END_REASON_USER_DISMISS: The user dismissed the event.
- * @EVENTD_EVENT_END_REASON_CLIENT_DISMISS: The source of the event dismissed the event.
- * @EVENTD_EVENT_END_REASON_RESERVED: Internal use only.
- */
 
 /**
  * eventd_event_end:

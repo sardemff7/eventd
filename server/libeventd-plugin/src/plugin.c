@@ -76,6 +76,34 @@
  */
 
 /**
+ * EventdPluginCommandStatus:
+ * @EVENTD_PLUGIN_COMMAND_STATUS_OK: The command was successful.
+ * @EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR: Command error. No command passed, unknown command or missing command argument.
+ * @EVENTD_PLUGIN_COMMAND_STATUS_EXEC_ERROR: Plugin error. No plugin or no control command support in plugin.
+ */
+
+EVENTD_EXPORT
+GType
+eventd_plugin_command_status_get_type(void)
+{
+    static volatile gsize g_define_type_id__volatile = 0;
+
+    if ( g_once_init_enter(&g_define_type_id__volatile))
+    {
+        static const GEnumValue values[] = {
+            { EVENTD_PLUGIN_COMMAND_STATUS_OK,            "EVENTD_PLUGIN_COMMAND_STATUS_OK",            "ok" },
+            { EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR, "EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR", "command-error" },
+            { EVENTD_PLUGIN_COMMAND_STATUS_EXEC_ERROR,    "EVENTD_PLUGIN_COMMAND_STATUS_EXEC_ERROR",    "exec-error" },
+            { 0, NULL, NULL }
+        };
+        GType g_define_type_id = g_enum_register_static(g_intern_static_string("EventdPluginCommandStatus"), values);
+        g_once_init_leave(&g_define_type_id__volatile, g_define_type_id);
+    }
+
+    return g_define_type_id__volatile;
+}
+
+/**
  * eventd_plugin_interface_add_init_callback:
  * @interface: an #EventdPluginInterface
  * @callback: (scope async): a function to call when the plugin is loaded
