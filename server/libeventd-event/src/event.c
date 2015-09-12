@@ -109,9 +109,8 @@ eventd_event_class_init(EventdEventClass *klass)
                      G_SIGNAL_RUN_FIRST,
                      G_STRUCT_OFFSET(EventdEventClass, updated),
                      NULL, NULL,
-                     g_cclosure_marshal_VOID__VOID,
-                     G_TYPE_NONE,
-                     0);
+                     g_cclosure_marshal_generic,
+                     G_TYPE_NONE, 0);
 
     /**
      * EventdEvent::answered:
@@ -126,9 +125,8 @@ eventd_event_class_init(EventdEventClass *klass)
                      G_SIGNAL_RUN_FIRST,
                      G_STRUCT_OFFSET(EventdEventClass, answered),
                      NULL, NULL,
-                     g_cclosure_marshal_VOID__STRING,
-                     G_TYPE_NONE,
-                     1, G_TYPE_STRING);
+                     g_cclosure_marshal_generic,
+                     G_TYPE_NONE, 1, G_TYPE_STRING);
 
     /**
      * EventdEvent::ended:
@@ -143,9 +141,8 @@ eventd_event_class_init(EventdEventClass *klass)
                      G_SIGNAL_RUN_FIRST,
                      G_STRUCT_OFFSET(EventdEventClass, ended),
                      NULL, NULL,
-                     g_cclosure_marshal_VOID__ENUM,
-                     G_TYPE_NONE,
-                     1, EVENTD_TYPE_EVENT_END_REASON);
+                     g_cclosure_marshal_generic,
+                     G_TYPE_NONE, 1, EVENTD_TYPE_EVENT_END_REASON);
 }
 
 /**
