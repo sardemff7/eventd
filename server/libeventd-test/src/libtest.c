@@ -29,6 +29,7 @@
 #endif /* HAVE_ERRNO_H */
 
 #include <glib.h>
+#include <glib/gstdio.h>
 
 #include <libeventd-test.h>
 
@@ -93,6 +94,10 @@ eventd_tests_env_new(const gchar *plugins, gchar **argv, gint argc)
     self->env[length+1] = NULL;
 
     gchar *socket = g_strdup_printf("%s-%u.private", g_get_prgname(), ++instance);
+
+    gchar *socket_path = g_build_filename(self->dir, socket, NULL);
+    g_unlink(socket_path);
+    g_free(socket_path);
 
     self->start_args = g_new(char *, 10+argc);
     self->start_args[0] = g_strdup(EVENTDCTL_PATH);
