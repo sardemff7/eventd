@@ -21,8 +21,7 @@
 #ifndef __EVENTD_EVENTD_PLUGIN_H__
 #define __EVENTD_EVENTD_PLUGIN_H__
 
-#include <libeventd-event-types.h>
-#include <glib-object.h>
+#include <libeventd-event.h>
 
 G_BEGIN_DECLS
 

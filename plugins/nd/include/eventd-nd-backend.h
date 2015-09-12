@@ -23,7 +23,7 @@
 #ifndef __EVENTD_ND_BACKEND_H__
 #define __EVENTD_ND_BACKEND_H__
 
-#include <libeventd-event-types.h>
+#include <libeventd-event.h>
 
 typedef struct _EventdPluginContext EventdNdContext;
 typedef struct _EventdNdDisplay EventdNdDisplay;

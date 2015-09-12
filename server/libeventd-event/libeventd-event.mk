@@ -15,7 +15,6 @@ lib_LTLIBRARIES += \
 	$(null)
 
 pkginclude_HEADERS += \
-	server/libeventd-event/include/libeventd-event-types.h \
 	server/libeventd-event/include/libeventd-event.h \
 	$(null)
 
@@ -41,7 +40,6 @@ vapi_DATA += \
 
 
 libeventd_event_la_SOURCES = \
-	server/libeventd-event/include/libeventd-event-types.h \
 	server/libeventd-event/include/libeventd-event.h \
 	server/libeventd-event/src/event.c \
 	$(null)

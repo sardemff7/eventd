@@ -26,7 +26,7 @@
 #include <glib.h>
 #include <gio/gio.h>
 
-#include <libeventd-event-types.h>
+#include <libeventd-event.h>
 
 
 /*
