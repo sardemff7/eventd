@@ -37,21 +37,6 @@ GSocketConnectable *libeventd_evp_get_address(const gchar *host_and_port, GError
 
 
 /*
- * Errors
- */
-
-typedef enum {
-    LIBEVENTD_EVP_ERROR_BYE,
-    LIBEVENTD_EVP_ERROR_SEND,
-    LIBEVENTD_EVP_ERROR_EVENT,
-    LIBEVENTD_EVP_ERROR_END,
-    LIBEVENTD_EVP_ERROR_CLOSE
-} LibeventdEvpError;
-#define LIBEVENTD_EVP_ERROR libeventd_evp_error_quark()
-GQuark libeventd_evp_error_quark(void);
-
-
-/*
  * Connection handling
  */
 

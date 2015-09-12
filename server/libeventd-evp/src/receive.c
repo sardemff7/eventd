@@ -373,12 +373,7 @@ gboolean
 libeventd_evp_context_passive(LibeventdEvpContext *self, GError **error)
 {
     g_return_val_if_fail(self != NULL, FALSE);
-
-    if ( self->in == NULL )
-    {
-        g_set_error_literal(error, LIBEVENTD_EVP_ERROR, LIBEVENTD_EVP_ERROR_SEND, "Already in passive mode");
-        return FALSE;
-    }
+    g_return_val_if_fail(self->in != NULL, FALSE);
 
     g_cancellable_reset(self->cancellable);
 

@@ -29,12 +29,6 @@
 
 #include "context.h"
 
-GQuark
-libeventd_evp_error_quark(void)
-{
-    return g_quark_from_static_string("libeventd_evp_error-quark");
-}
-
 LibeventdEvpContext *
 libeventd_evp_context_new(gpointer client, LibeventdEvpClientInterface *interface)
 {
