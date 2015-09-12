@@ -45,7 +45,7 @@ typedef void LibeventdEvpClientIface;
 
 typedef void (*LibeventdEvpErrorCallback)(gpointer client, LibeventdEvpContext *context, GError *error);
 typedef void (*LibeventdEvpCallback)(gpointer client, LibeventdEvpContext *context);
-typedef void (*LibeventdEvpEventCallback)(gpointer client, LibeventdEvpContext *context, gchar *id, EventdEvent *event);
+typedef void (*LibeventdEvpEventCallback)(gpointer client, LibeventdEvpContext *context, const gchar *id, EventdEvent *event);
 typedef void (*LibeventdEvpEndCallback)(gpointer client, LibeventdEvpContext *context, const gchar *id);
 typedef void (*LibeventdEvpAnsweredCallback)(gpointer client, LibeventdEvpContext *context, const gchar *id, const gchar *answer, GHashTable *data_hash);
 typedef void (*LibeventdEvpEndedCallback)(gpointer client, LibeventdEvpContext *context, const gchar *id, EventdEventEndReason reason);

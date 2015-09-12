@@ -63,7 +63,7 @@ typedef struct {
 
 typedef struct {
     EventdEvpClient *client;
-    const gchar *id;
+    gchar *id;
     EventdEvent *event;
     gulong answered_handler;
     gulong ended_handler;
@@ -141,7 +141,7 @@ _eventd_evp_ended(gpointer data, LibeventdEvpContext *evp, const gchar *id, Even
 }
 
 static void
-_eventd_evp_event(gpointer data, LibeventdEvpContext *evp, gchar *id, EventdEvent *event)
+_eventd_evp_event(gpointer data, LibeventdEvpContext *evp, const gchar *id, EventdEvent *event)
 {
     EventdEvpClient *client = data;
 #ifdef DEBUG
@@ -156,7 +156,6 @@ _eventd_evp_event(gpointer data, LibeventdEvpContext *evp, gchar *id, EventdEven
             g_warning("Couldn't send ENDED message: %s", error->message);
             g_error_free(error);
         }
-        g_free(id);
         return;
     }
 
@@ -164,10 +163,10 @@ _eventd_evp_event(gpointer data, LibeventdEvpContext *evp, gchar *id, EventdEven
 
     evp_event = g_new0(EventdEvpEvent, 1);
     evp_event->client = client;
-    evp_event->id = id;
+    evp_event->id = g_strdup(id);
     evp_event->event = g_object_ref(event);
 
-    g_hash_table_insert(client->events, id, evp_event);
+    g_hash_table_insert(client->events, evp_event->id, evp_event);
 
     evp_event->answered_handler = g_signal_connect(event, "answered", G_CALLBACK(_eventd_evp_event_answered), evp_event);
     evp_event->ended_handler = g_signal_connect(event, "ended", G_CALLBACK(_eventd_evp_event_ended), evp_event);
@@ -214,6 +213,7 @@ _eventd_evp_event_free(gpointer data)
         g_signal_handler_disconnect(evp_event->event, evp_event->ended_handler);
 
     g_object_unref(evp_event->event);
+    g_free(evp_event->id);
 
     g_free(evp_event);
 }
@@ -245,7 +245,7 @@ _eventd_service_connection_handler(GSocketService *socket_service, GSocketConnec
 
     service->clients = g_slist_prepend(service->clients, client);
 
-    client->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_evp_event_free);
+    client->events = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, _eventd_evp_event_free);
     client->evp = libeventd_evp_context_new_for_connection(client, &_eventd_evp_interface, connection);
 
     libeventd_evp_context_receive_loop(client->evp, G_PRIORITY_DEFAULT);
