@@ -26,10 +26,9 @@
 
 G_BEGIN_DECLS
 
-typedef struct _EventdEvent EventdEvent;
-typedef struct _EventdEventClass EventdEventClass;
-typedef struct _EventdEventPrivate EventdEventPrivate;
-
+/*
+ * EventdEventEndReason
+ */
 typedef enum {
     EVENTD_EVENT_END_REASON_NONE = 0,
     EVENTD_EVENT_END_REASON_TIMEOUT = 1,
@@ -38,8 +37,18 @@ typedef enum {
     EVENTD_EVENT_END_REASON_RESERVED = 4
 } EventdEventEndReason;
 
-GType eventd_event_get_type(void) G_GNUC_CONST;
 GType eventd_event_end_reason_get_type(void) G_GNUC_CONST;
+
+#define EVENTD_TYPE_EVENT_END_REASON (eventd_event_end_reason_get_type())
+
+/*
+ * EventdEvent
+ */
+typedef struct _EventdEvent EventdEvent;
+typedef struct _EventdEventClass EventdEventClass;
+typedef struct _EventdEventPrivate EventdEventPrivate;
+
+GType eventd_event_get_type(void) G_GNUC_CONST;
 
 #define EVENTD_TYPE_EVENT            (eventd_event_get_type())
 #define EVENTD_EVENT(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), EVENTD_TYPE_EVENT, EventdEvent))
@@ -47,9 +56,6 @@ GType eventd_event_end_reason_get_type(void) G_GNUC_CONST;
 #define EVENTD_EVENT_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), EVENTD_TYPE_EVENT, EventdEventClass))
 #define EVENTD_IS_EVENT_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), EVENTD_TYPE_EVENT))
 #define EVENTD_EVENT_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), EVENTD_TYPE_EVENT, EventdEventClass))
-
-#define EVENTD_TYPE_EVENT_END_REASON (eventd_event_end_reason_get_type())
-
 
 struct _EventdEvent
 {
@@ -69,7 +75,9 @@ struct _EventdEventClass
     void (*ended)    (EventdEvent *event, EventdEventEndReason reason);
 };
 
-
+/*
+ * Functions
+ */
 EventdEvent *eventd_event_new(const gchar *category, const gchar *name);
 
 void eventd_event_update(EventdEvent *event, const gchar *name);
