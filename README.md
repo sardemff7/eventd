@@ -34,3 +34,5 @@ However, some parts of it are distributed under other licences:
   - libeventd-plugin
 - Under the terms of the [MIT License](http://opensource.org/licenses/MIT):
   - eventc
+  - libnkutils (included submodule)
+  - libgwater (included submodule)
