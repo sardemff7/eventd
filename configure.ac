@@ -4,6 +4,11 @@ m4_define([eventd_version_patch], [])
 AC_PREREQ([2.65])
 AC_INIT([eventd],eventd_version_major.eventd_version_minor[]eventd_version_patch,[],[])
 
+if test -d .git; then
+    # Redefine PACKAGE_VERSION only to preserve VERSION for distdir
+    PACKAGE_VERSION="${PACKAGE_VERSION} - `git describe --tags --always` (`git describe --tags --always --all | sed -e 's:heads/::'`)"
+fi
+
 AC_CONFIG_HEADERS([src/config.h])
 AC_CONFIG_SRCDIR([server/eventd/src/eventd.c])
 AC_CONFIG_MACRO_DIR([m4])
@@ -69,12 +74,6 @@ AM_CPPFLAGS=""
 AM_LDFLAGS=""
 AM_XSLTPROCFLAGS="--nonet --xinclude --stringparam man.output.quietly 1 --stringparam funcsynopsis.style ansi"
 AM_DOCBOOK_CONDITIONS="installation"
-
-
-if test -d .git; then
-    PACKAGE_VERSION="${PACKAGE_VERSION} - `git describe --tags --always` (`git describe --tags --always --all | sed -e 's:heads/::'`)"
-    AC_DEFINE_UNQUOTED([PACKAGE_VERSION], ["${PACKAGE_VERSION}"], [Full version with git information])
-fi
 
 
 #
