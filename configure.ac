@@ -107,7 +107,7 @@ AC_SUBST([fdonotificationscapabilitiesdir])
 EVENTD_I18N
 GLIB_DEFINE_LOCALEDIR([EVENTD_LOCALEDIR])
 GW_INIT([src/libgwater])
-NK_INIT([src/libnkutils], [GLIB], [enum token colour/alpha colour/double], [AM_DOCBOOK_CONDITIONS])
+NK_INIT([src/libnkutils], [enum token colour/alpha colour/double], [AM_DOCBOOK_CONDITIONS])
 
 #
 # Common dependencies
