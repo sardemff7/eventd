@@ -70,6 +70,21 @@ _eventc_connect(gpointer user_data)
 }
 
 static void
+_eventc_event_answer_callback(EventdEvent *event, const gchar *answer, gpointer user_data)
+{
+    g_print("%s\n", answer);
+
+    GHashTable *answer_data;
+    answer_data = eventd_event_get_all_answer_data(event);
+
+    GHashTableIter iter;
+    gchar *name, *data;
+    g_hash_table_iter_init(&iter, answer_data);
+    while ( g_hash_table_iter_next(&iter, (gpointer *) &name, (gpointer *) &data) )
+        g_print("%s=%s\n", name, data);
+}
+
+static void
 _eventc_event_end_callback(EventdEvent *event, EventdEventEndReason reason, gpointer user_data)
 {
     g_idle_add(_eventc_disconnect, NULL);
@@ -79,7 +94,10 @@ static void
 _eventc_send_event(void)
 {
     if ( wait_event_end )
+    {
+        g_signal_connect(event, "answered", G_CALLBACK(_eventc_event_answer_callback), NULL);
         g_signal_connect(event, "ended", G_CALLBACK(_eventc_event_end_callback), NULL);
+    }
 
     GError *error = NULL;
     if ( ! eventc_connection_event(client, event, &error) )
@@ -107,6 +125,7 @@ main(int argc, char *argv[])
     gchar *host = NULL;
     gchar **event_data_name = NULL;
     gchar **event_data_content = NULL;
+    gchar **answers = NULL;
 
     gboolean print_version = FALSE;
 
@@ -114,6 +133,7 @@ main(int argc, char *argv[])
     {
         { "data-name",    'd', 0, G_OPTION_ARG_STRING_ARRAY, &event_data_name,    "Event data name to send",                                "<name>" },
         { "data-content", 'c', 0, G_OPTION_ARG_STRING_ARRAY, &event_data_content, "Event data content to send (must be after a data-name)", "<content>" },
+        { "answer",       'a', 0, G_OPTION_ARG_STRING_ARRAY, &answers,            "Possibles answers to event",                             "<answer>" },
         { "host",         'h', 0, G_OPTION_ARG_STRING,       &host,               "Host to connect to",                                     "<host>" },
         { "max-tries",    'm', 0, G_OPTION_ARG_INT,          &max_tries,          "Maximum connection attempts (0 for infinite)",           "<times>" },
         { "wait",         'w', 0, G_OPTION_ARG_NONE,         &wait_event_end,     "Wait the end of the event",                              NULL },
@@ -184,6 +204,14 @@ main(int argc, char *argv[])
         g_hash_table_insert(data, event_data_name[i], event_data_content[i]);
     g_free(event_data_name);
     g_free(event_data_content);
+
+    if ( answers != NULL )
+    {
+        gchar **answer;
+        for ( answer = answers ; *answer != NULL ; ++answer )
+            eventd_event_add_answer(event, *answer);
+        g_strfreev(answers);
+    }
 
     eventd_event_set_all_data(event, data);
 
