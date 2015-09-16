@@ -476,18 +476,24 @@ main(int argc, char *argv[])
     {
         eventd_plugins_start_all();
 
+#ifdef G_OS_UNIX
         if ( daemonize )
         {
             g_setenv("G_MESSAGES_DEBUG", "", TRUE);
             close(0);
             close(1);
             close(2);
-#ifdef G_OS_UNIX
             open("/dev/null", O_RDWR);
             dup2(0,1);
             dup2(0,2);
-#endif /* G_OS_UNIX */
         }
+
+        g_unix_signal_add(SIGTERM, _eventd_core_stop, context);
+        g_unix_signal_add(SIGINT, _eventd_core_stop, context);
+
+        /* Ignore SIGPIPE as it is useless */
+        signal(SIGPIPE, SIG_IGN);
+#endif /* G_OS_UNIX */
 
 #ifdef ENABLE_SYSTEMD
         sd_notify(1,
@@ -495,14 +501,6 @@ main(int argc, char *argv[])
             "STATUS=Waiting for events\n"
         );
 #endif /* ENABLE_SYSTEMD */
-
-#ifdef G_OS_UNIX
-        g_unix_signal_add(SIGTERM, _eventd_core_stop, context);
-        g_unix_signal_add(SIGINT, _eventd_core_stop, context);
-
-        /* Ignore SIGPIPE as it is useless */
-        signal(SIGPIPE, SIG_IGN);
-#endif /* G_OS_UNIX */
 
         context->loop = g_main_loop_new(NULL, FALSE);
         g_main_loop_run(context->loop);
