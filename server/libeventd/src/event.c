@@ -243,7 +243,7 @@ void
 eventd_event_end(EventdEvent *self, EventdEventEndReason reason)
 {
     g_return_if_fail(EVENTD_IS_EVENT(self));
-    g_return_if_fail(reason > EVENTD_EVENT_END_REASON_NONE);
+    g_return_if_fail(g_enum_get_value(g_type_class_ref(EVENTD_TYPE_EVENT_END_REASON), reason) != NULL);
 
     g_signal_emit(self, _eventd_event_signals[SIGNAL_ENDED], 0, reason);
 }
