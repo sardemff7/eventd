@@ -41,15 +41,15 @@ main(int argc, char *argv[])
     args[0] = g_strdup("--event-listen");
     args[1] = g_strdup("tcp:localhost4:19032");
     args[2] = g_strdup("--no-avahi");
-    EventdTestsEnv *realy = eventd_tests_env_new("test-plugin,evp", args, 3);
+    EventdTestsEnv *relay = eventd_tests_env_new("relay,evp", args, 3);
     if ( ! eventd_tests_env_start_eventd(env) )
         goto end;
-    if ( ! eventd_tests_env_start_eventd(realy) )
+    if ( ! eventd_tests_env_start_eventd(relay) )
         goto end;
 
     r = eventd_tests_run_libeventc("127.0.0.1:19032");
 
-    if ( ! eventd_tests_env_stop_eventd(realy) )
+    if ( ! eventd_tests_env_stop_eventd(relay) )
         r = 99;
     if ( ! eventd_tests_env_stop_eventd(env) )
         r = 99;
