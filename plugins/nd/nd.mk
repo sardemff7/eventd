@@ -63,7 +63,7 @@ nd_la_LDFLAGS = \
 nd_la_LIBADD = \
 	libeventd-event.la \
 	libeventd-plugin.la \
-	libeventd.la \
+	libeventd-helpers.la \
 	$(GDK_PIXBUF_LIBS) \
 	$(CAIRO_LIBS) \
 	$(PANGO_LIBS) \

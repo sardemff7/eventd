@@ -38,7 +38,7 @@ sound_la_LDFLAGS = \
 sound_la_LIBADD = \
 	libeventd-event.la \
 	libeventd-plugin.la \
-	libeventd.la \
+	libeventd-helpers.la \
 	$(SNDFILE_LIBS) \
 	$(PULSEAUDIO_LIBS) \
 	$(GOBJECT_LIBS) \

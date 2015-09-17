@@ -34,7 +34,7 @@
 #include <eventd-plugin.h>
 #include <libeventd-evp.h>
 
-#include <libeventd-reconnect.h>
+#include <libeventd-helpers-reconnect.h>
 
 #include "server.h"
 
@@ -72,7 +72,7 @@ _eventd_relay_event_answered(EventdEvent *event, const gchar *answer, gpointer u
     {
         g_warning("Couldn't send ANSWERED message: %s", error->message);
         g_clear_error(&error);
-        libeventd_reconnect_try(server->reconnect);
+        evhelpers_reconnect_try(server->reconnect);
     }
     g_signal_handler_disconnect(relay_event->event, relay_event->answered_handler);
     relay_event->answered_handler = 0;
@@ -89,7 +89,7 @@ _eventd_relay_event_ended(EventdEvent *event, EventdEventEndReason reason, gpoin
     {
         g_warning("Couldn't send ENDED message: %s", error->message);
         g_clear_error(&error);
-        libeventd_reconnect_try(server->reconnect);
+        evhelpers_reconnect_try(server->reconnect);
     }
     g_signal_handler_disconnect(relay_event->event, relay_event->ended_handler);
     relay_event->ended_handler = 0;
@@ -187,11 +187,11 @@ _eventd_relay_connection_handler(GObject *obj, GAsyncResult *res, gpointer user_
     {
         g_warning("Couldn't connect: %s", error->message);
         g_clear_error(&error);
-        libeventd_reconnect_try(server->reconnect);
+        evhelpers_reconnect_try(server->reconnect);
     }
     else
     {
-        libeventd_reconnect_reset(server->reconnect);
+        evhelpers_reconnect_reset(server->reconnect);
         libeventd_evp_context_set_connection(server->evp, connection);
         g_object_unref(connection);
         libeventd_evp_context_receive_loop(server->evp, G_PRIORITY_DEFAULT);
@@ -206,7 +206,7 @@ eventd_relay_server_new(void)
     server = g_new0(EventdRelayServer, 1);
 
     server->evp = libeventd_evp_context_new(server, &_eventd_relay_interface);
-    server->reconnect = libeventd_reconnect_new(5, 10,_eventd_relay_reconnect_callback, server);
+    server->reconnect = evhelpers_reconnect_new(5, 10,_eventd_relay_reconnect_callback, server);
     server->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_relay_event_free);
 
     return server;
@@ -276,7 +276,7 @@ eventd_relay_server_start(EventdRelayServer *server)
 void
 eventd_relay_server_stop(EventdRelayServer *server)
 {
-    libeventd_reconnect_reset(server->reconnect);
+    evhelpers_reconnect_reset(server->reconnect);
 
     if ( libeventd_evp_context_is_connected(server->evp, NULL) )
         libeventd_evp_context_send_bye(server->evp);
@@ -293,7 +293,7 @@ eventd_relay_server_event(EventdRelayServer *server, EventdEvent *event)
         {
             g_warning("Couldn't send event: %s", error->message);
             g_clear_error(&error);
-            libeventd_reconnect_try(server->reconnect);
+            evhelpers_reconnect_try(server->reconnect);
         }
         return;
     }
@@ -309,7 +309,7 @@ eventd_relay_server_event(EventdRelayServer *server, EventdEvent *event)
     {
         g_warning("Couldn't send event: %s", error->message);
         g_clear_error(&error);
-        libeventd_reconnect_try(server->reconnect);
+        evhelpers_reconnect_try(server->reconnect);
         return;
     }
 
@@ -323,7 +323,7 @@ eventd_relay_server_free(gpointer data)
 {
     EventdRelayServer *server = data;
 
-    libeventd_reconnect_free(server->reconnect);
+    evhelpers_reconnect_free(server->reconnect);
 
     if ( server->evp != NULL )
         libeventd_evp_context_free(server->evp);

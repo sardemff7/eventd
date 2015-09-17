@@ -30,7 +30,7 @@
 
 #include <libeventd-event.h>
 #include <eventd-plugin.h>
-#include <libeventd-config.h>
+#include <libeventd-helpers-config.h>
 
 #include "image.h"
 
@@ -83,10 +83,10 @@ _eventd_libnotify_event_free(gpointer data)
 {
     EventdLibnotifyEvent *event = data;
 
-    libeventd_filename_unref(event->image);
-    libeventd_filename_unref(event->icon);
-    libeventd_format_string_unref(event->message);
-    libeventd_format_string_unref(event->title);
+    evhelpers_filename_unref(event->image);
+    evhelpers_filename_unref(event->icon);
+    evhelpers_format_string_unref(event->message);
+    evhelpers_format_string_unref(event->title);
 
     g_free(event);
 }
@@ -159,22 +159,22 @@ _eventd_libnotify_event_parse(EventdPluginContext *context, const gchar *id, GKe
     if ( ! g_key_file_has_group(config_file, "Libnotify") )
         return;
 
-    if ( libeventd_config_key_file_get_boolean(config_file, "Libnotify", "Disable", &disable) < 0 )
+    if ( evhelpers_config_key_file_get_boolean(config_file, "Libnotify", "Disable", &disable) < 0 )
         return;
 
     if ( ! disable )
     {
-        if ( libeventd_config_key_file_get_locale_format_string_with_default(config_file, "Libnotify", "Title", NULL, "${summary}", &title) < 0 )
+        if ( evhelpers_config_key_file_get_locale_format_string_with_default(config_file, "Libnotify", "Title", NULL, "${summary}", &title) < 0 )
             goto skip;
-        if ( libeventd_config_key_file_get_locale_format_string_with_default(config_file, "Libnotify", "Message", NULL, "${body}", &message) < 0 )
+        if ( evhelpers_config_key_file_get_locale_format_string_with_default(config_file, "Libnotify", "Message", NULL, "${body}", &message) < 0 )
             goto skip;
-        if ( libeventd_config_key_file_get_filename_with_default(config_file, "Libnotify", "Image", "image", &image) < 0 )
+        if ( evhelpers_config_key_file_get_filename_with_default(config_file, "Libnotify", "Image", "image", &image) < 0 )
             goto skip;
-        if ( libeventd_config_key_file_get_filename_with_default(config_file, "Libnotify", "Icon", "icon", &icon) < 0 )
+        if ( evhelpers_config_key_file_get_filename_with_default(config_file, "Libnotify", "Icon", "icon", &icon) < 0 )
             goto skip;
-        if ( libeventd_config_key_file_get_int_with_default(config_file, "Libnotify", "OverlayScale", 50, &scale) < 0 )
+        if ( evhelpers_config_key_file_get_int_with_default(config_file, "Libnotify", "OverlayScale", 50, &scale) < 0 )
             goto skip;
-        if ( libeventd_config_key_file_get_string_with_default(config_file, "Libnotify", "Urgency", "normal", &urgency) < 0 )
+        if ( evhelpers_config_key_file_get_string_with_default(config_file, "Libnotify", "Urgency", "normal", &urgency) < 0 )
             goto skip;
 
         libnotify_event = _eventd_libnotify_event_new(title, message, image, icon, scale, urgency);
@@ -187,10 +187,10 @@ _eventd_libnotify_event_parse(EventdPluginContext *context, const gchar *id, GKe
 
 skip:
     g_free(urgency);
-    libeventd_filename_unref(icon);
-    libeventd_filename_unref(image);
-    libeventd_format_string_unref(message);
-    libeventd_format_string_unref(title);
+    evhelpers_filename_unref(icon);
+    evhelpers_filename_unref(image);
+    evhelpers_format_string_unref(message);
+    evhelpers_format_string_unref(title);
 }
 
 static void
@@ -219,8 +219,8 @@ _eventd_libnotify_event_action(EventdPluginContext *context, const gchar *config
     if ( libnotify_event == NULL )
         return;
 
-    title = libeventd_format_string_get_string(libnotify_event->title, event, NULL, NULL);
-    message = libeventd_format_string_get_string(libnotify_event->message, event, NULL, NULL);
+    title = evhelpers_format_string_get_string(libnotify_event->title, event, NULL, NULL);
+    message = evhelpers_format_string_get_string(libnotify_event->message, event, NULL, NULL);
 
     image = eventd_libnotify_get_image(event, libnotify_event->image, libnotify_event->icon, libnotify_event->scale, &icon_uri);
 

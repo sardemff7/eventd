@@ -27,10 +27,10 @@ typedef struct _LibeventdReconnectHandler LibeventdReconnectHandler;
 
 typedef void (*LibeventdReconnectTryCallback)(LibeventdReconnectHandler *handler, gpointer user_data);
 
-LibeventdReconnectHandler *libeventd_reconnect_new(gint64 timeout, gint64 max_tries, LibeventdReconnectTryCallback callback, gpointer user_data);
-void libeventd_reconnect_free(LibeventdReconnectHandler *handler);
+LibeventdReconnectHandler *evhelpers_reconnect_new(gint64 timeout, gint64 max_tries, LibeventdReconnectTryCallback callback, gpointer user_data);
+void evhelpers_reconnect_free(LibeventdReconnectHandler *handler);
 
-gboolean libeventd_reconnect_try(LibeventdReconnectHandler *handler);
-void libeventd_reconnect_reset(LibeventdReconnectHandler *handler);
+gboolean evhelpers_reconnect_try(LibeventdReconnectHandler *handler);
+void evhelpers_reconnect_reset(LibeventdReconnectHandler *handler);
 
 #endif /* __LIBEVENTD_RECONNECT_H__ */

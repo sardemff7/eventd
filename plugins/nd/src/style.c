@@ -30,7 +30,7 @@
 #endif /* ENABLE_GDK_PIXBUF */
 
 #include <libeventd-event.h>
-#include <libeventd-config.h>
+#include <libeventd-helpers-config.h>
 
 #include "style.h"
 
@@ -137,11 +137,11 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
 {
     /* template */
     style->template.set     = TRUE;
-    style->template.title   = libeventd_format_string_new(g_strdup("${name}"));
-    style->template.message = libeventd_format_string_new(g_strdup("${text}"));
+    style->template.title   = evhelpers_format_string_new(g_strdup("${name}"));
+    style->template.message = evhelpers_format_string_new(g_strdup("${text}"));
 #ifdef ENABLE_GDK_PIXBUF
-    style->template.image   = libeventd_filename_new(g_strdup("image"));
-    style->template.icon    = libeventd_filename_new(g_strdup("icon"));
+    style->template.image   = evhelpers_filename_new(g_strdup("image"));
+    style->template.icon    = evhelpers_filename_new(g_strdup("icon"));
 #endif /* ENABLE_GDK_PIXBUF */
 
     /* bubble */
@@ -221,34 +221,34 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
 
         FormatString *string = NULL;
 
-        libeventd_format_string_unref(self->template.title);
-        if ( libeventd_config_key_file_get_locale_format_string(config_file, "Notification", "Title", NULL, &string) == 0 )
+        evhelpers_format_string_unref(self->template.title);
+        if ( evhelpers_config_key_file_get_locale_format_string(config_file, "Notification", "Title", NULL, &string) == 0 )
             self->template.title = string;
         else if ( self->parent != NULL )
-            self->template.title = libeventd_format_string_ref(eventd_nd_style_get_template_title(self->parent));
+            self->template.title = evhelpers_format_string_ref(eventd_nd_style_get_template_title(self->parent));
 
         string = NULL;
-        libeventd_format_string_unref(self->template.message);
-        if ( libeventd_config_key_file_get_locale_format_string(config_file, "Notification", "Message", NULL, &string) == 0 )
+        evhelpers_format_string_unref(self->template.message);
+        if ( evhelpers_config_key_file_get_locale_format_string(config_file, "Notification", "Message", NULL, &string) == 0 )
             self->template.message = string;
         else if ( self->parent != NULL )
-            self->template.message = libeventd_format_string_ref(eventd_nd_style_get_template_message(self->parent));
+            self->template.message = evhelpers_format_string_ref(eventd_nd_style_get_template_message(self->parent));
 
 #ifdef ENABLE_GDK_PIXBUF
         Filename *filename = NULL;
 
-        libeventd_filename_unref(self->template.image);
-        if ( libeventd_config_key_file_get_filename(config_file, "Notification", "Image", &filename) == 0 )
+        evhelpers_filename_unref(self->template.image);
+        if ( evhelpers_config_key_file_get_filename(config_file, "Notification", "Image", &filename) == 0 )
             self->template.image = filename;
         else if ( self->parent != NULL )
-            self->template.image = libeventd_filename_ref(eventd_nd_style_get_template_image(self->parent));
+            self->template.image = evhelpers_filename_ref(eventd_nd_style_get_template_image(self->parent));
 
         filename = NULL;
-        libeventd_filename_unref(self->template.icon);
-        if ( libeventd_config_key_file_get_filename(config_file, "Notification", "Icon", &filename) == 0 )
+        evhelpers_filename_unref(self->template.icon);
+        if ( evhelpers_config_key_file_get_filename(config_file, "Notification", "Icon", &filename) == 0 )
             self->template.icon = filename;
         else if ( self->parent != NULL )
-            self->template.icon = libeventd_filename_ref(eventd_nd_style_get_template_icon(self->parent));
+            self->template.icon = evhelpers_filename_ref(eventd_nd_style_get_template_icon(self->parent));
 #endif /* ENABLE_GDK_PIXBUF */
     }
 
@@ -259,27 +259,27 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
         Int integer;
         Colour colour;
 
-        if ( libeventd_config_key_file_get_int(config_file, "NotificationBubble", "MinWidth", &integer) == 0 )
+        if ( evhelpers_config_key_file_get_int(config_file, "NotificationBubble", "MinWidth", &integer) == 0 )
             self->bubble.min_width = ( integer.value > 0 ) ? integer.value : 0;
         else if ( self->parent != NULL )
             self->bubble.min_width = eventd_nd_style_get_bubble_min_width(self->parent);
 
-        if ( libeventd_config_key_file_get_int(config_file, "NotificationBubble", "MaxWidth", &integer) == 0 )
+        if ( evhelpers_config_key_file_get_int(config_file, "NotificationBubble", "MaxWidth", &integer) == 0 )
             self->bubble.max_width = integer.value;
         else if ( self->parent != NULL )
             self->bubble.max_width = eventd_nd_style_get_bubble_max_width(self->parent);
 
-        if ( libeventd_config_key_file_get_int(config_file, "NotificationBubble", "Padding", &integer) == 0 )
+        if ( evhelpers_config_key_file_get_int(config_file, "NotificationBubble", "Padding", &integer) == 0 )
             self->bubble.padding = integer.value;
         else if ( self->parent != NULL )
             self->bubble.padding = eventd_nd_style_get_bubble_padding(self->parent);
 
-        if ( libeventd_config_key_file_get_int(config_file, "NotificationBubble", "Radius", &integer) == 0 )
+        if ( evhelpers_config_key_file_get_int(config_file, "NotificationBubble", "Radius", &integer) == 0 )
             self->bubble.radius = integer.value;
         else if ( self->parent != NULL )
             self->bubble.radius = eventd_nd_style_get_bubble_radius(self->parent);
 
-        if ( libeventd_config_key_file_get_colour(config_file, "NotificationBubble", "Colour", &colour) == 0 )
+        if ( evhelpers_config_key_file_get_colour(config_file, "NotificationBubble", "Colour", &colour) == 0 )
             self->bubble.colour = colour;
         else if ( self->parent != NULL )
             self->bubble.colour = eventd_nd_style_get_bubble_colour(self->parent);
@@ -297,7 +297,7 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
         guint64 enum_value;
         Colour colour;
 
-        if ( libeventd_config_key_file_get_string(config_file, "NotificationTitle", "Font", &string) == 0 )
+        if ( evhelpers_config_key_file_get_string(config_file, "NotificationTitle", "Font", &string) == 0 )
         {
             pango_font_description_free(self->title.font);
             self->title.font = pango_font_description_from_string(string);
@@ -308,12 +308,12 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
             self->title.font = pango_font_description_copy_static(eventd_nd_style_get_title_font(self->parent));
         }
 
-        if ( libeventd_config_key_file_get_enum(config_file, "NotificationTitle", "Alignment", _eventd_nd_style_pango_alignments, G_N_ELEMENTS(_eventd_nd_style_pango_alignments), &enum_value) == 0 )
+        if ( evhelpers_config_key_file_get_enum(config_file, "NotificationTitle", "Alignment", _eventd_nd_style_pango_alignments, G_N_ELEMENTS(_eventd_nd_style_pango_alignments), &enum_value) == 0 )
             self->title.align = enum_value;
         else if ( self->parent != NULL )
             self->title.align = eventd_nd_style_get_title_align(self->parent);
 
-        if ( libeventd_config_key_file_get_colour(config_file, "NotificationTitle", "Colour", &colour) == 0 )
+        if ( evhelpers_config_key_file_get_colour(config_file, "NotificationTitle", "Colour", &colour) == 0 )
             self->title.colour = colour;
         else if ( self->parent != NULL )
             self->title.colour = eventd_nd_style_get_title_colour(self->parent);
@@ -329,17 +329,17 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
         guint64 enum_value;
         Colour colour;
 
-        if ( libeventd_config_key_file_get_int(config_file, "NotificationMessage", "Spacing", &integer) == 0 )
+        if ( evhelpers_config_key_file_get_int(config_file, "NotificationMessage", "Spacing", &integer) == 0 )
             self->message.spacing = integer.value;
         else if ( self->parent != NULL )
             self->message.spacing = eventd_nd_style_get_message_spacing(self->parent);
 
-        if ( libeventd_config_key_file_get_int(config_file, "NotificationMessage", "MaxLines", &integer) == 0 )
+        if ( evhelpers_config_key_file_get_int(config_file, "NotificationMessage", "MaxLines", &integer) == 0 )
             self->message.max_lines = integer.value;
         else if ( self->parent != NULL )
             self->message.max_lines = eventd_nd_style_get_message_max_lines(self->parent);
 
-        if ( libeventd_config_key_file_get_string(config_file, "NotificationMessage", "Font", &string) == 0 )
+        if ( evhelpers_config_key_file_get_string(config_file, "NotificationMessage", "Font", &string) == 0 )
         {
             pango_font_description_free(self->message.font);
             self->message.font = pango_font_description_from_string(string);
@@ -350,12 +350,12 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
             self->message.font = pango_font_description_copy_static(eventd_nd_style_get_message_font(self->parent));
         }
 
-        if ( libeventd_config_key_file_get_enum(config_file, "NotificationMessage", "Alignment", _eventd_nd_style_pango_alignments, G_N_ELEMENTS(_eventd_nd_style_pango_alignments), &enum_value) == 0 )
+        if ( evhelpers_config_key_file_get_enum(config_file, "NotificationMessage", "Alignment", _eventd_nd_style_pango_alignments, G_N_ELEMENTS(_eventd_nd_style_pango_alignments), &enum_value) == 0 )
             self->message.align = enum_value;
         else if ( self->parent != NULL )
             self->message.align = eventd_nd_style_get_message_align(self->parent);
 
-        if ( libeventd_config_key_file_get_colour(config_file, "NotificationMessage", "Colour", &colour) == 0 )
+        if ( evhelpers_config_key_file_get_colour(config_file, "NotificationMessage", "Colour", &colour) == 0 )
             self->message.colour = colour;
         else if ( self->parent != NULL )
             self->message.colour = eventd_nd_style_get_message_colour(self->parent);
@@ -369,7 +369,7 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
 
         Int integer;
 
-        if ( libeventd_config_key_file_get_int(config_file, "NotificationImage", "MaxWidth", &integer) == 0 )
+        if ( evhelpers_config_key_file_get_int(config_file, "NotificationImage", "MaxWidth", &integer) == 0 )
         {
             self->image.max_width = integer.value;
             *images_max_width  = MAX(*images_max_width, integer.value);
@@ -377,7 +377,7 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
         else if ( self->parent != NULL )
             self->image.max_width = eventd_nd_style_get_image_max_width(self->parent);
 
-        if ( libeventd_config_key_file_get_int(config_file, "NotificationImage", "MaxHeight", &integer) == 0 )
+        if ( evhelpers_config_key_file_get_int(config_file, "NotificationImage", "MaxHeight", &integer) == 0 )
         {
             self->image.max_height = integer.value;
             *images_max_height  = MAX(*images_max_height, integer.value);
@@ -385,7 +385,7 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
         else if ( self->parent != NULL )
             self->image.max_height = eventd_nd_style_get_image_max_height(self->parent);
 
-        if ( libeventd_config_key_file_get_int(config_file, "NotificationImage", "Margin", &integer) == 0 )
+        if ( evhelpers_config_key_file_get_int(config_file, "NotificationImage", "Margin", &integer) == 0 )
             self->image.margin = integer.value;
         else if ( self->parent != NULL )
             self->image.margin = eventd_nd_style_get_image_margin(self->parent);
@@ -399,17 +399,17 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
         guint64 enum_value;
         Int integer;
 
-        if ( libeventd_config_key_file_get_enum(config_file, "NotificationIcon", "Placement", _eventd_nd_style_icon_placements, G_N_ELEMENTS(_eventd_nd_style_icon_placements), &enum_value) == 0 )
+        if ( evhelpers_config_key_file_get_enum(config_file, "NotificationIcon", "Placement", _eventd_nd_style_icon_placements, G_N_ELEMENTS(_eventd_nd_style_icon_placements), &enum_value) == 0 )
             self->icon.placement = enum_value;
         else if ( self->parent != NULL )
             self->icon.placement = eventd_nd_style_get_icon_placement(self->parent);
 
-        if ( libeventd_config_key_file_get_enum(config_file, "NotificationIcon", "Anche", _eventd_nd_style_anchors_vertical, G_N_ELEMENTS(_eventd_nd_style_anchors_vertical), &enum_value) == 0 )
+        if ( evhelpers_config_key_file_get_enum(config_file, "NotificationIcon", "Anche", _eventd_nd_style_anchors_vertical, G_N_ELEMENTS(_eventd_nd_style_anchors_vertical), &enum_value) == 0 )
             self->icon.anchor = enum_value;
         else if ( self->parent != NULL )
             self->icon.anchor = eventd_nd_style_get_icon_anchor(self->parent);
 
-        if ( libeventd_config_key_file_get_int(config_file, "NotificationIcon", "MaxWidth", &integer) == 0 )
+        if ( evhelpers_config_key_file_get_int(config_file, "NotificationIcon", "MaxWidth", &integer) == 0 )
         {
             self->icon.max_width = integer.value;
             *images_max_width  = MAX(*images_max_width, integer.value);
@@ -417,7 +417,7 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
         else if ( self->parent != NULL )
             self->icon.max_width = eventd_nd_style_get_icon_max_width(self->parent);
 
-        if ( libeventd_config_key_file_get_int(config_file, "NotificationIcon", "MaxHeight", &integer) == 0 )
+        if ( evhelpers_config_key_file_get_int(config_file, "NotificationIcon", "MaxHeight", &integer) == 0 )
         {
             self->icon.max_height = integer.value;
             *images_max_height  = MAX(*images_max_height, integer.value);
@@ -425,12 +425,12 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
         else if ( self->parent != NULL )
             self->icon.max_height = eventd_nd_style_get_icon_max_height(self->parent);
 
-        if ( libeventd_config_key_file_get_int(config_file, "NotificationIcon", "Margin", &integer) == 0 )
+        if ( evhelpers_config_key_file_get_int(config_file, "NotificationIcon", "Margin", &integer) == 0 )
             self->icon.margin = integer.value;
         else if ( self->parent != NULL )
             self->icon.margin = eventd_nd_style_get_icon_margin(self->parent);
 
-        if ( libeventd_config_key_file_get_int(config_file, "NotificationIcon", "FadeWidth", &integer) == 0 )
+        if ( evhelpers_config_key_file_get_int(config_file, "NotificationIcon", "FadeWidth", &integer) == 0 )
         {
             if ( ( integer.value < 0 ) || ( integer.value > 100 ) )
             {
@@ -455,11 +455,11 @@ eventd_nd_style_free(gpointer data)
     pango_font_description_free(style->title.font);
     pango_font_description_free(style->message.font);
 
-    libeventd_format_string_unref(style->template.title);
-    libeventd_format_string_unref(style->template.message);
+    evhelpers_format_string_unref(style->template.title);
+    evhelpers_format_string_unref(style->template.message);
 #ifdef ENABLE_GDK_PIXBUF
-    libeventd_filename_unref(style->template.image);
-    libeventd_filename_unref(style->template.icon);
+    evhelpers_filename_unref(style->template.image);
+    evhelpers_filename_unref(style->template.icon);
 #endif /* ENABLE_GDK_PIXBUF */
 
     g_free(style);
@@ -784,9 +784,9 @@ eventd_nd_notification_contents_new(EventdNdStyle *style, EventdEvent *event, gi
 
     self = g_new0(EventdNdNotificationContents, 1);
 
-    self->title = libeventd_format_string_get_string(title, event, NULL, NULL);
+    self->title = evhelpers_format_string_get_string(title, event, NULL, NULL);
 
-    self->message = libeventd_format_string_get_string(message, event, NULL, NULL);
+    self->message = evhelpers_format_string_get_string(message, event, NULL, NULL);
     if ( *self->message == '\0' )
         /* Empty message, just skip it */
         self->message = (g_free(self->message), NULL);
@@ -797,7 +797,7 @@ eventd_nd_notification_contents_new(EventdNdStyle *style, EventdEvent *event, gi
     gchar *path;
     const gchar *data;
 
-    if ( libeventd_filename_get_path(image, event, "images", &data, &path) )
+    if ( evhelpers_filename_get_path(image, event, "images", &data, &path) )
     {
         if ( path != NULL )
             self->image = _eventd_nd_notification_contents_pixbuf_from_file(path, width, height);
@@ -806,7 +806,7 @@ eventd_nd_notification_contents_new(EventdNdStyle *style, EventdEvent *event, gi
         g_free(path);
     }
 
-    if ( libeventd_filename_get_path(icon, event, "icons", &data, &path) )
+    if ( evhelpers_filename_get_path(icon, event, "icons", &data, &path) )
     {
         if ( path != NULL )
             self->icon = _eventd_nd_notification_contents_pixbuf_from_file(path, width, height);

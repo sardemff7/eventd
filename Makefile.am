@@ -61,7 +61,7 @@ AM_XSLTPROCFLAGS += \
 
 include server/libeventd-event/libeventd-event.mk
 include server/libeventd-evp/libeventd-evp.mk
-include server/libeventd/libeventd.mk
+include server/libeventd-helpers/libeventd-helpers.mk
 include server/eventd/eventd.mk
 include server/libeventd-plugin/libeventd-plugin.mk
 include server/eventdctl/eventdctl.mk

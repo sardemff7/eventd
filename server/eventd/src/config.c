@@ -26,7 +26,7 @@
 #include <glib-object.h>
 
 #include <libeventd-event.h>
-#include <libeventd-config.h>
+#include <libeventd-helpers-config.h>
 #include <eventdctl.h>
 
 #include "types.h"
@@ -221,10 +221,10 @@ _eventd_config_parse_global(EventdConfig *config, GKeyFile *config_file)
     if ( ! g_key_file_has_group(config_file, "Event") )
         return;
 
-    if ( libeventd_config_key_file_get_int(config_file, "Event", "Stack", &integer) == 0 )
+    if ( evhelpers_config_key_file_get_int(config_file, "Event", "Stack", &integer) == 0 )
         config->stack = integer.value;
 
-    if ( libeventd_config_key_file_get_int(config_file, "Event", "Timeout", &integer) == 0 )
+    if ( evhelpers_config_key_file_get_int(config_file, "Event", "Timeout", &integer) == 0 )
         config->timeout = MAX(0, integer.value);
 }
 
@@ -235,7 +235,7 @@ _eventd_config_parse_client(EventdConfig *config, const gchar *id, GKeyFile *con
     gboolean disable;
     Int timeout;
 
-    if ( ( libeventd_config_key_file_get_boolean(config_file, "Event", "Disable", &disable) == 0 ) && disable )
+    if ( ( evhelpers_config_key_file_get_boolean(config_file, "Event", "Disable", &disable) == 0 ) && disable )
     {
         g_hash_table_insert(config->events, g_strdup(id), NULL);
         return;
@@ -246,7 +246,7 @@ _eventd_config_parse_client(EventdConfig *config, const gchar *id, GKeyFile *con
     event->timeout = -1;
 
 
-    if ( libeventd_config_key_file_get_int(config_file, "Event", "Timeout", &timeout) == 0 )
+    if ( evhelpers_config_key_file_get_int(config_file, "Event", "Timeout", &timeout) == 0 )
         event->timeout = timeout.value;
 
     g_hash_table_insert(config->events, g_strdup(id), event);
@@ -325,10 +325,10 @@ _eventd_config_parse_event_file(EventdConfig *config, const gchar *id, GKeyFile 
     g_debug("Parsing event '%s'", id);
 #endif /* DEBUG */
 
-    if ( libeventd_config_key_file_get_string(config_file, "Event", "Category", &category) != 0 )
+    if ( evhelpers_config_key_file_get_string(config_file, "Event", "Category", &category) != 0 )
         return;
 
-    if ( libeventd_config_key_file_get_string(config_file, "Event", "Name", &name) < 0 )
+    if ( evhelpers_config_key_file_get_string(config_file, "Event", "Name", &name) < 0 )
         goto fail;
 
     EventdConfigMatch *match;
@@ -339,9 +339,9 @@ _eventd_config_parse_event_file(EventdConfig *config, const gchar *id, GKeyFile 
     gchar **flags;
     gsize length;
 
-    libeventd_config_key_file_get_string_list(config_file, "Event", "IfData", &match->if_data, NULL);
+    evhelpers_config_key_file_get_string_list(config_file, "Event", "IfData", &match->if_data, NULL);
 
-    if ( libeventd_config_key_file_get_string_list(config_file, "Event", "IfDataMatches", &if_data_matches, NULL) == 0 )
+    if ( evhelpers_config_key_file_get_string_list(config_file, "Event", "IfDataMatches", &if_data_matches, NULL) == 0 )
     {
         EventdConfigDataMatch *data_match;
         gchar **if_data_match;
@@ -365,10 +365,10 @@ _eventd_config_parse_event_file(EventdConfig *config, const gchar *id, GKeyFile 
         g_strfreev(if_data_matches);
     }
 
-    if ( libeventd_config_key_file_get_string_list(config_file, "Event", "OnlyIfFlags", &flags, &length) == 0 )
+    if ( evhelpers_config_key_file_get_string_list(config_file, "Event", "OnlyIfFlags", &flags, &length) == 0 )
         match->flags_whitelist = _eventd_config_parse_event_flags(flags, length);
 
-    if ( libeventd_config_key_file_get_string_list(config_file, "Event", "NotIfFlags", &flags, &length) == 0 )
+    if ( evhelpers_config_key_file_get_string_list(config_file, "Event", "NotIfFlags", &flags, &length) == 0 )
         match->flags_blacklist = _eventd_config_parse_event_flags(flags, length);
 
     gint64 default_importance;
@@ -377,7 +377,7 @@ _eventd_config_parse_event_file(EventdConfig *config, const gchar *id, GKeyFile 
         default_importance = 0;
     else
         default_importance = G_MAXINT64;
-    libeventd_config_key_file_get_int_with_default(config_file, "Event", "Importance", default_importance, &match->importance);
+    evhelpers_config_key_file_get_int_with_default(config_file, "Event", "Importance", default_importance, &match->importance);
 
     gchar *internal_name;
 
@@ -482,7 +482,7 @@ _eventd_config_process_config_file(GHashTable *files, const gchar *id, GKeyFile 
 
     gchar *parent_id;
 
-    switch ( libeventd_config_key_file_get_string(file, "File", "Extends", &parent_id) )
+    switch ( evhelpers_config_key_file_get_string(file, "File", "Extends", &parent_id) )
     {
     case 1:
         return file;

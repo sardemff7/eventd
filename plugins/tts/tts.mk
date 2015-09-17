@@ -31,7 +31,7 @@ tts_la_LDFLAGS = \
 tts_la_LIBADD = \
 	libeventd-event.la \
 	libeventd-plugin.la \
-	libeventd.la \
+	libeventd-helpers.la \
 	$(ESPEAK_LIBS) \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS) \

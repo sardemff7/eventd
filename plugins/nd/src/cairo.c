@@ -37,7 +37,7 @@
 #include <pango/pangocairo.h>
 
 #include <libeventd-event.h>
-#include <libeventd-config.h>
+#include <libeventd-helpers-config.h>
 
 #include "style.h"
 #ifdef ENABLE_GDK_PIXBUF

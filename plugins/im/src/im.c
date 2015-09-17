@@ -27,8 +27,8 @@
 #include <purple.h>
 
 #include <eventd-plugin.h>
-#include <libeventd-config.h>
-#include <libeventd-reconnect.h>
+#include <libeventd-helpers-config.h>
+#include <libeventd-helpers-reconnect.h>
 
 #define PURPLE_GLIB_READ_COND  (G_IO_IN | G_IO_HUP | G_IO_ERR)
 #define PURPLE_GLIB_WRITE_COND (G_IO_OUT | G_IO_HUP | G_IO_ERR | G_IO_NVAL)
@@ -177,7 +177,7 @@ _eventd_im_event_account_free(gpointer data)
     EventdImEventAccount *account = data;
 
     g_list_free_full(account->convs, _eventd_im_conv_free);
-    libeventd_format_string_unref(account->message);
+    evhelpers_format_string_unref(account->message);
 
     g_slice_free(EventdImEventAccount, account);
 }
@@ -201,7 +201,7 @@ _eventd_im_signed_on_callback(PurpleConnection *gc, EventdPluginContext *context
 {
     EventdImAccount *account = purple_connection_get_account(gc)->ui_data;
 
-    libeventd_reconnect_reset(account->reconnect);
+    evhelpers_reconnect_reset(account->reconnect);
 }
 
 static void
@@ -211,7 +211,7 @@ _eventd_im_error_callback(PurpleAccount *ac, const PurpleConnectionErrorInfo *ol
     g_debug("Error on account %s: %s", account->name, current_error->description);
     if ( account->started && ( ! purple_account_is_connecting(account->account) ) )
     {
-        if ( ! libeventd_reconnect_try(account->reconnect) )
+        if ( ! evhelpers_reconnect_try(account->reconnect) )
             g_warning("Too many reconnect tries for account %s", account->name);
     }
 }
@@ -325,7 +325,7 @@ _eventd_im_global_parse(EventdPluginContext *context, GKeyFile *config_file)
         return;
 
     gchar **names;
-    if ( libeventd_config_key_file_get_string_list(config_file, "IM", "Accounts", &names, NULL) < 0 )
+    if ( evhelpers_config_key_file_get_string_list(config_file, "IM", "Accounts", &names, NULL) < 0 )
         return;
 
     gchar **name, *section;
@@ -344,19 +344,19 @@ _eventd_im_global_parse(EventdPluginContext *context, GKeyFile *config_file)
         if ( ! g_key_file_has_group(config_file, section) )
             goto next;
 
-        if ( libeventd_config_key_file_get_string(config_file, section, "Protocol", &protocol) < 0 )
+        if ( evhelpers_config_key_file_get_string(config_file, section, "Protocol", &protocol) < 0 )
             goto next;
-        if ( libeventd_config_key_file_get_string(config_file, section, "Username", &username) < 0 )
+        if ( evhelpers_config_key_file_get_string(config_file, section, "Username", &username) < 0 )
             goto next;
-        if ( libeventd_config_key_file_get_string(config_file, section, "Password", &password) < 0 )
+        if ( evhelpers_config_key_file_get_string(config_file, section, "Password", &password) < 0 )
             goto next;
-        if ( libeventd_config_key_file_get_int(config_file, section, "Port", &port) < 0 )
+        if ( evhelpers_config_key_file_get_int(config_file, section, "Port", &port) < 0 )
             goto next;
-        if ( libeventd_config_key_file_get_int_with_default(config_file, section, "ReconnectTimeout", 5, &reconnect_timeout) < 0 )
+        if ( evhelpers_config_key_file_get_int_with_default(config_file, section, "ReconnectTimeout", 5, &reconnect_timeout) < 0 )
             goto next;
-        if ( libeventd_config_key_file_get_int_with_default(config_file, section, "ReconnectMaxTries", 10, &reconnect_max_tries) < 0 )
+        if ( evhelpers_config_key_file_get_int_with_default(config_file, section, "ReconnectMaxTries", 10, &reconnect_max_tries) < 0 )
             goto next;
-        if ( libeventd_config_key_file_get_int_with_default(config_file, section, "ChatLeaveTimeout", 1200, &leave_timeout) < 0 )
+        if ( evhelpers_config_key_file_get_int_with_default(config_file, section, "ChatLeaveTimeout", 1200, &leave_timeout) < 0 )
             goto next;
 
         prpl = purple_find_prpl(protocol);
@@ -386,7 +386,7 @@ _eventd_im_global_parse(EventdPluginContext *context, GKeyFile *config_file)
 
         account->convs = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) purple_conversation_destroy);
 
-        account->reconnect = libeventd_reconnect_new(reconnect_timeout, reconnect_max_tries, _eventd_im_account_reconnect_callback, account);
+        account->reconnect = evhelpers_reconnect_new(reconnect_timeout, reconnect_max_tries, _eventd_im_account_reconnect_callback, account);
 
         account->leave_timeout = leave_timeout;
 
@@ -408,7 +408,7 @@ _eventd_im_event_parse(EventdPluginContext *context, const gchar *config_id, GKe
     if ( g_key_file_has_group(config_file, "IM") )
     {
         gboolean disable;
-        if ( libeventd_config_key_file_get_boolean(config_file, "IM", "Disable", &disable) < 0 )
+        if ( evhelpers_config_key_file_get_boolean(config_file, "IM", "Disable", &disable) < 0 )
             return;
 
         if ( disable )
@@ -434,11 +434,11 @@ _eventd_im_event_parse(EventdPluginContext *context, const gchar *config_id, GKe
         have_account = TRUE;
 
         FormatString *message = NULL;
-        if ( libeventd_config_key_file_get_locale_format_string(config_file, section, "Message", NULL, &message) != 0 )
+        if ( evhelpers_config_key_file_get_locale_format_string(config_file, section, "Message", NULL, &message) != 0 )
             goto next;
 
         gchar **channels;
-        libeventd_config_key_file_get_string_list(config_file, section, "Channels", &channels, NULL);
+        evhelpers_config_key_file_get_string_list(config_file, section, "Channels", &channels, NULL);
 
         /*
          * TODO: private messages
@@ -514,7 +514,7 @@ _eventd_im_stop(EventdPluginContext *context)
     {
         EventdImAccount *account = account_->data;
         account->started = FALSE;
-        libeventd_reconnect_reset(account->reconnect);
+        evhelpers_reconnect_reset(account->reconnect);
         purple_account_disconnect(account->account);
     }
 }
@@ -549,7 +549,7 @@ _eventd_im_event_action(EventdPluginContext *context, const gchar *config_id, Ev
         gchar *message;
 
         gc = purple_account_get_connection(account->account->account);
-        message = libeventd_format_string_get_string(account->message, event, NULL, NULL);
+        message = evhelpers_format_string_get_string(account->message, event, NULL, NULL);
 
         GList *conv_;
         for ( conv_ = account->convs ; conv_ != NULL ; conv_ = g_list_next(conv_) )

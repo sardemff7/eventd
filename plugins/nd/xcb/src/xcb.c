@@ -39,7 +39,7 @@
 #include <xcb/shape.h>
 
 #include <libeventd-event.h>
-#include <libeventd-config.h>
+#include <libeventd-helpers-config.h>
 
 #include <eventd-nd-backend.h>
 
@@ -105,7 +105,7 @@ _eventd_nd_xcb_global_parse(EventdNdBackendContext *context, GKeyFile *config_fi
     if ( ! g_key_file_has_group(config_file, "NotificationXcb") )
         return;
 
-    libeventd_config_key_file_get_string_list(config_file, "NotificationXcb", "Outputs", &context->outputs, NULL);
+    evhelpers_config_key_file_get_string_list(config_file, "NotificationXcb", "Outputs", &context->outputs, NULL);
 }
 
 static xcb_visualtype_t *

@@ -32,7 +32,7 @@ im_la_LDFLAGS = \
 im_la_LIBADD = \
 	libeventd-event.la \
 	libeventd-plugin.la \
-	libeventd.la \
+	libeventd-helpers.la \
 	$(PURPLE_LIBS) \
 	$(GMODULE_LIBS) \
 	$(GLIB_LIBS) \

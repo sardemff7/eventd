@@ -29,7 +29,7 @@
 #include <libeventd-event.h>
 #include <eventd-plugin.h>
 #include <libeventd-evp.h>
-#include <libeventd-config.h>
+#include <libeventd-helpers-config.h>
 
 #include "avahi.h"
 
@@ -403,7 +403,7 @@ _eventd_evp_global_parse(EventdPluginContext *context, GKeyFile *config_file)
     if ( ! g_key_file_has_group(config_file, "Server") )
         return;
 
-    if ( libeventd_config_key_file_get_string(config_file, "Server", "AvahiName", &avahi_name) < 0 )
+    if ( evhelpers_config_key_file_get_string(config_file, "Server", "AvahiName", &avahi_name) < 0 )
         return;
     if ( avahi_name != NULL )
     {
@@ -421,7 +421,7 @@ _eventd_evp_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile 
     if ( ! g_key_file_has_group(config_file, "Event") )
         return;
 
-    r = libeventd_config_key_file_get_boolean(config_file, "Event", "Disable", &disable);
+    r = evhelpers_config_key_file_get_boolean(config_file, "Event", "Disable", &disable);
     if ( r < 0 )
         return;
 

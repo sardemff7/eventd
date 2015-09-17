@@ -32,7 +32,7 @@
 
 #include <libeventd-event.h>
 #include <eventd-plugin.h>
-#include <libeventd-config.h>
+#include <libeventd-helpers-config.h>
 
 
 #include "server.h"
@@ -218,7 +218,7 @@ _eventd_relay_event_parse(EventdPluginContext *context, const gchar *id, GKeyFil
     if ( ! g_key_file_has_group(config_file, "Relay") )
         return;
 
-    if ( libeventd_config_key_file_get_boolean(config_file, "Relay", "Disable", &disable) < 0 )
+    if ( evhelpers_config_key_file_get_boolean(config_file, "Relay", "Disable", &disable) < 0 )
         return;
     if ( disable )
     {
@@ -229,7 +229,7 @@ _eventd_relay_event_parse(EventdPluginContext *context, const gchar *id, GKeyFil
     GList *list = NULL;
 
     gchar **server_uris;
-    if ( libeventd_config_key_file_get_string_list(config_file, "Relay", "Servers", &server_uris, NULL) == 0 )
+    if ( evhelpers_config_key_file_get_string_list(config_file, "Relay", "Servers", &server_uris, NULL) == 0 )
     {
         gchar **server_uri;
         for ( server_uri = server_uris ; *server_uri != NULL ; ++server_uri )
@@ -252,7 +252,7 @@ _eventd_relay_event_parse(EventdPluginContext *context, const gchar *id, GKeyFil
 
 #ifdef ENABLE_AVAHI
     gchar **avahi_names;
-    if ( ( context->avahi != NULL ) && ( libeventd_config_key_file_get_string_list(config_file, "Relay", "Avahi", &avahi_names, NULL) == 0 ) )
+    if ( ( context->avahi != NULL ) && ( evhelpers_config_key_file_get_string_list(config_file, "Relay", "Avahi", &avahi_names, NULL) == 0 ) )
     {
         gchar **avahi_name;
         for ( avahi_name = avahi_names ; *avahi_name != NULL ; ++avahi_name )

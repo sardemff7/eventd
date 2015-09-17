@@ -33,7 +33,7 @@
 
 #include <eventd-plugin.h>
 #include <libeventd-event.h>
-#include <libeventd-config.h>
+#include <libeventd-helpers-config.h>
 
 struct _EventdPluginContext {
     GHashTable *events;
@@ -62,7 +62,7 @@ _eventd_tts_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *inter
 
     context = g_new0(EventdPluginContext, 1);
 
-    context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)libeventd_format_string_unref);
+    context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)evhelpers_format_string_unref);
 
     return context;
 }
@@ -102,12 +102,12 @@ _eventd_tts_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile 
     if ( ! g_key_file_has_group(config_file, "TTS") )
         return;
 
-    if ( libeventd_config_key_file_get_boolean(config_file, "TTS", "Disable", &disable) < 0 )
+    if ( evhelpers_config_key_file_get_boolean(config_file, "TTS", "Disable", &disable) < 0 )
         return;
 
     if ( ! disable )
     {
-        if ( libeventd_config_key_file_get_locale_format_string_with_default(config_file, "TTS", "Message", NULL, "<voice name=\"${message-lang}\">${message}</voice>", &message) < 0 )
+        if ( evhelpers_config_key_file_get_locale_format_string_with_default(config_file, "TTS", "Message", NULL, "<voice name=\"${message-lang}\">${message}</voice>", &message) < 0 )
             return;
     }
 
@@ -136,7 +136,7 @@ _eventd_tts_event_action(EventdPluginContext *context, const gchar *config_id, E
     if ( message == NULL )
         return;
 
-    msg = libeventd_format_string_get_string(message, event, NULL, NULL);
+    msg = evhelpers_format_string_get_string(message, event, NULL, NULL);
 
     error = espeak_Synth(msg, strlen(msg)+1, 0, POS_CHARACTER, 0, espeakCHARS_UTF8|espeakSSML, NULL, NULL);
 

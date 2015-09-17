@@ -34,7 +34,7 @@
 
 #include <eventd-plugin.h>
 #include <libeventd-event.h>
-#include <libeventd-config.h>
+#include <libeventd-helpers-config.h>
 
 #include <eventd-nd-backend.h>
 
@@ -331,16 +331,16 @@ _eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
         guint64 enum_value;
         gboolean boolean;
 
-        if ( libeventd_config_key_file_get_enum(config_file, "Notification", "Anchor", _eventd_nd_corner_anchors, G_N_ELEMENTS(_eventd_nd_corner_anchors), &enum_value) == 0 )
+        if ( evhelpers_config_key_file_get_enum(config_file, "Notification", "Anchor", _eventd_nd_corner_anchors, G_N_ELEMENTS(_eventd_nd_corner_anchors), &enum_value) == 0 )
                 context->bubble_anchor = enum_value;
 
-        if ( libeventd_config_key_file_get_boolean(config_file, "Notification", "OldestFirst", &boolean) == 0 )
+        if ( evhelpers_config_key_file_get_boolean(config_file, "Notification", "OldestFirst", &boolean) == 0 )
             context->bubble_reverse = boolean;
 
-        if ( libeventd_config_key_file_get_int(config_file, "Notification", "Margin", &integer) == 0 )
+        if ( evhelpers_config_key_file_get_int(config_file, "Notification", "Margin", &integer) == 0 )
             context->bubble_margin = integer.value;
 
-        if ( libeventd_config_key_file_get_int(config_file, "Notification", "Spacing", &integer) == 0 )
+        if ( evhelpers_config_key_file_get_int(config_file, "Notification", "Spacing", &integer) == 0 )
             context->bubble_spacing = integer.value;
     }
 
@@ -366,7 +366,7 @@ _eventd_nd_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile *
     if ( ! g_key_file_has_group(config_file, "Notification") )
         return;
 
-    if ( libeventd_config_key_file_get_boolean(config_file, "Notification", "Disable", &disable) < 0 )
+    if ( evhelpers_config_key_file_get_boolean(config_file, "Notification", "Disable", &disable) < 0 )
         return;
 
     if ( ! disable )

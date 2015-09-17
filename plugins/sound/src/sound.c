@@ -29,7 +29,7 @@
 
 #include <eventd-plugin.h>
 #include <libeventd-event.h>
-#include <libeventd-config.h>
+#include <libeventd-helpers-config.h>
 
 #include "pulseaudio.h"
 
@@ -123,7 +123,7 @@ _eventd_sound_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *int
 
     context = g_new0(EventdPluginContext, 1);
 
-    context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)libeventd_filename_unref);
+    context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)evhelpers_filename_unref);
 
     context->pulseaudio = eventd_sound_pulseaudio_init();
 
@@ -168,12 +168,12 @@ _eventd_sound_event_parse(EventdPluginContext *context, const gchar *id, GKeyFil
     if ( ! g_key_file_has_group(config_file, "Sound") )
         return;
 
-    if ( libeventd_config_key_file_get_boolean(config_file, "Sound", "Disable", &disable) < 0 )
+    if ( evhelpers_config_key_file_get_boolean(config_file, "Sound", "Disable", &disable) < 0 )
         return;
 
     if ( ! disable )
     {
-        if ( libeventd_config_key_file_get_filename_with_default(config_file, "Sound", "File", "sound-file", &sound) < 0 )
+        if ( evhelpers_config_key_file_get_filename_with_default(config_file, "Sound", "File", "sound-file", &sound) < 0 )
             return;
     }
 
@@ -206,7 +206,7 @@ _eventd_sound_event_action(EventdPluginContext *context, const gchar *config_id,
     if ( sound == NULL )
         return;
 
-    if ( libeventd_filename_get_path(sound, event, "sounds", NULL, &file) )
+    if ( evhelpers_filename_get_path(sound, event, "sounds", NULL, &file) )
     {
         if ( file != NULL )
             _eventd_sound_read_file(file, &data, &length, &format, &rate, &channels);

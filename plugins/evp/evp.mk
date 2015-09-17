@@ -44,7 +44,7 @@ evp_la_LIBADD = \
 	libeventd-event.la \
 	libeventd-evp.la \
 	libeventd-plugin.la \
-	libeventd.la \
+	libeventd-helpers.la \
 	$(AVAHI_LIBS) \
 	$(GIO_LIBS) \
 	$(GOBJECT_LIBS) \

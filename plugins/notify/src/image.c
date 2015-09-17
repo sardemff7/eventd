@@ -24,7 +24,7 @@
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
 #include <libeventd-event.h>
-#include <libeventd-config.h>
+#include <libeventd-helpers-config.h>
 
 #include "image.h"
 
@@ -90,7 +90,7 @@ eventd_libnotify_get_image(EventdEvent *event, const Filename *image_name, const
     GdkPixbuf *image = NULL;
     GdkPixbuf *icon = NULL;
 
-    if ( libeventd_filename_get_path(image_name, event, "icons", &data, &file) )
+    if ( evhelpers_filename_get_path(image_name, event, "icons", &data, &file) )
     {
         if ( file != NULL )
             image = _eventd_libnotify_icon_get_pixbuf_from_file(file);
@@ -99,7 +99,7 @@ eventd_libnotify_get_image(EventdEvent *event, const Filename *image_name, const
         g_free(file);
     }
 
-    if ( libeventd_filename_get_path(icon_name, event, "icons", &data, &file) )
+    if ( evhelpers_filename_get_path(icon_name, event, "icons", &data, &file) )
     {
         if ( file != NULL )
         {

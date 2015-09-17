@@ -34,7 +34,7 @@ canberra_la_LDFLAGS = \
 canberra_la_LIBADD = \
 	libeventd-event.la \
 	libeventd-plugin.la \
-	libeventd.la \
+	libeventd-helpers.la \
 	$(CANBERRA_LIBS) \
 	$(GLIB_LIBS) \
 	$(null)

@@ -30,7 +30,7 @@
 #include <pango/pango.h>
 #include <pango/pangocairo.h>
 
-#include <libeventd-config.h>
+#include <libeventd-helpers-config.h>
 
 #include "style.h"
 
