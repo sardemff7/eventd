@@ -36,7 +36,7 @@ sound_la_LDFLAGS = \
 	$(null)
 
 sound_la_LIBADD = \
-	libeventd-event.la \
+	libeventd.la \
 	libeventd-plugin.la \
 	libeventd-helpers.la \
 	$(SNDFILE_LIBS) \

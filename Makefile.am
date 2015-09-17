@@ -59,7 +59,7 @@ AM_XSLTPROCFLAGS += \
 	$(null)
 
 
-include server/libeventd-event/libeventd-event.mk
+include server/libeventd/libeventd.mk
 include server/libeventd-evp/libeventd-evp.mk
 include server/libeventd-helpers/libeventd-helpers.mk
 include server/eventd/eventd.mk

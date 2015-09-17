@@ -41,7 +41,7 @@ evp_la_LDFLAGS = \
 	$(null)
 
 evp_la_LIBADD = \
-	libeventd-event.la \
+	libeventd.la \
 	libeventd-evp.la \
 	libeventd-plugin.la \
 	libeventd-helpers.la \

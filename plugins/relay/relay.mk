@@ -43,7 +43,7 @@ relay_la_LDFLAGS = \
 	$(null)
 
 relay_la_LIBADD = \
-	libeventd-event.la \
+	libeventd.la \
 	libeventd-evp.la \
 	libeventd-plugin.la \
 	libeventd-helpers.la \
@@ -67,7 +67,7 @@ relay_connection_test_CFLAGS = \
 
 relay_connection_test_LDADD = \
 	libeventd-test.la \
-	libeventd-event.la \
+	libeventd.la \
 	libeventc.la \
 	$(GIO_LIBS) \
 	$(GOBJECT_LIBS) \

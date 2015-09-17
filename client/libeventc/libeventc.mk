@@ -59,7 +59,7 @@ libeventc_la_LDFLAGS = \
 	$(null)
 
 libeventc_la_LIBADD = \
-	libeventd-event.la \
+	libeventd.la \
 	libeventd-evp.la \
 	$(GIO_LIBS) \
 	$(GOBJECT_LIBS) \
@@ -83,8 +83,8 @@ libeventc_connection_test_LDADD = \
 	$(GLIB_LIBS) \
 	$(null)
 
-Eventc-0.gir: EventdEvent-0.gir libeventc.la
-Eventc_0_gir_INCLUDES = GObject-2.0 Gio-2.0 EventdEvent-0
+Eventc-0.gir: Eventd-0.gir libeventc.la
+Eventc_0_gir_INCLUDES = GObject-2.0 Gio-2.0 Eventd-0
 Eventc_0_gir_CFLAGS = $(AM_CPPFLAGS) $(libeventc_la_CFLAGS) $(CPPFLAGS) $(CFLAGS)
 Eventc_0_gir_LIBS = libeventc.la
 Eventc_0_gir_FILES = $(filter-out %-private.h,$(libeventc_la_SOURCES))

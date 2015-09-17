@@ -32,7 +32,7 @@ notify_la_LDFLAGS = \
 	$(null)
 
 notify_la_LIBADD = \
-	libeventd-event.la \
+	libeventd.la \
 	libeventd-plugin.la \
 	libeventd-helpers.la \
 	$(NOTIFY_LIBS) \

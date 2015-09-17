@@ -33,7 +33,7 @@ libeventd_test_la_LDFLAGS = \
 	$(null)
 
 libeventd_test_la_LIBADD = \
-	libeventd-event.la \
+	libeventd.la \
 	libeventc.la \
 	$(GIO_LIBS) \
 	$(GOBJECT_LIBS) \

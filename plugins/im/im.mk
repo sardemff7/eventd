@@ -30,7 +30,7 @@ im_la_LDFLAGS = \
 	$(null)
 
 im_la_LIBADD = \
-	libeventd-event.la \
+	libeventd.la \
 	libeventd-plugin.la \
 	libeventd-helpers.la \
 	$(PURPLE_LIBS) \

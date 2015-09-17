@@ -25,7 +25,7 @@ exec_la_LDFLAGS = \
 	$(null)
 
 exec_la_LIBADD = \
-	libeventd-event.la \
+	libeventd.la \
 	libeventd-plugin.la \
 	libeventd-helpers.la \
 	$(GLIB_LIBS) \

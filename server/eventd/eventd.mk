@@ -51,7 +51,7 @@ eventd_CFLAGS = \
 	$(null)
 
 eventd_LDADD = \
-	libeventd-event.la \
+	libeventd.la \
 	libeventd-helpers.la \
 	$(SYSTEMD_LIBS) \
 	$(AVAHI_LIBS) \

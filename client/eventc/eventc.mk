@@ -15,7 +15,7 @@ eventc_CFLAGS = \
 	$(null)
 
 eventc_LDADD = \
-	libeventd-event.la \
+	libeventd.la \
 	libeventc.la \
 	$(GIO_LIBS) \
 	$(GOBJECT_LIBS) \

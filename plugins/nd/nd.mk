@@ -61,7 +61,7 @@ nd_la_LDFLAGS = \
 	$(null)
 
 nd_la_LIBADD = \
-	libeventd-event.la \
+	libeventd.la \
 	libeventd-plugin.la \
 	libeventd-helpers.la \
 	$(GDK_PIXBUF_LIBS) \

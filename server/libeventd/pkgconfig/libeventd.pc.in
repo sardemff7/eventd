@@ -5,10 +5,10 @@ includedir=@includedir@
 
 pkgincludedir=@pkgincludedir@
 
-Name: libeventd-event
-Description: Library to manipulate eventd events
+Name: libeventd
+Description: Main eventd library
 URL: http://www.eventd.org/
 Version: @VERSION@
 Requires: gobject-2.0 glib-2.0
-Libs: -L${libdir} -leventd-event
+Libs: -L${libdir} -leventd
 Cflags: -I${pkgincludedir}

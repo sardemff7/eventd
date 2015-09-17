@@ -36,7 +36,7 @@ fdo_notifications_la_LDFLAGS = \
 	$(null)
 
 fdo_notifications_la_LIBADD = \
-	libeventd-event.la \
+	libeventd.la \
 	libeventd-plugin.la \
 	$(GIO_LIBS) \
 	$(GOBJECT_LIBS) \

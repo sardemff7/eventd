@@ -32,7 +32,7 @@ xcb_la_LDFLAGS = \
 	$(null)
 
 xcb_la_LIBADD = \
-	libeventd-event.la \
+	libeventd.la \
 	libeventd-helpers.la \
 	$(XCB_LIBS) \
 	$(CAIRO_LIBS) \

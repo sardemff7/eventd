@@ -36,7 +36,7 @@ libeventd_helpers_la_LDFLAGS = \
 	$(null)
 
 libeventd_helpers_la_LIBADD = \
-	libeventd-event.la \
+	libeventd.la \
 	$(NKUTILS_LIBS) \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS) \

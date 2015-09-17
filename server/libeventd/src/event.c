@@ -1,5 +1,5 @@
 /*
- * libeventd-event - Library to manipulate eventd events
+ * libeventd-event - Main eventd library - Event manipulation
  *
  * Copyright © 2011-2015 Quentin "Sardem FF7" Glidic
  *

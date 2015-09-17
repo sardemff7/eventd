@@ -25,7 +25,7 @@ test_plugin_la_LDFLAGS = \
 	$(null)
 
 test_plugin_la_LIBADD = \
-	libeventd-event.la \
+	libeventd.la \
 	libeventd-plugin.la \
 	$(GLIB_LIBS) \
 	$(null)

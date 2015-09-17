@@ -32,7 +32,7 @@ libeventd_evp_la_LDFLAGS = \
 	$(null)
 
 libeventd_evp_la_LIBADD = \
-	libeventd-event.la \
+	libeventd.la \
 	$(GIO_LIBS) \
 	$(GLIB_LIBS) \
 	$(null)
