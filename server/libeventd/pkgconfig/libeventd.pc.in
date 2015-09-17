@@ -4,6 +4,7 @@ libdir=@libdir@
 includedir=@includedir@
 
 pkgincludedir=@pkgincludedir@
+pkglibdir=@pkglibdir@
 
 Name: libeventd
 Description: Main eventd library
