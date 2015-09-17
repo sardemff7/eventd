@@ -117,7 +117,8 @@ _eventd_evp_answered(gpointer data, LibeventdEvpContext *evp, const gchar *id, c
     if ( evp_event == NULL )
         return;
 
-    eventd_event_set_all_answer_data(evp_event->event, g_hash_table_ref(data_hash));
+    if ( data_hash != NULL )
+        eventd_event_set_all_answer_data(evp_event->event, g_hash_table_ref(data_hash));
     g_signal_handler_disconnect(evp_event->event, evp_event->answered_handler);
     evp_event->answered_handler = 0;
     eventd_event_answer(evp_event->event, answer);
