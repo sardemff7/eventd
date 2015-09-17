@@ -21,7 +21,7 @@
  */
 
 #include "common.h"
-#include "getters.h"
+#include "event-getters.h"
 
 typedef struct {
     EventdEvent *event;

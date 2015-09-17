@@ -21,8 +21,8 @@
  */
 
 #include "common.h"
-#include "setters.h"
-#include "getters.h"
+#include "event-setters.h"
+#include "event-getters.h"
 
 int
 main(int argc, char *argv[])

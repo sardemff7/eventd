@@ -63,11 +63,11 @@ libeventd_la_LIBADD = \
 
 
 libeventd_event_test_SOURCES = \
-	server/libeventd/tests/unit/getters.c \
-	server/libeventd/tests/unit/getters.h \
-	server/libeventd/tests/unit/setters.c \
-	server/libeventd/tests/unit/setters.h \
 	server/libeventd/tests/unit/common.h \
+	server/libeventd/tests/unit/event-getters.c \
+	server/libeventd/tests/unit/event-getters.h \
+	server/libeventd/tests/unit/event-setters.c \
+	server/libeventd/tests/unit/event-setters.h \
 	server/libeventd/tests/unit/libeventd-event.c \
 	$(null)
 
