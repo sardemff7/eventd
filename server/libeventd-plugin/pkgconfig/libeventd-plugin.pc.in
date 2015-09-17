@@ -14,5 +14,6 @@ Description: Library to implement an eventd plugin
 URL: http://www.eventd.org/
 Version: @VERSION@
 Requires: gobject-2.0 glib-2.0
+Requires.private: libeventd
 Libs: -L${libdir} -leventd-plugin
 Cflags: -I${pkgincludedir}
