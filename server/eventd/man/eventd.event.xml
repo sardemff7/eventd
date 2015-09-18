@@ -26,6 +26,7 @@
 -->
 
 <refentry xmlns:xi="http://www.w3.org/2001/XInclude"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
     id="eventd.event">
     <xi:include href="common-man.xml" xpointer="refentryinfo" />
 
@@ -49,11 +50,12 @@
         </para>
         <para>eventd will search for event files in following directories:</para>
         <orderedlist>
-            <listitem><para><filename id="default-events-dir">&datadir;/&PACKAGE_NAME;</filename></para></listitem>
-            <listitem><para><filename>&sysconfdir;/&PACKAGE_NAME;</filename></para></listitem>
+            <listitem><para><filename id="default-events-dir">/usr/share/&PACKAGE_NAME;</filename></para></listitem>
+            <listitem><para><filename>/etc/&PACKAGE_NAME;</filename></para></listitem>
             <listitem><para><phrase id="home-events-dir"><filename><varname>$XDG_CONFIG_HOME</varname>/&PACKAGE_NAME;</filename> (fallback to <filename>~/.config/&PACKAGE_NAME;</filename>)</phrase></para></listitem>
             <listitem><para><filename><varname>$EVENTD_CONFIG_DIR</varname></filename> (see <citerefentry><refentrytitle>eventd</refentrytitle><manvolnum>1</manvolnum></citerefentry>)</para></listitem>
         </orderedlist>
+        <para>These paths are standard paths. Actual paths may depend on your configuration, see <link xlink:href="eventd#paths-option"><command>eventd <option>-P</option></command> output</link>.</para>
         <para>
             eventd will also walk through subdirectories, to let you organize your events.
         </para>

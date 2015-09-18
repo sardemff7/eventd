@@ -80,10 +80,11 @@
 
         <para>When eventd starts, it loads all the available plugins found in the following directories:</para>
         <orderedlist>
-            <listitem><para><filename>&libdir;/&PACKAGE_NAME;</filename></para></listitem>
+            <listitem><para><filename>/usr/lib/&PACKAGE_NAME;</filename> (actual path depends on your configuration)</para></listitem>
             <listitem><para><filename><varname>$XDG_DATA_HOME</varname>/&PACKAGE_NAME;</filename> (fallback to <filename>~/.local/share/&PACKAGE_NAME;</filename>)</para></listitem>
             <listitem><para><filename><varname>$EVENTD_PLUGINS_DIR</varname></filename> (see <xref linkend="environment" />)</para></listitem>
         </orderedlist>
+        <para>These paths are standard paths. Actual paths may depend on your configuration, see <link linkend="paths-option"><command>eventd <option>-P</option></command> output</link>.</para>
 
         <refsect2>
             <title>Event collection plugins</title>
@@ -168,6 +169,14 @@
                 <listitem>
                     <para>Socket to listen for internal control</para>
                     <para>See <citerefentry><refentrytitle>eventdctl</refentrytitle><manvolnum>1</manvolnum></citerefentry></para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry id="paths-option" xreflabel="">
+                <term><option>-P</option></term>
+                <term><option>--paths</option></term>
+                <listitem>
+                    <para>Print plugins, configuration and events search paths</para>
                 </listitem>
             </varlistentry>
 
