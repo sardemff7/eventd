@@ -277,7 +277,7 @@ eventd_core_stop(EventdCoreContext *context)
         g_main_loop_quit(context->loop);
 }
 
-#ifdef DEBUG
+#ifdef EVENTD_DEBUG
 #define PID_MAXLEN 128 + 1 /* \0 */
 static void
 _eventd_core_debug_log_handler(const gchar *log_domain, GLogLevelFlags log_level, const gchar *message, gpointer user_data)
@@ -338,7 +338,7 @@ _eventd_core_debug_log_handler(const gchar *log_domain, GLogLevelFlags log_level
     g_data_output_stream_put_byte(stream, '\n', NULL, NULL);
 }
 
-#endif /* ! DEBUG */
+#endif /* ! EVENTD_DEBUG */
 
 #ifdef G_OS_UNIX
 static gboolean
@@ -369,9 +369,9 @@ main(int argc, char *argv[])
     GOptionContext *option_context = NULL;
     GOptionGroup *option_group;
 
-#ifdef DEBUG
+#ifdef EVENTD_DEBUG
     g_setenv("G_MESSAGES_DEBUG", "all", FALSE);
-#endif /* DEBUG */
+#endif /* EVENTD_DEBUG */
 
     setlocale(LC_ALL, "");
 #ifdef ENABLE_NLS
@@ -385,7 +385,7 @@ main(int argc, char *argv[])
         return EVENTD_RETURN_CODE_FILESYSTEM_ENCODING_ERROR;
     }
 
-#ifdef DEBUG
+#ifdef EVENTD_DEBUG
     const gchar *debug_log_filename =  g_getenv("EVENTD_DEBUG_LOG_FILENAME");
     GDataOutputStream *debug_stream = NULL;
 
@@ -414,7 +414,7 @@ main(int argc, char *argv[])
         }
         g_object_unref(debug_log);
     }
-#endif /* DEBUG */
+#endif /* EVENTD_DEBUG */
 
     context = g_new0(EventdCoreContext, 1);
 
@@ -529,10 +529,10 @@ end:
 
     g_free(context);
 
-#ifdef DEBUG
+#ifdef EVENTD_DEBUG
     if ( debug_stream != NULL )
         g_object_unref(debug_stream);
-#endif /* DEBUG */
+#endif /* EVENTD_DEBUG */
 
     return retval;
 }

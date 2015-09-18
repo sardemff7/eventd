@@ -242,9 +242,9 @@ libeventd_evp_context_send_message(LibeventdEvpContext *self, const gchar *messa
     g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
 
-#ifdef DEBUG
+#ifdef EVENTD_DEBUG
     g_debug("Sending line: %s", message);
-#endif /* DEBUG */
+#endif /* EVENTD_DEBUG */
 
     if ( ! g_data_output_stream_put_string(self->out, message, self->cancellable, &_inner_error_) )
     {

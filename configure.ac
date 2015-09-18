@@ -305,7 +305,7 @@ dnl AC_ARG_ENABLE([tests], AS_HELP_STRING([--enable-tests], [Build tests]), [], 
 # Debug flags
 AC_ARG_ENABLE([debug], AS_HELP_STRING([--enable-debug], [Enable debug]), [], [enable_debug=no])
 if test x${enable_debug} = xyes; then
-    AC_DEFINE([DEBUG], [1], [Activate debug mode])
+    AC_DEFINE([EVENTD_DEBUG], [1], [Activate debug mode])
 fi
 
 AC_SUBST([AM_CFLAGS])

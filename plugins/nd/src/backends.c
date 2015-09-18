@@ -50,9 +50,9 @@ _eventd_nd_backends_load_dir(EventdNdContext *context, EventdNdInterface *interf
     const gchar *file;
 
 
-#ifdef DEBUG
+#ifdef EVENTD_DEBUG
     g_debug("Scanning notification backends dir: %s", backends_dir_name);
-#endif /* DEBUG */
+#endif /* EVENTD_DEBUG */
 
     plugins_dir = g_dir_open(backends_dir_name, 0, &error);
     if ( ! plugins_dir )
@@ -133,18 +133,18 @@ _eventd_nd_backends_load_dir(EventdNdContext *context, EventdNdInterface *interf
 
         if ( g_hash_table_contains(backends, *id) )
         {
-#ifdef DEBUG
+#ifdef EVENTD_DEBUG
             g_debug("Backend '%s' with id '%s' already loaded", file, *id);
-#endif /* ! DEBUG */
+#endif /* ! EVENTD_DEBUG */
             continue;
         }
 
         if ( ! g_module_symbol(module, "eventd_nd_backend_get_info", (void **)&get_info) )
             continue;
 
-#ifdef DEBUG
+#ifdef EVENTD_DEBUG
         g_debug("Loading backend '%s': %s", file, *id);
-#endif /* ! DEBUG */
+#endif /* ! EVENTD_DEBUG */
 
         backend = g_new0(EventdNdBackend, 1);
         get_info(backend);

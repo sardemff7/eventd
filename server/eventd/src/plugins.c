@@ -54,9 +54,9 @@ _eventd_plugins_load_dir(EventdPluginCoreContext *core, EventdPluginCoreInterfac
     const gchar *file;
 
 
-#ifdef DEBUG
+#ifdef EVENTD_DEBUG
     g_debug("Scanning plugins dir: %s", plugins_dir_name);
-#endif /* DEBUG */
+#endif /* EVENTD_DEBUG */
 
     plugins_dir = g_dir_open(plugins_dir_name, 0, &error);
     if ( ! plugins_dir )
@@ -137,18 +137,18 @@ _eventd_plugins_load_dir(EventdPluginCoreContext *core, EventdPluginCoreInterfac
 
         if ( g_hash_table_contains(plugins, *id) )
         {
-#ifdef DEBUG
+#ifdef EVENTD_DEBUG
             g_debug("Plugin '%s' with id '%s' already loaded", file, *id);
-#endif /* ! DEBUG */
+#endif /* ! EVENTD_DEBUG */
             continue;
         }
 
         if ( ! g_module_symbol(module, "eventd_plugin_get_interface", (void **)&get_interface) )
             continue;
 
-#ifdef DEBUG
+#ifdef EVENTD_DEBUG
         g_debug("Loading plugin '%s': %s", file, *id);
-#endif /* ! DEBUG */
+#endif /* ! EVENTD_DEBUG */
 
         plugin = g_new0(EventdPlugin, 1);
         plugin->module = module;

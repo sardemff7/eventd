@@ -146,15 +146,15 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
                   &hints,
                   &timeout);
 
-#ifdef DEBUG
+#ifdef EVENTD_DEBUG
     g_debug("Received notification from '%s': '%s'", app_name, summary);
-#endif /* DEBUG */
+#endif /* EVENTD_DEBUG */
 
     while ( g_variant_iter_next(hints, "{&sv}", &hint_name, &hint) )
     {
-#ifdef DEBUG
+#ifdef EVENTD_DEBUG
         g_debug("Found hint '%s'", hint_name);
-#endif /* DEBUG */
+#endif /* EVENTD_DEBUG */
 
         if ( g_strcmp0(hint_name, "urgency") == 0 )
             urgency = g_variant_get_byte(hint);
@@ -179,9 +179,9 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
         g_variant_unref(hint);
     }
 
-#ifdef DEBUG
+#ifdef EVENTD_DEBUG
     g_debug("Creating event '%s' for client '%s' ", event_name, app_name);
-#endif /* DEBUG */
+#endif /* EVENTD_DEBUG */
 
     if ( id > 0 )
     {
@@ -207,9 +207,9 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
 
     if ( ( icon != NULL ) && ( *icon != 0 ) )
     {
-#ifdef DEBUG
+#ifdef EVENTD_DEBUG
         g_debug("Icon specified: '%s'", icon);
-#endif /* DEBUG */
+#endif /* EVENTD_DEBUG */
 
         if ( g_str_has_prefix(icon, "file://") )
             eventd_event_add_data(event, g_strdup("icon"), g_strdup(icon));
@@ -391,17 +391,17 @@ _eventd_fdo_notifications_on_bus_acquired(GDBusConnection *connection, const gch
 static void
 _eventd_fdo_notifications_on_name_acquired(GDBusConnection *connection, const gchar *name, gpointer user_data)
 {
-#ifdef DEBUG
+#ifdef EVENTD_DEBUG
     g_debug("Acquired the name %s on the session bus", name);
-#endif /* DEBUG */
+#endif /* EVENTD_DEBUG */
 }
 
 static void
 _eventd_fdo_notifications_on_name_lost(GDBusConnection *connection, const gchar *name, gpointer user_data)
 {
-#ifdef DEBUG
+#ifdef EVENTD_DEBUG
     g_debug("Lost the name %s on the session bus", name);
-#endif /* DEBUG */
+#endif /* EVENTD_DEBUG */
 }
 
 

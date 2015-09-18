@@ -112,9 +112,9 @@ _libeventd_evp_context_receive_data_callback(GObject *source_object, GAsyncResul
     if ( line == NULL )
         return;
 
-#ifdef DEBUG
+#ifdef EVENTD_DEBUG
     g_debug("Received DATA line: %s", line);
-#endif /* DEBUG */
+#endif /* EVENTD_DEBUG */
 
     if ( g_strcmp0(line, ".") == 0 )
     {
@@ -188,9 +188,9 @@ _libeventd_evp_context_receive_event_callback(GObject *source_object, GAsyncResu
     if ( line == NULL )
         return;
 
-#ifdef DEBUG
+#ifdef EVENTD_DEBUG
     g_debug("Received EVENT line: %s", line);
-#endif /* DEBUG */
+#endif /* EVENTD_DEBUG */
 
     if ( g_strcmp0(line, ".") == 0 )
     {
@@ -237,9 +237,9 @@ _libeventd_evp_context_receive_answered_callback(GObject *source_object, GAsyncR
     if ( line == NULL )
         return;
 
-#ifdef DEBUG
+#ifdef EVENTD_DEBUG
     g_debug("Received ANSWERED line: %s", line);
-#endif /* DEBUG */
+#endif /* EVENTD_DEBUG */
 
     if ( g_strcmp0(line, ".") == 0 )
     {
@@ -273,18 +273,18 @@ _libeventd_evp_context_receive_callback(GObject *source_object, GAsyncResult *re
     if ( line == NULL )
         return;
 
-#ifdef DEBUG
+#ifdef EVENTD_DEBUG
     g_debug("Received line: %s", line);
-#endif /* DEBUG */
+#endif /* EVENTD_DEBUG */
 
     /* We proccess messages … */
     if ( g_str_has_prefix(line, "BYE")
          && ( ( line[strlen("BYE")] == '\0' ) || ( line[strlen("BYE")] == ' ' ) ) )
     {
-#ifdef DEBUG
+#ifdef EVENTD_DEBUG
         if ( line[strlen("BYE")] == ' ' )
             g_debug("Closing connection: %s", line + strlen("BYE "));
-#endif /* DEBUG */
+#endif /* EVENTD_DEBUG */
         g_free(line);
         self->interface->bye(self->client, self);
         return;

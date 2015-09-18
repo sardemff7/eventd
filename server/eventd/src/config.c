@@ -321,9 +321,9 @@ _eventd_config_parse_event_file(EventdConfig *config, const gchar *id, GKeyFile 
     gchar *category = NULL;
     gchar *name = NULL;
 
-#ifdef DEBUG
+#ifdef EVENTD_DEBUG
     g_debug("Parsing event '%s'", id);
-#endif /* DEBUG */
+#endif /* EVENTD_DEBUG */
 
     if ( evhelpers_config_key_file_get_string(config_file, "Event", "Category", &category) != 0 )
         return;
