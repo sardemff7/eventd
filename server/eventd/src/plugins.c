@@ -226,11 +226,6 @@ eventd_plugins_load(EventdPluginCoreContext *core, EventdPluginCoreInterface *in
         _eventd_plugins_load_dir(core, interface, plugins_dir, whitelist, blacklist);
     g_free(plugins_dir);
 
-    plugins_dir = g_build_filename(DATADIR, PACKAGE_NAME, "plugins", NULL);
-    if ( g_file_test(plugins_dir, G_FILE_TEST_IS_DIR) )
-        _eventd_plugins_load_dir(core, interface, plugins_dir, whitelist, blacklist);
-    g_free(plugins_dir);
-
     plugins_dir = g_build_filename(LIBDIR, PACKAGE_NAME, "plugins", NULL);
     if ( g_file_test(plugins_dir, G_FILE_TEST_IS_DIR) )
         _eventd_plugins_load_dir(core, interface, plugins_dir, whitelist, blacklist);
