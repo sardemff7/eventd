@@ -24,7 +24,6 @@ pkgconfig_DATA += \
 
 
 libeventd_plugin_la_SOURCES = \
-	%D%/include/eventd-plugin.h \
 	%D%/include/eventd-plugin-private.h \
 	%D%/src/core.c \
 	%D%/src/plugin.c \
@@ -50,5 +49,5 @@ EventdPlugin-0.gir: Eventd-0.gir libeventd-plugin.la
 EventdPlugin_0_gir_INCLUDES = GObject-2.0 Gio-2.0 Eventd-0
 EventdPlugin_0_gir_CFLAGS = $(AM_CPPFLAGS) $(libeventd_plugin_la_CFLAGS) $(CPPFLAGS) $(CFLAGS)
 EventdPlugin_0_gir_LIBS = libeventd-plugin.la
-EventdPlugin_0_gir_FILES = $(filter-out %-private.h,$(libeventd_plugin_la_SOURCES))
+EventdPlugin_0_gir_FILES = $(filter-out %.h,$(libeventd_plugin_la_SOURCES)) $(filter %D%/include/%.h,$(pkginclude_HEADERS))
 INTROSPECTION_GIRS += EventdPlugin-0.gir
