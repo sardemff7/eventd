@@ -16,14 +16,17 @@ lib_LTLIBRARIES += \
 
 pkginclude_HEADERS += \
 	%D%/include/libeventd-event.h \
+	%D%/include/libeventd-protocol.h \
 	$(null)
 
 TESTS += \
 	libeventd-event.test \
+	libeventd-protocol.test \
 	$(null)
 
 check_PROGRAMS += \
 	libeventd-event.test \
+	libeventd-protocol.test \
 	$(null)
 
 pkgconfig_DATA += \
@@ -42,6 +45,12 @@ vapi_DATA += \
 libeventd_la_SOURCES = \
 	%D%/include/libeventd-event-private.h \
 	%D%/src/event.c \
+	%D%/src/protocol-private.h \
+	%D%/src/protocol.c \
+	%D%/src/protocol-evp-private.h \
+	%D%/src/protocol-evp.c \
+	%D%/src/protocol-evp-parser.c \
+	%D%/src/protocol-evp-generator.c \
 	$(null)
 
 libeventd_la_CFLAGS = \
@@ -82,6 +91,32 @@ libeventd_event_test_CFLAGS = \
 	$(null)
 
 libeventd_event_test_LDADD = \
+	libeventd.la \
+	$(GIO_LIBS) \
+	$(GOBJECT_LIBS) \
+	$(GLIB_LIBS) \
+	$(UUID_LIBS) \
+	$(null)
+
+libeventd_protocol_test_SOURCES = \
+	%D%/src/event.c \
+	%D%/tests/unit/common.h \
+	%D%/tests/unit/protocol-parser.c \
+	%D%/tests/unit/protocol-parser.h \
+	%D%/tests/unit/protocol-generator.c \
+	%D%/tests/unit/protocol-generator.h \
+	%D%/tests/unit/libeventd-protocol.c \
+	$(null)
+
+libeventd_protocol_test_CFLAGS = \
+	$(AM_CFLAGS) \
+	$(GIO_CFLAGS) \
+	$(GOBJECT_CFLAGS) \
+	$(GLIB_CFLAGS) \
+	$(UUID_CFLAGS) \
+	$(null)
+
+libeventd_protocol_test_LDADD = \
 	libeventd.la \
 	$(GIO_LIBS) \
 	$(GOBJECT_LIBS) \

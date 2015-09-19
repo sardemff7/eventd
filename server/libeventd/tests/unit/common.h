@@ -29,6 +29,7 @@
 #include <glib-object.h>
 #include <libeventd-event.h>
 #include <libeventd-event-private.h>
+#include <libeventd-protocol.h>
 
 #define EVENTD_EVENT_TEST_UUID "1b4e28ba-2fa1-11d2-883f-b9a761bde3fb"
 #define EVENTD_EVENT_TEST_NAME "test-name"
@@ -37,5 +38,7 @@
 #define EVENTD_EVENT_TEST_ANSWER "test-answer"
 #define EVENTD_EVENT_TEST_DATA_NAME "test-name"
 #define EVENTD_EVENT_TEST_DATA_CONTENT "test-content"
+#define EVENTD_EVENT_TEST_DATA_NEWLINE_NAME "test-name-newline"
+#define EVENTD_EVENT_TEST_DATA_NEWLINE_CONTENT "test-content\ntest-newline-content"
 
 #endif /* __EVENTD_TESTS_UNIT_EVENTD_EVENT_COMMON_H__ */
