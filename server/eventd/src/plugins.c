@@ -77,38 +77,6 @@ _eventd_plugins_load_dir(EventdPluginCoreContext *core, EventdPluginCoreInterfac
         if ( ! g_str_has_suffix(file, G_MODULE_SUFFIX) )
             continue;
 
-        if ( whitelist != NULL )
-        {
-            gboolean whitelisted = FALSE;
-            gchar **wname;
-            for ( wname = whitelist ; *wname != NULL ; ++wname )
-            {
-                if ( g_str_has_prefix(file, *wname) )
-                {
-                    whitelisted = TRUE;
-                    break;
-                }
-            }
-            if ( ! whitelisted )
-                continue;
-        }
-
-        if ( blacklist != NULL )
-        {
-            gboolean blacklisted = FALSE;
-            gchar **bname;
-            for ( bname = blacklist ; *bname != NULL ; ++bname )
-            {
-                if ( g_str_has_prefix(file, *bname) )
-                {
-                    blacklisted = TRUE;
-                    break;
-                }
-            }
-            if ( blacklisted )
-                continue;
-        }
-
         full_filename = g_build_filename(plugins_dir_name, file, NULL);
 
         if ( g_file_test(full_filename, G_FILE_TEST_IS_DIR) )
@@ -133,6 +101,38 @@ _eventd_plugins_load_dir(EventdPluginCoreContext *core, EventdPluginCoreInterfac
         {
             g_warning("Plugin '%s' must define eventd_plugin_id", file);
             continue;
+        }
+
+        if ( whitelist != NULL )
+        {
+            gboolean whitelisted = FALSE;
+            gchar **wname;
+            for ( wname = whitelist ; *wname != NULL ; ++wname )
+            {
+                if ( g_strcmp0(*id, *wname) == 0 )
+                {
+                    whitelisted = TRUE;
+                    break;
+                }
+            }
+            if ( ! whitelisted )
+                continue;
+        }
+
+        if ( blacklist != NULL )
+        {
+            gboolean blacklisted = FALSE;
+            gchar **bname;
+            for ( bname = blacklist ; *bname != NULL ; ++bname )
+            {
+                if ( g_strcmp0(*id, *bname) == 0 )
+                {
+                    blacklisted = TRUE;
+                    break;
+                }
+            }
+            if ( blacklisted )
+                continue;
         }
 
         if ( g_hash_table_contains(plugins, *id) )
