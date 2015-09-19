@@ -5,35 +5,35 @@ bin_PROGRAMS += \
 	$(null)
 
 man1_MANS += \
-	server/eventd/man/eventd.1 \
+	%D%/man/eventd.1 \
 	$(null)
 
 man5_MANS += \
-	server/eventd/man/eventd.conf.5 \
-	server/eventd/man/eventd.event.5 \
+	%D%/man/eventd.conf.5 \
+	%D%/man/eventd.event.5 \
 	$(null)
 
 noarch_pkgconfig_DATA += \
-	server/eventd/pkgconfig/eventd.pc \
+	%D%/pkgconfig/eventd.pc \
 	$(null)
 
-include server/eventd/events/events.mk
+include %D%/events/events.mk
 
 
 eventd_SOURCES = \
-	server/eventd/src/types.h \
-	server/eventd/src/config.h \
-	server/eventd/src/config.c \
-	server/eventd/src/plugins.h \
-	server/eventd/src/plugins.c \
-	server/eventd/src/queue.h \
-	server/eventd/src/queue.c \
-	server/eventd/src/control.h \
-	server/eventd/src/control.c \
-	server/eventd/src/sockets.h \
-	server/eventd/src/sockets.c \
-	server/eventd/src/eventd.h \
-	server/eventd/src/eventd.c \
+	%D%/src/types.h \
+	%D%/src/config.h \
+	%D%/src/config.c \
+	%D%/src/plugins.h \
+	%D%/src/plugins.c \
+	%D%/src/queue.h \
+	%D%/src/queue.c \
+	%D%/src/control.h \
+	%D%/src/control.c \
+	%D%/src/sockets.h \
+	%D%/src/sockets.c \
+	%D%/src/eventd.h \
+	%D%/src/eventd.c \
 	$(null)
 
 eventd_CFLAGS = \
@@ -66,8 +66,8 @@ eventd_LDADD = \
 if ENABLE_SYSTEMD
 
 systemduserunit_DATA += \
-	server/eventd/units/eventd-control.socket \
-	server/eventd/units/eventd.service \
+	%D%/units/eventd-control.socket \
+	%D%/units/eventd.service \
 	$(null)
 
 endif

@@ -5,11 +5,11 @@ check_LTLIBRARIES += \
 	$(null)
 
 EXTRA_DIST += \
-	plugins/test-plugin/events/test.event \
+	%D%/events/test.event \
 	$(null)
 
 test_plugin_la_SOURCES = \
-	plugins/test-plugin/src/test-plugin.c \
+	%D%/src/test-plugin.c \
 	$(null)
 
 test_plugin_la_CFLAGS = \

@@ -6,17 +6,17 @@ plugins_LTLIBRARIES += \
 	$(null)
 
 man5_MANS += \
-	plugins/canberra/man/eventd-canberra.event.5 \
+	%D%/man/eventd-canberra.event.5 \
 	$(null)
 
 dist_fdonotificationscapabilities_DATA += \
-	plugins/canberra/fdonotificationscapabilities/canberra.capabilities \
+	%D%/fdonotificationscapabilities/canberra.capabilities \
 	$(null)
 endif
 
 
 canberra_la_SOURCES = \
-	plugins/canberra/src/canberra.c \
+	%D%/src/canberra.c \
 	$(null)
 
 canberra_la_CFLAGS = \

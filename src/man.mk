@@ -1,12 +1,12 @@
 EXTRA_DIST += \
-	src/config.ent.in \
-	src/common-man.xml \
+	%D%/config.ent.in \
+	%D%/common-man.xml \
 	$(man1_MANS:.1=.xml) \
 	$(man5_MANS:.5=.xml) \
 	$(null)
 
 CLEANFILES += \
-	src/config.ent \
+	%D%/config.ent \
 	$(man1_MANS) \
 	$(man5_MANS) \
 	$(null)
@@ -24,13 +24,13 @@ MAN_GEN_RULE = $(EV_V_MAN)$(MKDIR_P) $(dir $@) && \
 	http://docbook.sourceforge.net/release/xsl/current/manpages/profile-docbook.xsl \
 	$<
 
-$(man1_MANS): %.1: %.xml $(NKUTILS_MANFILES) src/common-man.xml src/config.ent
+$(man1_MANS): %.1: %.xml $(NKUTILS_MANFILES) %D%/common-man.xml %D%/config.ent
 	$(MAN_GEN_RULE)
 
-$(man5_MANS): %.5: %.xml $(NKUTILS_MANFILES) src/common-man.xml src/config.ent
+$(man5_MANS): %.5: %.xml $(NKUTILS_MANFILES) %D%/common-man.xml %D%/config.ent
 	$(MAN_GEN_RULE)
 
-src/config.ent: src/config.ent.in $(CONFIG_HEADER) src/man.mk
+%D%/config.ent: %D%/config.ent.in $(CONFIG_HEADER) %D%/man.mk
 	$(EV_V_MAN)$(MKDIR_P) $(dir $@) && \
 		$(SED) \
 		-e 's:[@]sysconfdir[@]:$(sysconfdir):g' \

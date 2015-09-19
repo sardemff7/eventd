@@ -14,7 +14,7 @@ AC_CONFIG_SRCDIR([server/eventd/src/eventd.c])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([.aux])
 
-AM_INIT_AUTOMAKE([1.11 foreign subdir-objects parallel-tests dist-xz no-dist-gzip tar-ustar])
+AM_INIT_AUTOMAKE([1.14 foreign subdir-objects parallel-tests dist-xz no-dist-gzip tar-ustar])
 
 AM_SILENT_RULES([yes])
 
@@ -107,7 +107,7 @@ AC_SUBST([fdonotificationscapabilitiesdir])
 EVENTD_I18N
 GLIB_DEFINE_LOCALEDIR([EVENTD_LOCALEDIR])
 GW_INIT([src/libgwater])
-NK_INIT([src/libnkutils], [enum token colour/alpha colour/double], [AM_DOCBOOK_CONDITIONS])
+NK_INIT([enum token colour/alpha colour/double], [AM_DOCBOOK_CONDITIONS])
 
 #
 # Common dependencies

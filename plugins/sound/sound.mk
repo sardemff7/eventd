@@ -6,19 +6,19 @@ plugins_LTLIBRARIES += \
 	$(null)
 
 man5_MANS += \
-	plugins/sound/man/eventd-sound.event.5 \
+	%D%/man/eventd-sound.event.5 \
 	$(null)
 
 dist_fdonotificationscapabilities_DATA += \
-	plugins/sound/fdonotificationscapabilities/sound.capabilities \
+	%D%/fdonotificationscapabilities/sound.capabilities \
 	$(null)
 endif
 
 
 sound_la_SOURCES = \
-	plugins/sound/src/pulseaudio.h \
-	plugins/sound/src/pulseaudio.c \
-	plugins/sound/src/sound.c \
+	%D%/src/pulseaudio.h \
+	%D%/src/pulseaudio.c \
+	%D%/src/sound.c \
 	$(null)
 
 sound_la_CFLAGS = \

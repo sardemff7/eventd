@@ -13,19 +13,19 @@ check_PROGRAMS += \
 	$(null)
 
 man1_MANS += \
-	plugins/relay/man/eventdctl-relay.1 \
+	%D%/man/eventdctl-relay.1 \
 	$(null)
 
 man5_MANS += \
-	plugins/relay/man/eventd-relay.event.5 \
+	%D%/man/eventd-relay.event.5 \
 	$(null)
 
 
 relay_la_SOURCES = \
-	plugins/relay/src/avahi.h \
-	plugins/relay/src/server.h \
-	plugins/relay/src/server.c \
-	plugins/relay/src/relay.c \
+	%D%/src/avahi.h \
+	%D%/src/server.h \
+	%D%/src/server.c \
+	%D%/src/relay.c \
 	$(null)
 
 relay_la_CFLAGS = \
@@ -54,7 +54,7 @@ relay_la_LIBADD = \
 
 
 relay_connection_test_SOURCES = \
-	plugins/relay/tests/integration/connection.c \
+	%D%/tests/integration/connection.c \
 	$(null)
 
 relay_connection_test_CFLAGS = \
@@ -77,7 +77,7 @@ relay_connection_test_LDADD = \
 if ENABLE_AVAHI
 
 relay_la_SOURCES += \
-	plugins/relay/src/avahi.c \
+	%D%/src/avahi.c \
 	$(null)
 
 endif

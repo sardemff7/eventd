@@ -4,23 +4,23 @@ imeventdir = $(eventdir)/im
 chateventdir = $(eventdir)/chat
 
 presenceevent_DATA = \
-	server/eventd/events/presence/presence-away.event \
-	server/eventd/events/presence/presence-away-message.event \
-	server/eventd/events/presence/presence-back.event \
-	server/eventd/events/presence/presence-back-message.event \
-	server/eventd/events/presence/presence-idle-back.event \
-	server/eventd/events/presence/presence-idle.event \
-	server/eventd/events/presence/presence-signed-off.event \
-	server/eventd/events/presence/presence-signed-on.event \
-	server/eventd/events/presence/presence.event \
+	%D%/presence/presence-away.event \
+	%D%/presence/presence-away-message.event \
+	%D%/presence/presence-back.event \
+	%D%/presence/presence-back-message.event \
+	%D%/presence/presence-idle-back.event \
+	%D%/presence/presence-idle.event \
+	%D%/presence/presence-signed-off.event \
+	%D%/presence/presence-signed-on.event \
+	%D%/presence/presence.event \
 	$(null)
 
 imevent_DATA = \
-	server/eventd/events/im/im.event \
+	%D%/im/im.event \
 	$(null)
 
 chatevent_DATA = \
-	server/eventd/events/chat/chat.event \
+	%D%/chat/chat.event \
 	$(null)
 
 

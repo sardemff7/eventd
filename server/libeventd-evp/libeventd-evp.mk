@@ -1,7 +1,7 @@
 # EvP implementation library
 
 AM_CPPFLAGS += \
-	-I $(srcdir)/server/libeventd-evp/include \
+	-I $(srcdir)/%D%/include \
 	$(null)
 
 
@@ -11,12 +11,12 @@ noinst_LTLIBRARIES += \
 
 
 libeventd_evp_la_SOURCES = \
-	server/libeventd-evp/src/send.c \
-	server/libeventd-evp/src/receive.c \
-	server/libeventd-evp/src/context.c \
-	server/libeventd-evp/src/context.h \
-	server/libeventd-evp/src/helpers.c \
-	server/libeventd-evp/include/libeventd-evp.h \
+	%D%/src/send.c \
+	%D%/src/receive.c \
+	%D%/src/context.c \
+	%D%/src/context.h \
+	%D%/src/helpers.c \
+	%D%/include/libeventd-evp.h \
 	$(null)
 
 libeventd_evp_la_CFLAGS = \

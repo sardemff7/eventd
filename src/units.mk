@@ -6,7 +6,7 @@ CLEANFILES += \
 	$(systemduserunit_DATA) \
 	$(null)
 
-$(systemduserunit_DATA): %: %.in $(CONFIG_HEADER) src/units.mk
+$(systemduserunit_DATA): %: %.in $(CONFIG_HEADER) %D%/units.mk
 	$(AM_V_GEN)$(MKDIR_P) $(dir $@) && \
 		$(SED) \
 		-e 's:[@]bindir[@]:$(bindir):g' \

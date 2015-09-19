@@ -6,7 +6,7 @@ LIBEVENTC_AGE=0
 
 
 AM_CPPFLAGS += \
-	-I $(srcdir)/client/libeventc/include \
+	-I $(srcdir)/%D%/include \
 	$(null)
 
 
@@ -15,7 +15,7 @@ lib_LTLIBRARIES += \
 	$(null)
 
 pkginclude_HEADERS += \
-	client/libeventc/include/libeventc.h \
+	%D%/include/libeventc.h \
 	$(null)
 
 TESTS += \
@@ -27,21 +27,21 @@ check_PROGRAMS += \
 	$(null)
 
 pkgconfig_DATA += \
-	client/libeventc/pkgconfig/libeventc.pc \
+	%D%/pkgconfig/libeventc.pc \
 	$(null)
 
 dist_vapi_DATA += \
-	client/libeventc/vapi/libeventc.vapi \
+	%D%/vapi/libeventc.vapi \
 	$(null)
 
 vapi_DATA += \
-	client/libeventc/vapi/libeventc.deps \
+	%D%/vapi/libeventc.deps \
 	$(null)
 
 
 libeventc_la_SOURCES = \
-	client/libeventc/include/libeventc.h \
-	client/libeventc/src/libeventc.c \
+	%D%/include/libeventc.h \
+	%D%/src/libeventc.c \
 	$(null)
 
 libeventc_la_CFLAGS = \
@@ -67,7 +67,7 @@ libeventc_la_LIBADD = \
 
 
 libeventc_connection_test_SOURCES = \
-	client/libeventc/tests/integration/connection.c \
+	%D%/tests/integration/connection.c \
 	$(null)
 
 libeventc_connection_test_CFLAGS = \

@@ -6,7 +6,7 @@ CLEANFILES += \
 	$(dbussessionservice_DATA) \
 	$(null)
 
-$(dbussessionservice_DATA): %: %.in $(CONFIG_HEADER) src/services.mk
+$(dbussessionservice_DATA): %: %.in $(CONFIG_HEADER) %D%/services.mk
 	$(AM_V_GEN)$(MKDIR_P) $(dir $@) && \
 		$(SED) \
 		-e 's:[@]bindir[@]:$(bindir):g' \

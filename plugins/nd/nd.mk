@@ -1,7 +1,7 @@
 # notification plugin
 
 AM_CPPFLAGS += \
-	-I $(srcdir)/plugins/nd/include \
+	-I $(srcdir)/%D%/include \
 	$(null)
 
 
@@ -11,25 +11,25 @@ plugins_LTLIBRARIES += \
 	$(null)
 
 pkginclude_HEADERS += \
-	plugins/nd/include/eventd-nd-backend.h \
+	%D%/include/eventd-nd-backend.h \
 	$(null)
 
 man1_MANS += \
-	plugins/nd/man/eventdctl-nd.1 \
+	%D%/man/eventdctl-nd.1 \
 	$(null)
 
 man5_MANS += \
-	plugins/nd/man/eventd-nd.conf.5 \
-	plugins/nd/man/eventd-nd.event.5 \
+	%D%/man/eventd-nd.conf.5 \
+	%D%/man/eventd-nd.event.5 \
 	$(null)
 
 dist_fdonotificationscapabilities_DATA += \
-	plugins/nd/fdonotificationscapabilities/nd.capabilities \
+	%D%/fdonotificationscapabilities/nd.capabilities \
 	$(null)
 
 if ENABLE_GDK_PIXBUF
 dist_fdonotificationscapabilities_DATA += \
-	plugins/nd/fdonotificationscapabilities/nd-icons.capabilities \
+	%D%/fdonotificationscapabilities/nd-icons.capabilities \
 	$(null)
 endif
 
@@ -37,15 +37,15 @@ endif
 
 
 nd_la_SOURCES = \
-	plugins/nd/src/icon.h \
-	plugins/nd/src/cairo.c \
-	plugins/nd/src/cairo.h \
-	plugins/nd/src/style.c \
-	plugins/nd/src/style.h \
-	plugins/nd/include/eventd-nd-backend.h \
-	plugins/nd/src/backends.c \
-	plugins/nd/src/backends.h \
-	plugins/nd/src/nd.c \
+	%D%/src/icon.h \
+	%D%/src/cairo.c \
+	%D%/src/cairo.h \
+	%D%/src/style.c \
+	%D%/src/style.h \
+	%D%/include/eventd-nd-backend.h \
+	%D%/src/backends.c \
+	%D%/src/backends.h \
+	%D%/src/nd.c \
 	$(null)
 
 nd_la_CFLAGS = \
@@ -80,7 +80,7 @@ nd_la_LIBADD = \
 
 if ENABLE_GDK_PIXBUF
 nd_la_SOURCES += \
-	plugins/nd/src/icon.c \
+	%D%/src/icon.c \
 	$(null)
 endif
 
@@ -88,8 +88,8 @@ ndbackendsdir = $(pluginsdir)/nd
 
 ndbackends_LTLIBRARIES =
 
-include plugins/nd/xcb/xcb.mk
-include plugins/nd/linux/linux.mk
+include %D%/xcb/xcb.mk
+include %D%/linux/linux.mk
 
 
 #

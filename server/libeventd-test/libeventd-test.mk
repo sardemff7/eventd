@@ -1,7 +1,7 @@
 # Testing helper library
 
 AM_CPPFLAGS += \
-	-I $(srcdir)/server/libeventd-test/include \
+	-I $(srcdir)/%D%/include \
 	$(null)
 
 
@@ -11,9 +11,9 @@ check_LTLIBRARIES += \
 
 
 libeventd_test_la_SOURCES = \
-	server/libeventd-test/src/libeventc-test.c \
-	server/libeventd-test/src/libtest.c \
-	server/libeventd-test/include/libeventd-test.h \
+	%D%/src/libeventc-test.c \
+	%D%/src/libtest.c \
+	%D%/include/libeventd-test.h \
 	$(null)
 
 libeventd_test_la_CFLAGS = \

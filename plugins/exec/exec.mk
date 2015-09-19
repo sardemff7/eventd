@@ -5,12 +5,12 @@ plugins_LTLIBRARIES += \
 	$(null)
 
 man5_MANS += \
-	plugins/exec/man/eventd-exec.event.5 \
+	%D%/man/eventd-exec.event.5 \
 	$(null)
 
 
 exec_la_SOURCES = \
-	plugins/exec/src/exec.c \
+	%D%/src/exec.c \
 	$(null)
 
 exec_la_CFLAGS = \

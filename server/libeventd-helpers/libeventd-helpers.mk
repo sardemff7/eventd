@@ -1,7 +1,7 @@
 # Internal helper library
 
 AM_CPPFLAGS += \
-	-I $(srcdir)/server/libeventd-helpers/include \
+	-I $(srcdir)/%D%/include \
 	$(null)
 
 
@@ -10,16 +10,16 @@ pkglib_LTLIBRARIES += \
 	$(null)
 
 pkginclude_HEADERS += \
-	server/libeventd-helpers/include/libeventd-helpers-reconnect.h \
-	server/libeventd-helpers/include/libeventd-helpers-config.h \
+	%D%/include/libeventd-helpers-reconnect.h \
+	%D%/include/libeventd-helpers-config.h \
 	$(null)
 
 
 libeventd_helpers_la_SOURCES = \
-	server/libeventd-helpers/include/libeventd-helpers-reconnect.h \
-	server/libeventd-helpers/src/reconnect.c \
-	server/libeventd-helpers/include/libeventd-helpers-config.h \
-	server/libeventd-helpers/src/config.c \
+	%D%/include/libeventd-helpers-reconnect.h \
+	%D%/src/reconnect.c \
+	%D%/include/libeventd-helpers-config.h \
+	%D%/src/config.c \
 	$(null)
 
 libeventd_helpers_la_CFLAGS = \

@@ -1,7 +1,7 @@
 # Server control utility
 
 AM_CPPFLAGS += \
-	-I $(srcdir)/server/eventdctl/include \
+	-I $(srcdir)/%D%/include \
 	$(null)
 
 
@@ -10,13 +10,13 @@ bin_PROGRAMS += \
 	$(null)
 
 man1_MANS += \
-	server/eventdctl/man/eventdctl.1 \
+	%D%/man/eventdctl.1 \
 	$(null)
 
 
 eventdctl_SOURCES = \
-	server/eventdctl/include/eventdctl.h \
-	server/eventdctl/src/eventdctl.c \
+	%D%/include/eventdctl.h \
+	%D%/src/eventdctl.c \
 	$(null)
 
 eventdctl_CFLAGS = \

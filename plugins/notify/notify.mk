@@ -6,15 +6,15 @@ plugins_LTLIBRARIES += \
 	$(null)
 
 man5_MANS += \
-	plugins/notify/man/eventd-notify.event.5 \
+	%D%/man/eventd-notify.event.5 \
 	$(null)
 endif
 
 
 notify_la_SOURCES = \
-	plugins/notify/src/image.h \
-	plugins/notify/src/image.c \
-	plugins/notify/src/notify.c \
+	%D%/src/image.h \
+	%D%/src/image.c \
+	%D%/src/notify.c \
 	$(null)
 
 notify_la_CFLAGS = \

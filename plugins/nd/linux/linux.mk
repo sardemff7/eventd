@@ -8,7 +8,7 @@ endif
 
 
 linux_la_SOURCES = \
-	plugins/nd/linux/linux.c \
+	%D%/linux.c \
 	$(null)
 
 linux_la_CFLAGS = \

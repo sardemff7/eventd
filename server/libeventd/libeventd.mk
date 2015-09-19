@@ -6,7 +6,7 @@ LIBEVENTD_AGE=0
 
 
 AM_CPPFLAGS += \
-	-I $(srcdir)/server/libeventd/include \
+	-I $(srcdir)/%D%/include \
 	$(null)
 
 
@@ -15,7 +15,7 @@ lib_LTLIBRARIES += \
 	$(null)
 
 pkginclude_HEADERS += \
-	server/libeventd/include/libeventd-event.h \
+	%D%/include/libeventd-event.h \
 	$(null)
 
 TESTS += \
@@ -27,21 +27,21 @@ check_PROGRAMS += \
 	$(null)
 
 pkgconfig_DATA += \
-	server/libeventd/pkgconfig/libeventd.pc \
+	%D%/pkgconfig/libeventd.pc \
 	$(null)
 
 dist_vapi_DATA += \
-	server/libeventd/vapi/libeventd.vapi \
+	%D%/vapi/libeventd.vapi \
 	$(null)
 
 vapi_DATA += \
-	server/libeventd/vapi/libeventd.deps \
+	%D%/vapi/libeventd.deps \
 	$(null)
 
 
 libeventd_la_SOURCES = \
-	server/libeventd/include/libeventd-event.h \
-	server/libeventd/src/event.c \
+	%D%/include/libeventd-event.h \
+	%D%/src/event.c \
 	$(null)
 
 libeventd_la_CFLAGS = \
@@ -62,12 +62,12 @@ libeventd_la_LIBADD = \
 
 
 libeventd_event_test_SOURCES = \
-	server/libeventd/tests/unit/common.h \
-	server/libeventd/tests/unit/event-getters.c \
-	server/libeventd/tests/unit/event-getters.h \
-	server/libeventd/tests/unit/event-setters.c \
-	server/libeventd/tests/unit/event-setters.h \
-	server/libeventd/tests/unit/libeventd-event.c \
+	%D%/tests/unit/common.h \
+	%D%/tests/unit/event-getters.c \
+	%D%/tests/unit/event-getters.h \
+	%D%/tests/unit/event-setters.c \
+	%D%/tests/unit/event-setters.h \
+	%D%/tests/unit/libeventd-event.c \
 	$(null)
 
 libeventd_event_test_CFLAGS = \

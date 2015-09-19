@@ -6,7 +6,7 @@ ndbackends_LTLIBRARIES += \
 	$(null)
 
 man5_MANS += \
-	plugins/nd/xcb/man/eventd-nd-xcb.conf.5 \
+	%D%/man/eventd-nd-xcb.conf.5 \
 	$(null)
 
 include src/libgwater/xcb.mk
@@ -14,7 +14,7 @@ endif
 
 
 xcb_la_SOURCES = \
-	plugins/nd/xcb/src/xcb.c \
+	%D%/src/xcb.c \
 	$(null)
 
 xcb_la_CFLAGS = \

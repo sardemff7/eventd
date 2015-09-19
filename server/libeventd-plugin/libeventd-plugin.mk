@@ -6,7 +6,7 @@ LIBEVENTD_PLUGIN_AGE=0
 
 
 AM_CPPFLAGS += \
-	-I $(srcdir)/server/libeventd-plugin/include \
+	-I $(srcdir)/%D%/include \
 	$(null)
 
 
@@ -15,19 +15,19 @@ lib_LTLIBRARIES += \
 	$(null)
 
 pkginclude_HEADERS += \
-	server/libeventd-plugin/include/eventd-plugin.h \
+	%D%/include/eventd-plugin.h \
 	$(null)
 
 pkgconfig_DATA += \
-	server/libeventd-plugin/pkgconfig/libeventd-plugin.pc \
+	%D%/pkgconfig/libeventd-plugin.pc \
 	$(null)
 
 
 libeventd_plugin_la_SOURCES = \
-	server/libeventd-plugin/include/eventd-plugin.h \
-	server/libeventd-plugin/include/eventd-plugin-private.h \
-	server/libeventd-plugin/src/core.c \
-	server/libeventd-plugin/src/plugin.c \
+	%D%/include/eventd-plugin.h \
+	%D%/include/eventd-plugin-private.h \
+	%D%/src/core.c \
+	%D%/src/plugin.c \
 	$(null)
 
 libeventd_plugin_la_CFLAGS = \

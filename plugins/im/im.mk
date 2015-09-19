@@ -6,14 +6,14 @@ plugins_LTLIBRARIES += \
 	$(null)
 
 man5_MANS += \
-	plugins/im/man/eventd-im.conf.5 \
-	plugins/im/man/eventd-im.event.5 \
+	%D%/man/eventd-im.conf.5 \
+	%D%/man/eventd-im.event.5 \
 	$(null)
 endif
 
 
 im_la_SOURCES = \
-	plugins/im/src/im.c \
+	%D%/src/im.c \
 	$(null)
 
 im_la_CFLAGS = \

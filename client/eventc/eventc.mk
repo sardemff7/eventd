@@ -4,7 +4,7 @@ bin_PROGRAMS += \
 	$(null)
 
 eventc_SOURCES = \
-	client/eventc/src/eventc.c \
+	%D%/src/eventc.c \
 	$(null)
 
 eventc_CFLAGS = \

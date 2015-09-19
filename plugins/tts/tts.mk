@@ -6,13 +6,13 @@ plugins_LTLIBRARIES += \
 	$(null)
 
 man5_MANS += \
-	plugins/tts/man/eventd-tts.event.5 \
+	%D%/man/eventd-tts.event.5 \
 	$(null)
 endif
 
 
 tts_la_SOURCES = \
-	plugins/tts/src/tts.c \
+	%D%/src/tts.c \
 	$(null)
 
 tts_la_CFLAGS = \

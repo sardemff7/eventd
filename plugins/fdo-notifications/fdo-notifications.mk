@@ -5,20 +5,20 @@ plugins_LTLIBRARIES += \
 	$(null)
 
 man1_MANS += \
-	plugins/fdo-notifications/man/eventd-fdo-notifications.1 \
+	%D%/man/eventd-fdo-notifications.1 \
 	$(null)
 
 dist_event_DATA += \
-	plugins/fdo-notifications/events/libnotify.event \
+	%D%/events/libnotify.event \
 	$(null)
 
 dbussessionservice_DATA += \
-	plugins/fdo-notifications/services/org.eventd.fdo-notifications.service \
+	%D%/services/org.eventd.fdo-notifications.service \
 	$(null)
 
 
 fdo_notifications_la_SOURCES = \
-	plugins/fdo-notifications/src/fdo-notifications.c \
+	%D%/src/fdo-notifications.c \
 	$(null)
 
 fdo_notifications_la_CFLAGS = \

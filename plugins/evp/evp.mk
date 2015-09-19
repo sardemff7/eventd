@@ -13,17 +13,17 @@ check_PROGRAMS += \
 	$(null)
 
 man1_MANS += \
-	plugins/evp/man/eventd-evp.1 \
+	%D%/man/eventd-evp.1 \
 	$(null)
 
 man5_MANS += \
-	plugins/evp/man/eventd-evp.conf.5 \
-	plugins/evp/man/eventd-evp.event.5 \
+	%D%/man/eventd-evp.conf.5 \
+	%D%/man/eventd-evp.event.5 \
 	$(null)
 
 
 evp_la_SOURCES = \
-	plugins/evp/src/evp.c \
+	%D%/src/evp.c \
 	$(null)
 
 evp_la_CFLAGS = \
@@ -52,7 +52,7 @@ evp_la_LIBADD = \
 
 
 evp_connection_test_SOURCES = \
-	plugins/evp/tests/integration/connection.c \
+	%D%/tests/integration/connection.c \
 	$(null)
 
 evp_connection_test_CFLAGS = \
@@ -73,8 +73,8 @@ evp_connection_test_LDADD = \
 if ENABLE_AVAHI
 
 evp_la_SOURCES += \
-	plugins/evp/src/avahi.h \
-	plugins/evp/src/avahi.c \
+	%D%/src/avahi.h \
+	%D%/src/avahi.c \
 	$(null)
 
 endif
@@ -83,7 +83,7 @@ endif
 if ENABLE_SYSTEMD
 
 systemduserunit_DATA += \
-	plugins/evp/units/eventd-evp.socket \
+	%D%/units/eventd-evp.socket \
 	$(null)
 
 endif
