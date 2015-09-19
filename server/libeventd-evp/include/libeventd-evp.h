@@ -76,7 +76,7 @@ void libeventd_evp_context_receive_loop(LibeventdEvpContext *context, gint prior
 
 gboolean libeventd_evp_context_send_event(LibeventdEvpContext *context, const gchar *id, EventdEvent *event, GError **error);
 gboolean libeventd_evp_context_send_end(LibeventdEvpContext *context, const gchar *id, GError **error);
-gboolean libeventd_evp_context_send_answered(LibeventdEvpContext *context, const gchar *id, const gchar *answer, GHashTable *data, GError **error);
+gboolean libeventd_evp_context_send_answered(LibeventdEvpContext *context, const gchar *id, const gchar *answer, EventdEvent *event, GError **error);
 gboolean libeventd_evp_context_send_ended(LibeventdEvpContext *context, const gchar *id, EventdEventEndReason reason, GError **error);
 void libeventd_evp_context_send_bye(LibeventdEvpContext *context);
 

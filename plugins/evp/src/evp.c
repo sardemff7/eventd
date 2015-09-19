@@ -81,7 +81,7 @@ _eventd_evp_event_answered(EventdEvent *event, const gchar *answer, gpointer use
     EventdEvpClient *client = evp_event->client;
     GError *error = NULL;
 
-    if ( ! libeventd_evp_context_send_answered(client->evp, evp_event->id, answer, eventd_event_get_all_answer_data(evp_event->event), &error) )
+    if ( ! libeventd_evp_context_send_answered(client->evp, evp_event->id, answer, evp_event->event, &error) )
     {
         g_warning("Couldn't send ANSWERED message: %s", error->message);
         g_clear_error(&error);

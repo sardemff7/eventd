@@ -68,7 +68,7 @@ _eventd_relay_event_answered(EventdEvent *event, const gchar *answer, gpointer u
     EventdRelayServer *server = relay_event->server;
     GError *error = NULL;
 
-    if ( ! libeventd_evp_context_send_answered(server->evp, relay_event->id, answer, eventd_event_get_all_answer_data(relay_event->event), &error) )
+    if ( ! libeventd_evp_context_send_answered(server->evp, relay_event->id, answer, relay_event->event, &error) )
     {
         g_warning("Couldn't send ANSWERED message: %s", error->message);
         g_clear_error(&error);
