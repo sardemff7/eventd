@@ -19,7 +19,6 @@ notify_la_SOURCES = \
 
 notify_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	-D G_LOG_DOMAIN=\"eventd-notify\" \
 	$(NOTIFY_CFLAGS) \
 	$(GDK_PIXBUF_CFLAGS) \
 	$(GOBJECT_CFLAGS) \

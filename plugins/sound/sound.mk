@@ -23,7 +23,6 @@ sound_la_SOURCES = \
 
 sound_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	-D G_LOG_DOMAIN=\"eventd-sound\" \
 	$(SNDFILE_CFLAGS) \
 	$(PULSEAUDIO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \

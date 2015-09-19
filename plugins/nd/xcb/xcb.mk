@@ -19,7 +19,6 @@ xcb_la_SOURCES = \
 
 xcb_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	-D G_LOG_DOMAIN=\"eventd-nd-xcb-backend\" \
 	$(XCB_CFLAGS) \
 	$(CAIRO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \

@@ -46,7 +46,6 @@ libeventd_la_SOURCES = \
 
 libeventd_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	-D G_LOG_DOMAIN=\"libeventd-event\" \
 	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(null)

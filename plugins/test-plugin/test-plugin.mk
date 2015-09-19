@@ -14,7 +14,6 @@ test_plugin_la_SOURCES = \
 
 test_plugin_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	-D G_LOG_DOMAIN=\"eventd-test-plugin\" \
 	$(GLIB_CFLAGS) \
 	$(null)
 

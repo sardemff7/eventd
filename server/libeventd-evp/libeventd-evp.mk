@@ -21,7 +21,6 @@ libeventd_evp_la_SOURCES = \
 
 libeventd_evp_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	-D G_LOG_DOMAIN=\"libeventd-evp\" \
 	$(GIO_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(null)

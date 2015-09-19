@@ -15,7 +15,6 @@ exec_la_SOURCES = \
 
 exec_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	-D G_LOG_DOMAIN=\"eventd-exec\" \
 	$(GLIB_CFLAGS) \
 	$(null)
 

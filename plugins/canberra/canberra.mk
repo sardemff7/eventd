@@ -21,7 +21,6 @@ canberra_la_SOURCES = \
 
 canberra_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	-D G_LOG_DOMAIN=\"eventd-canberra\" \
 	$(CANBERRA_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(null)

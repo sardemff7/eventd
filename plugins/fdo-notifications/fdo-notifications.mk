@@ -23,7 +23,6 @@ fdo_notifications_la_SOURCES = \
 
 fdo_notifications_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	-D G_LOG_DOMAIN=\"eventd-fdo-notifications\" \
 	-D FDONOTIFICATIONSCAPABILITIESDIR=\"$(fdonotificationscapabilitiesdir)\" \
 	$(GIO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \

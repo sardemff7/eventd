@@ -24,7 +24,6 @@ libeventd_helpers_la_SOURCES = \
 
 libeventd_helpers_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	-D G_LOG_DOMAIN=\"eventd-libeventd\" \
 	$(NKUTILS_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS) \

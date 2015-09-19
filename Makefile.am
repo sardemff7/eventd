@@ -51,6 +51,7 @@ CLEANFILES =
 AM_CPPFLAGS += \
 	-I $(srcdir)/src/ \
 	-I $(builddir)/src/ \
+	-D G_LOG_DOMAIN=\"$(word 2,$(subst /,$(space),$<))\" \
 	$(null)
 
 AM_XSLTPROCFLAGS += \

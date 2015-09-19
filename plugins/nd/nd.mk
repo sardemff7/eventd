@@ -43,7 +43,6 @@ nd_la_SOURCES = \
 
 nd_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	-D G_LOG_DOMAIN=\"eventd-nd\" \
 	-D SYSCONFDIR=\"$(sysconfdir)\" \
 	-D LIBDIR=\"$(libdir)\" \
 	-D DATADIR=\"$(datadir)\" \

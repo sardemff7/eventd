@@ -46,7 +46,6 @@ libeventc_la_SOURCES = \
 
 libeventc_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	-D G_LOG_DOMAIN=\"libeventc\" \
 	$(GIO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS) \

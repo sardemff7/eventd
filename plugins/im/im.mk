@@ -18,7 +18,6 @@ im_la_SOURCES = \
 
 im_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	-D G_LOG_DOMAIN=\"eventd-im\" \
 	$(PURPLE_CFLAGS) \
 	$(GMODULE_CFLAGS) \
 	$(GLIB_CFLAGS) \
