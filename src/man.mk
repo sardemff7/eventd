@@ -30,7 +30,7 @@ $(man1_MANS): %.1: %.xml $(NKUTILS_MANFILES) src/common-man.xml src/config.ent
 $(man5_MANS): %.5: %.xml $(NKUTILS_MANFILES) src/common-man.xml src/config.ent
 	$(MAN_GEN_RULE)
 
-src/config.ent: src/config.ent.in src/config.h
+src/config.ent: src/config.ent.in $(CONFIG_HEADER) src/man.mk
 	$(EV_V_MAN)$(MKDIR_P) $(dir $@) && \
 		$(SED) \
 		-e 's:[@]sysconfdir[@]:$(sysconfdir):g' \
