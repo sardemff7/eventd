@@ -78,12 +78,14 @@
     <refsect1 id="plugins">
         <title>Plugins</title>
 
-        <para>When eventd starts, it loads all the available plugins found in the following directories:</para>
+        <para>When eventd starts, it loads all the available plugins found in the following directories, in this order:</para>
         <orderedlist>
-            <listitem><para><filename>/usr/lib/&PACKAGE_NAME;</filename> (actual path depends on your configuration)</para></listitem>
-            <listitem><para><filename><varname>$XDG_DATA_HOME</varname>/&PACKAGE_NAME;</filename> (fallback to <filename>~/.local/share/&PACKAGE_NAME;</filename>)</para></listitem>
             <listitem><para><filename><varname>$EVENTD_PLUGINS_DIR</varname></filename> (see <xref linkend="environment" />)</para></listitem>
+            <listitem><para><filename><varname>$XDG_DATA_HOME</varname>/&PACKAGE_NAME;</filename> (fallback to <filename>~/.local/share/&PACKAGE_NAME;</filename>)</para></listitem>
+            <listitem><para><filename>/usr/lib/&PACKAGE_NAME;</filename> (actual path depends on your configuration)</para></listitem>
         </orderedlist>
+        <para>Each plugin, identified by a compiled-in identifier, is loaded only once, on first encounter.</para>
+        <para>You can white- and blacklist plugins by definining environment variables (see <xref linkend="environment" />).</para>
         <para>These paths are standard paths. Actual paths may depend on your configuration, see <link linkend="paths-option"><command>eventd <option>-P</option></command> output</link>.</para>
 
         <refsect2>
