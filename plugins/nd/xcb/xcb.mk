@@ -19,7 +19,7 @@ xcb_la_SOURCES = \
 
 xcb_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	$(XCB_CFLAGS) \
+	$(GW_XCB_CFLAGS) \
 	$(CAIRO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS) \
@@ -33,7 +33,7 @@ xcb_la_LDFLAGS = \
 xcb_la_LIBADD = \
 	libeventd.la \
 	libeventd-helpers.la \
-	$(XCB_LIBS) \
+	$(GW_XCB_LIBS) \
 	$(CAIRO_LIBS) \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS) \

@@ -227,7 +227,7 @@ fi
 
 # XCB backend
 if test x${enable_xcb} = xyes; then
-    GW_CHECK_XCB([XCB], [cairo-xcb xcb xcb-aux xcb-randr xcb-shape])
+    GW_CHECK_XCB([cairo-xcb xcb xcb-aux xcb-randr xcb-shape])
     AC_DEFINE([ENABLE_XCB], [1], [Enable XCB backend for notification-daemon plugin])
     AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_xcb"
 fi
