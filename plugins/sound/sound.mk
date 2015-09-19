@@ -9,7 +9,7 @@ man5_MANS += \
 	plugins/sound/man/eventd-sound.event.5 \
 	$(null)
 
-fdonotificationscapabilities_DATA += \
+dist_fdonotificationscapabilities_DATA += \
 	plugins/sound/fdonotificationscapabilities/sound.capabilities \
 	$(null)
 endif
@@ -42,17 +42,4 @@ sound_la_LIBADD = \
 	$(PULSEAUDIO_LIBS) \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS) \
-	$(null)
-
-
-sound_fdo_notifications_capabilities = \
-	sound \
-	$(null)
-
-plugins/sound/fdonotificationscapabilities/sound.capabilities: src/config.h
-	$(AM_V_GEN)$(MKDIR_P) $(dir $@) && \
-	echo $(sound_fdo_notifications_capabilities) > $@
-
-CLEANFILES += \
-	plugins/sound/fdonotificationscapabilities/sound.capabilities \
 	$(null)

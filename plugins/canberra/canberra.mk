@@ -9,7 +9,7 @@ man5_MANS += \
 	plugins/canberra/man/eventd-canberra.event.5 \
 	$(null)
 
-fdonotificationscapabilities_DATA += \
+dist_fdonotificationscapabilities_DATA += \
 	plugins/canberra/fdonotificationscapabilities/canberra.capabilities \
 	$(null)
 endif
@@ -36,17 +36,4 @@ canberra_la_LIBADD = \
 	libeventd-helpers.la \
 	$(CANBERRA_LIBS) \
 	$(GLIB_LIBS) \
-	$(null)
-
-
-canberra_fdo_notifications_capabilities = \
-	sound \
-	$(null)
-
-plugins/canberra/fdonotificationscapabilities/canberra.capabilities: src/config.h
-	$(AM_V_GEN)$(MKDIR_P) $(dir $@) && \
-	echo $(canberra_fdo_notifications_capabilities) > $@
-
-CLEANFILES += \
-	plugins/canberra/fdonotificationscapabilities/canberra.capabilities \
 	$(null)

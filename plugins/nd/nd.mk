@@ -23,9 +23,16 @@ man5_MANS += \
 	plugins/nd/man/eventd-nd.event.5 \
 	$(null)
 
-fdonotificationscapabilities_DATA += \
+dist_fdonotificationscapabilities_DATA += \
 	plugins/nd/fdonotificationscapabilities/nd.capabilities \
 	$(null)
+
+if ENABLE_GDK_PIXBUF
+dist_fdonotificationscapabilities_DATA += \
+	plugins/nd/fdonotificationscapabilities/nd-icons.capabilities \
+	$(null)
+endif
+
 endif
 
 
@@ -84,27 +91,6 @@ ndbackends_LTLIBRARIES =
 include plugins/nd/xcb/xcb.mk
 include plugins/nd/linux/linux.mk
 
-
-nd_fdo_notifications_capabilities = \
-	body \
-	body-markup \
-	$(null)
-
-if ENABLE_GDK_PIXBUF
-nd_fdo_notifications_capabilities += \
-	icon-static \
-	image/svg+xml \
-	x-eventd-overlay-icon \
-	$(null)
-endif
-
-plugins/nd/fdonotificationscapabilities/nd.capabilities: src/config.h
-	$(AM_V_GEN)$(MKDIR_P) $(dir $@) && \
-	echo $(nd_fdo_notifications_capabilities) > $@
-
-CLEANFILES += \
-	plugins/nd/fdonotificationscapabilities/nd.capabilities \
-	$(null)
 
 #
 # Hooks
