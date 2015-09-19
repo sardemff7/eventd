@@ -295,21 +295,18 @@ eventd_plugins_stop_all(void)
 EventdctlReturnCode
 eventd_plugins_control_command(const gchar *id, guint64 argc, const gchar * const *argv, gchar **status)
 {
-    const gchar *eid;
     EventdPlugin *plugin;
     EventdctlReturnCode r;;
-
-    eid = g_str_has_prefix(id, "eventd-") ? ( id + strlen("eventd-") ) : id;
 
     plugin = g_hash_table_lookup(plugins, id);
     if ( plugin == NULL )
     {
-        *status = g_strdup_printf("No such plugin '%s'", eid);
+        *status = g_strdup_printf("No such plugin '%s'", id);
         r = EVENTDCTL_RETURN_CODE_PLUGIN_ERROR;
     }
     else if ( plugin->interface.control_command == NULL )
     {
-        *status = g_strdup_printf("Plugin '%s' does not support control commands", eid);
+        *status = g_strdup_printf("Plugin '%s' does not support control commands", id);
         r = EVENTDCTL_RETURN_CODE_PLUGIN_ERROR;
     }
     else

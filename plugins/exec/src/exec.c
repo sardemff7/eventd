@@ -120,7 +120,7 @@ _eventd_exec_event_action(EventdPluginContext *context, const gchar *config_id, 
  * Plugin interface
  */
 
-EVENTD_EXPORT const gchar *eventd_plugin_id = "eventd-exec";
+EVENTD_EXPORT const gchar *eventd_plugin_id = "exec";
 EVENTD_EXPORT
 void
 eventd_plugin_get_interface(EventdPluginInterface *interface)

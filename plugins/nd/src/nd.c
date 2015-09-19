@@ -574,7 +574,7 @@ _eventd_nd_event_action(EventdPluginContext *context, const gchar *config_id, Ev
  * Plugin interface
  */
 
-EVENTD_EXPORT const gchar *eventd_plugin_id = "eventd-nd";
+EVENTD_EXPORT const gchar *eventd_plugin_id = "nd";
 EVENTD_EXPORT
 void
 eventd_plugin_get_interface(EventdPluginInterface *interface)

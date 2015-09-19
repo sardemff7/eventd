@@ -259,28 +259,11 @@ _eventd_eventdctl_process_command(const gchar *private_socket, gboolean autospaw
         return EVENTDCTL_RETURN_CODE_CONNECTION_ERROR;
     }
 
-    gchar *plugin = NULL;
     if ( g_strcmp0(argv[0], "notification-daemon") == 0 )
-        argv[0] = "eventd-nd";
-    else if (
-                 ( g_strcmp0(argv[0], "evp") == 0 )
-              || ( g_strcmp0(argv[0], "fdo-notifications") == 0 )
-              || ( g_strcmp0(argv[0], "relay") == 0 )
-              || ( g_strcmp0(argv[0], "exec") == 0 )
-              || ( g_strcmp0(argv[0], "nd") == 0 )
-              || ( g_strcmp0(argv[0], "im") == 0 )
-              || ( g_strcmp0(argv[0], "sound") == 0 )
-              || ( g_strcmp0(argv[0], "tts") == 0 )
-              || ( g_strcmp0(argv[0], "notify") == 0 )
-            )
-    {
-        plugin = g_strconcat("eventd-", argv[0], NULL);
-        argv[0] = plugin;
-    }
+        argv[0] = "nd";
 
     retval = _eventd_eventdctl_send_argv(connection, argc, argv);
 
-    g_free(plugin);
     if ( ! g_io_stream_close(connection, NULL, &error) )
         g_warning("Can't close the stream: %s", error->message);
     g_clear_error(&error);

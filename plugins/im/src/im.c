@@ -588,7 +588,7 @@ _eventd_im_event_action(EventdPluginContext *context, const gchar *config_id, Ev
  * Plugin interface
  */
 
-EVENTD_EXPORT const gchar *eventd_plugin_id = "eventd-im";
+EVENTD_EXPORT const gchar *eventd_plugin_id = "im";
 EVENTD_EXPORT
 void
 eventd_plugin_get_interface(EventdPluginInterface *interface)

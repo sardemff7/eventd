@@ -159,7 +159,7 @@ _eventd_tts_event_action(EventdPluginContext *context, const gchar *config_id, E
  * Plugin interface
  */
 
-EVENTD_EXPORT const gchar *eventd_plugin_id = "eventd-tts";
+EVENTD_EXPORT const gchar *eventd_plugin_id = "tts";
 EVENTD_EXPORT
 void
 eventd_plugin_get_interface(EventdPluginInterface *interface)

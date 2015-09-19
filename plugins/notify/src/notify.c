@@ -250,7 +250,7 @@ _eventd_libnotify_event_action(EventdPluginContext *context, const gchar *config
  * Plugin interface
  */
 
-EVENTD_EXPORT const gchar *eventd_plugin_id = "eventd-notify";
+EVENTD_EXPORT const gchar *eventd_plugin_id = "notify";
 EVENTD_EXPORT
 void
 eventd_plugin_get_interface(EventdPluginInterface *interface)

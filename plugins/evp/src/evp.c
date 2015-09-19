@@ -441,7 +441,7 @@ _eventd_evp_config_reset(EventdPluginContext *context)
  * Plugin interface
  */
 
-EVENTD_EXPORT const gchar *eventd_plugin_id = "eventd-evp";
+EVENTD_EXPORT const gchar *eventd_plugin_id = "evp";
 EVENTD_EXPORT
 void
 eventd_plugin_get_interface(EventdPluginInterface *interface)

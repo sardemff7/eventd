@@ -222,7 +222,7 @@ _eventd_sound_event_action(EventdPluginContext *context, const gchar *config_id,
  * Plugin interface
  */
 
-EVENTD_EXPORT const gchar *eventd_plugin_id = "eventd-sound";
+EVENTD_EXPORT const gchar *eventd_plugin_id = "sound";
 EVENTD_EXPORT
 void
 eventd_plugin_get_interface(EventdPluginInterface *interface)

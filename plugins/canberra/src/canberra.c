@@ -247,7 +247,7 @@ _eventd_libcanberra_event_action(EventdPluginContext *context, const gchar *conf
  * Plugin interface
  */
 
-EVENTD_EXPORT const gchar *eventd_plugin_id = "eventd-canberra";
+EVENTD_EXPORT const gchar *eventd_plugin_id = "canberra";
 EVENTD_EXPORT
 void
 eventd_plugin_get_interface(EventdPluginInterface *interface)

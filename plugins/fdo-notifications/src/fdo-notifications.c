@@ -599,7 +599,7 @@ _eventd_fdo_notifications_stop(EventdPluginContext *context)
  * Plugin interface
  */
 
-EVENTD_EXPORT const gchar *eventd_plugin_id = "eventd-fdo-notifications";
+EVENTD_EXPORT const gchar *eventd_plugin_id = "fdo-notifications";
 EVENTD_EXPORT
 void
 eventd_plugin_get_interface(EventdPluginInterface *interface)
