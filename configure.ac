@@ -109,7 +109,7 @@ AC_SUBST([fdonotificationscapabilitiesdir])
 EVENTD_I18N
 GLIB_DEFINE_LOCALEDIR([EVENTD_LOCALEDIR])
 GW_INIT
-NK_INIT([enum token colour/alpha colour/double], [AM_DOCBOOK_CONDITIONS])
+NK_INIT
 
 #
 # Common dependencies
