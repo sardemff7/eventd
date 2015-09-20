@@ -5,7 +5,7 @@ plugins_LTLIBRARIES += \
 	sound.la \
 	$(null)
 
-man5_MANS += \
+dist_man5_MANS += \
 	%D%/man/eventd-sound.event.5 \
 	$(null)
 

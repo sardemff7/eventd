@@ -5,7 +5,7 @@ plugins_LTLIBRARIES += \
 	notify.la \
 	$(null)
 
-man5_MANS += \
+dist_man5_MANS += \
 	%D%/man/eventd-notify.event.5 \
 	$(null)
 endif

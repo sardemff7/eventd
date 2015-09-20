@@ -4,11 +4,11 @@ bin_PROGRAMS += \
 	eventd \
 	$(null)
 
-man1_MANS += \
+dist_man1_MANS += \
 	%D%/man/eventd.1 \
 	$(null)
 
-man5_MANS += \
+dist_man5_MANS += \
 	%D%/man/eventd.conf.5 \
 	%D%/man/eventd.event.5 \
 	$(null)

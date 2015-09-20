@@ -1,12 +1,12 @@
 EXTRA_DIST += \
 	%D%/common-man.xml \
-	$(man1_MANS:.1=.xml) \
-	$(man5_MANS:.5=.xml) \
+	$(dist_man1_MANS:.1=.xml) \
+	$(dist_man5_MANS:.5=.xml) \
 	$(null)
 
-CLEANFILES += \
-	$(man1_MANS) \
-	$(man5_MANS) \
+DISTCLEANFILES += \
+	$(dist_man1_MANS) \
+	$(dist_man5_MANS) \
 	$(null)
 
 EV_V_MAN = $(ev__v_man_@AM_V@)
@@ -43,8 +43,8 @@ $(MAN_STAMP):
  endif
 endif
 
-$(man1_MANS): %.1: %.xml $(MAN_GEN_DEPS)
+$(dist_man1_MANS): %.1: %.xml $(MAN_GEN_DEPS)
 	$(MAN_GEN_RULE)
 
-$(man5_MANS): %.5: %.xml $(MAN_GEN_DEPS)
+$(dist_man5_MANS): %.5: %.xml $(MAN_GEN_DEPS)
 	$(MAN_GEN_RULE)

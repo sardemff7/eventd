@@ -5,7 +5,7 @@ plugins_LTLIBRARIES += \
 	canberra.la \
 	$(null)
 
-man5_MANS += \
+dist_man5_MANS += \
 	%D%/man/eventd-canberra.event.5 \
 	$(null)
 

@@ -5,7 +5,7 @@ plugins_LTLIBRARIES += \
 	tts.la \
 	$(null)
 
-man5_MANS += \
+dist_man5_MANS += \
 	%D%/man/eventd-tts.event.5 \
 	$(null)
 endif

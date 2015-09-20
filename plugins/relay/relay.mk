@@ -12,11 +12,11 @@ check_PROGRAMS += \
 	relay-connection.test \
 	$(null)
 
-man1_MANS += \
+dist_man1_MANS += \
 	%D%/man/eventdctl-relay.1 \
 	$(null)
 
-man5_MANS += \
+dist_man5_MANS += \
 	%D%/man/eventd-relay.event.5 \
 	$(null)
 

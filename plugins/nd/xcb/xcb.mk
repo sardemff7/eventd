@@ -5,7 +5,7 @@ ndbackends_LTLIBRARIES += \
 	xcb.la \
 	$(null)
 
-man5_MANS += \
+dist_man5_MANS += \
 	%D%/man/eventd-nd-xcb.conf.5 \
 	$(null)
 

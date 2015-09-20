@@ -32,8 +32,8 @@ XFAIL_TESTS =
 check_PROGRAMS =
 check_LTLIBRARIES =
 
-man1_MANS =
-man5_MANS =
+dist_man1_MANS =
+dist_man5_MANS =
 pkgconfig_DATA =
 noarch_pkgconfig_DATA =
 dist_vapi_DATA =
@@ -55,6 +55,7 @@ EXTRA_DIST = \
 	src/config-version.h \
 	$(null)
 CLEANFILES =
+DISTCLEANFILES =
 
 
 AM_CPPFLAGS += \

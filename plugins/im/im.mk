@@ -5,7 +5,7 @@ plugins_LTLIBRARIES += \
 	im.la \
 	$(null)
 
-man5_MANS += \
+dist_man5_MANS += \
 	%D%/man/eventd-im.conf.5 \
 	%D%/man/eventd-im.event.5 \
 	$(null)

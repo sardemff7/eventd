@@ -4,7 +4,7 @@ plugins_LTLIBRARIES += \
 	fdo-notifications.la \
 	$(null)
 
-man1_MANS += \
+dist_man1_MANS += \
 	%D%/man/eventd-fdo-notifications.1 \
 	$(null)
 
