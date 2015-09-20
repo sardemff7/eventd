@@ -22,8 +22,29 @@ MAN_GEN_RULE = $(EV_V_MAN)$(MKDIR_P) $(dir $@) && \
 	http://docbook.sourceforge.net/release/xsl/current/manpages/profile-docbook.xsl \
 	$<
 
-$(man1_MANS): %.1: %.xml $(NKUTILS_MANFILES) %D%/common-man.xml %D%/config.ent
+MAN_GEN_DEPS = \
+	$(NKUTILS_MANFILES) \
+	%D%/common-man.xml \
+	%D%/config.ent \
+	$(null)
+
+if EVENTD_USE_GIT_VERSION
+MAN_STAMP = %D%/man-version.stamp
+
+MAN_GEN_DEPS += \
+	$(MAN_STAMP) \
+	$(null)
+
+$(MAN_STAMP):
+	@echo '$(EVENTD_VERSION)' > $@
+
+ ifneq ($(shell cat $(MAN_STAMP)),$(EVENTD_VERSION))
+.PHONY: $(MAN_STAMP)
+ endif
+endif
+
+$(man1_MANS): %.1: %.xml $(MAN_GEN_DEPS)
 	$(MAN_GEN_RULE)
 
-$(man5_MANS): %.5: %.xml $(NKUTILS_MANFILES) %D%/common-man.xml %D%/config.ent
+$(man5_MANS): %.5: %.xml $(MAN_GEN_DEPS)
 	$(MAN_GEN_RULE)
