@@ -12,11 +12,11 @@ check_PROGRAMS += \
 	evp-connection.test \
 	$(null)
 
-dist_man1_MANS += \
+man1_MANS += \
 	%D%/man/eventd-evp.1 \
 	$(null)
 
-dist_man5_MANS += \
+man5_MANS += \
 	%D%/man/eventd-evp.conf.5 \
 	%D%/man/eventd-evp.event.5 \
 	$(null)

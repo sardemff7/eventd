@@ -14,11 +14,11 @@ pkginclude_HEADERS += \
 	%D%/include/eventd-nd-backend.h \
 	$(null)
 
-dist_man1_MANS += \
+man1_MANS += \
 	%D%/man/eventdctl-nd.1 \
 	$(null)
 
-dist_man5_MANS += \
+man5_MANS += \
 	%D%/man/eventd-nd.conf.5 \
 	%D%/man/eventd-nd.event.5 \
 	$(null)

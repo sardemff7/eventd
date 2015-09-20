@@ -28,7 +28,7 @@ AC_PROG_MKDIR_P
 LT_INIT([disable-static pic-only])
 PKG_PROG_PKG_CONFIG
 AC_PATH_PROG([XSLTPROC], [xsltproc])
-if test -d .git -a -z "${XSLTPROC}"; then
+if test -z "${XSLTPROC}"; then
     AC_MSG_ERROR([xsltproc not found])
 fi
 AC_PROG_INSTALL

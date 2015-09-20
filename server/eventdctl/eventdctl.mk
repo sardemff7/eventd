@@ -9,7 +9,7 @@ bin_PROGRAMS += \
 	eventdctl \
 	$(null)
 
-dist_man1_MANS += \
+man1_MANS += \
 	%D%/man/eventdctl.1 \
 	$(null)
 
