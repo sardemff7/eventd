@@ -6,19 +6,17 @@ m4_define([eventd_bug_report_page], [https://github.com/sardemff7/eventd/issues]
 AC_PREREQ([2.65])
 AC_INIT([eventd],eventd_version_major.eventd_version_minor[]eventd_version_patch,eventd_bug_report_page,[],eventd_homepage)
 
-if test -d .git; then
-    # Redefine PACKAGE_VERSION only to preserve VERSION for distdir
-    PACKAGE_VERSION="${PACKAGE_VERSION} - `git describe --tags --always` (`git describe --tags --always --all | sed -e 's:heads/::'`)"
-fi
-
 AC_CONFIG_HEADERS([src/config.h])
 AC_CONFIG_SRCDIR([server/eventd/src/eventd.c])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([.aux])
 
 AM_INIT_AUTOMAKE([1.14 foreign subdir-objects parallel-tests dist-xz no-dist-gzip tar-ustar])
-
 AM_SILENT_RULES([yes])
+
+AH_BOTTOM([#include <src/config-version.h>])
+AM_CONDITIONAL([EVENTD_USE_GIT_VERSION], [test -d .git])
+
 
 AC_ARG_VAR([XSLTPROC], [The xsltproc executable])
 

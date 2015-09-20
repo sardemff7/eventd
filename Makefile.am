@@ -2,6 +2,14 @@ comma := ,
 empty :=
 space := $(empty) $(empty)
 
+if EVENTD_USE_GIT_VERSION
+# First, check if we have an exact match for a tag
+EVENTD_GIT_EXACT_VERSION := $(shell git describe --tags --match 'v*' --exact-match --dirty 2>/dev/null)
+EVENTD_VERSION := $(if $(EVENTD_GIT_EXACT_VERSION),$(EVENTD_GIT_EXACT_VERSION),$(VERSION) - $(shell git describe --tags --always --dirty) ($(shell git describe --tags --always --all | sed -e 's:heads/::')))
+else # ! EVENTD_USE_GIT_VERSION
+EVENTD_VERSION = $(VERSION)
+endif # ! EVENTD_USE_GIT_VERSION
+
 AM_DISTCHECK_CONFIGURE_FLAGS = \
 	--with-systemduserunitdir="$$dc_install_base/$(systemduserunitdir)" \
 	--with-dbussessionservicedir="$$dc_install_base/$(dbussessionservicedir)" \
@@ -44,6 +52,7 @@ EXTRA_DIST = \
 	README.md \
 	PROTOCOL.md \
 	COPYING.LGPLv3 \
+	src/config-version.h \
 	$(null)
 CLEANFILES =
 
@@ -51,6 +60,7 @@ CLEANFILES =
 AM_CPPFLAGS += \
 	-I $(srcdir)/src/ \
 	-I $(builddir)/src/ \
+	-D EVENTD_VERSION='"$(EVENTD_VERSION)"' \
 	-D G_LOG_DOMAIN=\"$(word 2,$(subst /,$(space),$<))\" \
 	$(null)
 
