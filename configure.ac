@@ -1,8 +1,10 @@
 m4_define([eventd_version_major], [0])
 m4_define([eventd_version_minor], [4])
 m4_define([eventd_version_patch], [])
+m4_define([eventd_homepage], [http://www.eventd.org])
+m4_define([eventd_bug_report_page], [https://github.com/sardemff7/eventd/issues])
 AC_PREREQ([2.65])
-AC_INIT([eventd],eventd_version_major.eventd_version_minor[]eventd_version_patch,[],[])
+AC_INIT([eventd],eventd_version_major.eventd_version_minor[]eventd_version_patch,eventd_bug_report_page,[],eventd_homepage)
 
 if test -d .git; then
     # Redefine PACKAGE_VERSION only to preserve VERSION for distdir
