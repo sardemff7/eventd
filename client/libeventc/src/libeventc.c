@@ -432,6 +432,7 @@ eventc_connection_event(EventcConnection *self, EventdEvent *event, GError **err
     {
         g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_EVENT, "Couldn't send event: %s", _inner_error_->message);
         g_error_free(_inner_error_);
+        g_free(id);
         return FALSE;
     }
 
