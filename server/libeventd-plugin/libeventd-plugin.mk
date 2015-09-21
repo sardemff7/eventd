@@ -5,7 +5,7 @@ LIBEVENTD_PLUGIN_REVISION=0
 LIBEVENTD_PLUGIN_AGE=0
 
 
-AM_CPPFLAGS += \
+AM_CFLAGS += \
 	-I $(srcdir)/%D%/include \
 	$(null)
 
@@ -47,7 +47,7 @@ libeventd_plugin_la_LIBADD = \
 
 EventdPlugin-0.gir: Eventd-0.gir libeventd-plugin.la
 EventdPlugin_0_gir_INCLUDES = GObject-2.0 Gio-2.0 Eventd-0
-EventdPlugin_0_gir_CFLAGS = $(AM_CPPFLAGS) $(libeventd_plugin_la_CFLAGS) $(CPPFLAGS) $(CFLAGS)
+EventdPlugin_0_gir_CFLAGS = $(AM_CFLAGS) $(libeventd_plugin_la_CFLAGS) $(CFLAGS)
 EventdPlugin_0_gir_LIBS = libeventd-plugin.la
 EventdPlugin_0_gir_FILES = $(filter-out %.h,$(libeventd_plugin_la_SOURCES)) $(filter %D%/include/%.h,$(pkginclude_HEADERS))
 INTROSPECTION_GIRS += EventdPlugin-0.gir

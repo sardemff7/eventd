@@ -64,6 +64,11 @@ AM_CPPFLAGS += \
 	-D G_LOG_DOMAIN=\"$(word 2,$(subst /,$(space),$<))\" \
 	$(null)
 
+AM_CFLAGS += \
+	-I $(srcdir)/src/ \
+	-I $(builddir)/src/ \
+	$(null)
+
 AM_XSLTPROCFLAGS += \
 	--path "$(srcdir)/src/" \
 	--path "$(builddir)/src/" \

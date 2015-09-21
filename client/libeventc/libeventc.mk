@@ -5,7 +5,7 @@ LIBEVENTC_REVISION=0
 LIBEVENTC_AGE=0
 
 
-AM_CPPFLAGS += \
+AM_CFLAGS += \
 	-I $(srcdir)/%D%/include \
 	$(null)
 
@@ -83,7 +83,7 @@ libeventc_connection_test_LDADD = \
 
 Eventc-0.gir: Eventd-0.gir libeventc.la
 Eventc_0_gir_INCLUDES = GObject-2.0 Gio-2.0 Eventd-0
-Eventc_0_gir_CFLAGS = $(AM_CPPFLAGS) $(libeventc_la_CFLAGS) $(CPPFLAGS) $(CFLAGS)
+Eventc_0_gir_CFLAGS = $(AM_CFLAGS) $(libeventc_la_CFLAGS) $(CFLAGS)
 Eventc_0_gir_LIBS = libeventc.la
 Eventc_0_gir_FILES = $(filter-out %.h,$(libeventc_la_SOURCES)) $(filter %D%/include/%.h,$(pkginclude_HEADERS))
 INTROSPECTION_GIRS += Eventc-0.gir

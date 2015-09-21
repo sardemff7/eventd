@@ -5,7 +5,7 @@ LIBEVENTD_REVISION=0
 LIBEVENTD_AGE=0
 
 
-AM_CPPFLAGS += \
+AM_CFLAGS += \
 	-I $(srcdir)/%D%/include \
 	$(null)
 
@@ -85,7 +85,7 @@ libeventd_event_test_LDADD = \
 
 Eventd-0.gir: libeventd.la
 Eventd_0_gir_INCLUDES = GObject-2.0
-Eventd_0_gir_CFLAGS = $(AM_CPPFLAGS) $(libeventd_la_CFLAGS) $(CPPFLAGS) $(CFLAGS)
+Eventd_0_gir_CFLAGS = $(AM_CFLAGS) $(libeventd_la_CFLAGS) $(CFLAGS)
 Eventd_0_gir_LIBS = libeventd.la
 Eventd_0_gir_FILES = $(filter-out %.h,$(libeventd_la_SOURCES)) $(filter %D%/include/%.h,$(pkginclude_HEADERS))
 INTROSPECTION_GIRS += Eventd-0.gir

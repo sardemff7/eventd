@@ -1,6 +1,6 @@
 # Internal helper library
 
-AM_CPPFLAGS += \
+AM_CFLAGS += \
 	-I $(srcdir)/%D%/include \
 	$(null)
 
