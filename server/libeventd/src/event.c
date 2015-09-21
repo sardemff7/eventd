@@ -113,7 +113,7 @@ eventd_event_class_init(EventdEventClass *klass)
     /**
      * EventdEvent::answered:
      * @event: the #EventdEvent that was answered
-     * @answer (transfer none): the answer given
+     * @answer: (transfer none): the answer given
      *
      * Emitted when an event is answered.
      */
