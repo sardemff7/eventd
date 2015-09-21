@@ -199,20 +199,10 @@ if test x${enable_notification_daemon} = xyes; then
     AC_CHECK_HEADERS([math.h])
     PKG_CHECK_MODULES([CAIRO], [cairo])
     PKG_CHECK_MODULES([PANGO], [pango pangocairo])
+    PKG_CHECK_MODULES([GDK_PIXBUF], [gdk-pixbuf-2.0])
     AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_notification_daemon"
 fi
 AM_CONDITIONAL([ENABLE_NOTIFICATION_DAEMON], [test x${enable_notification_daemon} = xyes])
-
-AC_ARG_ENABLE([gdk-pixbuf], AS_HELP_STRING([--disable-gdk-pixbuf], [Disable image and icon support for notification-daemon through gdk-pixbuf]), [], [enable_gdk_pixbuf=yes])
-if test x${enable_gdk_pixbuf} = xyes; then
-    if test x${enable_notification_daemon} = xno; then
-        AC_MSG_ERROR([*** image and icon support required but not notification-daemon plugin])
-    fi
-    PKG_CHECK_MODULES([GDK_PIXBUF], [gdk-pixbuf-2.0])
-    AC_DEFINE([ENABLE_GDK_PIXBUF], [1], [Enable image and icon support for notification-daemon through gdk-pixbuf])
-    AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_gdk_pixbuf"
-fi
-AM_CONDITIONAL([ENABLE_GDK_PIXBUF], [test x${enable_gdk_pixbuf} = xyes])
 
 # nd backends
 AC_ARG_ENABLE([xcb], AS_HELP_STRING([--disable-xcb], [Disable XCB graphical backend]), [], [enable_xcb=yes])
@@ -347,7 +337,6 @@ AC_MSG_RESULT([
         EVENT protocol relay: yes
         exec plugin: yes
         notification-daemon: ${enable_notification_daemon}
-            Icon support: ${enable_gdk_pixbuf}
             Backends:
                 XCB: ${enable_xcb}
                 Linux framebuffer: ${enable_linux_framebuffer}

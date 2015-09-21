@@ -26,18 +26,12 @@ man5_MANS += \
 dist_fdonotificationscapabilities_DATA += \
 	%D%/fdonotificationscapabilities/nd.capabilities \
 	$(null)
-
-if ENABLE_GDK_PIXBUF
-dist_fdonotificationscapabilities_DATA += \
-	%D%/fdonotificationscapabilities/nd-icons.capabilities \
-	$(null)
-endif
-
 endif
 
 
 nd_la_SOURCES = \
 	%D%/src/icon.h \
+	%D%/src/icon.c \
 	%D%/src/cairo.c \
 	%D%/src/cairo.h \
 	%D%/src/style.c \
@@ -77,12 +71,6 @@ nd_la_LIBADD = \
 	$(GMODULE_LIBS) \
 	$(GLIB_LIBS) \
 	$(null)
-
-if ENABLE_GDK_PIXBUF
-nd_la_SOURCES += \
-	%D%/src/icon.c \
-	$(null)
-endif
 
 ndbackendsdir = $(pluginsdir)/nd
 

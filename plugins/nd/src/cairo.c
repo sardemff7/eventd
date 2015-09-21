@@ -40,10 +40,8 @@
 #include <libeventd-helpers-config.h>
 
 #include "style.h"
-#ifdef ENABLE_GDK_PIXBUF
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include "icon.h"
-#endif /* ENABLE_GDK_PIXBUF */
 
 #include "cairo.h"
 
@@ -312,10 +310,8 @@ eventd_nd_cairo_get_surface(EventdEvent *event, EventdNdNotificationContents *no
     PangoLayout *title;
     PangoLayout *message = NULL;
 
-#ifdef ENABLE_GDK_PIXBUF
     cairo_surface_t *image = NULL;
     cairo_surface_t *icon = NULL;
-#endif /* ENABLE_GDK_PIXBUF */
 
     gint content_height;
     gint text_width = 0, text_height = 0;
@@ -333,11 +329,9 @@ eventd_nd_cairo_get_surface(EventdEvent *event, EventdNdNotificationContents *no
 
     width = 2 * padding + text_width;
 
-#ifdef ENABLE_GDK_PIXBUF
     if ( ( max_width < 0 ) || ( width < max_width ) )
         eventd_nd_cairo_image_and_icon_process(notification, style, ( max_width > -1 ) ? ( max_width - width ) : -1, &image, &icon, &text_margin, &image_width, &image_height);
     width += image_width;
-#endif /* ENABLE_GDK_PIXBUF */
 
     /* We are sure that min_width < max_width */
     if ( min_width > width )
@@ -356,9 +350,7 @@ eventd_nd_cairo_get_surface(EventdEvent *event, EventdNdNotificationContents *no
     bubble = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
     cr = cairo_create(bubble);
     _eventd_nd_cairo_bubble_draw(cr, eventd_nd_style_get_bubble_colour(style), eventd_nd_style_get_bubble_radius(style), width, height);
-#ifdef ENABLE_GDK_PIXBUF
     eventd_nd_cairo_image_and_icon_draw(cr, image, icon, style, width, height);
-#endif /* ENABLE_GDK_PIXBUF */
     _eventd_nd_cairo_text_draw(cr, style, title, message, padding + text_margin, padding, text_width, content_height);
     cairo_destroy(cr);
 

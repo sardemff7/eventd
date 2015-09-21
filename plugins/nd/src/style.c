@@ -25,9 +25,7 @@
 #include <glib.h>
 #include <pango/pango.h>
 
-#ifdef ENABLE_GDK_PIXBUF
 #include <gdk-pixbuf/gdk-pixbuf.h>
-#endif /* ENABLE_GDK_PIXBUF */
 
 #include <libeventd-event.h>
 #include <libeventd-helpers-config.h>
@@ -66,10 +64,8 @@ struct _EventdNdStyle {
 
         FormatString *title;
         FormatString *message;
-#ifdef ENABLE_GDK_PIXBUF
         Filename *image;
         Filename *icon;
-#endif /* ENABLE_GDK_PIXBUF */
     } template;
 
     struct {
@@ -83,7 +79,6 @@ struct _EventdNdStyle {
         Colour colour;
     } bubble;
 
-#ifdef ENABLE_GDK_PIXBUF
     struct {
         gboolean set;
 
@@ -102,7 +97,6 @@ struct _EventdNdStyle {
         gint                       margin;
         gdouble                    fade_width;
     } icon;
-#endif /* ENABLE_GDK_PIXBUF */
 
     struct {
         gboolean set;
@@ -126,10 +120,8 @@ struct _EventdNdStyle {
 struct _EventdNdNotificationContents {
     gchar *title;
     gchar *message;
-#ifdef ENABLE_GDK_PIXBUF
     GdkPixbuf *image;
     GdkPixbuf *icon;
-#endif /* ENABLE_GDK_PIXBUF */
 };
 
 static void
@@ -139,10 +131,8 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
     style->template.set     = TRUE;
     style->template.title   = evhelpers_format_string_new(g_strdup("${name}"));
     style->template.message = evhelpers_format_string_new(g_strdup("${text}"));
-#ifdef ENABLE_GDK_PIXBUF
     style->template.image   = evhelpers_filename_new(g_strdup("image"));
     style->template.icon    = evhelpers_filename_new(g_strdup("icon"));
-#endif /* ENABLE_GDK_PIXBUF */
 
     /* bubble */
     style->bubble.set = TRUE;
@@ -179,7 +169,6 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
     style->message.colour.b    = 0.9;
     style->message.colour.a    = 1.0;
 
-#ifdef ENABLE_GDK_PIXBUF
     /* image */
     style->image.set = TRUE;
     style->image.max_width  = 50;
@@ -194,7 +183,6 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
     style->icon.max_height = 50;
     style->icon.margin     = 10;
     style->icon.fade_width = 0.75;
-#endif /* ENABLE_GDK_PIXBUF */
 }
 
 EventdNdStyle *
@@ -234,7 +222,6 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
         else if ( self->parent != NULL )
             self->template.message = evhelpers_format_string_ref(eventd_nd_style_get_template_message(self->parent));
 
-#ifdef ENABLE_GDK_PIXBUF
         Filename *filename = NULL;
 
         evhelpers_filename_unref(self->template.image);
@@ -249,7 +236,6 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
             self->template.icon = filename;
         else if ( self->parent != NULL )
             self->template.icon = evhelpers_filename_ref(eventd_nd_style_get_template_icon(self->parent));
-#endif /* ENABLE_GDK_PIXBUF */
     }
 
     if ( g_key_file_has_group(config_file, "NotificationBubble") )
@@ -362,7 +348,6 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
 
     }
 
-#ifdef ENABLE_GDK_PIXBUF
     if ( g_key_file_has_group(config_file, "NotificationImage") )
     {
         self->image.set = TRUE;
@@ -442,7 +427,6 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
         else if ( self->parent != NULL )
             self->icon.fade_width = eventd_nd_style_get_icon_fade_width(self->parent);
     }
-#endif /* ENABLE_GDK_PIXBUF */
 }
 
 void
@@ -457,10 +441,8 @@ eventd_nd_style_free(gpointer data)
 
     evhelpers_format_string_unref(style->template.title);
     evhelpers_format_string_unref(style->template.message);
-#ifdef ENABLE_GDK_PIXBUF
     evhelpers_filename_unref(style->template.image);
     evhelpers_filename_unref(style->template.icon);
-#endif /* ENABLE_GDK_PIXBUF */
 
     g_free(style);
 }
@@ -602,7 +584,6 @@ eventd_nd_style_get_message_colour(EventdNdStyle *self)
     return eventd_nd_style_get_message_colour(self->parent);
 }
 
-#ifdef ENABLE_GDK_PIXBUF
 gint
 eventd_nd_style_get_image_max_width(EventdNdStyle *self)
 {
@@ -674,13 +655,11 @@ eventd_nd_style_get_icon_fade_width(EventdNdStyle *self)
         return self->icon.fade_width;
     return eventd_nd_style_get_icon_fade_width(self->parent);
 }
-#endif /* ENABLE_GDK_PIXBUF */
 
 
 /* EventdNdNotificationContents */
 
 
-#ifdef ENABLE_GDK_PIXBUF
 static GdkPixbuf *
 _eventd_nd_notification_contents_pixbuf_from_file(const gchar *path, gint width, gint height)
 {
@@ -772,7 +751,6 @@ _eventd_nd_notification_contents_pixbuf_from_base64(EventdEvent *event, const gc
 
     return pixbuf;
 }
-#endif /* ENABLE_GDK_PIXBUF */
 
 EventdNdNotificationContents *
 eventd_nd_notification_contents_new(EventdNdStyle *style, EventdEvent *event, gint width, gint height)
@@ -791,7 +769,6 @@ eventd_nd_notification_contents_new(EventdNdStyle *style, EventdEvent *event, gi
         /* Empty message, just skip it */
         self->message = (g_free(self->message), NULL);
 
-#ifdef ENABLE_GDK_PIXBUF
     const Filename *image = eventd_nd_style_get_template_image(style);
     const Filename *icon = eventd_nd_style_get_template_icon(style);
     gchar *path;
@@ -814,7 +791,6 @@ eventd_nd_notification_contents_new(EventdNdStyle *style, EventdEvent *event, gi
             self->icon = _eventd_nd_notification_contents_pixbuf_from_base64(event, data);
         g_free(path);
     }
-#endif /* ENABLE_GDK_PIXBUF */
 
     return self;
 }
@@ -825,12 +801,10 @@ eventd_nd_notification_contents_free(EventdNdNotificationContents *self)
     if ( self == NULL )
         return;
 
-#ifdef ENABLE_GDK_PIXBUF
     if ( self->icon != NULL )
         g_object_unref(self->icon);
     if ( self->image != NULL )
         g_object_unref(self->image);
-#endif /* ENABLE_GDK_PIXBUF */
     g_free(self->message);
     g_free(self->title);
 
@@ -849,7 +823,6 @@ eventd_nd_notification_contents_get_message(EventdNdNotificationContents *self)
     return self->message;
 }
 
-#ifdef ENABLE_GDK_PIXBUF
 GdkPixbuf *
 eventd_nd_notification_contents_get_image(EventdNdNotificationContents *self)
 {
@@ -861,5 +834,4 @@ eventd_nd_notification_contents_get_icon(EventdNdNotificationContents *self)
 {
     return self->icon;
 }
-#endif /* ENABLE_GDK_PIXBUF */
 

@@ -82,7 +82,7 @@
                         </listitem>
                     </varlistentry>
 
-                    <varlistentry condition="website;enable_gdk_pixbuf">
+                    <varlistentry>
                         <term><varname>Image=</varname> (defaults to <literal>"image"</literal>)</term>
                         <listitem>
                             <para>A <type>file URI</type></para>
@@ -90,7 +90,7 @@
                         </listitem>
                     </varlistentry>
 
-                    <varlistentry condition="website;enable_gdk_pixbuf">
+                    <varlistentry>
                         <term><varname>Icon=</varname> (defaults to <literal>"icon"</literal>)</term>
                         <listitem>
                             <para>A <type>file URI</type></para>
@@ -286,7 +286,7 @@
                 </variablelist>
             </refsect3>
 
-            <refsect3 condition="website;enable_gdk_pixbuf">
+            <refsect3>
                 <title>Section <varname>[NotificationImage]</varname></title>
 
                 <variablelist>
@@ -309,7 +309,7 @@
                 </variablelist>
             </refsect3>
 
-            <refsect3 condition="website;enable_gdk_pixbuf">
+            <refsect3>
                 <title>Section <varname>[NotificationIcon]</varname></title>
 
                 <variablelist>
