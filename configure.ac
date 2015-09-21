@@ -1,6 +1,6 @@
 m4_define([eventd_version_major], [0])
 m4_define([eventd_version_minor], [5])
-m4_define([eventd_version_patch], [])
+m4_define([eventd_version_patch], [.1])
 m4_define([eventd_homepage], [http://www.eventd.org])
 m4_define([eventd_bug_report_page], [https://github.com/sardemff7/eventd/issues])
 AC_PREREQ([2.65])
@@ -107,7 +107,7 @@ AC_SUBST([fdonotificationscapabilitiesdir])
 EVENTD_I18N
 GLIB_DEFINE_LOCALEDIR([EVENTD_LOCALEDIR])
 GW_INIT
-NK_INIT
+NK_INIT([enum token colour/alpha colour/double])
 
 #
 # Common dependencies
