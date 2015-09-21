@@ -200,20 +200,47 @@ eventc_connection_is_connected(EventcConnection *self, GError **error)
 }
 
 static gboolean
-_eventc_connection_connect_before(EventcConnection *self, GSocketClient **client, GSocketConnectable **address, GError **error)
+_eventc_connection_expect_connected(EventcConnection *self, GError **error)
 {
     GError *_inner_error_ = NULL;
 
-    if ( libeventd_evp_context_is_connected(self->priv->evp, &_inner_error_) )
+    if ( eventc_connection_is_connected(self, &_inner_error_) )
+        return TRUE;
+
+    if ( _inner_error_ != NULL )
+        g_propagate_error(error, _inner_error_);
+    else
+        g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_NOT_CONNECTED, "Not connected, you must connect first");
+    return FALSE;
+}
+
+static gboolean
+_eventc_connection_expect_disconnected(EventcConnection *self, GError **error)
+{
+    GError *_inner_error_ = NULL;
+
+    if ( eventc_connection_is_connected(self, &_inner_error_) )
     {
         g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_ALREADY_CONNECTED, "Already connected, you must disconnect first");
         return FALSE;
     }
+
     if ( _inner_error_ != NULL )
     {
         g_propagate_error(error, _inner_error_);
         return FALSE;
     }
+
+    return TRUE;
+}
+
+static gboolean
+_eventc_connection_connect_before(EventcConnection *self, GSocketClient **client, GSocketConnectable **address, GError **error)
+{
+    GError *_inner_error_ = NULL;
+
+    if ( ! _eventc_connection_expect_disconnected(self, error) )
+        return FALSE;
 
     *address = libeventd_evp_get_address(self->priv->host, &_inner_error_);
     if ( *address == NULL )
@@ -413,17 +440,9 @@ eventc_connection_event(EventcConnection *self, EventdEvent *event, GError **err
     }
 
     GError *_inner_error_ = NULL;
-    if ( ! libeventd_evp_context_is_connected(self->priv->evp, &_inner_error_) )
-    {
-        if ( _inner_error_ != NULL )
-        {
-            g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_CONNECTION, "Connection error: %s", _inner_error_->message);
-            g_error_free(_inner_error_);
-        }
-        else
-            g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_NOT_CONNECTED, "Not connected, you must connect first");
+
+    if ( ! _eventc_connection_expect_connected(self, error) )
         return FALSE;
-    }
 
     gchar *id;
 
@@ -465,17 +484,9 @@ eventc_connection_event_end(EventcConnection *self, EventdEvent *event, GError *
     g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
     GError *_inner_error_ = NULL;
-    if ( ! libeventd_evp_context_is_connected(self->priv->evp, &_inner_error_) )
-    {
-        if ( _inner_error_ != NULL )
-        {
-            g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_CONNECTION, "Connection error: %s", _inner_error_->message);
-            g_error_free(_inner_error_);
-        }
-        else
-            g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_NOT_CONNECTED, "Not connected, you must connect first");
+
+    if ( ! _eventc_connection_expect_connected(self, error) )
         return FALSE;
-    }
 
     const gchar *id;
     id = g_hash_table_lookup(self->priv->ids, event);
