@@ -236,7 +236,7 @@
             <varlistentry>
                 <term><literal>31</literal></term>
                 <listitem>
-                    <para>Plugin command execution error. The command could not suceed, see <command>eventdctl</command> output for details.</para>
+                    <para>Plugin command execution error. The command could not succeed, see <command>eventdctl</command> output for details.</para>
                 </listitem>
             </varlistentry>
         </variablelist>

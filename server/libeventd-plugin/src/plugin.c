@@ -76,8 +76,8 @@
 /**
  * EventdPluginCommandStatus:
  * @EVENTD_PLUGIN_COMMAND_STATUS_OK: The command was successful.
- * @EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR: Command error. No command passed, unknown command or missing command argument.
- * @EVENTD_PLUGIN_COMMAND_STATUS_EXEC_ERROR: Plugin error. No plugin or no control command support in plugin.
+ * @EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR: Plugin command error. The plugin command is unknown, or miss an argument.
+ * @EVENTD_PLUGIN_COMMAND_STATUS_EXEC_ERROR: Plugin command execution error. The command could not succeed, see <command>eventdctl</command> output for details.
  */
 
 EVENTD_EXPORT
@@ -157,13 +157,6 @@ EVENTD_EXPORT void eventd_plugin_interface_add_start_callback(EventdPluginInterf
  * before the configuration is reloaded.
  */
 EVENTD_EXPORT void eventd_plugin_interface_add_stop_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback) { interface->stop = callback; }
-
-/**
- * EventdPluginCommandStatus:
- * @EVENTD_PLUGIN_COMMAND_STATUS_OK: No error.
- * @EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR: A user error occurred in a command (e.g., wrong or invalid arguments).
- * @EVENTD_PLUGIN_COMMAND_STATUS_EXEC_ERROR: An error occurred executing a command (e.g., failed to open a socket).
- */
 
 /**
  * EventdPluginControlCommandFunc:
