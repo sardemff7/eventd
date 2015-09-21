@@ -68,13 +68,6 @@ typedef struct {
 } EventdEvpEvent;
 
 static void
-_eventd_evp_error(gpointer data, LibeventdEvpContext *evp, GError *error)
-{
-    g_warning("Connection error: %s", error->message);
-    g_error_free(error);
-}
-
-static void
 _eventd_evp_event_answered(EventdEvent *event, const gchar *answer, gpointer user_data)
 {
     EventdEvpEvent *evp_event = user_data;
@@ -218,8 +211,6 @@ _eventd_evp_event_free(gpointer data)
 }
 
 static LibeventdEvpClientInterface _eventd_evp_interface = {
-    .error     = _eventd_evp_error,
-
     .event     = _eventd_evp_event,
     .end       = _eventd_evp_end,
 

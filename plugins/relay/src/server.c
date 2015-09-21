@@ -55,13 +55,6 @@ typedef struct {
 } EventdRelayEvent;
 
 static void
-_eventd_relay_error(gpointer data, LibeventdEvpContext *evp, GError *error)
-{
-    g_warning("Connection error: %s", error->message);
-    g_error_free(error);
-}
-
-static void
 _eventd_relay_event_answered(EventdEvent *event, const gchar *answer, gpointer user_data)
 {
     EventdRelayEvent *relay_event = user_data;
@@ -156,8 +149,6 @@ _eventd_relay_event_free(gpointer data)
 }
 
 static LibeventdEvpClientInterface _eventd_relay_interface = {
-    .error     = _eventd_relay_error,
-
     .event     = NULL,
     .end       = NULL,
 

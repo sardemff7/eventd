@@ -107,6 +107,10 @@ libeventd_evp_context_close(LibeventdEvpContext *self)
 
     g_cancellable_cancel(self->cancellable);
 
+    if ( self->error != NULL )
+        g_error_free(self->error);
+    self->error = NULL;
+
     if ( self->out != NULL )
         g_object_unref(self->out);
     if ( self->in != NULL )

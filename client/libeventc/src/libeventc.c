@@ -73,12 +73,6 @@ eventc_error_quark(void)
 }
 
 static void
-_eventc_connection_error(gpointer data, LibeventdEvpContext *context, GError *error)
-{
-    g_warning("Error: %s", error->message);
-}
-
-static void
 _eventc_connection_answered(gpointer data, LibeventdEvpContext *context, const gchar *id, const gchar *answer, GHashTable *data_hash)
 {
     EventcConnection *self = data;
@@ -111,8 +105,6 @@ _eventc_connection_bye(gpointer data, LibeventdEvpContext *context)
 }
 
 static LibeventdEvpClientInterface _eventc_connection_client_interface = {
-    .error = _eventc_connection_error,
-
     .event = NULL,
     .end = NULL,
 

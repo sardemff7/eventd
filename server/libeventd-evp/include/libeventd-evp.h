@@ -43,7 +43,6 @@ GSocketConnectable *libeventd_evp_get_address(const gchar *host_and_port, GError
 typedef struct _LibeventdEvpContext LibeventdEvpContext;
 typedef void LibeventdEvpClientIface;
 
-typedef void (*LibeventdEvpErrorCallback)(gpointer client, LibeventdEvpContext *context, GError *error);
 typedef void (*LibeventdEvpCallback)(gpointer client, LibeventdEvpContext *context);
 typedef void (*LibeventdEvpEventCallback)(gpointer client, LibeventdEvpContext *context, const gchar *id, EventdEvent *event);
 typedef void (*LibeventdEvpEndCallback)(gpointer client, LibeventdEvpContext *context, const gchar *id);
@@ -51,8 +50,6 @@ typedef void (*LibeventdEvpAnsweredCallback)(gpointer client, LibeventdEvpContex
 typedef void (*LibeventdEvpEndedCallback)(gpointer client, LibeventdEvpContext *context, const gchar *id, EventdEventEndReason reason);
 
 typedef struct {
-    LibeventdEvpErrorCallback error;
-
     LibeventdEvpEventCallback event;
     LibeventdEvpEndCallback end;
 

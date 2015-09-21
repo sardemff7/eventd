@@ -42,12 +42,6 @@ static void _libeventd_evp_context_receive_callback(GObject *source_object, GAsy
 static void
 _libeventd_evp_receive(LibeventdEvpContext *self, GAsyncReadyCallback callback, gpointer user_data)
 {
-    if ( self->error != NULL )
-    {
-        self->interface->error(self->client, self, self->error);
-        self->error = NULL;
-        return;
-    }
     g_data_input_stream_read_line_async(self->in, self->priority, self->cancellable, callback, user_data);
 }
 
