@@ -34,12 +34,18 @@ typedef enum {
     EVENTD_EVENT_END_REASON_TIMEOUT = 1,
     EVENTD_EVENT_END_REASON_USER_DISMISS = 2,
     EVENTD_EVENT_END_REASON_CLIENT_DISMISS = 3,
-    EVENTD_EVENT_END_REASON_RESERVED = 4
+    EVENTD_EVENT_END_REASON_UNKNOWN = G_MAXUINT32 - 1,
+    EVENTD_EVENT_END_REASON_RESERVED = G_MAXUINT32
 } EventdEventEndReason;
 
 GType eventd_event_end_reason_get_type(void) G_GNUC_CONST;
 
 #define EVENTD_TYPE_EVENT_END_REASON (eventd_event_end_reason_get_type())
+
+gboolean eventd_event_end_reason_is_valid_value(EventdEventEndReason reason);
+const gchar *eventd_event_end_reason_get_value_name(EventdEventEndReason reason);
+const gchar *eventd_event_end_reason_get_value_nick(EventdEventEndReason reason);
+
 
 /*
  * EventdEvent
