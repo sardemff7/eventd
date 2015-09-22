@@ -37,12 +37,12 @@ DATA <name> <data>
 Eventd dispatching
 ------------------
 
-.EVENT <id> <category> <type>
+.EVENT <id> <category> <name>
     Inform the server that an event happened
     The id is an arbritary string representing the event on the client side.
-    The type must contain only the characters
+    The name must contain only the characters
     "A-Za-z0-9-." (without the quotes).
-    The category can use the same characters as the type,
+    The category can use the same characters as the name,
     with the addition of "/" to separate subcategories.
     An arbitrary number of subcategories is accepted.
     The message may contain data using the corresponding messages.
