@@ -242,17 +242,17 @@ EVENTD_EXPORT
 EventdEvent *
 eventd_event_new(const gchar *category, const gchar *name)
 {
-    EventdEvent *event;
+    EventdEvent *self;
 
     g_return_val_if_fail(category != NULL, NULL);
     g_return_val_if_fail(name != NULL, NULL);
 
-    event = g_object_new(EVENTD_TYPE_EVENT, NULL);
+    self = g_object_new(EVENTD_TYPE_EVENT, NULL);
 
-    event->priv->category = g_strdup(category);
-    event->priv->name = g_strdup(name);
+    self->priv->category = g_strdup(category);
+    self->priv->name = g_strdup(name);
 
-    return event;
+    return self;
 }
 
 static void
@@ -267,11 +267,10 @@ static void
 _eventd_event_finalize(GObject *object)
 {
     EventdEvent *self = EVENTD_EVENT(object);
-    EventdEventPrivate *priv = self->priv;
 
-    if ( priv->data != NULL )
-        g_hash_table_unref(priv->data);
-    g_free(priv->name);
+    if ( self->priv->data != NULL )
+        g_hash_table_unref(self->priv->data);
+    g_free(self->priv->name);
 
     G_OBJECT_CLASS(eventd_event_parent_class)->finalize(object);
 }
