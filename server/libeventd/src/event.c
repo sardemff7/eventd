@@ -20,10 +20,13 @@
 
 #include <config.h>
 
+#include <uuid.h>
+
 #include <glib.h>
 #include <glib-object.h>
 
 #include <libeventd-event.h>
+#include <libeventd-event-private.h>
 
 #define EVENTD_EVENT_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), EVENTD_TYPE_EVENT, EventdEventPrivate))
 
@@ -149,6 +152,8 @@ eventd_event_end_reason_get_value_nick(EventdEventEndReason reason)
 }
 
 struct _EventdEventPrivate {
+    uuid_t uuid;
+    gchar uuid_str[UUID_STR_SIZE];
     gchar *category;
     gchar *name;
     gint64 timeout;
@@ -229,6 +234,24 @@ eventd_event_class_init(EventdEventClass *klass)
                      G_TYPE_NONE, 1, EVENTD_TYPE_EVENT_END_REASON);
 }
 
+EventdEvent *
+eventd_event_new_for_uuid(uuid_t uuid, const gchar *category, const gchar *name)
+{
+    g_return_val_if_fail(category != NULL, NULL);
+    g_return_val_if_fail(name != NULL, NULL);
+
+    EventdEvent *self;
+
+    self = g_object_new(EVENTD_TYPE_EVENT, NULL);
+
+    uuid_copy(self->priv->uuid, uuid);
+    uuid_unparse_lower(self->priv->uuid, self->priv->uuid_str);
+    self->priv->category = g_strdup(category);
+    self->priv->name = g_strdup(name);
+
+    return self;
+}
+
 /**
  * eventd_event_new:
  * @category: the category of the event
@@ -242,15 +265,11 @@ EVENTD_EXPORT
 EventdEvent *
 eventd_event_new(const gchar *category, const gchar *name)
 {
+    uuid_t uuid;
     EventdEvent *self;
 
-    g_return_val_if_fail(category != NULL, NULL);
-    g_return_val_if_fail(name != NULL, NULL);
-
-    self = g_object_new(EVENTD_TYPE_EVENT, NULL);
-
-    self->priv->category = g_strdup(category);
-    self->priv->name = g_strdup(name);
+    uuid_generate(uuid);
+    self = eventd_event_new_for_uuid(uuid, category, name);
 
     return self;
 }
@@ -527,6 +546,14 @@ eventd_event_get_answer_data(const EventdEvent *self, const gchar *name)
     return g_hash_table_lookup(self->priv->answer_data, name);
 }
 
+
+const gchar *
+eventd_event_get_uuid(EventdEvent *self)
+{
+    g_return_val_if_fail(EVENTD_IS_EVENT(self), NULL);
+
+    return self->priv->uuid_str;
+}
 
 /**
  * eventd_event_set_all_data:

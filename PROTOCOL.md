@@ -39,7 +39,7 @@ Event related messages
 
 .EVENT <id> <category> <name>
     Inform the server that an event happened
-    The id is an arbritary string representing the event on the client side.
+    The id is a UUID.
     The name must contain only the characters
     "A-Za-z0-9-." (without the quotes).
     The category can use the same characters as the name,

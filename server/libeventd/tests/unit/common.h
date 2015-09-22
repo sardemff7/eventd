@@ -1,7 +1,7 @@
 /*
  * eventd - Small daemon to act on remote or local events
  *
- * Copyright © 2011-2012 Quentin "Sardem FF7" Glidic
+ * Copyright © 2011-2015 Quentin "Sardem FF7" Glidic
  *
  * This file is part of eventd.
  *
@@ -24,10 +24,13 @@
 #define __EVENTD_TESTS_UNIT_EVENTD_EVENT_COMMON_H__
 
 #include <stdlib.h>
+#include <uuid.h>
 #include <glib.h>
 #include <glib-object.h>
 #include <libeventd-event.h>
+#include <libeventd-event-private.h>
 
+#define EVENTD_EVENT_TEST_UUID "1b4e28ba-2fa1-11d2-883f-b9a761bde3fb"
 #define EVENTD_EVENT_TEST_NAME "test-name"
 #define EVENTD_EVENT_TEST_CATEGORY "test-category"
 #define EVENTD_EVENT_TEST_TIMEOUT -1

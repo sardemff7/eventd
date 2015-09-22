@@ -32,7 +32,10 @@ _init_data(gpointer fixture, gconstpointer user_data)
 {
     GettersData *data = fixture;
 
-    data->event = eventd_event_new(EVENTD_EVENT_TEST_CATEGORY, EVENTD_EVENT_TEST_NAME);
+    uuid_t uuid;
+    uuid_parse(EVENTD_EVENT_TEST_UUID, uuid);
+
+    data->event = eventd_event_new_for_uuid(uuid, EVENTD_EVENT_TEST_CATEGORY, EVENTD_EVENT_TEST_NAME);
     eventd_event_set_timeout(data->event, EVENTD_EVENT_TEST_TIMEOUT);
     eventd_event_add_answer(data->event, EVENTD_EVENT_TEST_ANSWER);
 }
@@ -53,6 +56,28 @@ _clean_data(gpointer fixture, gconstpointer user_data)
     GettersData *data = fixture;
 
     g_object_unref(data->event);
+}
+
+static void
+_test_get_uuid_notnull(gpointer fixture, gconstpointer user_data)
+{
+    GettersData *data = fixture;
+
+    g_assert_cmpstr(eventd_event_get_uuid(data->event), ==, EVENTD_EVENT_TEST_UUID);
+}
+
+static void
+_test_get_uuid_null(gpointer fixture, gconstpointer user_data)
+{
+    if ( ! g_test_undefined() )
+            return;
+    if ( g_test_subprocess() )
+    {
+        eventd_event_get_uuid(NULL);
+        exit(0);
+    }
+    g_test_trap_subprocess(NULL, 0, 0);
+    g_test_trap_assert_failed();
 }
 
 static void
@@ -262,6 +287,9 @@ eventd_tests_unit_eventd_event_suite_getters(void)
     GTestSuite *suite;
 
     suite = g_test_create_suite("EventdEvent getters test suite");
+
+    g_test_suite_add(suite, g_test_create_case("get_uuid(event)",                        sizeof(GettersData), NULL, _init_data,           _test_get_uuid_notnull,                      _clean_data));
+    g_test_suite_add(suite, g_test_create_case("get_uuid(NULL)",                         sizeof(GettersData), NULL, NULL,                 _test_get_uuid_null,                         NULL));
 
     g_test_suite_add(suite, g_test_create_case("get_category(event)",                    sizeof(GettersData), NULL, _init_data,           _test_get_category_notnull,                  _clean_data));
     g_test_suite_add(suite, g_test_create_case("get_category(NULL)",                     sizeof(GettersData), NULL, NULL,                 _test_get_category_null,                     NULL));

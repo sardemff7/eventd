@@ -40,6 +40,7 @@ vapi_DATA += \
 
 
 libeventd_la_SOURCES = \
+	%D%/include/libeventd-event-private.h \
 	%D%/src/event.c \
 	$(null)
 
@@ -47,6 +48,7 @@ libeventd_la_CFLAGS = \
 	$(AM_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS) \
+	$(UUID_CFLAGS) \
 	$(null)
 
 libeventd_la_LDFLAGS = \
@@ -57,10 +59,12 @@ libeventd_la_LDFLAGS = \
 libeventd_la_LIBADD = \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS) \
+	$(UUID_LIBS) \
 	$(null)
 
 
 libeventd_event_test_SOURCES = \
+	%D%/src/event.c \
 	%D%/tests/unit/common.h \
 	%D%/tests/unit/event-getters.c \
 	%D%/tests/unit/event-getters.h \
@@ -74,6 +78,7 @@ libeventd_event_test_CFLAGS = \
 	$(GIO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS) \
+	$(UUID_CFLAGS) \
 	$(null)
 
 libeventd_event_test_LDADD = \
@@ -81,6 +86,7 @@ libeventd_event_test_LDADD = \
 	$(GIO_LIBS) \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS) \
+	$(UUID_LIBS) \
 	$(null)
 
 Eventd-0.gir: libeventd.la
