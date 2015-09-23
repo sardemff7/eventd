@@ -56,28 +56,6 @@ _clean_data(gpointer fixture, gconstpointer user_data)
 }
 
 static void
-_test_get_name_null(gpointer fixture, gconstpointer user_data)
-{
-    if ( ! g_test_undefined() )
-            return;
-    if ( g_test_subprocess() )
-    {
-        eventd_event_get_name(NULL);
-        exit(0);
-    }
-    g_test_trap_subprocess(NULL, 0, 0);
-    g_test_trap_assert_failed();
-}
-
-static void
-_test_get_name_notnull(gpointer fixture, gconstpointer user_data)
-{
-    GettersData *data = fixture;
-
-    g_assert_cmpstr(eventd_event_get_name(data->event), ==, EVENTD_EVENT_TEST_NAME);
-}
-
-static void
 _test_get_category_notnull(gpointer fixture, gconstpointer user_data)
 {
     GettersData *data = fixture;
@@ -97,6 +75,28 @@ _test_get_category_null(gpointer fixture, gconstpointer user_data)
     }
     g_test_trap_subprocess(NULL, 0, 0);
     g_test_trap_assert_failed();
+}
+
+static void
+_test_get_name_null(gpointer fixture, gconstpointer user_data)
+{
+    if ( ! g_test_undefined() )
+            return;
+    if ( g_test_subprocess() )
+    {
+        eventd_event_get_name(NULL);
+        exit(0);
+    }
+    g_test_trap_subprocess(NULL, 0, 0);
+    g_test_trap_assert_failed();
+}
+
+static void
+_test_get_name_notnull(gpointer fixture, gconstpointer user_data)
+{
+    GettersData *data = fixture;
+
+    g_assert_cmpstr(eventd_event_get_name(data->event), ==, EVENTD_EVENT_TEST_NAME);
 }
 
 static void
@@ -263,11 +263,11 @@ eventd_tests_unit_eventd_event_suite_getters(void)
 
     suite = g_test_create_suite("EventdEvent getters test suite");
 
-    g_test_suite_add(suite, g_test_create_case("get_name(event)",                        sizeof(GettersData), NULL, _init_data,           _test_get_name_notnull,                      _clean_data));
-    g_test_suite_add(suite, g_test_create_case("get_name(NULL)",                         sizeof(GettersData), NULL, NULL      ,           _test_get_name_null,                         NULL));
-
     g_test_suite_add(suite, g_test_create_case("get_category(event)",                    sizeof(GettersData), NULL, _init_data,           _test_get_category_notnull,                  _clean_data));
     g_test_suite_add(suite, g_test_create_case("get_category(NULL)",                     sizeof(GettersData), NULL, NULL,                 _test_get_category_null,                     NULL));
+
+    g_test_suite_add(suite, g_test_create_case("get_name(event)",                        sizeof(GettersData), NULL, _init_data,           _test_get_name_notnull,                      _clean_data));
+    g_test_suite_add(suite, g_test_create_case("get_name(NULL)",                         sizeof(GettersData), NULL, NULL      ,           _test_get_name_null,                         NULL));
 
     g_test_suite_add(suite, g_test_create_case("get_timeout(event)",                     sizeof(GettersData), NULL, _init_data,           _test_get_timeout_notnull,                   _clean_data));
     g_test_suite_add(suite, g_test_create_case("get_timeout(NULL)",                      sizeof(GettersData), NULL, NULL,                 _test_get_timeout_null,                      NULL));
