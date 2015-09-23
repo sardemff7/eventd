@@ -150,8 +150,6 @@ _eventd_relay_event_free(gpointer data)
 
 static LibeventdEvpClientInterface _eventd_relay_interface = {
     .event     = NULL,
-    .end       = NULL,
-
     .answered  = _eventd_relay_answered,
     .ended     = _eventd_relay_ended,
 

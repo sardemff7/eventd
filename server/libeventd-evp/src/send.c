@@ -143,27 +143,6 @@ fail:
 }
 
 gboolean
-libeventd_evp_context_send_end(LibeventdEvpContext *self, const gchar *id, GError **error)
-{
-    g_return_val_if_fail(self != NULL, FALSE);
-    g_return_val_if_fail(id != NULL, FALSE);
-    g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-    if ( self->out == NULL )
-        /* Passive mode */
-        return TRUE;
-
-    gboolean r;
-    gchar *message;
-
-    message = g_strdup_printf("END %s", id);
-    r = libeventd_evp_context_send_message(self, message, error);
-    g_free(message);
-
-    return r;
-}
-
-gboolean
 libeventd_evp_context_send_answered(LibeventdEvpContext *self, const gchar *id, const gchar *answer, EventdEvent *event, GError **error)
 {
     g_return_val_if_fail(self != NULL, FALSE);

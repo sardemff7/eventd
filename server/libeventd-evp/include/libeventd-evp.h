@@ -51,8 +51,6 @@ typedef void (*LibeventdEvpEndedCallback)(gpointer client, LibeventdEvpContext *
 
 typedef struct {
     LibeventdEvpEventCallback event;
-    LibeventdEvpEndCallback end;
-
     LibeventdEvpAnsweredCallback answered;
     LibeventdEvpEndedCallback ended;
 

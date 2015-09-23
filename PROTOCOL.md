@@ -51,10 +51,6 @@ Event related messages
     ANSWER <name>
         Add a possible answer to the event
 
-END <id>
-    Force the end of an event before the timeout.
-    Will trigger an ENDED message with "client-dismiss" reason.
-
 ENDED <id> <reason>
     Inform the client of an event ending.
 

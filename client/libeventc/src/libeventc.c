@@ -37,6 +37,7 @@ struct _EventcConnectionPrivate {
     gchar* host;
     gboolean passive;
     gboolean enable_proxy;
+    GError *error;
     LibeventdEvpContext* evp;
     guint64 count;
     GHashTable* events;
@@ -86,6 +87,21 @@ _eventc_connection_answered(gpointer data, LibeventdEvpContext *context, const g
 }
 
 static void
+_eventc_connection_event_end_callback(EventcConnection *self, EventdEventEndReason reason, EventdEvent *event)
+{
+    const gchar *id;
+    id = g_hash_table_lookup(self->priv->ids, event);
+    g_return_if_fail(id != NULL);
+
+    libeventd_evp_context_send_ended(self->priv->evp, id, reason, ( self->priv->error == NULL ) ? &self->priv->error : NULL);
+
+    g_hash_table_remove(self->priv->events, id);
+    g_hash_table_remove(self->priv->ids, event);
+
+    g_signal_handlers_disconnect_by_func(G_OBJECT(event), _eventc_connection_event_end_callback, self);
+}
+
+static void
 _eventc_connection_ended(gpointer data, LibeventdEvpContext *context, const gchar *id, EventdEventEndReason reason)
 {
     EventcConnection *self = data;
@@ -94,6 +110,7 @@ _eventc_connection_ended(gpointer data, LibeventdEvpContext *context, const gcha
     if ( event == NULL )
         return;
 
+    g_signal_handlers_disconnect_by_func(G_OBJECT(event), _eventc_connection_event_end_callback, self);
     eventd_event_end(event, reason);
 }
 
@@ -106,8 +123,6 @@ _eventc_connection_bye(gpointer data, LibeventdEvpContext *context)
 
 static LibeventdEvpClientInterface _eventc_connection_client_interface = {
     .event = NULL,
-    .end = NULL,
-
     .answered = _eventc_connection_answered,
     .ended = _eventc_connection_ended,
 
@@ -186,6 +201,13 @@ EVENTD_EXPORT
 gboolean
 eventc_connection_is_connected(EventcConnection *self, GError **error)
 {
+    if ( self->priv->error != NULL )
+    {
+        g_propagate_error(error, self->priv->error);
+        self->priv->error = NULL;
+        return FALSE;
+    }
+
     GError *_inner_error_ = NULL;
     if ( libeventd_evp_context_is_connected(self->priv->evp, &_inner_error_) )
         return TRUE;
@@ -400,19 +422,6 @@ eventc_connection_connect_sync(EventcConnection *self, GError **error)
     return TRUE;
 }
 
-static void
-_eventc_connection_event_end_callback(EventcConnection *self, EventdEventEndReason reason, EventdEvent *event)
-{
-    const gchar *id;
-    id = g_hash_table_lookup(self->priv->ids, event);
-    g_return_if_fail(id != NULL);
-
-    g_hash_table_remove(self->priv->events, id);
-    g_hash_table_remove(self->priv->ids, event);
-
-    g_signal_handlers_disconnect_by_func(G_OBJECT(event), _eventc_connection_event_end_callback, self);
-}
-
 /**
  * eventc_connection_event:
  * @self: an #EventcConnection
@@ -460,46 +469,6 @@ eventc_connection_event(EventcConnection *self, EventdEvent *event, GError **err
         g_hash_table_insert(self->priv->events, id, g_object_ref(event));
         g_hash_table_insert(self->priv->ids, g_object_ref(event), id);
         g_signal_connect_swapped(event, "ended", G_CALLBACK(_eventc_connection_event_end_callback), self);
-    }
-
-    return TRUE;
-}
-
-/**
- * eventc_connection_event_end:
- * @self: an #EventcConnection
- * @event: an #EventdEvent to send to the server
- * @error: (out) (optional): return location for error or %NULL to ignore
- *
- * End the event (e.g., close the notification popup).
- *
- * Returns: %TRUE if the event was ended successfully
- */
-EVENTD_EXPORT
-gboolean
-eventc_connection_event_end(EventcConnection *self, EventdEvent *event, GError **error)
-{
-    g_return_val_if_fail(EVENTC_IS_CONNECTION(self), FALSE);
-    g_return_val_if_fail(EVENTD_IS_EVENT(event), FALSE);
-    g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
-    GError *_inner_error_ = NULL;
-
-    if ( ! _eventc_connection_expect_connected(self, error) )
-        return FALSE;
-
-    const gchar *id;
-    id = g_hash_table_lookup(self->priv->ids, event);
-    if ( id == NULL )
-    {
-        g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_EVENT, "Couldn't find event");
-        return FALSE;
-    }
-    if ( ! libeventd_evp_context_send_end(self->priv->evp, id, &_inner_error_) )
-    {
-        g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_EVENT, "Couldn't send event end: %s", _inner_error_->message);
-        g_error_free(_inner_error_);
-        return FALSE;
     }
 
     return TRUE;

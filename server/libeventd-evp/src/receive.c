@@ -306,11 +306,6 @@ _libeventd_evp_context_receive_callback(GObject *source_object, GAsyncResult *re
         g_free(line);
         return;
     }
-    else if ( g_str_has_prefix(line, "END ") )
-    {
-        if ( self->interface->end != NULL )
-            self->interface->end(self->client, self, line + strlen("END "));
-    }
     else if ( g_str_has_prefix(line, "ENDED ") )
     {
         gchar **end;

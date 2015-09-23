@@ -76,7 +76,6 @@ void eventc_connection_connect (EventcConnection *self, GAsyncReadyCallback call
 gboolean eventc_connection_connect_finish (EventcConnection *self, GAsyncResult *result, GError **error);
 gboolean eventc_connection_connect_sync (EventcConnection *self, GError **error);
 gboolean eventc_connection_event (EventcConnection *self, EventdEvent *event, GError **error);
-gboolean eventc_connection_event_end (EventcConnection *self, EventdEvent *event, GError **error);
 gboolean eventc_connection_close(EventcConnection *self, GError **error);
 
 

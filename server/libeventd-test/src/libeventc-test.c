@@ -143,6 +143,22 @@ _ended_close_idle_callback(gpointer user_data)
     return FALSE;
 }
 
+static gboolean
+_end_idle_callback(gpointer user_data)
+{
+    switch ( state )
+    {
+    case STATE_FIRST_CONNECTION_SECOND_EVENT:
+    case STATE_SECOND_CONNECTION_SECOND_EVENT:
+        eventd_event_end(event, EVENTD_EVENT_END_REASON_CLIENT_DISMISS);
+    break;
+    default:
+        g_warning("Should never be in that state");
+        g_main_loop_quit(loop);
+    }
+    return FALSE;
+}
+
 static void
 _ended_callback(EventdEvent *e, EventdEventEndReason reason, EventcConnection *client)
 {
@@ -157,8 +173,8 @@ _ended_callback(EventdEvent *e, EventdEventEndReason reason, EventcConnection *c
         _create_event(client, FALSE);
         if ( ! eventc_connection_event(client, event, &error) )
             g_main_loop_quit(loop);
-        else if ( ! eventc_connection_event_end(client, event, &error) )
-            g_main_loop_quit(loop);
+        else
+            g_idle_add(_end_idle_callback, client);
         ++state;
         return;
     case STATE_FIRST_CONNECTION_SECOND_EVENT:

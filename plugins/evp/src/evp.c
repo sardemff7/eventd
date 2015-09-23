@@ -165,18 +165,6 @@ _eventd_evp_event(gpointer data, LibeventdEvpContext *evp, const gchar *id, Even
 }
 
 static void
-_eventd_evp_end(gpointer data, LibeventdEvpContext *evp, const gchar *id)
-{
-    EventdEvpClient *client = data;
-    EventdEvpEvent *evp_event;
-    evp_event = g_hash_table_lookup(client->events, id);
-    if ( evp_event == NULL )
-        return;
-
-    eventd_event_end(evp_event->event, EVENTD_EVENT_END_REASON_CLIENT_DISMISS);
-}
-
-static void
 _eventd_evp_bye(gpointer data, LibeventdEvpContext *evp)
 {
     EventdEvpClient *client = data;
@@ -212,8 +200,6 @@ _eventd_evp_event_free(gpointer data)
 
 static LibeventdEvpClientInterface _eventd_evp_interface = {
     .event     = _eventd_evp_event,
-    .end       = _eventd_evp_end,
-
     .answered  = _eventd_evp_answered,
     .ended     = _eventd_evp_ended,
 
