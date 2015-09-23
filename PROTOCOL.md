@@ -8,7 +8,7 @@ single dot on its own line (".\n"). They are referred as "dot messages".
 Any error in the pairing should close the connection. Implementations should
 send a "BYE Wrong dot message" message in this case.
 
-An implementation must discard unknown messages for backward compatibility.
+An implementation must discard unknown messages for compatibility.
 Only dot messages require special handling regarding that: an implementation
 must match any dot message with its corresponding ending line (".\n") and
 ignore it. Nesting is possible and must be handled. Data messages can appear
@@ -34,7 +34,7 @@ DATA <name> <data>
     Simple data in one line, up to "\n" (non included).
 
 
-Eventd dispatching
+Event related messages
 ------------------
 
 .EVENT <id> <category> <name>
@@ -48,17 +48,12 @@ Eventd dispatching
     The message may contain data using the corresponding messages.
     The message may contain possible answers using the corresponding message.
 
-ANSWER <name>
-    Add a possible answer to the event
+    ANSWER <name>
+        Add a possible answer to the event
 
 END <id>
     Force the end of an event before the timeout.
     Will trigger an ENDED message with "client-dismiss" reason.
-
-
-
-Event timeout or answer
------------------------
 
 ENDED <id> <reason>
     Inform the client of an event ending.
@@ -68,7 +63,7 @@ ENDED <id> <reason>
     The server may specify data using the corresponding messages.
 
 
-Closing the connection
+Connection related messages
 ----------------------
 
 PASSIVE
