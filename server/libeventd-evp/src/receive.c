@@ -46,12 +46,12 @@ _libeventd_evp_receive(LibeventdEvpContext *self, GAsyncReadyCallback callback, 
 }
 
 static gchar *
-_libeventd_evp_receive_finish(LibeventdEvpContext *self, GAsyncResult *res)
+_libeventd_evp_receive_finish(LibeventdEvpContext *self, GAsyncResult *res, GObject *in)
 {
     g_return_val_if_fail(G_IS_ASYNC_RESULT(res), NULL);
     gchar *line;
 
-    line = g_data_input_stream_read_line_finish(self->in, res, NULL, &self->error);
+    line = g_data_input_stream_read_line_finish(G_DATA_INPUT_STREAM(in), res, NULL, &self->error);
     if ( line == NULL )
     {
         if ( ( self->error != NULL ) && ( self->error->code == G_IO_ERROR_CANCELLED ) )
@@ -102,7 +102,7 @@ _libeventd_evp_context_receive_data_callback(GObject *source_object, GAsyncResul
 
     gchar *line;
 
-    line = _libeventd_evp_receive_finish(self, res);
+    line = _libeventd_evp_receive_finish(self, res, source_object);
     if ( line == NULL )
         return;
 
@@ -178,7 +178,7 @@ _libeventd_evp_context_receive_event_callback(GObject *source_object, GAsyncResu
 
     gchar *line;
 
-    line = _libeventd_evp_receive_finish(self, res);
+    line = _libeventd_evp_receive_finish(self, res, source_object);
     if ( line == NULL )
         return;
 
@@ -227,7 +227,7 @@ _libeventd_evp_context_receive_answered_callback(GObject *source_object, GAsyncR
 
     gchar *line;
 
-    line = _libeventd_evp_receive_finish(self, res);
+    line = _libeventd_evp_receive_finish(self, res, source_object);
     if ( line == NULL )
         return;
 
@@ -263,7 +263,7 @@ _libeventd_evp_context_receive_callback(GObject *source_object, GAsyncResult *re
 
     gchar *line;
 
-    line = _libeventd_evp_receive_finish(self, res);
+    line = _libeventd_evp_receive_finish(self, res, source_object);
     if ( line == NULL )
         return;
 
