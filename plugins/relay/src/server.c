@@ -32,128 +32,15 @@
 
 #include <libeventd-event.h>
 #include <eventd-plugin.h>
-#include <libeventd-evp.h>
+#include <libeventc.h>
 
 #include <libeventd-helpers-reconnect.h>
 
 #include "server.h"
 
 struct _EventdRelayServer {
-    GSocketConnectable *address;
-    LibeventdEvpContext *evp;
-    guint64 count;
-    GHashTable *events;
+    EventcConnection *connection;
     LibeventdReconnectHandler *reconnect;
-};
-
-typedef struct {
-    EventdRelayServer *server;
-    EventdEvent *event;
-    gchar *id;
-    gulong answered_handler;
-    gulong ended_handler;
-} EventdRelayEvent;
-
-static void
-_eventd_relay_event_answered(EventdEvent *event, const gchar *answer, gpointer user_data)
-{
-    EventdRelayEvent *relay_event = user_data;
-    EventdRelayServer *server = relay_event->server;
-    GError *error = NULL;
-
-    if ( ! libeventd_evp_context_send_answered(server->evp, relay_event->id, answer, relay_event->event, &error) )
-    {
-        g_warning("Couldn't send ANSWERED message: %s", error->message);
-        g_clear_error(&error);
-        evhelpers_reconnect_try(server->reconnect);
-    }
-    g_signal_handler_disconnect(relay_event->event, relay_event->answered_handler);
-    relay_event->answered_handler = 0;
-}
-
-static void
-_eventd_relay_event_ended(EventdEvent *event, EventdEventEndReason reason, gpointer user_data)
-{
-    EventdRelayEvent *relay_event = user_data;
-    EventdRelayServer *server = relay_event->server;
-    GError *error = NULL;
-
-    if ( ! libeventd_evp_context_send_ended(server->evp, relay_event->id, reason, &error) )
-    {
-        g_warning("Couldn't send ENDED message: %s", error->message);
-        g_clear_error(&error);
-        evhelpers_reconnect_try(server->reconnect);
-    }
-    g_signal_handler_disconnect(relay_event->event, relay_event->ended_handler);
-    relay_event->ended_handler = 0;
-
-    g_hash_table_remove(server->events, relay_event->id);
-}
-
-static void
-_eventd_relay_answered(gpointer data, LibeventdEvpContext *evp, const gchar *id, const gchar *answer, GHashTable *data_hash)
-{
-    EventdRelayServer *server = data;
-    EventdRelayEvent *relay_event;
-    relay_event = g_hash_table_lookup(server->events, id);
-    if ( relay_event == NULL )
-        return;
-
-    eventd_event_set_all_answer_data(relay_event->event, g_hash_table_ref(data_hash));
-    g_signal_handler_disconnect(relay_event->event, relay_event->answered_handler);
-    relay_event->answered_handler = 0;
-    eventd_event_answer(relay_event->event, answer);
-}
-
-static void
-_eventd_relay_ended(gpointer data, LibeventdEvpContext *evp, const gchar *id, EventdEventEndReason reason)
-{
-    EventdRelayServer *server = data;
-    EventdRelayEvent *relay_event;
-    relay_event = g_hash_table_lookup(server->events, id);
-    if ( relay_event == NULL )
-        return;
-
-    g_signal_handler_disconnect(relay_event->event, relay_event->ended_handler);
-    relay_event->ended_handler = 0;
-    eventd_event_end(relay_event->event, reason);
-    g_hash_table_remove(server->events, relay_event->id);
-}
-
-static void
-_eventd_relay_bye(gpointer data, LibeventdEvpContext *evp)
-{
-    /* TODO: check this one
-    EventdRelayServer *server = data;
-
-    libeventd_evp_context_free(server->evp);
-    g_hash_table_unref(server->events);
-
-    g_free(server);
-    */
-}
-
-static void
-_eventd_relay_event_free(gpointer data)
-{
-    EventdRelayEvent *relay_event = data;
-
-    if ( relay_event->answered_handler > 0 )
-        g_signal_handler_disconnect(relay_event->event, relay_event->answered_handler);
-    if ( relay_event->ended_handler > 0 )
-        g_signal_handler_disconnect(relay_event->event, relay_event->ended_handler);
-
-    g_object_unref(relay_event->event);
-
-    g_free(relay_event);
-}
-
-static LibeventdEvpClientInterface _eventd_relay_interface = {
-    .event     = NULL,
-    .answered  = _eventd_relay_answered,
-    .ended     = _eventd_relay_ended,
-
-    .bye       = _eventd_relay_bye
 };
 
 static void
@@ -169,21 +56,14 @@ _eventd_relay_connection_handler(GObject *obj, GAsyncResult *res, gpointer user_
 {
     GError *error = NULL;
     EventdRelayServer *server = user_data;
-    GSocketConnection *connection;
 
-    connection = g_socket_client_connect_finish(G_SOCKET_CLIENT(obj), res, &error);
-    if ( connection == NULL )
+    if ( eventc_connection_connect_finish(server->connection, res, &error) )
+        evhelpers_reconnect_reset(server->reconnect);
+    else
     {
         g_warning("Couldn't connect: %s", error->message);
         g_clear_error(&error);
         evhelpers_reconnect_try(server->reconnect);
-    }
-    else
-    {
-        evhelpers_reconnect_reset(server->reconnect);
-        libeventd_evp_context_set_connection(server->evp, connection);
-        g_object_unref(connection);
-        libeventd_evp_context_receive_loop(server->evp, G_PRIORITY_DEFAULT);
     }
 }
 
@@ -194,9 +74,7 @@ eventd_relay_server_new(void)
 
     server = g_new0(EventdRelayServer, 1);
 
-    server->evp = libeventd_evp_context_new(server, &_eventd_relay_interface);
     server->reconnect = evhelpers_reconnect_new(5, 10,_eventd_relay_reconnect_callback, server);
-    server->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_relay_event_free);
 
     return server;
 }
@@ -204,11 +82,11 @@ eventd_relay_server_new(void)
 EventdRelayServer *
 eventd_relay_server_new_for_host_and_port(const gchar *host_and_port)
 {
-    GSocketConnectable *address;
+    EventcConnection *connection;
     GError *error = NULL;
 
-    address = libeventd_evp_get_address(host_and_port, &error);
-    if ( address == NULL )
+    connection = eventc_connection_new(host_and_port, &error);
+    if ( connection == NULL )
     {
         g_warning("Couldn't get address for relay server '%s': %s", host_and_port, error->message);
         g_clear_error(&error);
@@ -218,7 +96,7 @@ eventd_relay_server_new_for_host_and_port(const gchar *host_and_port)
     EventdRelayServer *server;
 
     server = eventd_relay_server_new();
-    eventd_relay_server_set_address(server, address);
+    server->connection = connection;
 
     return server;
 }
@@ -226,25 +104,26 @@ eventd_relay_server_new_for_host_and_port(const gchar *host_and_port)
 void
 eventd_relay_server_set_address(EventdRelayServer *server, GSocketConnectable *address)
 {
-    if ( server->address != NULL )
-        g_object_unref(server->address);
-    server->address = address;
+    if ( server->connection != NULL )
+        eventc_connection_set_connectable(server->connection, address);
+    else
+        server->connection = eventc_connection_new_for_connectable(address);
 }
 
 gboolean
 eventd_relay_server_has_address(EventdRelayServer *server)
 {
-    return ( server->address != NULL );
+    return ( server->connection != NULL );
 }
 
 void
 eventd_relay_server_start(EventdRelayServer *server)
 {
-    if ( server->address == NULL )
+    if ( server->connection == NULL )
         return;
 
     GError *error = NULL;
-    if ( libeventd_evp_context_is_connected(server->evp, &error) )
+    if ( eventc_connection_is_connected(server->connection, &error) )
         return;
 
     if ( error != NULL )
@@ -253,13 +132,7 @@ eventd_relay_server_start(EventdRelayServer *server)
         g_clear_error(&error);
     }
 
-    GSocketClient *client;
-
-    client = g_socket_client_new();
-
-    g_socket_client_connect_async(client, server->address, NULL, _eventd_relay_connection_handler, server);
-
-    g_object_unref(client);
+    eventc_connection_connect(server->connection, _eventd_relay_connection_handler, server);
 }
 
 void
@@ -267,16 +140,14 @@ eventd_relay_server_stop(EventdRelayServer *server)
 {
     evhelpers_reconnect_reset(server->reconnect);
 
-    if ( libeventd_evp_context_is_connected(server->evp, NULL) )
-        libeventd_evp_context_send_bye(server->evp);
-    libeventd_evp_context_close(server->evp);
+    eventc_connection_close(server->connection, NULL);
 }
 
 void
 eventd_relay_server_event(EventdRelayServer *server, EventdEvent *event)
 {
     GError *error = NULL;
-    if ( ! libeventd_evp_context_is_connected(server->evp, &error) )
+    if ( ! eventc_connection_is_connected(server->connection, &error) )
     {
         if ( error != NULL )
         {
@@ -287,37 +158,27 @@ eventd_relay_server_event(EventdRelayServer *server, EventdEvent *event)
         return;
     }
 
-    EventdRelayEvent *relay_event;
-
-    relay_event = g_new0(EventdRelayEvent, 1);
-    relay_event->server = server;
-    relay_event->id = g_strdup_printf("%"G_GINT64_MODIFIER"x", ++server->count);
-    relay_event->event = g_object_ref(event);
-
-    if ( ! libeventd_evp_context_send_event(server->evp, relay_event->id, event, &error) )
+    if ( ! eventc_connection_event(server->connection, event, &error) )
     {
         g_warning("Couldn't send event: %s", error->message);
         g_clear_error(&error);
         evhelpers_reconnect_try(server->reconnect);
         return;
     }
-
-    g_hash_table_insert(server->events, relay_event->id, relay_event);
-    relay_event->answered_handler = g_signal_connect(relay_event->event, "answered", G_CALLBACK(_eventd_relay_event_answered), relay_event);
-    relay_event->ended_handler = g_signal_connect(relay_event->event, "ended", G_CALLBACK(_eventd_relay_event_ended), relay_event);
 }
 
 void
 eventd_relay_server_free(gpointer data)
 {
+    if ( data == NULL )
+        return;
+
     EventdRelayServer *server = data;
 
+    if ( server->connection != NULL )
+        g_object_unref(server->connection);
+
     evhelpers_reconnect_free(server->reconnect);
-
-    if ( server->evp != NULL )
-        libeventd_evp_context_free(server->evp);
-
-    g_hash_table_unref(server->events);
 
     g_free(server);
 }
