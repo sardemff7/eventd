@@ -198,6 +198,33 @@ eventc_connection_new(const gchar *host, GError **error)
 }
 
 /**
+ * eventc_connection_new_for_connectable:
+ * @address: (transfer full): a #GSocketConnectable
+ *
+ * Creates a new connection to an eventd daemon.
+ *
+ * Returns: (transfer full): a new connection
+ */
+EVENTD_EXPORT
+EventcConnection *
+eventc_connection_new_for_connectable(GSocketConnectable *address)
+{
+    g_return_val_if_fail(G_IS_SOCKET_CONNECTABLE(address), NULL);
+
+    EventcConnection *self;
+
+    self = g_object_new(EVENTC_TYPE_CONNECTION, NULL);
+
+    self->priv->evp = libeventd_evp_context_new(self, &_eventc_connection_client_interface);
+    self->priv->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_object_unref);
+    self->priv->ids = g_hash_table_new_full(g_direct_hash, g_direct_equal, g_object_unref, NULL);
+
+    self->priv->address = address;
+
+    return self;
+}
+
+/**
  * eventc_connection_is_connected:
  * @self: an #EventcConnection
  * @error: (out) (optional): return location for error or %NULL to ignore
@@ -545,6 +572,23 @@ eventc_connection_set_host(EventcConnection *self, const gchar *host, GError **e
     self->priv->address = address;
 
     return TRUE;
+}
+
+/**
+ * eventc_connection_set_connectable:
+ * @self: an #EventcConnection
+ * @address: (transfer full): a #GSocketConnectable
+ *
+ * Sets the connectable for the connection.
+ */
+EVENTD_EXPORT
+void
+eventc_connection_set_connectable(EventcConnection *self, GSocketConnectable *address)
+{
+    g_return_if_fail(EVENTC_IS_CONNECTION(self));
+
+    g_object_unref(self->priv->address);
+    self->priv->address = address;
 }
 
 /**

@@ -71,6 +71,7 @@ const gchar *eventc_get_version(void);
 
 
 EventcConnection *eventc_connection_new(const gchar *host, GError **error);
+EventcConnection *eventc_connection_new_for_connectable(GSocketConnectable *address);
 
 void eventc_connection_connect (EventcConnection *self, GAsyncReadyCallback callback, gpointer user_data);
 gboolean eventc_connection_connect_finish (EventcConnection *self, GAsyncResult *result, GError **error);
@@ -80,6 +81,7 @@ gboolean eventc_connection_close(EventcConnection *self, GError **error);
 
 
 gboolean eventc_connection_set_host(EventcConnection *self, const gchar *value, GError **error);
+void eventc_connection_set_connectable(EventcConnection *self, GSocketConnectable *address);
 void eventc_connection_set_passive(EventcConnection *self, gboolean value);
 void eventc_connection_set_enable_proxy(EventcConnection *self, gboolean value);
 
