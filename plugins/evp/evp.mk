@@ -23,7 +23,11 @@ man5_MANS += \
 
 
 evp_la_SOURCES = \
+	%D%/src/evp.h \
 	%D%/src/evp.c \
+	%D%/src/client.h \
+	%D%/src/client.c \
+	%D%/src/avahi.h \
 	$(null)
 
 evp_la_CFLAGS = \
@@ -73,7 +77,6 @@ evp_connection_test_LDADD = \
 if ENABLE_AVAHI
 
 evp_la_SOURCES += \
-	%D%/src/avahi.h \
 	%D%/src/avahi.c \
 	$(null)
 
