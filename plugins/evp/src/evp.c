@@ -28,7 +28,6 @@
 
 #include <libeventd-event.h>
 #include <eventd-plugin.h>
-#include <libeventd-evp.h>
 #include <libeventd-helpers-config.h>
 
 #include "avahi.h"

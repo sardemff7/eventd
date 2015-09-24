@@ -45,7 +45,6 @@ evp_la_LDFLAGS = \
 
 evp_la_LIBADD = \
 	libeventd.la \
-	libeventd-evp.la \
 	libeventd-plugin.la \
 	libeventd-helpers.la \
 	$(AVAHI_LIBS) \
