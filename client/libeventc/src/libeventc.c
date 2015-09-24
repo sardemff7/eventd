@@ -34,7 +34,7 @@ EVENTD_EXPORT GType eventc_connection_get_type(void);
 G_DEFINE_TYPE(EventcConnection, eventc_connection, G_TYPE_OBJECT)
 
 struct _EventcConnectionPrivate {
-    gchar* host;
+    GSocketConnectable *address;
     gboolean passive;
     gboolean enable_proxy;
     GError *error;
@@ -153,11 +153,13 @@ static void
 _eventc_connection_finalize(GObject *object)
 {
     EventcConnection *self = EVENTC_CONNECTION(object);
-    EventcConnectionPrivate *priv = self->priv;
 
+    if ( self->priv->address != NULL )
+        g_object_unref(self->priv->address);
+
+    libeventd_evp_context_free(self->priv->evp);
     g_hash_table_unref(self->priv->events);
     g_hash_table_unref(self->priv->ids);
-    g_free(priv->host);
 
     G_OBJECT_CLASS(eventc_connection_parent_class)->finalize(object);
 }
@@ -165,24 +167,32 @@ _eventc_connection_finalize(GObject *object)
 /**
  * eventc_connection_new:
  * @host: the host running the eventd instance to connect to
+ * @error: (out) (optional): return location for error or %NULL to ignore
  *
  * Creates a new connection to an eventd daemon.
  *
- * Returns: (transfer full): a new connection
+ * Returns: (transfer full): a new connection, or %NULL if @host could not be resolved
  */
 EVENTD_EXPORT
 EventcConnection *
-eventc_connection_new(const gchar *host)
+eventc_connection_new(const gchar *host, GError **error)
 {
+    g_return_val_if_fail(host != NULL, NULL);
+    g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
     EventcConnection *self;
 
     self = g_object_new(EVENTC_TYPE_CONNECTION, NULL);
 
-    self->priv->host = g_strdup(host);
-
     self->priv->evp = libeventd_evp_context_new(self, &_eventc_connection_client_interface);
     self->priv->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_object_unref);
     self->priv->ids = g_hash_table_new_full(g_direct_hash, g_direct_equal, g_object_unref, NULL);
+
+    if ( ! eventc_connection_set_host(self, host, error) )
+    {
+        g_object_unref(self);
+        return NULL;
+    }
 
     return self;
 }
@@ -190,7 +200,7 @@ eventc_connection_new(const gchar *host)
 /**
  * eventc_connection_is_connected:
  * @self: an #EventcConnection
- * @error: (out) (optional): a #GError or %NULL
+ * @error: (out) (optional): return location for error or %NULL to ignore
  *
  * Retrieves whether a given connection is actually connected to a server or
  * not.
@@ -252,28 +262,6 @@ _eventc_connection_expect_disconnected(EventcConnection *self, GError **error)
         g_propagate_error(error, _inner_error_);
         return FALSE;
     }
-
-    return TRUE;
-}
-
-static gboolean
-_eventc_connection_connect_before(EventcConnection *self, GSocketClient **client, GSocketConnectable **address, GError **error)
-{
-    GError *_inner_error_ = NULL;
-
-    if ( ! _eventc_connection_expect_disconnected(self, error) )
-        return FALSE;
-
-    *address = libeventd_evp_get_address(self->priv->host, &_inner_error_);
-    if ( *address == NULL )
-    {
-        g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_HOSTNAME, "Couldn't resolve the hostname '%s': %s", self->priv->host, _inner_error_->message);
-        g_error_free(_inner_error_);
-        return FALSE;
-    }
-
-    *client = g_socket_client_new();
-    g_socket_client_set_enable_proxy(*client, self->priv->enable_proxy);
 
     return TRUE;
 }
@@ -345,13 +333,17 @@ eventc_connection_connect(EventcConnection *self, GAsyncReadyCallback callback, 
 
     GError *error = NULL;
 
-    GSocketClient *client;
-    GSocketConnectable *address;
-    if ( ! _eventc_connection_connect_before(self, &client, &address, &error) )
+
+    if ( ! _eventc_connection_expect_disconnected(self, &error) )
     {
         g_simple_async_report_take_gerror_in_idle(G_OBJECT(self), callback, user_data, error);
         return;
     }
+
+    GSocketClient *client;
+
+    client = g_socket_client_new();
+    g_socket_client_set_enable_proxy(client, self->priv->enable_proxy);
 
     EventcConnectionCallbackData *data;
     data = g_slice_new(EventcConnectionCallbackData);
@@ -359,8 +351,7 @@ eventc_connection_connect(EventcConnection *self, GAsyncReadyCallback callback, 
     data->callback = callback;
     data->user_data = user_data;
 
-    g_socket_client_connect_async(client, address, NULL, _eventc_connection_connect_callback, data);
-    g_object_unref(address);
+    g_socket_client_connect_async(client, self->priv->address, NULL, _eventc_connection_connect_callback, data);
     g_object_unref(client);
 }
 
@@ -405,15 +396,17 @@ eventc_connection_connect_sync(EventcConnection *self, GError **error)
 {
     g_return_val_if_fail(EVENTC_IS_CONNECTION(self), FALSE);
 
-    GSocketClient *client;
-    GSocketConnectable *address;
-    if ( ! _eventc_connection_connect_before(self, &client, &address, error) )
+    if ( ! _eventc_connection_expect_disconnected(self, error) )
         return FALSE;
+
+    GSocketClient *client;
+
+    client = g_socket_client_new();
+    g_socket_client_set_enable_proxy(client, self->priv->enable_proxy);
 
     GError *_inner_error_ = NULL;
     GSocketConnection *connection;
-    connection = g_socket_client_connect(client, address, NULL, &_inner_error_);
-    g_object_unref(address);
+    connection = g_socket_client_connect(client, self->priv->address, NULL, &_inner_error_);
     g_object_unref(client);
 
     if ( ! _eventc_connection_connect_after(self, connection, _inner_error_, error) )
@@ -524,18 +517,34 @@ _eventc_connection_close_internal(EventcConnection *self)
  * eventc_connection_set_host:
  * @self: an #EventcConnection
  * @value: the host running the eventd instance to connect to
+ * @error: (out) (optional): return location for error or %NULL to ignore
  *
  * Sets the host for the connection.
+ * If @host cannot be resolved, the address will not change.
+ *
+ * Returns: %TRUE if the host was changed, %FALSE in case of error
  */
 EVENTD_EXPORT
-void
-eventc_connection_set_host(EventcConnection *self, const gchar *host)
+gboolean
+eventc_connection_set_host(EventcConnection *self, const gchar *host, GError **error)
 {
-    g_return_if_fail(EVENTC_IS_CONNECTION(self));
-    g_return_if_fail(host != NULL);
+    g_return_val_if_fail(EVENTC_IS_CONNECTION(self), FALSE);
+    g_return_val_if_fail(host != NULL, FALSE);
+    g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-    g_free(self->priv->host);
-    self->priv->host = g_strdup(host);
+    GError *_inner_error_ = NULL;
+    GSocketConnectable *address;
+
+    address = libeventd_evp_get_address(host, &_inner_error_);
+    if ( address == NULL )
+    {
+        g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_HOSTNAME, "Couldn't resolve the hostname '%s': %s", host, _inner_error_->message);
+        g_error_free(_inner_error_);
+        return FALSE;
+    }
+    self->priv->address = address;
+
+    return TRUE;
 }
 
 /**

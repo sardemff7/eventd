@@ -183,12 +183,21 @@ main(int argc, char *argv[])
         goto end;
     }
 
-    r = 0; /* Arguments are fine */
+    r = 2; /* Arguments are fine, checking host */
 
     const gchar *category = argv[1];
     const gchar *name = argv[2];
 
-    client = eventc_connection_new(host);
+    client = eventc_connection_new(host, &error);
+    if ( client == NULL )
+    {
+        g_warning("Could not resolve '%s': %s", host, error->message);
+        g_clear_error(&error);
+        goto end;
+    }
+
+    r = 0; /* Host is fine */
+
     eventc_connection_set_passive(client, !wait_event_end);
 
     event = eventd_event_new(category, name);

@@ -195,7 +195,13 @@ eventd_tests_run_libeventc(const gchar *host)
 {
     int r = 0;
 
-    EventcConnection *client = eventc_connection_new(host);
+    GError *error = NULL;
+    EventcConnection *client;
+
+    client = eventc_connection_new(host, &error);
+
+    if ( client == NULL )
+        goto error;
 
     _create_event(client, TRUE);
 
@@ -213,6 +219,7 @@ eventd_tests_run_libeventc(const gchar *host)
 
     g_object_unref(client);
 
+error:
     if ( error != NULL )
     {
         g_warning("Test failed: %s", error->message);
