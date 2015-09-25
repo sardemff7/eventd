@@ -58,7 +58,6 @@ libeventc_la_LDFLAGS = \
 
 libeventc_la_LIBADD = \
 	libeventd.la \
-	libeventd-evp.la \
 	$(GIO_LIBS) \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS) \

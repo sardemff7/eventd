@@ -23,9 +23,12 @@
 #include <glib.h>
 #include <glib-object.h>
 #include <gio/gio.h>
+#ifdef HAVE_GIO_UNIX
+#include <gio/gunixsocketaddress.h>
+#endif /* HAVE_GIO_UNIX */
 
-#include <libeventd-evp.h>
 #include <libeventd-event.h>
+#include <libeventd-protocol.h>
 
 #include <libeventc.h>
 #define EVENTC_CONNECTION_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), EVENTC_TYPE_CONNECTION, EventcConnectionPrivate))
@@ -38,7 +41,11 @@ struct _EventcConnectionPrivate {
     gboolean passive;
     gboolean enable_proxy;
     GError *error;
-    LibeventdEvpContext* evp;
+    EventdProtocol* protocol;
+    GCancellable *cancellable;
+    GSocketConnection *connection;
+    GDataInputStream *in;
+    GDataOutputStream *out;
     GHashTable* events;
 };
 
@@ -55,6 +62,31 @@ typedef struct {
 } EventcConnectionCallbackData;
 
 static void _eventc_connection_close_internal(EventcConnection *self);
+
+static GSocketConnectable *
+_eventc_get_address(const gchar *host_and_port, GError **error)
+{
+    GSocketConnectable *address = NULL;
+
+    if ( ( host_and_port == NULL ) || ( *host_and_port == '\0' ) )
+        host_and_port = "localhost";
+
+#ifdef HAVE_GIO_UNIX
+    gchar *path = NULL;
+    if ( g_strcmp0(host_and_port, "localhost") == 0 )
+        path = g_build_filename(g_get_user_runtime_dir(), PACKAGE_NAME, EVP_UNIX_SOCKET, NULL);
+    else if ( g_path_is_absolute(host_and_port) )
+        path = g_strdup(host_and_port);
+    if ( ( path != NULL ) && g_file_test(path, G_FILE_TEST_EXISTS) && ( ! g_file_test(path, G_FILE_TEST_IS_DIR|G_FILE_TEST_IS_REGULAR) ) )
+        address = G_SOCKET_CONNECTABLE(g_unix_socket_address_new(path));
+    g_free(path);
+#endif /* HAVE_GIO_UNIX */
+
+    if ( address == NULL )
+        address = g_network_address_parse(host_and_port, 0, error);
+
+    return address;
+}
 
 /**
  * eventc_get_version:
@@ -77,6 +109,32 @@ eventc_error_quark(void)
     return g_quark_from_static_string("eventc_error-quark");
 }
 
+static gboolean
+_eventc_connection_send_message(EventcConnection *self, gchar *message)
+{
+    gboolean r = FALSE;
+    if ( self->priv->error != NULL )
+        goto end;
+
+    GError *error = NULL;
+
+#ifdef EVENTD_DEBUG
+    g_debug("Sending message:\n%s", message);
+#endif /* EVENTD_DEBUG */
+
+    if ( g_data_output_stream_put_string(self->priv->out, message, NULL, &error) )
+        r = TRUE;
+    else
+    {
+        g_set_error(&self->priv->error, EVENTC_ERROR, EVENTC_ERROR_CONNECTION, "Failed to send message: %s", error->message);
+        g_error_free(error);
+        g_cancellable_cancel(self->priv->cancellable);
+    }
+
+end:
+    g_free(message);
+    return r;
+}
 static void
 _eventc_connection_event_answered(EventcConnection *self, const gchar *answer, EventdEvent *event)
 {
@@ -86,13 +144,12 @@ _eventc_connection_event_answered(EventcConnection *self, const gchar *answer, E
 
     g_signal_handler_disconnect(event, handlers->answered);
     handlers->answered = 0;
-    libeventd_evp_context_send_answered(self->priv->evp, event, answer, ( self->priv->error == NULL ) ? &self->priv->error : NULL);
+    _eventc_connection_send_message(self, eventd_protocol_generate_answered(self->priv->protocol, event, answer));
 }
 
 static void
-_eventc_connection_protocol_answered(gpointer data, LibeventdEvpContext *context, EventdEvent *event, const gchar *answer)
+_eventc_connection_protocol_answered(EventcConnection *self, EventdEvent *event, const gchar *answer, EventdProtocol *protocol)
 {
-    EventcConnection *self = data;
     EventdConnectionEventHandlers *handlers;
     handlers = g_hash_table_lookup(self->priv->events, event);
     g_return_if_fail(handlers != NULL);
@@ -106,31 +163,21 @@ static void
 _eventc_connection_event_ended(EventcConnection *self, EventdEventEndReason reason, EventdEvent *event)
 {
     g_hash_table_remove(self->priv->events, event);
-    libeventd_evp_context_send_ended(self->priv->evp, event, reason, ( self->priv->error == NULL ) ? &self->priv->error : NULL);
+    _eventc_connection_send_message(self, eventd_protocol_generate_ended(self->priv->protocol, event, reason));
 }
 
 static void
-_eventc_connection_protocol_ended(gpointer data, LibeventdEvpContext *context, EventdEvent *event, EventdEventEndReason reason)
+_eventc_connection_protocol_ended(EventcConnection *self, EventdEvent *event, EventdEventEndReason reason, EventdProtocol *protocol)
 {
-    EventcConnection *self = data;
     g_hash_table_remove(self->priv->events, event);
     eventd_event_end(event, reason);
 }
 
 static void
-_eventc_connection_protocol_bye(gpointer data, LibeventdEvpContext *context)
+_eventc_connection_protocol_bye(EventcConnection *self, EventdProtocol *protocol)
 {
-    EventcConnection *self = data;
     _eventc_connection_close_internal(self);
 }
-
-static LibeventdEvpClientInterface _eventc_connection_client_interface = {
-    .event = NULL,
-    .answered = _eventc_connection_protocol_answered,
-    .ended = _eventc_connection_protocol_ended,
-
-    .bye = _eventc_connection_protocol_bye
-};
 
 static void
 _eventc_connection_event_handlers_free(gpointer data)
@@ -144,6 +191,31 @@ _eventc_connection_event_handlers_free(gpointer data)
     g_object_unref(handlers->event);
 
     g_slice_free(EventdConnectionEventHandlers, handlers);
+}
+
+static void
+_eventc_connection_read_callback(GObject *obj, GAsyncResult *res, gpointer user_data)
+{
+    EventcConnection *self = user_data;
+    GError *error = NULL;
+    gchar *line;
+
+    line = g_data_input_stream_read_line_finish(G_DATA_INPUT_STREAM(obj), res, NULL, &error);
+    if ( line == NULL )
+    {
+        if ( error != NULL )
+        {
+            if ( error->code != G_IO_ERROR_CANCELLED )
+                g_set_error(&self->priv->error, EVENTC_ERROR, EVENTC_ERROR_CONNECTION, "Could not read line: %s", error->message);
+            g_clear_error(&error);
+        }
+        return;
+    }
+
+    if ( ! eventd_protocol_parse(self->priv->protocol, &line, &self->priv->error) )
+        return;
+
+    g_data_input_stream_read_line_async(self->priv->in, G_PRIORITY_DEFAULT, self->priv->cancellable, _eventc_connection_read_callback, self);
 }
 
 static void _eventc_connection_finalize(GObject *object);
@@ -165,8 +237,13 @@ eventc_connection_init(EventcConnection *self)
 {
     self->priv = EVENTC_CONNECTION_GET_PRIVATE(self);
 
-    self->priv->evp = libeventd_evp_context_new(self, &_eventc_connection_client_interface);
+    self->priv->protocol = eventd_protocol_evp_new();
     self->priv->events = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, _eventc_connection_event_handlers_free);
+    self->priv->cancellable = g_cancellable_new();
+
+    g_signal_connect_swapped(self->priv->protocol, "answered", G_CALLBACK(_eventc_connection_protocol_answered), self);
+    g_signal_connect_swapped(self->priv->protocol, "ended", G_CALLBACK(_eventc_connection_protocol_ended), self);
+    g_signal_connect_swapped(self->priv->protocol, "bye", G_CALLBACK(_eventc_connection_protocol_bye), self);
 }
 
 static void
@@ -177,8 +254,9 @@ _eventc_connection_finalize(GObject *object)
     if ( self->priv->address != NULL )
         g_object_unref(self->priv->address);
 
-    libeventd_evp_context_free(self->priv->evp);
+    g_object_unref(self->priv->cancellable);
     g_hash_table_unref(self->priv->events);
+    g_object_unref(self->priv->protocol);
 
     G_OBJECT_CLASS(eventc_connection_parent_class)->finalize(object);
 }
@@ -259,17 +337,7 @@ eventc_connection_is_connected(EventcConnection *self, GError **error)
         return FALSE;
     }
 
-    GError *_inner_error_ = NULL;
-    if ( libeventd_evp_context_is_connected(self->priv->evp, &_inner_error_) )
-        return TRUE;
-
-    if ( _inner_error_ != NULL )
-    {
-        g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_CONNECTION, "Connection error: %s", _inner_error_->message);
-        g_error_free(_inner_error_);
-    }
-
-    return FALSE;
+    return ( ( self->priv->connection != NULL ) && g_socket_connection_is_connected(self->priv->connection) );
 }
 
 static gboolean
@@ -308,27 +376,24 @@ _eventc_connection_expect_disconnected(EventcConnection *self, GError **error)
 }
 
 static gboolean
-_eventc_connection_connect_after(EventcConnection *self, GSocketConnection *connection, GError *_inner_error_, GError **error)
+_eventc_connection_connect_after(EventcConnection *self, GError *_inner_error_, GError **error)
 {
-    if ( connection == NULL )
+    if ( self->priv->connection == NULL )
     {
         g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_CONNECTION, "Failed to connect: %s", _inner_error_->message);
         g_error_free(_inner_error_);
         return FALSE;
     }
 
-    libeventd_evp_context_set_connection(self->priv->evp, connection);
+    self->priv->out = g_data_output_stream_new(g_io_stream_get_output_stream(G_IO_STREAM(self->priv->connection)));
+
     if ( self->priv->passive )
-    {
-        if ( ! libeventd_evp_context_passive(self->priv->evp, &_inner_error_) )
-        {
-            g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_CONNECTION, "Failed to go into passive mode: %s", _inner_error_->message);
-            g_error_free(_inner_error_);
-            return FALSE;
-        }
-    }
-    else
-        libeventd_evp_context_receive_loop(self->priv->evp, G_PRIORITY_DEFAULT);
+        return _eventc_connection_send_message(self, eventd_protocol_generate_passive(self->priv->protocol));
+
+    self->priv->in = g_data_input_stream_new(g_io_stream_get_input_stream(G_IO_STREAM(self->priv->connection)));
+
+    g_cancellable_reset(self->priv->cancellable);
+    g_data_input_stream_read_line_async(self->priv->in, G_PRIORITY_DEFAULT, self->priv->cancellable, _eventc_connection_read_callback, self);
 
     return TRUE;
 }
@@ -344,9 +409,8 @@ _eventc_connection_connect_callback(GObject *obj, GAsyncResult *res, gpointer us
 
     GError *_inner_error_ = NULL;
     GError *error = NULL;
-    GSocketConnection *connection;
-    connection = g_socket_client_connect_finish(G_SOCKET_CLIENT(obj), res, &_inner_error_);
-    if ( ! _eventc_connection_connect_after(self, connection, _inner_error_, &error) )
+    self->priv->connection = g_socket_client_connect_finish(G_SOCKET_CLIENT(obj), res, &_inner_error_);
+    if ( ! _eventc_connection_connect_after(self, _inner_error_, &error) )
     {
         g_simple_async_report_take_gerror_in_idle(G_OBJECT(self), callback, user_data, error);
         return;
@@ -373,7 +437,6 @@ eventc_connection_connect(EventcConnection *self, GAsyncReadyCallback callback, 
     g_return_if_fail(EVENTC_IS_CONNECTION(self));
 
     GError *error = NULL;
-
 
     if ( ! _eventc_connection_expect_disconnected(self, &error) )
     {
@@ -446,14 +509,10 @@ eventc_connection_connect_sync(EventcConnection *self, GError **error)
     g_socket_client_set_enable_proxy(client, self->priv->enable_proxy);
 
     GError *_inner_error_ = NULL;
-    GSocketConnection *connection;
-    connection = g_socket_client_connect(client, self->priv->address, NULL, &_inner_error_);
+    self->priv->connection = g_socket_client_connect(client, self->priv->address, NULL, &_inner_error_);
     g_object_unref(client);
 
-    if ( ! _eventc_connection_connect_after(self, connection, _inner_error_, error) )
-        return FALSE;
-
-    return TRUE;
+    return _eventc_connection_connect_after(self, _inner_error_, error);
 }
 
 /**
@@ -482,15 +541,13 @@ eventc_connection_event(EventcConnection *self, EventdEvent *event, GError **err
         return FALSE;
     }
 
-    GError *_inner_error_ = NULL;
-
     if ( ! _eventc_connection_expect_connected(self, error) )
         return FALSE;
 
-    if ( ! libeventd_evp_context_send_event(self->priv->evp, event, &_inner_error_) )
+    if ( ! _eventc_connection_send_message(self, eventd_protocol_generate_event(self->priv->protocol, event)) )
     {
-        g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_EVENT, "Couldn't send event: %s", _inner_error_->message);
-        g_error_free(_inner_error_);
+        g_propagate_error(error, self->priv->error);
+        self->priv->error = NULL;
         return FALSE;
     }
 
@@ -522,8 +579,8 @@ eventc_connection_close(EventcConnection *self, GError **error)
     g_return_val_if_fail(EVENTC_IS_CONNECTION(self), FALSE);
 
     GError *_inner_error_ = NULL;
-    if ( libeventd_evp_context_is_connected(self->priv->evp, &_inner_error_) )
-        libeventd_evp_context_send_bye(self->priv->evp);
+    if ( eventc_connection_is_connected(self, &_inner_error_) )
+        _eventc_connection_send_message(self, eventd_protocol_generate_bye(self->priv->protocol, NULL));
     else if ( _inner_error_ != NULL )
     {
         g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_BYE, "Couldn't send bye message: %s", _inner_error_->message);
@@ -539,7 +596,27 @@ eventc_connection_close(EventcConnection *self, GError **error)
 static void
 _eventc_connection_close_internal(EventcConnection *self)
 {
-    libeventd_evp_context_close(self->priv->evp);
+    g_cancellable_cancel(self->priv->cancellable);
+
+    if ( self->priv->error != NULL )
+        g_error_free(self->priv->error);
+    self->priv->error = NULL;
+
+    if ( self->priv->out != NULL )
+        g_object_unref(self->priv->out);
+    if ( self->priv->in != NULL )
+        g_object_unref(self->priv->in);
+
+    if ( self->priv->connection != NULL )
+    {
+        g_io_stream_close(G_IO_STREAM(self->priv->connection), NULL, NULL);
+        g_object_unref(self->priv->connection);
+    }
+
+    self->priv->out = NULL;
+    self->priv->in = NULL;
+    self->priv->connection = NULL;
+
     g_hash_table_remove_all(self->priv->events);
 }
 
@@ -566,7 +643,7 @@ eventc_connection_set_host(EventcConnection *self, const gchar *host, GError **e
     GError *_inner_error_ = NULL;
     GSocketConnectable *address;
 
-    address = libeventd_evp_get_address(host, &_inner_error_);
+    address = _eventc_get_address(host, &_inner_error_);
     if ( address == NULL )
     {
         g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_HOSTNAME, "Couldn't resolve the hostname '%s': %s", host, _inner_error_->message);
