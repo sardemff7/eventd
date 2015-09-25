@@ -35,77 +35,25 @@
 
 #include "context.h"
 
-static gboolean
-_libeventd_evp_context_send_data(LibeventdEvpContext *self, GHashTable *all_data, GError **error)
+
+static gboolean _libeventd_evp_context_send_message(LibeventdEvpContext *self, gchar *message, GError **error);
+
+gboolean
+libeventd_evp_context_send_passive(LibeventdEvpContext *self, GError **error)
 {
-    if ( all_data == NULL )
-        return TRUE;
+    g_return_val_if_fail(self != NULL, FALSE);
+    g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
     gchar *message;
 
-    GHashTableIter iter;
-    const gchar *name;
-    const gchar *content;
-
-    g_hash_table_iter_init(&iter, all_data);
-    while ( g_hash_table_iter_next(&iter, (gpointer *)&name, (gpointer *)&content) )
-    {
-        if ( g_utf8_strchr(content, -1, '\n') == NULL )
-        {
-            message = g_strdup_printf("DATA %s %s", name, content);
-            if ( ! libeventd_evp_context_send_message(self, message, error) )
-                goto fail;
-            g_free(message);
-        }
-        else
-        {
-            message = g_strdup_printf(".DATA %s", name);
-            if ( ! libeventd_evp_context_send_message(self, message, error) )
-                goto fail;
-            g_free(message);
-
-            gchar **data;
-            data = g_strsplit(content, "\n", -1);
-
-            gchar **line;
-            for ( line = data ; *line != NULL ; ++line )
-            {
-                if ( (*line)[0] == '.' )
-                {
-                    GError *_inner_error_ = NULL;
-                    if ( ! g_data_output_stream_put_byte(self->out, '.', self->cancellable, &_inner_error_) )
-                    {
-                        g_propagate_error(error, _inner_error_);
-                        g_strfreev(data);
-                        return FALSE;
-                    }
-                }
-                if ( ! libeventd_evp_context_send_message(self, *line, error) )
-                {
-                    g_strfreev(data);
-                    return FALSE;
-                }
-            }
-
-            g_strfreev(data);
-            if ( ! libeventd_evp_context_send_message(self, ".", error) )
-                return FALSE;
-        }
-    }
-
-    return TRUE;
-
-fail:
-    g_free(message);
-    return FALSE;
+    message = eventd_protocol_generate_passive(self->protocol);
+    return _libeventd_evp_context_send_message(self, message, error);
 }
 
 gboolean
-libeventd_evp_context_send_event(LibeventdEvpContext *self, const gchar *id, EventdEvent *event, GError **error)
+libeventd_evp_context_send_event(LibeventdEvpContext *self, EventdEvent *event, GError **error)
 {
     g_return_val_if_fail(self != NULL, FALSE);
-    g_return_val_if_fail(id != NULL, FALSE);
-    g_return_val_if_fail(event != NULL, FALSE);
     g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
     if ( self->out == NULL )
@@ -114,41 +62,14 @@ libeventd_evp_context_send_event(LibeventdEvpContext *self, const gchar *id, Eve
 
     gchar *message;
 
-    message = g_strdup_printf(".EVENT %s %s %s", id, eventd_event_get_category(event), eventd_event_get_name(event));
-    if ( ! libeventd_evp_context_send_message(self, message, error) )
-        goto fail;
-    g_free(message);
-
-    GList *answer_;
-    for ( answer_ = eventd_event_get_answers(event) ; answer_ != NULL ; answer_ = g_list_next(answer_) )
-    {
-        const gchar *answer = answer_->data;
-        message = g_strdup_printf("ANSWER %s", answer);
-        if ( ! libeventd_evp_context_send_message(self, message, error) )
-            goto fail;
-        g_free(message);
-    }
-
-    if ( ! _libeventd_evp_context_send_data(self, eventd_event_get_all_data(event), error) )
-        return FALSE;
-
-    if ( ! libeventd_evp_context_send_message(self, ".", error) )
-        return FALSE;
-
-    return TRUE;
-
-fail:
-    g_free(message);
-    return FALSE;
+    message = eventd_protocol_generate_event(self->protocol, event);
+    return _libeventd_evp_context_send_message(self, message, error);
 }
 
 gboolean
-libeventd_evp_context_send_answered(LibeventdEvpContext *self, const gchar *id, const gchar *answer, EventdEvent *event, GError **error)
+libeventd_evp_context_send_answered(LibeventdEvpContext *self, EventdEvent *event, const gchar *answer, GError **error)
 {
     g_return_val_if_fail(self != NULL, FALSE);
-    g_return_val_if_fail(id != NULL, FALSE);
-    g_return_val_if_fail(answer != NULL, FALSE);
-    g_return_val_if_fail(EVENTD_IS_EVENT(event), FALSE);
     g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
     if ( self->out == NULL )
@@ -157,45 +78,24 @@ libeventd_evp_context_send_answered(LibeventdEvpContext *self, const gchar *id, 
 
     gchar *message;
 
-    message = g_strdup_printf(".ANSWERED %s %s", id, answer);
-    if ( ! libeventd_evp_context_send_message(self, message, error) )
-        goto fail;
-    g_free(message);
-
-    if ( ! _libeventd_evp_context_send_data(self, eventd_event_get_all_answer_data(event), error) )
-        return FALSE;
-
-    if ( ! libeventd_evp_context_send_message(self, ".", error) )
-        return FALSE;
-
-    return TRUE;
-
-fail:
-    g_free(message);
-    return FALSE;
+    message = eventd_protocol_generate_answered(self->protocol, event, answer);
+    return _libeventd_evp_context_send_message(self, message, error);
 }
 
 gboolean
-libeventd_evp_context_send_ended(LibeventdEvpContext *self, const gchar *id, EventdEventEndReason reason, GError **error)
+libeventd_evp_context_send_ended(LibeventdEvpContext *self, EventdEvent *event, EventdEventEndReason reason, GError **error)
 {
-    GEnumValue *reason_value = g_enum_get_value(g_type_class_ref(EVENTD_TYPE_EVENT_END_REASON), reason);
     g_return_val_if_fail(self != NULL, FALSE);
-    g_return_val_if_fail(id != NULL, FALSE);
-    g_return_val_if_fail(reason_value != NULL, FALSE);
     g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
     if ( self->out == NULL )
         /* Passive mode */
         return TRUE;
 
-    gboolean r;
     gchar *message;
 
-    message = g_strdup_printf("ENDED %s %s", id, reason_value->value_nick);
-    r = libeventd_evp_context_send_message(self, message, error);
-    g_free(message);
-
-    return r;
+    message = eventd_protocol_generate_ended(self->protocol, event, reason);
+    return _libeventd_evp_context_send_message(self, message, error);
 }
 
 
@@ -208,19 +108,19 @@ libeventd_evp_context_send_bye(LibeventdEvpContext *self)
         /* Passive mode */
         return;
 
-    libeventd_evp_context_send_message(self, "BYE", NULL);
+    gchar *message;
+
+    message = eventd_protocol_generate_bye(self->protocol, NULL);
+    _libeventd_evp_context_send_message(self, message, NULL);
 }
 
-
-gboolean
-libeventd_evp_context_send_message(LibeventdEvpContext *self, const gchar *message, GError **error)
+static gboolean
+_libeventd_evp_context_send_message(LibeventdEvpContext *self, gchar *message, GError **error)
 {
+    if ( message == NULL )
+        return FALSE;
+
     GError *_inner_error_ = NULL;
-
-    g_return_val_if_fail(self != NULL, FALSE);
-    g_return_val_if_fail(message != NULL, FALSE);
-    g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
-
 
 #ifdef EVENTD_DEBUG
     g_debug("Sending line: %s", message);
@@ -229,15 +129,11 @@ libeventd_evp_context_send_message(LibeventdEvpContext *self, const gchar *messa
     if ( ! g_data_output_stream_put_string(self->out, message, self->cancellable, &_inner_error_) )
     {
         g_propagate_error(error, _inner_error_);
-        libeventd_evp_context_close(self);
-        return FALSE;
-    }
-    if ( ! g_data_output_stream_put_byte(self->out, '\n', self->cancellable, &_inner_error_) )
-    {
-        g_propagate_error(error, _inner_error_);
+        g_free(message);
         libeventd_evp_context_close(self);
         return FALSE;
     }
 
+    g_free(message);
     return TRUE;
 }

@@ -42,7 +42,7 @@ connection_test(GDataInputStream *input, GDataOutputStream *output, const gchar 
 
     /* Sending a first event an wait for the answer */
 
-    if ( ! g_data_output_stream_put_string(output, ".EVENT 1 test test\n", NULL, error) ) goto fail;
+    if ( ! g_data_output_stream_put_string(output, ".EVENT 2e6894bb-cf96-462e-a435-766c9b1b4f8a test test\n", NULL, error) ) goto fail;
     if ( ! g_data_output_stream_put_string(output, "ANSWER test\n", NULL, error) ) goto fail;
     m = g_strdup_printf("DATA file %s\n", filename);
     if ( ! g_data_output_stream_put_string(output, m, NULL, error) ) goto fail;
@@ -55,9 +55,9 @@ connection_test(GDataInputStream *input, GDataOutputStream *output, const gchar 
     r = g_data_input_stream_read_upto(input, "\n", -1, NULL, NULL, error);
     if ( r == NULL ) goto fail;
     if ( ! g_data_input_stream_read_byte(input, NULL, error) ) goto fail;
-    if ( g_strcmp0(r, ".ANSWERED 1 test") != 0 )
+    if ( g_strcmp0(r, ".ANSWERED 2e6894bb-cf96-462e-a435-766c9b1b4f8a test") != 0 )
     {
-        e = g_strdup_printf("Wrong ANSWER to EVENT 1: %s", r);
+        e = g_strdup_printf("Wrong ANSWER to EVENT: %s", r);
         goto fail;
     }
     g_free(r);
@@ -68,7 +68,7 @@ connection_test(GDataInputStream *input, GDataOutputStream *output, const gchar 
     m = g_strdup_printf("DATA test %s", message);
     if ( g_strcmp0(r, m) != 0 )
     {
-        e = g_strdup_printf("Wrong ANSWER DATA to EVENT 1: %s", r);
+        e = g_strdup_printf("Wrong ANSWER DATA to EVENT: %s", r);
         goto fail;
     }
     m = (g_free(m), NULL);
@@ -79,7 +79,7 @@ connection_test(GDataInputStream *input, GDataOutputStream *output, const gchar 
     if ( ! g_data_input_stream_read_byte(input, NULL, error) ) goto fail;
     if ( g_strcmp0(r, ".") != 0 )
     {
-        m = g_strdup_printf("Wrong ANSWER end to EVENT 1: %s", r);
+        m = g_strdup_printf("Wrong ANSWER end to EVENT: %s", r);
         goto fail;
     }
     g_free(r);
@@ -87,9 +87,9 @@ connection_test(GDataInputStream *input, GDataOutputStream *output, const gchar 
     r = g_data_input_stream_read_upto(input, "\n", -1, NULL, NULL, error);
     if ( r == NULL ) goto fail;
     if ( ! g_data_input_stream_read_byte(input, NULL, error) ) goto fail;
-    if ( g_strcmp0(r, "ENDED 1 reserved") != 0 )
+    if ( g_strcmp0(r, "ENDED 2e6894bb-cf96-462e-a435-766c9b1b4f8a reserved") != 0 )
     {
-        m = g_strdup_printf("No ENDED or bad ENDED to EVENT 1: %s", r);
+        m = g_strdup_printf("No ENDED or bad ENDED to EVENT: %s", r);
         goto fail;
     }
     r = (g_free(r), NULL);

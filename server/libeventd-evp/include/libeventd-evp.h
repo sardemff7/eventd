@@ -44,10 +44,10 @@ typedef struct _LibeventdEvpContext LibeventdEvpContext;
 typedef void LibeventdEvpClientIface;
 
 typedef void (*LibeventdEvpCallback)(gpointer client, LibeventdEvpContext *context);
-typedef void (*LibeventdEvpEventCallback)(gpointer client, LibeventdEvpContext *context, const gchar *id, EventdEvent *event);
-typedef void (*LibeventdEvpEndCallback)(gpointer client, LibeventdEvpContext *context, const gchar *id);
-typedef void (*LibeventdEvpAnsweredCallback)(gpointer client, LibeventdEvpContext *context, const gchar *id, const gchar *answer, GHashTable *data_hash);
-typedef void (*LibeventdEvpEndedCallback)(gpointer client, LibeventdEvpContext *context, const gchar *id, EventdEventEndReason reason);
+typedef void (*LibeventdEvpEventCallback)(gpointer client, LibeventdEvpContext *context, EventdEvent *event);
+typedef void (*LibeventdEvpEndCallback)(gpointer client, LibeventdEvpContext *context, EventdEvent *event);
+typedef void (*LibeventdEvpAnsweredCallback)(gpointer client, LibeventdEvpContext *context, EventdEvent *event, const gchar *answer);
+typedef void (*LibeventdEvpEndedCallback)(gpointer client, LibeventdEvpContext *context, EventdEvent *event, EventdEventEndReason reason);
 
 typedef struct {
     LibeventdEvpEventCallback event;
@@ -69,10 +69,11 @@ void libeventd_evp_context_close(LibeventdEvpContext *context);
 gboolean libeventd_evp_context_passive(LibeventdEvpContext *context, GError **error);
 void libeventd_evp_context_receive_loop(LibeventdEvpContext *context, gint priority);
 
-gboolean libeventd_evp_context_send_event(LibeventdEvpContext *context, const gchar *id, EventdEvent *event, GError **error);
-gboolean libeventd_evp_context_send_end(LibeventdEvpContext *context, const gchar *id, GError **error);
-gboolean libeventd_evp_context_send_answered(LibeventdEvpContext *context, const gchar *id, const gchar *answer, EventdEvent *event, GError **error);
-gboolean libeventd_evp_context_send_ended(LibeventdEvpContext *context, const gchar *id, EventdEventEndReason reason, GError **error);
+gboolean libeventd_evp_context_send_passive(LibeventdEvpContext *context, GError **error);
+gboolean libeventd_evp_context_send_event(LibeventdEvpContext *context, EventdEvent *event, GError **error);
+gboolean libeventd_evp_context_send_end(LibeventdEvpContext *context, EventdEvent *event, GError **error);
+gboolean libeventd_evp_context_send_answered(LibeventdEvpContext *context, EventdEvent *event, const gchar *answer, GError **error);
+gboolean libeventd_evp_context_send_ended(LibeventdEvpContext *context, EventdEvent *event, EventdEventEndReason reason, GError **error);
 void libeventd_evp_context_send_bye(LibeventdEvpContext *context);
 
 #endif /* __LIBEVENTD_EVP_H__ */

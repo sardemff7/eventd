@@ -24,12 +24,14 @@
 #define __LIBEVENTD_EVP_CONTEXT_H__
 
 #include <libeventd-evp.h>
+#include <libeventd-protocol.h>
 
 typedef void (*LibeventdEvpWaiterCallback)(LibeventdEvpContext *context, const gchar *line);
 
 struct _LibeventdEvpContext {
     gpointer client;
     LibeventdEvpClientInterface *interface;
+    EventdProtocol *protocol;
 
     GCancellable *cancellable;
     GSocketConnection *connection;

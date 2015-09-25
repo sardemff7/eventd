@@ -29,6 +29,38 @@
 
 #include "context.h"
 
+static void
+_eec_event(LibeventdEvpContext *self, EventdEvent *event, EventdProtocol *protocol)
+{
+    self->interface->event(self->client, self, event);
+}
+static void
+_eec_answered(LibeventdEvpContext *self, EventdEvent *event, const gchar *answer, EventdProtocol *protocol)
+{
+    self->interface->answered(self->client, self, event, answer);
+}
+static void
+_eec_ended(LibeventdEvpContext *self, EventdEvent *event, EventdEventEndReason reason, EventdProtocol *protocol)
+{
+    self->interface->ended(self->client, self, event, reason);
+}
+static void
+_eec_passive(LibeventdEvpContext *self, EventdProtocol *protocol)
+{
+    if ( self->out == NULL )
+        g_warning("Client already in passive mode");
+    else
+        g_object_unref(self->out);
+    self->out = NULL;
+}
+static void
+_eec_bye(LibeventdEvpContext *self, const gchar *message, EventdProtocol *protocol)
+{
+    self->interface->bye(self->client, self);
+    g_cancellable_cancel(self->cancellable);
+}
+
+
 LibeventdEvpContext *
 libeventd_evp_context_new(gpointer client, LibeventdEvpClientInterface *interface)
 {
@@ -42,6 +74,14 @@ libeventd_evp_context_new(gpointer client, LibeventdEvpClientInterface *interfac
     self->interface = interface;
 
     self->cancellable = g_cancellable_new();
+
+    self->protocol = eventd_protocol_evp_new();
+
+    g_signal_connect_swapped(self->protocol, "event", G_CALLBACK(_eec_event), self);
+    g_signal_connect_swapped(self->protocol, "answered", G_CALLBACK(_eec_answered), self);
+    g_signal_connect_swapped(self->protocol, "ended", G_CALLBACK(_eec_ended), self);
+    g_signal_connect_swapped(self->protocol, "passive", G_CALLBACK(_eec_passive), self);
+    g_signal_connect_swapped(self->protocol, "bye", G_CALLBACK(_eec_bye), self);
 
     return self;
 }
@@ -77,6 +117,8 @@ void
 libeventd_evp_context_free(LibeventdEvpContext *self)
 {
     g_return_if_fail(self != NULL);
+
+    g_object_unref(self->protocol);
 
     g_object_unref(self->cancellable);
 

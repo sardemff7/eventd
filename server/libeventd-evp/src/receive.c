@@ -35,327 +35,6 @@
 
 #include "context.h"
 
-static void _libeventd_evp_context_receive_data_callback(GObject *source_object, GAsyncResult *res, gpointer user_data);
-static void _libeventd_evp_context_receive_event_callback(GObject *source_object, GAsyncResult *res, gpointer user_data);
-static void _libeventd_evp_context_receive_answered_callback(GObject *source_object, GAsyncResult *res, gpointer user_data);
-static void _libeventd_evp_context_receive_callback(GObject *source_object, GAsyncResult *res, gpointer user_data);
-static void
-_libeventd_evp_receive(LibeventdEvpContext *self, GAsyncReadyCallback callback, gpointer user_data)
-{
-    g_data_input_stream_read_line_async(self->in, self->priority, self->cancellable, callback, user_data);
-}
-
-static gchar *
-_libeventd_evp_receive_finish(LibeventdEvpContext *self, GAsyncResult *res, GObject *in)
-{
-    g_return_val_if_fail(G_IS_ASYNC_RESULT(res), NULL);
-    gchar *line;
-
-    line = g_data_input_stream_read_line_finish(G_DATA_INPUT_STREAM(in), res, NULL, &self->error);
-    if ( line == NULL )
-    {
-        if ( ( self->error != NULL ) && ( self->error->code == G_IO_ERROR_CANCELLED ) )
-            g_clear_error(&self->error);
-    }
-
-    return line;
-}
-
-typedef struct {
-    LibeventdEvpContext *context;
-    GHashTable *data_hash;
-    gchar *name;
-    GString *data;
-    GAsyncReadyCallback callback;
-    gpointer user_data;
-} LibeventdEvpReceiveDataData;
-
-typedef struct {
-    LibeventdEvpContext *context;
-    gchar *id;
-    EventdEvent *event;
-    GHashTable *data_hash;
-    gboolean error;
-} LibeventdEvpReceiveEventData;
-
-typedef struct {
-    LibeventdEvpContext *context;
-    gchar *id;
-    gchar *answer;
-    GHashTable *data_hash;
-    gboolean error;
-} LibeventdEvpReceiveAnsweredData;
-
-static void
-_libeventd_evp_context_receive_data_continue(gpointer user_data)
-{
-    LibeventdEvpReceiveDataData *data = user_data;
-
-    _libeventd_evp_receive(data->context, _libeventd_evp_context_receive_data_callback, data);
-}
-
-static void
-_libeventd_evp_context_receive_data_callback(GObject *source_object, GAsyncResult *res, gpointer user_data)
-{
-    LibeventdEvpReceiveDataData *data = user_data;
-    LibeventdEvpContext *self = data->context;
-
-    gchar *line;
-
-    line = _libeventd_evp_receive_finish(self, res, source_object);
-    if ( line == NULL )
-        return;
-
-#ifdef EVENTD_DEBUG
-    g_debug("Received DATA line: %s", line);
-#endif /* EVENTD_DEBUG */
-
-    if ( g_strcmp0(line, ".") == 0 )
-    {
-        g_hash_table_insert(data->data_hash, data->name, g_string_free(data->data, FALSE));
-
-        g_hash_table_unref(data->data_hash);
-
-        _libeventd_evp_receive(data->context, data->callback, data->user_data);
-
-        g_free(data);
-    }
-    else
-    {
-        if ( *data->data->str != '\0' )
-            data->data = g_string_append_c(data->data, '\n');
-        data->data = g_string_append(data->data, ( line[0] == '.' ) ? ( line+1 ) : line);
-
-        _libeventd_evp_context_receive_data_continue(data);
-    }
-
-    g_free(line);
-}
-
-static void
-_libeventd_evp_context_receive_data(LibeventdEvpContext *self, GHashTable *data_hash, const gchar *name, GAsyncReadyCallback callback, gpointer user_data)
-{
-    LibeventdEvpReceiveDataData *data;
-
-    data = g_new0(LibeventdEvpReceiveDataData, 1);
-    data->context = self;
-    data->data_hash = g_hash_table_ref(data_hash);
-    data->name = g_strdup(name);
-    data->data = g_string_new("");
-    data->callback = callback;
-    data->user_data = user_data;
-
-    _libeventd_evp_context_receive_data_continue(data);
-}
-
-static gboolean
-_libeventd_evp_context_receive_data_handle(LibeventdEvpContext *self, GHashTable *data_hash, const gchar *line, GAsyncReadyCallback callback, gpointer user_data)
-{
-    if ( g_str_has_prefix(line, "DATA ") )
-    {
-        gchar **sline;
-
-        sline = g_strsplit(line + strlen("DATA "), " ", 2);
-
-        g_hash_table_insert(data_hash, sline[0], sline[1]);
-
-        g_free(sline);
-
-        _libeventd_evp_receive(self, callback, user_data);
-    }
-    else if ( g_str_has_prefix(line, ".DATA ") )
-        _libeventd_evp_context_receive_data(self, data_hash, line + strlen(".DATA "), callback, user_data);
-    else
-        return FALSE;
-    return TRUE;
-}
-
-static void
-_libeventd_evp_context_receive_event_callback(GObject *source_object, GAsyncResult *res, gpointer user_data)
-{
-    LibeventdEvpReceiveEventData *data = user_data;
-    LibeventdEvpContext *self = data->context;
-
-    gchar *line;
-
-    line = _libeventd_evp_receive_finish(self, res, source_object);
-    if ( line == NULL )
-        return;
-
-#ifdef EVENTD_DEBUG
-    g_debug("Received EVENT line: %s", line);
-#endif /* EVENTD_DEBUG */
-
-    if ( g_strcmp0(line, ".") == 0 )
-    {
-        if ( ! data->error )
-        {
-            if ( g_hash_table_size(data->data_hash) == 0 )
-                g_hash_table_unref(data->data_hash);
-            else
-                eventd_event_set_all_data(data->event, data->data_hash);
-
-            if ( self->interface->event != NULL )
-                self->interface->event(self->client, self, data->id, data->event);
-        }
-
-        g_object_unref(data->event);
-        g_free(data);
-
-        _libeventd_evp_receive(self, _libeventd_evp_context_receive_callback, self);
-    }
-    else if ( g_str_has_prefix(line, "ANSWER ") )
-    {
-        eventd_event_add_answer(data->event, line + strlen("ANSWER "));
-        _libeventd_evp_receive(self, _libeventd_evp_context_receive_event_callback, data);
-    }
-    else if ( ! _libeventd_evp_context_receive_data_handle(self, data->data_hash, line, _libeventd_evp_context_receive_event_callback, data) )
-    {
-        data->error = TRUE;
-        _libeventd_evp_receive(self, _libeventd_evp_context_receive_event_callback, data);
-    }
-
-
-    g_free(line);
-}
-
-static void
-_libeventd_evp_context_receive_answered_callback(GObject *source_object, GAsyncResult *res, gpointer user_data)
-{
-    LibeventdEvpReceiveAnsweredData *data = user_data;
-    LibeventdEvpContext *self = data->context;
-
-    gchar *line;
-
-    line = _libeventd_evp_receive_finish(self, res, source_object);
-    if ( line == NULL )
-        return;
-
-#ifdef EVENTD_DEBUG
-    g_debug("Received ANSWERED line: %s", line);
-#endif /* EVENTD_DEBUG */
-
-    if ( g_strcmp0(line, ".") == 0 )
-    {
-        if ( self->interface->answered != NULL )
-            self->interface->answered(self->client, self, data->id, data->answer, data->data_hash);
-
-        g_free(data->answer);
-        g_free(data->id);
-
-        _libeventd_evp_receive(self, _libeventd_evp_context_receive_callback, self);
-
-        g_free(data);
-    }
-    else if ( ! _libeventd_evp_context_receive_data_handle(self, data->data_hash, line, _libeventd_evp_context_receive_answered_callback, data) )
-        data->error = TRUE;
-
-    g_free(line);
-}
-
-/*
- * General receiving callbacks
- */
-static void
-_libeventd_evp_context_receive_callback(GObject *source_object, GAsyncResult *res, gpointer user_data)
-{
-    LibeventdEvpContext *self = user_data;
-
-    gchar *line;
-
-    line = _libeventd_evp_receive_finish(self, res, source_object);
-    if ( line == NULL )
-        return;
-
-#ifdef EVENTD_DEBUG
-    g_debug("Received line: %s", line);
-#endif /* EVENTD_DEBUG */
-
-    /* We proccess messages … */
-    if ( g_str_has_prefix(line, "BYE")
-         && ( ( line[strlen("BYE")] == '\0' ) || ( line[strlen("BYE")] == ' ' ) ) )
-    {
-#ifdef EVENTD_DEBUG
-        if ( line[strlen("BYE")] == ' ' )
-            g_debug("Closing connection: %s", line + strlen("BYE "));
-#endif /* EVENTD_DEBUG */
-        g_free(line);
-        self->interface->bye(self->client, self);
-        return;
-    }
-    else if ( g_str_has_prefix(line, ".EVENT ") )
-    {
-        gchar *id, *category = NULL, *name = NULL;
-        id = line + strlen(".EVENT ");
-        category = strchr(id, ' ');
-        *category = '\0';
-        category += strlen(" ");
-        name = strchr(category, ' ');
-        *name = '\0';
-        name += strlen(" ");
-
-        LibeventdEvpReceiveEventData *data;
-
-        data = g_new0(LibeventdEvpReceiveEventData, 1);
-        data->context = self;
-        data->id = g_strdup(id);
-        data->event = eventd_event_new(category, name);
-        data->data_hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-
-        _libeventd_evp_receive(self, _libeventd_evp_context_receive_event_callback, data);
-        g_free(line);
-        return;
-    }
-    else if ( g_str_has_prefix(line, "ENDED ") )
-    {
-        gchar **end;
-
-        end = g_strsplit(line + strlen("ENDED "), " ", 2);
-
-        EventdEventEndReason reason = EVENTD_EVENT_END_REASON_NONE;
-        GEnumValue *value = g_enum_get_value_by_nick(g_type_class_ref(EVENTD_TYPE_EVENT_END_REASON), end[1]);
-        if ( value != NULL )
-            reason = value->value;
-
-        if ( self->interface->ended != NULL )
-            self->interface->ended(self->client, self, end[0], reason);
-
-        g_strfreev(end);
-    }
-    else if ( g_str_has_prefix(line, ".ANSWERED ") )
-    {
-        gchar **answer;
-
-        answer = g_strsplit(line + strlen(".ANSWERED "), " ", 2);
-
-        LibeventdEvpReceiveAnsweredData *data;
-
-        data = g_new0(LibeventdEvpReceiveAnsweredData, 1);
-        data->context = self;
-        data->id = answer[0];
-        data->data_hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-        data->answer = answer[1];
-
-        _libeventd_evp_receive(self, _libeventd_evp_context_receive_answered_callback, data);
-
-        g_free(answer);
-        return;
-    }
-    else if ( g_strcmp0(line, "PASSIVE") == 0 )
-    {
-        if ( self->out == NULL )
-            g_warning("Client already in passive mode");
-        else
-            g_object_unref(self->out);
-        self->out = NULL;
-    }
-
-
-    g_free(line);
-
-    _libeventd_evp_receive(self, _libeventd_evp_context_receive_callback, self);
-}
-
 gboolean
 libeventd_evp_context_passive(LibeventdEvpContext *self, GError **error)
 {
@@ -364,13 +43,34 @@ libeventd_evp_context_passive(LibeventdEvpContext *self, GError **error)
 
     g_cancellable_reset(self->cancellable);
 
-    if ( ! libeventd_evp_context_send_message(self, "PASSIVE", error) )
+    if ( ! libeventd_evp_context_send_passive(self, error) )
         return FALSE;
 
     g_object_unref(self->in);
     self->in = NULL;
 
     return TRUE;
+}
+
+static void
+_libeventd_evp_new_receive_finish(GObject *obj, GAsyncResult *res, gpointer user_data)
+{
+    g_return_if_fail(G_IS_ASYNC_RESULT(res));
+    LibeventdEvpContext *self = user_data;
+    gchar *line;
+
+    line = g_data_input_stream_read_line_finish(G_DATA_INPUT_STREAM(obj), res, NULL, &self->error);
+    if ( line == NULL )
+    {
+        if ( ( self->error != NULL ) && ( self->error->code == G_IO_ERROR_CANCELLED ) )
+            g_clear_error(&self->error);
+        return;
+    }
+
+    if ( ! eventd_protocol_parse(self->protocol, &line, &self->error) )
+        return;
+
+    g_data_input_stream_read_line_async(self->in, self->priority, self->cancellable, _libeventd_evp_new_receive_finish, self);
 }
 
 void
@@ -382,5 +82,5 @@ libeventd_evp_context_receive_loop(LibeventdEvpContext *self, gint priority)
 
     g_cancellable_reset(self->cancellable);
 
-    _libeventd_evp_receive(self, _libeventd_evp_context_receive_callback, self);
+    g_data_input_stream_read_line_async(self->in, self->priority, self->cancellable, _libeventd_evp_new_receive_finish, self);
 }

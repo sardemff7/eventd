@@ -38,83 +38,70 @@
 typedef struct {
     EventdPluginContext *context;
     LibeventdEvpContext *evp;
-    guint64 id;
     GHashTable *events;
 } EventdEvpClient;
 
 typedef struct {
-    EventdEvpClient *client;
-    gchar *id;
     EventdEvent *event;
-    gulong answered_handler;
-    gulong ended_handler;
-} EventdEvpEvent;
+    gulong answered;
+    gulong ended;
+} EventdEvpEventHandlers;
 
 static void
-_eventd_evp_client_event_answered(EventdEvpEvent *evp_event, const gchar *answer, EventdEvent *event)
+_eventd_evp_client_event_answered(EventdEvpClient *self, const gchar *answer, EventdEvent *event)
 {
-    EventdEvpClient *self = evp_event->client;
     GError *error = NULL;
+    EventdEvpEventHandlers *handlers;
+    handlers = g_hash_table_lookup(self->events, event);
+    g_return_if_fail(handlers != NULL);
 
-    if ( ! libeventd_evp_context_send_answered(self->evp, evp_event->id, answer, evp_event->event, &error) )
+    g_signal_handler_disconnect(event, handlers->answered);
+    handlers->answered = 0;
+
+    if ( ! libeventd_evp_context_send_answered(self->evp, event, answer, &error) )
     {
         g_warning("Couldn't send ANSWERED message: %s", error->message);
         g_clear_error(&error);
     }
-    g_signal_handler_disconnect(evp_event->event, evp_event->answered_handler);
-    evp_event->answered_handler = 0;
 }
 
 static void
-_eventd_evp_client_protocol_answered(gpointer data, LibeventdEvpContext *evp, const gchar *id, const gchar *answer, GHashTable *data_hash)
+_eventd_evp_client_protocol_answered(gpointer data, LibeventdEvpContext *evp, EventdEvent *event, const gchar *answer)
 {
     EventdEvpClient *self = data;
-    EventdEvpEvent *evp_event;
-    evp_event = g_hash_table_lookup(self->events, id);
-    if ( evp_event == NULL )
-        return;
+    EventdEvpEventHandlers *handlers;
+    handlers = g_hash_table_lookup(self->events, event);
+    g_return_if_fail(handlers != NULL);
 
-    if ( data_hash != NULL )
-        eventd_event_set_all_answer_data(evp_event->event, g_hash_table_ref(data_hash));
-    g_signal_handler_disconnect(evp_event->event, evp_event->answered_handler);
-    evp_event->answered_handler = 0;
-    eventd_event_answer(evp_event->event, answer);
+    g_signal_handler_disconnect(event, handlers->answered);
+    handlers->answered = 0;
+    eventd_event_answer(event, answer);
 }
 
 static void
-_eventd_evp_client_event_ended(EventdEvpEvent *evp_event, EventdEventEndReason reason, EventdEvent *event)
+_eventd_evp_client_event_ended(EventdEvpClient *self, EventdEventEndReason reason, EventdEvent *event)
 {
-    EventdEvpClient *self = evp_event->client;
     GError *error = NULL;
 
-    if ( ! libeventd_evp_context_send_ended(self->evp, evp_event->id, reason, &error) )
+    g_hash_table_remove(self->events, event);
+    if ( ! libeventd_evp_context_send_ended(self->evp, event, reason, &error) )
     {
         g_warning("Couldn't send ENDED message: %s", error->message);
         g_clear_error(&error);
     }
-    g_signal_handler_disconnect(evp_event->event, evp_event->ended_handler);
-    evp_event->ended_handler = 0;
-
-    g_hash_table_remove(self->events, evp_event->id);
 }
 
 static void
-_eventd_evp_client_protocol_ended(gpointer data, LibeventdEvpContext *evp, const gchar *id, EventdEventEndReason reason)
+_eventd_evp_client_protocol_ended(gpointer data, LibeventdEvpContext *evp, EventdEvent *event, EventdEventEndReason reason)
 {
     EventdEvpClient *self = data;
-    EventdEvpEvent *evp_event;
-    evp_event = g_hash_table_lookup(self->events, id);
-    if ( evp_event == NULL )
-        return;
 
-    g_signal_handler_disconnect(evp_event->event, evp_event->ended_handler);
-    evp_event->ended_handler = 0;
-    eventd_event_end(evp_event->event, reason);
-    g_hash_table_remove(self->events, evp_event->id);
+    g_hash_table_remove(self->events, event);
+    eventd_event_end(event, reason);
 }
 
 static void
-_eventd_evp_client_protocol_event(gpointer data, LibeventdEvpContext *evp, const gchar *id, EventdEvent *event)
+_eventd_evp_client_protocol_event(gpointer data, LibeventdEvpContext *evp, EventdEvent *event)
 {
     EventdEvpClient *self = data;
 #ifdef EVENTD_DEBUG
@@ -124,7 +111,7 @@ _eventd_evp_client_protocol_event(gpointer data, LibeventdEvpContext *evp, const
     if ( ! eventd_plugin_core_push_event(self->context->core, self->context->core_interface, event) )
     {
         GError *error = NULL;
-        if ( ! libeventd_evp_context_send_ended(evp, id, EVENTD_EVENT_END_REASON_RESERVED, &error) )
+        if ( ! libeventd_evp_context_send_ended(evp, event, EVENTD_EVENT_END_REASON_RESERVED, &error) )
         {
             g_warning("Couldn't send ENDED message: %s", error->message);
             g_error_free(error);
@@ -132,17 +119,15 @@ _eventd_evp_client_protocol_event(gpointer data, LibeventdEvpContext *evp, const
         return;
     }
 
-    EventdEvpEvent *evp_event;
+    EventdEvpEventHandlers *handlers;
 
-    evp_event = g_new0(EventdEvpEvent, 1);
-    evp_event->client = self;
-    evp_event->id = g_strdup(id);
-    evp_event->event = g_object_ref(event);
+    handlers = g_slice_new(EventdEvpEventHandlers);
+    handlers->event = g_object_ref(event);
 
-    g_hash_table_insert(self->events, evp_event->id, evp_event);
+    handlers->answered = g_signal_connect_swapped(event, "answered", G_CALLBACK(_eventd_evp_client_event_answered), self);
+    handlers->ended = g_signal_connect_swapped(event, "ended", G_CALLBACK(_eventd_evp_client_event_ended), self);
 
-    evp_event->answered_handler = g_signal_connect_swapped(event, "answered", G_CALLBACK(_eventd_evp_client_event_answered), evp_event);
-    evp_event->ended_handler = g_signal_connect_swapped(event, "ended", G_CALLBACK(_eventd_evp_client_event_ended), evp_event);
+    g_hash_table_insert(self->events, event, handlers);
 }
 
 static void
@@ -164,19 +149,17 @@ _eventd_evp_client_protocol_bye(gpointer data, LibeventdEvpContext *evp)
 }
 
 static void
-_eventd_evp_client_event_free(gpointer data)
+_eventd_evp_client_event_handlers_free(gpointer data)
 {
-    EventdEvpEvent *evp_event = data;
+    EventdEvpEventHandlers *handlers = data;
 
-    if ( evp_event->answered_handler > 0 )
-        g_signal_handler_disconnect(evp_event->event, evp_event->answered_handler);
-    if ( evp_event->ended_handler > 0 )
-        g_signal_handler_disconnect(evp_event->event, evp_event->ended_handler);
+    if ( handlers->answered > 0 )
+        g_signal_handler_disconnect(handlers->event, handlers->answered);
+    g_signal_handler_disconnect(handlers->event, handlers->ended);
 
-    g_object_unref(evp_event->event);
-    g_free(evp_event->id);
+    g_object_unref(handlers->event);
 
-    g_free(evp_event);
+    g_slice_free(EventdEvpEventHandlers, handlers);
 }
 
 static LibeventdEvpClientInterface _eventd_evp_client_interface = {
@@ -202,7 +185,7 @@ eventd_evp_client_connection_handler(GSocketService *service, GSocketConnection 
 
     context->clients = g_slist_prepend(context->clients, self);
 
-    self->events = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, _eventd_evp_client_event_free);
+    self->events = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, _eventd_evp_client_event_handlers_free);
     self->evp = libeventd_evp_context_new_for_connection(self, &_eventd_evp_client_interface, connection);
 
     libeventd_evp_context_receive_loop(self->evp, G_PRIORITY_DEFAULT);

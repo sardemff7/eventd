@@ -39,10 +39,14 @@ struct _EventcConnectionPrivate {
     gboolean enable_proxy;
     GError *error;
     LibeventdEvpContext* evp;
-    guint64 count;
     GHashTable* events;
-    GHashTable* ids;
 };
+
+typedef struct {
+    EventdEvent *event;
+    gulong answered;
+    gulong ended;
+} EventdConnectionEventHandlers;
 
 typedef struct {
     EventcConnection *self;
@@ -76,52 +80,40 @@ eventc_error_quark(void)
 static void
 _eventc_connection_event_answered(EventcConnection *self, const gchar *answer, EventdEvent *event)
 {
-    const gchar *id;
-    id = g_hash_table_lookup(self->priv->ids, event);
-    g_return_if_fail(id != NULL);
+    EventdConnectionEventHandlers *handlers;
+    handlers = g_hash_table_lookup(self->priv->events, event);
+    g_return_if_fail(handlers != NULL);
 
-    g_signal_handlers_disconnect_by_func(G_OBJECT(event), _eventc_connection_event_answered, self);
-    libeventd_evp_context_send_answered(self->priv->evp, id, answer, event, ( self->priv->error == NULL ) ? &self->priv->error : NULL);
+    g_signal_handler_disconnect(event, handlers->answered);
+    handlers->answered = 0;
+    libeventd_evp_context_send_answered(self->priv->evp, event, answer, ( self->priv->error == NULL ) ? &self->priv->error : NULL);
 }
 
 static void
-_eventc_connection_protocol_answered(gpointer data, LibeventdEvpContext *context, const gchar *id, const gchar *answer, GHashTable *data_hash)
+_eventc_connection_protocol_answered(gpointer data, LibeventdEvpContext *context, EventdEvent *event, const gchar *answer)
 {
     EventcConnection *self = data;
-    EventdEvent *event;
-    event = g_hash_table_lookup(self->priv->events, id);
-    if ( event == NULL )
-        return;
+    EventdConnectionEventHandlers *handlers;
+    handlers = g_hash_table_lookup(self->priv->events, event);
+    g_return_if_fail(handlers != NULL);
 
-    g_signal_handlers_disconnect_by_func(G_OBJECT(event), _eventc_connection_event_answered, self);
-    eventd_event_set_all_answer_data(event, data_hash);
+    g_signal_handler_disconnect(event, handlers->answered);
+    handlers->answered = 0;
     eventd_event_answer(event, answer);
 }
 
 static void
 _eventc_connection_event_ended(EventcConnection *self, EventdEventEndReason reason, EventdEvent *event)
 {
-    const gchar *id;
-    id = g_hash_table_lookup(self->priv->ids, event);
-    g_return_if_fail(id != NULL);
-
-    g_signal_handlers_disconnect_by_func(G_OBJECT(event), _eventc_connection_event_ended, self);
-    libeventd_evp_context_send_ended(self->priv->evp, id, reason, ( self->priv->error == NULL ) ? &self->priv->error : NULL);
-
-    g_hash_table_remove(self->priv->events, id);
-    g_hash_table_remove(self->priv->ids, event);
+    g_hash_table_remove(self->priv->events, event);
+    libeventd_evp_context_send_ended(self->priv->evp, event, reason, ( self->priv->error == NULL ) ? &self->priv->error : NULL);
 }
 
 static void
-_eventc_connection_protocol_ended(gpointer data, LibeventdEvpContext *context, const gchar *id, EventdEventEndReason reason)
+_eventc_connection_protocol_ended(gpointer data, LibeventdEvpContext *context, EventdEvent *event, EventdEventEndReason reason)
 {
     EventcConnection *self = data;
-    EventdEvent *event;
-    event = g_hash_table_lookup(self->priv->events, id);
-    if ( event == NULL )
-        return;
-
-    g_signal_handlers_disconnect_by_func(G_OBJECT(event), _eventc_connection_event_ended, self);
+    g_hash_table_remove(self->priv->events, event);
     eventd_event_end(event, reason);
 }
 
@@ -139,6 +131,20 @@ static LibeventdEvpClientInterface _eventc_connection_client_interface = {
 
     .bye = _eventc_connection_protocol_bye
 };
+
+static void
+_eventc_connection_event_handlers_free(gpointer data)
+{
+    EventdConnectionEventHandlers *handlers = data;
+
+    if ( handlers->answered > 0 )
+        g_signal_handler_disconnect(handlers->event, handlers->answered);
+    g_signal_handler_disconnect(handlers->event, handlers->ended);
+
+    g_object_unref(handlers->event);
+
+    g_slice_free(EventdConnectionEventHandlers, handlers);
+}
 
 static void _eventc_connection_finalize(GObject *object);
 
@@ -160,8 +166,7 @@ eventc_connection_init(EventcConnection *self)
     self->priv = EVENTC_CONNECTION_GET_PRIVATE(self);
 
     self->priv->evp = libeventd_evp_context_new(self, &_eventc_connection_client_interface);
-    self->priv->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_object_unref);
-    self->priv->ids = g_hash_table_new_full(g_direct_hash, g_direct_equal, g_object_unref, NULL);
+    self->priv->events = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, _eventc_connection_event_handlers_free);
 }
 
 static void
@@ -174,7 +179,6 @@ _eventc_connection_finalize(GObject *object)
 
     libeventd_evp_context_free(self->priv->evp);
     g_hash_table_unref(self->priv->events);
-    g_hash_table_unref(self->priv->ids);
 
     G_OBJECT_CLASS(eventc_connection_parent_class)->finalize(object);
 }
@@ -471,7 +475,7 @@ eventc_connection_event(EventcConnection *self, EventdEvent *event, GError **err
     g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
     EventdEvent *old;
-    old = g_hash_table_lookup(self->priv->ids, event);
+    old = g_hash_table_lookup(self->priv->events, event);
     if ( old != NULL )
     {
         g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_EVENT, "This event was already sent to the server");
@@ -483,21 +487,21 @@ eventc_connection_event(EventcConnection *self, EventdEvent *event, GError **err
     if ( ! _eventc_connection_expect_connected(self, error) )
         return FALSE;
 
-    gchar *id;
-
-    id = g_strdup_printf("%" G_GINT64_MODIFIER "x", ++self->priv->count);
-    if ( ! libeventd_evp_context_send_event(self->priv->evp, id, event, &_inner_error_) )
+    if ( ! libeventd_evp_context_send_event(self->priv->evp, event, &_inner_error_) )
     {
         g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_EVENT, "Couldn't send event: %s", _inner_error_->message);
         g_error_free(_inner_error_);
-        g_free(id);
         return FALSE;
     }
 
-    g_hash_table_insert(self->priv->events, id, g_object_ref(event));
-    g_hash_table_insert(self->priv->ids, g_object_ref(event), id);
-    g_signal_connect_swapped(event, "answered", G_CALLBACK(_eventc_connection_event_answered), self);
-    g_signal_connect_swapped(event, "ended", G_CALLBACK(_eventc_connection_event_ended), self);
+    EventdConnectionEventHandlers *handlers;
+    handlers = g_slice_new(EventdConnectionEventHandlers);
+    handlers->event = g_object_ref(event);
+
+    handlers->answered = g_signal_connect_swapped(event, "answered", G_CALLBACK(_eventc_connection_event_answered), self);
+    handlers->ended = g_signal_connect_swapped(event, "ended", G_CALLBACK(_eventc_connection_event_ended), self);
+
+    g_hash_table_insert(self->priv->events, event, handlers);
 
     return TRUE;
 }
@@ -536,18 +540,7 @@ static void
 _eventc_connection_close_internal(EventcConnection *self)
 {
     libeventd_evp_context_close(self->priv->evp);
-
-    GHashTableIter iter;
-    EventdEvent *event;
-    g_hash_table_iter_init(&iter, self->priv->events);
-    while ( g_hash_table_iter_next(&iter, NULL, (gpointer *)&event) )
-    {
-        g_signal_handlers_disconnect_by_func(G_OBJECT(event), _eventc_connection_event_answered, self);
-        g_signal_handlers_disconnect_by_func(G_OBJECT(event), _eventc_connection_event_ended, self);
-    }
-
     g_hash_table_remove_all(self->priv->events);
-    g_hash_table_remove_all(self->priv->ids);
 }
 
 
