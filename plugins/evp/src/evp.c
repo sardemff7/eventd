@@ -82,17 +82,17 @@ _eventd_evp_uninit(EventdPluginContext *self)
  */
 
 static GList *
-_eventd_evp_add_socket(GList *used_sockets, EventdPluginContext *context, const gchar * const *binds)
+_eventd_evp_add_socket(GList *used_sockets, EventdPluginContext *self, const gchar * const *binds)
 {
     GList *sockets;
-    sockets = eventd_plugin_core_get_sockets(context->core, context->core_interface, binds);
+    sockets = eventd_plugin_core_get_sockets(self->core, self->core_interface, binds);
 
     GList *socket_;
     for ( socket_ = sockets ; socket_ != NULL ; socket_ = g_list_next(socket_) )
     {
         GError *error = NULL;
 
-        if ( ! g_socket_listener_add_socket(G_SOCKET_LISTENER(context->service), socket_->data, NULL, &error) )
+        if ( ! g_socket_listener_add_socket(G_SOCKET_LISTENER(self->service), socket_->data, NULL, &error) )
         {
             g_warning("Unable to add socket: %s", error->message);
             g_clear_error(&error);
@@ -153,16 +153,16 @@ _eventd_evp_stop(EventdPluginContext *self)
  */
 
 static GOptionGroup *
-_eventd_evp_get_option_group(EventdPluginContext *context)
+_eventd_evp_get_option_group(EventdPluginContext *self)
 {
     GOptionGroup *option_group;
     GOptionEntry entries[] =
     {
-        { "listen",         'l', 0,                 G_OPTION_ARG_STRING_ARRAY, &context->binds,        "Add a socket to listen to",     "<socket>" },
+        { "listen",         'l', 0,                 G_OPTION_ARG_STRING_ARRAY, &self->binds,        "Add a socket to listen to",     "<socket>" },
 #ifdef HAVE_GIO_UNIX
-        { "listen-default", 'u', 0,                 G_OPTION_ARG_NONE,         &context->default_unix, "Listen on default UNIX socket", NULL },
+        { "listen-default", 'u', 0,                 G_OPTION_ARG_NONE,         &self->default_unix, "Listen on default UNIX socket", NULL },
 #endif /* HAVE_GIO_UNIX */
-        { "no-avahi",       'A', AVAHI_OPTION_FLAG, G_OPTION_ARG_NONE,         &context->no_avahi,     "Disable avahi publishing",      NULL },
+        { "no-avahi",       'A', AVAHI_OPTION_FLAG, G_OPTION_ARG_NONE,         &self->no_avahi,     "Disable avahi publishing",      NULL },
         { NULL }
     };
 
@@ -178,7 +178,7 @@ _eventd_evp_get_option_group(EventdPluginContext *context)
  */
 
 static void
-_eventd_evp_global_parse(EventdPluginContext *context, GKeyFile *config_file)
+_eventd_evp_global_parse(EventdPluginContext *self, GKeyFile *config_file)
 {
     gchar *avahi_name;
 
@@ -189,13 +189,13 @@ _eventd_evp_global_parse(EventdPluginContext *context, GKeyFile *config_file)
         return;
     if ( avahi_name != NULL )
     {
-        g_free(context->avahi_name);
-        context->avahi_name = avahi_name;
+        g_free(self->avahi_name);
+        self->avahi_name = avahi_name;
     }
 }
 
 static void
-_eventd_evp_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile *config_file)
+_eventd_evp_event_parse(EventdPluginContext *self, const gchar *id, GKeyFile *config_file)
 {
     gboolean disable;
     gint8 r;
@@ -208,13 +208,13 @@ _eventd_evp_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile 
         return;
 
     if ( disable )
-        g_hash_table_insert(context->events, g_strdup(id), GUINT_TO_POINTER(disable));
+        g_hash_table_insert(self->events, g_strdup(id), GUINT_TO_POINTER(disable));
 }
 
 static void
-_eventd_evp_config_reset(EventdPluginContext *context)
+_eventd_evp_config_reset(EventdPluginContext *self)
 {
-    g_hash_table_remove_all(context->events);
+    g_hash_table_remove_all(self->events);
 }
 
 

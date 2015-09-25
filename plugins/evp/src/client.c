@@ -191,7 +191,7 @@ static LibeventdEvpClientInterface _eventd_evp_client_interface = {
  * Callback for the self connection
  */
 gboolean
-eventd_evp_client_connection_handler(GSocketService *service, GSocketConnection *connection, GObject *source_object, gpointer user_data)
+eventd_evp_client_connection_handler(GSocketService *service, GSocketConnection *connection, GObject *obj, gpointer user_data)
 {
     EventdPluginContext *context = user_data;
 
