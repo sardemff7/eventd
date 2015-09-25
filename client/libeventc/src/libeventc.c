@@ -74,6 +74,17 @@ eventc_error_quark(void)
 }
 
 static void
+_eventc_connection_event_answered(EventcConnection *self, const gchar *answer, EventdEvent *event)
+{
+    const gchar *id;
+    id = g_hash_table_lookup(self->priv->ids, event);
+    g_return_if_fail(id != NULL);
+
+    g_signal_handlers_disconnect_by_func(G_OBJECT(event), _eventc_connection_event_answered, self);
+    libeventd_evp_context_send_answered(self->priv->evp, id, answer, event, ( self->priv->error == NULL ) ? &self->priv->error : NULL);
+}
+
+static void
 _eventc_connection_protocol_answered(gpointer data, LibeventdEvpContext *context, const gchar *id, const gchar *answer, GHashTable *data_hash)
 {
     EventcConnection *self = data;
@@ -82,6 +93,7 @@ _eventc_connection_protocol_answered(gpointer data, LibeventdEvpContext *context
     if ( event == NULL )
         return;
 
+    g_signal_handlers_disconnect_by_func(G_OBJECT(event), _eventc_connection_event_answered, self);
     eventd_event_set_all_answer_data(event, data_hash);
     eventd_event_answer(event, answer);
 }
@@ -486,6 +498,7 @@ eventc_connection_event(EventcConnection *self, EventdEvent *event, GError **err
     {
         g_hash_table_insert(self->priv->events, id, g_object_ref(event));
         g_hash_table_insert(self->priv->ids, g_object_ref(event), id);
+        g_signal_connect_swapped(event, "answered", G_CALLBACK(_eventc_connection_event_answered), self);
         g_signal_connect_swapped(event, "ended", G_CALLBACK(_eventc_connection_event_ended), self);
     }
 
@@ -531,7 +544,10 @@ _eventc_connection_close_internal(EventcConnection *self)
     EventdEvent *event;
     g_hash_table_iter_init(&iter, self->priv->events);
     while ( g_hash_table_iter_next(&iter, NULL, (gpointer *)&event) )
+    {
+        g_signal_handlers_disconnect_by_func(G_OBJECT(event), _eventc_connection_event_answered, self);
         g_signal_handlers_disconnect_by_func(G_OBJECT(event), _eventc_connection_event_ended, self);
+    }
 
     g_hash_table_remove_all(self->priv->events);
     g_hash_table_remove_all(self->priv->ids);
