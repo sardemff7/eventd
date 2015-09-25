@@ -195,7 +195,6 @@ eventd_tests_run_libeventc(const gchar *host)
 {
     int r = 0;
 
-    GError *error = NULL;
     EventcConnection *client;
 
     client = eventc_connection_new(host, &error);
