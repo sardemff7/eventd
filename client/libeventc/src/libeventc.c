@@ -238,6 +238,9 @@ EVENTD_EXPORT
 gboolean
 eventc_connection_is_connected(EventcConnection *self, GError **error)
 {
+    g_return_val_if_fail(EVENTC_IS_CONNECTION(self), FALSE);
+    g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
+
     if ( self->priv->error != NULL )
     {
         g_propagate_error(error, self->priv->error);
