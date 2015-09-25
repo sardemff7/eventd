@@ -49,31 +49,31 @@
 static EventdPluginContext *
 _eventd_evp_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *core_interface)
 {
-    EventdPluginContext *service;
+    EventdPluginContext *self;
 
-    service = g_new0(EventdPluginContext, 1);
+    self = g_new0(EventdPluginContext, 1);
 
-    service->core = core;
-    service->core_interface= core_interface;
+    self->core = core;
+    self->core_interface= core_interface;
 
-    service->avahi_name = g_strdup_printf(PACKAGE_NAME " %s", g_get_host_name());
+    self->avahi_name = g_strdup_printf(PACKAGE_NAME " %s", g_get_host_name());
 
-    service->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+    self->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 
-    return service;
+    return self;
 }
 
 static void
-_eventd_evp_uninit(EventdPluginContext *service)
+_eventd_evp_uninit(EventdPluginContext *self)
 {
-    g_hash_table_unref(service->events);
+    g_hash_table_unref(self->events);
 
-    g_free(service->avahi_name);
+    g_free(self->avahi_name);
 
-    if ( service->binds != NULL )
-        g_strfreev(service->binds);
+    if ( self->binds != NULL )
+        g_strfreev(self->binds);
 
-    g_free(service);
+    g_free(self);
 }
 
 
@@ -106,45 +106,45 @@ _eventd_evp_add_socket(GList *used_sockets, EventdPluginContext *context, const 
 }
 
 static void
-_eventd_evp_start(EventdPluginContext *service)
+_eventd_evp_start(EventdPluginContext *self)
 {
     GList *sockets = NULL;
 
-    service->service = g_socket_service_new();
+    self->service = g_socket_service_new();
 
-    if ( service->binds != NULL )
-        sockets = _eventd_evp_add_socket(sockets, service, (const gchar * const *)service->binds);
+    if ( self->binds != NULL )
+        sockets = _eventd_evp_add_socket(sockets, self, (const gchar * const *)self->binds);
 
 #ifdef HAVE_GIO_UNIX
-    if ( service->default_unix )
+    if ( self->default_unix )
     {
         const gchar *binds[] = { "unix-runtime:" EVP_UNIX_SOCKET, NULL };
-        sockets = _eventd_evp_add_socket(sockets, service, binds);
+        sockets = _eventd_evp_add_socket(sockets, self, binds);
     }
 #endif /* HAVE_GIO_UNIX */
 
-    g_signal_connect(service->service, "incoming", G_CALLBACK(eventd_evp_client_connection_handler), service);
+    g_signal_connect(self->service, "incoming", G_CALLBACK(eventd_evp_client_connection_handler), self);
 
 #ifdef ENABLE_AVAHI
-    if ( ! service->no_avahi )
-        service->avahi = eventd_evp_avahi_start(service->avahi_name, sockets);
+    if ( ! self->no_avahi )
+        self->avahi = eventd_evp_avahi_start(self->avahi_name, sockets);
     else
 #endif /* ENABLE_AVAHI */
         g_list_free_full(sockets, g_object_unref);
 }
 
 static void
-_eventd_evp_stop(EventdPluginContext *service)
+_eventd_evp_stop(EventdPluginContext *self)
 {
 #ifdef ENABLE_AVAHI
-    eventd_evp_avahi_stop(service->avahi);
+    eventd_evp_avahi_stop(self->avahi);
 #endif /* ENABLE_AVAHI */
 
-    g_slist_free_full(service->clients, eventd_evp_client_disconnect);
+    g_slist_free_full(self->clients, eventd_evp_client_disconnect);
 
-    g_socket_service_stop(service->service);
-    g_socket_listener_close(G_SOCKET_LISTENER(service->service));
-    g_object_unref(service->service);
+    g_socket_service_stop(self->service);
+    g_socket_listener_close(G_SOCKET_LISTENER(self->service));
+    g_object_unref(self->service);
 }
 
 
