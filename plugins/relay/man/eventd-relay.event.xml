@@ -71,8 +71,10 @@
                 <varlistentry>
                     <term><varname>Servers=</varname></term>
                     <listitem>
-                        <para>A <type>list of URIs</type> (<replaceable>name</replaceable>:<replaceable>port</replaceable>)</para>
+                        <para>A <type>list of servers</type></para>
                         <para>Static servers the relay plugin will connect to.</para>
+                        <para>The form is <replaceable>name</replaceable><optional>:<replaceable>port</replaceable></optional>.</para>
+                        <para>If you omit <replaceable>port</replaceable> or use <literal>0</literal>, the SRV DNS record <literal>&EVP_SERVICE_TYPE;.<replaceable>host</replaceable></literal> will be used to find the real host and port to connect to.</para>
                     </listitem>
                 </varlistentry>
 

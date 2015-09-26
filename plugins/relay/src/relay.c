@@ -238,7 +238,7 @@ _eventd_relay_event_parse(EventdPluginContext *context, const gchar *id, GKeyFil
             server = g_hash_table_lookup(context->servers, *server_uri);
             if ( server == NULL )
             {
-                server = eventd_relay_server_new_for_host_and_port(*server_uri);
+                server = eventd_relay_server_new_for_domain(*server_uri);
                 if ( server == NULL )
                     g_warning("Couldn't create the connectiont to server '%s'", *server_uri);
                 else

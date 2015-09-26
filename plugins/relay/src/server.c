@@ -80,15 +80,15 @@ eventd_relay_server_new(void)
 }
 
 EventdRelayServer *
-eventd_relay_server_new_for_host_and_port(const gchar *host_and_port)
+eventd_relay_server_new_for_domain(const gchar *domain)
 {
     EventcConnection *connection;
     GError *error = NULL;
 
-    connection = eventc_connection_new(host_and_port, &error);
+    connection = eventc_connection_new(domain, &error);
     if ( connection == NULL )
     {
-        g_warning("Couldn't get address for relay server '%s': %s", host_and_port, error->message);
+        g_warning("Couldn't get address for relay server '%s': %s", domain, error->message);
         g_clear_error(&error);
         return NULL;
     }

@@ -94,6 +94,11 @@ _eventc_get_address(const gchar *host_and_port, GError **error)
         g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_HOSTNAME, "Could not resolve host name '%s': %s", host_and_port, _inner_error_->message);
         g_error_free(_inner_error_);
     }
+    else if ( g_network_address_get_port(G_NETWORK_ADDRESS(address)) == 0 )
+    {
+        g_object_unref(address);
+        address = g_network_service_new(EVP_SERVICE_NAME, EVP_TRANSPORT_NAME, host_and_port);
+    }
 
     return address;
 }
@@ -277,6 +282,7 @@ _eventc_connection_finalize(GObject *object)
  * @error: (out) (optional): return location for error or %NULL to ignore
  *
  * Creates a new connection to an eventd daemon.
+ * See eventc_connection_set_host() for the exact format for @host.
  *
  * Returns: (transfer full): a new connection, or %NULL if @host could not be resolved
  */
@@ -639,6 +645,9 @@ _eventc_connection_close_internal(EventcConnection *self)
  *
  * Sets the host for the connection.
  * If @host cannot be resolved, the address of @connection will not change.
+ *
+ * The format is `*host*[:*port*]`.
+ * If you either omit `*port*` or use `0`, the SRV DNS record will be used.
  *
  * Returns: %TRUE if the host was changed, %FALSE in case of error
  */

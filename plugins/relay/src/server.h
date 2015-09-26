@@ -26,7 +26,7 @@
 typedef struct _EventdRelayServer EventdRelayServer;
 
 EventdRelayServer *eventd_relay_server_new(void);
-EventdRelayServer *eventd_relay_server_new_for_host_and_port(const gchar *host_and_port);
+EventdRelayServer *eventd_relay_server_new_for_domain(const gchar *domain);
 void eventd_relay_server_free(gpointer data);
 
 void eventd_relay_server_set_address(EventdRelayServer *server, GSocketConnectable *address);
