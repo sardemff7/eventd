@@ -75,7 +75,7 @@ _eventd_protocol_evp_parser_interface_init(EventdProtocolInterface *iface)
 /**
  * eventd_protocol_evp_new:
  *
- * Returns: (transfer full): An #EventdProtocol for EvP
+ * Returns: (transfer full) (type EventdProtocolEvp): An #EventdProtocol for EvP
  */
 EVENTD_EXPORT
 EventdProtocol *
