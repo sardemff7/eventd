@@ -525,6 +525,26 @@ eventd_event_get_data(const EventdEvent *self, const gchar *name)
 }
 
 /**
+ * eventd_event_get_all_data:
+ * @event: an #EventdEvent
+ *
+ * Retrieves the data table from the event.
+ *
+ * Returns: (nullable) (transfer container) (element-type utf8 utf8): the data table
+ */
+EVENTD_EXPORT
+GHashTable *
+eventd_event_get_all_data(const EventdEvent *self)
+{
+    g_return_val_if_fail(EVENTD_IS_EVENT(self), NULL);
+
+    if ( self->priv->data == NULL )
+        return NULL;
+
+    return g_hash_table_ref(self->priv->data);
+}
+
+/**
  * eventd_event_get_answer_data:
  * @event: an #EventdEvent
  * @name: a name of the answer data
@@ -546,6 +566,26 @@ eventd_event_get_answer_data(const EventdEvent *self, const gchar *name)
     return g_hash_table_lookup(self->priv->answer_data, name);
 }
 
+/**
+ * eventd_event_get_all_answer_data:
+ * @event: an #EventdEvent
+ *
+ * Retrieves the answer data table from the event.
+ *
+ * Returns: (nullable) (transfer container) (element-type utf8 utf8): the answer data table
+ */
+EVENTD_EXPORT
+GHashTable *
+eventd_event_get_all_answer_data(const EventdEvent *self)
+{
+    g_return_val_if_fail(EVENTD_IS_EVENT(self), NULL);
+
+    if ( self->priv->answer_data == NULL )
+        return NULL;
+
+    return g_hash_table_ref(self->priv->answer_data);
+}
+
 
 const gchar *
 eventd_event_get_uuid(EventdEvent *self)
@@ -555,16 +595,6 @@ eventd_event_get_uuid(EventdEvent *self)
     return self->priv->uuid_str;
 }
 
-/**
- * eventd_event_set_all_data:
- * @event: an #EventdEvent
- * @data (transfer full): the data table
- *
- * Sets the data table within the event.
- *
- * Generally intended for event collection plugins.
- */
-EVENTD_EXPORT
 void
 eventd_event_set_all_data(EventdEvent *self, GHashTable *data)
 {
@@ -575,16 +605,6 @@ eventd_event_set_all_data(EventdEvent *self, GHashTable *data)
     self->priv->data = data;
 }
 
-/**
- * eventd_event_set_all_answer_data:
- * @event: an #EventdEvent
- * @data (transfer full): the answer data table
- *
- * Sets the answer data table within the event.
- *
- * Generally intended for event collection plugins.
- */
-EVENTD_EXPORT
 void
 eventd_event_set_all_answer_data(EventdEvent *self, GHashTable *data)
 {
@@ -595,59 +615,10 @@ eventd_event_set_all_answer_data(EventdEvent *self, GHashTable *data)
     self->priv->answer_data = data;
 }
 
-/**
- * eventd_event_get_all_data:
- * @event: an #EventdEvent
- *
- * Retrieves the data table from the event.
- *
- * Generally intended for event collection plugins.
- *
- * Returns: (transfer none): the data table
- */
-EVENTD_EXPORT
-GHashTable *
-eventd_event_get_all_data(EventdEvent *self)
-{
-    g_return_val_if_fail(EVENTD_IS_EVENT(self), NULL);
-
-    return self->priv->data;
-}
-
-/**
- * eventd_event_get_answers:
- * @event: an #EventdEvent
- *
- * Retrieves the list of answers from the event.
- *
- * Generally intended for event collection plugins.
- *
- * Returns: (element-type utf8) (transfer none): the answer data table
- */
-EVENTD_EXPORT
 GList *
 eventd_event_get_answers(EventdEvent *self)
 {
     g_return_val_if_fail(EVENTD_IS_EVENT(self), NULL);
 
     return self->priv->answers;
-}
-
-/**
- * eventd_event_get_all_answer_data:
- * @event: an #EventdEvent
- *
- * Retrieves the answer data table from the event.
- *
- * Generally intended for event collection plugins.
- *
- * Returns: (transfer none): the answer data table
- */
-EVENTD_EXPORT
-GHashTable *
-eventd_event_get_all_answer_data(EventdEvent *self)
-{
-    g_return_val_if_fail(EVENTD_IS_EVENT(self), NULL);
-
-    return self->priv->answer_data;
 }

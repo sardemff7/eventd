@@ -27,10 +27,8 @@ EventdEvent *eventd_event_new_for_uuid(uuid_t uuid, const gchar *category, const
 const gchar *eventd_event_get_uuid(EventdEvent *event);
 
 void eventd_event_set_all_data(EventdEvent *event, GHashTable *data);
-void eventd_event_set_all_answer_data(EventdEvent *event, GHashTable *data);
-GHashTable *eventd_event_get_all_data(EventdEvent *event);
 GList *eventd_event_get_answers(EventdEvent *event);
-GHashTable *eventd_event_get_all_answer_data(EventdEvent *event);
+void eventd_event_set_all_answer_data(EventdEvent *event, GHashTable *data);
 
 G_END_DECLS
 

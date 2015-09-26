@@ -58,6 +58,8 @@ _eventd_protocol_generate_data(GString *str, GHashTable *data)
             g_string_append(str, "\n.");
         g_string_append_c(str, '\n');
     }
+
+    g_hash_table_unref(data);
 }
 
 gchar *

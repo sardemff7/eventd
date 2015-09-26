@@ -75,11 +75,16 @@ _eventc_event_answer_callback(EventdEvent *event, const gchar *answer, gpointer 
     GHashTable *answer_data;
     answer_data = eventd_event_get_all_answer_data(event);
 
+    if ( answer_data == NULL )
+        return;
+
     GHashTableIter iter;
     gchar *name, *data;
     g_hash_table_iter_init(&iter, answer_data);
     while ( g_hash_table_iter_next(&iter, (gpointer *) &name, (gpointer *) &data) )
         g_print("%s=%s\n", name, data);
+
+    g_hash_table_unref(answer_data);
 }
 
 static void

@@ -81,13 +81,16 @@ static void
 _test_evp_generate_event(gpointer fixture, gconstpointer user_data)
 {
     GeneratorData *data = fixture;
+    GHashTable *data_hash;
     gboolean with_answer = GPOINTER_TO_INT(user_data);
     const gchar *expected;
     gchar *message;
 
 
-    if ( eventd_event_get_all_data(data->event) != NULL )
+    data_hash = eventd_event_get_all_data(data->event);
+    if ( data_hash != NULL )
     {
+        g_hash_table_unref(data_hash);
         if ( with_answer )
         {
             expected =
@@ -129,11 +132,14 @@ static void
 _test_evp_generate_answered(gpointer fixture, gconstpointer user_data)
 {
     GeneratorData *data = fixture;
+    GHashTable *data_hash;
     const gchar *expected;
     gchar *message;
 
-    if ( eventd_event_get_all_answer_data(data->event) != NULL )
+    data_hash = eventd_event_get_all_answer_data(data->event);
+    if ( data_hash != NULL )
     {
+        g_hash_table_unref(data_hash);
         expected =
             ".ANSWERED " EVENTD_EVENT_TEST_UUID " " EVENTD_EVENT_TEST_ANSWER "\n"
             "DATA " EVENTD_EVENT_TEST_DATA_NAME " " EVENTD_EVENT_TEST_DATA_CONTENT "\n"
