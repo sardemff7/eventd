@@ -432,9 +432,6 @@ _eventd_protocol_evp_parse_line(EventdProtocolEvp *self, const gchar *line, GErr
             g_set_error(error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_UNEXPECTED_TOKEN, "Message '%s' in an invalid state '%s'", message->message, _eventd_protocol_evp_states[self->priv->state]);
         return;
     }
-    /*
-     * TODO: ignore dot messages
-     */
 }
 
 gboolean
@@ -443,15 +440,21 @@ eventd_protocol_evp_parse(EventdProtocol *protocol, gchar **buffer, GError **err
     g_return_val_if_fail(EVENTD_IS_PROTOCOL_EVP(protocol), FALSE);
     EventdProtocolEvp *self = EVENTD_PROTOCOL_EVP(protocol);
 
+    GError *_inner_error_ = NULL;
+
     gchar *l;
     l = g_utf8_strchr(*buffer, -1, '\n');
     if ( l == NULL )
-        _eventd_protocol_evp_parse_line(self, *buffer, error);
+        _eventd_protocol_evp_parse_line(self, *buffer, &_inner_error_);
     else
-        g_set_error_literal(error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_GARBAGE, "EvP parser only takes lines");
+        g_set_error_literal(&_inner_error_, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_GARBAGE, "EvP parser only takes lines");
 
     g_free(*buffer);
     *buffer = NULL;
 
-    return ( *error == NULL );
+    if ( _inner_error_ == NULL )
+        return TRUE;
+
+    g_propagate_error(error, _inner_error_);
+    return FALSE;
 }
