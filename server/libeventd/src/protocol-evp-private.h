@@ -33,9 +33,9 @@ typedef enum {
 struct _EventdProtocolEvpPrivate {
     GHashTable *events;
     EventdProtocolEvpState state;
+    EventdProtocolEvpState return_state;
     union {
         struct {
-            EventdProtocolEvpState return_state;
             guint64 level;
         } catchall;
         EventdEvent *event;
@@ -46,7 +46,6 @@ struct _EventdProtocolEvpPrivate {
     };
     struct {
         GHashTable *hash;
-        EventdProtocolEvpState return_state;
         gchar *name;
         GString *value;
     } data;

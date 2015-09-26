@@ -79,7 +79,7 @@ _eventd_protocol_evp_parse_dot__continue_noeat(EventdProtocolEvp *self, const gc
 static void
 _eventd_protocol_evp_parse_dot_catchall_start(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
 {
-    self->priv->catchall.return_state = self->priv->state;
+    self->priv->return_state = self->priv->state;
     ++self->priv->catchall.level;
     self->priv->state = EVENTD_PROTOCOL_EVP_STATE_IGNORING;
 }
@@ -96,7 +96,7 @@ static void
 _eventd_protocol_evp_parse_dot_catchall_end(EventdProtocolEvp *self, GError **error)
 {
     if ( --self->priv->catchall.level < 1 )
-        self->priv->state = self->priv->catchall.return_state;
+        self->priv->state = self->priv->return_state;
 }
 
 /* .DATA */
@@ -106,7 +106,7 @@ _eventd_protocol_evp_parse_dot_data_start(EventdProtocolEvp *self, const gchar *
     self->priv->data.name = g_strdup(argv[0]);
     self->priv->data.value = g_string_new("");
 
-    self->priv->data.return_state = self->priv->state;
+    self->priv->return_state = self->priv->state;
     self->priv->state = EVENTD_PROTOCOL_EVP_STATE_DOT_DATA;
 }
 
@@ -131,7 +131,7 @@ _eventd_protocol_evp_parse_dot_data_end(EventdProtocolEvp *self, GError **error)
     self->priv->data.name = NULL;
     self->priv->data.value = NULL;
 
-    self->priv->state = self->priv->data.return_state;
+    self->priv->state = self->priv->return_state;
 }
 
 static EventdEvent *
@@ -162,6 +162,7 @@ _eventd_protocol_evp_parse_dot_event_start(EventdProtocolEvp *self, const gchar 
         return _eventd_protocol_evp_parse_dot_catchall_start(self, argv, error);
 
 
+    self->priv->return_state = self->priv->state;
     self->priv->state = EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT;
 }
 
@@ -179,7 +180,7 @@ _eventd_protocol_evp_parse_dot_event_end(EventdProtocolEvp *self, GError **error
     g_object_unref(self->priv->event);
     self->priv->event = NULL;
 
-    self->priv->state = EVENTD_PROTOCOL_EVP_STATE_BASE;
+    self->priv->state = self->priv->return_state;
 }
 
 /* .ANSWERED */
@@ -189,6 +190,7 @@ _eventd_protocol_evp_parse_dot_answered_start(EventdProtocolEvp *self, const gch
     self->priv->answer.id = g_strdup(argv[0]);
     self->priv->answer.answer = g_strdup(argv[1]);
 
+    self->priv->return_state = self->priv->state;
     self->priv->state = EVENTD_PROTOCOL_EVP_STATE_DOT_ANSWERED;
 }
 
@@ -212,7 +214,7 @@ _eventd_protocol_evp_parse_dot_answered_end(EventdProtocolEvp *self, GError **er
     self->priv->answer.answer = NULL;
     self->priv->data.hash = NULL;
 
-    self->priv->state = EVENTD_PROTOCOL_EVP_STATE_BASE;
+    self->priv->state = self->priv->return_state;
 }
 
 /* DATA */
