@@ -29,7 +29,7 @@
  * eventd_plugin_core_get_sockets:
  * @context: an #EventdPluginCoreContext
  * @interface: an #EventdPluginCoreInterface
- * @binds: (array zero-terminated=1) (element-type utf8) (allow-none): list of strings
+ * @binds: (array zero-terminated=1) (element-type utf8) (nullable): list of strings
  *
  * Returns: (element-type Gio.Socket) (transfer full): list of sockets for the binds
  */

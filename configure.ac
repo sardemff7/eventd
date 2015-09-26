@@ -60,7 +60,7 @@ glib_min_major="2"
 glib_min_minor="40"
 glib_min_version="${glib_min_major}.${glib_min_minor}"
 gio_min_version="${glib_min_version}"
-gobject_introspection_min_version="1.30.0"
+gobject_introspection_min_version="1.42.0"
 
 # Server dependencies
 gmodule_min_version="${glib_min_version}"
