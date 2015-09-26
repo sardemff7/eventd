@@ -82,8 +82,18 @@ _eventc_get_address(const gchar *host_and_port, GError **error)
     g_free(path);
 #endif /* HAVE_GIO_UNIX */
 
+    if ( address != NULL )
+        return address;
+
+    GError *_inner_error_ = NULL;
+
+    address = g_network_address_parse(host_and_port, 0, &_inner_error_);
+
     if ( address == NULL )
-        address = g_network_address_parse(host_and_port, 0, error);
+    {
+        g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_HOSTNAME, "Could not resolve host name '%s': %s", host_and_port, _inner_error_->message);
+        g_error_free(_inner_error_);
+    }
 
     return address;
 }
@@ -640,16 +650,11 @@ eventc_connection_set_host(EventcConnection *self, const gchar *host, GError **e
     g_return_val_if_fail(host != NULL, FALSE);
     g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-    GError *_inner_error_ = NULL;
     GSocketConnectable *address;
 
-    address = _eventc_get_address(host, &_inner_error_);
+    address = _eventc_get_address(host, error);
     if ( address == NULL )
-    {
-        g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_HOSTNAME, "Couldn't resolve the hostname '%s': %s", host, _inner_error_->message);
-        g_error_free(_inner_error_);
         return FALSE;
-    }
     self->priv->address = address;
 
     return TRUE;
