@@ -325,7 +325,7 @@ eventc_connection_new_for_connectable(GSocketConnectable *address)
 
 /**
  * eventc_connection_is_connected:
- * @self: an #EventcConnection
+ * @connection: an #EventcConnection
  * @error: (out) (optional): return location for error or %NULL to ignore
  *
  * Retrieves whether a given connection is actually connected to a server or
@@ -434,7 +434,7 @@ _eventc_connection_connect_callback(GObject *obj, GAsyncResult *res, gpointer us
 
 /**
  * eventc_connection_connect:
- * @self: an #EventcConnection
+ * @connection: an #EventcConnection
  * @callback: (scope async): a #GAsyncReadyCallback to call when the request is satisfied
  * @user_data: (closure): the data to pass to callback function
  *
@@ -471,7 +471,7 @@ eventc_connection_connect(EventcConnection *self, GAsyncReadyCallback callback, 
 
 /**
  * eventc_connection_connect_finish:
- * @self: an #EventcConnection
+ * @connection: an #EventcConnection
  * @result: a #GAsyncResult
  * @error: (out) (optional): return location for error or %NULL to ignore
  *
@@ -497,7 +497,7 @@ eventc_connection_connect_finish(EventcConnection *self, GAsyncResult *result, G
 
 /**
  * eventc_connection_connect_sync:
- * @self: an #EventcConnection
+ * @connection: an #EventcConnection
  * @error: (out) (optional): return location for error or %NULL to ignore
  *
  * Synchronously initializes the connection to the stored host.
@@ -527,7 +527,7 @@ eventc_connection_connect_sync(EventcConnection *self, GError **error)
 
 /**
  * eventc_connection_event:
- * @self: an #EventcConnection
+ * @connection: an #EventcConnection
  * @event: an #EventdEvent to send to the server
  * @error: (out) (optional): return location for error or %NULL to ignore
  *
@@ -575,7 +575,7 @@ eventc_connection_event(EventcConnection *self, EventdEvent *event, GError **err
 
 /**
  * eventc_connection_event_close:
- * @self: an #EventcConnection
+ * @connection: an #EventcConnection
  * @error: (out) (optional): return location for error or %NULL to ignore
  *
  * Closes the connection.
@@ -633,12 +633,12 @@ _eventc_connection_close_internal(EventcConnection *self)
 
 /**
  * eventc_connection_set_host:
- * @self: an #EventcConnection
- * @value: the host running the eventd instance to connect to
+ * @connection: an #EventcConnection
+ * @host: the host running the eventd instance to connect to
  * @error: (out) (optional): return location for error or %NULL to ignore
  *
  * Sets the host for the connection.
- * If @host cannot be resolved, the address will not change.
+ * If @host cannot be resolved, the address of @connection will not change.
  *
  * Returns: %TRUE if the host was changed, %FALSE in case of error
  */
@@ -662,7 +662,7 @@ eventc_connection_set_host(EventcConnection *self, const gchar *host, GError **e
 
 /**
  * eventc_connection_set_connectable:
- * @self: an #EventcConnection
+ * @connection: an #EventcConnection
  * @address: (transfer full): a #GSocketConnectable
  *
  * Sets the connectable for the connection.
@@ -679,8 +679,8 @@ eventc_connection_set_connectable(EventcConnection *self, GSocketConnectable *ad
 
 /**
  * eventc_connection_set_passive:
- * @self: an #EventcConnection
- * @value: the passive setting
+ * @connection: an #EventcConnection
+ * @passive: the passive setting
  *
  * Sets whether the connection is passive or not. A passive connection does not
  * receive events back from the server so that the client does not require an
@@ -697,8 +697,8 @@ eventc_connection_set_passive(EventcConnection *self, gboolean passive)
 
 /**
  * eventc_connection_set_enable_proxy:
- * @self: an #EventcConnection
- * @value: the passive setting
+ * @connection: an #EventcConnection
+ * @enable_proxy: the passive setting
  *
  * Sets whether the connection is to use a proxy or not on the underlying
  * #GSocketClient.
@@ -714,7 +714,7 @@ eventc_connection_set_enable_proxy(EventcConnection *self, gboolean enable_proxy
 
 /**
  * eventc_connection_get_passive:
- * @self: an #EventcConnection
+ * @connection: an #EventcConnection
  *
  * Retrieves whether the connection is passive or not.
  *
@@ -731,7 +731,7 @@ eventc_connection_get_passive(EventcConnection *self)
 
 /**
  * eventc_connection_get_enable_proxy:
- * @self: an #EventcConnection
+ * @connection: an #EventcConnection
  *
  * Retrieves whether the connection is to use a proxy or not.
  *
