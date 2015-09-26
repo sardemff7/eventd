@@ -42,7 +42,6 @@ typedef struct {
     GSocketConnection *connection;
     GDataInputStream *in;
     GDataOutputStream *out;
-    GError *error;
     GHashTable *events;
 } EventdEvpClient;
 
@@ -177,20 +176,29 @@ static void
 _eventd_evp_client_read_callback(GObject *obj, GAsyncResult *res, gpointer user_data)
 {
     EventdEvpClient *self = user_data;
+    GError *error = NULL;
     gchar *line;
 
-    line = g_data_input_stream_read_line_finish_utf8(G_DATA_INPUT_STREAM(obj), res, NULL, &self->error);
+    line = g_data_input_stream_read_line_finish_utf8(G_DATA_INPUT_STREAM(obj), res, NULL, &error);
     if ( line == NULL )
     {
-        if ( ( self->error != NULL ) && ( self->error->code == G_IO_ERROR_CANCELLED ) )
-            g_clear_error(&self->error);
-        return eventd_evp_client_disconnect(self);
+        if ( ( error == NULL ) || ( error->code != G_IO_ERROR_CANCELLED ) )
+            goto end;
+        goto error;
     }
 
-    if ( ! eventd_protocol_parse(self->protocol, &line, &self->error) )
-        return;
+    if ( ! eventd_protocol_parse(self->protocol, &line, &error) )
+        goto error;
 
-    g_data_input_stream_read_line_async(self->in, G_PRIORITY_DEFAULT, self->cancellable, _eventd_evp_client_read_callback, self);
+    return g_data_input_stream_read_line_async(self->in, G_PRIORITY_DEFAULT, self->cancellable, _eventd_evp_client_read_callback, self);
+
+error:
+    if ( self->out != NULL )
+        /* Client not in passive mode */
+        _eventd_evp_client_send_message(self, eventd_protocol_generate_bye(self->protocol, error->message));
+end:
+    g_clear_error(&error);
+    return eventd_evp_client_disconnect(self);
 }
 
 /*
@@ -234,6 +242,8 @@ eventd_evp_client_disconnect(gpointer data)
 {
     EventdEvpClient *self = data;
 
+    g_hash_table_unref(self->events);
+
     g_object_unref(self->in);
     if ( self->out != NULL )
         g_object_unref(self->out);
@@ -244,7 +254,7 @@ eventd_evp_client_disconnect(gpointer data)
         g_object_unref(self->connection);
     }
 
-    g_hash_table_unref(self->events);
+    g_object_unref(self->cancellable);
     g_object_unref(self->protocol);
 
     self->context->clients = g_slist_remove(self->context->clients, self);
