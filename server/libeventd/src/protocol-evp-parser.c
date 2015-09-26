@@ -40,6 +40,7 @@
 
 static const gchar *_eventd_protocol_evp_states[_EVENTD_PROTOCOL_EVP_STATE_SIZE] = {
     [EVENTD_PROTOCOL_EVP_STATE_BASE]         = "base",
+    [EVENTD_PROTOCOL_EVP_STATE_PASSIVE]      = "passive",
     [EVENTD_PROTOCOL_EVP_STATE_DOT_DATA]     = "dot message DATA",
     [EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT]    = "dot message EVENT",
     [EVENTD_PROTOCOL_EVP_STATE_DOT_ANSWERED] = "dot message ANSWERED",
@@ -277,6 +278,7 @@ static void
 _eventd_protocol_evp_parse_passive(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
 {
     g_signal_emit(self, _eventd_protocol_signals[SIGNAL_PASSIVE], 0);
+    self->priv->state = EVENTD_PROTOCOL_EVP_STATE_PASSIVE;
 }
 
 /* BYE */
@@ -295,14 +297,14 @@ static const EventdProtocolEvpTokens _eventd_protocol_evp_dot_messages[] = {
             _eventd_protocol_evp_parse_dot_data_end
     },
     {"EVENT", 3, 3,
-            { EVENTD_PROTOCOL_EVP_STATE_BASE,_EVENTD_PROTOCOL_EVP_STATE_SIZE },
+            { EVENTD_PROTOCOL_EVP_STATE_BASE, EVENTD_PROTOCOL_EVP_STATE_PASSIVE,_EVENTD_PROTOCOL_EVP_STATE_SIZE },
             _eventd_protocol_evp_parse_dot_event_start,
             EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT,
             _eventd_protocol_evp_parse_dot__continue_noeat,
             _eventd_protocol_evp_parse_dot_event_end
     },
     {"ANSWERED", 2, 2,
-            { EVENTD_PROTOCOL_EVP_STATE_BASE,_EVENTD_PROTOCOL_EVP_STATE_SIZE },
+            { EVENTD_PROTOCOL_EVP_STATE_BASE, EVENTD_PROTOCOL_EVP_STATE_PASSIVE,_EVENTD_PROTOCOL_EVP_STATE_SIZE },
             _eventd_protocol_evp_parse_dot_answered_start,
             EVENTD_PROTOCOL_EVP_STATE_DOT_ANSWERED,
             _eventd_protocol_evp_parse_dot__continue_noeat,
@@ -310,7 +312,7 @@ static const EventdProtocolEvpTokens _eventd_protocol_evp_dot_messages[] = {
     },
     /* Catch-all message to ignore future dot messages */
     {"", 0, G_MAXSIZE,
-            { EVENTD_PROTOCOL_EVP_STATE_BASE,_EVENTD_PROTOCOL_EVP_STATE_SIZE },
+            { EVENTD_PROTOCOL_EVP_STATE_BASE, EVENTD_PROTOCOL_EVP_STATE_PASSIVE,_EVENTD_PROTOCOL_EVP_STATE_SIZE },
             _eventd_protocol_evp_parse_dot_catchall_start,
             EVENTD_PROTOCOL_EVP_STATE_IGNORING,
             _eventd_protocol_evp_parse_dot_catchall_continue,
@@ -326,7 +328,7 @@ static const EventdProtocolEvpTokens _eventd_protocol_evp_messages[] = {
             _EVENTD_PROTOCOL_EVP_STATE_SIZE, NULL, NULL
     },
     {"EVENT", 3, 3,
-            { EVENTD_PROTOCOL_EVP_STATE_BASE,_EVENTD_PROTOCOL_EVP_STATE_SIZE },
+            { EVENTD_PROTOCOL_EVP_STATE_BASE, EVENTD_PROTOCOL_EVP_STATE_PASSIVE,_EVENTD_PROTOCOL_EVP_STATE_SIZE },
             _eventd_protocol_evp_parse_event,
             _EVENTD_PROTOCOL_EVP_STATE_SIZE, NULL, NULL
     },
@@ -336,7 +338,7 @@ static const EventdProtocolEvpTokens _eventd_protocol_evp_messages[] = {
             _EVENTD_PROTOCOL_EVP_STATE_SIZE, NULL, NULL
     },
     {"ENDED", 2, 2,
-            { EVENTD_PROTOCOL_EVP_STATE_BASE, _EVENTD_PROTOCOL_EVP_STATE_SIZE },
+            { EVENTD_PROTOCOL_EVP_STATE_BASE, EVENTD_PROTOCOL_EVP_STATE_PASSIVE, _EVENTD_PROTOCOL_EVP_STATE_SIZE },
             _eventd_protocol_evp_parse_ended,
             _EVENTD_PROTOCOL_EVP_STATE_SIZE, NULL, NULL
     },
@@ -346,7 +348,7 @@ static const EventdProtocolEvpTokens _eventd_protocol_evp_messages[] = {
             _EVENTD_PROTOCOL_EVP_STATE_SIZE, NULL, NULL
     },
     {"BYE", 0, 1,
-            { EVENTD_PROTOCOL_EVP_STATE_BASE, _EVENTD_PROTOCOL_EVP_STATE_SIZE },
+            { EVENTD_PROTOCOL_EVP_STATE_BASE, EVENTD_PROTOCOL_EVP_STATE_PASSIVE, _EVENTD_PROTOCOL_EVP_STATE_SIZE },
             _eventd_protocol_evp_parse_bye,
             _EVENTD_PROTOCOL_EVP_STATE_SIZE, NULL, NULL
     },
