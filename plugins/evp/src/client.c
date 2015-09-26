@@ -37,6 +37,7 @@
 
 typedef struct {
     EventdPluginContext *context;
+    GList *link;
     EventdProtocol *protocol;
     GCancellable *cancellable;
     GSocketConnection *connection;
@@ -232,7 +233,7 @@ eventd_evp_client_connection_handler(GSocketService *service, GSocketConnection 
     g_signal_connect_swapped(self->protocol, "bye", G_CALLBACK(_eventd_evp_client_protocol_bye), self);
     g_signal_connect_swapped(self->protocol, "passive", G_CALLBACK(_eventd_evp_client_protocol_passive), self);
 
-    context->clients = g_slist_prepend(context->clients, self);
+    self->link = context->clients = g_list_prepend(context->clients, self);
 
     return FALSE;
 }
@@ -257,7 +258,7 @@ eventd_evp_client_disconnect(gpointer data)
     g_object_unref(self->cancellable);
     g_object_unref(self->protocol);
 
-    self->context->clients = g_slist_remove(self->context->clients, self);
+    self->context->clients = g_list_remove_link(self->context->clients, self->link);
 
     g_free(self);
 }

@@ -139,7 +139,7 @@ _eventd_evp_stop(EventdPluginContext *self)
     eventd_evp_avahi_stop(self->avahi);
 #endif /* ENABLE_AVAHI */
 
-    g_slist_free_full(self->clients, eventd_evp_client_disconnect);
+    g_list_free_full(self->clients, eventd_evp_client_disconnect);
 
     g_socket_service_stop(self->service);
     g_socket_listener_close(G_SOCKET_LISTENER(self->service));

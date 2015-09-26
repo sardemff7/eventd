@@ -34,7 +34,7 @@ struct _EventdPluginContext {
     gboolean no_avahi;
     gchar *avahi_name;
     GSocketService *service;
-    GSList *clients;
+    GList *clients;
     GHashTable *events;
 };
 
