@@ -202,13 +202,9 @@ main(int argc, char *argv[])
 
     event = eventd_event_new(category, name);
 
-    GHashTable *data;
-
-    data = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-
     guint i;
     for ( i = 0 ; i < n_length ; ++i )
-        g_hash_table_insert(data, event_data_name[i], event_data_content[i]);
+        eventd_event_add_data(event, event_data_name[i], event_data_content[i]);
     g_free(event_data_name);
     g_free(event_data_content);
 
@@ -219,8 +215,6 @@ main(int argc, char *argv[])
             eventd_event_add_answer(event, *answer);
         g_strfreev(answers);
     }
-
-    eventd_event_set_all_data(event, data);
 
     g_idle_add(_eventc_connect, NULL);
 
