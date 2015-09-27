@@ -214,6 +214,11 @@ _eventd_relay_control_command(EventdPluginContext *context, guint64 argc, const 
 static EventdPluginAction *
 _eventd_relay_server_parse(EventdPluginContext *context, GKeyFile *config_file, const gchar *group, gboolean subscribe, gchar **subscriptions)
 {
+    gboolean accept_unknown_ca = FALSE;
+
+    if ( evhelpers_config_key_file_get_boolean(config_file, group, "AcceptUnknownCA", &accept_unknown_ca) < 0 )
+        goto err;
+
 #ifdef ENABLE_AVAHI
     gchar *avahi_name;
     if ( ( context->avahi != NULL ) && ( evhelpers_config_key_file_get_string(config_file, group, "Avahi", &avahi_name) == 0 ) )
@@ -222,7 +227,7 @@ _eventd_relay_server_parse(EventdPluginContext *context, GKeyFile *config_file, 
         server = g_hash_table_lookup(context->servers, avahi_name);
         if ( server == NULL )
         {
-            server = eventd_relay_server_new(context->core, context->core_interface, subscribe, subscriptions);
+            server = eventd_relay_server_new(context->core, context->core_interface, accept_unknown_ca, subscribe, subscriptions);
             eventd_relay_avahi_server_new(context->avahi, avahi_name, server);
             g_hash_table_insert(context->servers, g_strdup(avahi_name), server);
         }
@@ -238,7 +243,7 @@ _eventd_relay_server_parse(EventdPluginContext *context, GKeyFile *config_file, 
         server = g_hash_table_lookup(context->servers, server_uri);
         if ( server == NULL )
         {
-            server = eventd_relay_server_new_for_domain(context->core, context->core_interface, subscribe, subscriptions, server_uri);
+            server = eventd_relay_server_new_for_domain(context->core, context->core_interface, accept_unknown_ca, subscribe, subscriptions, server_uri);
             if ( server == NULL )
                 g_warning("Couldn't create the connection to server '%s'", server_uri);
             else
@@ -248,6 +253,7 @@ _eventd_relay_server_parse(EventdPluginContext *context, GKeyFile *config_file, 
         return server;
     }
 
+err:
     return NULL;
 }
 

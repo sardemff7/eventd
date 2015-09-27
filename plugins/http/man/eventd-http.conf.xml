@@ -59,24 +59,8 @@
         <refsect2>
             <title>Section <varname>[Server]</varname></title>
 
-            <variablelist>
-                <varlistentry>
-                    <term><varname>TLSCertificate=</varname></term>
-                    <listitem>
-                        <para>A <type>file name</type></para>
-                        <para>The path to the TLS certificate file.</para>
-                    </listitem>
-                </varlistentry>
-
-                <varlistentry>
-                    <term><varname>TLSKey=</varname></term>
-                    <listitem>
-                        <para>A <type>file name</type></para>
-                        <para>The path to the TLS private key file.</para>
-                        <para>If not specified, the certificate file is expected to contain the key.</para>
-                    </listitem>
-                </varlistentry>
-            </variablelist>
+            <para>The <command>http</command> plugin is using the same TLS certificate/key files as the <command>evp</command> plugin.</para>
+            <para>See <citerefentry><refentrytitle>eventd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>.</para>
         </refsect2>
     </refsect1>
 

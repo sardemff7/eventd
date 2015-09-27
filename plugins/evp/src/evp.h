@@ -33,6 +33,7 @@ struct _EventdPluginContext {
     gchar **binds;
     gboolean no_avahi;
     gchar *avahi_name;
+    GTlsCertificate *certificate;
     GSocketService *service;
     GList *clients;
     GList *subscribe_all;

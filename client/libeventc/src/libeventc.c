@@ -46,6 +46,7 @@ static guint _eventc_connection_signals[LAST_SIGNAL];
 
 struct _EventcConnectionPrivate {
     GSocketConnectable *address;
+    gboolean accept_unknown_ca;
     gboolean passive;
     gboolean enable_proxy;
     gboolean subscribe;
@@ -464,6 +465,15 @@ _eventc_connection_get_socket_client(EventcConnection *self)
 
     g_socket_client_set_enable_proxy(client, self->priv->enable_proxy);
 
+    g_socket_client_set_tls(client, ( G_IS_NETWORK_ADDRESS(self->priv->address) || G_IS_INET_SOCKET_ADDRESS(self->priv->address) ));
+
+    GTlsCertificateFlags flags = G_TLS_CERTIFICATE_VALIDATE_ALL;
+
+    if ( self->priv->accept_unknown_ca )
+        flags &= ~G_TLS_CERTIFICATE_UNKNOWN_CA;
+
+    g_socket_client_set_tls_validation_flags(client, flags);
+
     return client;
 }
 
@@ -761,6 +771,23 @@ eventc_connection_set_connectable(EventcConnection *self, GSocketConnectable *ad
 
     g_object_unref(self->priv->address);
     self->priv->address = address;
+}
+
+/**
+ * eventc_connection_set_accept_unknown_ca:
+ * @connection: an #EventcConnection
+ * @accept_unknown_ca: the accept-insecure-certificate setting
+ *
+ * Sets whether the TLS connection will accept a certificate signed by
+ * an unknown CA.
+ */
+EVENTD_EXPORT
+void
+eventc_connection_set_accept_unknown_ca(EventcConnection *self, gboolean accept_unknown_ca)
+{
+    g_return_if_fail(EVENTC_IS_CONNECTION(self));
+
+    self->priv->accept_unknown_ca = accept_unknown_ca;
 }
 
 /**

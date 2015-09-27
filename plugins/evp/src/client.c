@@ -41,6 +41,7 @@ struct _EventdEvpClient {
     EventdProtocol *protocol;
     GCancellable *cancellable;
     GSocketConnection *connection;
+    GIOStream *tls;
     GDataInputStream *in;
     GDataOutputStream *out;
     GHashTable *events;
@@ -265,11 +266,38 @@ _eventd_evp_client_connect(EventdEvpClient *self, GIOStream *stream)
     g_data_input_stream_read_line_async(self->in, G_PRIORITY_DEFAULT, self->cancellable, _eventd_evp_client_read_callback, self);
 }
 
+static void
+_eventd_evp_client_tls_handshake_callback(GObject *obj, GAsyncResult *res, gpointer user_data)
+{
+    EventdEvpClient *self = user_data;
+    GError *error = NULL;
+    if ( ! g_tls_connection_handshake_finish(G_TLS_CONNECTION(obj), res, &error) )
+    {
+        g_warning("Could not finish TLS handshake: %s", error->message);
+        g_clear_error(&error);
+        return _eventd_evp_client_disconnect_internal(self);
+    }
+
+    _eventd_evp_client_connect(self, self->tls);
+}
+
 gboolean
 eventd_evp_client_connection_handler(GSocketService *service, GSocketConnection *connection, GObject *obj, gpointer user_data)
 {
     EventdPluginContext *context = user_data;
 
+    GIOStream *tls = NULL;
+    if ( G_IS_TCP_CONNECTION(connection) )
+    {
+        GError *error = NULL;
+        tls = g_tls_server_connection_new(G_IO_STREAM(connection), context->certificate, &error);
+        if ( tls == NULL )
+        {
+            g_warning("Could not initialize TLS connection: %s", error->message);
+            g_clear_error(&error);
+            return FALSE;
+        }
+    }
     EventdEvpClient *self;
 
     self = g_new0(EventdEvpClient, 1);
@@ -281,8 +309,12 @@ eventd_evp_client_connection_handler(GSocketService *service, GSocketConnection 
 
     self->cancellable = g_cancellable_new();
     self->connection = g_object_ref(connection);
+    self->tls = tls;
 
-    _eventd_evp_client_connect(self, G_IO_STREAM(self->connection));
+    if ( self->tls != NULL )
+        g_tls_connection_handshake_async(G_TLS_CONNECTION(tls), G_PRIORITY_DEFAULT, self->cancellable, _eventd_evp_client_tls_handshake_callback, self);
+    else
+        _eventd_evp_client_connect(self, G_IO_STREAM(self->connection));
 
     self->link = context->clients = g_list_prepend(context->clients, self);
 
@@ -328,6 +360,9 @@ eventd_evp_client_disconnect(gpointer data)
         g_object_unref(self->in);
     if ( self->out != NULL )
         g_object_unref(self->out);
+
+    if ( self->tls != NULL )
+        g_object_unref(self->tls);
 
     if ( self->connection != NULL )
     {

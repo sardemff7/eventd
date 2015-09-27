@@ -87,6 +87,7 @@ gboolean eventc_connection_close(EventcConnection *connection, GError **error);
 
 gboolean eventc_connection_set_host(EventcConnection *connection, const gchar *host, GError **error);
 void eventc_connection_set_connectable(EventcConnection *connection, GSocketConnectable *address);
+void eventc_connection_set_accept_unknown_ca(EventcConnection *connection, gboolean accept_unknown_ca);
 void eventc_connection_set_passive(EventcConnection *connection, gboolean passive);
 void eventc_connection_set_enable_proxy(EventcConnection *connection, gboolean enable_proxy);
 void eventc_connection_set_subscribe(EventcConnection *connection, gboolean subscribe);

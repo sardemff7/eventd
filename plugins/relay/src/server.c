@@ -41,6 +41,7 @@
 struct _EventdPluginAction {
     EventdPluginCoreContext *core;
     EventdPluginCoreInterface *core_interface;
+    gboolean accept_unknown_ca;
     gboolean subscribe;
     gchar **subscriptions;
     EventcConnection *connection;
@@ -103,13 +104,15 @@ _eventd_relay_server_setup_connection(EventdRelayServer *server)
 }
 
 EventdRelayServer *
-eventd_relay_server_new(EventdPluginCoreContext *core, EventdPluginCoreInterface *core_interface, gboolean subscribe, gchar **subscriptions)
+eventd_relay_server_new(EventdPluginCoreContext *core, EventdPluginCoreInterface *core_interface, gboolean accept_unknown_ca, gboolean subscribe, gchar **subscriptions)
 {
     EventdRelayServer *server;
 
     server = g_new0(EventdRelayServer, 1);
     server->core = core;
     server->core_interface = core_interface;
+
+    server->accept_unknown_ca = accept_unknown_ca;
 
     server->subscribe = subscribe;
     if ( server->subscribe && ( subscriptions != NULL ) && ( subscriptions[0] != NULL ) )
@@ -123,7 +126,7 @@ eventd_relay_server_new(EventdPluginCoreContext *core, EventdPluginCoreInterface
 }
 
 EventdRelayServer *
-eventd_relay_server_new_for_domain(EventdPluginCoreContext *core, EventdPluginCoreInterface *core_interface, gboolean subscribe, gchar **subscriptions, const gchar *domain)
+eventd_relay_server_new_for_domain(EventdPluginCoreContext *core, EventdPluginCoreInterface *core_interface, gboolean accept_unknown_ca, gboolean subscribe, gchar **subscriptions, const gchar *domain)
 {
     EventcConnection *connection;
     GError *error = NULL;
@@ -138,7 +141,7 @@ eventd_relay_server_new_for_domain(EventdPluginCoreContext *core, EventdPluginCo
 
     EventdRelayServer *server;
 
-    server = eventd_relay_server_new(core, core_interface, subscribe, subscriptions);
+    server = eventd_relay_server_new(core, core_interface, accept_unknown_ca, subscribe, subscriptions);
     server->connection = connection;
 
     _eventd_relay_server_setup_connection(server);
@@ -180,6 +183,7 @@ eventd_relay_server_start(EventdRelayServer *server)
         g_clear_error(&error);
     }
 
+    eventc_connection_set_accept_unknown_ca(server->connection, server->accept_unknown_ca);
     eventc_connection_connect(server->connection, _eventd_relay_connection_handler, server);
 }
 

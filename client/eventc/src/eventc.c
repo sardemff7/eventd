@@ -147,6 +147,7 @@ main(int argc, char *argv[])
     gchar **answers = NULL;
     gboolean subscribe = FALSE;
 
+    gboolean insecure = FALSE;
     gboolean print_version = FALSE;
 
     GOptionEntry entries[] =
@@ -158,6 +159,7 @@ main(int argc, char *argv[])
         { "max-tries",    'm', 0, G_OPTION_ARG_INT,          &max_tries,          "Maximum connection attempts (0 for infinite)",             "<times>" },
         { "wait",         'w', 0, G_OPTION_ARG_NONE,         &wait_event_end,     "Wait the end of the event",                                NULL },
         { "subscribe",    's', 0, G_OPTION_ARG_NONE,         &subscribe,          "Subscribe mode",                                           NULL },
+        { "insecure",     0,   0, G_OPTION_ARG_NONE,         &insecure,           "Accept insecure certificates (unknown CA)",                NULL },
         { "version",      'V', 0, G_OPTION_ARG_NONE,         &print_version,      "Print version",                                            NULL },
         { NULL }
     };
@@ -233,6 +235,8 @@ post_args:
     }
 
     r = 0; /* Host is fine */
+
+    eventc_connection_set_accept_unknown_ca(client, insecure);
 
     if ( subscribe )
     {

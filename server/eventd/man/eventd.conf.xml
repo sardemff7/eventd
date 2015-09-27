@@ -216,6 +216,23 @@
             <para>This section controls the <command>evp</command> plugin, listed here as it is considered a core plugin.</para>
 
             <variablelist>
+                <varlistentry >
+                    <term><varname>TLSCertificate=</varname></term>
+                    <listitem>
+                        <para>A <type>file name</type></para>
+                        <para>The path to the TLS certificate file.</para>
+                    </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                    <term><varname>TLSKey=</varname></term>
+                    <listitem>
+                        <para>A <type>file name</type></para>
+                        <para>The path to the TLS private key file.</para>
+                        <para>If not specified, the certificate file is expected to contain the key.</para>
+                    </listitem>
+                </varlistentry>
+
                 <varlistentry>
                     <term><varname>AvahiName=</varname> (defaults to <literal>"&PACKAGE_NAME; <replaceable>hostname</replaceable>"</literal>)</term>
                     <listitem>
@@ -264,6 +281,14 @@
                         <para>An <type>Avahi name</type></para>
                         <para>Avahi name of servers the relay plugin will connect to.</para>
                         <para>If you provide both <varname>Server=</varname> and <varname>Avahi=</varname>, the former is ignored.</para>
+                    </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                    <term><varname>AcceptUnknownCA=</varname></term>
+                    <listitem>
+                        <para>A <type>boolean</type></para>
+                        <para>Whether to accept a certificate with an unknown CA (like a self-signed certificate).</para>
                     </listitem>
                 </varlistentry>
 
@@ -476,6 +501,14 @@
                         <para>An <type>Avahi name</type></para>
                         <para>Avahi name of servers the relay plugin will connect to.</para>
                         <para>If you provide both <varname>Server=</varname> and <varname>Avahi=</varname>, the former is ignored.</para>
+                    </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                    <term><varname>AcceptUnknownCA=</varname></term>
+                    <listitem>
+                        <para>A <type>boolean</type></para>
+                        <para>Whether to accept a certificate with an unknown CA (like a self-signed certificate).</para>
                     </listitem>
                 </varlistentry>
 

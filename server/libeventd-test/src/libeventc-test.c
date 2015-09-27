@@ -232,6 +232,8 @@ eventd_tests_run_libeventc(const gchar *host)
     if ( client == NULL )
         goto error;
 
+    eventc_connection_set_accept_unknown_ca(client, TRUE);
+
     _create_event(client, TRUE);
 
     loop = g_main_loop_new(NULL, FALSE);

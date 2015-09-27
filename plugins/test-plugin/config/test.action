@@ -3,5 +3,6 @@ Name = test
 
 [Relay]
 Server = 127.0.0.1:19031
+AcceptInsecureCertificate = true
 
 [TestPlugin]

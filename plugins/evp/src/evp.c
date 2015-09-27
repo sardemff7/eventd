@@ -88,7 +88,9 @@ _eventd_evp_add_socket(GList *used_sockets, EventdPluginContext *self, const gch
         GSocket *socket = socket_->data;
         GError *error = NULL;
 
-        if ( ! g_socket_listener_add_socket(G_SOCKET_LISTENER(self->service), socket, NULL, &error) )
+        if ( ( g_socket_get_family(socket) != G_SOCKET_FAMILY_UNIX ) && ( self->certificate == NULL ) )
+            g_warning("Cannot add non-UNIX socket: No TLS certificate");
+        else if ( ! g_socket_listener_add_socket(G_SOCKET_LISTENER(self->service), socket, NULL, &error) )
         {
             g_warning("Unable to add socket: %s", error->message);
             g_clear_error(&error);
@@ -184,23 +186,71 @@ _eventd_evp_get_option_group(EventdPluginContext *self)
 static void
 _eventd_evp_global_parse(EventdPluginContext *self, GKeyFile *config_file)
 {
+    gchar *cert_file = NULL;
+    gchar *key_file = NULL;
     gchar *avahi_name;
 
     if ( ! g_key_file_has_group(config_file, "Server") )
         return;
 
+    if ( evhelpers_config_key_file_get_string(config_file, "Server", "TLSCertificate", &cert_file) < 0 )
+        goto cleanup;
+    if ( evhelpers_config_key_file_get_string(config_file, "Server", "TLSKey", &key_file) < 0 )
+        goto cleanup;
     if ( evhelpers_config_key_file_get_string(config_file, "Server", "AvahiName", &avahi_name) < 0 )
-        return;
+        goto cleanup;
+
+    GError *error = NULL;
+
+    if ( cert_file != NULL )
+    {
+        if ( ! g_tls_backend_supports_tls(g_tls_backend_get_default()) )
+            g_warning("TLS not suported");
+        else
+        {
+            GTlsCertificate *cert;
+            if ( key_file != NULL )
+                cert = g_tls_certificate_new_from_files(cert_file, key_file, &error);
+            else
+                cert = g_tls_certificate_new_from_file(cert_file, &error);
+
+            if ( cert != NULL )
+            {
+                if ( self->certificate != NULL )
+                    g_object_unref(self->certificate);
+                self->certificate = cert;
+            }
+            else
+            {
+                if ( key_file != NULL )
+                    g_warning("Could not read certificate (%s) or key (%s) file: %s", cert_file, key_file, error->message);
+                else
+                    g_warning("Could not read certificate file (%s): %s", cert_file, error->message);
+                g_clear_error(&error);
+            }
+        }
+    }
+    else if ( key_file != NULL )
+        g_warning("You need to configure a certificate file to add TLS support");
+
     if ( avahi_name != NULL )
     {
         g_free(self->avahi_name);
         self->avahi_name = avahi_name;
     }
+
+cleanup:
+    g_free(key_file);
+    g_free(cert_file);
 }
 
 static void
 _eventd_evp_config_reset(EventdPluginContext *self)
 {
+    if ( self->certificate != NULL )
+        g_object_unref(self->certificate);
+    self->certificate = NULL;
+
     g_free(self->avahi_name);
     self->avahi_name = NULL;
 }

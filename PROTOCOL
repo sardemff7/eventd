@@ -2,6 +2,10 @@ This file describes the EVENT protocol (EvP),
 a generic events dispatching protocol
 
 
+This protocol can be server on a UNIX stream socket or a TCP connection.
+When using TCP, the connection *must* use TLS.
+
+
 Messages are UTF-8 text which ends at the "\n" character.
 Messages starting with a dot (".") are multiple-lines messages and ends with a
 single dot on its own line (".\n"). They are referred as "dot messages".
