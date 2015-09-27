@@ -278,7 +278,7 @@ _eventc_connection_finalize(GObject *object)
 
 /**
  * eventc_connection_new:
- * @host: the host running the eventd instance to connect to
+ * @host: (nullable): the host running the eventd instance to connect to or %NULL (equivalent to "localhost")
  * @error: (out) (optional): return location for error or %NULL to ignore
  *
  * Creates a new connection to an eventd daemon.
@@ -290,7 +290,6 @@ EVENTD_EXPORT
 EventcConnection *
 eventc_connection_new(const gchar *host, GError **error)
 {
-    g_return_val_if_fail(host != NULL, NULL);
     g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
     EventcConnection *self;
@@ -640,7 +639,7 @@ _eventc_connection_close_internal(EventcConnection *self)
 /**
  * eventc_connection_set_host:
  * @connection: an #EventcConnection
- * @host: the host running the eventd instance to connect to
+ * @host: (nullable): the host running the eventd instance to connect to or %NULL (equivalent to "localhost")
  * @error: (out) (optional): return location for error or %NULL to ignore
  *
  * Sets the host for the connection.
@@ -656,7 +655,6 @@ gboolean
 eventc_connection_set_host(EventcConnection *self, const gchar *host, GError **error)
 {
     g_return_val_if_fail(EVENTC_IS_CONNECTION(self), FALSE);
-    g_return_val_if_fail(host != NULL, FALSE);
     g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
     GSocketConnectable *address;
