@@ -80,12 +80,3 @@ evp_la_SOURCES += \
 	$(null)
 
 endif
-
-
-if ENABLE_SYSTEMD
-
-systemduserunit_DATA += \
-	%D%/units/eventd-evp.socket \
-	$(null)
-
-endif

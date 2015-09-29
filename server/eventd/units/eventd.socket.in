@@ -1,9 +1,9 @@
 [Unit]
-Description=eventd Control Socket
+Description=eventd sockets
 
 [Socket]
-Service=eventd.service
 ListenStream=%t/@PACKAGE_NAME@/private
+ListenStream=%t/@PACKAGE_NAME@/@EVP_UNIX_SOCKET@
 
 [Install]
 WantedBy=sockets.target

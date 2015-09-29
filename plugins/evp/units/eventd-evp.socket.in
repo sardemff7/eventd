@@ -1,9 +1,0 @@
-[Unit]
-Description=eventd EvP Sockets
-
-[Socket]
-Service=eventd.service
-ListenStream=%t/@PACKAGE_NAME@/@EVP_UNIX_SOCKET@
-
-[Install]
-WantedBy=sockets.target
