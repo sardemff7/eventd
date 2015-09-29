@@ -257,7 +257,10 @@ eventd_sockets_get_unix_socket(EventdSockets *sockets, const gchar *path, gboole
         goto fail;
     }
 
-    address = g_unix_socket_address_new(path);
+    if ( g_str_has_prefix(path, "@") )
+        address = g_unix_socket_address_new_with_type(path + 1, -1, G_UNIX_SOCKET_ADDRESS_ABSTRACT);
+    else
+        address = g_unix_socket_address_new(path);
     if ( ! g_socket_bind(socket, address, TRUE, &error) )
     {
         g_warning("Unable to bind the UNIX socket: %s", error->message);
