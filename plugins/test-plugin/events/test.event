@@ -1,5 +1,6 @@
 [Event]
 Category = test
 Timeout = 10000
+
 [Relay]
-Servers = 127.0.0.1:19031;
+Server = 127.0.0.1:19031

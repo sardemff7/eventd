@@ -63,7 +63,7 @@ _eventd_relay_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *int
 
     context = g_new0(EventdPluginContext, 1);
 
-    context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_list_free);
+    context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 
 #ifdef ENABLE_AVAHI
     context->avahi = eventd_relay_avahi_init();
@@ -226,16 +226,10 @@ _eventd_relay_event_parse(EventdPluginContext *context, const gchar *id, GKeyFil
         return;
     }
 
-    GList *list = NULL;
-
 #ifdef ENABLE_AVAHI
-    gchar **avahi_names;
-    if ( ( context->avahi != NULL ) && ( evhelpers_config_key_file_get_string_list(config_file, "Relay", "Avahi", &avahi_names, NULL) == 0 ) )
+    gchar *avahi_name;
+    if ( ( context->avahi != NULL ) && ( evhelpers_config_key_file_get_string(config_file, "Relay", "Avahi", &avahi_name) == 0 ) )
     {
-        gchar **avahi_name_, *avahi_name;
-        for ( avahi_name_ = avahi_names ; *avahi_name_ != NULL ; ++avahi_name_ )
-        {
-        avahi_name = *avahi_name_;
         EventdRelayServer *server;
         server = g_hash_table_lookup(context->servers, avahi_name);
         if ( server == NULL )
@@ -244,20 +238,15 @@ _eventd_relay_event_parse(EventdPluginContext *context, const gchar *id, GKeyFil
             eventd_relay_avahi_server_new(context->avahi, avahi_name, server);
             g_hash_table_insert(context->servers, g_strdup(avahi_name), server);
         }
-        if ( server != NULL )
-            list = g_list_prepend(list, server);
-        }
-        g_strfreev(avahi_names);
+        g_free(avahi_name);
+        g_hash_table_insert(context->events, g_strdup(id), server);
+        return;
     }
 #endif /* ENABLE_AVAHI */
 
-    gchar **server_uris;
-    if ( evhelpers_config_key_file_get_string_list(config_file, "Relay", "Servers", &server_uris, NULL) == 0 )
+    gchar *server_uri = NULL;
+    if ( evhelpers_config_key_file_get_string(config_file, "Relay", "Server", &server_uri) == 0 )
     {
-        gchar **server_uri_, *server_uri;
-        for ( server_uri_ = server_uris ; *server_uri_ != NULL ; ++server_uri_ )
-        {
-        server_uri = *server_uri_;
         EventdRelayServer *server;
         server = g_hash_table_lookup(context->servers, server_uri);
         if ( server == NULL )
@@ -268,13 +257,10 @@ _eventd_relay_event_parse(EventdPluginContext *context, const gchar *id, GKeyFil
             else
                 g_hash_table_insert(context->servers, g_strdup(server_uri), server);
         }
-        if ( server != NULL )
-            list = g_list_prepend(list, server);
-        }
-        g_strfreev(server_uris);
+        g_free(server_uri);
+        g_hash_table_insert(context->events, g_strdup(id), server);
+        return;
     }
-
-    g_hash_table_insert(context->events, g_strdup(id), list);
 }
 
 static void
@@ -291,15 +277,13 @@ _eventd_relay_config_reset(EventdPluginContext *context)
 static void
 _eventd_relay_event_action(EventdPluginContext *context, const gchar *config_id, EventdEvent *event)
 {
-    GList *servers;
-    GList *server;
+    EventdRelayServer *server;
 
-    servers = g_hash_table_lookup(context->events, config_id);
-    if ( servers == NULL )
+    server = g_hash_table_lookup(context->events, config_id);
+    if ( server == NULL )
         return;
 
-    for ( server = servers ; server != NULL ; server = g_list_next(server) )
-        eventd_relay_server_event(server->data, event);
+    eventd_relay_server_event(server, event);
 }
 
 
