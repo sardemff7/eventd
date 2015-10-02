@@ -228,28 +228,6 @@ _eventd_relay_event_parse(EventdPluginContext *context, const gchar *id, GKeyFil
 
     GList *list = NULL;
 
-    gchar **server_uris;
-    if ( evhelpers_config_key_file_get_string_list(config_file, "Relay", "Servers", &server_uris, NULL) == 0 )
-    {
-        gchar **server_uri;
-        for ( server_uri = server_uris ; *server_uri != NULL ; ++server_uri )
-        {
-            EventdRelayServer *server;
-            server = g_hash_table_lookup(context->servers, *server_uri);
-            if ( server == NULL )
-            {
-                server = eventd_relay_server_new_for_domain(*server_uri);
-                if ( server == NULL )
-                    g_warning("Couldn't create the connectiont to server '%s'", *server_uri);
-                else
-                    g_hash_table_insert(context->servers, g_strdup(*server_uri), server);
-            }
-            if ( server != NULL )
-                list = g_list_prepend(list, server);
-        }
-        g_strfreev(server_uris);
-    }
-
 #ifdef ENABLE_AVAHI
     gchar **avahi_names;
     if ( ( context->avahi != NULL ) && ( evhelpers_config_key_file_get_string_list(config_file, "Relay", "Avahi", &avahi_names, NULL) == 0 ) )
@@ -271,6 +249,28 @@ _eventd_relay_event_parse(EventdPluginContext *context, const gchar *id, GKeyFil
         g_strfreev(avahi_names);
     }
 #endif /* ENABLE_AVAHI */
+
+    gchar **server_uris;
+    if ( evhelpers_config_key_file_get_string_list(config_file, "Relay", "Servers", &server_uris, NULL) == 0 )
+    {
+        gchar **server_uri;
+        for ( server_uri = server_uris ; *server_uri != NULL ; ++server_uri )
+        {
+            EventdRelayServer *server;
+            server = g_hash_table_lookup(context->servers, *server_uri);
+            if ( server == NULL )
+            {
+                server = eventd_relay_server_new_for_domain(*server_uri);
+                if ( server == NULL )
+                    g_warning("Couldn't create the connectiont to server '%s'", *server_uri);
+                else
+                    g_hash_table_insert(context->servers, g_strdup(*server_uri), server);
+            }
+            if ( server != NULL )
+                list = g_list_prepend(list, server);
+        }
+        g_strfreev(server_uris);
+    }
 
     g_hash_table_insert(context->events, g_strdup(id), list);
 }
