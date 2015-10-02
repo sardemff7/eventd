@@ -404,80 +404,6 @@ _eventd_fdo_notifications_on_name_lost(GDBusConnection *connection, const gchar 
 #endif /* EVENTD_DEBUG */
 }
 
-
-/*
- * Initialization interface
- */
-
-static EventdPluginContext *
-_eventd_fdo_notifications_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *core_interface)
-{
-    EventdPluginContext *context;
-    GError *error = NULL;
-    GDBusNodeInfo *introspection_data;
-
-    introspection_data = g_dbus_node_info_new_for_xml(introspection_xml, &error);
-    if ( introspection_data == NULL )
-    {
-        g_warning("Couldn't generate introspection data: %s", error->message);
-        g_clear_error(&error);
-        return NULL;
-    }
-
-    context = g_new0(EventdPluginContext, 1);
-
-    context->introspection_data = introspection_data;
-
-    context->core = core;
-    context->core_interface = core_interface;
-
-    context->server_information = g_variant_new("(ssss)", PACKAGE_NAME, "Quentin 'Sardem FF7' Glidic", PACKAGE_VERSION, NOTIFICATION_SPEC_VERSION);
-
-    context->notifications = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, _eventd_fdo_notifications_notification_free);
-
-    return context;
-}
-
-static void
-_eventd_fdo_notifications_uninit(EventdPluginContext *context)
-{
-    if ( context == NULL )
-        return;
-
-    g_hash_table_unref(context->notifications);
-
-    g_variant_unref(context->server_information);
-
-    g_dbus_node_info_unref(context->introspection_data);
-
-    g_free(context);
-}
-
-
-/*
- * Command-line options interface
- */
-
-static GOptionGroup *
-_eventd_fdo_notifications_get_option_group(EventdPluginContext *context)
-{
-    GOptionGroup *option_group;
-    GOptionEntry entries[] =
-    {
-        { "no-fdo-notifications", 0, 0, G_OPTION_ARG_NONE, &context->disabled, "Disable Freedesktop.org Notifications D-Bus interface", NULL },
-        { NULL }
-    };
-
-    option_group = g_option_group_new("fdo-notifications", "Freedesktop.org Notifications plugin options", "Show Freedesktop.org Notifications plugin help options", NULL, NULL);
-    g_option_group_set_translation_domain(option_group, GETTEXT_PACKAGE);
-    g_option_group_add_entries(option_group, entries);
-    return option_group;
-}
-
-
-/*
- * Configuration interface
- */
 static void
 _eventd_fdo_notifications_load_capabilities_dir(const gchar *dir_name, GHashTable *capabilities_set)
 {
@@ -489,7 +415,7 @@ _eventd_fdo_notifications_load_capabilities_dir(const gchar *dir_name, GHashTabl
     capabilities_dir = g_dir_open(dir_name, 0, &error);
     if ( capabilities_dir == NULL )
     {
-        g_warning("Couldn't read the D-Bus plugin capabilities directory: %s", error->message);
+        g_warning("Couldn't read the Freedesktop.org Notifications plugin capabilities directory '%s': %s", dir_name, error->message);
         g_clear_error(&error);
         return;
     }
@@ -502,7 +428,7 @@ _eventd_fdo_notifications_load_capabilities_dir(const gchar *dir_name, GHashTabl
 
         gchar *full_filename;
 
-        full_filename = g_build_filename(FDONOTIFICATIONSCAPABILITIESDIR, file, NULL);
+        full_filename = g_build_filename(dir_name, file, NULL);
         if ( ! g_file_test(full_filename, G_FILE_TEST_IS_REGULAR) )
             goto next;
 
@@ -530,8 +456,12 @@ _eventd_fdo_notifications_load_capabilities_dir(const gchar *dir_name, GHashTabl
 }
 
 static void
-_eventd_fdo_notifications_config_init(EventdPluginContext *context)
+_eventd_fdo_notifications_init_capabilities(EventdPluginContext *context)
 {
+    /*
+     * We use a GHashTable to make sure we
+     * add each capability only once
+     */
     GHashTable *capabilities_set;
 
     capabilities_set = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
@@ -564,11 +494,75 @@ _eventd_fdo_notifications_config_init(EventdPluginContext *context)
     g_variant_builder_unref(builder);
 }
 
-static void
-_eventd_fdo_notifications_config_reset(EventdPluginContext *context)
+/*
+ * Initialization interface
+ */
+
+static EventdPluginContext *
+_eventd_fdo_notifications_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *core_interface)
 {
+    EventdPluginContext *context;
+    GError *error = NULL;
+    GDBusNodeInfo *introspection_data;
+
+    introspection_data = g_dbus_node_info_new_for_xml(introspection_xml, &error);
+    if ( introspection_data == NULL )
+    {
+        g_warning("Couldn't generate introspection data: %s", error->message);
+        g_clear_error(&error);
+        return NULL;
+    }
+
+    context = g_new0(EventdPluginContext, 1);
+
+    context->introspection_data = introspection_data;
+
+    context->core = core;
+    context->core_interface = core_interface;
+
+    context->server_information = g_variant_new("(ssss)", PACKAGE_NAME, "Quentin 'Sardem FF7' Glidic", PACKAGE_VERSION, NOTIFICATION_SPEC_VERSION);
+    _eventd_fdo_notifications_init_capabilities(context);
+
+    context->notifications = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, _eventd_fdo_notifications_notification_free);
+
+    return context;
+}
+
+static void
+_eventd_fdo_notifications_uninit(EventdPluginContext *context)
+{
+    if ( context == NULL )
+        return;
+
+    g_hash_table_unref(context->notifications);
+
     g_variant_unref(context->capabilities);
-    context->capabilities = NULL;
+    g_variant_unref(context->server_information);
+
+    g_dbus_node_info_unref(context->introspection_data);
+
+    g_free(context);
+}
+
+
+/*
+ * Command-line options interface
+ */
+
+static GOptionGroup *
+_eventd_fdo_notifications_get_option_group(EventdPluginContext *context)
+{
+    GOptionGroup *option_group;
+    GOptionEntry entries[] =
+    {
+        { "no-fdo-notifications", 0, 0, G_OPTION_ARG_NONE, &context->disabled, "Disable Freedesktop.org Notifications D-Bus interface", NULL },
+        { NULL }
+    };
+
+    option_group = g_option_group_new("fdo-notifications", "Freedesktop.org Notifications plugin options", "Show Freedesktop.org Notifications plugin help options", NULL, NULL);
+    g_option_group_set_translation_domain(option_group, GETTEXT_PACKAGE);
+    g_option_group_add_entries(option_group, entries);
+    return option_group;
 }
 
 
@@ -608,9 +602,6 @@ eventd_plugin_get_interface(EventdPluginInterface *interface)
     eventd_plugin_interface_add_uninit_callback(interface, _eventd_fdo_notifications_uninit);
 
     eventd_plugin_interface_add_get_option_group_callback(interface, _eventd_fdo_notifications_get_option_group);
-
-    eventd_plugin_interface_add_config_init_callback(interface, _eventd_fdo_notifications_config_init);
-    eventd_plugin_interface_add_config_reset_callback(interface, _eventd_fdo_notifications_config_reset);
 
     eventd_plugin_interface_add_start_callback(interface, _eventd_fdo_notifications_start);
     eventd_plugin_interface_add_stop_callback(interface, _eventd_fdo_notifications_stop);
