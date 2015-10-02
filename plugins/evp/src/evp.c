@@ -57,16 +57,12 @@ _eventd_evp_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *core_
 
     self->avahi_name = g_strdup_printf(PACKAGE_NAME " %s", g_get_host_name());
 
-    self->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
-
     return self;
 }
 
 static void
 _eventd_evp_uninit(EventdPluginContext *self)
 {
-    g_hash_table_unref(self->events);
-
     g_free(self->avahi_name);
 
     if ( self->binds != NULL )
@@ -194,26 +190,10 @@ _eventd_evp_global_parse(EventdPluginContext *self, GKeyFile *config_file)
 }
 
 static void
-_eventd_evp_event_parse(EventdPluginContext *self, const gchar *id, GKeyFile *config_file)
-{
-    gboolean disable;
-    gint8 r;
-
-    if ( ! g_key_file_has_group(config_file, "Event") )
-        return;
-
-    r = evhelpers_config_key_file_get_boolean(config_file, "Event", "Disable", &disable);
-    if ( r < 0 )
-        return;
-
-    if ( disable )
-        g_hash_table_insert(self->events, g_strdup(id), GUINT_TO_POINTER(disable));
-}
-
-static void
 _eventd_evp_config_reset(EventdPluginContext *self)
 {
-    g_hash_table_remove_all(self->events);
+    g_free(self->avahi_name);
+    self->avahi_name = NULL;
 }
 
 
@@ -235,6 +215,5 @@ eventd_plugin_get_interface(EventdPluginInterface *interface)
     eventd_plugin_interface_add_stop_callback(interface, _eventd_evp_stop);
 
     eventd_plugin_interface_add_global_parse_callback(interface, _eventd_evp_global_parse);
-    eventd_plugin_interface_add_event_parse_callback(interface, _eventd_evp_event_parse);
     eventd_plugin_interface_add_config_reset_callback(interface, _eventd_evp_config_reset);
 }
