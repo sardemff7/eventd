@@ -66,6 +66,36 @@ _eventd_events_events_get_name(const gchar *category, const gchar *name)
     return ( name == NULL ) ? g_strdup(category) : g_strconcat(category, "-", name, NULL);
 }
 
+static void
+_eventd_events_match_data_match_free(gpointer data)
+{
+    EventdEventsEventDataMatch *data_match = data;
+
+    g_regex_unref(data_match->regex);
+    g_free(data_match->data);
+
+    g_free(data_match);
+}
+
+static void
+_eventd_events_match_free(gpointer data)
+{
+    EventdEventsMatch *match = data;
+
+    g_list_free_full(match->if_data_matches, _eventd_events_match_data_match_free);
+    g_strfreev(match->if_data);
+
+    g_free(match->id);
+
+    g_free(match);
+}
+
+static void
+_eventd_events_matches_free(gpointer data)
+{
+    g_list_free_full(data, _eventd_events_match_free);
+}
+
 static gboolean
 _eventd_events_event_matches(EventdEventsMatch *self, EventdEvent *event, GQuark *current_flags)
 {
@@ -220,36 +250,6 @@ _eventd_events_parse_client(EventdEvents *self, const gchar *id, GKeyFile *confi
         event->timeout = timeout.value;
 
     g_hash_table_insert(self->events, g_strdup(id), event);
-}
-
-static void
-_eventd_events_match_data_match_free(gpointer data)
-{
-    EventdEventsEventDataMatch *data_match = data;
-
-    g_regex_unref(data_match->regex);
-    g_free(data_match->data);
-
-    g_free(data_match);
-}
-
-static void
-_eventd_events_match_free(gpointer data)
-{
-    EventdEventsMatch *match = data;
-
-    g_list_free_full(match->if_data_matches, _eventd_events_match_data_match_free);
-    g_strfreev(match->if_data);
-
-    g_free(match->id);
-
-    g_free(match);
-}
-
-static void
-_eventd_events_matches_free(gpointer data)
-{
-    g_list_free_full(data, _eventd_events_match_free);
 }
 
 static gint
