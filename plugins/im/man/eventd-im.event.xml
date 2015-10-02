@@ -67,22 +67,20 @@
                         <para>If <literal>true</literal>, no message is sent.</para>
                     </listitem>
                 </varlistentry>
-            </variablelist>
-        </refsect2>
 
-        <refsect2>
-            <title>Section <varname>[IMAccount <replaceable>account name</replaceable>]</varname></title>
-
-            <para>
-                Each section should refer to an account name (see <citerefentry><refentrytitle>eventd-im.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>).
-            </para>
-
-            <variablelist>
                 <varlistentry>
-                    <term><varname>Channels=</varname></term>
+                    <term><varname>Account=</varname></term>
                     <listitem>
-                        <para>A <type>string list</type></para>
-                        <para>The list of channels to connect to.</para>
+                        <para>An <type>account name</type></para>
+                        <para>The account that will send the message (see <citerefentry><refentrytitle>eventd-im.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>).</para>
+                    </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                    <term><varname>Room=</varname></term>
+                    <listitem>
+                        <para>A <type>room name</type></para>
+                        <para>A room to send the message to, the exact format is protocol-dependant, e.g. <literal>"#project"</literal>.</para>
                     </listitem>
                 </varlistentry>
 

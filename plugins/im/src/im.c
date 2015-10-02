@@ -33,13 +33,13 @@
 #include "io.h"
 
 struct _EventdPluginContext {
-    GList *accounts;
+    GHashTable *accounts;
     GHashTable *events;
 };
 
 typedef struct {
     EventdPluginContext *context;
-    gchar *name;
+    const gchar *name;
     PurplePluginProtocolInfo *prpl_info;
     PurpleAccount *account;
     GHashTable *convs;
@@ -50,17 +50,17 @@ typedef struct {
 
 typedef struct {
     EventdImAccount *account;
-    FormatString *message;
-    GList *convs;
-} EventdImEventAccount;
-
-typedef struct {
     PurpleConversationType type;
-    const gchar *channel;
+    const gchar *name;
     PurpleConversation *conv;
     guint leave_timeout;
     GList *pending_messages;
 } EventdImConv;
+
+typedef struct {
+    EventdImConv *conv;
+    FormatString *message;
+} EventdImAction;
 
 static PurpleEventLoopUiOps
 _eventd_im_ui_ops = {
@@ -79,7 +79,6 @@ _eventd_im_account_free(gpointer data)
     EventdImAccount *account = data;
 
     purple_account_destroy(account->account);
-    g_free(account->name);
 
     g_free(account);
 }
@@ -116,23 +115,16 @@ _eventd_im_conv_free(gpointer data)
 }
 
 static void
-_eventd_im_event_account_free(gpointer data)
+_eventd_im_action_free(gpointer data)
 {
     if ( data == NULL )
         return;
 
-    EventdImEventAccount *account = data;
+    EventdImAction *action = data;
 
-    g_list_free_full(account->convs, _eventd_im_conv_free);
-    evhelpers_format_string_unref(account->message);
+    evhelpers_format_string_unref(action->message);
 
-    g_slice_free(EventdImEventAccount, account);
-}
-
-static void
-_eventd_im_event_free(gpointer data)
-{
-    g_list_free_full(data, _eventd_im_event_account_free);
+    g_slice_free(EventdImAction, action);
 }
 
 static void
@@ -243,7 +235,8 @@ _eventd_im_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *interf
 
     context = g_new0(EventdPluginContext, 1);
 
-    context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_im_event_free);
+    context->accounts = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_im_account_free);
+    context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_im_action_free);
 
     purple_signal_connect(purple_connections_get_handle(), "signed-on", context, PURPLE_CALLBACK(_eventd_im_signed_on_callback), context);
     purple_signal_connect(purple_connections_get_handle(), "error-changed", context, PURPLE_CALLBACK(_eventd_im_error_callback), context);
@@ -255,7 +248,7 @@ _eventd_im_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *interf
 static void
 _eventd_im_uninit(EventdPluginContext *context)
 {
-    g_list_free_full(context->accounts, _eventd_im_account_free);
+    g_hash_table_unref(context->accounts);
     g_hash_table_unref(context->events);
 
     g_free(context);
@@ -317,7 +310,6 @@ _eventd_im_global_parse(EventdPluginContext *context, GKeyFile *config_file)
         account = g_new0(EventdImAccount, 1);
         account->context = context;
         account->name = *name;
-        *name = NULL;
 
         account->prpl_info = PURPLE_PLUGIN_PROTOCOL_INFO(prpl);
         account->account = purple_account_new(username, protocol);
@@ -331,13 +323,14 @@ _eventd_im_global_parse(EventdPluginContext *context, GKeyFile *config_file)
         if ( port.set )
             purple_account_set_int(account->account, "port", CLAMP(port.value, 1, G_MAXUINT16));
 
-        account->convs = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) purple_conversation_destroy);
+        account->convs = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_im_conv_free);
 
         account->reconnect = evhelpers_reconnect_new(reconnect_timeout, reconnect_max_tries, _eventd_im_account_reconnect_callback, account);
 
         account->leave_timeout = leave_timeout;
 
-        context->accounts = g_list_prepend(context->accounts, account);
+        g_hash_table_insert(context->accounts, *name, account);
+        *name = NULL;
 
     next:
         g_free(password);
@@ -352,102 +345,84 @@ _eventd_im_global_parse(EventdPluginContext *context, GKeyFile *config_file)
 static void
 _eventd_im_event_parse(EventdPluginContext *context, const gchar *config_id, GKeyFile *config_file)
 {
-    if ( g_key_file_has_group(config_file, "IM") )
-    {
-        gboolean disable;
-        if ( evhelpers_config_key_file_get_boolean(config_file, "IM", "Disable", &disable) < 0 )
-            return;
+    if ( ! g_key_file_has_group(config_file, "IM") )
+        return;
 
-        if ( disable )
-        {
-            g_hash_table_insert(context->events, g_strdup(config_id), NULL);
-            return;
-        }
+    gboolean disable;
+    if ( evhelpers_config_key_file_get_boolean(config_file, "IM", "Disable", &disable) < 0 )
+        return;
+
+    if ( disable )
+    {
+        g_hash_table_insert(context->events, g_strdup(config_id), NULL);
+        return;
     }
 
-    gboolean have_account = FALSE;
-    GList *event_accounts = NULL;
+    FormatString *message = NULL;
+    gchar *account_name = NULL;
+    gchar *room = NULL;
 
-    GList *account_;
-    gchar *section;
-    for ( account_ = context->accounts ; account_ != NULL ; account_ = g_list_next(account_) )
+    if ( evhelpers_config_key_file_get_locale_format_string(config_file, "IM", "Message", NULL, &message) != 0 )
+        goto error;
+
+    if ( evhelpers_config_key_file_get_string(config_file, "IM", "Account", &account_name) != 0 )
+        goto error;
+
+    /*
+     * TODO: private messages
+     */
+    if ( evhelpers_config_key_file_get_string(config_file, "IM", "Room", &room) != 0 )
+        goto error;
+
+    EventdImAccount *account;
+    account = g_hash_table_lookup(context->accounts, account_name);
+    if ( account == NULL )
+        goto error;
+    g_free(account_name);
+
+    EventdImConv *conv;
+    conv = g_hash_table_lookup(account->convs, room);
+    if ( conv == NULL )
     {
-        EventdImAccount *account = account_->data;
-
-        section = g_strconcat("IMAccount ", account->name, NULL);
-        if ( ! g_key_file_has_group(config_file, section) )
-            goto next;
-
-        have_account = TRUE;
-
-        FormatString *message = NULL;
-        if ( evhelpers_config_key_file_get_locale_format_string(config_file, section, "Message", NULL, &message) != 0 )
-            goto next;
-
-        gchar **channels;
-        evhelpers_config_key_file_get_string_list(config_file, section, "Channels", &channels, NULL);
-
-        /*
-         * TODO: private messages
-         */
-
-        if ( channels == NULL )
-        {
-            g_free(message);
-            goto next;
-        }
-
-        EventdImEventAccount *event_account;
-        event_account = g_slice_new0(EventdImEventAccount);
-        event_account->account = account;
-        event_account->message = message;
-
-        if ( channels != NULL )
-        {
-            gchar **channel;
-            for ( channel = channels ; *channel != NULL ; ++channel )
-            {
-                EventdImConv *conv;
-                conv = g_hash_table_lookup(account->convs, *channel);
-                if ( conv == NULL )
-                {
-                    conv = g_slice_new0(EventdImConv);
-                    conv->type = PURPLE_CONV_TYPE_CHAT;
-                    conv->channel = *channel;
-                    if ( account->prpl_info->join_chat == NULL )
-                        conv->conv = purple_conversation_new(PURPLE_CONV_TYPE_CHAT, account->account, *channel);
-                    g_hash_table_insert(account->convs, *channel, conv);
-                }
-                event_account->convs = g_list_prepend(event_account->convs, conv);
-            }
-            g_free(channels);
-        }
-
-        event_accounts = g_list_prepend(event_accounts, event_account);
-
-    next:
-        g_free(section);
+        conv = g_slice_new0(EventdImConv);
+        conv->type = PURPLE_CONV_TYPE_CHAT;
+        conv->name = room;
+        if ( account->prpl_info->join_chat == NULL )
+            conv->conv = purple_conversation_new(PURPLE_CONV_TYPE_CHAT, account->account, room);
+        g_hash_table_insert(account->convs, room, conv);
+        room = NULL;
     }
 
-    if ( have_account )
-        g_hash_table_insert(context->events, g_strdup(config_id), event_accounts);
+    EventdImAction *action;
+    action = g_slice_new(EventdImAction);
+    action->conv = conv;
+    action->message = message;
+
+    g_hash_table_insert(context->events, g_strdup(config_id), action);
+    return;
+
+error:
+    g_free(room);
+    g_free(account_name);
+    evhelpers_format_string_unref(message);
 }
 
 static void
 _eventd_im_config_reset(EventdPluginContext *context)
 {
     g_hash_table_remove_all(context->events);
-    g_list_free_full(context->accounts, _eventd_im_account_free);
-    context->accounts = NULL;
+    g_hash_table_remove_all(context->accounts);
 }
 
 static void
 _eventd_im_start(EventdPluginContext *context)
 {
-    GList *account_;
-    for ( account_ = context->accounts ; account_ != NULL ; account_ = g_list_next(account_) )
+    GHashTableIter iter;
+    gchar *name;
+    EventdImAccount *account;
+    g_hash_table_iter_init(&iter, context->accounts);
+    while ( g_hash_table_iter_next(&iter, (gpointer *) &name, (gpointer *) &account) )
     {
-        EventdImAccount *account = account_->data;
         account->started = TRUE;
         _eventd_im_account_connect(account);
     }
@@ -456,10 +431,12 @@ _eventd_im_start(EventdPluginContext *context)
 static void
 _eventd_im_stop(EventdPluginContext *context)
 {
-    GList *account_;
-    for ( account_ = context->accounts ; account_ != NULL ; account_ = g_list_next(account_) )
+    GHashTableIter iter;
+    gchar *name;
+    EventdImAccount *account;
+    g_hash_table_iter_init(&iter, context->accounts);
+    while ( g_hash_table_iter_next(&iter, (gpointer *) &name, (gpointer *) &account) )
     {
-        EventdImAccount *account = account_->data;
         account->started = FALSE;
         evhelpers_reconnect_reset(account->reconnect);
         purple_account_disconnect(account->account);
@@ -474,60 +451,48 @@ _eventd_im_stop(EventdPluginContext *context)
 static void
 _eventd_im_event_action(EventdPluginContext *context, const gchar *config_id, EventdEvent *event)
 {
-    GList *accounts;
+    EventdImAction *action;
 
-    accounts = g_hash_table_lookup(context->events, config_id);
-    if ( accounts == NULL )
+    action = g_hash_table_lookup(context->events, config_id);
+    if ( action == NULL )
         return;
 
-    GHashTable *comps;
-    comps = g_hash_table_new(g_str_hash, g_str_equal);
+    EventdImConv *conv = action->conv;
+    EventdImAccount *account = conv->account;
 
-    GList *account_;
-    EventdImEventAccount *account;
-    for ( account_ = accounts ; account_ != NULL ; account_ = g_list_next(account_) )
+    if ( ! purple_account_is_connected(account->account) )
+        return;
+
+    PurpleConnection *gc;
+    gchar *message;
+
+    gc = purple_account_get_connection(account->account);
+    message = evhelpers_format_string_get_string(action->message, event, NULL, NULL);
+
+    switch ( conv->type )
     {
-        account = account_->data;
-
-        if ( ! purple_account_is_connected(account->account->account) )
-            continue;
-
-        PurpleConnection *gc;
-        gchar *message;
-
-        gc = purple_account_get_connection(account->account->account);
-        message = evhelpers_format_string_get_string(account->message, event, NULL, NULL);
-
-        GList *conv_;
-        for ( conv_ = account->convs ; conv_ != NULL ; conv_ = g_list_next(conv_) )
+    case PURPLE_CONV_TYPE_CHAT:
+        if ( conv->conv != NULL )
         {
-            EventdImConv *conv = conv_->data;
-
-            switch ( conv->type )
-            {
-            case PURPLE_CONV_TYPE_CHAT:
-                if ( conv->conv != NULL )
-                {
-                    purple_conv_chat_send(PURPLE_CONV_CHAT(conv->conv), message);
-                    break;
-                }
-
-                if ( conv->pending_messages == NULL )
-                {
-                    g_hash_table_replace(comps, (gpointer) "channel", (gpointer) conv->channel);
-                    account->account->prpl_info->join_chat(gc, comps);
-                }
-                conv->pending_messages = g_list_prepend(conv->pending_messages, g_strdup(message));
+            purple_conv_chat_send(PURPLE_CONV_CHAT(conv->conv), message);
             break;
-            default:
-            break;
-            }
         }
 
-        g_free(message);
+        if ( conv->pending_messages == NULL )
+        {
+            GHashTable *comps;
+            comps = g_hash_table_new(g_str_hash, g_str_equal);
+            g_hash_table_insert(comps, (gpointer) "channel", (gpointer) conv->name);
+            account->prpl_info->join_chat(gc, comps);
+            g_hash_table_unref(comps);
+        }
+        conv->pending_messages = g_list_prepend(conv->pending_messages, g_strdup(message));
+    break;
+    default:
+    break;
     }
 
-    g_hash_table_unref(comps);
+    g_free(message);
 }
 
 
