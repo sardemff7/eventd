@@ -43,7 +43,7 @@ struct _EventdEvents {
 typedef struct {
     gchar *data;
     GRegex *regex;
-} EventdEventsDataMatch;
+} EventdEventsEventDataMatch;
 
 typedef struct {
     gint64 importance;
@@ -72,13 +72,13 @@ _eventd_events_get_best_match(GList *list, EventdEvent *event, GQuark *current_f
     GList *match_;
     for ( match_ = list ; match_ != NULL ; match_ = g_list_next(match_) )
     {
-        EventdEventsMatch *match = match_->data;
+        EventdEventsMatch *self = match_->data;
         gboolean skip = FALSE;
 
-        if ( match->if_data != NULL )
+        if ( self->if_data != NULL )
         {
             gchar **data;
-            for ( data = match->if_data ; ( *data != NULL ) && ( ! skip )  ; ++data )
+            for ( data = self->if_data ; ( *data != NULL ) && ( ! skip )  ; ++data )
             {
                 if ( ! eventd_event_has_data(event, *data) )
                     skip = TRUE;
@@ -87,13 +87,13 @@ _eventd_events_get_best_match(GList *list, EventdEvent *event, GQuark *current_f
                 continue;
         }
 
-        if ( match->if_data_matches != NULL )
+        if ( self->if_data_matches != NULL )
         {
             GList *data_match_;
             const gchar *data;
-            for ( data_match_ = match->if_data_matches ; ( data_match_ != NULL ) && ( ! skip ) ; data_match_ = g_list_next(data_match_) )
+            for ( data_match_ = self->if_data_matches ; ( data_match_ != NULL ) && ( ! skip ) ; data_match_ = g_list_next(data_match_) )
             {
-                EventdEventsDataMatch *data_match = data_match_->data;
+                EventdEventsEventDataMatch *data_match = data_match_->data;
                 if ( ( data = eventd_event_get_data(event, data_match->data) ) == NULL )
                     continue;
                 if ( ! g_regex_match(data_match->regex, data, 0, NULL) )
@@ -106,10 +106,10 @@ _eventd_events_get_best_match(GList *list, EventdEvent *event, GQuark *current_f
         if ( current_flags != NULL )
         {
             GQuark *flag;
-            if ( match->flags_whitelist != NULL )
+            if ( self->flags_whitelist != NULL )
             {
                 GQuark *wflag;
-                for ( wflag = match->flags_whitelist ; ( *wflag != 0 ) && ( ! skip ) ; ++wflag )
+                for ( wflag = self->flags_whitelist ; ( *wflag != 0 ) && ( ! skip ) ; ++wflag )
                 {
                     for ( flag = current_flags ; ( *flag != 0 ) && ( ! skip ) ; ++flag )
                     {
@@ -121,10 +121,10 @@ _eventd_events_get_best_match(GList *list, EventdEvent *event, GQuark *current_f
                     continue;
             }
 
-            if ( match->flags_blacklist != NULL )
+            if ( self->flags_blacklist != NULL )
             {
                 GQuark *bflag;
-                for ( bflag = match->flags_blacklist ; ( *bflag != 0 ) && ( ! skip ) ; ++bflag )
+                for ( bflag = self->flags_blacklist ; ( *bflag != 0 ) && ( ! skip ) ; ++bflag )
                 {
                     for ( flag = current_flags ; ( *flag != 0 ) && ( ! skip ) ; ++flag )
                     {
@@ -137,7 +137,7 @@ _eventd_events_get_best_match(GList *list, EventdEvent *event, GQuark *current_f
             }
         }
 
-        return match->id;
+        return self->id;
     }
 
     return NULL;
@@ -229,7 +229,7 @@ _eventd_events_parse_client(EventdEvents *self, const gchar *id, GKeyFile *confi
 static void
 _eventd_events_match_data_match_free(gpointer data)
 {
-    EventdEventsDataMatch *data_match = data;
+    EventdEventsEventDataMatch *data_match = data;
 
     g_regex_unref(data_match->regex);
     g_free(data_match->data);
@@ -317,7 +317,7 @@ eventd_events_parse(EventdEvents *self, const gchar *id, GKeyFile *config_file)
 
     if ( evhelpers_config_key_file_get_string_list(config_file, "Event", "IfDataMatches", &if_data_matches, NULL) == 0 )
     {
-        EventdEventsDataMatch *data_match;
+        EventdEventsEventDataMatch *data_match;
         gchar **if_data_match;
         GError *error = NULL;
         GRegex *regex;
@@ -328,7 +328,7 @@ eventd_events_parse(EventdEvents *self, const gchar *id, GKeyFile *config_file)
             if_data_matchv = g_strsplit(*if_data_match, ",", 2);
             if ( ( regex = g_regex_new(if_data_matchv[1], G_REGEX_OPTIMIZE, 0, &error) ) != NULL )
             {
-                data_match = g_new0(EventdEventsDataMatch, 1);
+                data_match = g_new0(EventdEventsEventDataMatch, 1);
                 data_match->data = g_strdup(if_data_matchv[0]);
                 data_match->regex = regex;
 
