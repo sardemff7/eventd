@@ -20,15 +20,14 @@
  *
  */
 
-#ifndef __EVENTD_CONFIG_H__
-#define __EVENTD_CONFIG_H__
+#ifndef __EVENTD_EVENTS_H__
+#define __EVENTD_EVENTS_H__
 
-EventdConfig *eventd_config_new(void);
-void eventd_config_parse(EventdConfig *config);
-void eventd_config_free(EventdConfig *config);
+EventdEvents *eventd_events_new(void);
+void eventd_events_reset(EventdEvents *self);
+void eventd_events_free(EventdEvents *self);
 
-gboolean eventd_config_process_event(EventdConfig *self, EventdEvent *event, GQuark *flags, const gchar **config_id);
+void eventd_events_parse(EventdEvents *self, const gchar *id, GKeyFile *config_file);
+gboolean eventd_events_process_event(EventdEvents *self, EventdEvent *event, GQuark *flags, gint64 timeout, const gchar **config_id);
 
-guint64 eventd_config_get_stack(EventdConfig *config);
-
-#endif /* __EVENTD_CONFIG_H__ */
+#endif /* __EVENTD_EVENTS_H__ */

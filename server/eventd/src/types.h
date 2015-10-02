@@ -1,7 +1,7 @@
 /*
  * eventd - Small daemon to act on remote or local events
  *
- * Copyright © 2011-2012 Quentin "Sardem FF7" Glidic
+ * Copyright © 2011-2015 Quentin "Sardem FF7" Glidic
  *
  * This file is part of eventd.
  *
@@ -31,6 +31,7 @@ typedef struct _EventdCoreContext EventdCoreContext;
 typedef struct _EventdQueue EventdQueue;
 typedef struct _EventdControl EventdControl;
 typedef struct _EventdConfig EventdConfig;
+typedef struct _EventdEvents EventdEvents;
 typedef struct _EventdSockets EventdSockets;
 
 #endif /* __EVENTD_TYPES_H__ */

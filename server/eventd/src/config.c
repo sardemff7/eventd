@@ -1,7 +1,7 @@
 /*
  * eventd - Small daemon to act on remote or local events
  *
- * Copyright © 2011-2012 Quentin "Sardem FF7" Glidic
+ * Copyright © 2011-2015 Quentin "Sardem FF7" Glidic
  *
  * This file is part of eventd.
  *
@@ -32,6 +32,7 @@
 #include "types.h"
 
 #include "plugins.h"
+#include "events.h"
 
 #include "config.h"
 
@@ -39,170 +40,13 @@ struct _EventdConfig {
     gboolean loaded;
     guint64 stack;
     gint64 timeout;
-    GHashTable *event_ids;
-    GHashTable *events;
+    EventdEvents *events;
 };
-
-typedef struct {
-    gchar *data;
-    GRegex *regex;
-} EventdConfigDataMatch;
-
-typedef struct {
-    gint64 importance;
-    gchar *id;
-
-    /* Conditions */
-    gchar **if_data;
-    GList *if_data_matches;
-    GQuark *flags_whitelist;
-    GQuark *flags_blacklist;
-} EventdConfigMatch;
-
-typedef struct {
-    gint64 timeout;
-} EventdConfigEvent;
-
-static gchar *
-_eventd_config_events_get_name(const gchar *category, const gchar *name)
-{
-    return ( name == NULL ) ? g_strdup(category) : g_strconcat(category, "-", name, NULL);
-}
-
-const gchar *
-_eventd_config_get_best_match(GList *list, EventdEvent *event, GQuark *current_flags)
-{
-    GList *match_;
-    for ( match_ = list ; match_ != NULL ; match_ = g_list_next(match_) )
-    {
-        EventdConfigMatch *match = match_->data;
-        gboolean skip = FALSE;
-
-        if ( match->if_data != NULL )
-        {
-            gchar **data;
-            for ( data = match->if_data ; ( *data != NULL ) && ( ! skip )  ; ++data )
-            {
-                if ( ! eventd_event_has_data(event, *data) )
-                    skip = TRUE;
-            }
-            if ( skip )
-                continue;
-        }
-
-        if ( match->if_data_matches != NULL )
-        {
-            GList *data_match_;
-            const gchar *data;
-            for ( data_match_ = match->if_data_matches ; ( data_match_ != NULL ) && ( ! skip ) ; data_match_ = g_list_next(data_match_) )
-            {
-                EventdConfigDataMatch *data_match = data_match_->data;
-                if ( ( data = eventd_event_get_data(event, data_match->data) ) == NULL )
-                    continue;
-                if ( ! g_regex_match(data_match->regex, data, 0, NULL) )
-                    skip = TRUE;
-            }
-            if ( skip )
-                continue;
-        }
-
-        if ( current_flags != NULL )
-        {
-            GQuark *flag;
-            if ( match->flags_whitelist != NULL )
-            {
-                GQuark *wflag;
-                for ( wflag = match->flags_whitelist ; ( *wflag != 0 ) && ( ! skip ) ; ++wflag )
-                {
-                    for ( flag = current_flags ; ( *flag != 0 ) && ( ! skip ) ; ++flag )
-                    {
-                        if ( *flag != *wflag )
-                            skip = TRUE;
-                    }
-                }
-                if ( skip )
-                    continue;
-            }
-
-            if ( match->flags_blacklist != NULL )
-            {
-                GQuark *bflag;
-                for ( bflag = match->flags_blacklist ; ( *bflag != 0 ) && ( ! skip ) ; ++bflag )
-                {
-                    for ( flag = current_flags ; ( *flag != 0 ) && ( ! skip ) ; ++flag )
-                    {
-                        if ( *flag == *bflag )
-                            skip = TRUE;
-                    }
-                }
-                if ( skip )
-                    continue;
-            }
-        }
-
-        return match->id;
-    }
-
-    return NULL;
-}
-
-static const gchar *
-_eventd_config_get_event_config_id(EventdConfig *config, EventdEvent *event, GQuark *current_flags)
-{
-    const gchar *category;
-    GList *list;
-    const gchar *match;
-
-    category = eventd_event_get_category(event);
-
-    gchar *name;
-    name = _eventd_config_events_get_name(category, eventd_event_get_name(event));
-    list = g_hash_table_lookup(config->event_ids, name);
-    g_free(name);
-
-
-    if ( list != NULL )
-    {
-        match = _eventd_config_get_best_match(list, event, current_flags);
-        if ( match != NULL )
-            return match;
-    }
-
-    list = g_hash_table_lookup(config->event_ids, category);
-    if ( list != NULL )
-    {
-        match = _eventd_config_get_best_match(list, event, current_flags);
-        if ( match != NULL )
-            return match;
-    }
-
-    return NULL;
-}
 
 gboolean
 eventd_config_process_event(EventdConfig *config, EventdEvent *event, GQuark *flags, const gchar **config_id)
 {
-    *config_id = _eventd_config_get_event_config_id(config, event, flags);
-
-    if ( *config_id == NULL )
-        return FALSE;
-
-    EventdConfigEvent *config_event;
-    gint64 timeout;
-
-    config_event = g_hash_table_lookup(config->events, *config_id);
-
-    timeout = eventd_event_get_timeout(event);
-    if ( timeout < 0 )
-    {
-        if ( ( config_event == NULL ) || ( config_event->timeout < 0 ) )
-            timeout = config->timeout;
-        else
-            timeout = config_event->timeout;
-    }
-    eventd_event_set_timeout(event, timeout);
-
-    return TRUE;
+    return eventd_events_process_event(config->events, event, flags, config->timeout, config_id);
 }
 
 
@@ -226,177 +70,6 @@ _eventd_config_parse_global(EventdConfig *config, GKeyFile *config_file)
 
     if ( evhelpers_config_key_file_get_int(config_file, "Event", "Timeout", &integer) == 0 )
         config->timeout = MAX(0, integer.value);
-}
-
-static void
-_eventd_config_parse_client(EventdConfig *config, const gchar *id, GKeyFile *config_file)
-{
-    EventdConfigEvent *event;
-    gboolean disable;
-    Int timeout;
-
-    if ( ( evhelpers_config_key_file_get_boolean(config_file, "Event", "Disable", &disable) == 0 ) && disable )
-    {
-        g_hash_table_insert(config->events, g_strdup(id), NULL);
-        return;
-    }
-
-    event = g_new0(EventdConfigEvent, 1);
-
-    event->timeout = -1;
-
-
-    if ( evhelpers_config_key_file_get_int(config_file, "Event", "Timeout", &timeout) == 0 )
-        event->timeout = timeout.value;
-
-    g_hash_table_insert(config->events, g_strdup(id), event);
-}
-
-static void
-_eventd_config_match_data_match_free(gpointer data)
-{
-    EventdConfigDataMatch *data_match = data;
-
-    g_regex_unref(data_match->regex);
-    g_free(data_match->data);
-
-    g_free(data_match);
-}
-
-static void
-_eventd_config_match_free(gpointer data)
-{
-    EventdConfigMatch *match = data;
-
-    g_list_free_full(match->if_data_matches, _eventd_config_match_data_match_free);
-    g_strfreev(match->if_data);
-
-    g_free(match->id);
-
-    g_free(match);
-}
-
-static void
-_eventd_config_matches_free(gpointer data)
-{
-    g_list_free_full(data, _eventd_config_match_free);
-}
-
-static gint
-_eventd_config_compare_matches(gconstpointer a_, gconstpointer b_)
-{
-    const EventdConfigMatch *a = a_;
-    const EventdConfigMatch *b = b_;
-    if ( a->importance < b->importance )
-        return -1;
-    if ( b->importance < a->importance )
-        return 1;
-    return 0;
-}
-
-static GQuark *
-_eventd_config_parse_event_flags(gchar **flags, gsize length)
-{
-    GQuark *quarks;
-
-    quarks = g_new0(GQuark, length + 1);
-    quarks[length] = 0;
-
-    gsize i;
-    for ( i = 0 ; i < length ; ++i )
-    {
-        gchar *flag = flags[i];
-        quarks[i] = g_quark_from_string(flag);
-        g_free(flag);
-    }
-
-    g_free(flags);
-
-    return quarks;
-}
-
-static void
-_eventd_config_parse_event_file(EventdConfig *config, const gchar *id, GKeyFile *config_file)
-{
-    gchar *category = NULL;
-    gchar *name = NULL;
-
-#ifdef EVENTD_DEBUG
-    g_debug("Parsing event '%s'", id);
-#endif /* EVENTD_DEBUG */
-
-    if ( evhelpers_config_key_file_get_string(config_file, "Event", "Category", &category) != 0 )
-        return;
-
-    if ( evhelpers_config_key_file_get_string(config_file, "Event", "Name", &name) < 0 )
-        goto fail;
-
-    EventdConfigMatch *match;
-    match = g_new0(EventdConfigMatch, 1);
-    match->id = g_strdup(id);
-
-    gchar **if_data_matches;
-    gchar **flags;
-    gsize length;
-
-    evhelpers_config_key_file_get_string_list(config_file, "Event", "IfData", &match->if_data, NULL);
-
-    if ( evhelpers_config_key_file_get_string_list(config_file, "Event", "IfDataMatches", &if_data_matches, NULL) == 0 )
-    {
-        EventdConfigDataMatch *data_match;
-        gchar **if_data_match;
-        GError *error = NULL;
-        GRegex *regex;
-
-        for ( if_data_match = if_data_matches ; *if_data_match != NULL ; ++if_data_match )
-        {
-            gchar **if_data_matchv;
-            if_data_matchv = g_strsplit(*if_data_match, ",", 2);
-            if ( ( regex = g_regex_new(if_data_matchv[1], G_REGEX_OPTIMIZE, 0, &error) ) != NULL )
-            {
-                data_match = g_new0(EventdConfigDataMatch, 1);
-                data_match->data = g_strdup(if_data_matchv[0]);
-                data_match->regex = regex;
-
-                match->if_data_matches = g_list_prepend(match->if_data_matches, data_match);
-            }
-            g_strfreev(if_data_matchv);
-        }
-        g_strfreev(if_data_matches);
-    }
-
-    if ( evhelpers_config_key_file_get_string_list(config_file, "Event", "OnlyIfFlags", &flags, &length) == 0 )
-        match->flags_whitelist = _eventd_config_parse_event_flags(flags, length);
-
-    if ( evhelpers_config_key_file_get_string_list(config_file, "Event", "NotIfFlags", &flags, &length) == 0 )
-        match->flags_blacklist = _eventd_config_parse_event_flags(flags, length);
-
-    gint64 default_importance;
-
-    if ( ( match->if_data != NULL ) || ( match->if_data_matches != NULL ) || ( match->flags_whitelist != NULL ) || ( match->flags_blacklist != NULL ) )
-        default_importance = 0;
-    else
-        default_importance = G_MAXINT64;
-    evhelpers_config_key_file_get_int_with_default(config_file, "Event", "Importance", default_importance, &match->importance);
-
-    gchar *internal_name;
-
-    internal_name = _eventd_config_events_get_name(category, name);
-
-    GList *list = NULL;
-    gchar *old_key = NULL;
-    g_hash_table_lookup_extended(config->event_ids, internal_name, (gpointer *)&old_key, (gpointer *)&list);
-    g_hash_table_steal(config->event_ids, internal_name);
-    g_free(old_key);
-    list = g_list_insert_sorted(list, match, _eventd_config_compare_matches);
-    g_hash_table_insert(config->event_ids, internal_name, list);
-
-    _eventd_config_parse_client(config, id, config_file);
-    eventd_plugins_event_parse_all(id, config_file);
-
-fail:
-    g_free(name);
-    g_free(category);
 }
 
 static void
@@ -550,8 +223,7 @@ eventd_config_new(void)
 
     config = g_new0(EventdConfig, 1);
 
-    config->event_ids = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_config_matches_free);
-    config->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+    config->events = eventd_events_new();
 
     return config;
 }
@@ -564,8 +236,7 @@ _eventd_config_clean(EventdConfig *config)
 
     eventd_plugins_config_reset_all();
 
-    g_hash_table_remove_all(config->events);
-    g_hash_table_remove_all(config->event_ids);
+    eventd_events_reset(config->events);
 }
 
 void
@@ -601,7 +272,7 @@ eventd_config_parse(EventdConfig *config)
     while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&config_file) )
     {
         if ( ( config_file = _eventd_config_process_config_file(config_files, id, config_file) ) != NULL )
-            _eventd_config_parse_event_file(config, id, config_file);
+            eventd_events_parse(config->events, id, config_file);
     }
     g_hash_table_unref(config_files);
 }
@@ -611,8 +282,7 @@ eventd_config_free(EventdConfig *config)
 {
     _eventd_config_clean(config);
 
-    g_hash_table_unref(config->events);
-    g_hash_table_unref(config->event_ids);
+    eventd_events_free(config->events);
 
     g_free(config);
 }

@@ -22,6 +22,8 @@ eventd_SOURCES = \
 	%D%/src/types.h \
 	%D%/src/config.h \
 	%D%/src/config.c \
+	%D%/src/events.h \
+	%D%/src/events.c \
 	%D%/src/plugins.h \
 	%D%/src/plugins.c \
 	%D%/src/queue.h \
