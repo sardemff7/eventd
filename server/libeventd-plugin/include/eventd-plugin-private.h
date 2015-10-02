@@ -44,7 +44,6 @@ struct EventdPluginInterface {
 
     EventdPluginControlCommandFunc control_command;
 
-    EventdPluginSimpleFunc config_init;
     EventdPluginGlobalParseFunc global_parse;
     EventdPluginEventParseFunc event_parse;
     EventdPluginSimpleFunc config_reset;

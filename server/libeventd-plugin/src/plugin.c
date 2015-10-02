@@ -198,16 +198,6 @@ EVENTD_EXPORT void eventd_plugin_interface_add_control_command_callback(EventdPl
  */
 
 /**
- * eventd_plugin_interface_add_config_init_callback:
- * @interface: an #EventdPluginInterface
- * @callback: (scope async): a function to call when pigs fly
- *
- * This callback is being removed in the future.
- *
- * TODO: graft wings on pigs
- */
-EVENTD_EXPORT void eventd_plugin_interface_add_config_init_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback) { interface->config_init = callback; }
-/**
  * eventd_plugin_interface_add_global_parse_callback:
  * @interface: an #EventdPluginInterface
  * @callback: (scope async): a function to call during global configuration parsing
