@@ -23,7 +23,7 @@
 #ifndef __EVENTD_ND_STYLE_H__
 #define __EVENTD_ND_STYLE_H__
 
-typedef struct _EventdNdStyle EventdNdStyle;
+typedef struct _EventdPluginAction EventdNdStyle;
 typedef struct _EventdNdNotificationContents EventdNdNotificationContents;
 
 typedef enum {

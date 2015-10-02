@@ -33,26 +33,26 @@
 
 struct _EventdPluginContext {
     ca_context *context;
-    GHashTable *events;
+    GSList *actions;
     gboolean started;
 };
 
-typedef struct {
+struct _EventdPluginAction {
     FormatString *sound_name;
     Filename *sound_file;
-} EventdCanberraEvent;
+};
 
 
 /*
  * Event contents helper
  */
 
-static EventdCanberraEvent *
+static EventdPluginAction *
 _eventd_canberra_event_new(FormatString *sound_name, Filename *sound_file)
 {
-    EventdCanberraEvent *event;
+    EventdPluginAction *event;
 
-    event = g_new0(EventdCanberraEvent, 1);
+    event = g_slice_new(EventdPluginAction);
 
     event->sound_name = sound_name;
     event->sound_file = sound_file;
@@ -61,14 +61,14 @@ _eventd_canberra_event_new(FormatString *sound_name, Filename *sound_file)
 }
 
 static void
-_eventd_canberra_event_free(gpointer data)
+_eventd_libcanberra_action_free(gpointer data)
 {
-    EventdCanberraEvent *event = data;
+    EventdPluginAction *event = data;
 
     evhelpers_filename_unref(event->sound_file);
     evhelpers_format_string_unref(event->sound_name);
 
-    g_free(event);
+    g_slice_free(EventdPluginAction, event);
 }
 
 
@@ -92,16 +92,12 @@ _eventd_libcanberra_init(EventdPluginCoreContext *core, EventdPluginCoreInterfac
         return NULL;
     }
 
-    context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_canberra_event_free);
-
     return context;
 }
 
 static void
 _eventd_libcanberra_uninit(EventdPluginContext *context)
 {
-    g_hash_table_unref(context->events);
-
     ca_context_destroy(context->context);
 
     g_free(context);
@@ -157,45 +153,49 @@ skip:
     g_free(sound_theme);
 }
 
-static void
-_eventd_libcanberra_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile *config_file)
+static EventdPluginAction *
+_eventd_libcanberra_action_parse(EventdPluginContext *context, GKeyFile *config_file)
 {
     gboolean disable;
-    EventdCanberraEvent *canberra_event = NULL;
     FormatString *sound_name = NULL;
     Filename *sound_file = NULL;
 
     if ( ! g_key_file_has_group(config_file, "Libcanberra") )
-        return;
+        return NULL;
 
     if ( evhelpers_config_key_file_get_boolean(config_file, "Libcanberra", "Disable", &disable) < 0 )
-        return;
+        return NULL;
 
-    if ( ! disable )
-    {
-        if ( evhelpers_config_key_file_get_format_string_with_default(config_file, "Libcanberra", "Name", "${sound-name}", &sound_name) < 0 )
-            goto fail;
+    if ( disable )
+        return NULL;
+
+    if ( evhelpers_config_key_file_get_format_string_with_default(config_file, "Libcanberra", "Name", "${sound-name}", &sound_name) < 0 )
+        goto fail;
 #ifndef ENABLE_SOUND
-        if ( evhelpers_config_key_file_get_filename_with_default(config_file, "Libcanberra", "File", "sound-file", &sound_file) < 0 )
-            goto fail;
+    if ( evhelpers_config_key_file_get_filename_with_default(config_file, "Libcanberra", "File", "sound-file", &sound_file) < 0 )
+        goto fail;
 #endif /* ! ENABLE_SOUND */
 
-        canberra_event = _eventd_canberra_event_new(sound_name, sound_file);
-        sound_file = NULL;
-        sound_name = NULL;
-    }
+    EventdPluginAction *action;
+    action = _eventd_canberra_event_new(sound_name, sound_file);
+    sound_file = NULL;
+    sound_name = NULL;
 
-    g_hash_table_insert(context->events, g_strdup(id), canberra_event);
+    context->actions = g_slist_prepend(context->actions, action);
+
+    return action;
 
 fail:
     evhelpers_filename_unref(sound_file);
     evhelpers_format_string_unref(sound_name);
+    return NULL;
 }
 
 static void
 _eventd_libcanberra_config_reset(EventdPluginContext *context)
 {
-    g_hash_table_remove_all(context->events);
+    g_slist_free_full(context->actions, _eventd_libcanberra_action_free);
+    context->actions = NULL;
 }
 
 
@@ -204,18 +204,12 @@ _eventd_libcanberra_config_reset(EventdPluginContext *context)
  */
 
 static void
-_eventd_libcanberra_event_action(EventdPluginContext *context, const gchar *config_id, EventdEvent *event)
+_eventd_libcanberra_event_action(EventdPluginContext *context, EventdPluginAction *action, EventdEvent *event)
 {
-    EventdCanberraEvent *canberra_event;
-
-    canberra_event = g_hash_table_lookup(context->events, config_id);
-    if ( canberra_event == NULL )
-        return;
-
     int error;
 
     gchar *sound_name;
-    sound_name = evhelpers_format_string_get_string(canberra_event->sound_name, event, NULL, NULL);
+    sound_name = evhelpers_format_string_get_string(action->sound_name, event, NULL, NULL);
     error = ca_context_play(context->context, 1,
         CA_PROP_EVENT_ID, sound_name,
         CA_PROP_MEDIA_ROLE, "event",
@@ -226,7 +220,7 @@ _eventd_libcanberra_event_action(EventdPluginContext *context, const gchar *conf
 
 #ifndef ENABLE_SOUND
     gchar *sound_file;
-    if ( evhelpers_filename_get_path(canberra_event->sound_file, event, "sounds", NULL, &sound_file) )
+    if ( evhelpers_filename_get_path(action->sound_file, event, "sounds", NULL, &sound_file) )
     {
         if ( sound_file != NULL )
         {
@@ -259,7 +253,7 @@ eventd_plugin_get_interface(EventdPluginInterface *interface)
     eventd_plugin_interface_add_stop_callback(interface, _eventd_libcanberra_stop);
 
     eventd_plugin_interface_add_global_parse_callback(interface, _eventd_libcanberra_global_parse);
-    eventd_plugin_interface_add_event_parse_callback(interface, _eventd_libcanberra_event_parse);
+    eventd_plugin_interface_add_action_parse_callback(interface, _eventd_libcanberra_action_parse);
     eventd_plugin_interface_add_config_reset_callback(interface, _eventd_libcanberra_config_reset);
 
     eventd_plugin_interface_add_event_action_callback(interface, _eventd_libcanberra_event_action);

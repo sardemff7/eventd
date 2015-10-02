@@ -47,7 +47,7 @@
 struct _EventdPluginContext {
     EventdRelayAvahi *avahi;
     GHashTable *servers;
-    GHashTable *events;
+    GSList *actions;
     gboolean no_avahi;
 };
 
@@ -62,8 +62,6 @@ _eventd_relay_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *int
     EventdPluginContext *context;
 
     context = g_new0(EventdPluginContext, 1);
-
-    context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 
 #ifdef ENABLE_AVAHI
     context->avahi = eventd_relay_avahi_init();
@@ -80,8 +78,6 @@ _eventd_relay_uninit(EventdPluginContext *context)
 #ifdef ENABLE_AVAHI
     eventd_relay_avahi_uninit(context->avahi);
 #endif /* ENABLE_AVAHI */
-
-    g_hash_table_unref(context->events);
 
     g_free(context);
 }
@@ -210,21 +206,18 @@ _eventd_relay_control_command(EventdPluginContext *context, guint64 argc, const 
  * Configuration interface
  */
 
-static void
-_eventd_relay_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile *config_file)
+static EventdPluginAction *
+_eventd_relay_action_parse(EventdPluginContext *context, GKeyFile *config_file)
 {
     gboolean disable;
 
     if ( ! g_key_file_has_group(config_file, "Relay") )
-        return;
+        return NULL;
 
     if ( evhelpers_config_key_file_get_boolean(config_file, "Relay", "Disable", &disable) < 0 )
-        return;
+        return NULL;
     if ( disable )
-    {
-        g_hash_table_insert(context->events, g_strdup(id), NULL);
-        return;
-    }
+        return NULL;
 
 #ifdef ENABLE_AVAHI
     gchar *avahi_name;
@@ -239,8 +232,7 @@ _eventd_relay_event_parse(EventdPluginContext *context, const gchar *id, GKeyFil
             g_hash_table_insert(context->servers, g_strdup(avahi_name), server);
         }
         g_free(avahi_name);
-        g_hash_table_insert(context->events, g_strdup(id), server);
-        return;
+        return server;
     }
 #endif /* ENABLE_AVAHI */
 
@@ -258,15 +250,17 @@ _eventd_relay_event_parse(EventdPluginContext *context, const gchar *id, GKeyFil
                 g_hash_table_insert(context->servers, g_strdup(server_uri), server);
         }
         g_free(server_uri);
-        g_hash_table_insert(context->events, g_strdup(id), server);
-        return;
+        return server;
     }
+
+    return NULL;
 }
 
 static void
 _eventd_relay_config_reset(EventdPluginContext *context)
 {
-    g_hash_table_remove_all(context->events);
+    g_slist_free_full(context->actions, eventd_relay_server_free);
+    context->actions = NULL;
 }
 
 
@@ -275,14 +269,8 @@ _eventd_relay_config_reset(EventdPluginContext *context)
  */
 
 static void
-_eventd_relay_event_action(EventdPluginContext *context, const gchar *config_id, EventdEvent *event)
+_eventd_relay_event_action(EventdPluginContext *context, EventdRelayServer *server, EventdEvent *event)
 {
-    EventdRelayServer *server;
-
-    server = g_hash_table_lookup(context->events, config_id);
-    if ( server == NULL )
-        return;
-
     eventd_relay_server_event(server, event);
 }
 
@@ -306,7 +294,7 @@ eventd_plugin_get_interface(EventdPluginInterface *interface)
 
     eventd_plugin_interface_add_control_command_callback(interface, _eventd_relay_control_command);
 
-    eventd_plugin_interface_add_event_parse_callback(interface, _eventd_relay_event_parse);
+    eventd_plugin_interface_add_action_parse_callback(interface, _eventd_relay_action_parse);
     eventd_plugin_interface_add_config_reset_callback(interface, _eventd_relay_config_reset);
 
     eventd_plugin_interface_add_event_action_callback(interface, _eventd_relay_event_action);

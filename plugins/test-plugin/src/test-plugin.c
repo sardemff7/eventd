@@ -40,8 +40,17 @@ _eventd_test_event_end_earlier(gpointer user_data)
     return FALSE;
 }
 
+static EventdPluginAction *
+_eventd_test_action_parse(EventdPluginContext *context, GKeyFile *key_file)
+{
+    if ( ! g_key_file_has_group(key_file, "TestPlugin") )
+        return NULL;
+
+    return (EventdPluginAction *) -1;
+}
+
 static void
-_eventd_test_event_action(EventdPluginContext *context, const gchar *config_id, EventdEvent *event)
+_eventd_test_event_action(EventdPluginContext *context, EventdPluginAction *action, EventdEvent *event)
 {
     GError *error = NULL;
 
@@ -68,5 +77,6 @@ EVENTD_EXPORT
 void
 eventd_plugin_get_interface(EventdPluginInterface *interface)
 {
+    eventd_plugin_interface_add_action_parse_callback(interface, _eventd_test_action_parse);
     eventd_plugin_interface_add_event_action_callback(interface, _eventd_test_event_action);
 }

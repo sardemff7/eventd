@@ -28,9 +28,22 @@
 #include <libeventd-helpers-config.h>
 
 struct _EventdPluginContext {
-    GHashTable *events;
+    GSList *actions;
 };
 
+struct _EventdPluginAction {
+    FormatString *command;
+};
+
+static void
+_eventd_exec_action_free(gpointer data)
+{
+    EventdPluginAction *action = data;
+
+    evhelpers_format_string_unref(action->command);
+
+    g_slice_free(EventdPluginAction, action);
+}
 
 /*
  * Initialization interface
@@ -43,16 +56,12 @@ _eventd_exec_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *inte
 
     context = g_new0(EventdPluginContext, 1);
 
-    context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)evhelpers_format_string_unref);
-
     return context;
 }
 
 static void
 _eventd_exec_uninit(EventdPluginContext *context)
 {
-    g_hash_table_unref(context->events);
-
     g_free(context);
 }
 
@@ -61,31 +70,38 @@ _eventd_exec_uninit(EventdPluginContext *context)
  * Configuration interface
  */
 
-static void
-_eventd_exec_event_parse(EventdPluginContext *context, const gchar *config_id, GKeyFile *config_file)
+static EventdPluginAction *
+_eventd_exec_action_parse(EventdPluginContext *context, GKeyFile *config_file)
 {
     gboolean disable;
     FormatString *command = NULL;
 
     if ( ! g_key_file_has_group(config_file, "Exec") )
-        return;
+        return NULL;
 
     if ( evhelpers_config_key_file_get_boolean(config_file, "Exec", "Disable", &disable) < 0 )
-        return;
+        return NULL;
 
-    if ( ! disable )
-    {
-        if ( evhelpers_config_key_file_get_format_string(config_file, "Exec", "Command", &command) < 0 )
-            return;
-    }
+    if ( disable )
+        return NULL;
 
-    g_hash_table_insert(context->events, g_strdup(config_id), command);
+    if ( evhelpers_config_key_file_get_format_string(config_file, "Exec", "Command", &command) < 0 )
+        return NULL;
+
+    EventdPluginAction *action;
+    action = g_slice_new(EventdPluginAction);
+    action->command = command;
+
+    context->actions = g_slist_prepend(context->actions, action);
+
+    return action;
 }
 
 static void
 _eventd_exec_config_reset(EventdPluginContext *context)
 {
-    g_hash_table_remove_all(context->events);
+    g_slist_free_full(context->actions, _eventd_exec_action_free);
+    context->actions = NULL;
 }
 
 
@@ -94,17 +110,12 @@ _eventd_exec_config_reset(EventdPluginContext *context)
  */
 
 static void
-_eventd_exec_event_action(EventdPluginContext *context, const gchar *config_id, EventdEvent *event)
+_eventd_exec_event_action(EventdPluginContext *context, EventdPluginAction *action, EventdEvent *event)
 {
-    const FormatString *command;
     gchar *cmd;
     GError *error = NULL;
 
-    command = g_hash_table_lookup(context->events, config_id);
-    if ( command == NULL )
-        return;
-
-    cmd = evhelpers_format_string_get_string(command, event, NULL, NULL);
+    cmd = evhelpers_format_string_get_string(action->command, event, NULL, NULL);
 
     if ( ! g_spawn_command_line_async(cmd, &error) )
     {
@@ -128,7 +139,7 @@ eventd_plugin_get_interface(EventdPluginInterface *interface)
     eventd_plugin_interface_add_init_callback(interface, _eventd_exec_init);
     eventd_plugin_interface_add_uninit_callback(interface, _eventd_exec_uninit);
 
-    eventd_plugin_interface_add_event_parse_callback(interface, _eventd_exec_event_parse);
+    eventd_plugin_interface_add_action_parse_callback(interface, _eventd_exec_action_parse);
     eventd_plugin_interface_add_config_reset_callback(interface, _eventd_exec_config_reset);
 
     eventd_plugin_interface_add_event_action_callback(interface, _eventd_exec_event_action);

@@ -58,7 +58,7 @@ static const gchar * const _eventd_nd_corner_anchors[] = {
 
 struct _EventdPluginContext {
     EventdNdInterface interface;
-    GHashTable *events;
+    GSList *actions;
     EventdNdCornerAnchor bubble_anchor;
     gboolean bubble_reverse;
     gint bubble_margin;
@@ -124,8 +124,6 @@ _eventd_nd_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *interf
     context->interface.update_notifications = _eventd_nd_update_notifications;
     context->interface.remove_display = _eventd_nd_backend_remove_display;
 
-    context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, eventd_nd_style_free);
-
     /* default bubble position */
     context->bubble_anchor    = EVENTD_ND_ANCHOR_TOP_RIGHT;
     context->bubble_margin    = 13;
@@ -151,8 +149,6 @@ _eventd_nd_uninit(EventdPluginContext *context)
     eventd_nd_cairo_uninit();
 
     g_queue_free(context->queue);
-
-    g_hash_table_unref(context->events);
 
     g_hash_table_unref(context->displays);
     g_hash_table_unref(context->backends);
@@ -357,31 +353,33 @@ _eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
     }
 }
 
-static void
-_eventd_nd_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile *config_file)
+static EventdPluginAction *
+_eventd_nd_action_parse(EventdPluginContext *context, GKeyFile *config_file)
 {
     gboolean disable;
-    EventdNdStyle *style = NULL;
 
     if ( ! g_key_file_has_group(config_file, "Notification") )
-        return;
+        return NULL;
 
     if ( evhelpers_config_key_file_get_boolean(config_file, "Notification", "Disable", &disable) < 0 )
-        return;
+        return NULL;
 
-    if ( ! disable )
-    {
-        style = eventd_nd_style_new(context->style);
-        eventd_nd_style_update(style, config_file, &context->max_width, &context->max_height);
-    }
+    if ( disable )
+        return NULL;
 
-    g_hash_table_insert(context->events, g_strdup(id), style);
+    EventdNdStyle *style;
+    style = eventd_nd_style_new(context->style);
+    eventd_nd_style_update(style, config_file, &context->max_width, &context->max_height);
+
+    context->actions = g_slist_prepend(context->actions, style);
+    return style;
 }
 
 static void
 _eventd_nd_config_reset(EventdPluginContext *context)
 {
-    g_hash_table_remove_all(context->events);
+    g_slist_free_full(context->actions, eventd_nd_style_free);
+    context->actions = NULL;
 }
 
 
@@ -538,15 +536,9 @@ _eventd_nd_event_ended(EventdEvent *event, EventdEventEndReason reason, EventdNd
 }
 
 static void
-_eventd_nd_event_action(EventdPluginContext *context, const gchar *config_id, EventdEvent *event)
+_eventd_nd_event_action(EventdPluginContext *context, EventdNdStyle *style, EventdEvent *event)
 {
-    EventdNdStyle *style;
-
     if ( g_hash_table_size(context->displays) == 0 )
-        return;
-
-    style = g_hash_table_lookup(context->events, config_id);
-    if ( style == NULL )
         return;
 
     EventdNdNotification *notification;
@@ -587,7 +579,7 @@ eventd_plugin_get_interface(EventdPluginInterface *interface)
     eventd_plugin_interface_add_control_command_callback(interface, _eventd_nd_control_command);
 
     eventd_plugin_interface_add_global_parse_callback(interface, _eventd_nd_global_parse);
-    eventd_plugin_interface_add_event_parse_callback(interface, _eventd_nd_event_parse);
+    eventd_plugin_interface_add_action_parse_callback(interface, _eventd_nd_action_parse);
     eventd_plugin_interface_add_config_reset_callback(interface, _eventd_nd_config_reset);
 
     eventd_plugin_interface_add_event_action_callback(interface, _eventd_nd_event_action);

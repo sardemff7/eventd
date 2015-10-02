@@ -34,7 +34,7 @@
 
 struct _EventdPluginContext {
     GHashTable *accounts;
-    GHashTable *events;
+    GSList *actions;
 };
 
 typedef struct {
@@ -57,10 +57,10 @@ typedef struct {
     GList *pending_messages;
 } EventdImConv;
 
-typedef struct {
+struct _EventdPluginAction {
     EventdImConv *conv;
     FormatString *message;
-} EventdImAction;
+};
 
 static PurpleEventLoopUiOps
 _eventd_im_ui_ops = {
@@ -120,11 +120,11 @@ _eventd_im_action_free(gpointer data)
     if ( data == NULL )
         return;
 
-    EventdImAction *action = data;
+    EventdPluginAction *action = data;
 
     evhelpers_format_string_unref(action->message);
 
-    g_slice_free(EventdImAction, action);
+    g_slice_free(EventdPluginAction, action);
 }
 
 static void
@@ -236,7 +236,6 @@ _eventd_im_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *interf
     context = g_new0(EventdPluginContext, 1);
 
     context->accounts = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_im_account_free);
-    context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_im_action_free);
 
     purple_signal_connect(purple_connections_get_handle(), "signed-on", context, PURPLE_CALLBACK(_eventd_im_signed_on_callback), context);
     purple_signal_connect(purple_connections_get_handle(), "error-changed", context, PURPLE_CALLBACK(_eventd_im_error_callback), context);
@@ -249,7 +248,6 @@ static void
 _eventd_im_uninit(EventdPluginContext *context)
 {
     g_hash_table_unref(context->accounts);
-    g_hash_table_unref(context->events);
 
     g_free(context);
 }
@@ -342,21 +340,18 @@ _eventd_im_global_parse(EventdPluginContext *context, GKeyFile *config_file)
     g_free(names);
 }
 
-static void
-_eventd_im_event_parse(EventdPluginContext *context, const gchar *config_id, GKeyFile *config_file)
+static EventdPluginAction *
+_eventd_im_action_parse(EventdPluginContext *context, GKeyFile *config_file)
 {
     if ( ! g_key_file_has_group(config_file, "IM") )
-        return;
+        return NULL;
 
     gboolean disable;
     if ( evhelpers_config_key_file_get_boolean(config_file, "IM", "Disable", &disable) < 0 )
-        return;
+        return NULL;
 
     if ( disable )
-    {
-        g_hash_table_insert(context->events, g_strdup(config_id), NULL);
-        return;
-    }
+        return NULL;
 
     FormatString *message = NULL;
     gchar *account_name = NULL;
@@ -393,24 +388,25 @@ _eventd_im_event_parse(EventdPluginContext *context, const gchar *config_id, GKe
         room = NULL;
     }
 
-    EventdImAction *action;
-    action = g_slice_new(EventdImAction);
+    EventdPluginAction *action;
+    action = g_slice_new(EventdPluginAction);
     action->conv = conv;
     action->message = message;
 
-    g_hash_table_insert(context->events, g_strdup(config_id), action);
-    return;
+    return action;
 
 error:
     g_free(room);
     g_free(account_name);
     evhelpers_format_string_unref(message);
+    return NULL;
 }
 
 static void
 _eventd_im_config_reset(EventdPluginContext *context)
 {
-    g_hash_table_remove_all(context->events);
+    g_slist_free_full(context->actions, _eventd_im_action_free);
+    context->actions = NULL;
     g_hash_table_remove_all(context->accounts);
 }
 
@@ -449,14 +445,8 @@ _eventd_im_stop(EventdPluginContext *context)
  */
 
 static void
-_eventd_im_event_action(EventdPluginContext *context, const gchar *config_id, EventdEvent *event)
+_eventd_im_event_action(EventdPluginContext *context, EventdPluginAction *action, EventdEvent *event)
 {
-    EventdImAction *action;
-
-    action = g_hash_table_lookup(context->events, config_id);
-    if ( action == NULL )
-        return;
-
     EventdImConv *conv = action->conv;
     EventdImAccount *account = conv->account;
 
@@ -509,7 +499,7 @@ eventd_plugin_get_interface(EventdPluginInterface *interface)
     eventd_plugin_interface_add_uninit_callback(interface, _eventd_im_uninit);
 
     eventd_plugin_interface_add_global_parse_callback(interface, _eventd_im_global_parse);
-    eventd_plugin_interface_add_event_parse_callback(interface, _eventd_im_event_parse);
+    eventd_plugin_interface_add_action_parse_callback(interface, _eventd_im_action_parse);
     eventd_plugin_interface_add_config_reset_callback(interface, _eventd_im_config_reset);
 
     eventd_plugin_interface_add_start_callback(interface, _eventd_im_start);

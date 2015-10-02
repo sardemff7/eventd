@@ -38,7 +38,7 @@
 
 #include "server.h"
 
-struct _EventdRelayServer {
+struct _EventdPluginAction {
     EventcConnection *connection;
     LibeventdReconnectHandler *reconnect;
 };

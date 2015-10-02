@@ -23,7 +23,7 @@
 #ifndef __EVENTD_PLUGINS_RELAY_SERVER_H__
 #define __EVENTD_PLUGINS_RELAY_SERVER_H__
 
-typedef struct _EventdRelayServer EventdRelayServer;
+typedef struct _EventdPluginAction EventdRelayServer;
 
 EventdRelayServer *eventd_relay_server_new(void);
 EventdRelayServer *eventd_relay_server_new_for_domain(const gchar *domain);

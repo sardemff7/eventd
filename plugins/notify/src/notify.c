@@ -35,29 +35,29 @@
 #include "image.h"
 
 struct _EventdPluginContext {
-    GHashTable *events;
+    GSList *actions;
 };
 
-typedef struct {
+struct _EventdPluginAction {
     FormatString *title;
     FormatString *message;
     Filename *image;
     Filename *icon;
     gdouble scale;
     NotifyUrgency urgency;
-} EventdLibnotifyEvent;
+};
 
 
 /*
  * Event contents helper
  */
 
-static EventdLibnotifyEvent *
+static EventdPluginAction *
 _eventd_libnotify_event_new(FormatString *title, FormatString *message, Filename *image, Filename *icon, gint64 scale, gchar *urgency)
 {
-    EventdLibnotifyEvent *event;
+    EventdPluginAction *event;
 
-    event = g_new0(EventdLibnotifyEvent, 1);
+    event = g_slice_new0(EventdPluginAction);
 
     event->title = title;
     event->message = message;
@@ -79,16 +79,16 @@ _eventd_libnotify_event_new(FormatString *title, FormatString *message, Filename
 }
 
 static void
-_eventd_libnotify_event_free(gpointer data)
+_eventd_libnotify_action_free(gpointer data)
 {
-    EventdLibnotifyEvent *event = data;
+    EventdPluginAction *event = data;
 
     evhelpers_filename_unref(event->image);
     evhelpers_filename_unref(event->icon);
     evhelpers_format_string_unref(event->message);
     evhelpers_format_string_unref(event->title);
 
-    g_free(event);
+    g_slice_free(EventdPluginAction, event);
 }
 
 
@@ -124,16 +124,12 @@ _eventd_libnotify_init(EventdPluginCoreContext *core, EventdPluginCoreInterface 
 
     context = g_new0(EventdPluginContext, 1);
 
-    context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_libnotify_event_free);
-
     return context;
 }
 
 static void
 _eventd_libnotify_uninit(EventdPluginContext *context)
 {
-    g_hash_table_unref(context->events);
-
     g_free(context);
 
     notify_uninit();
@@ -144,11 +140,20 @@ _eventd_libnotify_uninit(EventdPluginContext *context)
  * Configuration interface
  */
 
-static void
-_eventd_libnotify_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile *config_file)
+static EventdPluginAction *
+_eventd_libnotify_action_parse(EventdPluginContext *context, GKeyFile *config_file)
 {
     gboolean disable;
-    EventdLibnotifyEvent *libnotify_event = NULL;
+
+    if ( ! g_key_file_has_group(config_file, "Libnotify") )
+        return NULL;
+
+    if ( evhelpers_config_key_file_get_boolean(config_file, "Libnotify", "Disable", &disable) < 0 )
+        return NULL;
+
+    if ( disable )
+        return NULL;
+
     FormatString *title = NULL;
     FormatString *message = NULL;
     Filename *image = NULL;
@@ -156,34 +161,27 @@ _eventd_libnotify_event_parse(EventdPluginContext *context, const gchar *id, GKe
     gint64 scale;
     gchar *urgency = NULL;
 
-    if ( ! g_key_file_has_group(config_file, "Libnotify") )
-        return;
+    if ( evhelpers_config_key_file_get_locale_format_string_with_default(config_file, "Libnotify", "Title", NULL, "${summary}", &title) < 0 )
+        goto skip;
+    if ( evhelpers_config_key_file_get_locale_format_string_with_default(config_file, "Libnotify", "Message", NULL, "${body}", &message) < 0 )
+        goto skip;
+    if ( evhelpers_config_key_file_get_filename_with_default(config_file, "Libnotify", "Image", "image", &image) < 0 )
+        goto skip;
+    if ( evhelpers_config_key_file_get_filename_with_default(config_file, "Libnotify", "Icon", "icon", &icon) < 0 )
+        goto skip;
+    if ( evhelpers_config_key_file_get_int_with_default(config_file, "Libnotify", "OverlayScale", 50, &scale) < 0 )
+        goto skip;
+    if ( evhelpers_config_key_file_get_string_with_default(config_file, "Libnotify", "Urgency", "normal", &urgency) < 0 )
+        goto skip;
 
-    if ( evhelpers_config_key_file_get_boolean(config_file, "Libnotify", "Disable", &disable) < 0 )
-        return;
+    EventdPluginAction *action;
+    action = _eventd_libnotify_event_new(title, message, image, icon, scale, urgency);
+    title = message = NULL;
+    image = icon = NULL;
+    urgency = NULL;
 
-    if ( ! disable )
-    {
-        if ( evhelpers_config_key_file_get_locale_format_string_with_default(config_file, "Libnotify", "Title", NULL, "${summary}", &title) < 0 )
-            goto skip;
-        if ( evhelpers_config_key_file_get_locale_format_string_with_default(config_file, "Libnotify", "Message", NULL, "${body}", &message) < 0 )
-            goto skip;
-        if ( evhelpers_config_key_file_get_filename_with_default(config_file, "Libnotify", "Image", "image", &image) < 0 )
-            goto skip;
-        if ( evhelpers_config_key_file_get_filename_with_default(config_file, "Libnotify", "Icon", "icon", &icon) < 0 )
-            goto skip;
-        if ( evhelpers_config_key_file_get_int_with_default(config_file, "Libnotify", "OverlayScale", 50, &scale) < 0 )
-            goto skip;
-        if ( evhelpers_config_key_file_get_string_with_default(config_file, "Libnotify", "Urgency", "normal", &urgency) < 0 )
-            goto skip;
-
-        libnotify_event = _eventd_libnotify_event_new(title, message, image, icon, scale, urgency);
-        title = message = NULL;
-        image = icon = NULL;
-        urgency = NULL;
-    }
-
-    g_hash_table_insert(context->events, g_strdup(id), libnotify_event);
+    context->actions = g_slist_prepend(context->actions, action);
+    return action;
 
 skip:
     g_free(urgency);
@@ -191,12 +189,14 @@ skip:
     evhelpers_filename_unref(image);
     evhelpers_format_string_unref(message);
     evhelpers_format_string_unref(title);
+    return NULL;
 }
 
 static void
 _eventd_libnotify_config_reset(EventdPluginContext *context)
 {
-    g_hash_table_remove_all(context->events);
+    g_slist_free_full(context->actions, _eventd_libnotify_action_free);
+    context->actions = NULL;
 }
 
 
@@ -205,24 +205,19 @@ _eventd_libnotify_config_reset(EventdPluginContext *context)
  */
 
 static void
-_eventd_libnotify_event_action(EventdPluginContext *context, const gchar *config_id, EventdEvent *event)
+_eventd_libnotify_event_action(EventdPluginContext *context, EventdPluginAction *action, EventdEvent *event)
 {
     GError *error = NULL;
-    EventdLibnotifyEvent *libnotify_event;
     gchar *title;
     gchar *message;
     gchar *icon_uri = NULL;
     NotifyNotification *notification = NULL;
     GdkPixbuf *image;
 
-    libnotify_event = g_hash_table_lookup(context->events, config_id);
-    if ( libnotify_event == NULL )
-        return;
+    title = evhelpers_format_string_get_string(action->title, event, NULL, NULL);
+    message = evhelpers_format_string_get_string(action->message, event, NULL, NULL);
 
-    title = evhelpers_format_string_get_string(libnotify_event->title, event, NULL, NULL);
-    message = evhelpers_format_string_get_string(libnotify_event->message, event, NULL, NULL);
-
-    image = eventd_libnotify_get_image(event, libnotify_event->image, libnotify_event->icon, libnotify_event->scale, &icon_uri);
+    image = eventd_libnotify_get_image(event, action->image, action->icon, action->scale, &icon_uri);
 
     notification = notify_notification_new(title, message, icon_uri);
     g_free(icon_uri);
@@ -235,7 +230,7 @@ _eventd_libnotify_event_action(EventdPluginContext *context, const gchar *config
         g_object_unref(image);
     }
 
-    notify_notification_set_urgency(notification, libnotify_event->urgency);
+    notify_notification_set_urgency(notification, action->urgency);
     notify_notification_set_timeout(notification, eventd_event_get_timeout(event));
 
     if ( ! notify_notification_show(notification, &error) )
@@ -258,7 +253,7 @@ eventd_plugin_get_interface(EventdPluginInterface *interface)
     eventd_plugin_interface_add_init_callback(interface, _eventd_libnotify_init);
     eventd_plugin_interface_add_uninit_callback(interface, _eventd_libnotify_uninit);
 
-    eventd_plugin_interface_add_event_parse_callback(interface, _eventd_libnotify_event_parse);
+    eventd_plugin_interface_add_action_parse_callback(interface, _eventd_libnotify_action_parse);
     eventd_plugin_interface_add_config_reset_callback(interface, _eventd_libnotify_config_reset);
 
     eventd_plugin_interface_add_event_action_callback(interface, _eventd_libnotify_event_action);

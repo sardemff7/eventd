@@ -45,10 +45,10 @@ struct EventdPluginInterface {
     EventdPluginControlCommandFunc control_command;
 
     EventdPluginGlobalParseFunc global_parse;
-    EventdPluginEventParseFunc event_parse;
+    EventdPluginActionParseFunc action_parse;
     EventdPluginSimpleFunc config_reset;
 
-    EventdPluginEventDispatchFunc event_action;
+    EventdPluginEventActionFunc event_action;
 };
 
 #endif /* __EVENTD_EVENTD_PLUGIN_PRIVATE_H__ */

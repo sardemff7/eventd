@@ -30,6 +30,7 @@ typedef struct _EventdPluginCoreInterface EventdPluginCoreInterface;
 
 typedef struct _EventdPluginContext EventdPluginContext;
 typedef struct EventdPluginInterface EventdPluginInterface;
+typedef struct _EventdPluginAction EventdPluginAction;
 
 typedef enum {
 	EVENTD_PLUGIN_COMMAND_STATUS_OK            = 0,
@@ -49,8 +50,8 @@ typedef void (*EventdPluginSimpleFunc)(EventdPluginContext *context);
 typedef GOptionGroup *(*EventdPluginGetOptionGroupFunc)(EventdPluginContext *context);
 typedef EventdPluginCommandStatus (*EventdPluginControlCommandFunc)(EventdPluginContext *context, guint64 argc, const gchar * const *argv, gchar **status);
 typedef void (*EventdPluginGlobalParseFunc)(EventdPluginContext *context, GKeyFile *key_file);
-typedef void (*EventdPluginEventParseFunc)(EventdPluginContext *context, const gchar *config_id, GKeyFile *key_file);
-typedef void (*EventdPluginEventDispatchFunc)(EventdPluginContext *context, const gchar *config_id, EventdEvent *event);
+typedef EventdPluginAction *(*EventdPluginActionParseFunc)(EventdPluginContext *context, GKeyFile *key_file);
+typedef void (*EventdPluginEventActionFunc)(EventdPluginContext *context, EventdPluginAction *action, EventdEvent *event);
 
 typedef void (*EventdPluginGetInterfaceFunc)(EventdPluginInterface *interface);
 
@@ -65,10 +66,10 @@ void eventd_plugin_interface_add_stop_callback(EventdPluginInterface *interface,
 void eventd_plugin_interface_add_control_command_callback(EventdPluginInterface *interface, EventdPluginControlCommandFunc callback);
 
 void eventd_plugin_interface_add_global_parse_callback(EventdPluginInterface *interface, EventdPluginGlobalParseFunc callback);
-void eventd_plugin_interface_add_event_parse_callback(EventdPluginInterface *interface, EventdPluginEventParseFunc callback);
+void eventd_plugin_interface_add_action_parse_callback(EventdPluginInterface *interface, EventdPluginActionParseFunc callback);
 void eventd_plugin_interface_add_config_reset_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback);
 
-void eventd_plugin_interface_add_event_action_callback(EventdPluginInterface *interface, EventdPluginEventDispatchFunc callback);
+void eventd_plugin_interface_add_event_action_callback(EventdPluginInterface *interface, EventdPluginEventActionFunc callback);
 
 
 /*

@@ -35,8 +35,12 @@
 
 
 struct _EventdPluginContext {
-    GHashTable *events;
+    GSList *actions;
     EventdSoundPulseaudioContext *pulseaudio;
+};
+
+struct _EventdPluginAction {
+    Filename *sound;
 };
 
 /*
@@ -111,6 +115,15 @@ out:
     sf_close(f);
 }
 
+static void
+_eventd_sound_action_free(gpointer data)
+{
+    EventdPluginAction *action = data;
+
+    evhelpers_filename_unref(action->sound);
+
+    g_slice_free(EventdPluginAction, action);
+}
 
 /*
  * Initialization interface
@@ -122,8 +135,6 @@ _eventd_sound_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *int
     EventdPluginContext *context;
 
     context = g_new0(EventdPluginContext, 1);
-
-    context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)evhelpers_filename_unref);
 
     context->pulseaudio = eventd_sound_pulseaudio_init();
 
@@ -159,31 +170,36 @@ _eventd_sound_stop(EventdPluginContext *context)
  * Configuration interface
  */
 
-static void
-_eventd_sound_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile *config_file)
+static EventdPluginAction *
+_eventd_sound_action_parse(EventdPluginContext *context, GKeyFile *config_file)
 {
     gboolean disable;
     Filename *sound = NULL;
 
     if ( ! g_key_file_has_group(config_file, "Sound") )
-        return;
+        return NULL;
 
     if ( evhelpers_config_key_file_get_boolean(config_file, "Sound", "Disable", &disable) < 0 )
-        return;
+        return NULL;
 
-    if ( ! disable )
-    {
-        if ( evhelpers_config_key_file_get_filename_with_default(config_file, "Sound", "File", "sound-file", &sound) < 0 )
-            return;
-    }
+    if ( disable )
+        return NULL;
+    if ( evhelpers_config_key_file_get_filename_with_default(config_file, "Sound", "File", "sound-file", &sound) < 0 )
+        return NULL;
 
-    g_hash_table_insert(context->events, g_strdup(id), sound);
+    EventdPluginAction *action;
+    action = g_slice_new(EventdPluginAction);
+    action->sound = sound;
+
+    context->actions = g_slist_prepend(context->actions, sound);
+    return action;
 }
 
 static void
 _eventd_sound_config_reset(EventdPluginContext *context)
 {
-    g_hash_table_remove_all(context->events);
+    g_slist_free_full(context->actions, _eventd_sound_action_free);
+    context->actions = NULL;
 }
 
 
@@ -192,9 +208,8 @@ _eventd_sound_config_reset(EventdPluginContext *context)
  */
 
 static void
-_eventd_sound_event_action(EventdPluginContext *context, const gchar *config_id, EventdEvent *event)
+_eventd_sound_event_action(EventdPluginContext *context, EventdPluginAction *action, EventdEvent *event)
 {
-    Filename *sound;
     gchar *file;
     gpointer data = NULL;
     gsize length = 0;
@@ -202,11 +217,7 @@ _eventd_sound_event_action(EventdPluginContext *context, const gchar *config_id,
     guint32 rate = 0;
     guint8 channels = 0;
 
-    sound = g_hash_table_lookup(context->events, config_id);
-    if ( sound == NULL )
-        return;
-
-    if ( evhelpers_filename_get_path(sound, event, "sounds", NULL, &file) )
+    if ( evhelpers_filename_get_path(action->sound, event, "sounds", NULL, &file) )
     {
         if ( file != NULL )
             _eventd_sound_read_file(file, &data, &length, &format, &rate, &channels);
@@ -233,7 +244,7 @@ eventd_plugin_get_interface(EventdPluginInterface *interface)
     eventd_plugin_interface_add_start_callback(interface, _eventd_sound_start);
     eventd_plugin_interface_add_stop_callback(interface, _eventd_sound_stop);
 
-    eventd_plugin_interface_add_event_parse_callback(interface, _eventd_sound_event_parse);
+    eventd_plugin_interface_add_action_parse_callback(interface, _eventd_sound_action_parse);
     eventd_plugin_interface_add_config_reset_callback(interface, _eventd_sound_config_reset);
 
     eventd_plugin_interface_add_event_action_callback(interface, _eventd_sound_event_action);

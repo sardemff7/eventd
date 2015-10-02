@@ -36,11 +36,25 @@
 #include <libeventd-helpers-config.h>
 
 struct _EventdPluginContext {
-    GHashTable *events;
+    GSList *actions;
+};
+
+struct _EventdPluginAction {
+    FormatString *message;
 };
 
 #define BUFFER_SIZE 2000
 
+
+static void
+_eventd_tts_action_free(gpointer data)
+{
+    EventdPluginAction *action = data;
+
+    evhelpers_format_string_unref(action->message);
+
+    g_slice_free(EventdPluginAction, action);
+}
 
 /*
  * Initialization interface
@@ -62,16 +76,12 @@ _eventd_tts_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *inter
 
     context = g_new0(EventdPluginContext, 1);
 
-    context->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)evhelpers_format_string_unref);
-
     return context;
 }
 
 static void
 _eventd_tts_uninit(EventdPluginContext *context)
 {
-    g_hash_table_unref(context->events);
-
     espeak_Terminate();
 
     g_free(context);
@@ -93,31 +103,38 @@ _eventd_tts_stop(EventdPluginContext *context)
  * Configuration interface
  */
 
-static void
-_eventd_tts_event_parse(EventdPluginContext *context, const gchar *id, GKeyFile *config_file)
+static EventdPluginAction *
+_eventd_tts_action_parse(EventdPluginContext *context, GKeyFile *config_file)
 {
     gboolean disable;
     FormatString *message = NULL;
 
     if ( ! g_key_file_has_group(config_file, "TTS") )
-        return;
+        return NULL;
 
     if ( evhelpers_config_key_file_get_boolean(config_file, "TTS", "Disable", &disable) < 0 )
-        return;
+        return NULL;
 
-    if ( ! disable )
-    {
-        if ( evhelpers_config_key_file_get_locale_format_string_with_default(config_file, "TTS", "Message", NULL, "<voice name=\"${message-lang}\">${message}</voice>", &message) < 0 )
-            return;
-    }
+    if ( disable )
+        return NULL;
 
-    g_hash_table_insert(context->events, g_strdup(id), message);
+    if ( evhelpers_config_key_file_get_locale_format_string_with_default(config_file, "TTS", "Message", NULL, "<voice name=\"${message-lang}\">${message}</voice>", &message) < 0 )
+        return NULL;
+
+    EventdPluginAction *action;
+    action = g_slice_new(EventdPluginAction);
+    action->message = message;
+
+    context->actions = g_slist_prepend(context->actions, action);
+
+    return action;
 }
 
 static void
 _eventd_tts_config_reset(EventdPluginContext *context)
 {
-    g_hash_table_remove_all(context->events);
+    g_slist_free_full(context->actions, _eventd_tts_action_free);
+    context->actions = NULL;
 }
 
 
@@ -126,17 +143,12 @@ _eventd_tts_config_reset(EventdPluginContext *context)
  */
 
 static void
-_eventd_tts_event_action(EventdPluginContext *context, const gchar *config_id, EventdEvent *event)
+_eventd_tts_event_action(EventdPluginContext *context, EventdPluginAction *action, EventdEvent *event)
 {
-    const FormatString *message;
     gchar *msg;
     espeak_ERROR error;
 
-    message = g_hash_table_lookup(context->events, config_id);
-    if ( message == NULL )
-        return;
-
-    msg = evhelpers_format_string_get_string(message, event, NULL, NULL);
+    msg = evhelpers_format_string_get_string(action->message, event, NULL, NULL);
 
     error = espeak_Synth(msg, strlen(msg)+1, 0, POS_CHARACTER, 0, espeakCHARS_UTF8|espeakSSML, NULL, NULL);
 
@@ -169,7 +181,7 @@ eventd_plugin_get_interface(EventdPluginInterface *interface)
 
     eventd_plugin_interface_add_stop_callback(interface, _eventd_tts_stop);
 
-    eventd_plugin_interface_add_event_parse_callback(interface, _eventd_tts_event_parse);
+    eventd_plugin_interface_add_action_parse_callback(interface, _eventd_tts_action_parse);
     eventd_plugin_interface_add_config_reset_callback(interface, _eventd_tts_config_reset);
 
     eventd_plugin_interface_add_event_action_callback(interface, _eventd_tts_event_action);

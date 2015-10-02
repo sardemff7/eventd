@@ -56,7 +56,7 @@ static const gchar * const _eventd_nd_style_icon_placements[] = {
     [EVENTD_ND_STYLE_ICON_PLACEMENT_FOREGROUND] = "foreground",
 };
 
-struct _EventdNdStyle {
+struct _EventdPluginAction {
     EventdNdStyle *parent;
 
     struct {

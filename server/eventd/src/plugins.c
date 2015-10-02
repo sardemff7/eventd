@@ -43,7 +43,13 @@ typedef struct {
     EventdPluginInterface interface;
 } EventdPlugin;
 
+typedef struct {
+    EventdPlugin *plugin;
+    EventdPluginAction *action;
+} EventdPluginsAction;
+
 static GHashTable *plugins = NULL;
+static GHashTable *actions = NULL;
 
 
 static void
@@ -154,12 +160,24 @@ _eventd_plugins_load_dir(EventdPluginCoreContext *core, EventdPluginCoreInterfac
         plugin->module = module;
         get_interface(&plugin->interface);
 
+        if ( ! (
+                ( ( plugin->interface.action_parse == NULL ) && ( plugin->interface.event_action == NULL ) )
+                ||
+                ( ( plugin->interface.action_parse != NULL ) && ( plugin->interface.event_action != NULL ) )
+            ) )
+        {
+            g_warning("Plugin '%s' should define either both or neither of action_parse/event_action", *id);
+            g_module_close(plugin->module);
+            g_free(plugin);
+            continue;
+        }
+
         if ( plugin->interface.init != NULL )
         {
             plugin->context = plugin->interface.init(core, interface);
             if ( plugin->context == NULL )
             {
-                g_warning("Couldn't load plugin '%s'", file);
+                g_warning("Couldn't load plugin '%s'", *id);
                 g_module_close(plugin->module);
                 g_free(plugin);
                 continue;
@@ -182,6 +200,18 @@ _eventd_plugins_plugin_free(gpointer data)
     g_free(plugin);
 }
 
+static void
+_eventd_plugins_action_free(gpointer data)
+{
+    g_slice_free(EventdPluginsAction, data);
+}
+
+static void
+_eventd_plugins_action_free_list(gpointer data)
+{
+    g_list_free_full(data, _eventd_plugins_action_free);
+}
+
 void
 eventd_plugins_load(EventdPluginCoreContext *core, EventdPluginCoreInterface *interface)
 {
@@ -199,6 +229,7 @@ eventd_plugins_load(EventdPluginCoreContext *core, EventdPluginCoreInterface *in
     }
 
     plugins = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, _eventd_plugins_plugin_free);
+    actions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_plugins_action_free_list);
 
     env_whitelist = g_getenv("EVENTD_PLUGINS_WHITELIST");
     if ( env_whitelist != NULL )
@@ -240,6 +271,10 @@ eventd_plugins_unload(void)
 {
     if ( plugins == NULL )
         return;
+
+    g_hash_table_unref(actions);
+    actions = NULL;
+
     g_hash_table_unref(plugins);
     plugins = NULL;
 }
@@ -346,27 +381,40 @@ eventd_plugins_global_parse_all(GKeyFile *config_file)
 void
 eventd_plugins_event_parse_all(const gchar *event_id, GKeyFile *config_file)
 {
+    GList *plugins_actions = NULL;
     GHashTableIter iter;
     const gchar *id;
     EventdPlugin *plugin;
     g_hash_table_iter_init(&iter, plugins);
     while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&plugin) )
     {
-        if ( plugin->interface.event_parse != NULL )
-            plugin->interface.event_parse(plugin->context, event_id, config_file);
+        if ( plugin->interface.action_parse != NULL )
+        {
+            EventdPluginAction *action;
+            action = plugin->interface.action_parse(plugin->context, config_file);
+            if ( action == NULL )
+                continue;
+
+            EventdPluginsAction *action_;
+            action_ = g_slice_new(EventdPluginsAction);
+            action_->plugin = plugin;
+            action_->action = action;
+
+            plugins_actions = g_list_prepend(plugins_actions, action_);
+        }
     }
+    if ( plugins_actions != NULL )
+        g_hash_table_insert(actions, g_strdup(event_id), plugins_actions);
 }
 
 void
 eventd_plugins_event_action_all(const gchar *config_id, EventdEvent *event)
 {
-    GHashTableIter iter;
-    const gchar *id;
-    EventdPlugin *plugin;
-    g_hash_table_iter_init(&iter, plugins);
-    while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&plugin) )
+    GList *plugins_actions;
+    plugins_actions = g_hash_table_lookup(actions, config_id);
+    for ( ; plugins_actions != NULL ; plugins_actions = g_list_next(plugins_actions) )
     {
-        if ( plugin->interface.event_action != NULL )
-            plugin->interface.event_action(plugin->context, config_id, event);
+        EventdPluginsAction *action = plugins_actions->data;
+        action->plugin->interface.event_action(action->plugin->context, action->action, event);
     }
 }

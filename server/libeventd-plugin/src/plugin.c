@@ -61,6 +61,12 @@
  */
 
 /**
+ * EventdPluginAction:
+ *
+ * A plugin-defined structure which holds the necessary data to perform an action.
+ */
+
+/**
  * EventdPluginSimpleFunc:
  * @context: the plugin-specific context
  */
@@ -183,18 +189,19 @@ EVENTD_EXPORT void eventd_plugin_interface_add_control_command_callback(EventdPl
 /**
  * EventdPluginGlobalParseFunc:
  * @context: the plugin-specific context
- * @key_file (transfer none): the global configuration
+ * @key_file (transfer none): the global configuration file
  *
  * This callback handles global configuration parsing for the plugin.
  */
 
 /**
- * EventdPluginEventParseFunc:
+ * EventdPluginActionParseFunc:
  * @context: the plugin-specific context
- * @config_id: the name of the configuration
- * @key_file (transfer none): the global configuration
+ * @key_file (transfer none): the action configuration file
  *
- * This callback handles event-specific configuration parsing.
+ * This callback handles action configuration parsing.
+ *
+ * Returns: (transfer full) (nullable): an #EventdPluginAction or %NULL
  */
 
 /**
@@ -203,18 +210,18 @@ EVENTD_EXPORT void eventd_plugin_interface_add_control_command_callback(EventdPl
  * @callback: (scope async): a function to call during global configuration parsing
  *
  * This callback is used to handle global configuration (as opposed to
- * per-event configuration).
+ * action configuration).
  */
 EVENTD_EXPORT void eventd_plugin_interface_add_global_parse_callback(EventdPluginInterface *interface, EventdPluginGlobalParseFunc callback) { interface->global_parse = callback; }
 /**
- * eventd_plugin_interface_add_event_parse_callback:
+ * eventd_plugin_interface_add_action_parse_callback:
  * @interface: an #EventdPluginInterface
- * @callback: (scope async): a function to call during event-specific parsing
+ * @callback: (scope async): a function to call during action configuration parsing
  *
- * This callback is used to handle event-specific configuration (e.g., how to
+ * This callback is used to handle action configuration (e.g., how to
  * handle different urgencies of events).
  */
-EVENTD_EXPORT void eventd_plugin_interface_add_event_parse_callback(EventdPluginInterface *interface, EventdPluginEventParseFunc callback) { interface->event_parse = callback; }
+EVENTD_EXPORT void eventd_plugin_interface_add_action_parse_callback(EventdPluginInterface *interface, EventdPluginActionParseFunc callback) { interface->action_parse = callback; }
 /**
  * eventd_plugin_interface_add_config_reset_callback:
  * @interface: an #EventdPluginInterface
@@ -225,9 +232,9 @@ EVENTD_EXPORT void eventd_plugin_interface_add_event_parse_callback(EventdPlugin
 EVENTD_EXPORT void eventd_plugin_interface_add_config_reset_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback) { interface->config_reset = callback; }
 
 /**
- * EventdPluginEventDispatchFunc:
+ * EventdPluginEventActionFunc:
  * @context: the plugin-specific context
- * @config_id: the name of the configuration
+ * @action: (transfer none): the plugin action
  * @event: (transfer none): the dispatched event
  *
  * This callback handles incoming events.
@@ -243,4 +250,4 @@ EVENTD_EXPORT void eventd_plugin_interface_add_config_reset_callback(EventdPlugi
  * Note that currently, this is called for every event; in the future, it will
  * only be called for events which have configuration for the plugin.
  */
-EVENTD_EXPORT void eventd_plugin_interface_add_event_action_callback(EventdPluginInterface *interface, EventdPluginEventDispatchFunc callback) { interface->event_action = callback; }
+EVENTD_EXPORT void eventd_plugin_interface_add_event_action_callback(EventdPluginInterface *interface, EventdPluginEventActionFunc callback) { interface->event_action = callback; }
