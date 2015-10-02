@@ -1,7 +1,7 @@
 /*
  * eventd - Small daemon to act on remote or local events
  *
- * Copyright © 2011-2012 Quentin "Sardem FF7" Glidic
+ * Copyright © 2011-2015 Quentin "Sardem FF7" Glidic
  *
  * This file is part of eventd.
  *
@@ -30,19 +30,12 @@
 #include <libeventd-helpers-config.h>
 #include <libeventd-helpers-reconnect.h>
 
-#define PURPLE_GLIB_READ_COND  (G_IO_IN | G_IO_HUP | G_IO_ERR)
-#define PURPLE_GLIB_WRITE_COND (G_IO_OUT | G_IO_HUP | G_IO_ERR | G_IO_NVAL)
+#include "io.h"
 
 struct _EventdPluginContext {
     GList *accounts;
     GHashTable *events;
 };
-
-typedef struct {
-    PurpleInputFunction function;
-    guint result;
-    gpointer user_data;
-} EventdImGLibIOData;
 
 typedef struct {
     EventdPluginContext *context;
@@ -69,57 +62,11 @@ typedef struct {
     GList *pending_messages;
 } EventdImConv;
 
-static void
-_eventd_im_glib_io_free(gpointer data)
-{
-    g_slice_free(EventdImGLibIOData, data);
-}
-
-static gboolean
-_eventd_im_glib_io_invoke(GIOChannel *source, GIOCondition cond, gpointer user_data)
-{
-    EventdImGLibIOData *data = user_data;
-    PurpleInputCondition condition = 0;
-
-    if ( cond & PURPLE_GLIB_READ_COND )
-        condition |= PURPLE_INPUT_READ;
-    if ( cond & PURPLE_GLIB_WRITE_COND )
-        condition |= PURPLE_INPUT_WRITE;
-
-    data->function(data->user_data, g_io_channel_unix_get_fd(source), condition);
-
-    return TRUE;
-}
-
-static guint
-_eventd_im_glib_input_add(gint fd, PurpleInputCondition condition, PurpleInputFunction function, gpointer user_data)
-{
-    EventdImGLibIOData *data;
-    GIOChannel *channel;
-    GIOCondition cond = 0;
-
-    data = g_slice_new(EventdImGLibIOData);
-
-    data->function = function;
-    data->user_data = user_data;
-
-    if ( condition & PURPLE_INPUT_READ )
-        cond |= PURPLE_GLIB_READ_COND;
-    if ( condition & PURPLE_INPUT_WRITE )
-        cond |= PURPLE_GLIB_WRITE_COND;
-
-    channel = g_io_channel_unix_new(fd);
-    data->result = g_io_add_watch_full(channel, G_PRIORITY_DEFAULT, cond, _eventd_im_glib_io_invoke, data, _eventd_im_glib_io_free);
-    g_io_channel_unref(channel);
-
-    return data->result;
-}
-
 static PurpleEventLoopUiOps
 _eventd_im_ui_ops = {
     .timeout_add         = g_timeout_add,
     .timeout_remove      = g_source_remove,
-    .input_add           = _eventd_im_glib_input_add,
+    .input_add           = eventd_im_glib_input_add,
     .input_remove        = g_source_remove,
     .input_get_error     = NULL,
     .timeout_add_seconds = g_timeout_add_seconds,

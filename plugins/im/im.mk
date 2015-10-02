@@ -14,6 +14,8 @@ endif
 
 im_la_SOURCES = \
 	%D%/src/im.c \
+	%D%/src/io.h \
+	%D%/src/io.c \
 	$(null)
 
 im_la_CFLAGS = \
