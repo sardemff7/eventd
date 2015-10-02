@@ -36,7 +36,6 @@
 #include "events.h"
 
 struct _EventdEvents {
-    GHashTable *event_ids;
     GHashTable *events;
 };
 
@@ -46,6 +45,8 @@ typedef struct {
 } EventdEventsEventDataMatch;
 
 typedef struct {
+    gint64 timeout;
+
     gint64 importance;
     gchar *id;
 
@@ -54,10 +55,6 @@ typedef struct {
     GList *if_data_matches;
     GQuark *flags_whitelist;
     GQuark *flags_blacklist;
-} EventdEventsMatch;
-
-typedef struct {
-    gint64 timeout;
 } EventdEventsEvent;
 
 static gchar *
@@ -67,7 +64,7 @@ _eventd_events_events_get_name(const gchar *category, const gchar *name)
 }
 
 static void
-_eventd_events_match_data_match_free(gpointer data)
+_eventd_events_event_data_match_free(gpointer data)
 {
     EventdEventsEventDataMatch *data_match = data;
 
@@ -78,26 +75,32 @@ _eventd_events_match_data_match_free(gpointer data)
 }
 
 static void
-_eventd_events_match_free(gpointer data)
+_eventd_events_event_free(gpointer data)
 {
-    EventdEventsMatch *match = data;
+    if ( data == NULL )
+        return;
 
-    g_list_free_full(match->if_data_matches, _eventd_events_match_data_match_free);
-    g_strfreev(match->if_data);
+    EventdEventsEvent *self = data;
 
-    g_free(match->id);
+    g_list_free_full(self->if_data_matches, _eventd_events_event_data_match_free);
+    g_strfreev(self->if_data);
 
-    g_free(match);
+    g_free(self->id);
+
+    g_free(self);
 }
 
 static void
-_eventd_events_matches_free(gpointer data)
+_eventd_events_event_list_free(gpointer data)
 {
-    g_list_free_full(data, _eventd_events_match_free);
+    if ( data == NULL )
+        return;
+
+    g_list_free_full(data, _eventd_events_event_free);
 }
 
 static gboolean
-_eventd_events_event_matches(EventdEventsMatch *self, EventdEvent *event, GQuark *current_flags)
+_eventd_events_event_matches(EventdEventsEvent *self, EventdEvent *event, GQuark *current_flags)
 {
     if ( self->if_data != NULL )
     {
@@ -156,31 +159,31 @@ _eventd_events_event_matches(EventdEventsMatch *self, EventdEvent *event, GQuark
     return TRUE;
 }
 
-static const gchar *
+static EventdEventsEvent *
 _eventd_events_get_best_match(GList *list, EventdEvent *event, GQuark *current_flags)
 {
     GList *self_;
     for ( self_ = list ; self_ != NULL ; self_ = g_list_next(self_) )
     {
-        EventdEventsMatch *self = self_->data;
+        EventdEventsEvent *self = self_->data;
         if ( _eventd_events_event_matches(self, event, current_flags) )
-            return self->id;
+            return self;
     }
     return NULL;
 }
 
-static const gchar *
-_eventd_events_get_event_config_id(EventdEvents *self, EventdEvent *event, GQuark *current_flags)
+static EventdEventsEvent *
+_eventd_events_get_event(EventdEvents *self, EventdEvent *event, GQuark *current_flags)
 {
     const gchar *category;
     GList *list;
-    const gchar *match;
+    EventdEventsEvent *match;
 
     category = eventd_event_get_category(event);
 
     gchar *name;
     name = _eventd_events_events_get_name(category, eventd_event_get_name(event));
-    list = g_hash_table_lookup(self->event_ids, name);
+    list = g_hash_table_lookup(self->events, name);
     g_free(name);
 
 
@@ -191,7 +194,7 @@ _eventd_events_get_event_config_id(EventdEvents *self, EventdEvent *event, GQuar
             return match;
     }
 
-    list = g_hash_table_lookup(self->event_ids, category);
+    list = g_hash_table_lookup(self->events, category);
     if ( list != NULL )
     {
         match = _eventd_events_get_best_match(list, event, current_flags);
@@ -205,15 +208,15 @@ _eventd_events_get_event_config_id(EventdEvents *self, EventdEvent *event, GQuar
 gboolean
 eventd_events_process_event(EventdEvents *self, EventdEvent *event, GQuark *flags, gint64 config_timeout, const gchar **config_id)
 {
-    *config_id = _eventd_events_get_event_config_id(self, event, flags);
+    EventdEventsEvent *config_event;
+    config_event = _eventd_events_get_event(self, event, flags);
 
-    if ( *config_id == NULL )
+    if ( config_event == NULL )
         return FALSE;
 
-    EventdEventsEvent *config_event;
-    gint64 timeout;
+    *config_id = config_event->id;
 
-    config_event = g_hash_table_lookup(self->events, *config_id);
+    gint64 timeout;
 
     timeout = eventd_event_get_timeout(event);
     if ( timeout < 0 )
@@ -228,35 +231,11 @@ eventd_events_process_event(EventdEvents *self, EventdEvent *event, GQuark *flag
     return TRUE;
 }
 
-static void
-_eventd_events_parse_client(EventdEvents *self, const gchar *id, GKeyFile *config_file)
-{
-    EventdEventsEvent *event;
-    gboolean disable;
-    Int timeout;
-
-    if ( ( evhelpers_config_key_file_get_boolean(config_file, "Event", "Disable", &disable) == 0 ) && disable )
-    {
-        g_hash_table_insert(self->events, g_strdup(id), NULL);
-        return;
-    }
-
-    event = g_new0(EventdEventsEvent, 1);
-
-    event->timeout = -1;
-
-
-    if ( evhelpers_config_key_file_get_int(config_file, "Event", "Timeout", &timeout) == 0 )
-        event->timeout = timeout.value;
-
-    g_hash_table_insert(self->events, g_strdup(id), event);
-}
-
 static gint
-_eventd_events_compare_matches(gconstpointer a_, gconstpointer b_)
+_eventd_events_compare_event(gconstpointer a_, gconstpointer b_)
 {
-    const EventdEventsMatch *a = a_;
-    const EventdEventsMatch *b = b_;
+    const EventdEventsEvent *a = a_;
+    const EventdEventsEvent *b = b_;
     if ( a->importance < b->importance )
         return -1;
     if ( b->importance < a->importance )
@@ -291,25 +270,37 @@ eventd_events_parse(EventdEvents *self, const gchar *id, GKeyFile *config_file)
     gchar *category = NULL;
     gchar *name = NULL;
 
-#ifdef EVENTD_DEBUG
-    g_debug("Parsing event '%s'", id);
-#endif /* EVENTD_DEBUG */
-
     if ( evhelpers_config_key_file_get_string(config_file, "Event", "Category", &category) != 0 )
         return;
 
     if ( evhelpers_config_key_file_get_string(config_file, "Event", "Name", &name) < 0 )
         goto fail;
 
-    EventdEventsMatch *match;
-    match = g_new0(EventdEventsMatch, 1);
-    match->id = g_strdup(id);
+    gboolean disable = FALSE;
+
+    if ( ( evhelpers_config_key_file_get_boolean(config_file, "Event", "Disable", &disable) < 0 ) || disable )
+        goto fail;
+
+#ifdef EVENTD_DEBUG
+    g_debug("Parsing event '%s'", id);
+#endif /* EVENTD_DEBUG */
+
+    EventdEventsEvent *event;
+    event = g_new0(EventdEventsEvent, 1);
+    event->timeout = -1;
+    event->id = g_strdup(id);
+
+    Int timeout;
+
+    if ( evhelpers_config_key_file_get_int(config_file, "Event", "Timeout", &timeout) == 0 )
+        event->timeout = timeout.value;
+
 
     gchar **if_data_matches;
     gchar **flags;
     gsize length;
 
-    evhelpers_config_key_file_get_string_list(config_file, "Event", "IfData", &match->if_data, NULL);
+    evhelpers_config_key_file_get_string_list(config_file, "Event", "IfData", &event->if_data, NULL);
 
     if ( evhelpers_config_key_file_get_string_list(config_file, "Event", "IfDataMatches", &if_data_matches, NULL) == 0 )
     {
@@ -328,7 +319,7 @@ eventd_events_parse(EventdEvents *self, const gchar *id, GKeyFile *config_file)
                 data_match->data = g_strdup(if_data_matchv[0]);
                 data_match->regex = regex;
 
-                match->if_data_matches = g_list_prepend(match->if_data_matches, data_match);
+                event->if_data_matches = g_list_prepend(event->if_data_matches, data_match);
             }
             g_strfreev(if_data_matchv);
         }
@@ -336,18 +327,18 @@ eventd_events_parse(EventdEvents *self, const gchar *id, GKeyFile *config_file)
     }
 
     if ( evhelpers_config_key_file_get_string_list(config_file, "Event", "OnlyIfFlags", &flags, &length) == 0 )
-        match->flags_whitelist = _eventd_events_parse_event_flags(flags, length);
+        event->flags_whitelist = _eventd_events_parse_event_flags(flags, length);
 
     if ( evhelpers_config_key_file_get_string_list(config_file, "Event", "NotIfFlags", &flags, &length) == 0 )
-        match->flags_blacklist = _eventd_events_parse_event_flags(flags, length);
+        event->flags_blacklist = _eventd_events_parse_event_flags(flags, length);
 
     gint64 default_importance;
 
-    if ( ( match->if_data != NULL ) || ( match->if_data_matches != NULL ) || ( match->flags_whitelist != NULL ) || ( match->flags_blacklist != NULL ) )
+    if ( ( event->if_data != NULL ) || ( event->if_data_matches != NULL ) || ( event->flags_whitelist != NULL ) || ( event->flags_blacklist != NULL ) )
         default_importance = 0;
     else
         default_importance = G_MAXINT64;
-    evhelpers_config_key_file_get_int_with_default(config_file, "Event", "Importance", default_importance, &match->importance);
+    evhelpers_config_key_file_get_int_with_default(config_file, "Event", "Importance", default_importance, &event->importance);
 
     gchar *internal_name;
 
@@ -355,13 +346,12 @@ eventd_events_parse(EventdEvents *self, const gchar *id, GKeyFile *config_file)
 
     GList *list = NULL;
     gchar *old_key = NULL;
-    g_hash_table_lookup_extended(self->event_ids, internal_name, (gpointer *)&old_key, (gpointer *)&list);
-    g_hash_table_steal(self->event_ids, internal_name);
+    g_hash_table_lookup_extended(self->events, internal_name, (gpointer *)&old_key, (gpointer *)&list);
+    g_hash_table_steal(self->events, internal_name);
     g_free(old_key);
-    list = g_list_insert_sorted(list, match, _eventd_events_compare_matches);
-    g_hash_table_insert(self->event_ids, internal_name, list);
+    list = g_list_insert_sorted(list, event, _eventd_events_compare_event);
+    g_hash_table_insert(self->events, internal_name, list);
 
-    _eventd_events_parse_client(self, id, config_file);
     eventd_plugins_event_parse_all(id, config_file);
 
 fail:
@@ -373,7 +363,6 @@ void
 eventd_events_reset(EventdEvents *self)
 {
     g_hash_table_remove_all(self->events);
-    g_hash_table_remove_all(self->event_ids);
 }
 
 EventdEvents *
@@ -383,8 +372,7 @@ eventd_events_new(void)
 
     self = g_new0(EventdEvents, 1);
 
-    self->event_ids = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_events_matches_free);
-    self->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+    self->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_events_event_list_free);
 
     return self;
 }
@@ -393,7 +381,6 @@ void
 eventd_events_free(EventdEvents *self)
 {
     g_hash_table_unref(self->events);
-    g_hash_table_unref(self->event_ids);
 
     g_free(self);
 }
