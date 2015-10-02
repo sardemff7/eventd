@@ -66,80 +66,76 @@ _eventd_events_events_get_name(const gchar *category, const gchar *name)
     return ( name == NULL ) ? g_strdup(category) : g_strconcat(category, "-", name, NULL);
 }
 
-const gchar *
-_eventd_events_get_best_match(GList *list, EventdEvent *event, GQuark *current_flags)
+static gboolean
+_eventd_events_event_matches(EventdEventsMatch *self, EventdEvent *event, GQuark *current_flags)
 {
-    GList *match_;
-    for ( match_ = list ; match_ != NULL ; match_ = g_list_next(match_) )
+    if ( self->if_data != NULL )
     {
-        EventdEventsMatch *self = match_->data;
-        gboolean skip = FALSE;
-
-        if ( self->if_data != NULL )
+        gchar **data;
+        for ( data = self->if_data ; *data != NULL ; ++data )
         {
-            gchar **data;
-            for ( data = self->if_data ; ( *data != NULL ) && ( ! skip )  ; ++data )
-            {
-                if ( ! eventd_event_has_data(event, *data) )
-                    skip = TRUE;
-            }
-            if ( skip )
-                continue;
+            if ( ! eventd_event_has_data(event, *data) )
+                return FALSE;
         }
-
-        if ( self->if_data_matches != NULL )
-        {
-            GList *data_match_;
-            const gchar *data;
-            for ( data_match_ = self->if_data_matches ; ( data_match_ != NULL ) && ( ! skip ) ; data_match_ = g_list_next(data_match_) )
-            {
-                EventdEventsEventDataMatch *data_match = data_match_->data;
-                if ( ( data = eventd_event_get_data(event, data_match->data) ) == NULL )
-                    continue;
-                if ( ! g_regex_match(data_match->regex, data, 0, NULL) )
-                    skip = TRUE;
-            }
-            if ( skip )
-                continue;
-        }
-
-        if ( current_flags != NULL )
-        {
-            GQuark *flag;
-            if ( self->flags_whitelist != NULL )
-            {
-                GQuark *wflag;
-                for ( wflag = self->flags_whitelist ; ( *wflag != 0 ) && ( ! skip ) ; ++wflag )
-                {
-                    for ( flag = current_flags ; ( *flag != 0 ) && ( ! skip ) ; ++flag )
-                    {
-                        if ( *flag != *wflag )
-                            skip = TRUE;
-                    }
-                }
-                if ( skip )
-                    continue;
-            }
-
-            if ( self->flags_blacklist != NULL )
-            {
-                GQuark *bflag;
-                for ( bflag = self->flags_blacklist ; ( *bflag != 0 ) && ( ! skip ) ; ++bflag )
-                {
-                    for ( flag = current_flags ; ( *flag != 0 ) && ( ! skip ) ; ++flag )
-                    {
-                        if ( *flag == *bflag )
-                            skip = TRUE;
-                    }
-                }
-                if ( skip )
-                    continue;
-            }
-        }
-
-        return self->id;
     }
 
+    if ( self->if_data_matches != NULL )
+    {
+        GList *data_match_;
+        const gchar *data;
+        for ( data_match_ = self->if_data_matches ; data_match_ != NULL ; data_match_ = g_list_next(data_match_) )
+        {
+            EventdEventsEventDataMatch *data_match = data_match_->data;
+            if ( ( data = eventd_event_get_data(event, data_match->data) ) == NULL )
+                continue;
+            if ( ! g_regex_match(data_match->regex, data, 0, NULL) )
+                return FALSE;
+        }
+    }
+
+    if ( current_flags != NULL )
+    {
+        GQuark *flag;
+        if ( self->flags_whitelist != NULL )
+        {
+            GQuark *wflag;
+            for ( wflag = self->flags_whitelist ; *wflag != 0 ; ++wflag )
+            {
+                for ( flag = current_flags ; *flag != 0 ; ++flag )
+                {
+                    if ( *flag != *wflag )
+                        return FALSE;
+                }
+            }
+        }
+
+        if ( self->flags_blacklist != NULL )
+        {
+            GQuark *bflag;
+            for ( bflag = self->flags_blacklist ; *bflag != 0 ; ++bflag )
+            {
+                for ( flag = current_flags ; *flag != 0 ; ++flag )
+                {
+                    if ( *flag == *bflag )
+                        return FALSE;
+                }
+            }
+        }
+    }
+
+    return TRUE;
+}
+
+static const gchar *
+_eventd_events_get_best_match(GList *list, EventdEvent *event, GQuark *current_flags)
+{
+    GList *self_;
+    for ( self_ = list ; self_ != NULL ; self_ = g_list_next(self_) )
+    {
+        EventdEventsMatch *self = self_->data;
+        if ( _eventd_events_event_matches(self, event, current_flags) )
+            return self->id;
+    }
     return NULL;
 }
 
