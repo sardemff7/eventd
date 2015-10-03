@@ -92,6 +92,10 @@ AC_SUBST([pkgdatadir])
 PKG_INSTALLDIR
 PKG_NOARCH_INSTALLDIR
 
+# aclocal m4 files
+aclocaldir='${datadir}/aclocal'
+AC_SUBST([aclocaldir])
+
 # VAPI directory
 vapidir='${datadir}/vala/vapi'
 AC_SUBST([vapidir])

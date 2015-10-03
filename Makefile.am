@@ -36,6 +36,7 @@ man1_MANS =
 man5_MANS =
 pkgconfig_DATA =
 noarch_pkgconfig_DATA =
+dist_aclocal_DATA =
 dist_vapi_DATA =
 vapi_DATA =
 dist_event_DATA =

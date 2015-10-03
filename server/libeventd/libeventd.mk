@@ -33,6 +33,10 @@ pkgconfig_DATA += \
 	%D%/pkgconfig/libeventd.pc \
 	$(null)
 
+dist_aclocal_DATA += \
+	%D%/aclocal/eventd.m4 \
+	$(null)
+
 dist_vapi_DATA += \
 	%D%/vapi/libeventd.vapi \
 	$(null)
