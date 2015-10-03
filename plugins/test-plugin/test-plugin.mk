@@ -6,6 +6,7 @@ check_LTLIBRARIES += \
 
 EXTRA_DIST += \
 	%D%/events/test.event \
+	%D%/events/test.action \
 	$(null)
 
 test_plugin_la_SOURCES = \
