@@ -49,7 +49,6 @@ typedef struct {
 } EventdPluginsAction;
 
 static GHashTable *plugins = NULL;
-static GHashTable *actions = NULL;
 
 
 static void
@@ -200,16 +199,10 @@ _eventd_plugins_plugin_free(gpointer data)
     g_free(plugin);
 }
 
-static void
-_eventd_plugins_action_free(gpointer data)
+void
+eventd_plugins_action_free(gpointer data)
 {
     g_slice_free(EventdPluginsAction, data);
-}
-
-static void
-_eventd_plugins_action_free_list(gpointer data)
-{
-    g_list_free_full(data, _eventd_plugins_action_free);
 }
 
 void
@@ -229,7 +222,6 @@ eventd_plugins_load(EventdPluginCoreContext *core, EventdPluginCoreInterface *in
     }
 
     plugins = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, _eventd_plugins_plugin_free);
-    actions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_plugins_action_free_list);
 
     env_whitelist = g_getenv("EVENTD_PLUGINS_WHITELIST");
     if ( env_whitelist != NULL )
@@ -271,9 +263,6 @@ eventd_plugins_unload(void)
 {
     if ( plugins == NULL )
         return;
-
-    g_hash_table_unref(actions);
-    actions = NULL;
 
     g_hash_table_unref(plugins);
     plugins = NULL;
@@ -378,10 +367,10 @@ eventd_plugins_global_parse_all(GKeyFile *config_file)
     }
 }
 
-void
-eventd_plugins_event_parse_all(const gchar *event_id, GKeyFile *config_file)
+GList *
+eventd_plugins_event_parse_all(GKeyFile *config_file)
 {
-    GList *plugins_actions = NULL;
+    GList *actions = NULL;
     GHashTableIter iter;
     const gchar *id;
     EventdPlugin *plugin;
@@ -400,21 +389,18 @@ eventd_plugins_event_parse_all(const gchar *event_id, GKeyFile *config_file)
             action_->plugin = plugin;
             action_->action = action;
 
-            plugins_actions = g_list_prepend(plugins_actions, action_);
+            actions = g_list_prepend(actions, action_);
         }
     }
-    if ( plugins_actions != NULL )
-        g_hash_table_insert(actions, g_strdup(event_id), plugins_actions);
+    return actions;
 }
 
 void
-eventd_plugins_event_action_all(const gchar *config_id, EventdEvent *event)
+eventd_plugins_event_action_all(const GList *actions, EventdEvent *event)
 {
-    GList *plugins_actions;
-    plugins_actions = g_hash_table_lookup(actions, config_id);
-    for ( ; plugins_actions != NULL ; plugins_actions = g_list_next(plugins_actions) )
+    for ( ; actions != NULL ; actions = g_list_next(actions) )
     {
-        EventdPluginsAction *action = plugins_actions->data;
+        EventdPluginsAction *action = actions->data;
         action->plugin->interface.event_action(action->plugin->context, action->action, event);
     }
 }

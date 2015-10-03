@@ -27,7 +27,7 @@ EventdConfig *eventd_config_new(void);
 void eventd_config_parse(EventdConfig *config);
 void eventd_config_free(EventdConfig *config);
 
-gboolean eventd_config_process_event(EventdConfig *self, EventdEvent *event, GQuark *flags, const gchar **config_id);
+gboolean eventd_config_process_event(EventdConfig *self, EventdEvent *event, GQuark *flags, const GList **actions);
 
 guint64 eventd_config_get_stack(EventdConfig *config);
 

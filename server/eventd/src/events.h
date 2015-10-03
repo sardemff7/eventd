@@ -28,6 +28,6 @@ void eventd_events_reset(EventdEvents *self);
 void eventd_events_free(EventdEvents *self);
 
 void eventd_events_parse(EventdEvents *self, const gchar *id, GKeyFile *config_file);
-gboolean eventd_events_process_event(EventdEvents *self, EventdEvent *event, GQuark *flags, gint64 timeout, const gchar **config_id);
+gboolean eventd_events_process_event(EventdEvents *self, EventdEvent *event, GQuark *flags, gint64 timeout, const GList **actions);
 
 #endif /* __EVENTD_EVENTS_H__ */

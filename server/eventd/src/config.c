@@ -44,9 +44,9 @@ struct _EventdConfig {
 };
 
 gboolean
-eventd_config_process_event(EventdConfig *config, EventdEvent *event, GQuark *flags, const gchar **config_id)
+eventd_config_process_event(EventdConfig *config, EventdEvent *event, GQuark *flags, const GList **actions)
 {
-    return eventd_events_process_event(config->events, event, flags, config->timeout, config_id);
+    return eventd_events_process_event(config->events, event, flags, config->timeout, actions);
 }
 
 

@@ -43,7 +43,7 @@ struct _EventdQueue {
 typedef struct {
     EventdQueue *queue;
     GList *link;
-    const gchar *config_id;
+    const GList *actions;
     EventdEvent *event;
     gulong answered_handler;
     gulong ended_handler;
@@ -126,7 +126,7 @@ _eventd_queue_source_dispatch(EventdQueue *queue, EventdQueueEvent *event)
     g_queue_push_head(queue->current, event);
     event->link = g_queue_peek_head_link(queue->current);
 
-    eventd_plugins_event_action_all(event->config_id, event->event);
+    eventd_plugins_event_action_all(event->actions, event->event);
 
     event->answered_handler = g_signal_connect(event->event, "updated", G_CALLBACK(_eventd_queue_event_updated), event);
     event->ended_handler = g_signal_connect(event->event, "ended", G_CALLBACK(_eventd_queue_event_ended), event);
@@ -198,15 +198,15 @@ eventd_queue_resume(EventdQueue *queue)
 gboolean
 eventd_queue_push(EventdQueue *queue, EventdEvent *event, GQuark *flags)
 {
-    const gchar *config_id;
-    if ( ! eventd_config_process_event(queue->config, event, flags, &config_id) )
+    const GList *actions;
+    if ( ! eventd_config_process_event(queue->config, event, flags, &actions) )
         return FALSE;
 
     EventdQueueEvent *queue_event;
 
     queue_event = g_new0(EventdQueueEvent, 1);
     queue_event->queue = queue;
-    queue_event->config_id = config_id;
+    queue_event->actions = actions;
     queue_event->event = g_object_ref(event);
 
     g_queue_push_tail(queue->queue, queue_event);

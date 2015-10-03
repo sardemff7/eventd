@@ -48,7 +48,7 @@ typedef struct {
     gint64 timeout;
 
     gint64 importance;
-    gchar *id;
+    GList *actions;
 
     /* Conditions */
     gchar **if_data;
@@ -85,7 +85,7 @@ _eventd_events_event_free(gpointer data)
     g_list_free_full(self->if_data_matches, _eventd_events_event_data_match_free);
     g_strfreev(self->if_data);
 
-    g_free(self->id);
+    g_list_free_full(self->actions, eventd_plugins_action_free);
 
     g_free(self);
 }
@@ -206,7 +206,7 @@ _eventd_events_get_event(EventdEvents *self, EventdEvent *event, GQuark *current
 }
 
 gboolean
-eventd_events_process_event(EventdEvents *self, EventdEvent *event, GQuark *flags, gint64 config_timeout, const gchar **config_id)
+eventd_events_process_event(EventdEvents *self, EventdEvent *event, GQuark *flags, gint64 config_timeout, const GList **actions)
 {
     EventdEventsEvent *config_event;
     config_event = _eventd_events_get_event(self, event, flags);
@@ -214,7 +214,7 @@ eventd_events_process_event(EventdEvents *self, EventdEvent *event, GQuark *flag
     if ( config_event == NULL )
         return FALSE;
 
-    *config_id = config_event->id;
+    *actions = config_event->actions;
 
     gint64 timeout;
 
@@ -281,6 +281,12 @@ eventd_events_parse(EventdEvents *self, const gchar *id, GKeyFile *config_file)
     if ( ( evhelpers_config_key_file_get_boolean(config_file, "Event", "Disable", &disable) < 0 ) || disable )
         goto fail;
 
+    GList *actions;
+
+    actions = eventd_plugins_event_parse_all(config_file);
+    if ( actions == NULL )
+        return;
+
 #ifdef EVENTD_DEBUG
     g_debug("Parsing event '%s'", id);
 #endif /* EVENTD_DEBUG */
@@ -288,7 +294,7 @@ eventd_events_parse(EventdEvents *self, const gchar *id, GKeyFile *config_file)
     EventdEventsEvent *event;
     event = g_new0(EventdEventsEvent, 1);
     event->timeout = -1;
-    event->id = g_strdup(id);
+    event->actions = actions;
 
     Int timeout;
 
@@ -351,8 +357,6 @@ eventd_events_parse(EventdEvents *self, const gchar *id, GKeyFile *config_file)
     g_free(old_key);
     list = g_list_insert_sorted(list, event, _eventd_events_compare_event);
     g_hash_table_insert(self->events, internal_name, list);
-
-    eventd_plugins_event_parse_all(id, config_file);
 
 fail:
     g_free(name);
