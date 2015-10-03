@@ -52,7 +52,7 @@ typedef struct {
 
     /* Conditions */
     gchar **if_data;
-    GList *if_data_matches;
+    EventdEventsEventDataMatch *if_data_matches;
     GQuark *flags_whitelist;
     GQuark *flags_blacklist;
 } EventdEventsEvent;
@@ -64,17 +64,6 @@ _eventd_events_events_get_name(const gchar *category, const gchar *name)
 }
 
 static void
-_eventd_events_event_data_match_free(gpointer data)
-{
-    EventdEventsEventDataMatch *data_match = data;
-
-    g_regex_unref(data_match->regex);
-    g_free(data_match->data);
-
-    g_free(data_match);
-}
-
-static void
 _eventd_events_event_free(gpointer data)
 {
     if ( data == NULL )
@@ -82,7 +71,17 @@ _eventd_events_event_free(gpointer data)
 
     EventdEventsEvent *self = data;
 
-    g_list_free_full(self->if_data_matches, _eventd_events_event_data_match_free);
+    if ( self->if_data_matches != NULL )
+    {
+        EventdEventsEventDataMatch *match;
+        for ( match = self->if_data_matches ; match->data != NULL ; ++match )
+        {
+            g_regex_unref(match->regex);
+            g_free(match->data);
+        }
+    }
+    g_free(self->if_data_matches);
+
     g_strfreev(self->if_data);
 
     g_list_free_full(self->actions, eventd_plugins_action_free);
@@ -114,14 +113,13 @@ _eventd_events_event_matches(EventdEventsEvent *self, EventdEvent *event, GQuark
 
     if ( self->if_data_matches != NULL )
     {
-        GList *data_match_;
+        EventdEventsEventDataMatch *match;
         const gchar *data;
-        for ( data_match_ = self->if_data_matches ; data_match_ != NULL ; data_match_ = g_list_next(data_match_) )
+        for ( match = self->if_data_matches ; match->data != NULL ; ++match )
         {
-            EventdEventsEventDataMatch *data_match = data_match_->data;
-            if ( ( data = eventd_event_get_data(event, data_match->data) ) == NULL )
+            if ( ( data = eventd_event_get_data(event, match->data) ) == NULL )
                 continue;
-            if ( ! g_regex_match(data_match->regex, data, 0, NULL) )
+            if ( ! g_regex_match(match->regex, data, 0, NULL) )
                 return FALSE;
         }
     }
@@ -308,27 +306,42 @@ eventd_events_parse(EventdEvents *self, const gchar *id, GKeyFile *config_file)
 
     evhelpers_config_key_file_get_string_list(config_file, "Event", "IfData", &event->if_data, NULL);
 
-    if ( evhelpers_config_key_file_get_string_list(config_file, "Event", "IfDataMatches", &if_data_matches, NULL) == 0 )
+    if ( evhelpers_config_key_file_get_string_list(config_file, "Event", "IfDataMatches", &if_data_matches, &length) == 0 )
     {
-        EventdEventsEventDataMatch *data_match;
         gchar **if_data_match;
+        EventdEventsEventDataMatch *match;
+        gchar *data, *regex_;
         GError *error = NULL;
         GRegex *regex;
 
+        event->if_data_matches = g_new0(EventdEventsEventDataMatch, length + 1);
+        match = event->if_data_matches;
+
         for ( if_data_match = if_data_matches ; *if_data_match != NULL ; ++if_data_match )
         {
-            gchar **if_data_matchv;
-            if_data_matchv = g_strsplit(*if_data_match, ",", 2);
-            if ( ( regex = g_regex_new(if_data_matchv[1], G_REGEX_OPTIMIZE, 0, &error) ) != NULL )
+            data = *if_data_match;
+            regex_ = g_utf8_strchr(data, -1, ',');
+            if ( regex_ == NULL )
             {
-                data_match = g_new0(EventdEventsEventDataMatch, 1);
-                data_match->data = g_strdup(if_data_matchv[0]);
-                data_match->regex = regex;
-
-                event->if_data_matches = g_list_prepend(event->if_data_matches, data_match);
+                g_warning("Data matches must be of the form 'data-name,regex'");
+                continue;
             }
-            g_strfreev(if_data_matchv);
+            *regex_ = '\0';
+            ++regex_;
+
+            regex = g_regex_new(regex_, G_REGEX_OPTIMIZE, 0, &error);
+            if ( regex == NULL )
+            {
+                g_warning("Could not compile regex '%s': %s", regex_, error->message);
+                g_clear_error(&error);
+                continue;
+            }
+
+            match->data = g_strdup(data);
+            match->regex = regex;
+            ++match;
         }
+        match->data = NULL;
         g_strfreev(if_data_matches);
     }
 
