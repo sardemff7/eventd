@@ -217,9 +217,9 @@ main(int argc, char *argv[])
     }
     g_io_stream_close(G_IO_STREAM(connection), NULL, &error);
 
+    g_object_unref(connection);
 error:
     g_free(filename);
-    g_object_unref(connection);
     if ( error != NULL )
     {
         g_warning("Test failed: %s", error->message);
