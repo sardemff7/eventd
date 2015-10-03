@@ -32,6 +32,7 @@
 #include "types.h"
 
 #include "plugins.h"
+#include "actions.h"
 #include "events.h"
 
 #include "config.h"
@@ -41,6 +42,7 @@ struct _EventdConfig {
     guint64 stack;
     gint64 timeout;
     EventdEvents *events;
+    EventdActions *actions;
 };
 
 gboolean
@@ -73,7 +75,7 @@ _eventd_config_parse_global(EventdConfig *config, GKeyFile *config_file)
 }
 
 static void
-_eventd_config_read_dir(EventdConfig *config, GHashTable *config_files, const gchar *config_dir_name)
+_eventd_config_read_dir(EventdConfig *config, GHashTable *action_files, GHashTable *event_files, const gchar *config_dir_name)
 {
     GError *error = NULL;
     GDir *config_dir;
@@ -108,10 +110,24 @@ _eventd_config_read_dir(EventdConfig *config, GHashTable *config_files, const gc
             else if ( ! g_key_file_has_group(config_file, "Event") )
                 g_key_file_free(config_file);
             else
-                g_hash_table_insert(config_files, g_strdup(file), config_file);
+                g_hash_table_insert(event_files, g_strdup(file), config_file);
+        }
+        else if ( g_str_has_suffix(file, ".action") && g_file_test(config_file_name, G_FILE_TEST_IS_REGULAR) )
+        {
+            config_file = g_key_file_new();
+            if ( ! g_key_file_load_from_file(config_file, config_file_name, G_KEY_FILE_NONE, &error) )
+            {
+                g_warning("Can't read the defaults file '%s': %s", config_file_name, error->message);
+                g_clear_error(&error);
+                g_key_file_free(config_file);
+            }
+            else if ( ! g_key_file_has_group(config_file, "Action") )
+                g_key_file_free(config_file);
+            else
+                g_hash_table_insert(action_files, g_strdup(file), config_file);
         }
         else if ( g_file_test(config_file_name, G_FILE_TEST_IS_DIR) )
-            _eventd_config_read_dir(config, config_files, config_file_name);
+            _eventd_config_read_dir(config, action_files, event_files, config_file_name);
 
         g_free(config_file_name);
     }
@@ -119,7 +135,7 @@ _eventd_config_read_dir(EventdConfig *config, GHashTable *config_files, const gc
 }
 
 static void
-_eventd_config_load_dir(EventdConfig *config, GHashTable *config_files, const gchar *config_dir_name)
+_eventd_config_load_dir(EventdConfig *config, GHashTable *action_files, GHashTable *event_files, const gchar *config_dir_name)
 {
     GError *error = NULL;
     gchar *config_file_name = NULL;
@@ -144,7 +160,7 @@ _eventd_config_load_dir(EventdConfig *config, GHashTable *config_files, const gc
     }
     g_free(config_file_name);
 
-    _eventd_config_read_dir(config, config_files, config_dir_name);
+    _eventd_config_read_dir(config, action_files, event_files, config_dir_name);
 }
 
 static GKeyFile *
@@ -223,6 +239,7 @@ eventd_config_new(void)
 
     config = g_new0(EventdConfig, 1);
 
+    config->actions = eventd_actions_new();
     config->events = eventd_events_new();
 
     return config;
@@ -237,6 +254,7 @@ _eventd_config_clean(EventdConfig *config)
     eventd_plugins_config_reset_all();
 
     eventd_events_reset(config->events);
+    eventd_actions_reset(config->actions);
 }
 
 void
@@ -248,33 +266,47 @@ eventd_config_parse(EventdConfig *config)
 
     _eventd_config_defaults(config);
 
-    GHashTable *config_files;
+    GHashTable *action_files;
+    GHashTable *event_files;
 
-    config_files = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_key_file_free);
+    action_files = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_key_file_free);
+    event_files = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_key_file_free);
 
-    _eventd_config_load_dir(config, config_files, DATADIR G_DIR_SEPARATOR_S PACKAGE_NAME);
-    _eventd_config_load_dir(config, config_files, SYSCONFDIR G_DIR_SEPARATOR_S PACKAGE_NAME);
+    _eventd_config_load_dir(config, action_files, event_files, DATADIR G_DIR_SEPARATOR_S PACKAGE_NAME);
+    _eventd_config_load_dir(config, action_files, event_files, SYSCONFDIR G_DIR_SEPARATOR_S PACKAGE_NAME);
 
     gchar *user_config_dir;
     user_config_dir = g_build_filename(g_get_user_config_dir(), PACKAGE_NAME, NULL);
-    _eventd_config_load_dir(config, config_files, user_config_dir);
+    _eventd_config_load_dir(config, action_files, event_files, user_config_dir);
     g_free(user_config_dir);
 
     const gchar *env_config_dir;
     env_config_dir = g_getenv("EVENTD_CONFIG_DIR");
     if ( env_config_dir != NULL )
-        _eventd_config_load_dir(config, config_files, env_config_dir);
+        _eventd_config_load_dir(config, action_files, event_files, env_config_dir);
 
     GHashTableIter iter;
     gchar *id;
     GKeyFile *config_file;
-    g_hash_table_iter_init(&iter, config_files);
+
+    g_hash_table_iter_init(&iter, event_files);
     while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&config_file) )
     {
-        if ( ( config_file = _eventd_config_process_config_file(config_files, id, config_file) ) != NULL )
+        if ( ( config_file = _eventd_config_process_config_file(event_files, id, config_file) ) != NULL )
             eventd_events_parse(config->events, id, config_file);
     }
-    g_hash_table_unref(config_files);
+    g_hash_table_unref(event_files);
+
+    g_hash_table_iter_init(&iter, action_files);
+    while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&config_file) )
+    {
+        if ( ( config_file = _eventd_config_process_config_file(action_files, id, config_file) ) != NULL )
+            eventd_actions_parse(config->actions, config_file, id);
+    }
+    g_hash_table_unref(action_files);
+
+    eventd_actions_link_actions(config->actions);
+    eventd_events_link_actions(config->events, config->actions);
 }
 
 void
@@ -282,6 +314,7 @@ eventd_config_free(EventdConfig *config)
 {
     _eventd_config_clean(config);
 
+    eventd_actions_free(config->actions);
     eventd_events_free(config->events);
 
     g_free(config);

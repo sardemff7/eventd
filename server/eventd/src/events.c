@@ -31,7 +31,7 @@
 
 #include "types.h"
 
-#include "plugins.h"
+#include "actions.h"
 
 #include "events.h"
 
@@ -84,7 +84,7 @@ _eventd_events_event_free(gpointer data)
 
     g_strfreev(self->if_data);
 
-    g_list_free_full(self->actions, eventd_plugins_action_free);
+    g_list_free(self->actions);
 
     g_free(self);
 }
@@ -279,11 +279,10 @@ eventd_events_parse(EventdEvents *self, const gchar *id, GKeyFile *config_file)
     if ( ( evhelpers_config_key_file_get_boolean(config_file, "Event", "Disable", &disable) < 0 ) || disable )
         goto fail;
 
-    GList *actions;
+    gchar **actions;
 
-    actions = eventd_plugins_event_parse_all(config_file);
-    if ( actions == NULL )
-        return;
+    if ( evhelpers_config_key_file_get_string_list(config_file, "Event", "Actions", &actions, NULL) != 0 )
+        goto fail;
 
 #ifdef EVENTD_DEBUG
     g_debug("Parsing event '%s'", id);
@@ -292,7 +291,11 @@ eventd_events_parse(EventdEvents *self, const gchar *id, GKeyFile *config_file)
     EventdEventsEvent *event;
     event = g_new0(EventdEventsEvent, 1);
     event->timeout = -1;
-    event->actions = actions;
+
+    gchar **action;
+    for ( action = actions ; *action != NULL ; ++action )
+        event->actions = g_list_prepend(event->actions, *action);
+    g_free(actions);
 
     Int timeout;
 
@@ -374,6 +377,35 @@ eventd_events_parse(EventdEvents *self, const gchar *id, GKeyFile *config_file)
 fail:
     g_free(name);
     g_free(category);
+}
+
+void
+eventd_events_link_actions(EventdEvents *self, EventdActions *actions)
+{
+    GHashTableIter iter;
+    gchar *id;
+    GList *events;
+    g_hash_table_iter_init(&iter, self->events);
+    while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&events) )
+    {
+        GList *new_events = NULL;
+        GList *event_;
+        for ( event_ = events ; event_ != NULL ; event_ = g_list_next(event_) )
+        {
+            EventdEventsEvent *event = event_->data;
+            eventd_actions_replace_actions(actions, &event->actions);
+            if ( event->actions != NULL )
+            {
+                new_events = g_list_prepend(new_events, event);
+                event_->data = NULL;
+            }
+        }
+
+        if ( new_events != NULL )
+            g_hash_table_iter_replace(&iter, new_events);
+        else
+            g_hash_table_iter_remove(&iter);
+    }
 }
 
 void

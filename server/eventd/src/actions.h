@@ -20,16 +20,19 @@
  *
  */
 
-#ifndef __EVENTD_EVENTS_H__
-#define __EVENTD_EVENTS_H__
+#ifndef __EVENTD_ACTIONS_H__
+#define __EVENTD_ACTIONS_H__
 
-EventdEvents *eventd_events_new(void);
-void eventd_events_reset(EventdEvents *self);
-void eventd_events_free(EventdEvents *self);
 
-void eventd_events_parse(EventdEvents *self, const gchar *id, GKeyFile *config_file);
-void eventd_events_link_actions(EventdEvents *self, EventdActions *actions);
+EventdActions *eventd_actions_new();
+void eventd_actions_free(EventdActions *actions);
 
-gboolean eventd_events_process_event(EventdEvents *self, EventdEvent *event, GQuark *flags, gint64 timeout, const GList **actions);
+void eventd_actions_parse(EventdActions *actions, GKeyFile *file, const gchar *default_id);
+void eventd_actions_link_actions(EventdActions *actions);
+void eventd_actions_reset();
 
-#endif /* __EVENTD_EVENTS_H__ */
+void eventd_actions_replace_actions(EventdActions *self, GList **list);
+
+void eventd_actions_trigger(const GList *actions, EventdEvent *event);
+
+#endif /* __EVENTD_ACTIONS_H__ */

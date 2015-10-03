@@ -1,0 +1,12 @@
+[Action]
+Name = libnotify
+
+[Notification]
+Title = ${summary}
+Message = ${body}
+
+[Sound]
+
+[Libcanberra]
+
+[Libnotify]

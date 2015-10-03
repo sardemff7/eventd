@@ -1,8 +1,4 @@
 [Event]
 Category = test
 Timeout = 10000
-
-[Relay]
-Server = 127.0.0.1:19031
-
-[TestPlugin]
+Actions = test;
