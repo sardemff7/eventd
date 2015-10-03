@@ -53,6 +53,7 @@ EXTRA_DIST = \
 	PROTOCOL.md \
 	COPYING.LGPLv3 \
 	src/config-version.h \
+	po/POTFILES.in \
 	$(null)
 CLEANFILES =
 
@@ -101,10 +102,6 @@ include src/units.mk
 include src/services.mk
 
 include src/libnkutils/libnkutils.mk
-
-SUBDIRS = po
-
-@EVENTD_EVENT_RULE@
 
 -include local-rules.mk
 

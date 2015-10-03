@@ -17,8 +17,6 @@ noarch_pkgconfig_DATA += \
 	%D%/pkgconfig/eventd.pc \
 	$(null)
 
-include %D%/events/events.mk
-
 
 eventd_SOURCES = \
 	%D%/src/types.h \

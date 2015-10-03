@@ -1,6 +1,0 @@
-[Event]
-Extends=presence.event
-Name=signed-off
-
-[Notification]
-_Message=signed off

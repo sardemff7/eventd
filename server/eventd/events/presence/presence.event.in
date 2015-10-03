@@ -1,8 +1,0 @@
-[Event]
-Category=presence
-
-[Notification]
-_Title=${buddy-name}
-_Message=${message}
-Image=buddy-icon
-Icon=file:///usr/share/pixmaps/pidgin/protocols/scalable/${protocol-name}.svg

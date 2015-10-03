@@ -1,6 +1,0 @@
-[Event]
-Extends=presence.event
-Name=idle-back
-
-[Notification]
-_Message=is active

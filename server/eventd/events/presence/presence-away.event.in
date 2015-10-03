@@ -1,6 +1,0 @@
-[Event]
-Extends=presence.event
-Name=away
-
-[Notification]
-_Message=went away

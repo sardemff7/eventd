@@ -36,8 +36,8 @@ AC_PROG_INSTALL
 GETTEXT_PACKAGE=${PACKAGE_NAME}
 AC_DEFINE_UNQUOTED([GETTEXT_PACKAGE], ["${GETTEXT_PACKAGE}"], [Gettext Package])
 AC_SUBST([GETTEXT_PACKAGE])
-IT_PROG_INTLTOOL([0.40.0])
-AM_GLIB_GNU_GETTEXT
+dnl IT_PROG_INTLTOOL([0.40.0])
+dnl AM_GLIB_GNU_GETTEXT
 
 
 EVP_SERVICE_NAME="evp"
@@ -104,15 +104,14 @@ AC_SUBST([pluginsdir])
 AC_SUBST([eventdir])
 AC_SUBST([fdonotificationscapabilitiesdir])
 
-EVENTD_I18N
-GLIB_DEFINE_LOCALEDIR([EVENTD_LOCALEDIR])
+dnl GLIB_DEFINE_LOCALEDIR([EVENTD_LOCALEDIR])
 GW_INIT
 NK_INIT([enum token colour/alpha colour/double])
 
 #
 # Common dependencies
 #
-AC_CHECK_HEADERS([fcntl.h errno.h])
+AC_CHECK_HEADERS([locale.h fcntl.h errno.h])
 
 PKG_CHECK_MODULES([UUID], [uuid])
 
@@ -318,7 +317,6 @@ AC_CONFIG_FILES([
     client/libeventc/vapi/libeventc.deps
     src/config.ent
     Makefile
-    po/Makefile.in
 ])
 AC_OUTPUT
 
