@@ -82,6 +82,10 @@ eventd_actions_parse(EventdActions *self, GKeyFile *file, const gchar *default_i
     else
         id = g_strdup(default_id);
 
+#ifdef EVENTD_DEBUG
+    g_debug("Parsing action '%s'", id);
+#endif /* EVENTD_DEBUG */
+
     action->actions = eventd_plugins_event_parse_all(file);
 
     g_hash_table_replace(self->actions, id, action);
@@ -119,7 +123,6 @@ eventd_actions_replace_actions(EventdActions *self, GList **list)
 
         gchar *id = action->data;
         action->data = g_hash_table_lookup(self->actions, id);
-        g_debug("Found action %p for id %s", action->data, id);
         g_free(id);
 
         if ( action->data == NULL )
