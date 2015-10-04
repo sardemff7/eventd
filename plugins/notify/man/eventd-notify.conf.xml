@@ -26,22 +26,22 @@
 -->
 
 <refentry xmlns:xi="http://www.w3.org/2001/XInclude"
-    id="eventd-notify.event">
+    id="eventd-notify.conf">
     <xi:include href="common-man.xml" xpointer="refentryinfo" />
 
     <refmeta>
-        <refentrytitle>eventd-notify.event</refentrytitle>
+        <refentrytitle>eventd-notify.conf</refentrytitle>
         <manvolnum>5</manvolnum>
     </refmeta>
 
     <refnamediv>
-        <refname>eventd-notify.event</refname>
-        <refpurpose>notify plugin event configuration files</refpurpose>
+        <refname>eventd-notify.conf</refname>
+        <refpurpose>notify plugin configuration</refpurpose>
     </refnamediv>
 
     <refsynopsisdiv>
         <para>
-            Event configuration for the notify plugin.
+            Configuration for the notify plugin.
         </para>
     </refsynopsisdiv>
 
@@ -49,12 +49,12 @@
         <title>Description</title>
 
         <para>
-            It controls relaying of events to a notification daemon.
+            The <command>notify</command> plugin relays events to a notification daemon.
         </para>
     </refsect1>
 
-    <refsect1 id="sections">
-        <title>Sections</title>
+    <refsect1 id="action-sections">
+        <title>Action sections</title>
 
         <refsect2>
             <title>Section <varname>[Libnotify]</varname></title>

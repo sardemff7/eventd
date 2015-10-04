@@ -63,14 +63,8 @@
                         <varlistentry>
                             <term><citerefentry><refentrytitle>eventd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry></term>
                             <listitem>
-                                <para>Main eventd configuration file</para>
-                                <para>Contains information about configuration key types</para>
-                            </listitem>
-                        </varlistentry>
-                        <varlistentry>
-                            <term><citerefentry><refentrytitle>eventd.event</refentrytitle><manvolnum>5</manvolnum></citerefentry></term>
-                            <listitem>
-                                <para>Event definition and global configuration</para>
+                                <para>eventd configuration</para>
+                                <para>Contains information about all the event configuration</para>
                             </listitem>
                         </varlistentry>
                     </variablelist>
@@ -78,8 +72,7 @@
                         Plugins <phrase condition="website">distributed</phrase><phrase condition="installation">installed</phrase> with eventd will use the same scheme:
                         eventd-<replaceable>plugin-name</replaceable> for their additional <command>eventd</command> command-line options,
                         eventdctl-<replaceable>plugin-name</replaceable> for their additional <command>eventdctl</command> command-line options,
-                        eventd-<replaceable>plugin-name</replaceable>.conf for their global configuration,
-                        eventd-<replaceable>plugin-name</replaceable>.event for their event configuration.
+                        eventd-<replaceable>plugin-name</replaceable>.conf for their configuration,
                     </para>
                 </listitem>
             </varlistentry>
@@ -90,7 +83,6 @@
                     <para>
                         <citerefentry><refentrytitle>eventd-evp</refentrytitle><manvolnum>1</manvolnum></citerefentry>
                         <citerefentry><refentrytitle>eventd-evp.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
-                        <citerefentry><refentrytitle>eventd-evp.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>
                     </para>
                 </listitem>
             </varlistentry>
@@ -108,7 +100,7 @@
                 <term><command>relay</command> plugin man pages</term>
                 <listitem>
                     <para>
-                        <citerefentry><refentrytitle>eventd-relay.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                        <citerefentry><refentrytitle>eventd-relay.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
                     </para>
                 </listitem>
             </varlistentry>
@@ -117,7 +109,7 @@
                 <term><command>exec</command> plugin man pages</term>
                 <listitem>
                     <para>
-                        <citerefentry><refentrytitle>eventd-exec.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                        <citerefentry><refentrytitle>eventd-exec.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
                     </para>
                 </listitem>
             </varlistentry>
@@ -127,12 +119,6 @@
                 <listitem>
                     <para>
                         <citerefentry><refentrytitle>eventd-nd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
-                        <citerefentry><refentrytitle>eventd-nd.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>
-                    </para>
-                </listitem>
-                <listitem condition="website;enable_xcb">
-                    <para>
-                        <citerefentry condition="website;enable_xcb"><refentrytitle>eventd-nd-xcb.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
                     </para>
                 </listitem>
             </varlistentry>
@@ -142,7 +128,6 @@
                 <listitem>
                     <para>
                         <citerefentry><refentrytitle>eventd-im.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
-                        <citerefentry><refentrytitle>eventd-im.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>
                     </para>
                 </listitem>
             </varlistentry>
@@ -151,7 +136,7 @@
                 <term><command>sound</command> plugin man pages</term>
                 <listitem>
                     <para>
-                        <citerefentry><refentrytitle>eventd-sound.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                        <citerefentry><refentrytitle>eventd-sound.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
                     </para>
                 </listitem>
             </varlistentry>
@@ -160,7 +145,7 @@
                 <term><command>tts</command> plugin man pages</term>
                 <listitem>
                     <para>
-                        <citerefentry><refentrytitle>eventd-tts.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                        <citerefentry><refentrytitle>eventd-tts.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
                     </para>
                 </listitem>
             </varlistentry>
@@ -169,7 +154,7 @@
                 <term><command>notify</command> plugin man pages</term>
                 <listitem>
                     <para>
-                        <citerefentry><refentrytitle>eventd-notify.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                        <citerefentry><refentrytitle>eventd-notify.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
                     </para>
                 </listitem>
             </varlistentry>

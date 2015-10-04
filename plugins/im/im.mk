@@ -7,7 +7,6 @@ plugins_LTLIBRARIES += \
 
 man5_MANS += \
 	%D%/man/eventd-im.conf.5 \
-	%D%/man/eventd-im.event.5 \
 	$(null)
 endif
 

@@ -64,14 +64,14 @@
         <para>
             The core daemon will not dispatch unknown events to action plugins.
             Default events are distributed with eventd in
-            <xi:include href="eventd.event.xml" xpointer="default-events-dir" />.
+            <xi:include href="eventd.conf.xml" xpointer="default-events-dir" />.
         </para>
         <para>
             Official actions plugins will require at least a section in the matching event file to act on a specific event.
             Third party plugin are advised to do the same for consistency.
         </para>
         <para>
-            See <citerefentry><refentrytitle>eventd.event</refentrytitle><manvolnum>5</manvolnum></citerefentry> for detailed information.
+            See <citerefentry><refentrytitle>eventd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry> for detailed information.
         </para>
     </refsect1>
 
@@ -115,37 +115,37 @@
             <para>The following action plugins are <phrase condition="website">distributed</phrase><phrase condition="installation">installed</phrase> with eventd:</para>
             <variablelist>
                 <varlistentry>
-                    <term><command>relay</command> (see <citerefentry><refentrytitle>eventd-relay.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
+                    <term><command>relay</command> (see <citerefentry><refentrytitle>eventd-relay.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
                     <listitem><para>a relay plugin, to relay events to remote eventd</para></listitem>
                 </varlistentry>
 
                 <varlistentry>
-                    <term><command>exec</command> (see <citerefentry><refentrytitle>eventd-exec.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
+                    <term><command>exec</command> (see <citerefentry><refentrytitle>eventd-exec.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
                     <listitem><para>a simple exec plugin, to exec arbitrary commands</para></listitem>
                 </varlistentry>
 
                 <varlistentry condition="website;enable_notification_daemon">
-                    <term><command>nd</command> (see <citerefentry><refentrytitle>eventd-nd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry> and <citerefentry><refentrytitle>eventd-nd.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
+                    <term><command>nd</command> (see <citerefentry><refentrytitle>eventd-nd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
                     <listitem><para>a notification plugin, aka "bubble" plugin</para></listitem>
                 </varlistentry>
 
                 <varlistentry condition="website;enable_im">
-                    <term><command>im</command> (see <citerefentry><refentrytitle>eventd-im.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry> and <citerefentry><refentrytitle>eventd-im.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
+                    <term><command>im</command> (see <citerefentry><refentrytitle>eventd-im.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
                     <listitem><para>an IM plugin</para></listitem>
                 </varlistentry>
 
                 <varlistentry condition="website;enable_sound">
-                    <term><command>sound</command> (see <citerefentry><refentrytitle>eventd-sound.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
+                    <term><command>sound</command> (see <citerefentry><refentrytitle>eventd-sound.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
                     <listitem><para>a sound file playing plugin</para></listitem>
                 </varlistentry>
 
                 <varlistentry condition="website;enable_tts">
-                    <term><command>tts</command> (see <citerefentry><refentrytitle>eventd-tts.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
+                    <term><command>tts</command> (see <citerefentry><refentrytitle>eventd-tts.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
                     <listitem><para>a Text-to-Speech plugin</para></listitem>
                 </varlistentry>
 
                 <varlistentry condition="website;enable_notify">
-                    <term><command>notify</command> (see <citerefentry><refentrytitle>eventd-notify.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
+                    <term><command>notify</command> (see <citerefentry><refentrytitle>eventd-notify.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
                     <listitem><para>a libnotify client plugin</para></listitem>
                 </varlistentry>
             </variablelist>
@@ -265,7 +265,7 @@
             </para>
             <para>
                 We will use three files: one for the category <literal>"command"</literal> and one for each event, <literal>"success"</literal> and <literal>"failure"</literal>.
-                These files will be placed in <xi:include href="eventd.event.xml" xpointer="home-events-dir" />.
+                These files will be placed in <xi:include href="eventd.conf.xml" xpointer="home-events-dir" />.
                 Here is their contents:
             </para>
             <programlisting><literal>"<filename>command.event</filename>"</literal>:
@@ -367,7 +367,7 @@ Fish config:
                 eventd <command>notify</command> plugin also has support for displaying a small icon over the usual notification image.
             </para>
             <para>
-                See <citerefentry><refentrytitle>eventd-notify.event</refentrytitle><manvolnum>5</manvolnum></citerefentry> for the <command>notify</command> plugin configuration.
+                See <citerefentry><refentrytitle>eventd-notify.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry> for the <command>notify</command> plugin configuration.
             </para>
         </example>
 
@@ -387,7 +387,7 @@ Fish config:
             <programlisting>eventdctl relay connect your.distant.computer
 eventdctl relay disconnect your.distant.computer</programlisting>
             <para>
-                See <citerefentry><refentrytitle>eventd-relay.event</refentrytitle><manvolnum>5</manvolnum></citerefentry> for the <command>relay</command> plugin configuration.
+                See <citerefentry><refentrytitle>eventd-relay.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry> for the <command>relay</command> plugin configuration.
             </para>
             <para>
                 See <citerefentry><refentrytitle>eventdctl</refentrytitle><manvolnum>1</manvolnum></citerefentry> for <command>eventdctl</command> call precisions.

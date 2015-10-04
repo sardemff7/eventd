@@ -26,22 +26,22 @@
 -->
 
 <refentry xmlns:xi="http://www.w3.org/2001/XInclude"
-    id="eventd-im.event">
+    id="eventd-tts.conf">
     <xi:include href="common-man.xml" xpointer="refentryinfo" />
 
     <refmeta>
-        <refentrytitle>eventd-im.event</refentrytitle>
+        <refentrytitle>eventd-tts.conf</refentrytitle>
         <manvolnum>5</manvolnum>
     </refmeta>
 
     <refnamediv>
-        <refname>eventd-im.event</refname>
-        <refpurpose>IM plugin event configuration files</refpurpose>
+        <refname>eventd-tts.conf</refname>
+        <refpurpose>Text-to-speech plugin configuration</refpurpose>
     </refnamediv>
 
     <refsynopsisdiv>
         <para>
-            Event configuration for the IM plugin.
+            Configuration for the text-to-speech plugin.
         </para>
     </refsynopsisdiv>
 
@@ -49,46 +49,30 @@
         <title>Description</title>
 
         <para>
-            It controls the IM plugin behavior.
+            The <command>tts</command> plugin provides Text-to-Speech support through eSpeak.
         </para>
     </refsect1>
 
-    <refsect1 id="sections">
-        <title>Sections</title>
+    <refsect1 id="action-sections">
+        <title>Action sections</title>
 
         <refsect2>
-            <title>Section <varname>[IM]</varname></title>
+            <title>Section <varname>[TTS]</varname></title>
 
             <variablelist>
                 <varlistentry>
                     <term><varname>Disable=</varname></term>
                     <listitem>
                         <para>A <type>boolean</type></para>
-                        <para>If <literal>true</literal>, no message is sent.</para>
+                        <para>If <literal>true</literal>, no text will be read.</para>
                     </listitem>
                 </varlistentry>
 
                 <varlistentry>
-                    <term><varname>Account=</varname></term>
+                    <term><varname>Message=</varname> (defaults to <literal>"&lt;voice name="${message-lang}"&gt;${message}&lt;/voice&gt;"</literal>)</term>
                     <listitem>
-                        <para>An <type>account name</type></para>
-                        <para>The account that will send the message (see <citerefentry><refentrytitle>eventd-im.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>).</para>
-                    </listitem>
-                </varlistentry>
-
-                <varlistentry>
-                    <term><varname>Room=</varname></term>
-                    <listitem>
-                        <para>A <type>room name</type></para>
-                        <para>A room to send the message to, the exact format is protocol-dependant, e.g. <literal>"#project"</literal>.</para>
-                    </listitem>
-                </varlistentry>
-
-                <varlistentry>
-                    <term><varname>Message=</varname></term>
-                    <listitem>
-                        <para>A <type>format string</type></para>
-                        <para>The message to be sent.</para>
+                        <para>A <type>localised format string</type></para>
+                        <para>The text which will be read using. You can use <acronym>SSML</acronym><footnote><para>Speech Synthesis Markup Language</para></footnote>.</para>
                     </listitem>
                 </varlistentry>
             </variablelist>

@@ -144,7 +144,7 @@
             <varlistentry>
                 <term><parameter class="command">flags</parameter> <parameter class="command"><replaceable class="command">sub-command</replaceable></parameter></term>
                 <listitem>
-                    <para>Control the eventd flags (see <citerefentry><refentrytitle>eventd.event</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</para>
+                    <para>Control the eventd flags (see <citerefentry><refentrytitle>eventd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</para>
                     <variablelist>
                         <varlistentry>
                             <term><parameter class="command">add</parameter> <parameter><replaceable class="option">flag</replaceable></parameter></term>

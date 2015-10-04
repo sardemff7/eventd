@@ -26,22 +26,22 @@
 -->
 
 <refentry xmlns:xi="http://www.w3.org/2001/XInclude"
-    id="eventd-exec.event">
+    id="eventd-sound.conf">
     <xi:include href="common-man.xml" xpointer="refentryinfo" />
 
     <refmeta>
-        <refentrytitle>eventd-exec.event</refentrytitle>
+        <refentrytitle>eventd-sound.conf</refentrytitle>
         <manvolnum>5</manvolnum>
     </refmeta>
 
     <refnamediv>
-        <refname>eventd-exec.event</refname>
-        <refpurpose>exec plugin event configuration files</refpurpose>
+        <refname>eventd-sound.conf</refname>
+        <refpurpose>Sound plugin configuration</refpurpose>
     </refnamediv>
 
     <refsynopsisdiv>
         <para>
-            Event configuration for the exec plugin.
+            Configuration for the sound plugin.
         </para>
     </refsynopsisdiv>
 
@@ -49,30 +49,30 @@
         <title>Description</title>
 
         <para>
-            It controls executions of arbitrary commands on events.
+            The <command>sound</command> plugin plays sound files read with libsndfile through PulseAudio.
         </para>
     </refsect1>
 
-    <refsect1 id="sections">
-        <title>Sections</title>
+    <refsect1 id="action-sections">
+        <title>Action sections</title>
 
         <refsect2>
-            <title>Section <varname>[Exec]</varname></title>
+            <title>Section <varname>[Sound]</varname></title>
 
             <variablelist>
                 <varlistentry>
                     <term><varname>Disable=</varname></term>
                     <listitem>
                         <para>A <type>boolean</type></para>
-                        <para>If <literal>true</literal>, no command will be run.</para>
+                        <para>If <literal>true</literal>, no sound will be play.</para>
                     </listitem>
                 </varlistentry>
 
                 <varlistentry>
-                    <term><varname>Command=</varname></term>
+                    <term><varname>File=</varname> (defaults to <literal>"sound-file"</literal>)</term>
                     <listitem>
-                        <para>A <type>format string</type></para>
-                        <para>The command to exec when an event occurs. It is run asynchronously.</para>
+                        <para>A <type>file URI</type></para>
+                        <para>The sound data or file to read on event.</para>
                     </listitem>
                 </varlistentry>
             </variablelist>

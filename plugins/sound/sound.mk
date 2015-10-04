@@ -6,7 +6,7 @@ plugins_LTLIBRARIES += \
 	$(null)
 
 man5_MANS += \
-	%D%/man/eventd-sound.event.5 \
+	%D%/man/eventd-sound.conf.5 \
 	$(null)
 
 dist_fdonotificationscapabilities_DATA += \

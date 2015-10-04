@@ -26,22 +26,22 @@
 -->
 
 <refentry xmlns:xi="http://www.w3.org/2001/XInclude"
-    id="eventd-nd-xcb.conf">
+    id="eventd-exec.conf">
     <xi:include href="common-man.xml" xpointer="refentryinfo" />
 
     <refmeta>
-        <refentrytitle>eventd-nd-xcb.conf</refentrytitle>
+        <refentrytitle>eventd-exec.conf</refentrytitle>
         <manvolnum>5</manvolnum>
     </refmeta>
 
     <refnamediv>
-        <refname>eventd-nd-xcb.conf</refname>
-        <refpurpose>nd plugin xcb backend global configuration file</refpurpose>
+        <refname>eventd-exec.conf</refname>
+        <refpurpose>exec plugin configuration</refpurpose>
     </refnamediv>
 
     <refsynopsisdiv>
         <para>
-            Event configuration for the XCB backend of the nd plugin.
+            Configuration for the exec plugin.
         </para>
     </refsynopsisdiv>
 
@@ -49,22 +49,30 @@
         <title>Description</title>
 
         <para>
-            It controls the XCB backend behavior.
+            The <command>exec</command> plugin allows to run arbitrary commands.
         </para>
     </refsect1>
 
-    <refsect1 id="sections">
-        <title>Sections</title>
+    <refsect1 id="action-sections">
+        <title>Action sections</title>
 
         <refsect2>
-            <title>Section <varname>[NotificationXcb]</varname></title>
+            <title>Section <varname>[Exec]</varname></title>
 
             <variablelist>
                 <varlistentry>
-                    <term><varname>Outputs=</varname></term>
+                    <term><varname>Disable=</varname></term>
                     <listitem>
-                        <para>A <type>list of output names</type></para>
-                        <para>The backend will try to find the first available output in the list. If none is found, it will fallback to the primary output, then to use the full screen.</para>
+                        <para>A <type>boolean</type></para>
+                        <para>If <literal>true</literal>, no command will be run.</para>
+                    </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                    <term><varname>Command=</varname></term>
+                    <listitem>
+                        <para>A <type>format string</type></para>
+                        <para>The command to exec when an event occurs. It is run asynchronously.</para>
                     </listitem>
                 </varlistentry>
             </variablelist>

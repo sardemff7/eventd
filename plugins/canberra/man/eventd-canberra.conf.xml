@@ -7,7 +7,7 @@
 <!--
   eventd - Small daemon to act on remote or local events
 
-  Copyright © 2011-2012 Quentin "Sardem FF7" Glidic
+  Copyright © 2011-2014 Quentin "Sardem FF7" Glidic
 
   This file is part of eventd.
 
@@ -26,22 +26,22 @@
 -->
 
 <refentry xmlns:xi="http://www.w3.org/2001/XInclude"
-    id="eventd-sound.event">
+    id="eventd-canberra.conf">
     <xi:include href="common-man.xml" xpointer="refentryinfo" />
 
     <refmeta>
-        <refentrytitle>eventd-sound.event</refentrytitle>
+        <refentrytitle>eventd-canberra.conf</refentrytitle>
         <manvolnum>5</manvolnum>
     </refmeta>
 
     <refnamediv>
-        <refname>eventd-sound.event</refname>
-        <refpurpose>Sound plugin event configuration files</refpurpose>
+        <refname>eventd-canberra.conf</refname>
+        <refpurpose>libcanberra plugin configuration</refpurpose>
     </refnamediv>
 
     <refsynopsisdiv>
         <para>
-            Event configuration for the sound plugin.
+            Configuration for the libcanberra plugin.
         </para>
     </refsynopsisdiv>
 
@@ -49,22 +49,30 @@
         <title>Description</title>
 
         <para>
-            It controls sound support for eventd.
+            The <command>canberra</command> plugin plays theme-based sounds through the system mechanism.
         </para>
     </refsect1>
 
-    <refsect1 id="sections">
-        <title>Sections</title>
+    <refsect1 id="action-sections">
+        <title>Action sections</title>
 
         <refsect2>
-            <title>Section <varname>[Sound]</varname></title>
+            <title>Section <varname>[Libcanberra]</varname></title>
 
             <variablelist>
                 <varlistentry>
                     <term><varname>Disable=</varname></term>
                     <listitem>
                         <para>A <type>boolean</type></para>
-                        <para>If <literal>true</literal>, no sound will be play.</para>
+                        <para>If <literal>true</literal>, no sound will be played.</para>
+                    </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                    <term><varname>Name=</varname> (defaults to <literal>"${sound-name}"</literal>)</term>
+                    <listitem>
+                        <para>A <type>format string</type></para>
+                        <para>The sound name to play.</para>
                     </listitem>
                 </varlistentry>
 
@@ -72,7 +80,7 @@
                     <term><varname>File=</varname> (defaults to <literal>"sound-file"</literal>)</term>
                     <listitem>
                         <para>A <type>file URI</type></para>
-                        <para>The sound data or file to read on event.</para>
+                        <para>The sound file to play.</para>
                     </listitem>
                 </varlistentry>
             </variablelist>

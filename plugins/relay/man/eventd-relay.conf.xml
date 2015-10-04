@@ -7,7 +7,7 @@
 <!--
   eventd - Small daemon to act on remote or local events
 
-  Copyright © 2011-2014 Quentin "Sardem FF7" Glidic
+  Copyright © 2011-2012 Quentin "Sardem FF7" Glidic
 
   This file is part of eventd.
 
@@ -26,22 +26,22 @@
 -->
 
 <refentry xmlns:xi="http://www.w3.org/2001/XInclude"
-    id="eventd-canberra.event">
+    id="eventd-relay.conf">
     <xi:include href="common-man.xml" xpointer="refentryinfo" />
 
     <refmeta>
-        <refentrytitle>eventd-canberra.event</refentrytitle>
+        <refentrytitle>eventd-relay.conf</refentrytitle>
         <manvolnum>5</manvolnum>
     </refmeta>
 
     <refnamediv>
-        <refname>eventd-canberra.event</refname>
-        <refpurpose>libcanberra plugin event configuration files</refpurpose>
+        <refname>eventd-relay.conf</refname>
+        <refpurpose>relay plugin configuration</refpurpose>
     </refnamediv>
 
     <refsynopsisdiv>
         <para>
-            Event configuration for the libcanberra plugin.
+            Configuration for the relay plugin.
         </para>
     </refsynopsisdiv>
 
@@ -49,38 +49,41 @@
         <title>Description</title>
 
         <para>
-            It controls relaying of events to a notification daemon.
+            The <command>relay</command> plugin implement the EVENT protocol as a client to relay events to other servers.
         </para>
     </refsect1>
 
-    <refsect1 id="sections">
-        <title>Sections</title>
+    <refsect1 id="action-sections">
+        <title>Action sections</title>
 
         <refsect2>
-            <title>Section <varname>[Libcanberra]</varname></title>
+            <title>Section <varname>[Relay]</varname></title>
 
             <variablelist>
                 <varlistentry>
                     <term><varname>Disable=</varname></term>
                     <listitem>
                         <para>A <type>boolean</type></para>
-                        <para>If <literal>true</literal>, no sound will be played.</para>
+                        <para>If <literal>true</literal>, the event will not be relayed.</para>
                     </listitem>
                 </varlistentry>
 
                 <varlistentry>
-                    <term><varname>Name=</varname> (defaults to <literal>"${sound-name}"</literal>)</term>
+                    <term><varname>Server=</varname></term>
                     <listitem>
-                        <para>A <type>format string</type></para>
-                        <para>The sound name to play.</para>
+                        <para>A <type>server string</type></para>
+                        <para>The form is <replaceable>name</replaceable><optional>:<replaceable>port</replaceable></optional>.</para>
+                        <para>If you omit <replaceable>port</replaceable> or use <literal>0</literal>, the SRV DNS record <literal>&EVP_SERVICE_TYPE;.<replaceable>host</replaceable></literal> will be used to find the real host and port to connect to.</para>
+                        <para>Static servers the relay plugin will connect to.</para>
                     </listitem>
                 </varlistentry>
 
                 <varlistentry>
-                    <term><varname>File=</varname> (defaults to <literal>"sound-file"</literal>)</term>
+                    <term><varname>Avahi=</varname></term>
                     <listitem>
-                        <para>A <type>file URI</type></para>
-                        <para>The sound file to play.</para>
+                        <para>An <type>Avahi name</type></para>
+                        <para>Avahi name of servers the relay plugin will connect to.</para>
+                        <para>If you provide both <varname>Server=</varname> and <varname>Avahi=</varname>, the former is ignored.</para>
                     </listitem>
                 </varlistentry>
             </variablelist>

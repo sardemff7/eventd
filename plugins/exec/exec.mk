@@ -5,7 +5,7 @@ plugins_LTLIBRARIES += \
 	$(null)
 
 man5_MANS += \
-	%D%/man/eventd-exec.event.5 \
+	%D%/man/eventd-exec.conf.5 \
 	$(null)
 
 

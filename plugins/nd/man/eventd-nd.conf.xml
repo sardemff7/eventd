@@ -36,12 +36,12 @@
 
     <refnamediv>
         <refname>eventd-nd.conf</refname>
-        <refpurpose>nd plugin main configuration file</refpurpose>
+        <refpurpose>nd plugin configuration</refpurpose>
     </refnamediv>
 
     <refsynopsisdiv>
         <para>
-            Global configuration for the nd plugin.
+            Configuration for the nd plugin.
         </para>
     </refsynopsisdiv>
 
@@ -49,17 +49,108 @@
         <title>Description</title>
 
         <para>
-            It controls the notification behavior.
+            The <command>nd</command> plugins provides on-screen notifications (aka “bubbles”).
+            It depends on backends to display them.
         </para>
     </refsect1>
 
-    <refsect1 id="sections">
-        <title>Sections</title>
-
-        <para>Many keys are usable in event configuration. Keys which are not will be identified as specific to the global configuration.</para>
+    <refsect1 id="global-sections">
+        <title>Global sections</title>
 
         <refsect2>
             <title>Section <varname>[Notification]</varname></title>
+
+            <variablelist>
+                <varlistentry>
+                    <term><varname>Anchor=</varname> (defaults to <literal>top-right</literal>)</term>
+                    <listitem>
+                        <para>
+                            An <type>enumeration</type>:
+                            <simplelist type='inline'>
+                                <member><literal>top left</literal></member>
+                                <member><literal>top right</literal></member>
+                                <member><literal>bottom left</literal></member>
+                                <member><literal>bottom right</literal></member>
+                            </simplelist>
+                        </para>
+                        <para>The screen corner in which the bubble will be placed.</para>
+                    </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                    <term><varname>OldestFirst=</varname> (defaults to <literal>false</literal>)</term>
+                    <listitem>
+                        <para>A <type>boolean</type></para>
+                        <para>If <literal>true</literal>, the first bubble is the oldest, new bubbles will be pushed at the end of the queue.</para>
+                    </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                    <term><varname>Margin=</varname> (defaults to <literal>13</literal>)</term>
+                    <listitem>
+                        <para>An <type>integer</type></para>
+                        <para>Margin between bubble and screen's edge.</para>
+                    </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                    <term><varname>Spacing=</varname> (defaults to <literal>13</literal>)</term>
+                    <listitem>
+                        <para>An <type>integer</type></para>
+                        <para>Spacing between each bubble.</para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+        </refsect2>
+
+        <refsect2 condition="website;enable_xcb">
+            <title>Section <varname>[NotificationXcb]</varname></title>
+
+            <para>The XCB backend configuration</para>
+
+            <variablelist>
+                <varlistentry>
+                    <term><varname>Outputs=</varname></term>
+                    <listitem>
+                        <para>A <type>list of output names</type></para>
+                        <para>The backend will try to find the first available output in the list. If none is found, it will fallback to the primary output, then to use the full screen.</para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+        </refsect2>
+    </refsect1>
+
+    <refsect1 id="action-sections">
+        <title>Action sections</title>
+
+        <refsect2>
+            <title>Section <varname>[Notification]</varname></title>
+
+            <variablelist>
+                <varlistentry>
+                    <term><varname>Disable=</varname></term>
+                    <listitem>
+                        <para>A <type>boolean</type></para>
+                        <para>If <literal>true</literal>, the event will not have its bubble.</para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+        </refsect2>
+
+        <para>
+            Other settings are inherited from the global configuration. You may override them on an action basis.
+        </para>
+    </refsect1>
+
+    <refsect1 id="shared-sections">
+        <title>Shared sections</title>
+
+        <para>These sections are valid in both global and action configurations.</para>
+
+        <refsect2>
+            <title>Section <varname>[Notification]</varname></title>
+
+            <para>This section can accept other keys </para>
 
             <!-- Some other plugin may reuse this section -->
             <refsect3 id="content-keys">
@@ -95,54 +186,6 @@
                         <listitem>
                             <para>A <type>file URI</type></para>
                             <para>The notification's icon. Generally application-specific or category-specific.</para>
-                        </listitem>
-                    </varlistentry>
-                </variablelist>
-            </refsect3>
-
-            <refsect3>
-                <title>Placement keys</title>
-
-                <para>These keys are specific to the global configuration.</para>
-
-                <variablelist>
-                    <varlistentry>
-                        <term><varname>Anchor=</varname> (defaults to <literal>top-right</literal>)</term>
-                        <listitem>
-                            <para>
-                                An <type>enumeration</type>:
-                                <simplelist type='inline'>
-                                    <member><literal>top left</literal></member>
-                                    <member><literal>top right</literal></member>
-                                    <member><literal>bottom left</literal></member>
-                                    <member><literal>bottom right</literal></member>
-                                </simplelist>
-                            </para>
-                            <para>The screen corner in which the bubble will be placed.</para>
-                        </listitem>
-                    </varlistentry>
-
-                    <varlistentry>
-                        <term><varname>OldestFirst=</varname> (defaults to <literal>false</literal>)</term>
-                        <listitem>
-                            <para>A <type>boolean</type></para>
-                            <para>If <literal>true</literal>, the first bubble is the oldest, new bubbles will be pushed at the end of the queue.</para>
-                        </listitem>
-                    </varlistentry>
-
-                    <varlistentry>
-                        <term><varname>Margin=</varname> (defaults to <literal>13</literal>)</term>
-                        <listitem>
-                            <para>An <type>integer</type></para>
-                            <para>Margin between bubble and screen's edge.</para>
-                        </listitem>
-                    </varlistentry>
-
-                    <varlistentry>
-                        <term><varname>Spacing=</varname> (defaults to <literal>13</literal>)</term>
-                        <listitem>
-                            <para>An <type>integer</type></para>
-                            <para>Spacing between each bubble.</para>
                         </listitem>
                     </varlistentry>
                 </variablelist>

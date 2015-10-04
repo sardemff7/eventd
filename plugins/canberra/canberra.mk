@@ -6,7 +6,7 @@ plugins_LTLIBRARIES += \
 	$(null)
 
 man5_MANS += \
-	%D%/man/eventd-canberra.event.5 \
+	%D%/man/eventd-canberra.conf.5 \
 	$(null)
 
 dist_fdonotificationscapabilities_DATA += \

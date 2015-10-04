@@ -17,7 +17,7 @@ man1_MANS += \
 	$(null)
 
 man5_MANS += \
-	%D%/man/eventd-relay.event.5 \
+	%D%/man/eventd-relay.conf.5 \
 	$(null)
 
 

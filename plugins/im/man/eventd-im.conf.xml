@@ -36,12 +36,12 @@
 
     <refnamediv>
         <refname>eventd-im.conf</refname>
-        <refpurpose>IM plugin main configuration file</refpurpose>
+        <refpurpose>IM plugin configuration</refpurpose>
     </refnamediv>
 
     <refsynopsisdiv>
         <para>
-            Global configuration for the IM plugin.
+            Configuration for the IM plugin.
         </para>
     </refsynopsisdiv>
 
@@ -49,12 +49,12 @@
         <title>Description</title>
 
         <para>
-            It controls the IM plugin behavior.
+            The <command>im</command> plugin provides messaging through libpurple.
         </para>
     </refsect1>
 
-    <refsect1 id="sections">
-        <title>Sections</title>
+    <refsect1 id="global-sections">
+        <title>Global sections</title>
 
         <refsect2 id="main-section">
             <title>Section <varname>[IM]</varname></title>
@@ -115,6 +115,48 @@
                     <listitem>
                         <para>A time in <type>seconds</type> (<literal>-1</literal> for infinity)</para>
                         <para>The number of seconds the plugin will remain connected to a chat room.</para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+        </refsect2>
+    </refsect1>
+
+    <refsect1 id="action-sections">
+        <title>Action sections</title>
+
+        <refsect2>
+            <title>Section <varname>[IM]</varname></title>
+
+            <variablelist>
+                <varlistentry>
+                    <term><varname>Disable=</varname></term>
+                    <listitem>
+                        <para>A <type>boolean</type></para>
+                        <para>If <literal>true</literal>, no message is sent.</para>
+                    </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                    <term><varname>Account=</varname></term>
+                    <listitem>
+                        <para>An <type>account name</type></para>
+                        <para>The account that will send the message (see <citerefentry><refentrytitle>eventd-im.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>).</para>
+                    </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                    <term><varname>Room=</varname></term>
+                    <listitem>
+                        <para>A <type>room name</type></para>
+                        <para>A room to send the message to, the exact format is protocol-dependant, e.g. <literal>"#project"</literal>.</para>
+                    </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                    <term><varname>Message=</varname></term>
+                    <listitem>
+                        <para>A <type>format string</type></para>
+                        <para>The message to be sent.</para>
                     </listitem>
                 </varlistentry>
             </variablelist>

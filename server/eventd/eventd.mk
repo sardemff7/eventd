@@ -10,7 +10,6 @@ man1_MANS += \
 
 man5_MANS += \
 	%D%/man/eventd.conf.5 \
-	%D%/man/eventd.event.5 \
 	$(null)
 
 noarch_pkgconfig_DATA += \

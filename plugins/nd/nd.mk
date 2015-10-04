@@ -20,7 +20,6 @@ man1_MANS += \
 
 man5_MANS += \
 	%D%/man/eventd-nd.conf.5 \
-	%D%/man/eventd-nd.event.5 \
 	$(null)
 
 dist_fdonotificationscapabilities_DATA += \

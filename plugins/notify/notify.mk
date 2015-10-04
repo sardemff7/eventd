@@ -6,7 +6,7 @@ plugins_LTLIBRARIES += \
 	$(null)
 
 man5_MANS += \
-	%D%/man/eventd-notify.event.5 \
+	%D%/man/eventd-notify.conf.5 \
 	$(null)
 endif
 

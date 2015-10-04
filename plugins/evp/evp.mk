@@ -18,7 +18,6 @@ man1_MANS += \
 
 man5_MANS += \
 	%D%/man/eventd-evp.conf.5 \
-	%D%/man/eventd-evp.event.5 \
 	$(null)
 
 

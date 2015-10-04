@@ -6,7 +6,7 @@ plugins_LTLIBRARIES += \
 	$(null)
 
 man5_MANS += \
-	%D%/man/eventd-tts.event.5 \
+	%D%/man/eventd-tts.conf.5 \
 	$(null)
 endif
 
