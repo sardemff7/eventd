@@ -69,6 +69,9 @@ _eventc_get_address(const gchar *host_and_port, GError **error)
     GSocketConnectable *address = NULL;
 
     if ( ( host_and_port == NULL ) || ( *host_and_port == '\0' ) )
+        host_and_port = g_getenv("EVENTC_HOST");
+
+    if ( ( host_and_port == NULL ) || ( *host_and_port == '\0' ) )
         host_and_port = "localhost";
 
 #ifdef HAVE_GIO_UNIX

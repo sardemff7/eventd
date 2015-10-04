@@ -134,13 +134,13 @@ main(int argc, char *argv[])
 
     GOptionEntry entries[] =
     {
-        { "data-name",    'd', 0, G_OPTION_ARG_STRING_ARRAY, &event_data_name,    "Event data name to send",                                "<name>" },
-        { "data-content", 'c', 0, G_OPTION_ARG_STRING_ARRAY, &event_data_content, "Event data content to send (must be after a data-name)", "<content>" },
-        { "answer",       'a', 0, G_OPTION_ARG_STRING_ARRAY, &answers,            "Possibles answers to event",                             "<answer>" },
-        { "host",         'h', 0, G_OPTION_ARG_STRING,       &host,               "Host to connect to",                                     "<host>" },
-        { "max-tries",    'm', 0, G_OPTION_ARG_INT,          &max_tries,          "Maximum connection attempts (0 for infinite)",           "<times>" },
-        { "wait",         'w', 0, G_OPTION_ARG_NONE,         &wait_event_end,     "Wait the end of the event",                              NULL },
-        { "version",      'V', 0, G_OPTION_ARG_NONE,         &print_version,      "Print version",                                          NULL },
+        { "data-name",    'd', 0, G_OPTION_ARG_STRING_ARRAY, &event_data_name,    "Event data name to send",                                  "<name>" },
+        { "data-content", 'c', 0, G_OPTION_ARG_STRING_ARRAY, &event_data_content, "Event data content to send (must be after a data-name)",   "<content>" },
+        { "answer",       'a', 0, G_OPTION_ARG_STRING_ARRAY, &answers,            "Possibles answers to event",                               "<answer>" },
+        { "host",         'h', 0, G_OPTION_ARG_STRING,       &host,               "Host to connect to (defaults to $EVENTC_HOST if defined)", "<host>" },
+        { "max-tries",    'm', 0, G_OPTION_ARG_INT,          &max_tries,          "Maximum connection attempts (0 for infinite)",             "<times>" },
+        { "wait",         'w', 0, G_OPTION_ARG_NONE,         &wait_event_end,     "Wait the end of the event",                                NULL },
+        { "version",      'V', 0, G_OPTION_ARG_NONE,         &print_version,      "Print version",                                            NULL },
         { NULL }
     };
     GOptionContext *opt_context = g_option_context_new("<event category> <event name> - Basic CLI client for eventd");
