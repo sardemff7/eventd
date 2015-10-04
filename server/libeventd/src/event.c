@@ -39,6 +39,7 @@ G_DEFINE_TYPE(EventdEvent, eventd_event, G_TYPE_OBJECT)
  * @EVENTD_EVENT_END_REASON_TIMEOUT: The event timed out.
  * @EVENTD_EVENT_END_REASON_USER_DISMISS: The user dismissed the event.
  * @EVENTD_EVENT_END_REASON_CLIENT_DISMISS: The source of the event dismissed the event.
+ * @EVENTD_EVENT_END_REASON_TEST: Test reason. To be used in tests.
  * @EVENTD_EVENT_END_REASON_UNKNOWN: Unknown reason. When the reason comes from a remote server, the value may have been introduced in a new version.
  * @EVENTD_EVENT_END_REASON_RESERVED: Internal use only.
  */
@@ -56,6 +57,7 @@ eventd_event_end_reason_get_type(void)
             { EVENTD_EVENT_END_REASON_TIMEOUT,        "EVENTD_EVENT_END_REASON_TIMEOUT",        "timeout" },
             { EVENTD_EVENT_END_REASON_USER_DISMISS,   "EVENTD_EVENT_END_REASON_USER_DISMISS",   "user-dismiss" },
             { EVENTD_EVENT_END_REASON_CLIENT_DISMISS, "EVENTD_EVENT_END_REASON_CLIENT_DISMISS", "client-dismiss" },
+            { EVENTD_EVENT_END_REASON_TEST,           "EVENTD_EVENT_END_REASON_TEST",           "test" },
             { EVENTD_EVENT_END_REASON_UNKNOWN,        "EVENTD_EVENT_END_REASON_UNKNWON",        "unknown" },
             { EVENTD_EVENT_END_REASON_RESERVED,       "EVENTD_EVENT_END_REASON_RESERVED",       "reserved" },
             { 0, NULL, NULL }

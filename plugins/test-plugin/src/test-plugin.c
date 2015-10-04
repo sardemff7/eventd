@@ -34,7 +34,7 @@ _eventd_test_event_end_earlier(gpointer user_data)
     EventdEvent *event = user_data;
 
     eventd_event_answer(event, "test");
-    eventd_event_end(event, EVENTD_EVENT_END_REASON_RESERVED);
+    eventd_event_end(event, EVENTD_EVENT_END_REASON_TEST);
     g_object_unref(event);
 
     return FALSE;

@@ -167,7 +167,7 @@ _ended_callback(EventdEvent *e, EventdEventEndReason reason, EventcConnection *c
     {
     case STATE_FIRST_CONNECTION_FIRST_EVENT:
     case STATE_SECOND_CONNECTION_FIRST_EVENT:
-        if ( reason != EVENTD_EVENT_END_REASON_RESERVED )
+        if ( reason != EVENTD_EVENT_END_REASON_TEST )
             break;
         g_object_unref(event);
         _create_event(client, FALSE);

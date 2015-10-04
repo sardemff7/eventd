@@ -87,7 +87,7 @@ connection_test(GDataInputStream *input, GDataOutputStream *output, const gchar 
     r = g_data_input_stream_read_upto(input, "\n", -1, NULL, NULL, error);
     if ( r == NULL ) goto fail;
     if ( ! g_data_input_stream_read_byte(input, NULL, error) ) goto fail;
-    if ( g_strcmp0(r, "ENDED 2e6894bb-cf96-462e-a435-766c9b1b4f8a reserved") != 0 )
+    if ( g_strcmp0(r, "ENDED 2e6894bb-cf96-462e-a435-766c9b1b4f8a test") != 0 )
     {
         m = g_strdup_printf("No ENDED or bad ENDED to EVENT: %s", r);
         goto fail;
