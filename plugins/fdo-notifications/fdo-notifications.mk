@@ -4,10 +4,6 @@ plugins_LTLIBRARIES += \
 	fdo-notifications.la \
 	$(null)
 
-man1_MANS += \
-	%D%/man/eventd-fdo-notifications.1 \
-	$(null)
-
 dist_event_DATA += \
 	%D%/events/libnotify.event \
 	$(null)

@@ -101,7 +101,7 @@
                 </varlistentry>
 
                 <varlistentry>
-                    <term><command>fdo-notifications</command> (see <citerefentry><refentrytitle>eventd-fdo-notifications</refentrytitle><manvolnum>1</manvolnum></citerefentry>)</term>
+                    <term><command>fdo-notifications</command></term>
                     <listitem><para>which implements the <ulink url="http://people.gnome.org/~mccann/docs/notification-spec/notification-spec-latest.html">Desktop Notifications Specification</ulink></para></listitem>
                 </varlistentry>
             </variablelist>

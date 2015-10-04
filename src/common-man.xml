@@ -88,15 +88,6 @@
             </varlistentry>
 
             <varlistentry>
-                <term><command>fdo-notifications</command> plugin man pages</term>
-                <listitem>
-                    <para>
-                        <citerefentry><refentrytitle>eventd-fdo-notifications</refentrytitle><manvolnum>1</manvolnum></citerefentry>
-                    </para>
-                </listitem>
-            </varlistentry>
-
-            <varlistentry>
                 <term><command>relay</command> plugin man pages</term>
                 <listitem>
                     <para>

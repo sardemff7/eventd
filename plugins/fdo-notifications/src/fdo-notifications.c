@@ -37,7 +37,6 @@ struct _EventdPluginContext {
     EventdPluginCoreContext *core;
     EventdPluginCoreInterface *core_interface;
     GDBusNodeInfo *introspection_data;
-    gboolean disabled;
     guint id;
     GDBusConnection *connection;
     GVariant *capabilities;
@@ -531,9 +530,6 @@ _eventd_fdo_notifications_init(EventdPluginCoreContext *core, EventdPluginCoreIn
 static void
 _eventd_fdo_notifications_uninit(EventdPluginContext *context)
 {
-    if ( context == NULL )
-        return;
-
     g_hash_table_unref(context->notifications);
 
     g_variant_unref(context->capabilities);
@@ -546,45 +542,18 @@ _eventd_fdo_notifications_uninit(EventdPluginContext *context)
 
 
 /*
- * Command-line options interface
- */
-
-static GOptionGroup *
-_eventd_fdo_notifications_get_option_group(EventdPluginContext *context)
-{
-    GOptionGroup *option_group;
-    GOptionEntry entries[] =
-    {
-        { "no-fdo-notifications", 0, 0, G_OPTION_ARG_NONE, &context->disabled, "Disable Freedesktop.org Notifications D-Bus interface", NULL },
-        { NULL }
-    };
-
-    option_group = g_option_group_new("fdo-notifications", "Freedesktop.org Notifications plugin options", "Show Freedesktop.org Notifications plugin help options", NULL, NULL);
-    g_option_group_set_translation_domain(option_group, GETTEXT_PACKAGE);
-    g_option_group_add_entries(option_group, entries);
-    return option_group;
-}
-
-
-/*
  * Start/Stop interface
  */
 
 static void
 _eventd_fdo_notifications_start(EventdPluginContext *context)
 {
-    if ( ( context == NULL ) || context->disabled )
-        return;
-
     context->id = g_bus_own_name(G_BUS_TYPE_SESSION, NOTIFICATION_BUS_NAME, G_BUS_NAME_OWNER_FLAGS_NONE, _eventd_fdo_notifications_on_bus_acquired, _eventd_fdo_notifications_on_name_acquired, _eventd_fdo_notifications_on_name_lost, context, NULL);
 }
 
 static void
 _eventd_fdo_notifications_stop(EventdPluginContext *context)
 {
-    if ( ( context == NULL ) || context->disabled )
-        return;
-
     g_bus_unown_name(context->id);
 }
 
@@ -600,8 +569,6 @@ eventd_plugin_get_interface(EventdPluginInterface *interface)
 {
     eventd_plugin_interface_add_init_callback(interface, _eventd_fdo_notifications_init);
     eventd_plugin_interface_add_uninit_callback(interface, _eventd_fdo_notifications_uninit);
-
-    eventd_plugin_interface_add_get_option_group_callback(interface, _eventd_fdo_notifications_get_option_group);
 
     eventd_plugin_interface_add_start_callback(interface, _eventd_fdo_notifications_start);
     eventd_plugin_interface_add_stop_callback(interface, _eventd_fdo_notifications_stop);
