@@ -47,6 +47,7 @@ struct _EventdProtocolEvpPrivate {
     };
     struct {
         GHashTable *hash;
+        EventdProtocolEvpState return_state;
         gchar *name;
         GString *value;
     } data;

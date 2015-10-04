@@ -107,7 +107,7 @@ _eventd_protocol_evp_parse_dot_data_start(EventdProtocolEvp *self, const gchar *
     self->priv->data.name = g_strdup(argv[0]);
     self->priv->data.value = g_string_new("");
 
-    self->priv->return_state = self->priv->state;
+    self->priv->data.return_state = self->priv->state;
     self->priv->state = EVENTD_PROTOCOL_EVP_STATE_DOT_DATA;
 }
 
@@ -132,7 +132,7 @@ _eventd_protocol_evp_parse_dot_data_end(EventdProtocolEvp *self, GError **error)
     self->priv->data.name = NULL;
     self->priv->data.value = NULL;
 
-    self->priv->state = self->priv->return_state;
+    self->priv->state = self->priv->data.return_state;
 }
 
 static EventdEvent *
