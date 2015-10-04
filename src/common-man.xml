@@ -130,6 +130,15 @@
                     </para>
                 </listitem>
             </varlistentry>
+
+            <varlistentry condition="website;enable_canberra">
+                <term><command>canberra</command> plugin man pages</term>
+                <listitem>
+                    <para>
+                        <citerefentry><refentrytitle>eventd-canberra.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                    </para>
+                </listitem>
+            </varlistentry>
         </variablelist>
     </refsect1>
 </refentry>

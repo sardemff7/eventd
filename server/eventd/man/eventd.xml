@@ -154,6 +154,11 @@
                     <term><command>notify</command> (see <citerefentry><refentrytitle>eventd-notify.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
                     <listitem><para>a libnotify client plugin</para></listitem>
                 </varlistentry>
+
+                <varlistentry condition="website;enable_canberra">
+                    <term><command>canberra</command> (see <citerefentry><refentrytitle>eventd-canberra.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
+                    <listitem><para>a libcanberra client plugin</para></listitem>
+                </varlistentry>
             </variablelist>
         </refsect2>
     </refsect1>
