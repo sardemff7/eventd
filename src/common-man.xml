@@ -78,65 +78,31 @@
             </varlistentry>
 
             <varlistentry>
-                <term><command>exec</command> plugin man pages</term>
+                <term>Plugins man pages</term>
                 <listitem>
-                    <para>
-                        <citerefentry><refentrytitle>eventd-exec.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
-                    </para>
-                </listitem>
-            </varlistentry>
-
-            <varlistentry condition="website;enable_notification_daemon">
-                <term><command>nd</command> plugin and backends man pages</term>
-                <listitem>
-                    <para>
-                        <citerefentry><refentrytitle>eventd-nd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
-                    </para>
-                </listitem>
-            </varlistentry>
-
-            <varlistentry condition="website;enable_im">
-                <term><command>im</command> plugin man pages</term>
-                <listitem>
-                    <para>
-                        <citerefentry><refentrytitle>eventd-im.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
-                    </para>
-                </listitem>
-            </varlistentry>
-
-            <varlistentry condition="website;enable_sound">
-                <term><command>sound</command> plugin man pages</term>
-                <listitem>
-                    <para>
-                        <citerefentry><refentrytitle>eventd-sound.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
-                    </para>
-                </listitem>
-            </varlistentry>
-
-            <varlistentry condition="website;enable_tts">
-                <term><command>tts</command> plugin man pages</term>
-                <listitem>
-                    <para>
-                        <citerefentry><refentrytitle>eventd-tts.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
-                    </para>
-                </listitem>
-            </varlistentry>
-
-            <varlistentry condition="website;enable_notify">
-                <term><command>notify</command> plugin man pages</term>
-                <listitem>
-                    <para>
-                        <citerefentry><refentrytitle>eventd-notify.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
-                    </para>
-                </listitem>
-            </varlistentry>
-
-            <varlistentry condition="website;enable_canberra">
-                <term><command>canberra</command> plugin man pages</term>
-                <listitem>
-                    <para>
-                        <citerefentry><refentrytitle>eventd-canberra.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
-                    </para>
+                    <itemizedlist mark="">
+                        <listitem>
+                            <para><command>exec</command> plugin: <citerefentry><refentrytitle>eventd-exec.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry></para>
+                        </listitem>
+                        <listitem condition="website;enable_notification_daemon">
+                            <para><command>nd</command> plugin: <citerefentry><refentrytitle>eventdctl-nd</refentrytitle><manvolnum>1</manvolnum></citerefentry> <citerefentry><refentrytitle>eventd-nd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry></para>
+                        </listitem>
+                        <listitem condition="website;enable_im">
+                            <para><command>im</command> plugin: <citerefentry><refentrytitle>eventd-im.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry></para>
+                        </listitem>
+                        <listitem condition="website;enable_sound">
+                            <para><command>sound</command> plugin: <citerefentry><refentrytitle>eventd-sound.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry></para>
+                        </listitem>
+                        <listitem condition="website;enable_tts">
+                            <para><command>tts</command> plugin: <citerefentry><refentrytitle>eventd-tts.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry></para>
+                        </listitem>
+                        <listitem condition="website;enable_notify">
+                            <para><command>notify</command> plugin: <citerefentry><refentrytitle>eventd-notify.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry></para>
+                        </listitem>
+                        <listitem condition="website;enable_canberra">
+                            <para><command>canberra</command> plugin: <citerefentry><refentrytitle>eventd-canberra.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry></para>
+                        </listitem>
+                    </itemizedlist>
                 </listitem>
             </varlistentry>
         </variablelist>
