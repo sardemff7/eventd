@@ -143,20 +143,20 @@ connection_test(GDataInputStream *input, GDataOutputStream *output, const gchar 
 
     /* Sending a second event to test that everything is fine */
 
-    if ( ! g_data_output_stream_put_string(output, ".EVENT 2 test test\n", NULL, error) ) goto fail;
+    if ( ! g_data_output_stream_put_string(output, ".EVENT 8d099ddd-2b3b-4bd6-8ff7-374632032493 test test\n", NULL, error) ) goto fail;
     if ( ! g_data_output_stream_put_string(output, ".\n", NULL, error) ) goto fail;
 
-    if ( ! g_data_output_stream_put_string(output, "ENDED 2 client-dismiss\n", NULL, error) ) goto fail;
+    if ( ! g_data_output_stream_put_string(output, "ENDED 8d099ddd-2b3b-4bd6-8ff7-374632032493 client-dismiss\n", NULL, error) ) goto fail;
 
     /* Sending a third event to test empty newline in DATA */
 
-    if ( ! g_data_output_stream_put_string(output, ".EVENT 3 test test\n", NULL, error) ) goto fail;
+    if ( ! g_data_output_stream_put_string(output, ".EVENT 2fcdb771-9307-448d-89ab-33cbf8047cc9 test test\n", NULL, error) ) goto fail;
     if ( ! g_data_output_stream_put_string(output, ".DATA test\n", NULL, error) ) goto fail;
     if ( ! g_data_output_stream_put_string(output, "\n", NULL, error) ) goto fail;
     if ( ! g_data_output_stream_put_string(output, ".\n", NULL, error) ) goto fail;
     if ( ! g_data_output_stream_put_string(output, ".\n", NULL, error) ) goto fail;
 
-    if ( ! g_data_output_stream_put_string(output, "END 3\n", NULL, error) ) goto fail;
+    if ( ! g_data_output_stream_put_string(output, "ENDED 2fcdb771-9307-448d-89ab-33cbf8047cc9 client-dismiss\n", NULL, error) ) goto fail;
 
     g_data_output_stream_put_string(output, "BYE\n", NULL, error);
 
