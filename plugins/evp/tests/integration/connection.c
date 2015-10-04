@@ -79,7 +79,7 @@ connection_test(GDataInputStream *input, GDataOutputStream *output, const gchar 
     if ( ! g_data_input_stream_read_byte(input, NULL, error) ) goto fail;
     if ( g_strcmp0(r, ".") != 0 )
     {
-        m = g_strdup_printf("Wrong ANSWER end to EVENT: %s", r);
+        e = g_strdup_printf("Wrong ANSWER end to EVENT: %s", r);
         goto fail;
     }
     g_free(r);
@@ -89,7 +89,7 @@ connection_test(GDataInputStream *input, GDataOutputStream *output, const gchar 
     if ( ! g_data_input_stream_read_byte(input, NULL, error) ) goto fail;
     if ( g_strcmp0(r, "ENDED 2e6894bb-cf96-462e-a435-766c9b1b4f8a test") != 0 )
     {
-        m = g_strdup_printf("No ENDED or bad ENDED to EVENT: %s", r);
+        e = g_strdup_printf("No ENDED or bad ENDED to EVENT: %s", r);
         goto fail;
     }
     r = (g_free(r), NULL);
@@ -98,14 +98,14 @@ connection_test(GDataInputStream *input, GDataOutputStream *output, const gchar 
     if ( ! g_file_get_contents(filename, &contents, NULL, error) ) goto fail;
     if ( g_strcmp0(message, contents) != 0 )
     {
-        m = g_strdup_printf("Wrong test file contents: %s", contents);
+        e = g_strdup_printf("Wrong test file contents: %s", contents);
         g_free(contents);
         goto fail;
     }
     g_free(contents);
     if ( g_unlink(filename) < 0 )
     {
-        m = g_strdup_printf("Couldn't remove the file: %s", g_strerror(errno));
+        e = g_strdup_printf("Couldn't remove the file: %s", g_strerror(errno));
         goto fail;
     }
 
