@@ -371,7 +371,8 @@
             <para>You can also hook your favorite shell to make it automatic. Here are some example for Zshell, Bash or Fish:</para>
             <programlisting>Zshell zshrc:
     precmd() {
-        eventc command $([ $? -eq 0 ] &amp;&amp; echo success || echo failure) -d command -c "!!"
+        local s=$? c=( $(fc -l -D -1 ) )
+        eventc command $([[ ${s} == 0 ]] &amp;&amp; echo success || echo failure) -d command -c "${c[3,-1]}" -d time -c "${c[2]}"
     }
 
 Bash bashrc:
