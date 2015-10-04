@@ -6,6 +6,7 @@ plugins_LTLIBRARIES += \
 
 dist_event_DATA += \
 	%D%/events/libnotify.event \
+	%D%/events/libnotify.action \
 	$(null)
 
 dbussessionservice_DATA += \
