@@ -36,6 +36,7 @@ G_DEFINE_TYPE(EventdEvent, eventd_event, G_TYPE_OBJECT)
 /**
  * EventdEventEndReason:
  * @EVENTD_EVENT_END_REASON_NONE: No reason given.
+ * @EVENTD_EVENT_END_REASON_DISCARD: The event is discarded, the server has no relevant configuration for it.
  * @EVENTD_EVENT_END_REASON_TIMEOUT: The event timed out.
  * @EVENTD_EVENT_END_REASON_USER_DISMISS: The user dismissed the event.
  * @EVENTD_EVENT_END_REASON_CLIENT_DISMISS: The source of the event dismissed the event.
@@ -54,6 +55,7 @@ eventd_event_end_reason_get_type(void)
     {
         static const GEnumValue values[] = {
             { EVENTD_EVENT_END_REASON_NONE,           "EVENTD_EVENT_END_REASON_NONE",           "none" },
+            { EVENTD_EVENT_END_REASON_DISCARD,        "EVENTD_EVENT_END_REASON_DISCARD",        "discard" },
             { EVENTD_EVENT_END_REASON_TIMEOUT,        "EVENTD_EVENT_END_REASON_TIMEOUT",        "timeout" },
             { EVENTD_EVENT_END_REASON_USER_DISMISS,   "EVENTD_EVENT_END_REASON_USER_DISMISS",   "user-dismiss" },
             { EVENTD_EVENT_END_REASON_CLIENT_DISMISS, "EVENTD_EVENT_END_REASON_CLIENT_DISMISS", "client-dismiss" },
