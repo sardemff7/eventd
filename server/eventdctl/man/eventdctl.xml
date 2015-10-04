@@ -177,6 +177,26 @@
                 </listitem>
             </varlistentry>
         </variablelist>
+
+        <para>These commands are for the <command>relay</command> plugin, listed here as it is considered a core plugin.</para>
+
+        <variablelist>
+            <varlistentry>
+                <term><parameter>relay</parameter> <parameter class="command">connect</parameter> <parameter><replaceable class="option">server</replaceable></parameter></term>
+                <listitem>
+                    <para>Tell the plugin to connect to the specified <replaceable class="option">server</replaceable>.</para>
+                    <para><replaceable class="option">server</replaceable> may be any server configured as a relay (see <citerefentry><refentrytitle>eventd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>).</para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><parameter>relay</parameter> <parameter class="command">disconnect</parameter> <parameter><replaceable class="option">server</replaceable></parameter></term>
+                <listitem>
+                    <para>Tell the plugin to disconnect from the specified <replaceable class="option">server</replaceable>.</para>
+                    <para><replaceable class="option">server</replaceable> may be any server configured as a relay (see <citerefentry><refentrytitle>eventd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>).</para>
+                </listitem>
+            </varlistentry>
+        </variablelist>
     </refsect1>
 
     <refsect1 id="exit-status">

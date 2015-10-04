@@ -96,8 +96,11 @@
             <para>The following event collection plugins are <phrase condition="website">distributed</phrase><phrase condition="installation">installed</phrase> with eventd:</para>
             <variablelist>
                 <varlistentry>
-                    <term><command>evp</command> (see <citerefentry><refentrytitle>eventd-evp</refentrytitle><manvolnum>1</manvolnum></citerefentry>)</term>
-                    <listitem><para>which implements our own EVENT protocol</para></listitem>
+                    <term><command>evp</command></term>
+                    <listitem>
+                        <para>which implements our own EVENT protocol</para>
+                        <para>It is considered as a core plugin and all its relevant configuration will reside in the main eventd man pages.</para>
+                    </listitem>
                 </varlistentry>
 
                 <varlistentry>
@@ -115,8 +118,11 @@
             <para>The following action plugins are <phrase condition="website">distributed</phrase><phrase condition="installation">installed</phrase> with eventd:</para>
             <variablelist>
                 <varlistentry>
-                    <term><command>relay</command> (see <citerefentry><refentrytitle>eventd-relay.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
-                    <listitem><para>a relay plugin, to relay events to remote eventd</para></listitem>
+                    <term><command>relay</command></term>
+                    <listitem>
+                        <para>a relay plugin, to relay events to remote eventd</para>
+                        <para>It is considered as a core plugin and all its relevant configuration will reside in the main eventd man pages.</para>
+                    </listitem>
                 </varlistentry>
 
                 <varlistentry>
@@ -195,6 +201,34 @@
                 <term><option>--help</option></term>
                 <listitem>
                     <para>Show help options</para>
+                </listitem>
+            </varlistentry>
+        </variablelist>
+
+        <para>These options are for the <command>evp</command> plugin, listed here as it is considered a core plugin.</para>
+        <variablelist>
+            <varlistentry condition="website;have_gio_unix">
+                <term><option>-u</option></term>
+                <term><option>--listen-default-unix</option></term>
+                <listitem>
+                    <para>Listen on default UNIX socket</para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><option>-l</option></term>
+                <term><option>--listen=<replaceable class="parameter">socket</replaceable></option></term>
+                <listitem>
+                    <para>Add a socket to listen to</para>
+                    <para>May be specified multiple times.</para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry condition="website;enable_avahi">
+                <term><option>-A</option></term>
+                <term><option>--no-avahi</option></term>
+                <listitem>
+                    <para>Disable Avahi publishing</para>
                 </listitem>
             </varlistentry>
         </variablelist>
@@ -387,7 +421,7 @@ Fish config:
             <programlisting>eventdctl relay connect your.distant.computer
 eventdctl relay disconnect your.distant.computer</programlisting>
             <para>
-                See <citerefentry><refentrytitle>eventd-relay.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry> for the <command>relay</command> plugin configuration.
+                See <citerefentry><refentrytitle>eventd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry> for the <command>relay</command> plugin configuration.
             </para>
             <para>
                 See <citerefentry><refentrytitle>eventdctl</refentrytitle><manvolnum>1</manvolnum></citerefentry> for <command>eventdctl</command> call precisions.

@@ -12,14 +12,6 @@ check_PROGRAMS += \
 	relay-connection.test \
 	$(null)
 
-man1_MANS += \
-	%D%/man/eventdctl-relay.1 \
-	$(null)
-
-man5_MANS += \
-	%D%/man/eventd-relay.conf.5 \
-	$(null)
-
 
 relay_la_SOURCES = \
 	%D%/src/avahi.h \

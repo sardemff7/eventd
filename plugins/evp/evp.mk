@@ -12,14 +12,6 @@ check_PROGRAMS += \
 	evp-connection.test \
 	$(null)
 
-man1_MANS += \
-	%D%/man/eventd-evp.1 \
-	$(null)
-
-man5_MANS += \
-	%D%/man/eventd-evp.conf.5 \
-	$(null)
-
 
 evp_la_SOURCES = \
 	%D%/src/evp.h \

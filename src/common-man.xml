@@ -78,25 +78,6 @@
             </varlistentry>
 
             <varlistentry>
-                <term><command>evp</command> plugin man pages</term>
-                <listitem>
-                    <para>
-                        <citerefentry><refentrytitle>eventd-evp</refentrytitle><manvolnum>1</manvolnum></citerefentry>
-                        <citerefentry><refentrytitle>eventd-evp.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
-                    </para>
-                </listitem>
-            </varlistentry>
-
-            <varlistentry>
-                <term><command>relay</command> plugin man pages</term>
-                <listitem>
-                    <para>
-                        <citerefentry><refentrytitle>eventd-relay.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
-                    </para>
-                </listitem>
-            </varlistentry>
-
-            <varlistentry>
                 <term><command>exec</command> plugin man pages</term>
                 <listitem>
                     <para>
