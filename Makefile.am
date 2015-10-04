@@ -4,7 +4,7 @@ space := $(empty) $(empty)
 
 if EVENTD_USE_GIT_VERSION
 # First, check if we have an exact match for a tag
-EVENTD_GIT_EXACT_VERSION := $(shell git describe --tags --match 'v*' --exact-match --dirty 2>/dev/null)
+EVENTD_GIT_EXACT_VERSION := $(shell git describe --tags --match 'v*' --exact-match --dirty 2>/dev/null | sed -e 's:^v::')
 EVENTD_VERSION := $(if $(EVENTD_GIT_EXACT_VERSION),$(EVENTD_GIT_EXACT_VERSION),$(VERSION) - $(shell git describe --tags --always --dirty) ($(shell git describe --tags --always --all | sed -e 's:heads/::')))
 else # ! EVENTD_USE_GIT_VERSION
 EVENTD_VERSION = $(VERSION)
