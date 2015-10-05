@@ -289,6 +289,10 @@ _eventd_libnotify_action_parse(EventdPluginContext *context, GKeyFile *config_fi
     if ( evhelpers_config_key_file_get_string_with_default(config_file, "Libnotify", "Urgency", "normal", &urgency) < 0 )
         goto skip;
 
+    if ( scale < 0 )
+        scale = 50;
+    scale = CLAMP(scale, 0, 100);
+
     EventdPluginAction *action;
     action = _eventd_libnotify_event_new(title, message, image, icon, scale, urgency);
     title = message = NULL;
