@@ -74,7 +74,7 @@ _create_event(EventcConnection *client, gboolean with_file)
         gchar *tmp = g_strconcat(g_get_prgname(), "-file", NULL );
         eventd_event_add_data(event, g_strdup("file"), g_build_filename(g_getenv("EVENTD_TESTS_TMP_DIR"), tmp, NULL));
         g_free(tmp);
-        eventd_event_add_data(event, g_strdup("test"), g_strdup_printf("Some message from %s", g_get_prgname()));
+        eventd_event_add_data(event, g_strdup("test"), g_strdup_printf("Some message\nfrom %s", g_get_prgname()));
         eventd_event_add_answer(event,"test");
     }
 
