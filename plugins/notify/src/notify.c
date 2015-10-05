@@ -338,6 +338,14 @@ _eventd_libnotify_config_reset(EventdPluginContext *context)
  */
 
 static void
+_eventd_libnotify_event_ended(NotifyNotification *notification, EventdEventEndReason reason, EventdEvent *event)
+{
+    notify_notification_close(notification, NULL);
+    g_object_unref(notification);
+    g_object_unref(event);
+}
+
+static void
 _eventd_libnotify_event_action(EventdPluginContext *context, EventdPluginAction *action, EventdEvent *event)
 {
     GError *error = NULL;
@@ -369,6 +377,8 @@ _eventd_libnotify_event_action(EventdPluginContext *context, EventdPluginAction 
     if ( ! notify_notification_show(notification, &error) )
         g_warning("Can't show the notification: %s", error->message);
     g_clear_error(&error);
+
+    g_signal_connect_swapped(g_object_ref(event), "ended", G_CALLBACK(_eventd_libnotify_event_ended), g_object_ref(notification));
 
     g_object_unref(notification);
 }
