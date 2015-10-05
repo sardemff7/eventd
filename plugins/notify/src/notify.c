@@ -32,8 +32,6 @@
 #include <eventd-plugin.h>
 #include <libeventd-helpers-config.h>
 
-#include "image.h"
-
 struct _EventdPluginContext {
     GSList *actions;
 };
@@ -47,6 +45,122 @@ struct _EventdPluginAction {
     NotifyUrgency urgency;
 };
 
+
+static GdkPixbuf *
+_eventd_libnotify_icon_get_pixbuf_from_file(const gchar *filename)
+{
+    GError *error = NULL;
+    GdkPixbuf *pixbuf;
+
+    pixbuf = gdk_pixbuf_new_from_file(filename, &error);
+    if ( pixbuf == NULL )
+    {
+        g_warning("Couldn't load icon file: %s", error->message);
+        g_clear_error(&error);
+    }
+
+    return pixbuf;
+}
+
+static GdkPixbuf *
+_eventd_libnotify_icon_get_pixbuf_from_base64(const gchar *base64)
+{
+    GError *error = NULL;
+    guchar *data;
+    gsize length;
+    GdkPixbufLoader *loader;
+    GdkPixbuf *pixbuf = NULL;
+
+    if ( base64 == NULL )
+        return NULL;
+
+    data = g_base64_decode(base64, &length);
+
+    loader = gdk_pixbuf_loader_new();
+
+    if ( ! gdk_pixbuf_loader_write(loader, data, length, &error) )
+    {
+        g_warning("Couldn't write icon data: %s", error->message);
+        g_clear_error(&error);
+        goto fail;
+    }
+
+    if ( ! gdk_pixbuf_loader_close(loader, &error) )
+    {
+        g_warning("Couldn't terminate icon data loading: %s", error->message);
+        g_clear_error(&error);
+        goto fail;
+    }
+
+    pixbuf = g_object_ref(gdk_pixbuf_loader_get_pixbuf(loader));
+
+fail:
+    g_free(data);
+    g_object_unref(loader);
+    return pixbuf;
+}
+
+static GdkPixbuf *
+_eventd_libnotify_get_image(EventdEvent *event, const Filename *image_name, const Filename *icon_name, gdouble overlay_scale, gchar **icon_uri)
+{
+    gchar *file;
+    const gchar *data;
+    GdkPixbuf *image = NULL;
+    GdkPixbuf *icon = NULL;
+
+    if ( evhelpers_filename_get_path(image_name, event, "icons", &data, &file) )
+    {
+        if ( file != NULL )
+            image = _eventd_libnotify_icon_get_pixbuf_from_file(file);
+        else if ( data != NULL )
+            image = _eventd_libnotify_icon_get_pixbuf_from_base64(eventd_event_get_data(event, data));
+        g_free(file);
+    }
+
+    if ( evhelpers_filename_get_path(icon_name, event, "icons", &data, &file) )
+    {
+        if ( file != NULL )
+        {
+            *icon_uri = g_strconcat("file://", file, NULL);
+            icon = _eventd_libnotify_icon_get_pixbuf_from_file(file);
+        }
+        else if ( data != NULL )
+            icon = _eventd_libnotify_icon_get_pixbuf_from_base64(eventd_event_get_data(event, data));
+        g_free(file);
+    }
+
+    if ( ( image != NULL ) && ( icon != NULL ) )
+    {
+        gint image_width, image_height;
+        gint icon_width, icon_height;
+        gint x, y;
+        gdouble scale;
+
+        image_width = gdk_pixbuf_get_width(image);
+        image_height = gdk_pixbuf_get_height(image);
+
+        icon_width = overlay_scale * (gdouble) image_width;
+        icon_height = overlay_scale * (gdouble) image_height;
+
+        x = image_width - icon_width;
+        y = image_height - icon_height;
+
+        scale = (gdouble) icon_width / (gdouble) gdk_pixbuf_get_width(icon);
+
+        gdk_pixbuf_composite(icon, image,
+                             x, y,
+                             icon_width, icon_height,
+                             x, y,
+                             scale, scale,
+                             GDK_INTERP_BILINEAR, 255);
+
+        g_object_unref(icon);
+    }
+    else if ( ( image == NULL ) && ( icon != NULL ) )
+        image = icon;
+
+    return image;
+}
 
 /*
  * Event contents helper
@@ -217,7 +331,7 @@ _eventd_libnotify_event_action(EventdPluginContext *context, EventdPluginAction 
     title = evhelpers_format_string_get_string(action->title, event, NULL, NULL);
     message = evhelpers_format_string_get_string(action->message, event, NULL, NULL);
 
-    image = eventd_libnotify_get_image(event, action->image, action->icon, action->scale, &icon_uri);
+    image = _eventd_libnotify_get_image(event, action->image, action->icon, action->scale, &icon_uri);
 
     notification = notify_notification_new(title, message, icon_uri);
     g_free(icon_uri);

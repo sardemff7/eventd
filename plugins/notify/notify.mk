@@ -12,8 +12,6 @@ endif
 
 
 notify_la_SOURCES = \
-	%D%/src/image.h \
-	%D%/src/image.c \
 	%D%/src/notify.c \
 	$(null)
 
