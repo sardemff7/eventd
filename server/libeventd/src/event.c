@@ -60,7 +60,7 @@ eventd_event_end_reason_get_type(void)
             { EVENTD_EVENT_END_REASON_USER_DISMISS,   "EVENTD_EVENT_END_REASON_USER_DISMISS",   "user-dismiss" },
             { EVENTD_EVENT_END_REASON_CLIENT_DISMISS, "EVENTD_EVENT_END_REASON_CLIENT_DISMISS", "client-dismiss" },
             { EVENTD_EVENT_END_REASON_TEST,           "EVENTD_EVENT_END_REASON_TEST",           "test" },
-            { EVENTD_EVENT_END_REASON_UNKNOWN,        "EVENTD_EVENT_END_REASON_UNKNWON",        "unknown" },
+            { EVENTD_EVENT_END_REASON_UNKNOWN,        "EVENTD_EVENT_END_REASON_UNKNOWN",        "unknown" },
             { EVENTD_EVENT_END_REASON_RESERVED,       "EVENTD_EVENT_END_REASON_RESERVED",       "reserved" },
             { 0, NULL, NULL }
         };
