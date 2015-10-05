@@ -39,12 +39,20 @@ static EventdEvent *event = NULL;
 static GMainLoop *loop = NULL;
 
 static enum {
-    STATE_FIRST_CONNECTION_FIRST_EVENT = 1,
-    STATE_FIRST_CONNECTION_SECOND_EVENT = 2,
-    STATE_SECOND_CONNECTION_FIRST_EVENT = 3,
-    STATE_SECOND_CONNECTION_SECOND_EVENT = 4,
-    STATE_END = 5
+    STATE_FIRST_CONNECTION_FIRST_EVENT,
+    STATE_FIRST_CONNECTION_SECOND_EVENT,
+    STATE_SECOND_CONNECTION_FIRST_EVENT,
+    STATE_SECOND_CONNECTION_SECOND_EVENT,
+    STATE_END
 } state = STATE_FIRST_CONNECTION_FIRST_EVENT;
+
+static const gchar *state_names[] = {
+    [STATE_FIRST_CONNECTION_FIRST_EVENT] = "First connection, First event",
+    [STATE_FIRST_CONNECTION_SECOND_EVENT] = "First connection, Second event",
+    [STATE_SECOND_CONNECTION_FIRST_EVENT] = "Second connection, First event",
+    [STATE_SECOND_CONNECTION_SECOND_EVENT] = "Second connection, Second event",
+    [STATE_END] = "End",
+};
 
 static void _ended_callback(EventdEvent *e, EventdEventEndReason reason, EventcConnection *client);
 static void _answered_callback(EventdEvent *e, const gchar *answer, EventcConnection *client);
@@ -83,7 +91,7 @@ _connect_callback(GObject *obj, GAsyncResult *res, gpointer user_data)
             return;
         break;
         default:
-            g_warning("Should never be in that state");
+            g_warning("Should never be in that state '%s'", state_names[state]);
         }
     }
     g_main_loop_quit(loop);
@@ -137,7 +145,7 @@ _ended_close_idle_callback(gpointer user_data)
         state = STATE_END;
     break;
     default:
-        g_warning("Should never be in that state");
+        g_warning("Should never be in that state '%s'", state_names[state]);
     }
     g_main_loop_quit(loop);
     return FALSE;
@@ -153,7 +161,7 @@ _end_idle_callback(gpointer user_data)
         eventd_event_end(event, EVENTD_EVENT_END_REASON_CLIENT_DISMISS);
     break;
     default:
-        g_warning("Should never be in that state");
+        g_warning("Should never be in that state '%s'", state_names[state]);
         g_main_loop_quit(loop);
     }
     return FALSE;
@@ -184,7 +192,7 @@ _ended_callback(EventdEvent *e, EventdEventEndReason reason, EventcConnection *c
         g_idle_add(_ended_close_idle_callback, client);
         return;
     default:
-        g_warning("Should never be in that state");
+        g_warning("Should never be in that state '%s'", state_names[state]);
     }
     g_warning("Wrong end reason: %s", eventd_event_end_reason_get_value_nick(reason));
     g_main_loop_quit(loop);
@@ -212,7 +220,10 @@ eventd_tests_run_libeventc(const gchar *host)
     g_main_loop_unref(loop);
 
     if ( state != STATE_END )
+    {
+        g_warning("Wrong ending state: %s", state_names[state]);
         r = 1;
+    }
 
     g_object_unref(event);
 
