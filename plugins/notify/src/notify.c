@@ -129,35 +129,36 @@ _eventd_libnotify_get_image(EventdPluginAction *action, EventdEvent *event, gcha
         g_free(file);
     }
 
-    if ( ( image != NULL ) && ( icon != NULL ) )
-    {
-        gint image_width, image_height;
-        gint icon_width, icon_height;
-        gint x, y;
-        gdouble scale;
+    if ( ( image == NULL ) && ( icon == NULL ) )
+        return NULL;
 
-        image_width = gdk_pixbuf_get_width(image);
-        image_height = gdk_pixbuf_get_height(image);
+    if ( image == NULL )
+        return icon;
 
-        icon_width = action->scale * (gdouble) image_width;
-        icon_height = action->scale * (gdouble) image_height;
+    gint image_width, image_height;
+    gint icon_width, icon_height;
+    gint x, y;
+    gdouble scale;
 
-        x = image_width - icon_width;
-        y = image_height - icon_height;
+    image_width = gdk_pixbuf_get_width(image);
+    image_height = gdk_pixbuf_get_height(image);
 
-        scale = (gdouble) icon_width / (gdouble) gdk_pixbuf_get_width(icon);
+    icon_width = action->scale * (gdouble) image_width;
+    icon_height = action->scale * (gdouble) image_height;
 
-        gdk_pixbuf_composite(icon, image,
-                             x, y,
-                             icon_width, icon_height,
-                             x, y,
-                             scale, scale,
-                             GDK_INTERP_BILINEAR, 255);
+    x = image_width - icon_width;
+    y = image_height - icon_height;
 
-        g_object_unref(icon);
-    }
-    else if ( ( image == NULL ) && ( icon != NULL ) )
-        image = icon;
+    scale = (gdouble) icon_width / (gdouble) gdk_pixbuf_get_width(icon);
+
+    gdk_pixbuf_composite(icon, image,
+                         x, y,
+                         icon_width, icon_height,
+                         x, y,
+                         scale, scale,
+                         GDK_INTERP_BILINEAR, 255);
+
+    g_object_unref(icon);
 
     return image;
 }
