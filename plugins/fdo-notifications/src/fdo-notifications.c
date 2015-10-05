@@ -445,7 +445,7 @@ _eventd_fdo_notifications_load_capabilities_dir(const gchar *dir_name, GHashTabl
 
         gchar **capability;
         for ( capability = capabilitiesv ; *capability != NULL ; ++capability )
-            g_hash_table_insert(capabilities_set, *capability, NULL);
+            g_hash_table_add(capabilities_set, *capability);
         g_free(capabilitiesv);
 
     next:
@@ -467,7 +467,7 @@ _eventd_fdo_notifications_init_capabilities(EventdPluginContext *context)
 
     /* Common capabilities */
     /* TODO: or not, these imply “some” work
-    g_hash_table_insert(capabilities_set, "actions", NULL);
+    g_hash_table_add(capabilities_set, "actions");
      */
 
     _eventd_fdo_notifications_load_capabilities_dir(FDONOTIFICATIONSCAPABILITIESDIR, capabilities_set);
