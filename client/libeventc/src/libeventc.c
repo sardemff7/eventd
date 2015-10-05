@@ -197,7 +197,7 @@ _eventc_connection_protocol_ended(EventcConnection *self, EventdEvent *event, Ev
 static void
 _eventc_connection_protocol_bye(EventcConnection *self, EventdProtocol *protocol)
 {
-    _eventc_connection_close_internal(self);
+    g_cancellable_cancel(self->priv->cancellable);
 }
 
 static void
@@ -230,6 +230,7 @@ _eventc_connection_read_callback(GObject *obj, GAsyncResult *res, gpointer user_
                 g_set_error(&self->priv->error, EVENTC_ERROR, EVENTC_ERROR_CONNECTION, "Could not read line: %s", error->message);
             g_clear_error(&error);
         }
+        _eventc_connection_close_internal(self);
         return;
     }
 
@@ -609,6 +610,8 @@ eventc_connection_close(EventcConnection *self, GError **error)
         return FALSE;
     }
 
+    g_cancellable_cancel(self->priv->cancellable);
+
     _eventc_connection_close_internal(self);
 
     return TRUE;
@@ -617,8 +620,6 @@ eventc_connection_close(EventcConnection *self, GError **error)
 static void
 _eventc_connection_close_internal(EventcConnection *self)
 {
-    g_cancellable_cancel(self->priv->cancellable);
-
     if ( self->priv->error != NULL )
         g_error_free(self->priv->error);
     self->priv->error = NULL;
