@@ -121,8 +121,10 @@ _eventd_libnotify_get_image(EventdPluginAction *action, EventdEvent *event, gcha
     {
         if ( file != NULL )
         {
-            *icon_uri = g_strconcat("file://", file, NULL);
-            icon = _eventd_libnotify_icon_get_pixbuf_from_file(file);
+            if ( image == NULL ) 
+                *icon_uri = g_strconcat("file://", file, NULL);
+            else
+                icon = _eventd_libnotify_icon_get_pixbuf_from_file(file);
         }
         else if ( data != NULL )
             icon = _eventd_libnotify_icon_get_pixbuf_from_base64(eventd_event_get_data(event, data));
