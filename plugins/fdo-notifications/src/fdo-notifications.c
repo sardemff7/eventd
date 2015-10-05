@@ -40,6 +40,7 @@ struct _EventdPluginContext {
     guint id;
     GDBusConnection *connection;
     GVariant *capabilities;
+    GVariant *server_information_self;
     GVariant *server_information;
     guint32 count;
     GHashTable *events;
@@ -295,9 +296,12 @@ _eventd_fdo_notifications_get_capabilities(EventdPluginContext *context, GDBusMe
 }
 
 static void
-_eventd_fdo_notifications_get_server_information(EventdPluginContext *context, GDBusMethodInvocation *invocation)
+_eventd_fdo_notifications_get_server_information(const char *from, const gchar *to, EventdPluginContext *context, GDBusMethodInvocation *invocation)
 {
-    g_dbus_method_invocation_return_value(invocation, g_variant_ref(context->server_information));
+    if ( g_strcmp0(from, to) == 0 )
+        g_dbus_method_invocation_return_value(invocation, g_variant_ref(context->server_information_self));
+    else
+        g_dbus_method_invocation_return_value(invocation, g_variant_ref(context->server_information));
 }
 
 /* D-Bus method callback */
@@ -324,7 +328,7 @@ _eventd_fdo_notifications_method(GDBusConnection       *connection,
     else if ( g_strcmp0(method_name, "GetCapabilities") == 0 )
         _eventd_fdo_notifications_get_capabilities(context, invocation);
     else if ( g_strcmp0(method_name, "GetServerInformation") == 0 )
-        _eventd_fdo_notifications_get_server_information(context, invocation);
+        _eventd_fdo_notifications_get_server_information(sender, g_dbus_connection_get_unique_name(connection), context, invocation);
 }
 
 
@@ -519,6 +523,7 @@ _eventd_fdo_notifications_init(EventdPluginCoreContext *core, EventdPluginCoreIn
     context->core = core;
     context->core_interface = core_interface;
 
+    context->server_information_self = g_variant_new("(ssss)", PACKAGE_NAME "-self", "Quentin 'Sardem FF7' Glidic", PACKAGE_VERSION, NOTIFICATION_SPEC_VERSION);
     context->server_information = g_variant_new("(ssss)", PACKAGE_NAME, "Quentin 'Sardem FF7' Glidic", PACKAGE_VERSION, NOTIFICATION_SPEC_VERSION);
     _eventd_fdo_notifications_init_capabilities(context);
 
@@ -534,6 +539,7 @@ _eventd_fdo_notifications_uninit(EventdPluginContext *context)
 
     g_variant_unref(context->capabilities);
     g_variant_unref(context->server_information);
+    g_variant_unref(context->server_information_self);
 
     g_dbus_node_info_unref(context->introspection_data);
 

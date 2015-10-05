@@ -229,13 +229,12 @@ _eventd_libnotify_init(EventdPluginCoreContext *core, EventdPluginCoreInterface 
         return NULL;
     }
 
-    gchar *server_name;
+    gchar *server_name = NULL;
     notify_get_server_info(&server_name, NULL, NULL, NULL);
 
-    if ( g_strcmp0(server_name, PACKAGE_NAME) == 0 )
+    if ( g_strcmp0(server_name, PACKAGE_NAME "-self") == 0 )
     {
         g_debug("We would send notifications to ourselves: quitting");
-
         g_free(server_name);
         notify_uninit();
         return NULL;
