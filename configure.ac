@@ -1,6 +1,6 @@
 m4_define([eventd_version_major], [0])
-m4_define([eventd_version_minor], [8])
-m4_define([eventd_version_patch], [])
+m4_define([eventd_version_minor], [7])
+m4_define([eventd_version_patch], [.2])
 m4_define([eventd_homepage], [http://www.eventd.org])
 m4_define([eventd_bug_report_page], [https://github.com/sardemff7/eventd/issues])
 AC_PREREQ([2.65])

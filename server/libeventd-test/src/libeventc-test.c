@@ -42,16 +42,20 @@ static guint timeout = 0;
 static enum {
     STATE_FIRST_CONNECTION_FIRST_EVENT,
     STATE_FIRST_CONNECTION_SECOND_EVENT,
+    STATE_FIRST_CONNECTION_THIRD_EVENT,
     STATE_SECOND_CONNECTION_FIRST_EVENT,
     STATE_SECOND_CONNECTION_SECOND_EVENT,
+    STATE_SECOND_CONNECTION_THIRD_EVENT,
     STATE_END
 } state = STATE_FIRST_CONNECTION_FIRST_EVENT;
 
 static const gchar *state_names[] = {
     [STATE_FIRST_CONNECTION_FIRST_EVENT] = "First connection, First event",
     [STATE_FIRST_CONNECTION_SECOND_EVENT] = "First connection, Second event",
+    [STATE_FIRST_CONNECTION_THIRD_EVENT] = "First connection, Third event",
     [STATE_SECOND_CONNECTION_FIRST_EVENT] = "Second connection, First event",
     [STATE_SECOND_CONNECTION_SECOND_EVENT] = "Second connection, Second event",
+    [STATE_SECOND_CONNECTION_THIRD_EVENT] = "Second connection, Third event",
     [STATE_END] = "End",
 };
 
@@ -148,13 +152,13 @@ _ended_close_idle_callback(gpointer user_data)
 
     switch ( state )
     {
-    case STATE_FIRST_CONNECTION_SECOND_EVENT:
+    case STATE_FIRST_CONNECTION_THIRD_EVENT:
         if ( ! eventc_connection_close(client, &error) )
             break;
         eventc_connection_connect(client, _connect_callback, NULL);
         state = STATE_SECOND_CONNECTION_FIRST_EVENT;
         return FALSE;
-    case STATE_SECOND_CONNECTION_SECOND_EVENT:
+    case STATE_SECOND_CONNECTION_THIRD_EVENT:
         eventc_connection_close(client, &error);
         state = STATE_END;
     break;
@@ -170,8 +174,8 @@ _end_idle_callback(gpointer user_data)
 {
     switch ( state )
     {
-    case STATE_FIRST_CONNECTION_SECOND_EVENT:
-    case STATE_SECOND_CONNECTION_SECOND_EVENT:
+    case STATE_FIRST_CONNECTION_THIRD_EVENT:
+    case STATE_SECOND_CONNECTION_THIRD_EVENT:
         eventd_event_end(event, EVENTD_EVENT_END_REASON_CLIENT_DISMISS);
     break;
     default:
@@ -185,22 +189,26 @@ static void
 _ended_callback(EventdEvent *e, EventdEventEndReason reason, EventcConnection *client)
 {
     g_return_if_fail(eventd_event_end_reason_is_valid_value(reason));
+    gboolean with_file = TRUE;
     switch ( state )
     {
+    case STATE_FIRST_CONNECTION_SECOND_EVENT:
+    case STATE_SECOND_CONNECTION_SECOND_EVENT:
+        with_file = FALSE;
+        g_idle_add(_end_idle_callback, client);
     case STATE_FIRST_CONNECTION_FIRST_EVENT:
     case STATE_SECOND_CONNECTION_FIRST_EVENT:
         if ( reason != EVENTD_EVENT_END_REASON_TEST )
             break;
         g_object_unref(event);
-        _create_event(client, FALSE);
+        _create_event(client, with_file);
         if ( ! eventc_connection_event(client, event, &error) )
             g_main_loop_quit(loop);
         else
-            g_idle_add(_end_idle_callback, client);
-        ++state;
+            ++state;
         return;
-    case STATE_FIRST_CONNECTION_SECOND_EVENT:
-    case STATE_SECOND_CONNECTION_SECOND_EVENT:
+    case STATE_FIRST_CONNECTION_THIRD_EVENT:
+    case STATE_SECOND_CONNECTION_THIRD_EVENT:
         if ( reason != EVENTD_EVENT_END_REASON_CLIENT_DISMISS )
             break;
         g_idle_add(_ended_close_idle_callback, client);
