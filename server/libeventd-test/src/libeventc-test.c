@@ -37,6 +37,7 @@
 static GError *error = NULL;
 static EventdEvent *event = NULL;
 static GMainLoop *loop = NULL;
+static guint timeout = 0;
 
 static enum {
     STATE_FIRST_CONNECTION_FIRST_EVENT,
@@ -53,6 +54,14 @@ static const gchar *state_names[] = {
     [STATE_SECOND_CONNECTION_SECOND_EVENT] = "Second connection, Second event",
     [STATE_END] = "End",
 };
+
+static gboolean
+_timeout_callback(gpointer user_data)
+{
+    g_warning("Test takes too much time, aborting");
+    g_main_loop_quit(loop);
+    return FALSE;
+}
 
 static void _ended_callback(EventdEvent *e, EventdEventEndReason reason, EventcConnection *client);
 static void _answered_callback(EventdEvent *e, const gchar *answer, EventcConnection *client);
@@ -71,6 +80,11 @@ _create_event(EventcConnection *client, gboolean with_file)
 
     g_signal_connect(event, "answered", G_CALLBACK(_answered_callback), client);
     g_signal_connect(event, "ended", G_CALLBACK(_ended_callback), client);
+
+    if ( timeout > 0 )
+        g_source_remove(timeout);
+    /* The event timeout is 10s, after 11s, there must be something wrong */
+    timeout = g_timeout_add_seconds_full(G_PRIORITY_DEFAULT_IDLE, 11, _timeout_callback, NULL, NULL);
 }
 
 static void
