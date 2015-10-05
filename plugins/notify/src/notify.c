@@ -223,9 +223,7 @@ _eventd_libnotify_init(EventdPluginCoreContext *core, EventdPluginCoreInterface 
 {
     EventdPluginContext *context;
 
-    notify_init(PACKAGE_NAME);
-
-    if ( ! notify_is_initted() )
+    if ( ! notify_init(PACKAGE_NAME) )
     {
         g_warning("Couldn't initialize notify system");
         return NULL;
