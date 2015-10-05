@@ -44,6 +44,7 @@ struct _EventdPluginAction {
     Filename *icon;
     gdouble scale;
     NotifyUrgency urgency;
+    GHashTable *hints;
 };
 
 
@@ -171,7 +172,7 @@ _eventd_libnotify_get_image(EventdPluginAction *action, EventdEvent *event, gboo
  */
 
 static EventdPluginAction *
-_eventd_libnotify_event_new(FormatString *title, FormatString *message, Filename *image, Filename *icon, gint64 scale, gchar *urgency)
+_eventd_libnotify_event_new(FormatString *title, FormatString *message, Filename *image, Filename *icon, gint64 scale, gchar *urgency, GHashTable *hints)
 {
     EventdPluginAction *event;
 
@@ -192,6 +193,7 @@ _eventd_libnotify_event_new(FormatString *title, FormatString *message, Filename
     else
         g_warning("Unknown urgency: %s", urgency);
     g_free(urgency);
+    event->hints = hints;
 
     return event;
 }
@@ -201,6 +203,8 @@ _eventd_libnotify_action_free(gpointer data)
 {
     EventdPluginAction *event = data;
 
+    if ( event->hints != NULL )
+        g_hash_table_unref(event->hints);
     evhelpers_filename_unref(event->image);
     evhelpers_filename_unref(event->icon);
     evhelpers_format_string_unref(event->message);
@@ -307,8 +311,29 @@ _eventd_libnotify_action_parse(EventdPluginContext *context, GKeyFile *config_fi
         scale = 50;
     scale = CLAMP(scale, 0, 100);
 
+    GHashTable *hints = NULL;
+    if ( g_key_file_has_group(config_file, "Libnotify hints") )
+    {
+        gchar **keys, **key;
+        FormatString *value;
+
+        keys = g_key_file_get_keys(config_file, "Libnotify hints", NULL, NULL);
+        if ( keys != NULL )
+        {
+            hints = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) evhelpers_format_string_unref);
+            for ( key = keys ; *key != NULL ; ++key )
+            {
+                if ( evhelpers_config_key_file_get_format_string(config_file, "Libnotify hints", *key, &value) == 0 )
+                    g_hash_table_insert(hints, *key, value);
+                else
+                    g_free(*key);
+            }
+            g_free(keys);
+        }
+    }
+
     EventdPluginAction *action;
-    action = _eventd_libnotify_event_new(title, message, image, icon, scale, urgency);
+    action = _eventd_libnotify_event_new(title, message, image, icon, scale, urgency, hints);
     title = message = NULL;
     image = icon = NULL;
     urgency = NULL;
@@ -373,6 +398,29 @@ _eventd_libnotify_event_action(EventdPluginContext *context, EventdPluginAction 
 
     notify_notification_set_urgency(notification, action->urgency);
     notify_notification_set_timeout(notification, eventd_event_get_timeout(event));
+
+    if ( action->hints != NULL )
+    {
+        GHashTableIter iter;
+        gchar *key;
+        FormatString *value_;
+        gchar *value;
+        GVariant *variant;
+        g_hash_table_iter_init(&iter, action->hints);
+        while ( g_hash_table_iter_next(&iter, (gpointer *) &key, (gpointer *) &value_) )
+        {
+            value = evhelpers_format_string_get_string(value_, event, NULL, NULL);
+            if ( *value == '\0' )
+                notify_notification_set_hint(notification, key, NULL);
+            else
+            {
+                variant = g_variant_parse(NULL, value, NULL, NULL, NULL);
+                if ( variant != NULL )
+                    notify_notification_set_hint(notification, key, variant);
+            }
+            g_free(value);
+        }
+    }
 
     if ( ! notify_notification_show(notification, &error) )
         g_warning("Can't show the notification: %s", error->message);

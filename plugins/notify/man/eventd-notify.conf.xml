@@ -119,6 +119,22 @@
                 </varlistentry>
             </variablelist>
         </refsect2>
+
+        <refsect2>
+            <title>Section <varname>[Libnotify hints]</varname></title>
+
+            <para>This section has special handling. All keys in this section are translated to <ulink url="https://people.gnome.org/~mccann/docs/notification-spec/notification-spec-latest.html#hints">hints</ulink> for the server.</para>
+            <para>The key name is used as-is, and the key value is a <type>format string</type> which, once resolved, will be parsed as a <ulink href="https://developer.gnome.org/glib/stable/gvariant-text.html"><type>GVariant text</type></ulink>.</para>
+
+            <example>
+                <title>Setting a notification as transcient and of category "device.added"</title>
+                <programlisting>[Libnotify]
+
+[Libnotify hints]
+transcient=true
+category="device.added"</programlisting>
+            </example>
+        </refsect2>
     </refsect1>
 
     <xi:include href="common-man.xml" xpointer="see-also" />
