@@ -33,6 +33,7 @@
 #include <libeventd-helpers-config.h>
 
 struct _EventdPluginContext {
+    gboolean overlay_icon;
     GSList *actions;
 };
 
@@ -101,7 +102,7 @@ fail:
 }
 
 static GdkPixbuf *
-_eventd_libnotify_get_image(EventdPluginAction *action, EventdEvent *event, gchar **icon_uri)
+_eventd_libnotify_get_image(EventdPluginAction *action, EventdEvent *event, gboolean server_support, gchar **icon_uri)
 {
     gchar *file;
     const gchar *data;
@@ -121,7 +122,7 @@ _eventd_libnotify_get_image(EventdPluginAction *action, EventdEvent *event, gcha
     {
         if ( file != NULL )
         {
-            if ( image == NULL ) 
+            if ( ( image == NULL ) || ( server_support ) )
                 *icon_uri = g_strconcat("file://", file, NULL);
             else
                 icon = _eventd_libnotify_icon_get_pixbuf_from_file(file);
@@ -241,6 +242,17 @@ _eventd_libnotify_init(EventdPluginCoreContext *core, EventdPluginCoreInterface 
 
     context = g_new0(EventdPluginContext, 1);
 
+    GList *capabilities, *capability_;
+    capabilities = notify_get_server_caps();
+    for ( capability_ = capabilities ; capability_ != NULL ; capability_ = g_list_next(capability_) )
+    {
+        gchar *capability = capability_->data;
+        if ( g_strcmp0(capability, "x-eventd-overlay-icon") == 0 )
+            context->overlay_icon = TRUE;
+        g_free(capability);
+    }
+    g_list_free(capabilities);
+
     return context;
 }
 
@@ -338,7 +350,7 @@ _eventd_libnotify_event_action(EventdPluginContext *context, EventdPluginAction 
     title = evhelpers_format_string_get_string(action->title, event, NULL, NULL);
     message = evhelpers_format_string_get_string(action->message, event, NULL, NULL);
 
-    image = _eventd_libnotify_get_image(action, event, &icon_uri);
+    image = _eventd_libnotify_get_image(action, event, context->overlay_icon, &icon_uri);
 
     notification = notify_notification_new(title, message, icon_uri);
     g_free(icon_uri);
