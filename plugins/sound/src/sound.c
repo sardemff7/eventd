@@ -191,7 +191,7 @@ _eventd_sound_action_parse(EventdPluginContext *context, GKeyFile *config_file)
     action = g_slice_new(EventdPluginAction);
     action->sound = sound;
 
-    context->actions = g_slist_prepend(context->actions, sound);
+    context->actions = g_slist_prepend(context->actions, action);
     return action;
 }
 
