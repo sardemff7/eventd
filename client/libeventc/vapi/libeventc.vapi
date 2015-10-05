@@ -40,15 +40,21 @@ namespace Eventc
 	[CCode (cheader_filename = "libeventc.h")]
 	public class Connection : GLib.Object
 	{
-		public bool passive { get; set; }
-		public bool enable_proxy { get; set; }
-		public string host { private get; set; }
+		public Connection(string host) throws Eventc.Error;
+		public Connection.for_connectable(GLib.SocketConnectable connectable);
 
-		public Connection(string host);
-		public bool close() throws Eventc.Error;
+		public bool get_passive();
+		public bool get_enable_proxy();
+
+		public void set_passive(bool passive);
+		public void set_enable_proxy(bool enable_proxy);
+		public bool set_host(string host) throws Eventc.Error;
+		public void set_connectable(GLib.SocketConnectable address);
+
+		public bool is_connected() throws Eventc.Error;
 		public new async void connect() throws Eventc.Error;
 		public new void connect_sync() throws Eventc.Error;
 		public bool event(Eventd.Event event) throws Eventc.Error;
-		public bool is_connected() throws Eventc.Error;
+		public bool close() throws Eventc.Error;
 	}
 }
