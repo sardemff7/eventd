@@ -101,14 +101,14 @@ fail:
 }
 
 static GdkPixbuf *
-_eventd_libnotify_get_image(EventdEvent *event, const Filename *image_name, const Filename *icon_name, gdouble overlay_scale, gchar **icon_uri)
+_eventd_libnotify_get_image(EventdPluginAction *action, EventdEvent *event, gchar **icon_uri)
 {
     gchar *file;
     const gchar *data;
     GdkPixbuf *image = NULL;
     GdkPixbuf *icon = NULL;
 
-    if ( evhelpers_filename_get_path(image_name, event, "icons", &data, &file) )
+    if ( evhelpers_filename_get_path(action->image, event, "icons", &data, &file) )
     {
         if ( file != NULL )
             image = _eventd_libnotify_icon_get_pixbuf_from_file(file);
@@ -117,7 +117,7 @@ _eventd_libnotify_get_image(EventdEvent *event, const Filename *image_name, cons
         g_free(file);
     }
 
-    if ( evhelpers_filename_get_path(icon_name, event, "icons", &data, &file) )
+    if ( evhelpers_filename_get_path(action->icon, event, "icons", &data, &file) )
     {
         if ( file != NULL )
         {
@@ -139,8 +139,8 @@ _eventd_libnotify_get_image(EventdEvent *event, const Filename *image_name, cons
         image_width = gdk_pixbuf_get_width(image);
         image_height = gdk_pixbuf_get_height(image);
 
-        icon_width = overlay_scale * (gdouble) image_width;
-        icon_height = overlay_scale * (gdouble) image_height;
+        icon_width = action->scale * (gdouble) image_width;
+        icon_height = action->scale * (gdouble) image_height;
 
         x = image_width - icon_width;
         y = image_height - icon_height;
@@ -331,7 +331,7 @@ _eventd_libnotify_event_action(EventdPluginContext *context, EventdPluginAction 
     title = evhelpers_format_string_get_string(action->title, event, NULL, NULL);
     message = evhelpers_format_string_get_string(action->message, event, NULL, NULL);
 
-    image = _eventd_libnotify_get_image(event, action->image, action->icon, action->scale, &icon_uri);
+    image = _eventd_libnotify_get_image(action, event, &icon_uri);
 
     notification = notify_notification_new(title, message, icon_uri);
     g_free(icon_uri);
