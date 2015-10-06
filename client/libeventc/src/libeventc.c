@@ -76,7 +76,15 @@ _eventc_get_address(const gchar *host_and_port, GError **error)
 
 #ifdef HAVE_GIO_UNIX
     if ( g_str_has_prefix(host_and_port, "@") )
-        return G_SOCKET_CONNECTABLE(g_unix_socket_address_new_with_type(host_and_port + 1, -1, G_UNIX_SOCKET_ADDRESS_ABSTRACT));
+    {
+        if ( g_unix_socket_address_abstract_names_supported() )
+            return G_SOCKET_CONNECTABLE(g_unix_socket_address_new_with_type(host_and_port + 1, -1, G_UNIX_SOCKET_ADDRESS_ABSTRACT));
+        else
+        {
+            g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_HOSTNAME, "Abstract UNIX socket names are not supported");
+            return NULL;
+        }
+    }
 
     if ( g_path_is_absolute(host_and_port) )
         return G_SOCKET_CONNECTABLE(g_unix_socket_address_new(host_and_port));
