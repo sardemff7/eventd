@@ -80,7 +80,6 @@ _eventd_protocol_evp_parse_dot__continue_noeat(EventdProtocolEvp *self, const gc
 static void
 _eventd_protocol_evp_parse_dot_catchall_start(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
 {
-    self->priv->return_state = self->priv->state;
     ++self->priv->catchall.level;
     self->priv->state = EVENTD_PROTOCOL_EVP_STATE_IGNORING;
 }
@@ -97,7 +96,7 @@ static void
 _eventd_protocol_evp_parse_dot_catchall_end(EventdProtocolEvp *self, GError **error)
 {
     if ( --self->priv->catchall.level < 1 )
-        self->priv->state = self->priv->return_state;
+        self->priv->state = self->priv->base_state;
 }
 
 /* .DATA */
@@ -163,7 +162,6 @@ _eventd_protocol_evp_parse_dot_event_start(EventdProtocolEvp *self, const gchar 
         return _eventd_protocol_evp_parse_dot_catchall_start(self, argv, error);
 
 
-    self->priv->return_state = self->priv->state;
     self->priv->state = EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT;
 }
 
@@ -181,7 +179,7 @@ _eventd_protocol_evp_parse_dot_event_end(EventdProtocolEvp *self, GError **error
     g_object_unref(self->priv->event);
     self->priv->event = NULL;
 
-    self->priv->state = self->priv->return_state;
+    self->priv->state = self->priv->base_state;
 }
 
 /* .ANSWERED */
@@ -191,7 +189,6 @@ _eventd_protocol_evp_parse_dot_answered_start(EventdProtocolEvp *self, const gch
     self->priv->answer.id = g_strdup(argv[0]);
     self->priv->answer.answer = g_strdup(argv[1]);
 
-    self->priv->return_state = self->priv->state;
     self->priv->state = EVENTD_PROTOCOL_EVP_STATE_DOT_ANSWERED;
 }
 
@@ -215,7 +212,7 @@ _eventd_protocol_evp_parse_dot_answered_end(EventdProtocolEvp *self, GError **er
     self->priv->answer.answer = NULL;
     self->priv->data.hash = NULL;
 
-    self->priv->state = self->priv->return_state;
+    self->priv->state = self->priv->base_state;
 }
 
 /* DATA */
@@ -278,7 +275,9 @@ static void
 _eventd_protocol_evp_parse_passive(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
 {
     g_signal_emit(self, _eventd_protocol_signals[SIGNAL_PASSIVE], 0);
-    self->priv->state = EVENTD_PROTOCOL_EVP_STATE_PASSIVE;
+
+    self->priv->base_state = EVENTD_PROTOCOL_EVP_STATE_PASSIVE;
+    self->priv->state = self->priv->base_state;
 }
 
 /* BYE */
