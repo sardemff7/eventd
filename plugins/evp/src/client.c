@@ -44,6 +44,8 @@ struct _EventdEvpClient {
     GDataInputStream *in;
     GDataOutputStream *out;
     GHashTable *events;
+    GList *subscribe_all;
+    GHashTable *subscriptions;
 };
 
 typedef struct {
@@ -159,6 +161,32 @@ _eventd_evp_client_protocol_passive(EventdEvpClient *self, EventdProtocol *proto
 }
 
 static void
+_eventd_evp_client_protocol_subscribe(EventdEvpClient *self, const gchar * const *categories, EventdProtocol *protocol)
+{
+    if ( categories == NULL )
+    {
+        self->context->subscribe_all = g_list_prepend(self->context->subscribe_all, self);
+        self->subscribe_all = self->context->subscribe_all;
+        return;
+    }
+
+    gchar *key = NULL;
+    GList *list = NULL;
+    for ( ; *categories != NULL ; ++categories )
+    {
+        if ( g_hash_table_lookup_extended(self->context->subscribe_categories, *categories, (gpointer *) &key, (gpointer *) &list) )
+            g_hash_table_steal(self->context->subscribe_categories, *categories);
+        else
+            key = g_strdup(*categories);
+
+        list = g_list_prepend(list, self);
+
+        g_hash_table_insert(self->context->subscribe_categories, key, list);
+        g_hash_table_insert(self->subscriptions, key, list);
+    }
+}
+
+static void
 _eventd_evp_client_protocol_bye(EventdEvpClient *self, EventdProtocol *protocol)
 {
 #ifdef EVENTD_DEBUG
@@ -226,6 +254,7 @@ eventd_evp_client_connection_handler(GSocketService *service, GSocketConnection 
 
     self->protocol = eventd_protocol_evp_new();
     self->events = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, _eventd_evp_client_event_handlers_free);
+    self->subscriptions = g_hash_table_new(g_str_hash, g_str_equal);
 
     self->cancellable = g_cancellable_new();
     self->connection = g_object_ref(connection);
@@ -240,6 +269,7 @@ eventd_evp_client_connection_handler(GSocketService *service, GSocketConnection 
     g_signal_connect_swapped(self->protocol, "answered", G_CALLBACK(_eventd_evp_client_protocol_answered), self);
     g_signal_connect_swapped(self->protocol, "ended", G_CALLBACK(_eventd_evp_client_protocol_ended), self);
     g_signal_connect_swapped(self->protocol, "passive", G_CALLBACK(_eventd_evp_client_protocol_passive), self);
+    g_signal_connect_swapped(self->protocol, "subscribe", G_CALLBACK(_eventd_evp_client_protocol_subscribe), self);
     g_signal_connect_swapped(self->protocol, "bye", G_CALLBACK(_eventd_evp_client_protocol_bye), self);
 
     self->link = context->clients = g_list_prepend(context->clients, self);
@@ -250,6 +280,24 @@ eventd_evp_client_connection_handler(GSocketService *service, GSocketConnection 
 static void
 _eventd_evp_client_disconnect_internal(EventdEvpClient *self)
 {
+    GHashTableIter iter;
+    gchar *category, *key;
+    GList *link, *list;
+    g_hash_table_iter_init(&iter, self->subscriptions);
+    while ( g_hash_table_iter_next(&iter, (gpointer *) &category, (gpointer *) &link) )
+    {
+        g_hash_table_iter_steal(&iter);
+
+        g_hash_table_lookup_extended(self->context->subscribe_categories, category, (gpointer *) &key, (gpointer *) &list);
+        g_hash_table_steal(self->context->subscribe_categories, category);
+
+        list = g_list_delete_link(list, link);
+
+        g_hash_table_insert(self->context->subscribe_categories, key, list);
+    }
+
+    self->context->subscribe_all = g_list_delete_link(self->context->subscribe_all, self->subscribe_all);
+
     self->context->clients = g_list_remove_link(self->context->clients, self->link);
 
     eventd_evp_client_disconnect(self);
@@ -260,6 +308,7 @@ eventd_evp_client_disconnect(gpointer data)
 {
     EventdEvpClient *self = data;
 
+    g_hash_table_unref(self->subscriptions);
     g_hash_table_unref(self->events);
 
     g_object_unref(self->in);
@@ -276,4 +325,15 @@ eventd_evp_client_disconnect(gpointer data)
     g_object_unref(self->protocol);
 
     g_free(self);
+}
+
+void
+eventd_evp_client_event_dispatch(EventdEvpClient *self, EventdEvent *event)
+{
+    if ( g_hash_table_contains(self->events, event) )
+        /* Do not send back our own events */
+        return;
+
+    _eventd_evp_client_send_message(self, eventd_protocol_generate_event(self->protocol, event));
+    _eventd_evp_client_handle_event(self, event);
 }

@@ -35,6 +35,8 @@ struct _EventdPluginContext {
     gchar *avahi_name;
     GSocketService *service;
     GList *clients;
+    GList *subscribe_all;
+    GHashTable *subscribe_categories;
 };
 
 #endif /* __EVENTD_EVP_EVP_H__ */

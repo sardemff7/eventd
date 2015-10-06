@@ -126,6 +126,8 @@ _eventd_evp_start(EventdPluginContext *self)
     else
 #endif /* ENABLE_AVAHI */
         g_list_free_full(sockets, g_object_unref);
+
+    self->subscribe_categories = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) g_list_free);
 }
 
 static void
@@ -134,6 +136,11 @@ _eventd_evp_stop(EventdPluginContext *self)
 #ifdef ENABLE_AVAHI
     eventd_evp_avahi_stop(self->avahi);
 #endif /* ENABLE_AVAHI */
+
+    g_hash_table_unref(self->subscribe_categories);
+    self->subscribe_categories = NULL;
+    g_list_free(self->subscribe_all);
+    self->subscribe_all = NULL;
 
     g_list_free_full(self->clients, eventd_evp_client_disconnect);
 
@@ -198,6 +205,26 @@ _eventd_evp_config_reset(EventdPluginContext *self)
 
 
 /*
+ * Event dispatching interface
+ */
+
+static void
+_eventd_evp_event_dispatch(EventdPluginContext *self, EventdEvent *event)
+{
+    GList *subscribers;
+    GList *client;
+
+    subscribers = self->subscribe_all;
+    for ( client = subscribers ; client != NULL ; client = g_list_next(client) )
+        eventd_evp_client_event_dispatch(client->data, event);
+
+    subscribers = g_hash_table_lookup(self->subscribe_categories, eventd_event_get_category(event));
+    for ( client = subscribers ; client != NULL ; client = g_list_next(client) )
+        eventd_evp_client_event_dispatch(client->data, event);
+}
+
+
+/*
  * Plugin interface
  */
 
@@ -216,4 +243,6 @@ eventd_plugin_get_interface(EventdPluginInterface *interface)
 
     eventd_plugin_interface_add_global_parse_callback(interface, _eventd_evp_global_parse);
     eventd_plugin_interface_add_config_reset_callback(interface, _eventd_evp_config_reset);
+
+    eventd_plugin_interface_add_event_dispatch_callback(interface, _eventd_evp_event_dispatch);
 }

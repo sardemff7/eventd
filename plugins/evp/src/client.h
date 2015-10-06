@@ -27,5 +27,6 @@ typedef struct _EventdEvpClient EventdEvpClient;
 
 gboolean eventd_evp_client_connection_handler(GSocketService *service, GSocketConnection *connection, GObject *obj, gpointer user_data);
 void eventd_evp_client_disconnect(gpointer data);
+void eventd_evp_client_event_dispatch(EventdEvpClient *client, EventdEvent *event);
 
 #endif /* __EVENTD_EVP_CLIENT_H__ */
