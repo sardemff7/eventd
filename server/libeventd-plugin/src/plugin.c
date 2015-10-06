@@ -237,17 +237,14 @@ EVENTD_EXPORT void eventd_plugin_interface_add_config_reset_callback(EventdPlugi
  * @action: (transfer none): the plugin action
  * @event: (transfer none): the dispatched event
  *
- * This callback handles incoming events.
+ * This callback handles actions.
  */
 
 /**
  * eventd_plugin_interface_add_event_action_callback:
  * @interface: an #EventdPluginInterface
- * @callback: (scope async): a function to call when an event occurs
+ * @callback: (scope async): a function to call when triggering an action
  *
- * This callback is used to handle events and act upon them.
- *
- * Note that currently, this is called for every event; in the future, it will
- * only be called for events which have configuration for the plugin.
+ * This callback is called whenever an event triggers an action created by the plugin.
  */
 EVENTD_EXPORT void eventd_plugin_interface_add_event_action_callback(EventdPluginInterface *interface, EventdPluginEventActionFunc callback) { interface->event_action = callback; }
