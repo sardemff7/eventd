@@ -187,7 +187,7 @@ _eventd_protocol_evp_parse_dot_event_end(EventdProtocolEvp *self, GError **error
 static void
 _eventd_protocol_evp_parse_dot_answered_start(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
 {
-    self->priv->answer.id = g_strdup(argv[0]);
+    self->priv->answer.event = g_hash_table_lookup(self->priv->events, argv[0]);
     self->priv->answer.answer = g_strdup(argv[1]);
 
     self->priv->state = EVENTD_PROTOCOL_EVP_STATE_DOT_ANSWERED;
@@ -196,20 +196,17 @@ _eventd_protocol_evp_parse_dot_answered_start(EventdProtocolEvp *self, const gch
 static void
 _eventd_protocol_evp_parse_dot_answered_end(EventdProtocolEvp *self, GError **error)
 {
-    EventdEvent *event;
-    event = g_hash_table_lookup(self->priv->events, self->priv->answer.id);
-    if ( event != NULL )
+    if ( self->priv->answer.event != NULL )
     {
-        eventd_event_set_all_answer_data(event, self->priv->data.hash);
-        g_signal_emit(self, _eventd_protocol_signals[SIGNAL_ANSWERED], 0, event, self->priv->answer.answer);
+        eventd_event_set_all_answer_data(self->priv->answer.event, self->priv->data.hash);
+        g_signal_emit(self, _eventd_protocol_signals[SIGNAL_ANSWERED], 0, self->priv->answer.event, self->priv->answer.answer);
     }
     else if ( self->priv->data.hash != NULL )
         g_hash_table_unref(self->priv->data.hash);
 
-    g_free(self->priv->answer.id);
     g_free(self->priv->answer.answer);
 
-    self->priv->answer.id = NULL;
+    self->priv->answer.event = NULL;
     self->priv->answer.answer = NULL;
     self->priv->data.hash = NULL;
 

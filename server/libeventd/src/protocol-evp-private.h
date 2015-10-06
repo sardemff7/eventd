@@ -42,7 +42,7 @@ struct _EventdProtocolEvpPrivate {
         } catchall;
         EventdEvent *event;
         struct {
-            gchar *id;
+            EventdEvent *event;
             gchar *answer;
         } answer;
     };
