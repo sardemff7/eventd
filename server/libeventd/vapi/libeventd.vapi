@@ -83,12 +83,14 @@ namespace Eventd
         public abstract string generate_answered(Eventd.Event event, string answer);
         public abstract string generate_ended(Eventd.Event event, Eventd.EventEndReason reason);
         public abstract string generate_passive();
+        public abstract string generate_subscribe([CCode (array_null_terminated = true, array_length = false)] string[] ?categories);
         public abstract string generate_bye(string? message);
 
         public signal void event(Eventd.Event event);
         public signal void answered(Eventd.Event event, string answer);
         public signal void ended(Eventd.Event event, Eventd.EventEndReason reason);
         public signal void passive();
+        public signal void subscribe([CCode (array_null_terminated = true, array_length = false)] unowned string[] ?categories);
         public signal void bye(string? message);
     }
 

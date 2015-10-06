@@ -24,7 +24,9 @@
 typedef enum {
     EVENTD_PROTOCOL_EVP_STATE_BASE = 0,
     EVENTD_PROTOCOL_EVP_STATE_PASSIVE,
+    EVENTD_PROTOCOL_EVP_STATE_SUBSCRIBE,
     EVENTD_PROTOCOL_EVP_STATE_BYE,
+    EVENTD_PROTOCOL_EVP_STATE_DOT_SUBSCRIBE,
     EVENTD_PROTOCOL_EVP_STATE_DOT_DATA,
     EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT,
     EVENTD_PROTOCOL_EVP_STATE_DOT_ANSWERED,
@@ -45,6 +47,11 @@ struct _EventdProtocolEvpPrivate {
             EventdEvent *event;
             gchar *answer;
         } answer;
+        struct {
+            gchar **list;
+            gsize size;
+            gsize current;
+        } subscriptions;
     };
     struct {
         GHashTable *hash;
@@ -65,6 +72,7 @@ gchar *eventd_protocol_evp_generate_answered(EventdProtocol *protocol, EventdEve
 gchar *eventd_protocol_evp_generate_ended(EventdProtocol *protocol, EventdEvent *event, EventdEventEndReason reason);
 
 gchar *eventd_protocol_evp_generate_passive(EventdProtocol *protocol);
+gchar *eventd_protocol_evp_generate_subscribe(EventdProtocol *protocol, const gchar * const *categories);
 gchar *eventd_protocol_evp_generate_bye(EventdProtocol *protocol, const gchar *message);
 
 

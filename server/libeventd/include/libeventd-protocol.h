@@ -50,6 +50,7 @@ struct _EventdProtocolInterface
     gchar *(*generate_ended)(EventdProtocol *protocol, EventdEvent *event, EventdEventEndReason reason);
 
     gchar *(*generate_passive)(EventdProtocol *protocol);
+    gchar *(*generate_subscribe)(EventdProtocol *protocol, const gchar * const *categories);
     gchar *(*generate_bye)(EventdProtocol *protocol, const gchar *message);
 
     /* Signals */
@@ -58,6 +59,7 @@ struct _EventdProtocolInterface
     void (*ended)(EventdProtocol *protocol, EventdEvent *event, EventdEventEndReason reason);
 
     void (*passive)(EventdProtocol *protocol);
+    void (*subscribe)(EventdProtocol *protocol, const gchar * const *categories);
     void (*bye)(EventdProtocol *protocol, const gchar *message);
 };
 
@@ -124,6 +126,7 @@ gchar *eventd_protocol_generate_answered(EventdProtocol *protocol, EventdEvent *
 gchar *eventd_protocol_generate_ended(EventdProtocol *protocol, EventdEvent *event, EventdEventEndReason reason);
 
 gchar *eventd_protocol_generate_passive(EventdProtocol *protocol);
+gchar *eventd_protocol_generate_subscribe(EventdProtocol *protocol, const gchar * const *categories);
 gchar *eventd_protocol_generate_bye(EventdProtocol *protocol, const gchar *message);
 
 G_END_DECLS

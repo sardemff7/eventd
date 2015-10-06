@@ -39,13 +39,15 @@
 #include "protocol-evp-private.h"
 
 static const gchar *_eventd_protocol_evp_states[_EVENTD_PROTOCOL_EVP_STATE_SIZE] = {
-    [EVENTD_PROTOCOL_EVP_STATE_BASE]         = "base",
-    [EVENTD_PROTOCOL_EVP_STATE_PASSIVE]      = "passive",
-    [EVENTD_PROTOCOL_EVP_STATE_BYE]          = "bye",
-    [EVENTD_PROTOCOL_EVP_STATE_DOT_DATA]     = "dot message DATA",
-    [EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT]    = "dot message EVENT",
-    [EVENTD_PROTOCOL_EVP_STATE_DOT_ANSWERED] = "dot message ANSWERED",
-    [EVENTD_PROTOCOL_EVP_STATE_IGNORING]     = "ignoring",
+    [EVENTD_PROTOCOL_EVP_STATE_BASE]          = "base",
+    [EVENTD_PROTOCOL_EVP_STATE_PASSIVE]       = "passive",
+    [EVENTD_PROTOCOL_EVP_STATE_SUBSCRIBE]     = "subscribe",
+    [EVENTD_PROTOCOL_EVP_STATE_BYE]           = "bye",
+    [EVENTD_PROTOCOL_EVP_STATE_DOT_DATA]      = "dot message DATA",
+    [EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT]     = "dot message EVENT",
+    [EVENTD_PROTOCOL_EVP_STATE_DOT_ANSWERED]  = "dot message ANSWERED",
+    [EVENTD_PROTOCOL_EVP_STATE_DOT_SUBSCRIBE] = "dot message SUBSCRIBE",
+    [EVENTD_PROTOCOL_EVP_STATE_IGNORING]      = "ignoring",
 };
 
 typedef void (*EventdProtocolEvpTokenParseStartFunc)(EventdProtocolEvp *self, const gchar * const *argv, GError **error);
@@ -213,6 +215,47 @@ _eventd_protocol_evp_parse_dot_answered_end(EventdProtocolEvp *self, GError **er
     self->priv->state = self->priv->base_state;
 }
 
+/* .SUBSCRIBE */
+static void
+_eventd_protocol_evp_parse_dot_subscribe_start(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
+{
+    self->priv->subscriptions.current = 0;
+    self->priv->subscriptions.size = 2;
+    self->priv->subscriptions.list = g_new(gchar *, self->priv->subscriptions.size + 1);
+
+    self->priv->state = EVENTD_PROTOCOL_EVP_STATE_DOT_SUBSCRIBE;
+    self->priv->base_state = EVENTD_PROTOCOL_EVP_STATE_SUBSCRIBE;
+}
+
+static gboolean
+_eventd_protocol_evp_parse_dot_subscribe_continue(EventdProtocolEvp *self, const gchar *line, GError **error)
+{
+    if ( self->priv->subscriptions.size <= self->priv->subscriptions.current )
+    {
+        self->priv->subscriptions.size *= 2;
+        self->priv->subscriptions.list = g_renew(gchar *, self->priv->subscriptions.list, self->priv->subscriptions.size + 1);
+    }
+    self->priv->subscriptions.list[self->priv->subscriptions.current] = g_strdup(line);
+    ++self->priv->subscriptions.current;
+    return TRUE;
+}
+
+static void
+_eventd_protocol_evp_parse_dot_subscribe_end(EventdProtocolEvp *self, GError **error)
+{
+    if ( self->priv->subscriptions.current < 2 )
+        return g_set_error(error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_MALFORMED, "SUBSCRIBE dot message requires at least two categories");
+
+    self->priv->subscriptions.list[self->priv->subscriptions.current] = NULL;
+
+    g_signal_emit(self, _eventd_protocol_signals[SIGNAL_SUBSCRIBE], 0, self->priv->subscriptions.list);
+
+    g_strfreev(self->priv->subscriptions.list);
+    self->priv->subscriptions.list = NULL;
+
+    self->priv->state = self->priv->base_state;
+}
+
 /* DATA */
 static void
 _eventd_protocol_evp_parse_data(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
@@ -278,6 +321,16 @@ _eventd_protocol_evp_parse_passive(EventdProtocolEvp *self, const gchar * const 
     self->priv->state = self->priv->base_state;
 }
 
+/* SUBSCRIBE */
+static void
+_eventd_protocol_evp_parse_subscribe(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
+{
+    g_signal_emit(self, _eventd_protocol_signals[SIGNAL_SUBSCRIBE], 0, argv);
+
+    self->priv->base_state = EVENTD_PROTOCOL_EVP_STATE_SUBSCRIBE;
+    self->priv->state = self->priv->base_state;
+}
+
 /* BYE */
 static void
 _eventd_protocol_evp_parse_bye(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
@@ -297,22 +350,29 @@ static const EventdProtocolEvpTokens _eventd_protocol_evp_dot_messages[] = {
             _eventd_protocol_evp_parse_dot_data_end
     },
     {"EVENT", 3, 3,
-            { EVENTD_PROTOCOL_EVP_STATE_BASE, EVENTD_PROTOCOL_EVP_STATE_PASSIVE,_EVENTD_PROTOCOL_EVP_STATE_SIZE },
+            { EVENTD_PROTOCOL_EVP_STATE_BASE, EVENTD_PROTOCOL_EVP_STATE_PASSIVE, EVENTD_PROTOCOL_EVP_STATE_SUBSCRIBE, _EVENTD_PROTOCOL_EVP_STATE_SIZE },
             _eventd_protocol_evp_parse_dot_event_start,
             EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT,
             _eventd_protocol_evp_parse_dot__continue_noeat,
             _eventd_protocol_evp_parse_dot_event_end
     },
     {"ANSWERED", 2, 2,
-            { EVENTD_PROTOCOL_EVP_STATE_BASE, EVENTD_PROTOCOL_EVP_STATE_PASSIVE,_EVENTD_PROTOCOL_EVP_STATE_SIZE },
+            { EVENTD_PROTOCOL_EVP_STATE_BASE, EVENTD_PROTOCOL_EVP_STATE_PASSIVE, EVENTD_PROTOCOL_EVP_STATE_SUBSCRIBE,_EVENTD_PROTOCOL_EVP_STATE_SIZE },
             _eventd_protocol_evp_parse_dot_answered_start,
             EVENTD_PROTOCOL_EVP_STATE_DOT_ANSWERED,
             _eventd_protocol_evp_parse_dot__continue_noeat,
             _eventd_protocol_evp_parse_dot_answered_end
     },
+    {"SUBSCRIBE", 0, 0,
+            { EVENTD_PROTOCOL_EVP_STATE_BASE, _EVENTD_PROTOCOL_EVP_STATE_SIZE },
+            _eventd_protocol_evp_parse_dot_subscribe_start,
+            EVENTD_PROTOCOL_EVP_STATE_DOT_SUBSCRIBE,
+            _eventd_protocol_evp_parse_dot_subscribe_continue,
+            _eventd_protocol_evp_parse_dot_subscribe_end
+    },
     /* Catch-all message to ignore future dot messages */
     {"", 0, G_MAXSIZE,
-            { EVENTD_PROTOCOL_EVP_STATE_BASE, EVENTD_PROTOCOL_EVP_STATE_PASSIVE,_EVENTD_PROTOCOL_EVP_STATE_SIZE },
+            { EVENTD_PROTOCOL_EVP_STATE_BASE, EVENTD_PROTOCOL_EVP_STATE_PASSIVE, EVENTD_PROTOCOL_EVP_STATE_SUBSCRIBE, _EVENTD_PROTOCOL_EVP_STATE_SIZE },
             _eventd_protocol_evp_parse_dot_catchall_start,
             EVENTD_PROTOCOL_EVP_STATE_IGNORING,
             _eventd_protocol_evp_parse_dot_catchall_continue,
@@ -328,7 +388,7 @@ static const EventdProtocolEvpTokens _eventd_protocol_evp_messages[] = {
             _EVENTD_PROTOCOL_EVP_STATE_SIZE, NULL, NULL
     },
     {"EVENT", 3, 3,
-            { EVENTD_PROTOCOL_EVP_STATE_BASE, EVENTD_PROTOCOL_EVP_STATE_PASSIVE,_EVENTD_PROTOCOL_EVP_STATE_SIZE },
+            { EVENTD_PROTOCOL_EVP_STATE_BASE, EVENTD_PROTOCOL_EVP_STATE_PASSIVE, EVENTD_PROTOCOL_EVP_STATE_SUBSCRIBE, _EVENTD_PROTOCOL_EVP_STATE_SIZE },
             _eventd_protocol_evp_parse_event,
             _EVENTD_PROTOCOL_EVP_STATE_SIZE, NULL, NULL
     },
@@ -338,8 +398,13 @@ static const EventdProtocolEvpTokens _eventd_protocol_evp_messages[] = {
             _EVENTD_PROTOCOL_EVP_STATE_SIZE, NULL, NULL
     },
     {"ENDED", 2, 2,
-            { EVENTD_PROTOCOL_EVP_STATE_BASE, EVENTD_PROTOCOL_EVP_STATE_PASSIVE, _EVENTD_PROTOCOL_EVP_STATE_SIZE },
+            { EVENTD_PROTOCOL_EVP_STATE_BASE, EVENTD_PROTOCOL_EVP_STATE_PASSIVE, EVENTD_PROTOCOL_EVP_STATE_SUBSCRIBE, _EVENTD_PROTOCOL_EVP_STATE_SIZE },
             _eventd_protocol_evp_parse_ended,
+            _EVENTD_PROTOCOL_EVP_STATE_SIZE, NULL, NULL
+    },
+    {"SUBSCRIBE", 0, 1,
+            { EVENTD_PROTOCOL_EVP_STATE_BASE, _EVENTD_PROTOCOL_EVP_STATE_SIZE },
+            _eventd_protocol_evp_parse_subscribe,
             _EVENTD_PROTOCOL_EVP_STATE_SIZE, NULL, NULL
     },
     {"PASSIVE", 0, 0,
@@ -348,7 +413,7 @@ static const EventdProtocolEvpTokens _eventd_protocol_evp_messages[] = {
             _EVENTD_PROTOCOL_EVP_STATE_SIZE, NULL, NULL
     },
     {"BYE", 0, 1,
-            { EVENTD_PROTOCOL_EVP_STATE_BASE, EVENTD_PROTOCOL_EVP_STATE_PASSIVE, _EVENTD_PROTOCOL_EVP_STATE_SIZE },
+            { EVENTD_PROTOCOL_EVP_STATE_BASE, EVENTD_PROTOCOL_EVP_STATE_PASSIVE, EVENTD_PROTOCOL_EVP_STATE_SUBSCRIBE, _EVENTD_PROTOCOL_EVP_STATE_SIZE },
             _eventd_protocol_evp_parse_bye,
             _EVENTD_PROTOCOL_EVP_STATE_SIZE, NULL, NULL
     },
@@ -505,6 +570,10 @@ recheck:
 
         g_free(self->priv->answer.answer);
         self->priv->answer.answer = NULL;
+    break;
+    case EVENTD_PROTOCOL_EVP_STATE_DOT_SUBSCRIBE:
+        g_free(self->priv->subscriptions.list);
+        self->priv->subscriptions.list = NULL;
     break;
     default:
     break;

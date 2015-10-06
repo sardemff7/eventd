@@ -70,6 +70,7 @@ _eventd_protocol_evp_parser_interface_init(EventdProtocolInterface *iface)
     iface->generate_ended = eventd_protocol_evp_generate_ended;
 
     iface->generate_passive = eventd_protocol_evp_generate_passive;
+    iface->generate_subscribe = eventd_protocol_evp_generate_subscribe;
     iface->generate_bye = eventd_protocol_evp_generate_bye;
 }
 

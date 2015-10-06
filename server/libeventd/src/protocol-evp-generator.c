@@ -155,6 +155,33 @@ eventd_protocol_evp_generate_passive(EventdProtocol *protocol)
 }
 
 gchar *
+eventd_protocol_evp_generate_subscribe(EventdProtocol *protocol, const gchar * const *categories)
+{
+    g_return_val_if_fail(EVENTD_IS_PROTOCOL_EVP(protocol), FALSE);
+
+    if ( categories == NULL )
+        return g_strdup("SUBSCRIBE\n");
+
+    guint length;
+    length = g_strv_length((gchar **) categories);
+
+    if ( length == 1 )
+        return g_strdup_printf("SUBSCRIBE %s\n", categories[0]);
+
+    gsize size;
+    GString *str;
+    size = strlen(".SUBSCRIBE\n.\n") + ( strlen(categories[0]) + 1) * length;
+    str = g_string_sized_new(size);
+
+    g_string_append(str, ".SUBSCRIBE\n");
+    for ( ; *categories != NULL ; ++categories )
+        g_string_append_c(g_string_append(str, *categories), '\n');
+    g_string_append(str, ".\n");
+
+    return g_string_free(str, FALSE);
+}
+
+gchar *
 eventd_protocol_evp_generate_bye(EventdProtocol *protocol, const gchar *message)
 {
     g_return_val_if_fail(EVENTD_IS_PROTOCOL_EVP(protocol), FALSE);

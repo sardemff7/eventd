@@ -104,6 +104,22 @@ eventd_protocol_default_init(EventdProtocolInterface *iface)
                      G_TYPE_NONE, 0);
 
     /**
+     * EventdProtocol::subscribe:
+     * @protocol: the #EventdProtocol that parsed the message
+     * @category: (array zero-terminated=1) (element-type utf8) (nullable): the categories of events the client wants to subscribe to
+     *
+     * Emitted when parsed a SUBSCRIBE message.
+     */
+    _eventd_protocol_signals[SIGNAL_SUBSCRIBE] =
+        g_signal_new("subscribe",
+                     G_TYPE_FROM_INTERFACE(iface),
+                     G_SIGNAL_RUN_FIRST,
+                     G_STRUCT_OFFSET(EventdProtocolInterface, subscribe),
+                     NULL, NULL,
+                     g_cclosure_marshal_generic,
+                     G_TYPE_NONE, 1, G_TYPE_STRV);
+
+    /**
      * EventdProtocol::bye:
      * @protocol: the #EventdProtocol that parsed the message
      * @message: (nullable): the optional message
@@ -218,6 +234,25 @@ eventd_protocol_generate_passive(EventdProtocol *self)
     g_return_val_if_fail(EVENTD_IS_PROTOCOL(self), NULL);
 
     return EVENTD_PROTOCOL_GET_INTERFACE(self)->generate_passive(self);
+}
+
+/**
+ * eventd_protocol_generate_subscribe:
+ * @protocol: an #EventdProtocol
+ * @categories: (array zero-terminated=1) (element-type utf8) (nullable): the categories of events you want to subscribe to
+ *
+ * Generates a SUBSCRIBE message.
+ *
+ * Returns: (transfer full): the message
+ */
+EVENTD_EXPORT
+gchar *
+eventd_protocol_generate_subscribe(EventdProtocol *self, const gchar * const *categories)
+{
+    g_return_val_if_fail(EVENTD_IS_PROTOCOL(self), NULL);
+    g_return_val_if_fail(categories == NULL || categories[0] != NULL, NULL);
+
+    return EVENTD_PROTOCOL_GET_INTERFACE(self)->generate_subscribe(self, categories);
 }
 
 /**

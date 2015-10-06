@@ -65,7 +65,14 @@ Connection related messages
 PASSIVE
     Go to passive mode. The server will not send any message back to the client.
     Client may (and should) close the input connection.
-    Must be sent only once.
+    Must be sent only once. Mutually exclusive with SUBSCRIBE.
+
+SUBSCRIBE [<category>]
+.SUBSCRIBE
+    Ask the server to send us events.
+    The first form ask for either all events or a single category.
+    The second form ask for any number of categories (but at least two).
+    Must be sent only once. Mutually exclusive with PASSIVE.
 
 BYE [<reason>]
     Close the connection.
