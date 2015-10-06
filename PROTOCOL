@@ -35,7 +35,7 @@ DATA <name> <data>
 
 
 Event related messages
-------------------
+----------------------
 
 .EVENT <id> <category> <name>
     Inform the server that an event happened
@@ -60,14 +60,14 @@ ENDED <id> <reason>
 
 
 Connection related messages
-----------------------
+---------------------------
 
 PASSIVE
     Go to passive mode. The server will not send any message back to the client.
     Client may (and should) close the input connection.
     Must be sent only once.
 
-BYE <reason>
+BYE [<reason>]
     Close the connection.
     The connection is closed immediately and must not be used any more.
     The reason is an human readable reason possibly shown to the user.

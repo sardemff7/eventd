@@ -51,7 +51,7 @@ INTROSPECTION_COMPILER_ARGS = --includedir=$(srcdir)
 EXTRA_DIST = \
 	autogen.sh \
 	README.md \
-	PROTOCOL.md \
+	PROTOCOL \
 	COPYING.LGPLv3 \
 	src/config-version.h \
 	po/POTFILES.in \
