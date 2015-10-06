@@ -65,7 +65,7 @@ eventd_protocol_default_init(EventdProtocolInterface *iface)
         g_signal_new("answered",
                      G_TYPE_FROM_INTERFACE(iface),
                      G_SIGNAL_RUN_FIRST,
-                     G_STRUCT_OFFSET(EventdProtocolInterface, event),
+                     G_STRUCT_OFFSET(EventdProtocolInterface, answered),
                      NULL, NULL,
                      g_cclosure_marshal_generic,
                      G_TYPE_NONE, 2, EVENTD_TYPE_EVENT, G_TYPE_STRING);
@@ -82,7 +82,7 @@ eventd_protocol_default_init(EventdProtocolInterface *iface)
         g_signal_new("ended",
                      G_TYPE_FROM_INTERFACE(iface),
                      G_SIGNAL_RUN_FIRST,
-                     G_STRUCT_OFFSET(EventdProtocolInterface, event),
+                     G_STRUCT_OFFSET(EventdProtocolInterface, ended),
                      NULL, NULL,
                      g_cclosure_marshal_generic,
                      G_TYPE_NONE, 2, EVENTD_TYPE_EVENT, EVENTD_TYPE_EVENT_END_REASON);
@@ -98,7 +98,7 @@ eventd_protocol_default_init(EventdProtocolInterface *iface)
         g_signal_new("passive",
                      G_TYPE_FROM_INTERFACE(iface),
                      G_SIGNAL_RUN_FIRST,
-                     G_STRUCT_OFFSET(EventdProtocolInterface, event),
+                     G_STRUCT_OFFSET(EventdProtocolInterface, passive),
                      NULL, NULL,
                      g_cclosure_marshal_generic,
                      G_TYPE_NONE, 0);
@@ -114,7 +114,7 @@ eventd_protocol_default_init(EventdProtocolInterface *iface)
         g_signal_new("bye",
                      G_TYPE_FROM_INTERFACE(iface),
                      G_SIGNAL_RUN_FIRST,
-                     G_STRUCT_OFFSET(EventdProtocolInterface, event),
+                     G_STRUCT_OFFSET(EventdProtocolInterface, bye),
                      NULL, NULL,
                      g_cclosure_marshal_generic,
                      G_TYPE_NONE, 1, G_TYPE_STRING);
