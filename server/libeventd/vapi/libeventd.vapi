@@ -79,11 +79,11 @@ namespace Eventd
     {
         public abstract bool parse(string buffer) throws ProtocolParseError;
 
-        public abstract string generate_answered(Eventd.Event event, string answer);
-        public abstract string generate_bye(string? message);
-        public abstract string generate_ended(Eventd.Event event, Eventd.EventEndReason reason);
         public abstract string generate_event(Eventd.Event event);
+        public abstract string generate_answered(Eventd.Event event, string answer);
+        public abstract string generate_ended(Eventd.Event event, Eventd.EventEndReason reason);
         public abstract string generate_passive();
+        public abstract string generate_bye(string? message);
 
         public signal void event(Eventd.Event event);
         public signal void answered(Eventd.Event event, string answer);

@@ -45,18 +45,20 @@ struct _EventdProtocolInterface
 
     gboolean (*parse)(EventdProtocol *protocol, gchar **buffer, GError **error);
 
-    gchar *(*generate_passive)(EventdProtocol *protocol);
     gchar *(*generate_event)(EventdProtocol *protocol, EventdEvent *event);
     gchar *(*generate_answered)(EventdProtocol *protocol, EventdEvent *event, const gchar *answer);
     gchar *(*generate_ended)(EventdProtocol *protocol, EventdEvent *event, EventdEventEndReason reason);
+
+    gchar *(*generate_passive)(EventdProtocol *protocol);
     gchar *(*generate_bye)(EventdProtocol *protocol, const gchar *message);
 
     /* Signals */
-    void (*passive)  (EventdProtocol *protocol);
-    void (*event)    (EventdProtocol *protocol, EventdEvent *event);
-    void (*answered) (EventdProtocol *protocol, EventdEvent *event, const gchar *answer);
-    void (*ended)    (EventdProtocol *protocol, EventdEvent *event, EventdEventEndReason reason);
-    void (*bye)      (EventdProtocol *protocol, const gchar *message);
+    void (*event)(EventdProtocol *protocol, EventdEvent *event);
+    void (*answered)(EventdProtocol *protocol, EventdEvent *event, const gchar *answer);
+    void (*ended)(EventdProtocol *protocol, EventdEvent *event, EventdEventEndReason reason);
+
+    void (*passive)(EventdProtocol *protocol);
+    void (*bye)(EventdProtocol *protocol, const gchar *message);
 };
 
 /*
@@ -117,10 +119,11 @@ EventdProtocol *eventd_protocol_evp_new(void);
 
 gboolean eventd_protocol_parse(EventdProtocol *protocol, gchar **buffer, GError **error);
 
-gchar *eventd_protocol_generate_passive(EventdProtocol *protocol);
 gchar *eventd_protocol_generate_event(EventdProtocol *protocol, EventdEvent *event);
 gchar *eventd_protocol_generate_answered(EventdProtocol *protocol, EventdEvent *event, const gchar *answer);
 gchar *eventd_protocol_generate_ended(EventdProtocol *protocol, EventdEvent *event, EventdEventEndReason reason);
+
+gchar *eventd_protocol_generate_passive(EventdProtocol *protocol);
 gchar *eventd_protocol_generate_bye(EventdProtocol *protocol, const gchar *message);
 
 G_END_DECLS

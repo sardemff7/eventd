@@ -38,21 +38,6 @@ static void
 eventd_protocol_default_init(EventdProtocolInterface *iface)
 {
     /**
-     * EventdProtocol::passive:
-     * @protocol: the #EventdProtocol that parsed the message
-     *
-     * Emitted when parsed a PASSIVE message.
-     */
-    _eventd_protocol_signals[SIGNAL_PASSIVE] =
-        g_signal_new("passive",
-                     G_TYPE_FROM_INTERFACE(iface),
-                     G_SIGNAL_RUN_FIRST,
-                     G_STRUCT_OFFSET(EventdProtocolInterface, event),
-                     NULL, NULL,
-                     g_cclosure_marshal_generic,
-                     G_TYPE_NONE, 0);
-
-    /**
      * EventdProtocol::event:
      * @protocol: the #EventdProtocol that parsed the message
      * @event: the #EventdEvent that was sent
@@ -102,6 +87,22 @@ eventd_protocol_default_init(EventdProtocolInterface *iface)
                      g_cclosure_marshal_generic,
                      G_TYPE_NONE, 2, EVENTD_TYPE_EVENT, EVENTD_TYPE_EVENT_END_REASON);
 
+
+    /**
+     * EventdProtocol::passive:
+     * @protocol: the #EventdProtocol that parsed the message
+     *
+     * Emitted when parsed a PASSIVE message.
+     */
+    _eventd_protocol_signals[SIGNAL_PASSIVE] =
+        g_signal_new("passive",
+                     G_TYPE_FROM_INTERFACE(iface),
+                     G_SIGNAL_RUN_FIRST,
+                     G_STRUCT_OFFSET(EventdProtocolInterface, event),
+                     NULL, NULL,
+                     g_cclosure_marshal_generic,
+                     G_TYPE_NONE, 0);
+
     /**
      * EventdProtocol::bye:
      * @protocol: the #EventdProtocol that parsed the message
@@ -138,23 +139,6 @@ eventd_protocol_parse(EventdProtocol *self, gchar **buffer, GError **error)
     g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
     return EVENTD_PROTOCOL_GET_INTERFACE(self)->parse(self, buffer, error);
-}
-
-/**
- * eventd_protocol_generate_passive:
- * @protocol: an #EventdProtocol
- *
- * Generates a PASSIVE message.
- *
- * Returns: (transfer full): the message
- */
-EVENTD_EXPORT
-gchar *
-eventd_protocol_generate_passive(EventdProtocol *self)
-{
-    g_return_val_if_fail(EVENTD_IS_PROTOCOL(self), NULL);
-
-    return EVENTD_PROTOCOL_GET_INTERFACE(self)->generate_passive(self);
 }
 
 /**
@@ -216,6 +200,24 @@ eventd_protocol_generate_ended(EventdProtocol *self, EventdEvent *event, EventdE
     g_return_val_if_fail(eventd_event_end_reason_is_valid_value(reason), NULL);
 
     return EVENTD_PROTOCOL_GET_INTERFACE(self)->generate_ended(self, event, reason);
+}
+
+
+/**
+ * eventd_protocol_generate_passive:
+ * @protocol: an #EventdProtocol
+ *
+ * Generates a PASSIVE message.
+ *
+ * Returns: (transfer full): the message
+ */
+EVENTD_EXPORT
+gchar *
+eventd_protocol_generate_passive(EventdProtocol *self)
+{
+    g_return_val_if_fail(EVENTD_IS_PROTOCOL(self), NULL);
+
+    return EVENTD_PROTOCOL_GET_INTERFACE(self)->generate_passive(self);
 }
 
 /**
