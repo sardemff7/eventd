@@ -396,6 +396,20 @@ eventd_plugins_event_parse_all(GKeyFile *config_file)
 }
 
 void
+eventd_plugins_event_dispatch_all(EventdEvent *event)
+{
+    GHashTableIter iter;
+    const gchar *id;
+    EventdPlugin *plugin;
+    g_hash_table_iter_init(&iter, plugins);
+    while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&plugin) )
+    {
+        if ( plugin->interface.event_dispatch != NULL )
+            plugin->interface.event_dispatch(plugin->context, event);
+    }
+}
+
+void
 eventd_plugins_event_action_all(const GList *actions, EventdEvent *event)
 {
     for ( ; actions != NULL ; actions = g_list_next(actions) )

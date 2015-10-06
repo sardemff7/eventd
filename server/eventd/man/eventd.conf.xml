@@ -70,7 +70,7 @@
         </refsect2>
 
         <para>
-            <emphasis>An event file with actions, and the corresponding action file are <emphasis>mandatory</emphasis> for the event to be processed by eventd.</emphasis>
+            <emphasis>An event file is <emphasis>mandatory</emphasis> for the event to be processed by eventd.</emphasis>
             Unknown events are <emphasis>ended on receive</emphasis>.
         </para>
     </refsynopsisdiv>

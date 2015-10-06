@@ -127,6 +127,7 @@ _eventd_queue_source_dispatch(EventdQueue *queue, EventdQueueEvent *event)
     g_queue_push_head(queue->current, event);
     event->link = g_queue_peek_head_link(queue->current);
 
+    eventd_plugins_event_dispatch_all(event->event);
     eventd_actions_trigger(event->actions, event->event);
 
     event->answered_handler = g_signal_connect(event->event, "updated", G_CALLBACK(_eventd_queue_event_updated), event);

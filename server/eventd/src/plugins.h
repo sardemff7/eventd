@@ -39,6 +39,7 @@ void eventd_plugins_config_reset_all(void);
 void eventd_plugins_global_parse_all(GKeyFile *config_file);
 GList *eventd_plugins_event_parse_all(GKeyFile *config_file);
 
+void eventd_plugins_event_dispatch_all(EventdEvent *event);
 void eventd_plugins_event_action_all(const GList *actions, EventdEvent *event);
 
 void eventd_plugins_action_free(gpointer data);

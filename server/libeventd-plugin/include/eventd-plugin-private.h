@@ -48,6 +48,7 @@ struct EventdPluginInterface {
     EventdPluginActionParseFunc action_parse;
     EventdPluginSimpleFunc config_reset;
 
+    EventdPluginEventDispatchFunc event_dispatch;
     EventdPluginEventActionFunc event_action;
 };
 

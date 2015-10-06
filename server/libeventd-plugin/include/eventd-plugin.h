@@ -51,6 +51,7 @@ typedef GOptionGroup *(*EventdPluginGetOptionGroupFunc)(EventdPluginContext *con
 typedef EventdPluginCommandStatus (*EventdPluginControlCommandFunc)(EventdPluginContext *context, guint64 argc, const gchar * const *argv, gchar **status);
 typedef void (*EventdPluginGlobalParseFunc)(EventdPluginContext *context, GKeyFile *key_file);
 typedef EventdPluginAction *(*EventdPluginActionParseFunc)(EventdPluginContext *context, GKeyFile *key_file);
+typedef void (*EventdPluginEventDispatchFunc)(EventdPluginContext *context, EventdEvent *event);
 typedef void (*EventdPluginEventActionFunc)(EventdPluginContext *context, EventdPluginAction *action, EventdEvent *event);
 
 typedef void (*EventdPluginGetInterfaceFunc)(EventdPluginInterface *interface);
@@ -69,6 +70,7 @@ void eventd_plugin_interface_add_global_parse_callback(EventdPluginInterface *in
 void eventd_plugin_interface_add_action_parse_callback(EventdPluginInterface *interface, EventdPluginActionParseFunc callback);
 void eventd_plugin_interface_add_config_reset_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback);
 
+void eventd_plugin_interface_add_event_dispatch_callback(EventdPluginInterface *interface, EventdPluginEventDispatchFunc callback);
 void eventd_plugin_interface_add_event_action_callback(EventdPluginInterface *interface, EventdPluginEventActionFunc callback);
 
 

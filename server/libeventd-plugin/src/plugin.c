@@ -232,6 +232,14 @@ EVENTD_EXPORT void eventd_plugin_interface_add_action_parse_callback(EventdPlugi
 EVENTD_EXPORT void eventd_plugin_interface_add_config_reset_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback) { interface->config_reset = callback; }
 
 /**
+ * EventdPluginEventDispatchFunc:
+ * @context: the plugin-specific context
+ * @event: (transfer none): the dispatched event
+ *
+ * This callback handles events.
+ */
+
+/**
  * EventdPluginEventActionFunc:
  * @context: the plugin-specific context
  * @action: (transfer none): the plugin action
@@ -239,6 +247,18 @@ EVENTD_EXPORT void eventd_plugin_interface_add_config_reset_callback(EventdPlugi
  *
  * This callback handles actions.
  */
+
+/**
+ * eventd_plugin_interface_add_event_dispatch_callback:
+ * @interface: an #EventdPluginInterface
+ * @callback: (scope async): a function to call when an event occurs
+ *
+ * This callback is called *once* per known event.
+ *
+ * This callback is intended for plugins needing to relay event to clients
+ * using SUBSCRIBE. It should not be abused for anything else.
+ */
+EVENTD_EXPORT void eventd_plugin_interface_add_event_dispatch_callback(EventdPluginInterface *interface, EventdPluginEventDispatchFunc callback) { interface->event_dispatch = callback; }
 
 /**
  * eventd_plugin_interface_add_event_action_callback:

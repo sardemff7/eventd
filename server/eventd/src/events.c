@@ -279,9 +279,9 @@ eventd_events_parse(EventdEvents *self, const gchar *id, GKeyFile *config_file)
     if ( ( evhelpers_config_key_file_get_boolean(config_file, "Event", "Disable", &disable) < 0 ) || disable )
         goto fail;
 
-    gchar **actions;
+    gchar **actions = NULL;
 
-    if ( evhelpers_config_key_file_get_string_list(config_file, "Event", "Actions", &actions, NULL) != 0 )
+    if ( evhelpers_config_key_file_get_string_list(config_file, "Event", "Actions", &actions, NULL) < 0 )
         goto fail;
 
 #ifdef EVENTD_DEBUG
@@ -292,10 +292,13 @@ eventd_events_parse(EventdEvents *self, const gchar *id, GKeyFile *config_file)
     event = g_new0(EventdEventsEvent, 1);
     event->timeout = -1;
 
-    gchar **action;
-    for ( action = actions ; *action != NULL ; ++action )
-        event->actions = g_list_prepend(event->actions, *action);
-    g_free(actions);
+    if ( actions != NULL )
+    {
+        gchar **action;
+        for ( action = actions ; *action != NULL ; ++action )
+            event->actions = g_list_prepend(event->actions, *action);
+        g_free(actions);
+    }
 
     Int timeout;
 
@@ -388,23 +391,12 @@ eventd_events_link_actions(EventdEvents *self, EventdActions *actions)
     g_hash_table_iter_init(&iter, self->events);
     while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&events) )
     {
-        GList *new_events = NULL;
         GList *event_;
         for ( event_ = events ; event_ != NULL ; event_ = g_list_next(event_) )
         {
             EventdEventsEvent *event = event_->data;
             eventd_actions_replace_actions(actions, &event->actions);
-            if ( event->actions != NULL )
-            {
-                new_events = g_list_prepend(new_events, event);
-                event_->data = NULL;
-            }
         }
-
-        if ( new_events != NULL )
-            g_hash_table_iter_replace(&iter, new_events);
-        else
-            g_hash_table_iter_remove(&iter);
     }
 }
 
