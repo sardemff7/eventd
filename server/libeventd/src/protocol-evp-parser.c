@@ -443,6 +443,7 @@ eventd_protocol_evp_parse(EventdProtocol *protocol, gchar **buffer, GError **err
 {
     g_return_val_if_fail(EVENTD_IS_PROTOCOL_EVP(protocol), FALSE);
     EventdProtocolEvp *self = EVENTD_PROTOCOL_EVP(protocol);
+    g_return_val_if_fail(self->priv->state != _EVENTD_PROTOCOL_EVP_STATE_SIZE, FALSE);
 
     GError *_inner_error_ = NULL;
 
@@ -458,6 +459,27 @@ eventd_protocol_evp_parse(EventdProtocol *protocol, gchar **buffer, GError **err
 
     if ( _inner_error_ == NULL )
         return TRUE;
+
+recheck:
+    switch ( self->priv->state )
+    {
+    case EVENTD_PROTOCOL_EVP_STATE_DOT_DATA:
+        g_hash_table_unref(self->priv->data.hash);
+        g_free(self->priv->data.name);
+        g_string_free(self->priv->data.value, TRUE);
+        self->priv->state = self->priv->data.return_state;
+    goto recheck;
+    case EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT:
+        g_object_unref(self->priv->event);
+    break;
+    case EVENTD_PROTOCOL_EVP_STATE_DOT_ANSWERED:
+        g_free(self->priv->answer.answer);
+    break;
+    default:
+    break;
+    }
+
+    self->priv->state = _EVENTD_PROTOCOL_EVP_STATE_SIZE;
 
     g_propagate_error(error, _inner_error_);
     return FALSE;
