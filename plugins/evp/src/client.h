@@ -23,6 +23,8 @@
 #ifndef __EVENTD_EVP_CLIENT_H__
 #define __EVENTD_EVP_CLIENT_H__
 
+typedef struct _EventdEvpClient EventdEvpClient;
+
 gboolean eventd_evp_client_connection_handler(GSocketService *service, GSocketConnection *connection, GObject *obj, gpointer user_data);
 void eventd_evp_client_disconnect(gpointer data);
 

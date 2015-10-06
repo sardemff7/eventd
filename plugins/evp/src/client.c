@@ -35,7 +35,7 @@
 
 #include "client.h"
 
-typedef struct {
+struct _EventdEvpClient {
     EventdPluginContext *context;
     GList *link;
     EventdProtocol *protocol;
@@ -44,7 +44,7 @@ typedef struct {
     GDataInputStream *in;
     GDataOutputStream *out;
     GHashTable *events;
-} EventdEvpClient;
+};
 
 typedef struct {
     EventdEvent *event;
@@ -111,6 +111,20 @@ _eventd_evp_client_protocol_ended(EventdEvpClient *self, EventdEvent *event, Eve
 }
 
 static void
+_eventd_evp_client_handle_event(EventdEvpClient *self, EventdEvent *event)
+{
+    EventdEvpEventHandlers *handlers;
+
+    handlers = g_slice_new(EventdEvpEventHandlers);
+    handlers->event = g_object_ref(event);
+
+    handlers->answered = g_signal_connect_swapped(event, "answered", G_CALLBACK(_eventd_evp_client_event_answered), self);
+    handlers->ended = g_signal_connect_swapped(event, "ended", G_CALLBACK(_eventd_evp_client_event_ended), self);
+
+    g_hash_table_insert(self->events, event, handlers);
+}
+
+static void
 _eventd_evp_client_protocol_event(EventdEvpClient *self, EventdEvent *event, EventdProtocol *protocol)
 {
 #ifdef EVENTD_DEBUG
@@ -129,15 +143,16 @@ _eventd_evp_client_protocol_event(EventdEvpClient *self, EventdEvent *event, Eve
         /* Client in passive mode */
         return;
 
-    EventdEvpEventHandlers *handlers;
+    _eventd_evp_client_handle_event(self, event);
+}
 
-    handlers = g_slice_new(EventdEvpEventHandlers);
-    handlers->event = g_object_ref(event);
-
-    handlers->answered = g_signal_connect_swapped(event, "answered", G_CALLBACK(_eventd_evp_client_event_answered), self);
-    handlers->ended = g_signal_connect_swapped(event, "ended", G_CALLBACK(_eventd_evp_client_event_ended), self);
-
-    g_hash_table_insert(self->events, event, handlers);
+static void
+_eventd_evp_client_protocol_passive(EventdEvpClient *self, EventdProtocol *protocol)
+{
+    if ( self->out == NULL )
+        return eventd_evp_client_disconnect(self);
+    g_object_unref(self->out);
+    self->out = NULL;
 }
 
 static void
@@ -148,15 +163,6 @@ _eventd_evp_client_protocol_bye(EventdEvpClient *self, EventdProtocol *protocol)
 #endif /* EVENTD_DEBUG */
 
     g_cancellable_cancel(self->cancellable);
-}
-
-static void
-_eventd_evp_client_protocol_passive(EventdEvpClient *self, EventdProtocol *protocol)
-{
-    if ( self->out == NULL )
-        return eventd_evp_client_disconnect(self);
-    g_object_unref(self->out);
-    self->out = NULL;
 }
 
 static void
@@ -230,8 +236,8 @@ eventd_evp_client_connection_handler(GSocketService *service, GSocketConnection 
     g_signal_connect_swapped(self->protocol, "event", G_CALLBACK(_eventd_evp_client_protocol_event), self);
     g_signal_connect_swapped(self->protocol, "answered", G_CALLBACK(_eventd_evp_client_protocol_answered), self);
     g_signal_connect_swapped(self->protocol, "ended", G_CALLBACK(_eventd_evp_client_protocol_ended), self);
-    g_signal_connect_swapped(self->protocol, "bye", G_CALLBACK(_eventd_evp_client_protocol_bye), self);
     g_signal_connect_swapped(self->protocol, "passive", G_CALLBACK(_eventd_evp_client_protocol_passive), self);
+    g_signal_connect_swapped(self->protocol, "bye", G_CALLBACK(_eventd_evp_client_protocol_bye), self);
 
     self->link = context->clients = g_list_prepend(context->clients, self);
 
