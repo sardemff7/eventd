@@ -41,6 +41,7 @@
 static const gchar *_eventd_protocol_evp_states[_EVENTD_PROTOCOL_EVP_STATE_SIZE] = {
     [EVENTD_PROTOCOL_EVP_STATE_BASE]         = "base",
     [EVENTD_PROTOCOL_EVP_STATE_PASSIVE]      = "passive",
+    [EVENTD_PROTOCOL_EVP_STATE_BYE]          = "bye",
     [EVENTD_PROTOCOL_EVP_STATE_DOT_DATA]     = "dot message DATA",
     [EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT]    = "dot message EVENT",
     [EVENTD_PROTOCOL_EVP_STATE_DOT_ANSWERED] = "dot message ANSWERED",
@@ -285,6 +286,9 @@ static void
 _eventd_protocol_evp_parse_bye(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
 {
     g_signal_emit(self, _eventd_protocol_signals[SIGNAL_BYE], 0, ( argv == NULL ) ? NULL : argv[0]);
+
+    self->priv->base_state = EVENTD_PROTOCOL_EVP_STATE_BYE;
+    self->priv->state = self->priv->base_state;
 }
 
 static const EventdProtocolEvpTokens _eventd_protocol_evp_dot_messages[] = {
