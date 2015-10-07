@@ -95,6 +95,18 @@ _eventc_event_end_callback(EventdEvent *event, EventdEventEndReason reason, gpoi
 }
 
 static void
+_eventc_event_callback(EventcConnection *connection, EventdEvent *event, gpointer user_data)
+{
+    if ( wait_event_end )
+    {
+        g_signal_connect(event, "answered", G_CALLBACK(_eventc_event_answer_callback), NULL);
+        g_signal_connect(event, "ended", G_CALLBACK(_eventc_event_end_callback), NULL);
+    }
+    else
+        g_idle_add(_eventc_disconnect, NULL);
+}
+
+static void
 _eventc_send_event(void)
 {
     if ( wait_event_end )
@@ -133,6 +145,7 @@ main(int argc, char *argv[])
     gchar **event_data_name = NULL;
     gchar **event_data_content = NULL;
     gchar **answers = NULL;
+    gboolean subscribe = FALSE;
 
     gboolean print_version = FALSE;
 
@@ -144,10 +157,21 @@ main(int argc, char *argv[])
         { "host",         'h', 0, G_OPTION_ARG_STRING,       &host,               "Host to connect to (defaults to $EVENTC_HOST if defined)", "<host>" },
         { "max-tries",    'm', 0, G_OPTION_ARG_INT,          &max_tries,          "Maximum connection attempts (0 for infinite)",             "<times>" },
         { "wait",         'w', 0, G_OPTION_ARG_NONE,         &wait_event_end,     "Wait the end of the event",                                NULL },
+        { "subscribe",    's', 0, G_OPTION_ARG_NONE,         &subscribe,          "Subscribe mode",                                           NULL },
         { "version",      'V', 0, G_OPTION_ARG_NONE,         &print_version,      "Print version",                                            NULL },
         { NULL }
     };
-    GOptionContext *opt_context = g_option_context_new("<event category> <event name> - Basic CLI client for eventd");
+    GOptionContext *opt_context = g_option_context_new("- Basic CLI client for eventd");
+
+    g_option_context_set_summary(opt_context, ""
+        "Normal mode: eventc <event category> <event name>"
+        "\n  eventc will connect to <host> and send an event."
+        "\n  If --wait is specified, eventc will only return after receiving the ENDED message for the event."
+        "\n\n"
+        "Subscribe mode: eventc --subscribe [<event category>...]"
+        "\n  eventc will connect to <host> and wait for an event of the specified categories. If no category is specified, it will wait for any event."
+        "\n  If --wait is specified, eventc will only return after receiving the ENDED message for the event."
+        "");
 
     g_option_context_add_main_entries(opt_context, entries, GETTEXT_PACKAGE);
 
@@ -169,6 +193,9 @@ main(int argc, char *argv[])
     }
 
     r = 1; /* We are checking arguments */
+
+    if ( subscribe )
+        goto post_args;
 
     if ( argc < 2 )
     {
@@ -194,6 +221,7 @@ main(int argc, char *argv[])
     category = argv[1];
     name = argv[2];
 
+post_args:
     r = 2; /* Arguments are fine, checking host */
 
     client = eventc_connection_new(host, &error);
@@ -205,6 +233,15 @@ main(int argc, char *argv[])
     }
 
     r = 0; /* Host is fine */
+
+    if ( subscribe )
+    {
+        eventc_connection_set_subscribe(client, TRUE);
+        eventc_connection_set_subscriptions(client, ( argc < 2 ) ? NULL : g_strdupv(argv + 1));
+
+        g_signal_connect(client, "event", G_CALLBACK(_eventc_event_callback), NULL);
+        goto post_event;
+    }
 
     eventc_connection_set_passive(client, !wait_event_end);
 
@@ -224,6 +261,7 @@ main(int argc, char *argv[])
         g_strfreev(answers);
     }
 
+post_event:
     g_idle_add(_eventc_connect, NULL);
 
     loop = g_main_loop_new(NULL, FALSE);
