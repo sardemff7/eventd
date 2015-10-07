@@ -52,6 +52,9 @@ typedef struct {
     gulong ended;
 } EventdEvpEventHandlers;
 
+
+static void _eventd_evp_client_disconnect_internal(EventdEvpClient *self);
+
 static void
 _eventd_evp_client_send_message(EventdEvpClient *self, gchar *message)
 {
@@ -150,7 +153,7 @@ static void
 _eventd_evp_client_protocol_passive(EventdEvpClient *self, EventdProtocol *protocol)
 {
     if ( self->out == NULL )
-        return eventd_evp_client_disconnect(self);
+        return _eventd_evp_client_disconnect_internal(self);
     g_object_unref(self->out);
     self->out = NULL;
 }
@@ -205,7 +208,7 @@ error:
         _eventd_evp_client_send_message(self, eventd_protocol_generate_bye(self->protocol, error->message));
 end:
     g_clear_error(&error);
-    return eventd_evp_client_disconnect(self);
+    return _eventd_evp_client_disconnect_internal(self);
 }
 
 /*
@@ -244,6 +247,14 @@ eventd_evp_client_connection_handler(GSocketService *service, GSocketConnection 
     return FALSE;
 }
 
+static void
+_eventd_evp_client_disconnect_internal(EventdEvpClient *self)
+{
+    self->context->clients = g_list_remove_link(self->context->clients, self->link);
+
+    eventd_evp_client_disconnect(self);
+}
+
 void
 eventd_evp_client_disconnect(gpointer data)
 {
@@ -263,8 +274,6 @@ eventd_evp_client_disconnect(gpointer data)
 
     g_object_unref(self->cancellable);
     g_object_unref(self->protocol);
-
-    self->context->clients = g_list_remove_link(self->context->clients, self->link);
 
     g_free(self);
 }
