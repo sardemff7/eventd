@@ -463,27 +463,52 @@ eventd_protocol_evp_parse(EventdProtocol *protocol, gchar **buffer, GError **err
     if ( _inner_error_ == NULL )
         return TRUE;
 
+    eventd_protocol_evp_parse_free(self);
+
+    g_propagate_error(error, _inner_error_);
+    return FALSE;
+}
+
+void
+eventd_protocol_evp_parse_free(EventdProtocolEvp *self)
+{
 recheck:
     switch ( self->priv->state )
     {
     case EVENTD_PROTOCOL_EVP_STATE_DOT_DATA:
-        g_hash_table_unref(self->priv->data.hash);
+        if ( self->priv->data.hash != NULL )
+            g_hash_table_unref(self->priv->data.hash);
+        self->priv->data.hash = NULL;
+
         g_free(self->priv->data.name);
-        g_string_free(self->priv->data.value, TRUE);
+        self->priv->data.name = NULL;
+
+        if ( self->priv->data.value != NULL )
+            g_string_free(self->priv->data.value, TRUE);
+        self->priv->data.value = NULL;
+
         self->priv->state = self->priv->data.return_state;
     goto recheck;
     case EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT:
-        g_object_unref(self->priv->event);
+        if ( self->priv->data.hash != NULL )
+            g_hash_table_unref(self->priv->data.hash);
+        self->priv->data.hash = NULL;
+
+        if ( self->priv->event != NULL )
+            g_object_unref(self->priv->event);
+        self->priv->event = NULL;
     break;
     case EVENTD_PROTOCOL_EVP_STATE_DOT_ANSWERED:
+        if ( self->priv->data.hash != NULL )
+            g_hash_table_unref(self->priv->data.hash);
+        self->priv->data.hash = NULL;
+
         g_free(self->priv->answer.answer);
+        self->priv->answer.answer = NULL;
     break;
     default:
     break;
     }
 
     self->priv->state = _EVENTD_PROTOCOL_EVP_STATE_SIZE;
-
-    g_propagate_error(error, _inner_error_);
-    return FALSE;
 }

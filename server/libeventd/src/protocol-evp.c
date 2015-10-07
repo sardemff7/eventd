@@ -102,14 +102,9 @@ _eventd_protocol_evp_finalize(GObject *object)
 {
     EventdProtocolEvp *self = EVENTD_PROTOCOL_EVP(object);
 
-    g_free(self->priv->data.name);
-    if ( self->priv->data.value != NULL )
-        g_string_free(self->priv->data.value, TRUE);
-
-    if ( self->priv->event != NULL )
-        g_object_unref(self->priv->event);
-
     g_hash_table_unref(self->priv->events);
+
+    eventd_protocol_evp_parse_free(self);
 
     G_OBJECT_CLASS(eventd_protocol_evp_parent_class)->finalize(object);
 }

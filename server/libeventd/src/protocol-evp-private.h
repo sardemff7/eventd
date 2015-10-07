@@ -58,6 +58,7 @@ void eventd_protocol_evp_add_event(EventdProtocolEvp *self, EventdEvent *event);
 void eventd_protocol_evp_remove_event(EventdProtocolEvp *self, EventdEvent *event);
 
 gboolean eventd_protocol_evp_parse(EventdProtocol *protocol, gchar **buffer, GError **error);
+void eventd_protocol_evp_parse_free(EventdProtocolEvp *self);
 
 gchar *eventd_protocol_evp_generate_event(EventdProtocol *protocol, EventdEvent *event);
 gchar *eventd_protocol_evp_generate_answered(EventdProtocol *protocol, EventdEvent *event, const gchar *answer);
