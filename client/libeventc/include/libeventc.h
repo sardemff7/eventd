@@ -66,6 +66,9 @@ struct _EventcConnection {
 
 struct _EventcConnectionClass {
 	GObjectClass parent_class;
+
+	/* Signals */
+	void (*event)(EventcConnection *connection, EventdEvent *event);
 };
 
 
@@ -86,10 +89,14 @@ gboolean eventc_connection_set_host(EventcConnection *connection, const gchar *h
 void eventc_connection_set_connectable(EventcConnection *connection, GSocketConnectable *address);
 void eventc_connection_set_passive(EventcConnection *connection, gboolean passive);
 void eventc_connection_set_enable_proxy(EventcConnection *connection, gboolean enable_proxy);
+void eventc_connection_set_subscribe(EventcConnection *connection, gboolean subscribe);
+void eventc_connection_set_subscriptions(EventcConnection *connection, gchar **categories);
 
 gboolean eventc_connection_is_connected(EventcConnection *connection, GError **error);
 gboolean eventc_connection_get_passive(EventcConnection *connection);
 gboolean eventc_connection_get_enable_proxy(EventcConnection *connection);
+gboolean eventc_connection_get_subscribe(EventcConnection *connection);
+const gchar * const *eventc_connection_get_subscriptions(EventcConnection *connection);
 
 G_END_DECLS
 

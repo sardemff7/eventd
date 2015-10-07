@@ -36,10 +36,20 @@
 EVENTD_EXPORT GType eventc_connection_get_type(void);
 G_DEFINE_TYPE(EventcConnection, eventc_connection, G_TYPE_OBJECT)
 
+
+enum {
+    SIGNAL_EVENT,
+    LAST_SIGNAL
+};
+
+static guint _eventc_connection_signals[LAST_SIGNAL];
+
 struct _EventcConnectionPrivate {
     GSocketConnectable *address;
     gboolean passive;
     gboolean enable_proxy;
+    gboolean subscribe;
+    gchar **subscriptions;
     GError *error;
     EventdProtocol* protocol;
     GCancellable *cancellable;
@@ -164,6 +174,15 @@ end:
     g_free(message);
     return r;
 }
+
+static void _eventc_connection_handle_event(EventcConnection *self, EventdEvent *event);
+static void
+_eventc_connection_protocol_event(EventcConnection *self, EventdEvent *event, EventdProtocol *protocol)
+{
+    _eventc_connection_handle_event(self, event);
+    g_signal_emit(self, _eventc_connection_signals[SIGNAL_EVENT], 0, event);
+}
+
 static void
 _eventc_connection_event_answered(EventcConnection *self, const gchar *answer, EventdEvent *event)
 {
@@ -273,6 +292,22 @@ eventc_connection_class_init(EventcConnectionClass *klass)
     eventc_connection_parent_class = g_type_class_peek_parent(klass);
 
     object_class->finalize = _eventc_connection_finalize;
+
+    /**
+     * EventcConnection::event:
+     * @connection: the #EventcConnection that the event is from
+     * @event: the #EventdEvent that was received
+     *
+     * Emitted when receiving an event.
+     */
+    _eventc_connection_signals[SIGNAL_EVENT] =
+        g_signal_new("event",
+                     G_TYPE_FROM_CLASS(object_class),
+                     G_SIGNAL_RUN_FIRST,
+                     G_STRUCT_OFFSET(EventcConnectionClass, event),
+                     NULL, NULL,
+                     g_cclosure_marshal_generic,
+                     G_TYPE_NONE, 1, EVENTD_TYPE_EVENT);
 }
 
 static void
@@ -284,6 +319,7 @@ eventc_connection_init(EventcConnection *self)
     self->priv->events = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, _eventc_connection_event_handlers_free);
     self->priv->cancellable = g_cancellable_new();
 
+    g_signal_connect_swapped(self->priv->protocol, "event", G_CALLBACK(_eventc_connection_protocol_event), self);
     g_signal_connect_swapped(self->priv->protocol, "answered", G_CALLBACK(_eventc_connection_protocol_answered), self);
     g_signal_connect_swapped(self->priv->protocol, "ended", G_CALLBACK(_eventc_connection_protocol_ended), self);
     g_signal_connect_swapped(self->priv->protocol, "bye", G_CALLBACK(_eventc_connection_protocol_bye), self);
@@ -293,6 +329,8 @@ static void
 _eventc_connection_finalize(GObject *object)
 {
     EventcConnection *self = EVENTC_CONNECTION(object);
+
+    g_strfreev(self->priv->subscriptions);
 
     if ( self->priv->address != NULL )
         g_object_unref(self->priv->address);
@@ -437,6 +475,9 @@ _eventc_connection_connect_after(EventcConnection *self, GError *_inner_error_, 
 
     g_cancellable_reset(self->priv->cancellable);
     g_data_input_stream_read_line_async(self->priv->in, G_PRIORITY_DEFAULT, self->priv->cancellable, _eventc_connection_read_callback, self);
+
+    if ( self->priv->subscribe )
+        return _eventc_connection_send_message(self, eventd_protocol_generate_subscribe(self->priv->protocol, (const gchar * const *) self->priv->subscriptions));
 
     return TRUE;
 }
@@ -713,12 +754,15 @@ eventc_connection_set_connectable(EventcConnection *self, GSocketConnectable *ad
  * Sets whether the connection is passive or not. A passive connection does not
  * receive events back from the server so that the client does not require an
  * event loop.
+ *
+ * The subscribe setting *must not* be set.
  */
 EVENTD_EXPORT
 void
 eventc_connection_set_passive(EventcConnection *self, gboolean passive)
 {
     g_return_if_fail(EVENTC_IS_CONNECTION(self));
+    g_return_if_fail(! self->priv->subscribe);
 
     self->priv->passive = passive;
 }
@@ -738,6 +782,43 @@ eventc_connection_set_enable_proxy(EventcConnection *self, gboolean enable_proxy
     g_return_if_fail(EVENTC_IS_CONNECTION(self));
 
     self->priv->enable_proxy = enable_proxy;
+}
+
+/**
+ * eventc_connection_set_subscribe:
+ * @connection: an #EventcConnection
+ * @subscribe: the subscribe setting
+ *
+ * Sets whether the connection will subscribe to events.
+ *
+ * The passive setting *must not* be set.
+ */
+EVENTD_EXPORT
+void
+eventc_connection_set_subscribe(EventcConnection *self, gboolean subscribe)
+{
+    g_return_if_fail(EVENTC_IS_CONNECTION(self));
+    g_return_if_fail(! self->priv->passive);
+
+    self->priv->subscribe = subscribe;
+}
+
+/**
+ * eventc_connection_set_subscriptions:
+ * @connection: an #EventcConnection
+ * @categories: (array zero-terminated=1) (element-type utf8) (nullable) (transfer full): the categories of events to subscribe to
+ *
+ * Sets the categories the plugin will subscribe to.
+ * %NULL (the default) means subscribing to *all* events the server know.
+ */
+EVENTD_EXPORT
+void
+eventc_connection_set_subscriptions(EventcConnection *self, gchar **subscriptions)
+{
+    g_return_if_fail(EVENTC_IS_CONNECTION(self));
+
+    g_strfreev(self->priv->subscriptions);
+    self->priv->subscriptions = subscriptions;
 }
 
 /**
@@ -772,4 +853,38 @@ eventc_connection_get_enable_proxy(EventcConnection *self)
     g_return_val_if_fail(EVENTC_IS_CONNECTION(self), FALSE);
 
     return self->priv->enable_proxy;
+}
+
+/**
+ * eventc_connection_get_subscribe:
+ * @connection: an #EventcConnection
+ *
+ * Retrieves whether the connection will subscribe to events.
+ *
+ * Returns: %TRUE if the connection will subscribe to events
+ */
+EVENTD_EXPORT
+gboolean
+eventc_connection_get_subscribe(EventcConnection *self)
+{
+    g_return_val_if_fail(EVENTC_IS_CONNECTION(self), FALSE);
+
+    return self->priv->subscribe;
+}
+
+/**
+ * eventc_connection_get_subscriptions:
+ * @connection: an #EventcConnection
+ *
+ * Retrieves the categories of events the connection will subscribe to.
+ *
+ * Returns: (array zero-terminated=1) (element-type utf8) (nullable): the list of categories, or %NULL (for all)
+ */
+EVENTD_EXPORT
+const gchar * const *
+eventc_connection_get_subscriptions(EventcConnection *self)
+{
+    g_return_val_if_fail(EVENTC_IS_CONNECTION(self), FALSE);
+
+    return (const gchar * const *) self->priv->subscriptions;
 }
