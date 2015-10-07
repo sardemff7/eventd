@@ -209,6 +209,19 @@ _eventc_connection_protocol_bye(EventcConnection *self, EventdProtocol *protocol
 }
 
 static void
+_eventc_connection_handle_event(EventcConnection *self, EventdEvent *event)
+{
+    EventdConnectionEventHandlers *handlers;
+    handlers = g_slice_new(EventdConnectionEventHandlers);
+    handlers->event = g_object_ref(event);
+
+    handlers->answered = g_signal_connect_swapped(event, "answered", G_CALLBACK(_eventc_connection_event_answered), self);
+    handlers->ended = g_signal_connect_swapped(event, "ended", G_CALLBACK(_eventc_connection_event_ended), self);
+
+    g_hash_table_insert(self->priv->events, event, handlers);
+}
+
+static void
 _eventc_connection_event_handlers_free(gpointer data)
 {
     EventdConnectionEventHandlers *handlers = data;
@@ -581,14 +594,7 @@ eventc_connection_event(EventcConnection *self, EventdEvent *event, GError **err
         return FALSE;
     }
 
-    EventdConnectionEventHandlers *handlers;
-    handlers = g_slice_new(EventdConnectionEventHandlers);
-    handlers->event = g_object_ref(event);
-
-    handlers->answered = g_signal_connect_swapped(event, "answered", G_CALLBACK(_eventc_connection_event_answered), self);
-    handlers->ended = g_signal_connect_swapped(event, "ended", G_CALLBACK(_eventc_connection_event_ended), self);
-
-    g_hash_table_insert(self->priv->events, event, handlers);
+    _eventc_connection_handle_event(self, event);
 
     return TRUE;
 }
@@ -720,7 +726,7 @@ eventc_connection_set_passive(EventcConnection *self, gboolean passive)
 /**
  * eventc_connection_set_enable_proxy:
  * @connection: an #EventcConnection
- * @enable_proxy: the passive setting
+ * @enable_proxy: the enable_proxy setting
  *
  * Sets whether the connection is to use a proxy or not on the underlying
  * #GSocketClient.

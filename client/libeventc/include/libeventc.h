@@ -59,6 +59,8 @@ GQuark eventc_error_quark(void);
 
 struct _EventcConnection {
 	GObject parent_instance;
+
+	/*< private >*/
 	EventcConnectionPrivate  *priv;
 };
 
