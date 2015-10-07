@@ -219,9 +219,7 @@ _eventd_protocol_evp_parse_dot_answered_end(EventdProtocolEvp *self, GError **er
 static void
 _eventd_protocol_evp_parse_dot_subscribe_start(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
 {
-    self->priv->subscriptions.current = 0;
-    self->priv->subscriptions.size = 2;
-    self->priv->subscriptions.list = g_new(gchar *, self->priv->subscriptions.size + 1);
+    self->priv->subscriptions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 
     self->priv->state = EVENTD_PROTOCOL_EVP_STATE_DOT_SUBSCRIBE;
     self->priv->base_state = EVENTD_PROTOCOL_EVP_STATE_SUBSCRIBE;
@@ -230,28 +228,20 @@ _eventd_protocol_evp_parse_dot_subscribe_start(EventdProtocolEvp *self, const gc
 static gboolean
 _eventd_protocol_evp_parse_dot_subscribe_continue(EventdProtocolEvp *self, const gchar *line, GError **error)
 {
-    if ( self->priv->subscriptions.size <= self->priv->subscriptions.current )
-    {
-        self->priv->subscriptions.size *= 2;
-        self->priv->subscriptions.list = g_renew(gchar *, self->priv->subscriptions.list, self->priv->subscriptions.size + 1);
-    }
-    self->priv->subscriptions.list[self->priv->subscriptions.current] = g_strdup(line);
-    ++self->priv->subscriptions.current;
+    g_hash_table_add(self->priv->subscriptions, g_strdup(line));
     return TRUE;
 }
 
 static void
 _eventd_protocol_evp_parse_dot_subscribe_end(EventdProtocolEvp *self, GError **error)
 {
-    if ( self->priv->subscriptions.current < 2 )
+    if ( g_hash_table_size(self->priv->subscriptions) < 2 )
         return g_set_error(error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_MALFORMED, "SUBSCRIBE dot message requires at least two categories");
 
-    self->priv->subscriptions.list[self->priv->subscriptions.current] = NULL;
+    g_signal_emit(self, _eventd_protocol_signals[SIGNAL_SUBSCRIBE], 0, self->priv->subscriptions);
 
-    g_signal_emit(self, _eventd_protocol_signals[SIGNAL_SUBSCRIBE], 0, self->priv->subscriptions.list);
-
-    g_strfreev(self->priv->subscriptions.list);
-    self->priv->subscriptions.list = NULL;
+    g_hash_table_unref(self->priv->subscriptions);
+    self->priv->subscriptions = NULL;
 
     self->priv->state = self->priv->base_state;
 }
@@ -325,7 +315,11 @@ _eventd_protocol_evp_parse_passive(EventdProtocolEvp *self, const gchar * const 
 static void
 _eventd_protocol_evp_parse_subscribe(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
 {
-    g_signal_emit(self, _eventd_protocol_signals[SIGNAL_SUBSCRIBE], 0, argv);
+    GHashTable *subscriptions;
+    subscriptions = g_hash_table_new(g_str_hash, g_str_equal);
+    g_hash_table_add(subscriptions, (gpointer) argv[0]);
+    g_signal_emit(self, _eventd_protocol_signals[SIGNAL_SUBSCRIBE], 0, subscriptions);
+    g_hash_table_unref(subscriptions);
 
     self->priv->base_state = EVENTD_PROTOCOL_EVP_STATE_SUBSCRIBE;
     self->priv->state = self->priv->base_state;
@@ -572,8 +566,8 @@ recheck:
         self->priv->answer.answer = NULL;
     break;
     case EVENTD_PROTOCOL_EVP_STATE_DOT_SUBSCRIBE:
-        g_free(self->priv->subscriptions.list);
-        self->priv->subscriptions.list = NULL;
+        g_hash_table_unref(self->priv->subscriptions);
+        self->priv->subscriptions = NULL;
     break;
     default:
     break;

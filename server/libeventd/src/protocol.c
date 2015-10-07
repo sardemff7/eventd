@@ -106,7 +106,7 @@ eventd_protocol_default_init(EventdProtocolInterface *iface)
     /**
      * EventdProtocol::subscribe:
      * @protocol: the #EventdProtocol that parsed the message
-     * @category: (array zero-terminated=1) (element-type utf8) (nullable): the categories of events the client wants to subscribe to
+     * @categories: (element-type utf8 utf8) (nullable): the categories of events the client wants to subscribe to as a set (key == value)
      *
      * Emitted when parsed a SUBSCRIBE message.
      */
@@ -117,7 +117,7 @@ eventd_protocol_default_init(EventdProtocolInterface *iface)
                      G_STRUCT_OFFSET(EventdProtocolInterface, subscribe),
                      NULL, NULL,
                      g_cclosure_marshal_generic,
-                     G_TYPE_NONE, 1, G_TYPE_STRV);
+                     G_TYPE_NONE, 1, G_TYPE_HASH_TABLE);
 
     /**
      * EventdProtocol::bye:
@@ -239,7 +239,7 @@ eventd_protocol_generate_passive(EventdProtocol *self)
 /**
  * eventd_protocol_generate_subscribe:
  * @protocol: an #EventdProtocol
- * @categories: (array zero-terminated=1) (element-type utf8) (nullable): the categories of events you want to subscribe to
+ * @categories: (element-type utf8 utf8) (nullable): the categories of events you want to subscribe to as a set (key == value)
  *
  * Generates a SUBSCRIBE message.
  *
@@ -247,10 +247,10 @@ eventd_protocol_generate_passive(EventdProtocol *self)
  */
 EVENTD_EXPORT
 gchar *
-eventd_protocol_generate_subscribe(EventdProtocol *self, const gchar * const *categories)
+eventd_protocol_generate_subscribe(EventdProtocol *self, GHashTable *categories)
 {
     g_return_val_if_fail(EVENTD_IS_PROTOCOL(self), NULL);
-    g_return_val_if_fail(categories == NULL || categories[0] != NULL, NULL);
+    g_return_val_if_fail(categories == NULL || g_hash_table_size(categories) > 0, NULL);
 
     return EVENTD_PROTOCOL_GET_INTERFACE(self)->generate_subscribe(self, categories);
 }

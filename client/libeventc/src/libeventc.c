@@ -49,7 +49,7 @@ struct _EventcConnectionPrivate {
     gboolean passive;
     gboolean enable_proxy;
     gboolean subscribe;
-    gchar **subscriptions;
+    GHashTable *subscriptions;
     GError *error;
     EventdProtocol* protocol;
     GCancellable *cancellable;
@@ -330,7 +330,7 @@ _eventc_connection_finalize(GObject *object)
 {
     EventcConnection *self = EVENTC_CONNECTION(object);
 
-    g_strfreev(self->priv->subscriptions);
+    g_hash_table_unref(self->priv->subscriptions);
 
     if ( self->priv->address != NULL )
         g_object_unref(self->priv->address);
@@ -477,7 +477,7 @@ _eventc_connection_connect_after(EventcConnection *self, GError *_inner_error_, 
     g_data_input_stream_read_line_async(self->priv->in, G_PRIORITY_DEFAULT, self->priv->cancellable, _eventc_connection_read_callback, self);
 
     if ( self->priv->subscribe )
-        return _eventc_connection_send_message(self, eventd_protocol_generate_subscribe(self->priv->protocol, (const gchar * const *) self->priv->subscriptions));
+        return _eventc_connection_send_message(self, eventd_protocol_generate_subscribe(self->priv->protocol, self->priv->subscriptions));
 
     return TRUE;
 }
@@ -790,6 +790,8 @@ eventc_connection_set_enable_proxy(EventcConnection *self, gboolean enable_proxy
  * @subscribe: the subscribe setting
  *
  * Sets whether the connection will subscribe to events.
+ * If you do not add specific categories using eventc_connection_add_subscription(),
+ * it will subscribe to *all* events.
  *
  * The passive setting *must not* be set.
  */
@@ -804,21 +806,22 @@ eventc_connection_set_subscribe(EventcConnection *self, gboolean subscribe)
 }
 
 /**
- * eventc_connection_set_subscriptions:
+ * eventc_connection_add_subscription:
  * @connection: an #EventcConnection
- * @categories: (array zero-terminated=1) (element-type utf8) (nullable) (transfer full): the categories of events to subscribe to
+ * @category: (transfer full): a category of events to subscribe to
  *
- * Sets the categories the plugin will subscribe to.
- * %NULL (the default) means subscribing to *all* events the server know.
+ * Adds a category of events to subscribe to.
  */
 EVENTD_EXPORT
 void
-eventc_connection_set_subscriptions(EventcConnection *self, gchar **subscriptions)
+eventc_connection_add_subscription(EventcConnection *self, gchar *category)
 {
     g_return_if_fail(EVENTC_IS_CONNECTION(self));
+    g_return_if_fail(category != NULL);
 
-    g_strfreev(self->priv->subscriptions);
-    self->priv->subscriptions = subscriptions;
+    if ( self->priv->subscriptions == NULL )
+        self->priv->subscriptions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+    g_hash_table_add(self->priv->subscriptions, category);
 }
 
 /**
@@ -870,21 +873,4 @@ eventc_connection_get_subscribe(EventcConnection *self)
     g_return_val_if_fail(EVENTC_IS_CONNECTION(self), FALSE);
 
     return self->priv->subscribe;
-}
-
-/**
- * eventc_connection_get_subscriptions:
- * @connection: an #EventcConnection
- *
- * Retrieves the categories of events the connection will subscribe to.
- *
- * Returns: (array zero-terminated=1) (element-type utf8) (nullable): the list of categories, or %NULL (for all)
- */
-EVENTD_EXPORT
-const gchar * const *
-eventc_connection_get_subscriptions(EventcConnection *self)
-{
-    g_return_val_if_fail(EVENTC_IS_CONNECTION(self), FALSE);
-
-    return (const gchar * const *) self->priv->subscriptions;
 }

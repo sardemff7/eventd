@@ -155,30 +155,45 @@ eventd_protocol_evp_generate_passive(EventdProtocol *protocol)
 }
 
 gchar *
-eventd_protocol_evp_generate_subscribe(EventdProtocol *protocol, const gchar * const *categories)
+eventd_protocol_evp_generate_subscribe(EventdProtocol *protocol, GHashTable *categories)
 {
     g_return_val_if_fail(EVENTD_IS_PROTOCOL_EVP(protocol), FALSE);
 
     if ( categories == NULL )
         return g_strdup("SUBSCRIBE\n");
 
+    gchar *message;
+
     guint length;
-    length = g_strv_length((gchar **) categories);
+    GHashTableIter iter;
+    gchar *category;
+    gpointer dummy;
+    length = g_hash_table_size(categories);
+    g_hash_table_iter_init(&iter, categories);
+    g_hash_table_iter_next(&iter, (gpointer *) &category, &dummy);
 
     if ( length == 1 )
-        return g_strdup_printf("SUBSCRIBE %s\n", categories[0]);
+    {
+        message = g_strdup_printf("SUBSCRIBE %s\n", category);
+        goto ret;
+    }
 
     gsize size;
     GString *str;
-    size = strlen(".SUBSCRIBE\n.\n") + ( strlen(categories[0]) + 1) * length;
+    size = strlen(".SUBSCRIBE\n.\n") + ( strlen(category) + 1) * length;
     str = g_string_sized_new(size);
 
     g_string_append(str, ".SUBSCRIBE\n");
-    for ( ; *categories != NULL ; ++categories )
-        g_string_append_c(g_string_append(str, *categories), '\n');
+        g_string_append_c(g_string_append(str, category), '\n');
+    while ( g_hash_table_iter_next(&iter, (gpointer *) &category, &dummy) )
+        g_string_append_c(g_string_append(str, category), '\n');
     g_string_append(str, ".\n");
 
-    return g_string_free(str, FALSE);
+    message = g_string_free(str, FALSE);
+
+ret:
+    g_hash_table_unref(categories);
+    return message;
 }
 
 gchar *

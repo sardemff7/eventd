@@ -161,7 +161,7 @@ _eventd_evp_client_protocol_passive(EventdEvpClient *self, EventdProtocol *proto
 }
 
 static void
-_eventd_evp_client_protocol_subscribe(EventdEvpClient *self, const gchar * const *categories, EventdProtocol *protocol)
+_eventd_evp_client_protocol_subscribe(EventdEvpClient *self, GHashTable *categories, EventdProtocol *protocol)
 {
     if ( categories == NULL )
     {
@@ -170,14 +170,18 @@ _eventd_evp_client_protocol_subscribe(EventdEvpClient *self, const gchar * const
         return;
     }
 
+    GHashTableIter iter;
+    gchar *category;
+    gpointer dummy;
     gchar *key = NULL;
     GList *list = NULL;
-    for ( ; *categories != NULL ; ++categories )
+    g_hash_table_iter_init(&iter, categories);
+    while ( g_hash_table_iter_next(&iter, (gpointer *) &category, &dummy) )
     {
-        if ( g_hash_table_lookup_extended(self->context->subscribe_categories, *categories, (gpointer *) &key, (gpointer *) &list) )
-            g_hash_table_steal(self->context->subscribe_categories, *categories);
+        if ( g_hash_table_lookup_extended(self->context->subscribe_categories, category, (gpointer *) &key, (gpointer *) &list) )
+            g_hash_table_steal(self->context->subscribe_categories, category);
         else
-            key = g_strdup(*categories);
+            key = g_strdup(category);
 
         list = g_list_prepend(list, self);
 

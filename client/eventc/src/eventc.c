@@ -237,7 +237,9 @@ post_args:
     if ( subscribe )
     {
         eventc_connection_set_subscribe(client, TRUE);
-        eventc_connection_set_subscriptions(client, ( argc < 2 ) ? NULL : g_strdupv(argv + 1));
+        gint i;
+        for ( i = 1 ; i < argc ; ++i )
+            eventc_connection_add_subscription(client, g_strdup(argv[i]));
 
         g_signal_connect(client, "event", G_CALLBACK(_eventc_event_callback), NULL);
         goto post_event;
