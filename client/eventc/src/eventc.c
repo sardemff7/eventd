@@ -34,9 +34,9 @@
 #include <libeventc.h>
 
 
-static EventcConnection *client;
-static EventdEvent *event;
-static GMainLoop *loop;
+static EventcConnection *client = NULL;
+static EventdEvent *event = NULL;
+static GMainLoop *loop = NULL;
 
 static gint tries = 0;
 static gint max_tries = 3;
@@ -62,7 +62,8 @@ _eventc_connect(gpointer user_data)
         return TRUE;
     }
 
-    _eventc_send_event();
+    if ( event != NULL )
+        _eventc_send_event();
 
     return FALSE;
 }
@@ -126,6 +127,9 @@ main(int argc, char *argv[])
 {
     int r = 0;
     gchar *host = NULL;
+    const gchar *category = NULL;
+    const gchar *name = NULL;
+    guint n_length = 0, c_length = 0;
     gchar **event_data_name = NULL;
     gchar **event_data_content = NULL;
     gchar **answers = NULL;
@@ -176,7 +180,6 @@ main(int argc, char *argv[])
         g_print("You must define the name of the event.\n");
         goto end;
     }
-    guint n_length, c_length;
 
     n_length = ( event_data_name == NULL ) ? 0 : g_strv_length(event_data_name);
     c_length = ( event_data_content == NULL ) ? 0 : g_strv_length(event_data_content);
@@ -188,10 +191,10 @@ main(int argc, char *argv[])
         goto end;
     }
 
-    r = 2; /* Arguments are fine, checking host */
+    category = argv[1];
+    name = argv[2];
 
-    const gchar *category = argv[1];
-    const gchar *name = argv[2];
+    r = 2; /* Arguments are fine, checking host */
 
     client = eventc_connection_new(host, &error);
     if ( client == NULL )
@@ -227,7 +230,8 @@ main(int argc, char *argv[])
     g_main_loop_run(loop);
     g_main_loop_unref(loop);
 
-    g_object_unref(event);
+    if ( event != NULL )
+        g_object_unref(event);
 
     g_object_unref(client);
 
