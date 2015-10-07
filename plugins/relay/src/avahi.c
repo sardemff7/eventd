@@ -33,6 +33,7 @@
 #include <avahi-glib/glib-malloc.h>
 
 #include <libeventd-event.h>
+#include <eventd-plugin.h>
 
 #include "server.h"
 

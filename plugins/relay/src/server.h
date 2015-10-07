@@ -25,8 +25,8 @@
 
 typedef struct _EventdPluginAction EventdRelayServer;
 
-EventdRelayServer *eventd_relay_server_new(void);
-EventdRelayServer *eventd_relay_server_new_for_domain(const gchar *domain);
+EventdRelayServer *eventd_relay_server_new(EventdPluginCoreContext *core, EventdPluginCoreInterface *core_interface, gboolean subscribe, gchar **subscriptions);
+EventdRelayServer *eventd_relay_server_new_for_domain(EventdPluginCoreContext *core, EventdPluginCoreInterface *core_interface, gboolean subscribe, gchar **subscriptions, const gchar *domain);
 void eventd_relay_server_free(gpointer data);
 
 void eventd_relay_server_set_address(EventdRelayServer *server, GSocketConnectable *address);

@@ -39,9 +39,29 @@
 #include "server.h"
 
 struct _EventdPluginAction {
+    EventdPluginCoreContext *core;
+    EventdPluginCoreInterface *core_interface;
+    gboolean subscribe;
+    gchar **subscriptions;
     EventcConnection *connection;
     LibeventdReconnectHandler *reconnect;
 };
+
+static gboolean
+_eventd_relay_server_discard_event(gpointer data)
+{
+    EventdEvent *event = data;
+
+    eventd_event_end(event, EVENTD_EVENT_END_REASON_DISCARD);
+
+    return FALSE;
+}
+static void
+_eventd_relay_server_event(EventdRelayServer *self, EventdEvent *event, EventcConnection *connection)
+{
+    if ( ! eventd_plugin_core_push_event(self->core, self->core_interface, event) )
+        g_idle_add(_eventd_relay_server_discard_event, event);
+}
 
 static void
 _eventd_relay_reconnect_callback(LibeventdReconnectHandler *handler, gpointer user_data)
@@ -67,12 +87,35 @@ _eventd_relay_connection_handler(GObject *obj, GAsyncResult *res, gpointer user_
     }
 }
 
+static void
+_eventd_relay_server_setup_connection(EventdRelayServer *server)
+{
+    g_signal_connect_swapped(server->connection, "event", G_CALLBACK(_eventd_relay_server_event), server);
+    if ( server->subscribe )
+    {
+        gchar **category;
+        eventc_connection_set_subscribe(server->connection, TRUE);
+        for ( category = server->subscriptions ; *category != NULL ; ++category )
+            eventc_connection_add_subscription(server->connection, *category);
+        g_free(server->subscriptions);
+        server->subscriptions = NULL;
+    }
+}
+
 EventdRelayServer *
-eventd_relay_server_new(void)
+eventd_relay_server_new(EventdPluginCoreContext *core, EventdPluginCoreInterface *core_interface, gboolean subscribe, gchar **subscriptions)
 {
     EventdRelayServer *server;
 
     server = g_new0(EventdRelayServer, 1);
+    server->core = core;
+    server->core_interface = core_interface;
+
+    server->subscribe = subscribe;
+    if ( server->subscribe && ( subscriptions != NULL ) && ( subscriptions[0] != NULL ) )
+        server->subscriptions = subscriptions;
+    else
+        g_strfreev(subscriptions);
 
     server->reconnect = evhelpers_reconnect_new(5, 10,_eventd_relay_reconnect_callback, server);
 
@@ -80,7 +123,7 @@ eventd_relay_server_new(void)
 }
 
 EventdRelayServer *
-eventd_relay_server_new_for_domain(const gchar *domain)
+eventd_relay_server_new_for_domain(EventdPluginCoreContext *core, EventdPluginCoreInterface *core_interface, gboolean subscribe, gchar **subscriptions, const gchar *domain)
 {
     EventcConnection *connection;
     GError *error = NULL;
@@ -95,8 +138,10 @@ eventd_relay_server_new_for_domain(const gchar *domain)
 
     EventdRelayServer *server;
 
-    server = eventd_relay_server_new();
+    server = eventd_relay_server_new(core, core_interface, subscribe, subscriptions);
     server->connection = connection;
+
+    _eventd_relay_server_setup_connection(server);
 
     return server;
 }
@@ -107,7 +152,10 @@ eventd_relay_server_set_address(EventdRelayServer *server, GSocketConnectable *a
     if ( server->connection != NULL )
         eventc_connection_set_connectable(server->connection, address);
     else
+    {
         server->connection = eventc_connection_new_for_connectable(address);
+        _eventd_relay_server_setup_connection(server);
+    }
 }
 
 gboolean
