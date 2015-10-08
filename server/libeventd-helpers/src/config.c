@@ -245,6 +245,19 @@ evhelpers_config_key_file_get_enum(GKeyFile *config_file, const gchar *group, co
 
 EVENTD_EXPORT
 gint8
+evhelpers_config_key_file_get_enum_with_default(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar * const *values, guint64 size, guint64 default_value, guint64 *value)
+{
+    gint8 r;
+
+    r = evhelpers_config_key_file_get_enum(config_file, group, key, values, size, value);
+    if ( r > 0 )
+        *value = default_value;
+
+    return r;
+}
+
+EVENTD_EXPORT
+gint8
 evhelpers_config_key_file_get_string_list(GKeyFile *config_file, const gchar *group, const gchar *key, gchar ***value, gsize *length)
 {
     GError *error = NULL;
