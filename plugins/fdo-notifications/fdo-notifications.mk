@@ -15,6 +15,7 @@ dbussessionservice_DATA += \
 
 
 fdo_notifications_la_SOURCES = \
+	%D%/src/fdo-notifications.h \
 	%D%/src/fdo-notifications.c \
 	$(null)
 
@@ -38,3 +39,24 @@ fdo_notifications_la_LIBADD = \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS) \
 	$(null)
+
+if ENABLE_NOTIFY
+man5_MANS += \
+	%D%/man/eventd-notify.conf.5 \
+	$(null)
+
+fdo_notifications_la_SOURCES += \
+	%D%/src/notify.c \
+	$(null)
+
+fdo_notifications_la_CFLAGS += \
+	$(NOTIFY_CFLAGS) \
+	$(GDK_PIXBUF_CFLAGS) \
+	$(null)
+
+fdo_notifications_la_LIBADD += \
+	libeventd-helpers.la \
+	$(NOTIFY_LIBS) \
+	$(GDK_PIXBUF_LIBS) \
+	$(null)
+endif

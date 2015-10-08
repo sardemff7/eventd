@@ -1,7 +1,7 @@
 /*
  * eventd - Small daemon to act on remote or local events
  *
- * Copyright © 2011-2012 Quentin "Sardem FF7" Glidic
+ * Copyright © 2011-2015 Quentin "Sardem FF7" Glidic
  *
  * This file is part of eventd.
  *
@@ -25,27 +25,20 @@
 #include <glib.h>
 #include <gio/gio.h>
 
+#ifdef ENABLE_NOTIFY
+#include <libnotify/notify.h>
+#endif /* ENABLE_NOTIFY */
+
+
 #include <libeventd-event.h>
 #include <eventd-plugin.h>
+
+#include "fdo-notifications.h"
 
 #define NOTIFICATION_BUS_NAME      "org.freedesktop.Notifications"
 #define NOTIFICATION_BUS_PATH      "/org/freedesktop/Notifications"
 
 #define NOTIFICATION_SPEC_VERSION  "1.2"
-
-struct _EventdPluginContext {
-    EventdPluginCoreContext *core;
-    EventdPluginCoreInterface *core_interface;
-    GDBusNodeInfo *introspection_data;
-    guint id;
-    GDBusConnection *connection;
-    GVariant *capabilities;
-    GVariant *server_information_self;
-    GVariant *server_information;
-    guint32 count;
-    GHashTable *events;
-    GHashTable *notifications;
-};
 
 typedef struct {
     EventdPluginContext *context;
@@ -296,12 +289,9 @@ _eventd_fdo_notifications_get_capabilities(EventdPluginContext *context, GDBusMe
 }
 
 static void
-_eventd_fdo_notifications_get_server_information(const char *from, const gchar *to, EventdPluginContext *context, GDBusMethodInvocation *invocation)
+_eventd_fdo_notifications_get_server_information(EventdPluginContext *context, GDBusMethodInvocation *invocation)
 {
-    if ( g_strcmp0(from, to) == 0 )
-        g_dbus_method_invocation_return_value(invocation, g_variant_ref(context->server_information_self));
-    else
-        g_dbus_method_invocation_return_value(invocation, g_variant_ref(context->server_information));
+    g_dbus_method_invocation_return_value(invocation, g_variant_ref(context->server_information));
 }
 
 /* D-Bus method callback */
@@ -328,7 +318,7 @@ _eventd_fdo_notifications_method(GDBusConnection       *connection,
     else if ( g_strcmp0(method_name, "GetCapabilities") == 0 )
         _eventd_fdo_notifications_get_capabilities(context, invocation);
     else if ( g_strcmp0(method_name, "GetServerInformation") == 0 )
-        _eventd_fdo_notifications_get_server_information(sender, g_dbus_connection_get_unique_name(connection), context, invocation);
+        _eventd_fdo_notifications_get_server_information(context, invocation);
 }
 
 
@@ -394,17 +384,21 @@ _eventd_fdo_notifications_on_bus_acquired(GDBusConnection *connection, const gch
 static void
 _eventd_fdo_notifications_on_name_acquired(GDBusConnection *connection, const gchar *name, gpointer user_data)
 {
+    EventdPluginContext *context = user_data;
 #ifdef EVENTD_DEBUG
     g_debug("Acquired the name %s on the session bus", name);
 #endif /* EVENTD_DEBUG */
+    context->bus_name_owned = TRUE;
 }
 
 static void
 _eventd_fdo_notifications_on_name_lost(GDBusConnection *connection, const gchar *name, gpointer user_data)
 {
+    EventdPluginContext *context = user_data;
 #ifdef EVENTD_DEBUG
     g_debug("Lost the name %s on the session bus", name);
 #endif /* EVENTD_DEBUG */
+    context->bus_name_owned = FALSE;
 }
 
 static void
@@ -508,6 +502,14 @@ _eventd_fdo_notifications_init(EventdPluginCoreContext *core, EventdPluginCoreIn
     GError *error = NULL;
     GDBusNodeInfo *introspection_data;
 
+#ifdef ENABLE_NOTIFY
+    if ( ! notify_init(PACKAGE_NAME) )
+    {
+        g_warning("Couldn't initialize notify system");
+        return NULL;
+    }
+#endif /* ENABLE_NOTIFY */
+
     introspection_data = g_dbus_node_info_new_for_xml(introspection_xml, &error);
     if ( introspection_data == NULL )
     {
@@ -523,7 +525,6 @@ _eventd_fdo_notifications_init(EventdPluginCoreContext *core, EventdPluginCoreIn
     context->core = core;
     context->core_interface = core_interface;
 
-    context->server_information_self = g_variant_new("(ssss)", PACKAGE_NAME "-self", "Quentin 'Sardem FF7' Glidic", PACKAGE_VERSION, NOTIFICATION_SPEC_VERSION);
     context->server_information = g_variant_new("(ssss)", PACKAGE_NAME, "Quentin 'Sardem FF7' Glidic", PACKAGE_VERSION, NOTIFICATION_SPEC_VERSION);
     _eventd_fdo_notifications_init_capabilities(context);
 
@@ -539,11 +540,14 @@ _eventd_fdo_notifications_uninit(EventdPluginContext *context)
 
     g_variant_unref(context->capabilities);
     g_variant_unref(context->server_information);
-    g_variant_unref(context->server_information_self);
 
     g_dbus_node_info_unref(context->introspection_data);
 
     g_free(context);
+
+#ifdef ENABLE_NOTIFY
+    notify_uninit();
+#endif /* ENABLE_NOTIFY */
 }
 
 
@@ -578,4 +582,8 @@ eventd_plugin_get_interface(EventdPluginInterface *interface)
 
     eventd_plugin_interface_add_start_callback(interface, _eventd_fdo_notifications_start);
     eventd_plugin_interface_add_stop_callback(interface, _eventd_fdo_notifications_stop);
+
+#ifdef ENABLE_NOTIFY
+    eventd_libnotify_get_interface(interface);
+#endif /* ENABLE_NOTIFY */
 }

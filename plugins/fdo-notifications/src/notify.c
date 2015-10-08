@@ -32,10 +32,7 @@
 #include <eventd-plugin.h>
 #include <libeventd-helpers-config.h>
 
-struct _EventdPluginContext {
-    gboolean overlay_icon;
-    GSList *actions;
-};
+#include "fdo-notifications.h"
 
 struct _EventdPluginAction {
     FormatString *title;
@@ -215,58 +212,6 @@ _eventd_libnotify_action_free(gpointer data)
 
 
 /*
- * Initialization interface
- */
-
-static EventdPluginContext *
-_eventd_libnotify_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *interface)
-{
-    EventdPluginContext *context;
-
-    if ( ! notify_init(PACKAGE_NAME) )
-    {
-        g_warning("Couldn't initialize notify system");
-        return NULL;
-    }
-
-    gchar *server_name = NULL;
-    notify_get_server_info(&server_name, NULL, NULL, NULL);
-
-    if ( g_strcmp0(server_name, PACKAGE_NAME "-self") == 0 )
-    {
-        g_debug("We would send notifications to ourselves: quitting");
-        g_free(server_name);
-        notify_uninit();
-        return NULL;
-    }
-    g_free(server_name);
-
-    context = g_new0(EventdPluginContext, 1);
-
-    GList *capabilities, *capability_;
-    capabilities = notify_get_server_caps();
-    for ( capability_ = capabilities ; capability_ != NULL ; capability_ = g_list_next(capability_) )
-    {
-        gchar *capability = capability_->data;
-        if ( g_strcmp0(capability, "x-eventd-overlay-icon") == 0 )
-            context->overlay_icon = TRUE;
-        g_free(capability);
-    }
-    g_list_free(capabilities);
-
-    return context;
-}
-
-static void
-_eventd_libnotify_uninit(EventdPluginContext *context)
-{
-    g_free(context);
-
-    notify_uninit();
-}
-
-
-/*
  * Configuration interface
  */
 
@@ -335,7 +280,7 @@ _eventd_libnotify_action_parse(EventdPluginContext *context, GKeyFile *config_fi
     image = icon = NULL;
     urgency = NULL;
 
-    context->actions = g_slist_prepend(context->actions, action);
+    context->client.actions = g_slist_prepend(context->client.actions, action);
     return action;
 
 skip:
@@ -350,8 +295,8 @@ skip:
 static void
 _eventd_libnotify_config_reset(EventdPluginContext *context)
 {
-    g_slist_free_full(context->actions, _eventd_libnotify_action_free);
-    context->actions = NULL;
+    g_slist_free_full(context->client.actions, _eventd_libnotify_action_free);
+    context->client.actions = NULL;
 }
 
 
@@ -370,6 +315,10 @@ _eventd_libnotify_event_ended(NotifyNotification *notification, EventdEventEndRe
 static void
 _eventd_libnotify_event_action(EventdPluginContext *context, EventdPluginAction *action, EventdEvent *event)
 {
+    if ( context->bus_name_owned )
+        /* We would be sending stuff to ourselves */
+        return;
+
     GError *error = NULL;
     gchar *title;
     gchar *message;
@@ -380,7 +329,7 @@ _eventd_libnotify_event_action(EventdPluginContext *context, EventdPluginAction 
     title = evhelpers_format_string_get_string(action->title, event, NULL, NULL);
     message = evhelpers_format_string_get_string(action->message, event, NULL, NULL);
 
-    image = _eventd_libnotify_get_image(action, event, context->overlay_icon, &icon_uri);
+    image = _eventd_libnotify_get_image(action, event, FALSE, &icon_uri);
 
     notification = notify_notification_new(title, message, icon_uri);
     g_free(icon_uri);
@@ -433,14 +382,9 @@ _eventd_libnotify_event_action(EventdPluginContext *context, EventdPluginAction 
  * Plugin interface
  */
 
-EVENTD_EXPORT const gchar *eventd_plugin_id = "notify";
-EVENTD_EXPORT
 void
-eventd_plugin_get_interface(EventdPluginInterface *interface)
+eventd_libnotify_get_interface(EventdPluginInterface *interface)
 {
-    eventd_plugin_interface_add_init_callback(interface, _eventd_libnotify_init);
-    eventd_plugin_interface_add_uninit_callback(interface, _eventd_libnotify_uninit);
-
     eventd_plugin_interface_add_action_parse_callback(interface, _eventd_libnotify_action_parse);
     eventd_plugin_interface_add_config_reset_callback(interface, _eventd_libnotify_config_reset);
 

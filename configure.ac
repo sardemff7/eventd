@@ -277,6 +277,7 @@ AC_ARG_ENABLE([libnotify], AS_HELP_STRING([--enable-libnotify], [Enable libnotif
 if test x${enable_libnotify} = xyes; then
     PKG_CHECK_MODULES([NOTIFY], [libnotify >= ${libnotify_min_version}])
     PKG_CHECK_MODULES([GDK_PIXBUF], [gdk-pixbuf-2.0])
+    AC_DEFINE([ENABLE_NOTIFY], [1], [Enable libnotify support])
     AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_notify"
 fi
 AM_CONDITIONAL([ENABLE_NOTIFY], [test x${enable_libnotify} = xyes])
