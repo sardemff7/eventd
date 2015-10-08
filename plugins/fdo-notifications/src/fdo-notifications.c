@@ -35,11 +35,6 @@
 
 #include "fdo-notifications.h"
 
-#define NOTIFICATION_BUS_NAME      "org.freedesktop.Notifications"
-#define NOTIFICATION_BUS_PATH      "/org/freedesktop/Notifications"
-
-#define NOTIFICATION_SPEC_VERSION  "1.2"
-
 typedef struct {
     EventdPluginContext *context;
     guint32 id;
@@ -559,11 +554,17 @@ static void
 _eventd_fdo_notifications_start(EventdPluginContext *context)
 {
     context->id = g_bus_own_name(G_BUS_TYPE_SESSION, NOTIFICATION_BUS_NAME, G_BUS_NAME_OWNER_FLAGS_NONE, _eventd_fdo_notifications_on_bus_acquired, _eventd_fdo_notifications_on_name_acquired, _eventd_fdo_notifications_on_name_lost, context, NULL);
+#ifdef ENABLE_NOTIFY
+    eventd_libnotify_start(context);
+#endif /* ENABLE_NOTIFY */
 }
 
 static void
 _eventd_fdo_notifications_stop(EventdPluginContext *context)
 {
+#ifdef ENABLE_NOTIFY
+    eventd_libnotify_stop(context);
+#endif /* ENABLE_NOTIFY */
     g_bus_unown_name(context->id);
 }
 

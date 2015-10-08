@@ -36,11 +36,21 @@ struct _EventdPluginContext {
     GHashTable *events;
     GHashTable *notifications;
     struct {
+        guint id;
+        GDBusProxy *server;
         GSList *actions;
+        gboolean overlay_icon;
     } client;
 };
 
 void eventd_libnotify_get_interface(EventdPluginInterface *interface);
+void eventd_libnotify_start(EventdPluginContext *context);
+void eventd_libnotify_stop(EventdPluginContext *context);
 
+
+#define NOTIFICATION_BUS_NAME      "org.freedesktop.Notifications"
+#define NOTIFICATION_BUS_PATH      "/org/freedesktop/Notifications"
+
+#define NOTIFICATION_SPEC_VERSION  "1.2"
 
 #endif /* __EVENTD_FDO_NOTIFICATIONS_H__ */

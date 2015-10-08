@@ -212,6 +212,84 @@ _eventd_libnotify_action_free(gpointer data)
 
 
 /*
+ * Start/stop interface
+ */
+
+static void
+_eventd_libnotify_proxy_get_capabilities(GObject *obj, GAsyncResult *res, gpointer user_data)
+{
+    EventdPluginContext *context = user_data;
+    GError *error = NULL;
+    GVariant *ret;
+
+    ret = g_dbus_proxy_call_finish(context->client.server, res, &error);
+    if ( ret == NULL )
+    {
+        g_warning("Couldn't get org.freedesktop.Notifications server capabilities: %s", error->message);
+        g_clear_error(&error);
+        return;
+    }
+
+    const gchar **capabilities, **capability;
+    g_variant_get(ret, "(^a&s)", &capabilities);
+
+    for ( capability = capabilities ; *capability != NULL ; ++capability )
+    {
+        if ( g_strcmp0(*capability, "x-eventd-overlay-icon") == 0 )
+            context->client.overlay_icon = TRUE;
+    }
+
+    g_free(capabilities);
+    g_variant_unref(ret);
+}
+
+static void
+_eventd_libnotify_proxy_create_callback(GObject *obj, GAsyncResult *res, gpointer user_data)
+{
+    EventdPluginContext *context = user_data;
+    GError *error = NULL;
+
+    context->client.server = g_dbus_proxy_new_finish(res, &error);
+    if ( context->client.server == NULL )
+    {
+        g_warning("Couldn't connection to org.freedesktop.Notifications server: %s", error->message);
+        g_clear_error(&error);
+        return;
+    }
+
+    g_dbus_proxy_call(context->client.server, "GetCapabilities", NULL, G_DBUS_CALL_FLAGS_NONE, -1, NULL, _eventd_libnotify_proxy_get_capabilities, context);
+}
+
+static void
+_eventd_libnotify_bus_name_appeared(GDBusConnection *connection, const gchar *name, const gchar *name_owner, gpointer user_data)
+{
+    EventdPluginContext *context = user_data;
+    GDBusProxyFlags flags = G_DBUS_PROXY_FLAGS_DO_NOT_CONNECT_SIGNALS|G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES;
+
+    g_dbus_proxy_new(connection, flags, context->introspection_data->interfaces[0], name, NOTIFICATION_BUS_PATH, NOTIFICATION_BUS_NAME, NULL, _eventd_libnotify_proxy_create_callback, context);
+}
+
+static void
+_eventd_libnotify_bus_name_vanished(GDBusConnection *connection, const gchar *name, gpointer user_data)
+{
+    EventdPluginContext *context = user_data;
+    g_object_unref(context->client.server);
+}
+
+void
+eventd_libnotify_start(EventdPluginContext *context)
+{
+    context->client.id = g_bus_watch_name(G_BUS_TYPE_SESSION, NOTIFICATION_BUS_NAME, G_BUS_NAME_WATCHER_FLAGS_NONE, _eventd_libnotify_bus_name_appeared, _eventd_libnotify_bus_name_vanished, context, NULL);
+}
+
+void
+eventd_libnotify_stop(EventdPluginContext *context)
+{
+    g_bus_unwatch_name(context->client.id);
+}
+
+
+/*
  * Configuration interface
  */
 
@@ -329,7 +407,7 @@ _eventd_libnotify_event_action(EventdPluginContext *context, EventdPluginAction 
     title = evhelpers_format_string_get_string(action->title, event, NULL, NULL);
     message = evhelpers_format_string_get_string(action->message, event, NULL, NULL);
 
-    image = _eventd_libnotify_get_image(action, event, FALSE, &icon_uri);
+    image = _eventd_libnotify_get_image(action, event, context->client.overlay_icon, &icon_uri);
 
     notification = notify_notification_new(title, message, icon_uri);
     g_free(icon_uri);
