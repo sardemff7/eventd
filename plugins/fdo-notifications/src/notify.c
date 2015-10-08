@@ -34,16 +34,28 @@
 
 #include "fdo-notifications.h"
 
+typedef enum {
+    EVENTD_LIBNOTIFY_URGENCY_LOW,
+    EVENTD_LIBNOTIFY_URGENCY_NORMAL,
+    EVENTD_LIBNOTIFY_URGENCY_CRITICAL,
+    _EVENTD_LIBNOTIFY_URGENCY_SIZE
+} EventdLibnotifyUrgency;
+
 struct _EventdPluginAction {
     FormatString *title;
     FormatString *message;
     Filename *image;
     Filename *icon;
     gdouble scale;
-    NotifyUrgency urgency;
+    EventdLibnotifyUrgency urgency;
     GHashTable *hints;
 };
 
+const gchar * const _eventd_libnotify_urgency[_EVENTD_LIBNOTIFY_URGENCY_SIZE] = {
+    [EVENTD_LIBNOTIFY_URGENCY_LOW] =      "low",
+    [EVENTD_LIBNOTIFY_URGENCY_NORMAL] =   "normal",
+    [EVENTD_LIBNOTIFY_URGENCY_CRITICAL] = "critical",
+};
 
 static GdkPixbuf *
 _eventd_libnotify_icon_get_pixbuf_from_file(const gchar *filename)
@@ -169,7 +181,7 @@ _eventd_libnotify_get_image(EventdPluginAction *action, EventdEvent *event, gboo
  */
 
 static EventdPluginAction *
-_eventd_libnotify_event_new(FormatString *title, FormatString *message, Filename *image, Filename *icon, gint64 scale, gchar *urgency, GHashTable *hints)
+_eventd_libnotify_event_new(FormatString *title, FormatString *message, Filename *image, Filename *icon, gint64 scale, EventdLibnotifyUrgency urgency, GHashTable *hints)
 {
     EventdPluginAction *event;
 
@@ -180,16 +192,7 @@ _eventd_libnotify_event_new(FormatString *title, FormatString *message, Filename
     event->image = image;
     event->icon = icon;
     event->scale = (gdouble) scale / 100.;
-    event->urgency = NOTIFY_URGENCY_NORMAL;
-    if ( g_strcmp0(urgency, "low") == 0 )
-        event->urgency = NOTIFY_URGENCY_LOW;
-    else if ( g_strcmp0(urgency, "normal") == 0 )
-        event->urgency = NOTIFY_URGENCY_NORMAL;
-    else if ( g_strcmp0(urgency, "critical") == 0 )
-        event->urgency = NOTIFY_URGENCY_CRITICAL;
-    else
-        g_warning("Unknown urgency: %s", urgency);
-    g_free(urgency);
+    event->urgency = urgency;
     event->hints = hints;
 
     return event;
@@ -312,7 +315,7 @@ _eventd_libnotify_action_parse(EventdPluginContext *context, GKeyFile *config_fi
     Filename *image = NULL;
     Filename *icon = NULL;
     gint64 scale;
-    gchar *urgency = NULL;
+    guint64 urgency;
 
     if ( evhelpers_config_key_file_get_locale_format_string_with_default(config_file, "Libnotify", "Title", NULL, "${summary}", &title) < 0 )
         goto skip;
@@ -324,7 +327,7 @@ _eventd_libnotify_action_parse(EventdPluginContext *context, GKeyFile *config_fi
         goto skip;
     if ( evhelpers_config_key_file_get_int_with_default(config_file, "Libnotify", "OverlayScale", 50, &scale) < 0 )
         goto skip;
-    if ( evhelpers_config_key_file_get_string_with_default(config_file, "Libnotify", "Urgency", "normal", &urgency) < 0 )
+    if ( evhelpers_config_key_file_get_enum_with_default(config_file, "Libnotify", "Urgency", _eventd_libnotify_urgency, _EVENTD_LIBNOTIFY_URGENCY_SIZE, EVENTD_LIBNOTIFY_URGENCY_NORMAL, &urgency) < 0 )
         goto skip;
 
     if ( scale < 0 )
@@ -356,13 +359,11 @@ _eventd_libnotify_action_parse(EventdPluginContext *context, GKeyFile *config_fi
     action = _eventd_libnotify_event_new(title, message, image, icon, scale, urgency, hints);
     title = message = NULL;
     image = icon = NULL;
-    urgency = NULL;
 
     context->client.actions = g_slist_prepend(context->client.actions, action);
     return action;
 
 skip:
-    g_free(urgency);
     evhelpers_filename_unref(icon);
     evhelpers_filename_unref(image);
     evhelpers_format_string_unref(message);
