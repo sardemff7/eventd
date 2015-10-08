@@ -65,7 +65,6 @@ gobject_introspection_min_version="1.42.0"
 # Server dependencies
 gmodule_min_version="${glib_min_version}"
 libpulse_min_version="0.9.15"
-libnotify_min_version="0.7.0"
 gtk_min_version="3.0"
 
 
@@ -275,7 +274,6 @@ AM_CONDITIONAL([ENABLE_TTS], [test x${enable_tts} = xyes])
 # libnotify plugin
 AC_ARG_ENABLE([libnotify], AS_HELP_STRING([--enable-libnotify], [Enable libnotify support (client side)]), [], [enable_libnotify=no])
 if test x${enable_libnotify} = xyes; then
-    PKG_CHECK_MODULES([NOTIFY], [libnotify >= ${libnotify_min_version}])
     PKG_CHECK_MODULES([GDK_PIXBUF], [gdk-pixbuf-2.0])
     AC_DEFINE([ENABLE_NOTIFY], [1], [Enable libnotify support])
     AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_notify"

@@ -22,10 +22,13 @@
 
 #include <config.h>
 
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif /* HAVE_STRING_H */
+
 #include <glib.h>
 #include <glib-object.h>
 
-#include <libnotify/notify.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
 #include <libeventd-event.h>
@@ -51,6 +54,12 @@ struct _EventdPluginAction {
     GHashTable *hints;
 };
 
+typedef struct {
+    EventdPluginContext *context;
+    guint32 id;
+    EventdEvent *event;
+} EventdLibnotifyNotification;
+
 const gchar * const _eventd_libnotify_urgency[_EVENTD_LIBNOTIFY_URGENCY_SIZE] = {
     [EVENTD_LIBNOTIFY_URGENCY_LOW] =      "low",
     [EVENTD_LIBNOTIFY_URGENCY_NORMAL] =   "normal",
@@ -58,12 +67,12 @@ const gchar * const _eventd_libnotify_urgency[_EVENTD_LIBNOTIFY_URGENCY_SIZE] = 
 };
 
 static GdkPixbuf *
-_eventd_libnotify_icon_get_pixbuf_from_file(const gchar *filename)
+_eventd_libnotify_icon_get_pixbuf_from_uri(const gchar *filename)
 {
     GError *error = NULL;
     GdkPixbuf *pixbuf;
 
-    pixbuf = gdk_pixbuf_new_from_file(filename, &error);
+    pixbuf = gdk_pixbuf_new_from_file(filename + strlen("file://"), &error);
     if ( pixbuf == NULL )
     {
         g_warning("Couldn't load icon file: %s", error->message);
@@ -112,7 +121,7 @@ fail:
 }
 
 static GdkPixbuf *
-_eventd_libnotify_get_image(EventdPluginAction *action, EventdEvent *event, gboolean server_support, gchar **icon_uri)
+_eventd_libnotify_get_image(EventdPluginAction *action, EventdEvent *event, gboolean server_support, gchar **icon_uri, gchar **image_uri)
 {
     gchar *file;
     const gchar *data;
@@ -122,7 +131,7 @@ _eventd_libnotify_get_image(EventdPluginAction *action, EventdEvent *event, gboo
     if ( evhelpers_filename_get_path(action->image, event, "icons", &data, &file) )
     {
         if ( file != NULL )
-            image = _eventd_libnotify_icon_get_pixbuf_from_file(file);
+            *image_uri = g_strconcat("file://", file, NULL);
         else if ( data != NULL )
             image = _eventd_libnotify_icon_get_pixbuf_from_base64(eventd_event_get_data(event, data));
         g_free(file);
@@ -131,23 +140,63 @@ _eventd_libnotify_get_image(EventdPluginAction *action, EventdEvent *event, gboo
     if ( evhelpers_filename_get_path(action->icon, event, "icons", &data, &file) )
     {
         if ( file != NULL )
-        {
-            if ( ( image == NULL ) || ( server_support ) )
-                *icon_uri = g_strconcat("file://", file, NULL);
-            else
-                icon = _eventd_libnotify_icon_get_pixbuf_from_file(file);
-        }
+            *icon_uri = g_strconcat("file://", file, NULL);
         else if ( data != NULL )
             icon = _eventd_libnotify_icon_get_pixbuf_from_base64(eventd_event_get_data(event, data));
         g_free(file);
     }
 
-    if ( ( image == NULL ) && ( icon == NULL ) )
-        return NULL;
+    if ( ( *image_uri == NULL ) && ( image == NULL ) )
+        return icon;
 
+    if ( ( *icon_uri == NULL ) && ( icon == NULL ) )
+        return image;
+
+    /*
+     * The server can support both icon and image
+     * We have an icon URI and an image (either URI or data)
+     * We give it both
+     */
+    if ( server_support && ( *icon_uri != NULL ) && ( ( *image_uri != NULL ) || ( image != NULL ) ) )
+        return image;
+
+    /*
+     * We have an image URI, check if we can read it
+     */
+    if ( ( image == NULL ) && ( *image_uri != NULL ) )
+    {
+        image = _eventd_libnotify_icon_get_pixbuf_from_uri(*image_uri);
+        g_free(*image_uri);
+        *image_uri = NULL;
+    }
+
+    /*
+     * We could not read the image, so back to sending the icon alone
+     */
     if ( image == NULL )
         return icon;
 
+    /*
+     * We have an icon URI, check if we can read it
+     */
+    if ( ( icon == NULL ) && ( *icon_uri != NULL ) )
+    {
+        icon = _eventd_libnotify_icon_get_pixbuf_from_uri(*icon_uri);
+        g_free(*icon_uri);
+        *icon_uri = NULL;
+    }
+
+    /*
+     * We could not read the icon, so back to sending the image alone
+     */
+    if ( icon == NULL )
+        return image;
+
+    /*
+     * Either the server does not support displaying both
+     * or we only had data for the icon and no URI
+     * Here we are, merge then!
+     */
     gint image_width, image_height;
     gint icon_width, icon_height;
     gint x, y;
@@ -211,6 +260,43 @@ _eventd_libnotify_action_free(gpointer data)
     evhelpers_format_string_unref(event->title);
 
     g_slice_free(EventdPluginAction, event);
+}
+
+static void
+_eventd_libnotify_notification_free(gpointer data)
+{
+    EventdLibnotifyNotification *self = data;
+
+    g_object_unref(self->event);
+
+    g_slice_free(EventdLibnotifyNotification, self);
+}
+
+static void
+_eventd_libnotify_notification_close(GObject *obj, GAsyncResult *res, gpointer user_data)
+{
+    EventdLibnotifyNotification *self = user_data;
+    GVariant *ret;
+    GError *error = NULL;
+
+    ret = g_dbus_proxy_call_finish(self->context->client.server, res, &error);
+    if ( ret == NULL )
+    {
+        g_warning("Couldn't close the notification: %s", error->message);
+        g_clear_error(&error);
+    }
+    else
+        g_variant_unref(ret);
+    _eventd_libnotify_notification_free(self);
+}
+
+static void
+_eventd_libnotify_event_ended(EventdLibnotifyNotification *self, EventdEventEndReason reason, EventdEvent *event)
+{
+    if ( self->id > 0 )
+        g_dbus_proxy_call(self->context->client.server, "CloseNotification", g_variant_new("(u)", self->id), G_DBUS_CALL_FLAGS_NONE, -1, NULL, _eventd_libnotify_notification_close, self);
+    else
+        _eventd_libnotify_notification_free(self);
 }
 
 
@@ -384,11 +470,22 @@ _eventd_libnotify_config_reset(EventdPluginContext *context)
  */
 
 static void
-_eventd_libnotify_event_ended(NotifyNotification *notification, EventdEventEndReason reason, EventdEvent *event)
+_eventd_libnotify_proxy_notify(GObject *obj, GAsyncResult *res, gpointer user_data)
 {
-    notify_notification_close(notification, NULL);
-    g_object_unref(notification);
-    g_object_unref(event);
+    EventdLibnotifyNotification *self = user_data;
+    GVariant *ret;
+    GError *error = NULL;
+
+    ret = g_dbus_proxy_call_finish(self->context->client.server, res, &error);
+    if ( ret == NULL )
+    {
+        g_warning("Server refused notification: %s", error->message);
+        g_clear_error(&error);
+        return;
+    }
+
+    g_variant_get(ret, "(u)", &self->id);
+    g_variant_unref(ret);
 }
 
 static void
@@ -398,31 +495,22 @@ _eventd_libnotify_event_action(EventdPluginContext *context, EventdPluginAction 
         /* We would be sending stuff to ourselves */
         return;
 
-    GError *error = NULL;
+    if ( context->client.server == NULL )
+        return;
+
     gchar *title;
     gchar *message;
     gchar *icon_uri = NULL;
-    NotifyNotification *notification = NULL;
+    gchar *image_uri = NULL;
     GdkPixbuf *image;
 
     title = evhelpers_format_string_get_string(action->title, event, NULL, NULL);
     message = evhelpers_format_string_get_string(action->message, event, NULL, NULL);
 
-    image = _eventd_libnotify_get_image(action, event, context->client.overlay_icon, &icon_uri);
+    image = _eventd_libnotify_get_image(action, event, context->client.overlay_icon, &icon_uri, &image_uri);
 
-    notification = notify_notification_new(title, message, icon_uri);
-    g_free(icon_uri);
-    g_free(message);
-    g_free(title);
-
-    if ( image != NULL )
-    {
-        notify_notification_set_image_from_pixbuf(notification, image);
-        g_object_unref(image);
-    }
-
-    notify_notification_set_urgency(notification, action->urgency);
-    notify_notification_set_timeout(notification, eventd_event_get_timeout(event));
+    GVariantBuilder *hints;
+    hints = g_variant_builder_new(G_VARIANT_TYPE_VARDICT);
 
     if ( action->hints != NULL )
     {
@@ -430,30 +518,65 @@ _eventd_libnotify_event_action(EventdPluginContext *context, EventdPluginAction 
         gchar *key;
         FormatString *value_;
         gchar *value;
-        GVariant *variant;
         g_hash_table_iter_init(&iter, action->hints);
         while ( g_hash_table_iter_next(&iter, (gpointer *) &key, (gpointer *) &value_) )
         {
             value = evhelpers_format_string_get_string(value_, event, NULL, NULL);
             if ( *value == '\0' )
-                notify_notification_set_hint(notification, key, NULL);
+                g_variant_builder_add(hints, "{sv}", key, NULL);
             else
-            {
-                variant = g_variant_parse(NULL, value, NULL, NULL, NULL);
-                if ( variant != NULL )
-                    notify_notification_set_hint(notification, key, variant);
-            }
+                g_variant_builder_add_parsed(hints, "{'%s', %?}", key, value);
             g_free(value);
         }
     }
 
-    if ( ! notify_notification_show(notification, &error) )
-        g_warning("Can't show the notification: %s", error->message);
-    g_clear_error(&error);
+    g_variant_builder_add(hints, "{sv}", "urgency", g_variant_new_byte(action->urgency));
 
-    g_signal_connect_swapped(g_object_ref(event), "ended", G_CALLBACK(_eventd_libnotify_event_ended), g_object_ref(notification));
+    if ( image != NULL )
+    {
+        gint32 width, height, rowstride, bits, channels;
+        gboolean alpha;
+        GVariant *data;
+        width = gdk_pixbuf_get_width(image);
+        height = gdk_pixbuf_get_height(image);
+        rowstride = gdk_pixbuf_get_rowstride(image);
+        alpha = gdk_pixbuf_get_has_alpha(image);
+        bits = gdk_pixbuf_get_bits_per_sample(image);
+        channels = gdk_pixbuf_get_n_channels(image);
+        data = g_variant_new_from_data(G_VARIANT_TYPE_BYTESTRING, gdk_pixbuf_read_pixels(image), gdk_pixbuf_get_byte_length(image), TRUE, NULL, NULL);
+        g_variant_builder_add(hints, "{sv}", "image-data", g_variant_new("(iiibii@ay)", width, height, rowstride, alpha, bits, channels, data));
+        g_object_unref(image);
+    }
+    if ( image_uri != NULL )
+    {
+        g_variant_builder_add(hints, "{s<s>}", "image-path", image_uri);
+        g_free(image_uri);
+    }
 
-    g_object_unref(notification);
+    GVariantBuilder *actions;
+    actions = g_variant_builder_new(G_VARIANT_TYPE_STRING_ARRAY);
+
+    GVariant *args;
+    args = g_variant_new("(susssasa{sv}i)",
+        PACKAGE_NAME,
+        (gint32) 0,
+        ( icon_uri != NULL ) ? icon_uri : "",
+        ( title != NULL ) ? title : "",
+        ( message != NULL ) ? message : "",
+        actions,
+        hints,
+        (gint32) eventd_event_get_timeout(event));
+    g_free(icon_uri);
+    g_free(message);
+    g_free(title);
+
+    EventdLibnotifyNotification *notification;
+    notification = g_slice_new0(EventdLibnotifyNotification);
+    notification->context = context;
+    notification->event = g_object_ref(event);
+
+    g_dbus_proxy_call(context->client.server, "Notify", args, G_DBUS_CALL_FLAGS_NONE, -1, NULL, _eventd_libnotify_proxy_notify, notification);
+    g_signal_connect_swapped(notification->event, "ended", G_CALLBACK(_eventd_libnotify_event_ended), notification);
 }
 
 

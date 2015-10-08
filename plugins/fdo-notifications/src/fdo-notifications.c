@@ -25,10 +25,6 @@
 #include <glib.h>
 #include <gio/gio.h>
 
-#ifdef ENABLE_NOTIFY
-#include <libnotify/notify.h>
-#endif /* ENABLE_NOTIFY */
-
 
 #include <libeventd-event.h>
 #include <eventd-plugin.h>
@@ -497,14 +493,6 @@ _eventd_fdo_notifications_init(EventdPluginCoreContext *core, EventdPluginCoreIn
     GError *error = NULL;
     GDBusNodeInfo *introspection_data;
 
-#ifdef ENABLE_NOTIFY
-    if ( ! notify_init(PACKAGE_NAME) )
-    {
-        g_warning("Couldn't initialize notify system");
-        return NULL;
-    }
-#endif /* ENABLE_NOTIFY */
-
     introspection_data = g_dbus_node_info_new_for_xml(introspection_xml, &error);
     if ( introspection_data == NULL )
     {
@@ -539,10 +527,6 @@ _eventd_fdo_notifications_uninit(EventdPluginContext *context)
     g_dbus_node_info_unref(context->introspection_data);
 
     g_free(context);
-
-#ifdef ENABLE_NOTIFY
-    notify_uninit();
-#endif /* ENABLE_NOTIFY */
 }
 
 
