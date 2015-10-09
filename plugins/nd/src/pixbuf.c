@@ -99,7 +99,7 @@ _eventd_nd_pixbuf_from_base64(gchar *uri)
     GError *error = NULL;
     GdkPixbufLoader *loader;
 
-    if ( mime_type != NULL )
+    if ( *mime_type != '\0' )
     {
         loader = gdk_pixbuf_loader_new_with_mime_type(mime_type, &error);
         if ( loader == NULL )
