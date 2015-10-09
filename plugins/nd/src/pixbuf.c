@@ -22,6 +22,10 @@
 
 #include <config.h>
 
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif /* HAVE_STRING_H */
+
 #include <glib.h>
 #include <glib-object.h>
 
@@ -43,20 +47,14 @@ eventd_nd_pixbuf_from_base64(EventdEvent *event, const gchar *name)
     const gchar *base64;
     guchar *data;
     gsize length;
-    const gchar *format;
-    gchar *format_name;
 
     base64 = eventd_event_get_data(event, name);
     if ( base64 == NULL )
         return NULL;
-    data = g_base64_decode(base64, &length);
 
-    format_name = g_strconcat(name, "-format", NULL);
-    format = eventd_event_get_data(event, format_name);
-    g_free(format_name);
-
-    if ( format != NULL )
+    if ( g_str_has_prefix(base64, "data:image/x.eventd.gdkpixbuf;format=") )
     {
+        const gchar *format = base64 + strlen("data:image/x.eventd.gdkpixbuf;format=");
         gint width, height;
         gint stride;
         gboolean alpha;
@@ -67,6 +65,9 @@ eventd_nd_pixbuf_from_base64(EventdEvent *event, const gchar *name)
         stride = g_ascii_strtoll(f+1, &f, 16);
         alpha = g_ascii_strtoll(f+1, &f, 16);
 
+        f += strlen(";base64,");
+
+        data = g_base64_decode(f+1, &length);
         pixbuf = gdk_pixbuf_new_from_data(data, GDK_COLORSPACE_RGB, alpha, 8, width, height, stride, _eventd_nd_pixbuf_free_data, NULL);
     }
     else
@@ -74,6 +75,7 @@ eventd_nd_pixbuf_from_base64(EventdEvent *event, const gchar *name)
         GError *error = NULL;
         GdkPixbufLoader *loader;
 
+        data = g_base64_decode(base64, &length);
         loader = gdk_pixbuf_loader_new();
 
         if ( ! gdk_pixbuf_loader_write(loader, data, length, &error) )

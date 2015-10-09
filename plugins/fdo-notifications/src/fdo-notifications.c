@@ -22,6 +22,10 @@
 
 #include <config.h>
 
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif /* HAVE_STRING_H */
+
 #include <glib.h>
 #include <gio/gio.h>
 
@@ -210,13 +214,32 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
         gboolean a;
         gint b, w, h, s, n;
         GVariant *data;
-        gchar *format;
 
         g_variant_get(image_data, "(iiibii@ay)", &w, &h, &s, &a, &b, &n, &data);
-        eventd_event_add_data(event, g_strdup("image"), g_base64_encode(g_variant_get_data(data), g_variant_get_size(data)));
 
-        format = g_strdup_printf("%x %x %x %x", w, h, s, a);
-        eventd_event_add_data(event, g_strdup("image-format"), format);
+        /* This is the only format gdk-pixbuf can read */
+        if ( ( b == 8 ) && ( n == ( a ? 4 : 3 ) ) )
+        {
+            gchar *value;
+            gsize format_length;
+            gsize length;
+
+            format_length = strlen("data:image/x.eventd.gdkpixbuf;format=ffffffffffffffff:ffffffffffffffff:ffffffffffffffff:f;base64,");
+            length = ( g_variant_get_size(data) / 3 + 1 ) * 4 + 1;
+            value = g_malloc(format_length + length);
+
+            gchar *out = value;
+            out += g_snprintf(out, format_length, "data:image/x.eventd.gdkpixbuf;format=%x:%x:%x:%x;base64,", w, h, s, a);
+
+            gint state = 0;
+            gint save = 0;
+            out += g_base64_encode_step(g_variant_get_data(data), g_variant_get_size(data), FALSE, out, &state, &save);
+            out += g_base64_encode_close(FALSE, out, &state, &save);
+            *out = '\0';
+
+            eventd_event_add_data(event, g_strdup("image"), value);
+        }
+        g_variant_unref(data);
     }
     else if ( image_path != NULL )
     {
