@@ -665,29 +665,6 @@ eventd_nd_style_get_icon_fade_width(EventdNdStyle *self)
 
 /* EventdNdNotificationContents */
 
-
-static GdkPixbuf *
-_eventd_nd_notification_contents_pixbuf_from_file(const gchar *path, gint width, gint height)
-{
-    GError *error = NULL;
-    GdkPixbufFormat *format;
-    GdkPixbuf *pixbuf;
-
-    if ( *path == 0 )
-        return NULL;
-
-    if ( ( ( width > 0 ) || ( height > 0 ) ) && ( ( format = gdk_pixbuf_get_file_info(path, NULL, NULL) ) != NULL ) && gdk_pixbuf_format_is_scalable(format) )
-        pixbuf = gdk_pixbuf_new_from_file_at_size(path, width, height, &error);
-    else
-        pixbuf = gdk_pixbuf_new_from_file(path, &error);
-
-    if ( pixbuf == NULL )
-        g_warning("Couldn't load file '%s': %s", path, error->message);
-    g_clear_error(&error);
-
-    return pixbuf;
-}
-
 EventdNdNotificationContents *
 eventd_nd_notification_contents_new(EventdNdStyle *style, EventdEvent *event, gint width, gint height)
 {
@@ -711,23 +688,11 @@ eventd_nd_notification_contents_new(EventdNdStyle *style, EventdEvent *event, gi
 
     uri = evhelpers_filename_get_uri(image, event, "images");
     if ( uri != NULL )
-    {
-        if ( g_str_has_prefix(uri, "file://") )
-            self->image = _eventd_nd_notification_contents_pixbuf_from_file(uri + strlen("file://"), width, height);
-        else if ( g_str_has_prefix(uri, "data:") )
-           self->image =  eventd_nd_pixbuf_from_base64(uri);
-        g_free(uri);
-    }
+       self->image = eventd_nd_pixbuf_from_uri(uri, width, height);
 
     uri = evhelpers_filename_get_uri(icon, event, "icons");
     if ( uri != NULL )
-    {
-        if ( g_str_has_prefix(uri, "file://") )
-            self->icon = _eventd_nd_notification_contents_pixbuf_from_file(uri + strlen("file://"), width, height);
-        else if ( g_str_has_prefix(uri, "data:") )
-            self->icon = eventd_nd_pixbuf_from_base64(uri);
-        g_free(uri);
-    }
+        self->icon = eventd_nd_pixbuf_from_uri(uri, width, height);
 
     return self;
 }

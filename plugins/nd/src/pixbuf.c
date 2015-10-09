@@ -34,18 +34,40 @@
 #include <libeventd-event.h>
 
 
+static GdkPixbuf *
+_eventd_nd_from_file(const gchar *path, gint width, gint height)
+{
+    GError *error = NULL;
+    GdkPixbufFormat *format;
+    GdkPixbuf *pixbuf;
+
+    if ( *path == 0 )
+        return NULL;
+
+    if ( ( ( width > 0 ) || ( height > 0 ) ) && ( ( format = gdk_pixbuf_get_file_info(path, NULL, NULL) ) != NULL ) && gdk_pixbuf_format_is_scalable(format) )
+        pixbuf = gdk_pixbuf_new_from_file_at_size(path, width, height, &error);
+    else
+        pixbuf = gdk_pixbuf_new_from_file(path, &error);
+
+    if ( pixbuf == NULL )
+        g_warning("Couldn't load file '%s': %s", path, error->message);
+    g_clear_error(&error);
+
+    return pixbuf;
+}
+
 static void
 _eventd_nd_pixbuf_free_data(guchar *pixels, gpointer data)
 {
     g_free(pixels);
 }
 
-GdkPixbuf *
-eventd_nd_pixbuf_from_base64(gchar *uri)
+static GdkPixbuf *
+_eventd_nd_pixbuf_from_base64(gchar *uri)
 {
     GdkPixbuf *pixbuf = NULL;
     gchar *c;
-    gchar *mime_type = uri + strlen("data:");
+    gchar *mime_type = uri;
     guchar *data;
     gsize length;
 
@@ -97,5 +119,18 @@ error:
     g_clear_error(&error);
     g_object_unref(loader);
     g_free(data);
+    return pixbuf;
+}
+
+GdkPixbuf *
+eventd_nd_pixbuf_from_uri(gchar *uri, gint width, gint height)
+{
+    GdkPixbuf *pixbuf = NULL;
+    if ( g_str_has_prefix(uri, "file://") )
+        pixbuf = _eventd_nd_from_file(uri + strlen("file://"), width, height);
+    else if ( g_str_has_prefix(uri, "data:") )
+        pixbuf = _eventd_nd_pixbuf_from_base64(uri + strlen("data:"));
+    g_free(uri);
+
     return pixbuf;
 }

@@ -70,22 +70,6 @@ const gchar * const _eventd_libnotify_urgency[_EVENTD_LIBNOTIFY_URGENCY_SIZE] = 
 };
 
 static GdkPixbuf *
-_eventd_libnotify_icon_get_pixbuf_from_uri(const gchar *filename)
-{
-    GError *error = NULL;
-    GdkPixbuf *pixbuf;
-
-    pixbuf = gdk_pixbuf_new_from_file(filename + strlen("file://"), &error);
-    if ( pixbuf == NULL )
-    {
-        g_warning("Couldn't load icon file: %s", error->message);
-        g_clear_error(&error);
-    }
-
-    return pixbuf;
-}
-
-static GdkPixbuf *
 _eventd_libnotify_get_image(EventdPluginAction *action, EventdEvent *event, gboolean server_support, gchar **icon_uri, gchar **image_uri)
 {
     gchar *uri;
@@ -97,13 +81,8 @@ _eventd_libnotify_get_image(EventdPluginAction *action, EventdEvent *event, gboo
     {
         if ( g_str_has_prefix(uri, "file://") )
             *image_uri = uri;
-        else if ( g_str_has_prefix(uri, "data:") )
-        {
-            image = eventd_nd_pixbuf_from_base64(uri);
-            g_free(uri);
-        }
         else
-            g_free(uri);
+            image = eventd_nd_pixbuf_from_uri(uri, 0, 0);
     }
 
     uri = evhelpers_filename_get_uri(action->icon, event, "icons");
@@ -111,13 +90,8 @@ _eventd_libnotify_get_image(EventdPluginAction *action, EventdEvent *event, gboo
     {
         if ( g_str_has_prefix(uri, "file://") )
             *icon_uri = uri;
-        else if ( g_str_has_prefix(uri, "data:") )
-        {
-            icon = eventd_nd_pixbuf_from_base64(uri);
-            g_free(uri);
-        }
         else
-            g_free(uri);
+            icon = eventd_nd_pixbuf_from_uri(uri, 0, 0);
     }
 
     if ( ( *image_uri == NULL ) && ( image == NULL ) )
@@ -139,8 +113,7 @@ _eventd_libnotify_get_image(EventdPluginAction *action, EventdEvent *event, gboo
      */
     if ( ( image == NULL ) && ( *image_uri != NULL ) )
     {
-        image = _eventd_libnotify_icon_get_pixbuf_from_uri(*image_uri);
-        g_free(*image_uri);
+        image = eventd_nd_pixbuf_from_uri(*image_uri, 0, 0);
         *image_uri = NULL;
     }
 
@@ -155,8 +128,7 @@ _eventd_libnotify_get_image(EventdPluginAction *action, EventdEvent *event, gboo
      */
     if ( ( icon == NULL ) && ( *icon_uri != NULL ) )
     {
-        icon = _eventd_libnotify_icon_get_pixbuf_from_uri(*icon_uri);
-        g_free(*icon_uri);
+        icon = eventd_nd_pixbuf_from_uri(*icon_uri, 0, 0);
         *icon_uri = NULL;
     }
 
