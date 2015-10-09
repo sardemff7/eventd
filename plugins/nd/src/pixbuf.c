@@ -99,7 +99,17 @@ _eventd_nd_pixbuf_from_base64(gchar *uri)
     GError *error = NULL;
     GdkPixbufLoader *loader;
 
-    loader = gdk_pixbuf_loader_new();
+    if ( mime_type != NULL )
+    {
+        loader = gdk_pixbuf_loader_new_with_mime_type(mime_type, &error);
+        if ( loader == NULL )
+        {
+            g_warning("Couldn't create loader for MIME type '%s': %s", mime_type, error->message);
+            goto end;
+        }
+    }
+    else
+        loader = gdk_pixbuf_loader_new();
 
     if ( ! gdk_pixbuf_loader_write(loader, data, length, &error) )
     {
@@ -116,8 +126,9 @@ _eventd_nd_pixbuf_from_base64(gchar *uri)
     pixbuf = g_object_ref(gdk_pixbuf_loader_get_pixbuf(loader));
 
 error:
-    g_clear_error(&error);
     g_object_unref(loader);
+end:
+    g_clear_error(&error);
     g_free(data);
     return pixbuf;
 }
