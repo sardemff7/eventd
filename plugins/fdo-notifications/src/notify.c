@@ -35,6 +35,9 @@
 #include <eventd-plugin.h>
 #include <libeventd-helpers-config.h>
 
+/* We share nd plugin’s pixbuf loader */
+#include "plugins/nd/src/pixbuf.h"
+
 #include "fdo-notifications.h"
 
 typedef enum {
@@ -83,44 +86,6 @@ _eventd_libnotify_icon_get_pixbuf_from_uri(const gchar *filename)
 }
 
 static GdkPixbuf *
-_eventd_libnotify_icon_get_pixbuf_from_base64(const gchar *base64)
-{
-    GError *error = NULL;
-    guchar *data;
-    gsize length;
-    GdkPixbufLoader *loader;
-    GdkPixbuf *pixbuf = NULL;
-
-    if ( base64 == NULL )
-        return NULL;
-
-    data = g_base64_decode(base64, &length);
-
-    loader = gdk_pixbuf_loader_new();
-
-    if ( ! gdk_pixbuf_loader_write(loader, data, length, &error) )
-    {
-        g_warning("Couldn't write icon data: %s", error->message);
-        g_clear_error(&error);
-        goto fail;
-    }
-
-    if ( ! gdk_pixbuf_loader_close(loader, &error) )
-    {
-        g_warning("Couldn't terminate icon data loading: %s", error->message);
-        g_clear_error(&error);
-        goto fail;
-    }
-
-    pixbuf = g_object_ref(gdk_pixbuf_loader_get_pixbuf(loader));
-
-fail:
-    g_free(data);
-    g_object_unref(loader);
-    return pixbuf;
-}
-
-static GdkPixbuf *
 _eventd_libnotify_get_image(EventdPluginAction *action, EventdEvent *event, gboolean server_support, gchar **icon_uri, gchar **image_uri)
 {
     gchar *file;
@@ -133,7 +98,7 @@ _eventd_libnotify_get_image(EventdPluginAction *action, EventdEvent *event, gboo
         if ( file != NULL )
             *image_uri = g_strconcat("file://", file, NULL);
         else if ( data != NULL )
-            image = _eventd_libnotify_icon_get_pixbuf_from_base64(eventd_event_get_data(event, data));
+            image = eventd_nd_pixbuf_from_base64(event, data);
         g_free(file);
     }
 
@@ -142,7 +107,7 @@ _eventd_libnotify_get_image(EventdPluginAction *action, EventdEvent *event, gboo
         if ( file != NULL )
             *icon_uri = g_strconcat("file://", file, NULL);
         else if ( data != NULL )
-            icon = _eventd_libnotify_icon_get_pixbuf_from_base64(eventd_event_get_data(event, data));
+            icon = eventd_nd_pixbuf_from_base64(event, data);
         g_free(file);
     }
 

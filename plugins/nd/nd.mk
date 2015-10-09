@@ -35,6 +35,8 @@ nd_la_SOURCES = \
 	%D%/src/cairo.h \
 	%D%/src/style.c \
 	%D%/src/style.h \
+	%D%/src/pixbuf.h \
+	%D%/src/pixbuf.c \
 	%D%/include/eventd-nd-backend.h \
 	%D%/src/backends.c \
 	%D%/src/backends.h \

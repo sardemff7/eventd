@@ -47,6 +47,7 @@ man5_MANS += \
 
 fdo_notifications_la_SOURCES += \
 	%D%/src/notify.c \
+	%D%/../nd/src/pixbuf.c \
 	$(null)
 
 fdo_notifications_la_CFLAGS += \

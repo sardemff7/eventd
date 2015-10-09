@@ -30,6 +30,8 @@
 #include <libeventd-event.h>
 #include <libeventd-helpers-config.h>
 
+#include "pixbuf.h"
+
 #include "style.h"
 
 static const gchar * const _eventd_nd_style_pango_alignments[] = {
@@ -682,76 +684,6 @@ _eventd_nd_notification_contents_pixbuf_from_file(const gchar *path, gint width,
     return pixbuf;
 }
 
-static void
-_eventd_nd_notification_contents_pixbuf_data_free(guchar *pixels, gpointer data)
-{
-    g_free(pixels);
-}
-
-static GdkPixbuf *
-_eventd_nd_notification_contents_pixbuf_from_base64(EventdEvent *event, const gchar *name)
-{
-    GdkPixbuf *pixbuf = NULL;
-    const gchar *base64;
-    guchar *data;
-    gsize length;
-    const gchar *format;
-    gchar *format_name;
-
-    base64 = eventd_event_get_data(event, name);
-    if ( base64 == NULL )
-        return NULL;
-    data = g_base64_decode(base64, &length);
-
-    format_name = g_strconcat(name, "-format", NULL);
-    format = eventd_event_get_data(event, format_name);
-    g_free(format_name);
-
-    if ( format != NULL )
-    {
-        gint width, height;
-        gint stride;
-        gboolean alpha;
-        gchar *f;
-
-        width = g_ascii_strtoll(format, &f, 16);
-        height = g_ascii_strtoll(f+1, &f, 16);
-        stride = g_ascii_strtoll(f+1, &f, 16);
-        alpha = g_ascii_strtoll(f+1, &f, 16);
-
-        pixbuf = gdk_pixbuf_new_from_data(data, GDK_COLORSPACE_RGB, alpha, 8, width, height, stride, _eventd_nd_notification_contents_pixbuf_data_free, NULL);
-    }
-    else
-    {
-        GError *error = NULL;
-        GdkPixbufLoader *loader;
-
-        loader = gdk_pixbuf_loader_new();
-
-        if ( ! gdk_pixbuf_loader_write(loader, data, length, &error) )
-        {
-            g_warning("Couldn't write image data: %s", error->message);
-            g_clear_error(&error);
-            goto error;
-        }
-
-        if ( ! gdk_pixbuf_loader_close(loader, &error) )
-        {
-            g_warning("Couldn't load image data: %s", error->message);
-            g_clear_error(&error);
-            goto error;
-        }
-
-        pixbuf = g_object_ref(gdk_pixbuf_loader_get_pixbuf(loader));
-
-    error:
-        g_object_unref(loader);
-        g_free(data);
-    }
-
-    return pixbuf;
-}
-
 EventdNdNotificationContents *
 eventd_nd_notification_contents_new(EventdNdStyle *style, EventdEvent *event, gint width, gint height)
 {
@@ -779,7 +711,7 @@ eventd_nd_notification_contents_new(EventdNdStyle *style, EventdEvent *event, gi
         if ( path != NULL )
             self->image = _eventd_nd_notification_contents_pixbuf_from_file(path, width, height);
         else if ( data != NULL )
-           self->image =  _eventd_nd_notification_contents_pixbuf_from_base64(event, data);
+           self->image = eventd_nd_pixbuf_from_base64(event, data);
         g_free(path);
     }
 
@@ -788,7 +720,7 @@ eventd_nd_notification_contents_new(EventdNdStyle *style, EventdEvent *event, gi
         if ( path != NULL )
             self->icon = _eventd_nd_notification_contents_pixbuf_from_file(path, width, height);
         else if ( data != NULL )
-            self->icon = _eventd_nd_notification_contents_pixbuf_from_base64(event, data);
+            self->icon = eventd_nd_pixbuf_from_base64(event, data);
         g_free(path);
     }
 
