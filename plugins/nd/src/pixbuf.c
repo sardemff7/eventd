@@ -41,18 +41,26 @@ _eventd_nd_pixbuf_free_data(guchar *pixels, gpointer data)
 }
 
 GdkPixbuf *
-eventd_nd_pixbuf_from_base64(const gchar *base64)
+eventd_nd_pixbuf_from_base64(gchar *uri)
 {
     GdkPixbuf *pixbuf = NULL;
+    gchar *c;
+    gchar *mime_type = uri + strlen("data:");
     guchar *data;
     gsize length;
 
-    if ( base64 == NULL )
-        return NULL;
+    /* We checked for ";base64," already */
+    c = g_utf8_strchr(mime_type, -1, ',');
+    *c = '\0';
 
-    if ( g_str_has_prefix(base64, "data:image/x.eventd.gdkpixbuf;format=") )
+    data = g_base64_decode(c + 1, &length);
+
+    c = g_utf8_strchr(mime_type, c - mime_type, ';');
+    *c++ = '\0';
+
+    if ( ( g_strcmp0(mime_type, "image/x.eventd.gdkpixbuf") == 0 ) && g_str_has_prefix(c, "format=") )
     {
-        const gchar *format = base64 + strlen("data:image/x.eventd.gdkpixbuf;format=");
+        const gchar *format = c + strlen("format=");
         gint width, height;
         gint stride;
         gboolean alpha;
@@ -63,16 +71,12 @@ eventd_nd_pixbuf_from_base64(const gchar *base64)
         stride = g_ascii_strtoll(f+1, &f, 16);
         alpha = g_ascii_strtoll(f+1, &f, 16);
 
-        f += strlen(";base64,");
-
-        data = g_base64_decode(f+1, &length);
         return gdk_pixbuf_new_from_data(data, GDK_COLORSPACE_RGB, alpha, 8, width, height, stride, _eventd_nd_pixbuf_free_data, NULL);
     }
 
     GError *error = NULL;
     GdkPixbufLoader *loader;
 
-    data = g_base64_decode(base64, &length);
     loader = gdk_pixbuf_loader_new();
 
     if ( ! gdk_pixbuf_loader_write(loader, data, length, &error) )

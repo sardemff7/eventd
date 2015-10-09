@@ -22,6 +22,10 @@
 
 #include <config.h>
 
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif /* HAVE_STRING_H */
+
 #include <glib.h>
 #include <pango/pango.h>
 
@@ -703,25 +707,26 @@ eventd_nd_notification_contents_new(EventdNdStyle *style, EventdEvent *event, gi
 
     const Filename *image = eventd_nd_style_get_template_image(style);
     const Filename *icon = eventd_nd_style_get_template_icon(style);
-    gchar *path;
-    const gchar *data;
+    gchar *uri;
 
-    if ( evhelpers_filename_get_path(image, event, "images", &data, &path) )
+    uri = evhelpers_filename_get_uri(image, event, "images");
+    if ( uri != NULL )
     {
-        if ( path != NULL )
-            self->image = _eventd_nd_notification_contents_pixbuf_from_file(path, width, height);
-        else if ( data != NULL )
-           self->image = eventd_nd_pixbuf_from_base64(eventd_event_get_data(event, data));
-        g_free(path);
+        if ( g_str_has_prefix(uri, "file://") )
+            self->image = _eventd_nd_notification_contents_pixbuf_from_file(uri + strlen("file://"), width, height);
+        else if ( g_str_has_prefix(uri, "data:") )
+           self->image =  eventd_nd_pixbuf_from_base64(uri);
+        g_free(uri);
     }
 
-    if ( evhelpers_filename_get_path(icon, event, "icons", &data, &path) )
+    uri = evhelpers_filename_get_uri(icon, event, "icons");
+    if ( uri != NULL )
     {
-        if ( path != NULL )
-            self->icon = _eventd_nd_notification_contents_pixbuf_from_file(path, width, height);
-        else if ( data != NULL )
-            self->icon = eventd_nd_pixbuf_from_base64(eventd_event_get_data(event, data));
-        g_free(path);
+        if ( g_str_has_prefix(uri, "file://") )
+            self->icon = _eventd_nd_notification_contents_pixbuf_from_file(uri + strlen("file://"), width, height);
+        else if ( g_str_has_prefix(uri, "data:") )
+            self->icon = eventd_nd_pixbuf_from_base64(uri);
+        g_free(uri);
     }
 
     return self;

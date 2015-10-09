@@ -88,27 +88,36 @@ _eventd_libnotify_icon_get_pixbuf_from_uri(const gchar *filename)
 static GdkPixbuf *
 _eventd_libnotify_get_image(EventdPluginAction *action, EventdEvent *event, gboolean server_support, gchar **icon_uri, gchar **image_uri)
 {
-    gchar *file;
-    const gchar *data;
+    gchar *uri;
     GdkPixbuf *image = NULL;
     GdkPixbuf *icon = NULL;
 
-    if ( evhelpers_filename_get_path(action->image, event, "icons", &data, &file) )
+    uri = evhelpers_filename_get_uri(action->image, event, "icons");
+    if ( uri != NULL )
     {
-        if ( file != NULL )
-            *image_uri = g_strconcat("file://", file, NULL);
-        else if ( data != NULL )
-            image = eventd_nd_pixbuf_from_base64(eventd_event_get_data(event, data));
-        g_free(file);
+        if ( g_str_has_prefix(uri, "file://") )
+            *image_uri = uri;
+        else if ( g_str_has_prefix(uri, "data:") )
+        {
+            image = eventd_nd_pixbuf_from_base64(uri);
+            g_free(uri);
+        }
+        else
+            g_free(uri);
     }
 
-    if ( evhelpers_filename_get_path(action->icon, event, "icons", &data, &file) )
+    uri = evhelpers_filename_get_uri(action->icon, event, "icons");
+    if ( uri != NULL )
     {
-        if ( file != NULL )
-            *icon_uri = g_strconcat("file://", file, NULL);
-        else if ( data != NULL )
-            icon = eventd_nd_pixbuf_from_base64(eventd_event_get_data(event, data));
-        g_free(file);
+        if ( g_str_has_prefix(uri, "file://") )
+            *icon_uri = uri;
+        else if ( g_str_has_prefix(uri, "data:") )
+        {
+            icon = eventd_nd_pixbuf_from_base64(uri);
+            g_free(uri);
+        }
+        else
+            g_free(uri);
     }
 
     if ( ( *image_uri == NULL ) && ( image == NULL ) )

@@ -22,6 +22,10 @@
 
 #include <config.h>
 
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif /* HAVE_STRING_H */
+
 #include <glib.h>
 #include <glib-object.h>
 
@@ -210,19 +214,20 @@ _eventd_sound_config_reset(EventdPluginContext *context)
 static void
 _eventd_sound_event_action(EventdPluginContext *context, EventdPluginAction *action, EventdEvent *event)
 {
-    gchar *file;
+    gchar *uri;
     gpointer data = NULL;
     gsize length = 0;
     gint format = 0;
     guint32 rate = 0;
     guint8 channels = 0;
 
-    if ( evhelpers_filename_get_path(action->sound, event, "sounds", NULL, &file) )
+    uri = evhelpers_filename_get_uri(action->sound, event, "sounds");
+    if ( uri != NULL )
     {
-        if ( file != NULL )
-            _eventd_sound_read_file(file, &data, &length, &format, &rate, &channels);
+        if ( g_str_has_prefix(uri, "file://"))
+            _eventd_sound_read_file(uri + strlen("file://"), &data, &length, &format, &rate, &channels);
         // TODO: using event data
-        g_free(file);
+        g_free(uri);
     }
 
     eventd_sound_pulseaudio_play_data(context->pulseaudio, data, length, format, rate, channels);

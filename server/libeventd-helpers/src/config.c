@@ -28,6 +28,7 @@
 
 #include <glib.h>
 #include <glib-object.h>
+#include <gio/gio.h>
 
 #include <libeventd-event.h>
 
@@ -68,6 +69,24 @@ evhelpers_format_string_unref(FormatString *format_string)
     nk_token_list_unref(format_string);
 }
 
+static gboolean
+_evhelpers_filename_check_data_base64_prefix(const gchar *string)
+{
+    gchar *c;
+    gsize s;
+
+    c = g_utf8_strchr(string, -1, ',');
+    s = c - string;
+    if ( ( c == NULL ) || ( s < strlen(";base64") ) )
+        return FALSE;
+
+    c = g_utf8_strrchr(string, s, ';');
+    if ( ( c == NULL ) || ( ! g_str_has_prefix(c, ";base64") ) )
+        return FALSE;
+
+    return TRUE;
+}
+
 EVENTD_EXPORT
 Filename *
 evhelpers_filename_new(gchar *string)
@@ -77,6 +96,15 @@ evhelpers_filename_new(gchar *string)
 
     if ( g_str_has_prefix(string, "file://") )
         file_uri = evhelpers_format_string_new(string);
+    else if ( g_str_has_prefix(string, "data:") )
+    {
+        if ( ! _evhelpers_filename_check_data_base64_prefix(string + strlen("data:")) )
+        {
+            g_free(string);
+            return NULL;
+        }
+        file_uri = evhelpers_format_string_new(string);
+    }
     else if ( g_utf8_strchr(string, -1, ' ') == NULL )
         data_name = string;
     else
@@ -462,49 +490,51 @@ evhelpers_format_string_get_string(const FormatString *format_string, EventdEven
 }
 
 EVENTD_EXPORT
-gboolean
-evhelpers_filename_get_path(const Filename *filename, EventdEvent *event, const gchar *subdir, const gchar **ret_data, gchar **ret_path)
+gchar *
+evhelpers_filename_get_uri(const Filename *filename, EventdEvent *event, const gchar *subdir)
 {
-    g_return_val_if_fail(filename != NULL, FALSE);
-    g_return_val_if_fail(event != NULL, FALSE);
-    g_return_val_if_fail(subdir != NULL, FALSE);
-    g_return_val_if_fail(ret_path != NULL, FALSE);
+    g_return_val_if_fail(filename != NULL, NULL);
+    g_return_val_if_fail(event != NULL, NULL);
+    g_return_val_if_fail(subdir != NULL, NULL);
 
-    const gchar *data = NULL;
-    const gchar *path = NULL;
-    gchar *path_ = NULL;
+    gchar *uri = NULL;
 
     if ( filename->data_name != NULL )
-    {
-        data = filename->data_name;
-        path = eventd_event_get_data(event, data);
-        if ( ( path == NULL ) || ( ! g_str_has_prefix(path, "file://") ) )
-            return FALSE;
-    }
+        uri = g_strdup(eventd_event_get_data(event, filename->data_name));
     else if ( filename->file_uri != NULL )
-        path = path_ = evhelpers_format_string_get_string(filename->file_uri, event, NULL, NULL);
+        uri = evhelpers_format_string_get_string(filename->file_uri, event, NULL, NULL);
     else
     {
         g_assert_not_reached();
-        return FALSE;
+        return NULL;
     }
-    path += strlen("file://");
-
-    if ( ! g_path_is_absolute(path) )
+    if ( uri == NULL )
+        return NULL;
+    if ( *uri == '\0' )
     {
-        gchar *tmp = path_;
-        path = path_ = g_build_filename(g_get_user_data_dir(), PACKAGE_NAME, subdir, path, NULL);
-        g_free(tmp);
+        g_free(uri);
+        return NULL;
     }
 
-    if ( g_file_test(path, G_FILE_TEST_IS_REGULAR) )
-        *ret_path = g_strdup(path);
-    else
-        *ret_path = NULL;
-    if ( ret_data != NULL )
-        *ret_data = data;
+    if ( g_str_has_prefix(uri, "data:") )
+    {
+        if ( _evhelpers_filename_check_data_base64_prefix(uri + strlen("data:")) )
+            return uri;
+    }
+    else if ( g_str_has_prefix(uri, "file://") )
+    {
+        const gchar *p = uri + strlen("file://");
+        if ( ! g_path_is_absolute(p) )
+        {
+            gchar *tmp = uri;
+            uri = g_build_filename(g_get_user_data_dir(), PACKAGE_NAME, subdir, p, NULL);
+            g_free(tmp);
+        }
+        if ( g_file_test(uri, G_FILE_TEST_EXISTS|G_FILE_TEST_IS_REGULAR|G_FILE_TEST_IS_SYMLINK) )
+            return uri;
+    }
 
-    g_free(path_);
+    g_free(uri);
 
-    return TRUE;
+    return NULL;
 }

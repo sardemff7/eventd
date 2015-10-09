@@ -23,6 +23,6 @@
 #ifndef __EVENTD_ND_PIXBUF_H__
 #define __EVENTD_ND_PIXBUF_H__
 
-GdkPixbuf *eventd_nd_pixbuf_from_base64(const gchar *base64);
+GdkPixbuf *eventd_nd_pixbuf_from_base64(gchar *uri);
 
 #endif /* __EVENTD_ND_PIXBUF_H__ */
