@@ -41,14 +41,12 @@ _eventd_nd_pixbuf_free_data(guchar *pixels, gpointer data)
 }
 
 GdkPixbuf *
-eventd_nd_pixbuf_from_base64(EventdEvent *event, const gchar *name)
+eventd_nd_pixbuf_from_base64(const gchar *base64)
 {
     GdkPixbuf *pixbuf = NULL;
-    const gchar *base64;
     guchar *data;
     gsize length;
 
-    base64 = eventd_event_get_data(event, name);
     if ( base64 == NULL )
         return NULL;
 
@@ -68,35 +66,32 @@ eventd_nd_pixbuf_from_base64(EventdEvent *event, const gchar *name)
         f += strlen(";base64,");
 
         data = g_base64_decode(f+1, &length);
-        pixbuf = gdk_pixbuf_new_from_data(data, GDK_COLORSPACE_RGB, alpha, 8, width, height, stride, _eventd_nd_pixbuf_free_data, NULL);
+        return gdk_pixbuf_new_from_data(data, GDK_COLORSPACE_RGB, alpha, 8, width, height, stride, _eventd_nd_pixbuf_free_data, NULL);
     }
-    else
+
+    GError *error = NULL;
+    GdkPixbufLoader *loader;
+
+    data = g_base64_decode(base64, &length);
+    loader = gdk_pixbuf_loader_new();
+
+    if ( ! gdk_pixbuf_loader_write(loader, data, length, &error) )
     {
-        GError *error = NULL;
-        GdkPixbufLoader *loader;
-
-        data = g_base64_decode(base64, &length);
-        loader = gdk_pixbuf_loader_new();
-
-        if ( ! gdk_pixbuf_loader_write(loader, data, length, &error) )
-        {
-            g_warning("Couldn't write image data: %s", error->message);
-            goto error;
-        }
-
-        if ( ! gdk_pixbuf_loader_close(loader, &error) )
-        {
-            g_warning("Couldn't load image data: %s", error->message);
-            goto error;
-        }
-
-        pixbuf = g_object_ref(gdk_pixbuf_loader_get_pixbuf(loader));
-
-    error:
-        g_clear_error(&error);
-        g_object_unref(loader);
-        g_free(data);
+        g_warning("Couldn't write image data: %s", error->message);
+        goto error;
     }
 
+    if ( ! gdk_pixbuf_loader_close(loader, &error) )
+    {
+        g_warning("Couldn't load image data: %s", error->message);
+        goto error;
+    }
+
+    pixbuf = g_object_ref(gdk_pixbuf_loader_get_pixbuf(loader));
+
+error:
+    g_clear_error(&error);
+    g_object_unref(loader);
+    g_free(data);
     return pixbuf;
 }

@@ -711,7 +711,7 @@ eventd_nd_notification_contents_new(EventdNdStyle *style, EventdEvent *event, gi
         if ( path != NULL )
             self->image = _eventd_nd_notification_contents_pixbuf_from_file(path, width, height);
         else if ( data != NULL )
-           self->image = eventd_nd_pixbuf_from_base64(event, data);
+           self->image = eventd_nd_pixbuf_from_base64(eventd_event_get_data(event, data));
         g_free(path);
     }
 
@@ -720,7 +720,7 @@ eventd_nd_notification_contents_new(EventdNdStyle *style, EventdEvent *event, gi
         if ( path != NULL )
             self->icon = _eventd_nd_notification_contents_pixbuf_from_file(path, width, height);
         else if ( data != NULL )
-            self->icon = eventd_nd_pixbuf_from_base64(event, data);
+            self->icon = eventd_nd_pixbuf_from_base64(eventd_event_get_data(event, data));
         g_free(path);
     }
 

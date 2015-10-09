@@ -98,7 +98,7 @@ _eventd_libnotify_get_image(EventdPluginAction *action, EventdEvent *event, gboo
         if ( file != NULL )
             *image_uri = g_strconcat("file://", file, NULL);
         else if ( data != NULL )
-            image = eventd_nd_pixbuf_from_base64(event, data);
+            image = eventd_nd_pixbuf_from_base64(eventd_event_get_data(event, data));
         g_free(file);
     }
 
@@ -107,7 +107,7 @@ _eventd_libnotify_get_image(EventdPluginAction *action, EventdEvent *event, gboo
         if ( file != NULL )
             *icon_uri = g_strconcat("file://", file, NULL);
         else if ( data != NULL )
-            icon = eventd_nd_pixbuf_from_base64(event, data);
+            icon = eventd_nd_pixbuf_from_base64(eventd_event_get_data(event, data));
         g_free(file);
     }
 
