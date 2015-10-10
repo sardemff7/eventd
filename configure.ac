@@ -64,8 +64,6 @@ gobject_introspection_min_version="1.42.0"
 
 # Server dependencies
 gmodule_min_version="${glib_min_version}"
-libpulse_min_version="0.9.15"
-gtk_min_version="3.0"
 
 
 AM_CFLAGS="-fvisibility=hidden -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers"
@@ -245,6 +243,7 @@ fi
 AM_CONDITIONAL([ENABLE_IM], [test x${enable_im} = xyes])
 
 # sound plugin
+libpulse_min_version="0.9.15"
 AC_ARG_ENABLE([sound], AS_HELP_STRING([--disable-sound], [Disable sound support through libsndfile]), [], [enable_sound=yes])
 if test x${enable_sound} = xyes; then
     PKG_CHECK_MODULES([SNDFILE], [sndfile])
