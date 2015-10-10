@@ -4,6 +4,10 @@ if ENABLE_HTTP
 plugins_LTLIBRARIES += \
 	http.la \
 	$(null)
+
+man5_MANS += \
+	%D%/man/eventd-http.conf.5 \
+	$(null)
 endif
 
 
