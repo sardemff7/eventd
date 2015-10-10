@@ -28,6 +28,8 @@
 #include <libeventd-event.h>
 #include <libeventd-event-private.h>
 
+#include "event-private.h"
+
 #define EVENTD_EVENT_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), EVENTD_TYPE_EVENT, EventdEventPrivate))
 
 EVENTD_EXPORT GType eventd_event_get_type(void);
@@ -155,17 +157,6 @@ eventd_event_end_reason_get_value_nick(EventdEventEndReason reason)
     return nick;
 }
 
-struct _EventdEventPrivate {
-    uuid_t uuid;
-    gchar uuid_str[UUID_STR_SIZE];
-    gchar *category;
-    gchar *name;
-    gint64 timeout;
-    GHashTable *data;
-    GList *answers;
-    GHashTable *answer_data;
-};
-
 
 enum {
     SIGNAL_UPDATED,
@@ -236,24 +227,6 @@ eventd_event_class_init(EventdEventClass *klass)
                      NULL, NULL,
                      g_cclosure_marshal_generic,
                      G_TYPE_NONE, 1, EVENTD_TYPE_EVENT_END_REASON);
-}
-
-EventdEvent *
-eventd_event_new_for_uuid(uuid_t uuid, const gchar *category, const gchar *name)
-{
-    g_return_val_if_fail(category != NULL, NULL);
-    g_return_val_if_fail(name != NULL, NULL);
-
-    EventdEvent *self;
-
-    self = g_object_new(EVENTD_TYPE_EVENT, NULL);
-
-    uuid_copy(self->priv->uuid, uuid);
-    uuid_unparse_lower(self->priv->uuid, self->priv->uuid_str);
-    self->priv->category = g_strdup(category);
-    self->priv->name = g_strdup(name);
-
-    return self;
 }
 
 /**
@@ -588,41 +561,4 @@ eventd_event_get_all_answer_data(const EventdEvent *self)
         return NULL;
 
     return g_hash_table_ref(self->priv->answer_data);
-}
-
-
-const gchar *
-eventd_event_get_uuid(EventdEvent *self)
-{
-    g_return_val_if_fail(EVENTD_IS_EVENT(self), NULL);
-
-    return self->priv->uuid_str;
-}
-
-void
-eventd_event_set_all_data(EventdEvent *self, GHashTable *data)
-{
-    g_return_if_fail(EVENTD_IS_EVENT(self));
-
-    if ( self->priv->data != NULL )
-        g_hash_table_unref(self->priv->data);
-    self->priv->data = data;
-}
-
-void
-eventd_event_set_all_answer_data(EventdEvent *self, GHashTable *data)
-{
-    g_return_if_fail(EVENTD_IS_EVENT(self));
-
-    if ( self->priv->answer_data != NULL )
-        g_hash_table_unref(self->priv->answer_data);
-    self->priv->answer_data = data;
-}
-
-GList *
-eventd_event_get_answers(EventdEvent *self)
-{
-    g_return_val_if_fail(EVENTD_IS_EVENT(self), NULL);
-
-    return self->priv->answers;
 }

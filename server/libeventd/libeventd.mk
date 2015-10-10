@@ -48,6 +48,8 @@ vapi_DATA += \
 
 libeventd_la_SOURCES = \
 	%D%/include/libeventd-event-private.h \
+	%D%/src/event-private.h \
+	%D%/src/event-private.c \
 	%D%/src/event.c \
 	%D%/src/protocol-private.h \
 	%D%/src/protocol.c \
@@ -77,7 +79,7 @@ libeventd_la_LIBADD = \
 
 
 libeventd_event_test_SOURCES = \
-	%D%/src/event.c \
+	%D%/src/event-private.c \
 	%D%/tests/unit/common.h \
 	%D%/tests/unit/event-getters.c \
 	%D%/tests/unit/event-getters.h \
@@ -103,7 +105,7 @@ libeventd_event_test_LDADD = \
 	$(null)
 
 libeventd_protocol_test_SOURCES = \
-	%D%/src/event.c \
+	%D%/src/event-private.c \
 	%D%/tests/unit/common.h \
 	%D%/tests/unit/protocol-parser.c \
 	%D%/tests/unit/protocol-parser.h \
