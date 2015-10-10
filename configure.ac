@@ -164,6 +164,14 @@ m4_ifdef([GOBJECT_INTROSPECTION_CHECK], [
     AM_CONDITIONAL([ENABLE_INTROSPECTION], [false])
 ])
 
+# JSON protocol support
+AC_ARG_ENABLE([json], AS_HELP_STRING([--enable-json], [Enable JSON protocol support]), [], [enable_json=no])
+if test x${enable_json} = xyes; then
+    PKG_CHECK_MODULES([YAJL], [yajl >= 2])
+    AC_DEFINE([ENABLE_JSON], [1], [Enable JSON protocol support])
+    AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_json"
+fi
+AM_CONDITIONAL([ENABLE_JSON], [test x${enable_json} = xyes])
 
 #
 # Server and plugins
@@ -313,6 +321,8 @@ AC_SUBST([shrext_cmds])
 AC_CONFIG_FILES([
     server/libeventd/pkgconfig/libeventd.pc
     server/libeventd/vapi/libeventd.deps
+    server/libeventd/pkgconfig/libeventd-protocol-json.pc
+    server/libeventd/vapi/libeventd-protocol-json.deps
     server/eventd/pkgconfig/eventd.pc
     server/libeventd-plugin/pkgconfig/libeventd-plugin.pc
     client/libeventc/pkgconfig/libeventc.pc

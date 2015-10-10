@@ -1,0 +1,15 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+pkgincludedir=@pkgincludedir@
+pkglibdir=@pkglibdir@
+
+Name: libeventd-protocol-json
+Description: eventd JSON protocol library
+URL: http://www.eventd.org/
+Version: @VERSION@
+Requires: libeventd gobject-2.0 glib-2.0
+Libs: -L${libdir} -leventd-protocol-json
+Cflags: -I${pkgincludedir}
