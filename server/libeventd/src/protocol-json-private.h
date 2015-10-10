@@ -28,6 +28,7 @@ yajl_alloc_funcs eventd_protocol_json_alloc_funcs;
 typedef enum {
     EVENTD_PROTOCOL_JSON_MESSAGE_TYPE_MISSING = 0,
     EVENTD_PROTOCOL_JSON_MESSAGE_TYPE_EVENT,
+    EVENTD_PROTOCOL_JSON_MESSAGE_TYPE_SUBSCRIBE,
     EVENTD_PROTOCOL_JSON_MESSAGE_TYPE_UNKNOWN,
     _EVENTD_PROTOCOL_JSON_MESSAGE_TYPE_SIZE
 } EventdProtocolJsonMessageType;
@@ -40,6 +41,7 @@ typedef enum {
     EVENTD_PROTOCOL_JSON_STATE_CATEGORY,
     EVENTD_PROTOCOL_JSON_STATE_NAME,
     EVENTD_PROTOCOL_JSON_STATE_ANSWERS,
+    EVENTD_PROTOCOL_JSON_STATE_CATEGORIES,
     EVENTD_PROTOCOL_JSON_STATE_DATA,
 } EventdProtocolJsonState;
 
@@ -53,6 +55,7 @@ struct _EventdProtocolJsonPrivate {
         gchar *category;
         gchar *name;
         GList *answers;
+        GHashTable *categories;
         GHashTable *data;
         gchar *data_name;
     } message;

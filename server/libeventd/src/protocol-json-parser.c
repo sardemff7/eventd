@@ -44,9 +44,10 @@
 #include "protocol-json-private.h"
 
 static const gchar *_eventd_protocol_json_message_types[_EVENTD_PROTOCOL_JSON_MESSAGE_TYPE_SIZE] = {
-    [EVENTD_PROTOCOL_JSON_MESSAGE_TYPE_MISSING] = "missing",
-    [EVENTD_PROTOCOL_JSON_MESSAGE_TYPE_EVENT]   = "event",
-    [EVENTD_PROTOCOL_JSON_MESSAGE_TYPE_UNKNOWN] = "unknown",
+    [EVENTD_PROTOCOL_JSON_MESSAGE_TYPE_MISSING]   = "missing",
+    [EVENTD_PROTOCOL_JSON_MESSAGE_TYPE_EVENT]     = "event",
+    [EVENTD_PROTOCOL_JSON_MESSAGE_TYPE_SUBSCRIBE] = "subscribe",
+    [EVENTD_PROTOCOL_JSON_MESSAGE_TYPE_UNKNOWN]   = "unknown",
 };
 
 static gint
@@ -136,6 +137,9 @@ _eventd_protocol_json_parse_string(gpointer user_data, const guchar *str_, gsize
     break;
     case EVENTD_PROTOCOL_JSON_STATE_ANSWERS:
         self->priv->message.answers = g_list_prepend(self->priv->message.answers, str);
+    break;
+    case EVENTD_PROTOCOL_JSON_STATE_CATEGORIES:
+        g_hash_table_add(self->priv->message.categories, str);
     break;
     default:
         g_set_error(&self->priv->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_UNEXPECTED_TOKEN, "Unexpected string '%s'", str);
@@ -233,6 +237,15 @@ _eventd_protocol_json_parse_map_key(gpointer user_data, const guchar *key_, gsiz
             }
             self->priv->message.state = EVENTD_PROTOCOL_JSON_STATE_ANSWERS;
         }
+        else if ( g_ascii_strncasecmp(key, "categories", len) == 0 )
+        {
+            if ( self->priv->message.categories != NULL )
+            {
+                g_set_error_literal(&self->priv->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_MALFORMED, "Got at least two categories lists");
+                break;
+            }
+            self->priv->message.state = EVENTD_PROTOCOL_JSON_STATE_CATEGORIES;
+        }
         return 1;
     default:
         g_set_error(&self->priv->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_UNEXPECTED_TOKEN, "Unexpected map key '%.*s'", (gint) len, key);
@@ -271,6 +284,9 @@ _eventd_protocol_json_parse_start_array(gpointer user_data)
     {
     case EVENTD_PROTOCOL_JSON_STATE_ANSWERS:
         return 1;
+    case EVENTD_PROTOCOL_JSON_STATE_CATEGORIES:
+        self->priv->message.categories = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+        return 1;
     default:
     break;
     }
@@ -287,6 +303,7 @@ _eventd_protocol_json_parse_end_array(gpointer user_data)
     switch ( self->priv->message.state )
     {
     case EVENTD_PROTOCOL_JSON_STATE_ANSWERS:
+    case EVENTD_PROTOCOL_JSON_STATE_CATEGORIES:
         self->priv->message.state = EVENTD_PROTOCOL_JSON_STATE_MESSAGE;
         return 1;
     default:
@@ -326,6 +343,15 @@ _eventd_protocol_json_check_message(EventdProtocolJson *self, GError **error)
         g_object_unref(event);
         return TRUE;
     }
+    case EVENTD_PROTOCOL_JSON_MESSAGE_TYPE_SUBSCRIBE:
+        if ( ( self->priv->message.categories != NULL ) && ( g_hash_table_size(self->priv->message.categories) < 1 ) )
+        {
+            g_set_error_literal(&self->priv->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_MALFORMED, "Got at least two categories lists");
+            return FALSE;
+        }
+
+        g_signal_emit(self, eventd_protocol_signals[SIGNAL_SUBSCRIBE], 0, self->priv->message.categories);
+        return TRUE;
     case EVENTD_PROTOCOL_JSON_MESSAGE_TYPE_UNKNOWN:
         return TRUE;
     case EVENTD_PROTOCOL_JSON_MESSAGE_TYPE_MISSING:
@@ -399,4 +425,8 @@ eventd_protocol_json_parse_free(EventdProtocolJson *self)
     self->priv->message.category = NULL;
     self->priv->message.name = NULL;
     self->priv->message.data = NULL;
+
+    if ( self->priv->message.categories != NULL )
+        g_hash_table_unref(self->priv->message.categories);
+    self->priv->message.categories = NULL;
 }
