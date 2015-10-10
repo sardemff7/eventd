@@ -323,15 +323,8 @@ _eventd_protocol_json_check_message(EventdProtocolJson *self, GError **error)
         if ( self->priv->message.data != NULL )
             eventd_event_set_all_data(event, self->priv->message.data);
         g_signal_emit(self, eventd_protocol_signals[SIGNAL_EVENT], 0, event);
-        //g_signal_emit_by_name(self, "event", event);
         g_object_unref(event);
-
-        uuid_clear(self->priv->message.uuid);
-        g_free(self->priv->message.category);
-        g_free(self->priv->message.name);
-        self->priv->message.category = NULL;
-        self->priv->message.name = NULL;
-        self->priv->message.data = NULL;
+        return TRUE;
     }
     case EVENTD_PROTOCOL_JSON_MESSAGE_TYPE_UNKNOWN:
         return TRUE;
@@ -398,4 +391,12 @@ eventd_protocol_json_parse(EventdProtocol *protocol, gchar **buffer, GError **er
 void
 eventd_protocol_json_parse_free(EventdProtocolJson *self)
 {
+    self->priv->message.type = EVENTD_PROTOCOL_JSON_MESSAGE_TYPE_MISSING;
+
+    uuid_clear(self->priv->message.uuid);
+    g_free(self->priv->message.category);
+    g_free(self->priv->message.name);
+    self->priv->message.category = NULL;
+    self->priv->message.name = NULL;
+    self->priv->message.data = NULL;
 }
