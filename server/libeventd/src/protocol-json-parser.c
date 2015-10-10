@@ -235,10 +235,9 @@ _eventd_protocol_json_parse_map_key(gpointer user_data, const guchar *key_, gsiz
         }
         return 1;
     default:
-    break;
+        g_set_error(&self->priv->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_UNEXPECTED_TOKEN, "Unexpected map key '%.*s'", (gint) len, key);
     }
 
-    g_set_error_literal(&self->priv->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_UNEXPECTED_TOKEN, "Unexpected map key");
     return 0;
 }
 
