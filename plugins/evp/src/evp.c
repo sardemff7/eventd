@@ -143,6 +143,7 @@ _eventd_evp_stop(EventdPluginContext *self)
     self->subscribe_all = NULL;
 
     g_list_free_full(self->clients, eventd_evp_client_disconnect);
+    self->clients = NULL;
 
     g_socket_service_stop(self->service);
     g_socket_listener_close(G_SOCKET_LISTENER(self->service));
