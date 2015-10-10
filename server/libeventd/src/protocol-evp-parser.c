@@ -177,7 +177,7 @@ _eventd_protocol_evp_parse_dot_event_end(EventdProtocolEvp *self, GError **error
         self->priv->data.hash = NULL;
     }
 
-    g_signal_emit(self, _eventd_protocol_signals[SIGNAL_EVENT], 0, self->priv->event);
+    g_signal_emit(self, eventd_protocol_signals[SIGNAL_EVENT], 0, self->priv->event);
 
     g_object_unref(self->priv->event);
     self->priv->event = NULL;
@@ -201,7 +201,7 @@ _eventd_protocol_evp_parse_dot_answered_end(EventdProtocolEvp *self, GError **er
     if ( self->priv->answer.event != NULL )
     {
         eventd_event_set_all_answer_data(self->priv->answer.event, self->priv->data.hash);
-        g_signal_emit(self, _eventd_protocol_signals[SIGNAL_ANSWERED], 0, self->priv->answer.event, self->priv->answer.answer);
+        g_signal_emit(self, eventd_protocol_signals[SIGNAL_ANSWERED], 0, self->priv->answer.event, self->priv->answer.answer);
     }
     else if ( self->priv->data.hash != NULL )
         g_hash_table_unref(self->priv->data.hash);
@@ -238,7 +238,7 @@ _eventd_protocol_evp_parse_dot_subscribe_end(EventdProtocolEvp *self, GError **e
     if ( g_hash_table_size(self->priv->subscriptions) < 2 )
         return g_set_error(error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_MALFORMED, "SUBSCRIBE dot message requires at least two categories");
 
-    g_signal_emit(self, _eventd_protocol_signals[SIGNAL_SUBSCRIBE], 0, self->priv->subscriptions);
+    g_signal_emit(self, eventd_protocol_signals[SIGNAL_SUBSCRIBE], 0, self->priv->subscriptions);
 
     g_hash_table_unref(self->priv->subscriptions);
     self->priv->subscriptions = NULL;
@@ -262,7 +262,7 @@ _eventd_protocol_evp_parse_event(EventdProtocolEvp *self, const gchar * const *a
     event = _eventd_protocol_evp_parser_get_event(self, argv, error);
     if ( event == NULL )
         return;
-    g_signal_emit(self, _eventd_protocol_signals[SIGNAL_EVENT], 0, event);
+    g_signal_emit(self, eventd_protocol_signals[SIGNAL_EVENT], 0, event);
     g_object_unref(event);
 }
 
@@ -296,7 +296,7 @@ _eventd_protocol_evp_parse_ended(EventdProtocolEvp *self, const gchar * const *a
         reason = enum_value->value;
     g_type_class_unref(enum_class);
 
-    g_signal_emit(self, _eventd_protocol_signals[SIGNAL_ENDED], 0, event, reason);
+    g_signal_emit(self, eventd_protocol_signals[SIGNAL_ENDED], 0, event, reason);
 
     eventd_protocol_evp_remove_event(self, event);
 }
@@ -305,7 +305,7 @@ _eventd_protocol_evp_parse_ended(EventdProtocolEvp *self, const gchar * const *a
 static void
 _eventd_protocol_evp_parse_passive(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
 {
-    g_signal_emit(self, _eventd_protocol_signals[SIGNAL_PASSIVE], 0);
+    g_signal_emit(self, eventd_protocol_signals[SIGNAL_PASSIVE], 0);
 
     self->priv->base_state = EVENTD_PROTOCOL_EVP_STATE_PASSIVE;
     self->priv->state = self->priv->base_state;
@@ -318,7 +318,7 @@ _eventd_protocol_evp_parse_subscribe(EventdProtocolEvp *self, const gchar * cons
     GHashTable *subscriptions;
     subscriptions = g_hash_table_new(g_str_hash, g_str_equal);
     g_hash_table_add(subscriptions, (gpointer) argv[0]);
-    g_signal_emit(self, _eventd_protocol_signals[SIGNAL_SUBSCRIBE], 0, subscriptions);
+    g_signal_emit(self, eventd_protocol_signals[SIGNAL_SUBSCRIBE], 0, subscriptions);
     g_hash_table_unref(subscriptions);
 
     self->priv->base_state = EVENTD_PROTOCOL_EVP_STATE_SUBSCRIBE;
@@ -329,7 +329,7 @@ _eventd_protocol_evp_parse_subscribe(EventdProtocolEvp *self, const gchar * cons
 static void
 _eventd_protocol_evp_parse_bye(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
 {
-    g_signal_emit(self, _eventd_protocol_signals[SIGNAL_BYE], 0, ( argv == NULL ) ? NULL : argv[0]);
+    g_signal_emit(self, eventd_protocol_signals[SIGNAL_BYE], 0, ( argv == NULL ) ? NULL : argv[0]);
 
     self->priv->base_state = EVENTD_PROTOCOL_EVP_STATE_BYE;
     self->priv->state = self->priv->base_state;

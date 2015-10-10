@@ -29,7 +29,8 @@
 
 #include "protocol-private.h"
 
-guint _eventd_protocol_signals[LAST_SIGNAL] = { 0 };
+EVENTD_EXPORT
+guint eventd_protocol_signals[LAST_SIGNAL] = { 0 };
 
 EVENTD_EXPORT GType eventd_protocol_get_type(void);
 G_DEFINE_INTERFACE(EventdProtocol, eventd_protocol, 0);
@@ -44,7 +45,7 @@ eventd_protocol_default_init(EventdProtocolInterface *iface)
      *
      * Emitted when parsed an EVENT message.
      */
-    _eventd_protocol_signals[SIGNAL_EVENT] =
+    eventd_protocol_signals[SIGNAL_EVENT] =
         g_signal_new("event",
                      G_TYPE_FROM_INTERFACE(iface),
                      G_SIGNAL_RUN_FIRST,
@@ -61,7 +62,7 @@ eventd_protocol_default_init(EventdProtocolInterface *iface)
      *
      * Emitted when parsed a ANSWERED message.
      */
-    _eventd_protocol_signals[SIGNAL_ANSWERED] =
+    eventd_protocol_signals[SIGNAL_ANSWERED] =
         g_signal_new("answered",
                      G_TYPE_FROM_INTERFACE(iface),
                      G_SIGNAL_RUN_FIRST,
@@ -78,7 +79,7 @@ eventd_protocol_default_init(EventdProtocolInterface *iface)
      *
      * Emitted when parsed a ENDED message.
      */
-    _eventd_protocol_signals[SIGNAL_ENDED] =
+    eventd_protocol_signals[SIGNAL_ENDED] =
         g_signal_new("ended",
                      G_TYPE_FROM_INTERFACE(iface),
                      G_SIGNAL_RUN_FIRST,
@@ -94,7 +95,7 @@ eventd_protocol_default_init(EventdProtocolInterface *iface)
      *
      * Emitted when parsed a PASSIVE message.
      */
-    _eventd_protocol_signals[SIGNAL_PASSIVE] =
+    eventd_protocol_signals[SIGNAL_PASSIVE] =
         g_signal_new("passive",
                      G_TYPE_FROM_INTERFACE(iface),
                      G_SIGNAL_RUN_FIRST,
@@ -110,7 +111,7 @@ eventd_protocol_default_init(EventdProtocolInterface *iface)
      *
      * Emitted when parsed a SUBSCRIBE message.
      */
-    _eventd_protocol_signals[SIGNAL_SUBSCRIBE] =
+    eventd_protocol_signals[SIGNAL_SUBSCRIBE] =
         g_signal_new("subscribe",
                      G_TYPE_FROM_INTERFACE(iface),
                      G_SIGNAL_RUN_FIRST,
@@ -126,7 +127,7 @@ eventd_protocol_default_init(EventdProtocolInterface *iface)
      *
      * Emitted when parsed a BYE message.
      */
-    _eventd_protocol_signals[SIGNAL_BYE] =
+    eventd_protocol_signals[SIGNAL_BYE] =
         g_signal_new("bye",
                      G_TYPE_FROM_INTERFACE(iface),
                      G_SIGNAL_RUN_FIRST,

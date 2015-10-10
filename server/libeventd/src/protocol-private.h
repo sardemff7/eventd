@@ -31,6 +31,6 @@ enum {
     LAST_SIGNAL
 };
 
-guint _eventd_protocol_signals[LAST_SIGNAL];
+extern guint eventd_protocol_signals[LAST_SIGNAL];
 
 #endif /* __EVENTD_PROTOCOL_PRIVATE_H__ */
