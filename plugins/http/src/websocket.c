@@ -329,7 +329,12 @@ eventd_http_websocket_client_disconnect(gpointer data)
 }
 
 void
-eventd_http_websocket_client_event_dispatch(EventdHttpWebsocketClient *client, EventdEvent *event)
+eventd_http_websocket_client_event_dispatch(EventdHttpWebsocketClient *self, EventdEvent *event)
 {
+    if ( g_hash_table_contains(self->events, event) )
+        /* Do not send back our own events */
+        return;
 
+    _eventd_http_websocket_client_send_message(self, eventd_protocol_generate_event(self->protocol, event));
+    _eventd_http_websocket_client_handle_event(self, event);
 }
