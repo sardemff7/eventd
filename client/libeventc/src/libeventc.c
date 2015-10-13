@@ -469,7 +469,15 @@ _eventc_connection_connect_after(EventcConnection *self, GError *_inner_error_, 
     self->priv->out = g_data_output_stream_new(g_io_stream_get_output_stream(G_IO_STREAM(self->priv->connection)));
 
     if ( self->priv->passive )
-        return _eventc_connection_send_message(self, eventd_protocol_generate_passive(self->priv->protocol));
+    {
+        if ( ! _eventc_connection_send_message(self, eventd_protocol_generate_passive(self->priv->protocol)) )
+        {
+            *error = self->priv->error;
+            self->priv->error = NULL;
+            return FALSE;
+        }
+        return TRUE;
+    }
 
     self->priv->in = g_data_input_stream_new(g_io_stream_get_input_stream(G_IO_STREAM(self->priv->connection)));
 
