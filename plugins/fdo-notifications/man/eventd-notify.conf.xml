@@ -127,11 +127,11 @@
             <para>The key name is used as-is, and the key value is a <type>format string</type> which, once resolved, will be parsed as a <ulink href="https://developer.gnome.org/glib/stable/gvariant-text.html"><type>GVariant text</type></ulink>.</para>
 
             <example>
-                <title>Setting a notification as transcient and of category "device.added"</title>
+                <title>Setting a notification as transient and of category "device.added"</title>
                 <programlisting>[Libnotify]
 
 [Libnotify hints]
-transcient=true
+transient=true
 category="device.added"</programlisting>
             </example>
         </refsect2>

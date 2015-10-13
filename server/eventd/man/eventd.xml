@@ -328,7 +328,7 @@
     [Event]
     Category=command
     Name=success
-    Actions=relay;command-sucess;
+    Actions=relay;command-success;
 
 <literal>"<filename>command-success.action</filename>"</literal>:
     [Action]
@@ -352,7 +352,7 @@
     [Event]
     Category=command
     Name=failure
-    Actions=command-sucess;
+    Actions=command-success;
 
 <literal>"<filename>command-failure.action</filename>"</literal>:
     [Action]
