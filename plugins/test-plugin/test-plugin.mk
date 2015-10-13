@@ -5,15 +5,25 @@ check_LTLIBRARIES += \
 	$(null)
 
 check_DATA += \
-	$(srcdir)/%D%/config/eventd.conf \
+	$(builddir)/%D%/config/eventd.conf \
+	$(builddir)/%D%/config/test.pem \
+	$(builddir)/%D%/config/test.event \
+	$(builddir)/%D%/config/test.action \
 	$(null)
 
 EXTRA_DIST += \
 	%D%/config/eventd.conf.in \
-	%D%/config/test.event \
-	%D%/config/test.action \
+	%D%/config/test.pem.in \
+	%D%/config/test.event.in \
+	%D%/config/test.action.in \
 	$(null)
 
+CLEANFILES += \
+	$(builddir)/%D%/config/eventd.conf \
+	$(builddir)/%D%/config/test.pem \
+	$(builddir)/%D%/config/test.event \
+	$(builddir)/%D%/config/test.action \
+	$(null)
 
 test_plugin_la_SOURCES = \
 	%D%/src/test-plugin.c \
@@ -36,7 +46,12 @@ test_plugin_la_LIBADD = \
 	$(GLIB_LIBS) \
 	$(null)
 
-$(srcdir)/%D%/config/eventd.conf: %D%/config/eventd.conf.in Makefile
-	$(AM_V_GEN)$(SED) \
-		-e 's:[@]CONFIG_DIR[@]:$(abs_srcdir)/%D%/config:g' \
+$(builddir)/%D%/config/eventd.conf: $(srcdir)/%D%/config/eventd.conf.in Makefile
+	$(AM_V_GEN)$(MKDIR_P) $(dir $@) && \
+		$(SED) \
+		-e 's:[@]CONFIG_DIR[@]:$(abs_builddir)/%D%/config:g' \
 		< $< > $@ || rm $@
+
+$(builddir)/%D%/config/%: $(srcdir)/%D%/config/%.in
+	$(AM_V_GEN)$(MKDIR_P) $(dir $@) && \
+		cp $< $@
