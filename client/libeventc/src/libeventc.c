@@ -456,6 +456,17 @@ _eventc_connection_expect_disconnected(EventcConnection *self, GError **error)
     return TRUE;
 }
 
+static GSocketClient *
+_eventc_connection_get_socket_client(EventcConnection *self)
+{
+    GSocketClient *client;
+    client = g_socket_client_new();
+
+    g_socket_client_set_enable_proxy(client, self->priv->enable_proxy);
+
+    return client;
+}
+
 static gboolean
 _eventc_connection_connect_after(EventcConnection *self, GError *_inner_error_, GError **error)
 {
@@ -538,8 +549,7 @@ eventc_connection_connect(EventcConnection *self, GAsyncReadyCallback callback, 
 
     GSocketClient *client;
 
-    client = g_socket_client_new();
-    g_socket_client_set_enable_proxy(client, self->priv->enable_proxy);
+    client = _eventc_connection_get_socket_client(self);
 
     EventcConnectionCallbackData *data;
     data = g_slice_new(EventcConnectionCallbackData);
@@ -597,8 +607,7 @@ eventc_connection_connect_sync(EventcConnection *self, GError **error)
 
     GSocketClient *client;
 
-    client = g_socket_client_new();
-    g_socket_client_set_enable_proxy(client, self->priv->enable_proxy);
+    client = _eventc_connection_get_socket_client(self);
 
     GError *_inner_error_ = NULL;
     self->priv->connection = g_socket_client_connect(client, self->priv->address, NULL, &_inner_error_);
