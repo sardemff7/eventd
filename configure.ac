@@ -291,7 +291,7 @@ fi
 AM_CONDITIONAL([ENABLE_TTS], [test x${enable_tts} = xyes])
 
 # libnotify plugin
-AC_ARG_ENABLE([libnotify], AS_HELP_STRING([--enable-libnotify], [Enable libnotify support (client side)]), [], [enable_libnotify=no])
+AC_ARG_ENABLE([libnotify], AS_HELP_STRING([--disable-libnotify], [Disable libnotify support (client side)]), [], [enable_libnotify=yes])
 if test x${enable_libnotify} = xyes; then
     PKG_CHECK_MODULES([GDK_PIXBUF], [gdk-pixbuf-2.0])
     AC_DEFINE([ENABLE_NOTIFY], [1], [Enable libnotify support])
