@@ -31,7 +31,7 @@
 
 #include <libeventd-test.h>
 
-#define EVENTS_DIR     SRC_DIR   G_DIR_SEPARATOR_S "plugins" G_DIR_SEPARATOR_S "test-plugin" G_DIR_SEPARATOR_S "events"
+#define CONFIG_DIR     SRC_DIR   G_DIR_SEPARATOR_S "plugins" G_DIR_SEPARATOR_S "test-plugin" G_DIR_SEPARATOR_S "config"
 #define RUN_DIR        BUILD_DIR G_DIR_SEPARATOR_S ".test-run"
 #define PLUGINS_DIR    BUILD_DIR G_DIR_SEPARATOR_S LT_OBJDIR
 
@@ -66,7 +66,7 @@ eventd_tests_env_setup(gchar **argv)
     if ( ( ! g_file_test(tmp_dir, G_FILE_TEST_IS_DIR) ) && ( g_mkdir_with_parents(tmp_dir, 0755) < 0 ) )
         g_warning("Couldn't create the test temp dir '%s': %s", tmp_dir, g_strerror(errno));
 
-    g_setenv("EVENTD_CONFIG_DIR", EVENTS_DIR, TRUE);
+    g_setenv("EVENTD_CONFIG_DIR", CONFIG_DIR, TRUE);
     g_setenv("EVENTD_PLUGINS_DIR", PLUGINS_DIR, TRUE);
     g_unsetenv("EVENTD_PLUGINS_WHITELIST");
     g_unsetenv("EVENTD_PLUGINS_BLACKLIST");
