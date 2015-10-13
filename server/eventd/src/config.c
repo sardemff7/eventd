@@ -64,14 +64,14 @@ _eventd_config_parse_global(EventdConfig *config, GKeyFile *config_file)
 {
     Int integer;
 
-    if ( ! g_key_file_has_group(config_file, "Event") )
-        return;
+    if ( g_key_file_has_group(config_file, "Event") )
+    {
+        if ( evhelpers_config_key_file_get_int(config_file, "Event", "Stack", &integer) == 0 )
+            config->stack = integer.value;
 
-    if ( evhelpers_config_key_file_get_int(config_file, "Event", "Stack", &integer) == 0 )
-        config->stack = integer.value;
-
-    if ( evhelpers_config_key_file_get_int(config_file, "Event", "Timeout", &integer) == 0 )
-        config->timeout = MAX(0, integer.value);
+        if ( evhelpers_config_key_file_get_int(config_file, "Event", "Timeout", &integer) == 0 )
+            config->timeout = MAX(0, integer.value);
+    }
 }
 
 static void
