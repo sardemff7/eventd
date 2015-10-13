@@ -85,15 +85,16 @@ _eventd_evp_add_socket(GList *used_sockets, EventdPluginContext *self, const gch
     GList *socket_;
     for ( socket_ = sockets ; socket_ != NULL ; socket_ = g_list_next(socket_) )
     {
+        GSocket *socket = socket_->data;
         GError *error = NULL;
 
-        if ( ! g_socket_listener_add_socket(G_SOCKET_LISTENER(self->service), socket_->data, NULL, &error) )
+        if ( ! g_socket_listener_add_socket(G_SOCKET_LISTENER(self->service), socket, NULL, &error) )
         {
             g_warning("Unable to add socket: %s", error->message);
             g_clear_error(&error);
         }
         else
-            used_sockets = g_list_prepend(used_sockets, g_object_ref(socket_->data));
+            used_sockets = g_list_prepend(used_sockets, g_object_ref(socket));
     }
     g_list_free_full(sockets, g_object_unref);
 

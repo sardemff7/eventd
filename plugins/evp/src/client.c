@@ -243,9 +243,28 @@ end:
     return _eventd_evp_client_disconnect_internal(self);
 }
 
+
 /*
- * Callback for the self connection
+ * Callback for the client connection
  */
+
+static void
+_eventd_evp_client_connect(EventdEvpClient *self, GIOStream *stream)
+{
+    g_signal_connect_swapped(self->protocol, "event", G_CALLBACK(_eventd_evp_client_protocol_event), self);
+    g_signal_connect_swapped(self->protocol, "answered", G_CALLBACK(_eventd_evp_client_protocol_answered), self);
+    g_signal_connect_swapped(self->protocol, "ended", G_CALLBACK(_eventd_evp_client_protocol_ended), self);
+    g_signal_connect_swapped(self->protocol, "passive", G_CALLBACK(_eventd_evp_client_protocol_passive), self);
+    g_signal_connect_swapped(self->protocol, "subscribe", G_CALLBACK(_eventd_evp_client_protocol_subscribe), self);
+    g_signal_connect_swapped(self->protocol, "bye", G_CALLBACK(_eventd_evp_client_protocol_bye), self);
+
+    self->in = g_data_input_stream_new(g_io_stream_get_input_stream(stream));
+    self->out = g_data_output_stream_new(g_io_stream_get_output_stream(stream));
+    g_data_input_stream_set_newline_type(self->in, G_DATA_STREAM_NEWLINE_TYPE_LF);
+
+    g_data_input_stream_read_line_async(self->in, G_PRIORITY_DEFAULT, self->cancellable, _eventd_evp_client_read_callback, self);
+}
+
 gboolean
 eventd_evp_client_connection_handler(GSocketService *service, GSocketConnection *connection, GObject *obj, gpointer user_data)
 {
@@ -262,24 +281,14 @@ eventd_evp_client_connection_handler(GSocketService *service, GSocketConnection 
 
     self->cancellable = g_cancellable_new();
     self->connection = g_object_ref(connection);
-    self->in = g_data_input_stream_new(g_io_stream_get_input_stream(G_IO_STREAM(connection)));
-    self->out = g_data_output_stream_new(g_io_stream_get_output_stream(G_IO_STREAM(connection)));
 
-    g_data_input_stream_set_newline_type(self->in, G_DATA_STREAM_NEWLINE_TYPE_LF);
-
-    g_data_input_stream_read_line_async(self->in, G_PRIORITY_DEFAULT, self->cancellable, _eventd_evp_client_read_callback, self);
-
-    g_signal_connect_swapped(self->protocol, "event", G_CALLBACK(_eventd_evp_client_protocol_event), self);
-    g_signal_connect_swapped(self->protocol, "answered", G_CALLBACK(_eventd_evp_client_protocol_answered), self);
-    g_signal_connect_swapped(self->protocol, "ended", G_CALLBACK(_eventd_evp_client_protocol_ended), self);
-    g_signal_connect_swapped(self->protocol, "passive", G_CALLBACK(_eventd_evp_client_protocol_passive), self);
-    g_signal_connect_swapped(self->protocol, "subscribe", G_CALLBACK(_eventd_evp_client_protocol_subscribe), self);
-    g_signal_connect_swapped(self->protocol, "bye", G_CALLBACK(_eventd_evp_client_protocol_bye), self);
+    _eventd_evp_client_connect(self, G_IO_STREAM(self->connection));
 
     self->link = context->clients = g_list_prepend(context->clients, self);
 
     return FALSE;
 }
+
 
 static void
 _eventd_evp_client_disconnect_internal(EventdEvpClient *self)
@@ -315,7 +324,8 @@ eventd_evp_client_disconnect(gpointer data)
     g_hash_table_unref(self->subscriptions);
     g_hash_table_unref(self->events);
 
-    g_object_unref(self->in);
+    if ( self->in != NULL )
+        g_object_unref(self->in);
     if ( self->out != NULL )
         g_object_unref(self->out);
 
