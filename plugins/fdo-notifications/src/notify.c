@@ -442,7 +442,10 @@ _eventd_libnotify_event_action(EventdPluginContext *context, EventdPluginAction 
         return;
 
     if ( context->client.server == NULL )
+    {
+        g_warning("No server on the bus");
         return;
+    }
 
     gchar *title;
     gchar *message;
