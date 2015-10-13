@@ -24,6 +24,7 @@
 
 #include <glib.h>
 #include <glib-object.h>
+#include <gio/gio.h>
 
 #include <libeventd-event.h>
 #include <libeventd-helpers-config.h>
@@ -39,6 +40,8 @@
 
 struct _EventdConfig {
     gboolean loaded;
+    const gchar *gnutls_priorities_env;
+    gchar *gnutls_priorities;
     guint64 stack;
     gint64 timeout;
     EventdEvents *events;
@@ -63,6 +66,17 @@ static void
 _eventd_config_parse_global(EventdConfig *config, GKeyFile *config_file)
 {
     Int integer;
+
+    if ( g_tls_backend_supports_tls(g_tls_backend_get_default()) && g_key_file_has_group(config_file, "Server") )
+    {
+        gchar *priorities;
+        if ( ( config->gnutls_priorities_env == NULL ) && ( evhelpers_config_key_file_get_string(config_file, "Server", "GnuTLSPriority", &priorities) == 0 ) )
+        {
+            g_free(config->gnutls_priorities);
+            config->gnutls_priorities = priorities;
+        }
+
+    }
 
     if ( g_key_file_has_group(config_file, "Event") )
     {
@@ -242,6 +256,8 @@ eventd_config_new(void)
     config->actions = eventd_actions_new();
     config->events = eventd_events_new();
 
+    config->gnutls_priorities_env = g_getenv("G_TLS_GNUTLS_PRIORITY");
+
     return config;
 }
 
@@ -284,6 +300,13 @@ eventd_config_parse(EventdConfig *config)
     env_config_dir = g_getenv("EVENTD_CONFIG_DIR");
     if ( env_config_dir != NULL )
         _eventd_config_load_dir(config, action_files, event_files, env_config_dir);
+
+    /*
+     * We check the env early, and skip the configuration if found
+     * so here, we can override it safely
+     */
+    if ( config->gnutls_priorities != NULL )
+        g_setenv("G_TLS_GNUTLS_PRIORITY", config->gnutls_priorities, TRUE);
 
     GHashTableIter iter;
     gchar *id;

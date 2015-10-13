@@ -240,6 +240,15 @@
                         <para>The name that the server will publish using Avahi.</para>
                     </listitem>
                 </varlistentry>
+
+                <varlistentry>
+                    <term><varname>GnuTLSPriority=</varname></term>
+                    <listitem>
+                        <para>A <type>string</type></para>
+                        <para>A convenience key to set the <varname>$G_TLS_GNUTLS_PRIORITY</varname> environment variable.</para>
+                        <para><emphasis>It will not override the environment variable if it is present when you run eventd.</emphasis></para>
+                    </listitem>
+                </varlistentry>
             </variablelist>
         </refsect2>
 
