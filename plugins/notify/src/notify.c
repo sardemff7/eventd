@@ -38,7 +38,42 @@
 /* We share nd plugin’s pixbuf loader */
 #include "plugins/nd/src/pixbuf.h"
 
-#include "fdo-notifications.h"
+/*
+ * D-Bus interface information
+ */
+
+#define NOTIFICATION_BUS_NAME      "org.freedesktop.Notifications"
+#define NOTIFICATION_BUS_PATH      "/org/freedesktop/Notifications"
+
+static const gchar introspection_xml[] =
+"<node>"
+"    <interface name='org.freedesktop.Notifications'>"
+"        <method name='Notify'>"
+"            <arg type='s' name='app_name' direction='in' />"
+"            <arg type='u' name='id' direction='in' />"
+"            <arg type='s' name='icon' direction='in' />"
+"            <arg type='s' name='summary' direction='in' />"
+"            <arg type='s' name='body' direction='in' />"
+"            <arg type='as' name='actions' direction='in' />"
+"            <arg type='a{sv}' name='hints' direction='in' />"
+"            <arg type='i' name='timeout' direction='in' />"
+"            <arg type='u' name='return_id' direction='out' />"
+"        </method>"
+"        <method name='CloseNotification'>"
+"            <arg type='u' name='id' direction='in' />"
+"        </method>"
+"        <method name='GetCapabilities'>"
+"            <arg type='as' name='return_caps' direction='out' />"
+"        </method>"
+"        <method name='GetServerInformation'>"
+"            <arg type='s' name='return_name' direction='out' />"
+"            <arg type='s' name='return_vendor' direction='out' />"
+"            <arg type='s' name='return_version' direction='out' />"
+"            <arg type='s' name='return_spec_version' direction='out' />"
+"        </method>"
+"    </interface>"
+"</node>";
+
 
 typedef enum {
     EVENTD_LIBNOTIFY_URGENCY_LOW,
@@ -46,6 +81,16 @@ typedef enum {
     EVENTD_LIBNOTIFY_URGENCY_CRITICAL,
     _EVENTD_LIBNOTIFY_URGENCY_SIZE
 } EventdLibnotifyUrgency;
+
+struct _EventdPluginContext
+{
+    GDBusNodeInfo *introspection_data;
+    guint id;
+    gboolean bus_name_owned;
+    GDBusProxy *server;
+    GSList *actions;
+    gboolean overlay_icon;
+};
 
 struct _EventdPluginAction {
     FormatString *title;
@@ -225,7 +270,7 @@ _eventd_libnotify_notification_close(GObject *obj, GAsyncResult *res, gpointer u
     GVariant *ret;
     GError *error = NULL;
 
-    ret = g_dbus_proxy_call_finish(self->context->client.server, res, &error);
+    ret = g_dbus_proxy_call_finish(self->context->server, res, &error);
     if ( ret == NULL )
     {
         g_warning("Couldn't close the notification: %s", error->message);
@@ -240,9 +285,44 @@ static void
 _eventd_libnotify_event_ended(EventdLibnotifyNotification *self, EventdEventEndReason reason, EventdEvent *event)
 {
     if ( self->id > 0 )
-        g_dbus_proxy_call(self->context->client.server, "CloseNotification", g_variant_new("(u)", self->id), G_DBUS_CALL_FLAGS_NONE, -1, NULL, _eventd_libnotify_notification_close, self);
+        g_dbus_proxy_call(self->context->server, "CloseNotification", g_variant_new("(u)", self->id), G_DBUS_CALL_FLAGS_NONE, -1, NULL, _eventd_libnotify_notification_close, self);
     else
         _eventd_libnotify_notification_free(self);
+}
+
+
+/*
+ * Init interface
+ */
+
+static EventdPluginContext *
+_eventd_libnotify_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *core_interface)
+{
+    EventdPluginContext *context;
+    GError *error = NULL;
+    GDBusNodeInfo *introspection_data;
+
+    introspection_data = g_dbus_node_info_new_for_xml(introspection_xml, &error);
+    if ( introspection_data == NULL )
+    {
+        g_warning("Couldn't generate introspection data: %s", error->message);
+        g_clear_error(&error);
+        return NULL;
+    }
+
+    context = g_new0(EventdPluginContext, 1);
+
+    context->introspection_data = introspection_data;
+
+    return context;
+}
+
+static void
+_eventd_libnotify_uninit(EventdPluginContext *context)
+{
+    g_dbus_node_info_unref(context->introspection_data);
+
+    g_free(context);
 }
 
 
@@ -257,7 +337,7 @@ _eventd_libnotify_proxy_get_capabilities(GObject *obj, GAsyncResult *res, gpoint
     GError *error = NULL;
     GVariant *ret;
 
-    ret = g_dbus_proxy_call_finish(context->client.server, res, &error);
+    ret = g_dbus_proxy_call_finish(context->server, res, &error);
     if ( ret == NULL )
     {
         g_warning("Couldn't get org.freedesktop.Notifications server capabilities: %s", error->message);
@@ -271,7 +351,7 @@ _eventd_libnotify_proxy_get_capabilities(GObject *obj, GAsyncResult *res, gpoint
     for ( capability = capabilities ; *capability != NULL ; ++capability )
     {
         if ( g_strcmp0(*capability, "x-eventd-overlay-icon") == 0 )
-            context->client.overlay_icon = TRUE;
+            context->overlay_icon = TRUE;
     }
 
     g_free(capabilities);
@@ -284,15 +364,15 @@ _eventd_libnotify_proxy_create_callback(GObject *obj, GAsyncResult *res, gpointe
     EventdPluginContext *context = user_data;
     GError *error = NULL;
 
-    context->client.server = g_dbus_proxy_new_finish(res, &error);
-    if ( context->client.server == NULL )
+    context->server = g_dbus_proxy_new_finish(res, &error);
+    if ( context->server == NULL )
     {
         g_warning("Couldn't connection to org.freedesktop.Notifications server: %s", error->message);
         g_clear_error(&error);
         return;
     }
 
-    g_dbus_proxy_call(context->client.server, "GetCapabilities", NULL, G_DBUS_CALL_FLAGS_NONE, -1, NULL, _eventd_libnotify_proxy_get_capabilities, context);
+    g_dbus_proxy_call(context->server, "GetCapabilities", NULL, G_DBUS_CALL_FLAGS_NONE, -1, NULL, _eventd_libnotify_proxy_get_capabilities, context);
 }
 
 static void
@@ -301,6 +381,12 @@ _eventd_libnotify_bus_name_appeared(GDBusConnection *connection, const gchar *na
     EventdPluginContext *context = user_data;
     GDBusProxyFlags flags = G_DBUS_PROXY_FLAGS_DO_NOT_CONNECT_SIGNALS|G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES;
 
+    if ( g_strcmp0(g_dbus_connection_get_unique_name(connection), name_owner) == 0 )
+    {
+        /* The fdo-notifications plugin got the bus name */
+        context->bus_name_owned = TRUE;
+        return;
+    }
     g_dbus_proxy_new(connection, flags, context->introspection_data->interfaces[0], name, NOTIFICATION_BUS_PATH, NOTIFICATION_BUS_NAME, NULL, _eventd_libnotify_proxy_create_callback, context);
 }
 
@@ -308,19 +394,21 @@ static void
 _eventd_libnotify_bus_name_vanished(GDBusConnection *connection, const gchar *name, gpointer user_data)
 {
     EventdPluginContext *context = user_data;
-    g_object_unref(context->client.server);
+    context->bus_name_owned = FALSE;
+    if ( context->server != NULL )
+        g_object_unref(context->server);
 }
 
-void
-eventd_libnotify_start(EventdPluginContext *context)
+static void
+_eventd_libnotify_start(EventdPluginContext *context)
 {
-    context->client.id = g_bus_watch_name(G_BUS_TYPE_SESSION, NOTIFICATION_BUS_NAME, G_BUS_NAME_WATCHER_FLAGS_NONE, _eventd_libnotify_bus_name_appeared, _eventd_libnotify_bus_name_vanished, context, NULL);
+    context->id = g_bus_watch_name(G_BUS_TYPE_SESSION, NOTIFICATION_BUS_NAME, G_BUS_NAME_WATCHER_FLAGS_NONE, _eventd_libnotify_bus_name_appeared, _eventd_libnotify_bus_name_vanished, context, NULL);
 }
 
-void
-eventd_libnotify_stop(EventdPluginContext *context)
+static void
+_eventd_libnotify_stop(EventdPluginContext *context)
 {
-    g_bus_unwatch_name(context->client.id);
+    g_bus_unwatch_name(context->id);
 }
 
 
@@ -392,7 +480,7 @@ _eventd_libnotify_action_parse(EventdPluginContext *context, GKeyFile *config_fi
     title = message = NULL;
     image = icon = NULL;
 
-    context->client.actions = g_slist_prepend(context->client.actions, action);
+    context->actions = g_slist_prepend(context->actions, action);
     return action;
 
 skip:
@@ -406,8 +494,8 @@ skip:
 static void
 _eventd_libnotify_config_reset(EventdPluginContext *context)
 {
-    g_slist_free_full(context->client.actions, _eventd_libnotify_action_free);
-    context->client.actions = NULL;
+    g_slist_free_full(context->actions, _eventd_libnotify_action_free);
+    context->actions = NULL;
 }
 
 
@@ -422,7 +510,7 @@ _eventd_libnotify_proxy_notify(GObject *obj, GAsyncResult *res, gpointer user_da
     GVariant *ret;
     GError *error = NULL;
 
-    ret = g_dbus_proxy_call_finish(self->context->client.server, res, &error);
+    ret = g_dbus_proxy_call_finish(self->context->server, res, &error);
     if ( ret == NULL )
     {
         g_warning("Server refused notification: %s", error->message);
@@ -441,7 +529,7 @@ _eventd_libnotify_event_action(EventdPluginContext *context, EventdPluginAction 
         /* We would be sending stuff to ourselves */
         return;
 
-    if ( context->client.server == NULL )
+    if ( context->server == NULL )
     {
         g_warning("No server on the bus");
         return;
@@ -456,7 +544,7 @@ _eventd_libnotify_event_action(EventdPluginContext *context, EventdPluginAction 
     title = evhelpers_format_string_get_string(action->title, event, NULL, NULL);
     message = evhelpers_format_string_get_string(action->message, event, NULL, NULL);
 
-    image = _eventd_libnotify_get_image(action, event, context->client.overlay_icon, &icon_uri, &image_uri);
+    image = _eventd_libnotify_get_image(action, event, context->overlay_icon, &icon_uri, &image_uri);
 
     GVariantBuilder *hints;
     hints = g_variant_builder_new(G_VARIANT_TYPE_VARDICT);
@@ -524,7 +612,7 @@ _eventd_libnotify_event_action(EventdPluginContext *context, EventdPluginAction 
     notification->context = context;
     notification->event = g_object_ref(event);
 
-    g_dbus_proxy_call(context->client.server, "Notify", args, G_DBUS_CALL_FLAGS_NONE, -1, NULL, _eventd_libnotify_proxy_notify, notification);
+    g_dbus_proxy_call(context->server, "Notify", args, G_DBUS_CALL_FLAGS_NONE, -1, NULL, _eventd_libnotify_proxy_notify, notification);
     g_signal_connect_swapped(notification->event, "ended", G_CALLBACK(_eventd_libnotify_event_ended), notification);
 }
 
@@ -533,12 +621,19 @@ _eventd_libnotify_event_action(EventdPluginContext *context, EventdPluginAction 
  * Plugin interface
  */
 
+EVENTD_EXPORT const gchar *eventd_plugin_id = "notify";
+EVENTD_EXPORT
 void
-eventd_libnotify_get_interface(EventdPluginInterface *interface)
+eventd_plugin_get_interface(EventdPluginInterface *interface)
 {
+    eventd_plugin_interface_add_init_callback(interface, _eventd_libnotify_init);
+    eventd_plugin_interface_add_uninit_callback(interface, _eventd_libnotify_uninit);
+
+    eventd_plugin_interface_add_start_callback(interface, _eventd_libnotify_start);
+    eventd_plugin_interface_add_stop_callback(interface, _eventd_libnotify_stop);
+
     eventd_plugin_interface_add_action_parse_callback(interface, _eventd_libnotify_action_parse);
     eventd_plugin_interface_add_config_reset_callback(interface, _eventd_libnotify_config_reset);
 
     eventd_plugin_interface_add_event_action_callback(interface, _eventd_libnotify_event_action);
 }
-

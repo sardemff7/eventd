@@ -29,11 +29,26 @@
 #include <glib.h>
 #include <gio/gio.h>
 
-
 #include <libeventd-event.h>
 #include <eventd-plugin.h>
 
-#include "fdo-notifications.h"
+#define NOTIFICATION_BUS_NAME      "org.freedesktop.Notifications"
+#define NOTIFICATION_BUS_PATH      "/org/freedesktop/Notifications"
+
+#define NOTIFICATION_SPEC_VERSION  "1.2"
+
+struct _EventdPluginContext {
+    EventdPluginCoreContext *core;
+    EventdPluginCoreInterface *core_interface;
+    GDBusNodeInfo *introspection_data;
+    guint id;
+    GDBusConnection *connection;
+    GVariant *capabilities;
+    GVariant *server_information;
+    guint32 count;
+    GHashTable *events;
+    GHashTable *notifications;
+};
 
 typedef struct {
     EventdPluginContext *context;
@@ -398,21 +413,17 @@ _eventd_fdo_notifications_on_bus_acquired(GDBusConnection *connection, const gch
 static void
 _eventd_fdo_notifications_on_name_acquired(GDBusConnection *connection, const gchar *name, gpointer user_data)
 {
-    EventdPluginContext *context = user_data;
 #ifdef EVENTD_DEBUG
     g_debug("Acquired the name %s on the session bus", name);
 #endif /* EVENTD_DEBUG */
-    context->bus_name_owned = TRUE;
 }
 
 static void
 _eventd_fdo_notifications_on_name_lost(GDBusConnection *connection, const gchar *name, gpointer user_data)
 {
-    EventdPluginContext *context = user_data;
 #ifdef EVENTD_DEBUG
     g_debug("Lost the name %s on the session bus", name);
 #endif /* EVENTD_DEBUG */
-    context->bus_name_owned = FALSE;
 }
 
 static void
@@ -561,17 +572,11 @@ static void
 _eventd_fdo_notifications_start(EventdPluginContext *context)
 {
     context->id = g_bus_own_name(G_BUS_TYPE_SESSION, NOTIFICATION_BUS_NAME, G_BUS_NAME_OWNER_FLAGS_NONE, _eventd_fdo_notifications_on_bus_acquired, _eventd_fdo_notifications_on_name_acquired, _eventd_fdo_notifications_on_name_lost, context, NULL);
-#ifdef ENABLE_NOTIFY
-    eventd_libnotify_start(context);
-#endif /* ENABLE_NOTIFY */
 }
 
 static void
 _eventd_fdo_notifications_stop(EventdPluginContext *context)
 {
-#ifdef ENABLE_NOTIFY
-    eventd_libnotify_stop(context);
-#endif /* ENABLE_NOTIFY */
     g_bus_unown_name(context->id);
 }
 
@@ -590,8 +595,4 @@ eventd_plugin_get_interface(EventdPluginInterface *interface)
 
     eventd_plugin_interface_add_start_callback(interface, _eventd_fdo_notifications_start);
     eventd_plugin_interface_add_stop_callback(interface, _eventd_fdo_notifications_stop);
-
-#ifdef ENABLE_NOTIFY
-    eventd_libnotify_get_interface(interface);
-#endif /* ENABLE_NOTIFY */
 }
