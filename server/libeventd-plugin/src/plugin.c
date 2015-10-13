@@ -265,6 +265,7 @@ EVENTD_EXPORT void eventd_plugin_interface_add_event_dispatch_callback(EventdPlu
  * @interface: an #EventdPluginInterface
  * @callback: (scope async): a function to call when triggering an action
  *
- * This callback is called whenever an event triggers an action created by the plugin.
+ * This callback is called whenever an event triggers an action created by the
+ * plugin.
  */
 EVENTD_EXPORT void eventd_plugin_interface_add_event_action_callback(EventdPluginInterface *interface, EventdPluginEventActionFunc callback) { interface->event_action = callback; }
