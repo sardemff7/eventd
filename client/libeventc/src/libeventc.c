@@ -331,7 +331,8 @@ _eventc_connection_finalize(GObject *object)
 {
     EventcConnection *self = EVENTC_CONNECTION(object);
 
-    g_hash_table_unref(self->priv->subscriptions);
+    if ( self->priv->subscriptions != NULL )
+        g_hash_table_unref(self->priv->subscriptions);
 
     if ( self->priv->address != NULL )
         g_object_unref(self->priv->address);
