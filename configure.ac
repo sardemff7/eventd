@@ -331,9 +331,8 @@ AC_SUBST([shrext_cmds])
 
 AC_CONFIG_FILES([
     server/libeventd/pkgconfig/libeventd.pc
-    server/libeventd/vapi/libeventd.deps
     server/libeventd/pkgconfig/libeventd-protocol-json.pc
-    server/libeventd/vapi/libeventd-protocol-json.deps
+    server/libeventd/vapi/libeventd.deps
     server/eventd/pkgconfig/eventd.pc
     server/libeventd-plugin/pkgconfig/libeventd-plugin.pc
     client/libeventc/pkgconfig/libeventc.pc

@@ -58,14 +58,6 @@ pkginclude_HEADERS += \
 pkgconfig_DATA += \
 	%D%/pkgconfig/libeventd-protocol-json.pc \
 	$(null)
-
-dist_vapi_DATA += \
-	%D%/vapi/libeventd-protocol-json.vapi \
-	$(null)
-
-vapi_DATA += \
-	%D%/vapi/libeventd-protocol-json.deps \
-	$(null)
 endif
 
 
