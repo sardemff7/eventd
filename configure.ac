@@ -350,10 +350,12 @@ AC_MSG_RESULT([
         systemd support: ${enable_systemd}
         UNIX sockets support: ${have_gio_unix}
         GObject introspection: ${enable_introspection}
+        EVENT JSON protocol library: ${enable_json}
 
     Event collection plugins:
         EVENT protocol: yes
         org.freedesktop.Notifications interface: yes
+        EVENT JSON protocol over WebSocket: ${enable_http}
 
     Action plugins:
         EVENT protocol relay: yes
