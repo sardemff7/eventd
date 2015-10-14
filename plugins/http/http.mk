@@ -12,6 +12,7 @@ endif
 
 
 http_la_SOURCES = \
+	%D%/src/http.h \
 	%D%/src/http.c \
 	%D%/src/websocket.h \
 	%D%/src/websocket.c \
