@@ -85,18 +85,14 @@ include %D%/linux/linux.mk
 # Hooks
 #
 
- ifneq (,$(strip $(ndbackends_LTLIBRARIES)))
 install-data-hook la-files-install-hook: nd-la-files-install-hook
 uninstall-hook la-files-uninstall-hook: nd-la-files-uninstall-hook
- endif
 
 # *.la files cleanup
 nd-la-files-install-hook:
-	cd $(DESTDIR)$(ndbackendsdir) && \
-		rm $(ndbackends_LTLIBRARIES)
+	$(call ev_remove_la,ndbackends)
 
 # Remove *.so files at uninstall since
 # we remove *.la files at install
 nd-la-files-uninstall-hook:
-	cd $(DESTDIR)$(ndbackendsdir) && \
-		rm $(ndbackends_LTLIBRARIES:.la=.so)
+	$(call ev_remove_so_from_la,ndbackends)

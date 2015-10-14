@@ -115,17 +115,18 @@ include src/libnkutils/libnkutils.mk
 install-data-hook: la-files-install-hook
 uninstall-hook: la-files-uninstall-hook
 
+ev_remove_la = $(if $(strip $($(1)_LTLIBRARIES)),( cd $(DESTDIR)$($(1)dir) && rm -f $($(1)_LTLIBRARIES) ))
+ev_remove_so_from_la = $(if $(strip $($(1)_LTLIBRARIES)),( cd $(DESTDIR)$($(1)dir) && rm -f `$(AWK) -F "'" '/^library_names=/ { print $$2 }' $(addprefix "$(abs_builddir)"/,$($(1)_LTLIBRARIES))` ))
+
 # *.la files cleanup
 la-files-install-hook:
-	cd $(DESTDIR)$(pkglibdir) && \
-		rm $(pkglib_LTLIBRARIES)
-	cd $(DESTDIR)$(pluginsdir) && \
-		rm $(plugins_LTLIBRARIES)
+	$(call ev_remove_la,lib)
+	$(call ev_remove_la,pkglib)
+	$(call ev_remove_la,plugins)
 
 # Remove shared object files at uninstall since
 # we remove *.la files at install
 la-files-uninstall-hook:
-	cd $(DESTDIR)$(pkglibdir) && \
-		rm $(pkglib_LTLIBRARIES:.la=$(shrext_cmds))
-	cd $(DESTDIR)$(pluginsdir) && \
-		rm $(plugins_LTLIBRARIES:.la=$(shrext_cmds))
+	$(call ev_remove_so_from_la,lib)
+	$(call ev_remove_so_from_la,pkglib)
+	$(call ev_remove_so_from_la,plugins)

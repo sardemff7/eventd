@@ -23,6 +23,7 @@ AC_ARG_VAR([XSLTPROC], [The xsltproc executable])
 AC_PROG_CC
 AC_PROG_CC_C99
 AM_PROG_CC_C_O
+AC_PROG_AWK
 AC_PROG_SED
 AC_PROG_MKDIR_P
 LT_INIT([disable-static pic-only])
