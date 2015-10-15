@@ -158,12 +158,12 @@ m4_ifdef([GOBJECT_INTROSPECTION_CHECK], [
             yes) typelibdir="`${PKG_CONFIG} --variable=typelibdir gobject-introspection-1.0`" ;;
             *) typelibdir="${with_typelibdir}" ;;
         esac
-        AC_SUBST([girdir])
-        AC_SUBST([typelibdir])
     fi
 ], [
-    AM_CONDITIONAL([ENABLE_INTROSPECTION], [false])
+    AM_CONDITIONAL([HAVE_INTROSPECTION], [false])
 ])
+AC_SUBST([girdir])
+AC_SUBST([typelibdir])
 
 # JSON protocol support
 AC_ARG_ENABLE([json], AS_HELP_STRING([--enable-json], [Enable JSON protocol support]), [], [enable_json=no])
