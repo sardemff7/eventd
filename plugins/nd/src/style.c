@@ -415,7 +415,7 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
         else if ( self->parent != NULL )
             self->icon.placement = eventd_nd_style_get_icon_placement(self->parent);
 
-        if ( evhelpers_config_key_file_get_enum(config_file, "NotificationIcon", "Anche", _eventd_nd_style_anchors_vertical, G_N_ELEMENTS(_eventd_nd_style_anchors_vertical), &enum_value) == 0 )
+        if ( evhelpers_config_key_file_get_enum(config_file, "NotificationIcon", "Anchor", _eventd_nd_style_anchors_vertical, G_N_ELEMENTS(_eventd_nd_style_anchors_vertical), &enum_value) == 0 )
             self->icon.anchor = enum_value;
         else if ( self->parent != NULL )
             self->icon.anchor = eventd_nd_style_get_icon_anchor(self->parent);
