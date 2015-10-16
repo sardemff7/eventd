@@ -22,8 +22,7 @@
 #define __EVENTD_EVENT_EVENT_PRIVATE_H__
 
 struct _EventdEventPrivate {
-    uuid_t uuid;
-    gchar uuid_str[UUID_STR_SIZE];
+    NkUuid uuid;
     gchar *category;
     gchar *name;
     gint64 timeout;
@@ -32,6 +31,6 @@ struct _EventdEventPrivate {
     GHashTable *answer_data;
 };
 
-EventdEvent *eventd_event_new_for_uuid(uuid_t uuid, const gchar *category, const gchar *name);
+EventdEvent *eventd_event_new_for_uuid(NkUuid uuid, const gchar *category, const gchar *name);
 
 #endif /* __EVENTD_EVENT_EVENT_PRIVATE_H__ */

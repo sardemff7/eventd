@@ -76,9 +76,9 @@ libeventd_la_SOURCES = \
 
 libeventd_la_CFLAGS = \
 	$(AM_CFLAGS) \
+	$(NKUTILS_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS) \
-	$(UUID_CFLAGS) \
 	$(null)
 
 libeventd_la_LDFLAGS = \
@@ -87,9 +87,9 @@ libeventd_la_LDFLAGS = \
 	$(null)
 
 libeventd_la_LIBADD = \
+	$(NKUTILS_LIBS) \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS) \
-	$(UUID_LIBS) \
 	$(null)
 
 
@@ -107,7 +107,6 @@ libeventd_protocol_json_la_CFLAGS = \
 	$(NKUTILS_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS) \
-	$(UUID_CFLAGS) \
 	$(null)
 
 libeventd_protocol_json_la_LDFLAGS = \
@@ -121,7 +120,6 @@ libeventd_protocol_json_la_LIBADD = \
 	$(NKUTILS_LIBS) \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS) \
-	$(UUID_LIBS) \
 	$(null)
 
 
@@ -137,18 +135,16 @@ libeventd_event_test_SOURCES = \
 
 libeventd_event_test_CFLAGS = \
 	$(AM_CFLAGS) \
-	$(GIO_CFLAGS) \
+	$(NKUTILS_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS) \
-	$(UUID_CFLAGS) \
 	$(null)
 
 libeventd_event_test_LDADD = \
 	libeventd.la \
-	$(GIO_LIBS) \
+	$(NKUTILS_LIBS) \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS) \
-	$(UUID_LIBS) \
 	$(null)
 
 libeventd_protocol_test_SOURCES = \
@@ -163,18 +159,16 @@ libeventd_protocol_test_SOURCES = \
 
 libeventd_protocol_test_CFLAGS = \
 	$(AM_CFLAGS) \
-	$(GIO_CFLAGS) \
+	$(NKUTILS_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS) \
-	$(UUID_CFLAGS) \
 	$(null)
 
 libeventd_protocol_test_LDADD = \
 	libeventd.la \
-	$(GIO_LIBS) \
+	$(NKUTILS_LIBS) \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS) \
-	$(UUID_LIBS) \
 	$(null)
 
 if ENABLE_JSON

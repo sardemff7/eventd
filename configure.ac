@@ -108,14 +108,12 @@ AC_SUBST([fdonotificationscapabilitiesdir])
 
 dnl GLIB_DEFINE_LOCALEDIR([EVENTD_LOCALEDIR])
 GW_INIT
-NK_INIT([enum token colour/alpha colour/double])
+NK_INIT([uuid enum token colour/alpha colour/double])
 
 #
 # Common dependencies
 #
 AC_CHECK_HEADERS([locale.h fcntl.h errno.h])
-
-PKG_CHECK_MODULES([UUID], [uuid])
 
 PKG_CHECK_MODULES([GLIB], [glib-2.0 >= ${glib_min_version}])
 AC_DEFINE_UNQUOTED([GLIB_VERSION_MIN_REQUIRED], [(G_ENCODE_VERSION(${glib_min_major},${glib_min_minor}))], [The lower GLib version supported])

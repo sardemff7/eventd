@@ -20,10 +20,10 @@
 
 #include <config.h>
 
-#include <uuid.h>
-
 #include <glib.h>
 #include <glib-object.h>
+
+#include <nkutils-uuid.h>
 
 #include <libeventd-event.h>
 #include <libeventd-event-private.h>
@@ -32,14 +32,13 @@
 
 
 EventdEvent *
-eventd_event_new_for_uuid(uuid_t uuid, const gchar *category, const gchar *name)
+eventd_event_new_for_uuid(NkUuid uuid, const gchar *category, const gchar *name)
 {
     EventdEvent *self;
 
     self = g_object_new(EVENTD_TYPE_EVENT, NULL);
 
-    uuid_copy(self->priv->uuid, uuid);
-    uuid_unparse_lower(self->priv->uuid, self->priv->uuid_str);
+    self->priv->uuid = uuid;
     self->priv->category = g_strdup(category);
     self->priv->name = g_strdup(name);
 
@@ -53,8 +52,8 @@ eventd_event_new_for_uuid_string(const gchar *uuid_string, const gchar *category
     g_return_val_if_fail(category != NULL, NULL);
     g_return_val_if_fail(name != NULL, NULL);
 
-    uuid_t uuid;
-    if ( uuid_parse(uuid_string, uuid) < 0 )
+    NkUuid uuid;
+    if ( ! nk_uuid_parse(&uuid, uuid_string) )
         return NULL;
 
     return eventd_event_new_for_uuid(uuid, category, name);
@@ -65,7 +64,7 @@ eventd_event_get_uuid(EventdEvent *self)
 {
     g_return_val_if_fail(EVENTD_IS_EVENT(self), NULL);
 
-    return self->priv->uuid_str;
+    return self->priv->uuid.string;
 }
 
 void

@@ -20,10 +20,10 @@
 
 #include <config.h>
 
-#include <uuid.h>
-
 #include <glib.h>
 #include <glib-object.h>
+
+#include <nkutils-uuid.h>
 
 #include <libeventd-event.h>
 #include <libeventd-event-private.h>
@@ -242,10 +242,10 @@ EVENTD_EXPORT
 EventdEvent *
 eventd_event_new(const gchar *category, const gchar *name)
 {
-    uuid_t uuid;
+    NkUuid uuid;
     EventdEvent *self;
 
-    uuid_generate(uuid);
+    nk_uuid_generate(&uuid);
     self = eventd_event_new_for_uuid(uuid, category, name);
 
     return self;
