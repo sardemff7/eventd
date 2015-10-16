@@ -215,33 +215,53 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
 
         FormatString *string = NULL;
 
-        evhelpers_format_string_unref(self->template.title);
         if ( evhelpers_config_key_file_get_locale_format_string(config_file, "Notification", "Title", NULL, &string) == 0 )
+        {
+            evhelpers_format_string_unref(self->template.title);
             self->template.title = string;
+        }
         else if ( self->parent != NULL )
+        {
+            evhelpers_format_string_unref(self->template.title);
             self->template.title = evhelpers_format_string_ref(eventd_nd_style_get_template_title(self->parent));
+        }
 
         string = NULL;
-        evhelpers_format_string_unref(self->template.message);
         if ( evhelpers_config_key_file_get_locale_format_string(config_file, "Notification", "Message", NULL, &string) == 0 )
+        {
+            evhelpers_format_string_unref(self->template.message);
             self->template.message = string;
+        }
         else if ( self->parent != NULL )
+        {
+            evhelpers_format_string_unref(self->template.message);
             self->template.message = evhelpers_format_string_ref(eventd_nd_style_get_template_message(self->parent));
+        }
 
         Filename *filename = NULL;
 
-        evhelpers_filename_unref(self->template.image);
         if ( evhelpers_config_key_file_get_filename(config_file, "Notification", "Image", &filename) == 0 )
+        {
+            evhelpers_filename_unref(self->template.image);
             self->template.image = filename;
+        }
         else if ( self->parent != NULL )
+        {
+            evhelpers_filename_unref(self->template.image);
             self->template.image = evhelpers_filename_ref(eventd_nd_style_get_template_image(self->parent));
+        }
 
         filename = NULL;
-        evhelpers_filename_unref(self->template.icon);
         if ( evhelpers_config_key_file_get_filename(config_file, "Notification", "Icon", &filename) == 0 )
+        {
+            evhelpers_filename_unref(self->template.icon);
             self->template.icon = filename;
+        }
         else if ( self->parent != NULL )
+        {
+            evhelpers_filename_unref(self->template.icon);
             self->template.icon = evhelpers_filename_ref(eventd_nd_style_get_template_icon(self->parent));
+        }
     }
 
     if ( g_key_file_has_group(config_file, "NotificationBubble") )
