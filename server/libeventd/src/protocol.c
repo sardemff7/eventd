@@ -151,9 +151,9 @@ EVENTD_EXPORT
 gboolean
 eventd_protocol_parse(EventdProtocol *self, gchar **buffer, GError **error)
 {
-    g_return_val_if_fail(EVENTD_IS_PROTOCOL(self), NULL);
-    g_return_val_if_fail(buffer != NULL && *buffer != NULL, NULL);
-    g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+    g_return_val_if_fail(EVENTD_IS_PROTOCOL(self), FALSE);
+    g_return_val_if_fail(buffer != NULL && *buffer != NULL, FALSE);
+    g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
     return EVENTD_PROTOCOL_GET_INTERFACE(self)->parse(self, buffer, error);
 }

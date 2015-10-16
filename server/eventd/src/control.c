@@ -77,7 +77,7 @@ _eventd_service_private_connection_handler(GSocketService *socket_service, GSock
         g_data_input_stream_read_byte(input, NULL, NULL);
         if ( error != NULL )
         {
-            g_warning("Couldn't read the command argv[%ju]: %s", i, error->message);
+            g_warning("Couldn't read the command argv[%" G_GUINT64_FORMAT "]: %s", i, error->message);
             goto fail;
         }
         argv[i] = arg;

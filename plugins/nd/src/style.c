@@ -425,7 +425,7 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
         {
             if ( ( integer.value < 0 ) || ( integer.value > 100 ) )
             {
-                g_warning("Wrong percentage value '%jd'", integer.value);
+                g_warning("Wrong percentage value '%" G_GINT64_FORMAT "'", integer.value);
                 integer.value = CLAMP(integer.value, 0, 100);
             }
             self->icon.fade_width = (gdouble) integer.value / 100.;

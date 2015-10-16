@@ -67,7 +67,7 @@ gobject_introspection_min_version="1.42.0"
 gmodule_min_version="${glib_min_version}"
 
 
-AM_CFLAGS="-fvisibility=hidden -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers"
+AM_CFLAGS="-fvisibility=hidden -Wall -Wextra -Wformat=2 -Wno-unused-parameter -Wno-missing-field-initializers"
 AM_CPPFLAGS=""
 AM_LDFLAGS="-no-undefined"
 AM_XSLTPROCFLAGS="--nonet --xinclude --stringparam man.output.quietly 1 --stringparam funcsynopsis.style ansi"

@@ -480,11 +480,11 @@ _eventd_protocol_evp_parse_line(EventdProtocolEvp *self, const gchar *line, GErr
             if ( argc < message->min_args )
             {
                 g_strfreev(argv);
-                return g_set_error(error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_MALFORMED, "Message '%s' does take at least %zd arguments, but got %zd", message->message, message->min_args, argc);
+                return g_set_error(error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_MALFORMED, "Message '%s' does take at least %" G_GSIZE_FORMAT " arguments, but got %" G_GSIZE_FORMAT, message->message, message->min_args, argc);
             }
         }
         else if ( message->min_args > 0 )
-            return g_set_error(error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_MALFORMED, "Message '%s' does take at least %zd arguments, but got none", message->message, message->min_args);
+            return g_set_error(error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_MALFORMED, "Message '%s' does take at least %" G_GSIZE_FORMAT " arguments, but got none", message->message, message->min_args);
 
         gboolean valid = FALSE;
         for ( state = message->start_states ; *state != _EVENTD_PROTOCOL_EVP_STATE_SIZE ; ++state )
