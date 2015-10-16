@@ -32,10 +32,7 @@ _init_data(gpointer fixture, gconstpointer user_data)
 {
     GettersData *data = fixture;
 
-    uuid_t uuid;
-    uuid_parse(EVENTD_EVENT_TEST_UUID, uuid);
-
-    data->event = eventd_event_new_for_uuid(uuid, EVENTD_EVENT_TEST_CATEGORY, EVENTD_EVENT_TEST_NAME);
+    data->event = eventd_event_new_for_uuid_string(EVENTD_EVENT_TEST_UUID, EVENTD_EVENT_TEST_CATEGORY, EVENTD_EVENT_TEST_NAME);
     eventd_event_set_timeout(data->event, EVENTD_EVENT_TEST_TIMEOUT);
     eventd_event_add_answer(data->event, EVENTD_EVENT_TEST_ANSWER);
 }

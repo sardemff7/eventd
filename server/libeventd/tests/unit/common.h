@@ -24,7 +24,6 @@
 #define __EVENTD_TESTS_UNIT_EVENTD_EVENT_COMMON_H__
 
 #include <stdlib.h>
-#include <uuid.h>
 #include <glib.h>
 #include <glib-object.h>
 #include <libeventd-event.h>

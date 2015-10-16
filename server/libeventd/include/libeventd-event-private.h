@@ -23,7 +23,7 @@
 
 #define UUID_STR_SIZE 37 /* 36 + \0 */
 
-EventdEvent *eventd_event_new_for_uuid(uuid_t uuid, const gchar *category, const gchar *name);
+EventdEvent *eventd_event_new_for_uuid_string(const gchar *uuid_string, const gchar *category, const gchar *name);
 const gchar *eventd_event_get_uuid(EventdEvent *event);
 
 void eventd_event_set_all_data(EventdEvent *event, GHashTable *data);

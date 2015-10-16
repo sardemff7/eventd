@@ -34,11 +34,8 @@ _init_data(gpointer fixture, gconstpointer user_data)
     GeneratorData *data = fixture;
     gboolean with_answer = GPOINTER_TO_INT(user_data);
 
-    uuid_t uuid;
-    uuid_parse(EVENTD_EVENT_TEST_UUID, uuid);
-
     data->protocol = eventd_protocol_evp_new();
-    data->event = eventd_event_new_for_uuid(uuid, EVENTD_EVENT_TEST_NAME, EVENTD_EVENT_TEST_NAME);
+    data->event = eventd_event_new_for_uuid_string(EVENTD_EVENT_TEST_UUID, EVENTD_EVENT_TEST_NAME, EVENTD_EVENT_TEST_NAME);
 
     if ( with_answer )
         eventd_event_add_answer(data->event, EVENTD_EVENT_TEST_ANSWER);

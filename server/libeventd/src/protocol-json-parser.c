@@ -26,8 +26,6 @@
 #include <string.h>
 #endif /* HAVE_STRING_H */
 
-#include <uuid.h>
-
 #include <glib.h>
 #include <glib-object.h>
 
@@ -117,17 +115,7 @@ _eventd_protocol_json_parse_string(gpointer user_data, const guchar *str_, gsize
     }
     break;
     case EVENTD_PROTOCOL_JSON_STATE_UUID:
-    {
-        uuid_t uuid;
-        if ( uuid_parse(str, uuid) < 0 )
-        {
-            g_set_error(&self->priv->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_WRONG_UUID, "Error while parsing UUID '%s'", str);
-            g_free(str);
-            return 0;
-        }
-        uuid_copy(self->priv->message.uuid, uuid);
-        g_free(str);
-    }
+        self->priv->message.uuid = str;
     break;
     case EVENTD_PROTOCOL_JSON_STATE_CATEGORY:
         self->priv->message.category = str;
@@ -203,7 +191,7 @@ _eventd_protocol_json_parse_map_key(gpointer user_data, const guchar *key_, gsiz
         }
         else if ( g_ascii_strncasecmp(key, "uuid", len) == 0 )
         {
-            if ( ! uuid_is_null(self->priv->message.uuid) )
+            if ( self->priv->message.uuid != NULL )
             {
                 g_set_error_literal(&self->priv->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_MALFORMED, "Got at least two UUIDs");
                 break;
@@ -336,7 +324,12 @@ _eventd_protocol_json_check_message(EventdProtocolJson *self, GError **error)
     case EVENTD_PROTOCOL_JSON_MESSAGE_TYPE_EVENT:
     {
         EventdEvent *event;
-        event = eventd_event_new_for_uuid(self->priv->message.uuid, self->priv->message.category, self->priv->message.name);
+        event = eventd_event_new_for_uuid_string(self->priv->message.uuid, self->priv->message.category, self->priv->message.name);
+        if ( event == NULL )
+        {
+            g_set_error(&self->priv->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_WRONG_UUID, "Error while parsing UUID '%s'", self->priv->message.uuid);
+            return FALSE;
+        }
         if ( self->priv->message.data != NULL )
             eventd_event_set_all_data(event, self->priv->message.data);
         g_signal_emit(self, eventd_protocol_signals[SIGNAL_EVENT], 0, event);
@@ -419,7 +412,7 @@ eventd_protocol_json_parse_free(EventdProtocolJson *self)
 {
     self->priv->message.type = EVENTD_PROTOCOL_JSON_MESSAGE_TYPE_MISSING;
 
-    uuid_clear(self->priv->message.uuid);
+    g_free(self->priv->message.uuid);
     g_free(self->priv->message.category);
     g_free(self->priv->message.name);
     self->priv->message.category = NULL;

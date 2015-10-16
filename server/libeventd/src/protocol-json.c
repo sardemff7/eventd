@@ -26,8 +26,6 @@
 #include <string.h>
 #endif /* HAVE_STRING_H */
 
-#include <uuid.h>
-
 #include <glib.h>
 #include <glib-object.h>
 
@@ -125,7 +123,6 @@ eventd_protocol_json_init(EventdProtocolJson *self)
     self->priv = EVENTD_PROTOCOL_JSON_GET_PRIVATE(self);
 
     self->priv->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_object_unref);
-    uuid_clear(self->priv->message.uuid);
 }
 
 static void

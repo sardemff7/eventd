@@ -32,10 +32,7 @@ _init_data(gpointer fixture, gconstpointer user_data)
 {
     SettersData *data = fixture;
 
-    uuid_t uuid;
-    uuid_parse(EVENTD_EVENT_TEST_UUID, uuid);
-
-    data->event = eventd_event_new_for_uuid(uuid, EVENTD_EVENT_TEST_CATEGORY, EVENTD_EVENT_TEST_NAME);
+    data->event = eventd_event_new_for_uuid_string(EVENTD_EVENT_TEST_UUID, EVENTD_EVENT_TEST_CATEGORY, EVENTD_EVENT_TEST_NAME);
 }
 
 static void
@@ -53,10 +50,7 @@ _test_new_good_good(gpointer fixture, gconstpointer user_data)
             return;
     if ( g_test_subprocess() )
     {
-        uuid_t uuid;
-        uuid_parse(EVENTD_EVENT_TEST_UUID, uuid);
-
-        eventd_event_new_for_uuid(uuid, EVENTD_EVENT_TEST_CATEGORY, EVENTD_EVENT_TEST_NAME);
+        eventd_event_new_for_uuid_string(EVENTD_EVENT_TEST_UUID, EVENTD_EVENT_TEST_CATEGORY, EVENTD_EVENT_TEST_NAME);
         exit(0);
     }
     g_test_trap_subprocess(NULL, 0, 0);
@@ -70,10 +64,7 @@ _test_new_null_good(gpointer fixture, gconstpointer user_data)
             return;
     if ( g_test_subprocess() )
     {
-        uuid_t uuid;
-        uuid_parse(EVENTD_EVENT_TEST_UUID, uuid);
-
-        eventd_event_new_for_uuid(uuid, NULL, EVENTD_EVENT_TEST_NAME);
+        eventd_event_new_for_uuid_string(EVENTD_EVENT_TEST_UUID, NULL, EVENTD_EVENT_TEST_NAME);
         exit(0);
     }
     g_test_trap_subprocess(NULL, 0, 0);
@@ -87,10 +78,7 @@ _test_new_good_null(gpointer fixture, gconstpointer user_data)
             return;
     if ( g_test_subprocess() )
     {
-        uuid_t uuid;
-        uuid_parse(EVENTD_EVENT_TEST_UUID, uuid);
-
-        eventd_event_new_for_uuid(uuid, NULL, NULL);
+        eventd_event_new_for_uuid_string(EVENTD_EVENT_TEST_UUID, NULL, NULL);
         exit(0);
     }
     g_test_trap_subprocess(NULL, 0, 0);

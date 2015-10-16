@@ -26,8 +26,6 @@
 #include <string.h>
 #endif /* HAVE_STRING_H */
 
-#include <uuid.h>
-
 #include <glib.h>
 #include <glib-object.h>
 
@@ -140,17 +138,13 @@ _eventd_protocol_evp_parse_dot_data_end(EventdProtocolEvp *self, GError **error)
 static EventdEvent *
 _eventd_protocol_evp_parser_get_event(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
 {
-    uuid_t uuid;
-    if ( uuid_parse(argv[0], uuid) < 0 )
-    {
-        g_set_error(error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_WRONG_UUID, "Error while parsing UUID %s", argv[0]);
-        return NULL;
-    }
-
     EventdEvent *event;
-    event = eventd_event_new_for_uuid(uuid, argv[1], argv[2]);
+    event = eventd_event_new_for_uuid_string(argv[0], argv[1], argv[2]);
 
-    eventd_protocol_evp_add_event(self, event);
+    if ( event != NULL )
+        eventd_protocol_evp_add_event(self, event);
+    else
+        g_set_error(error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_WRONG_UUID, "Error while parsing UUID %s", argv[0]);
 
     return event;
 }

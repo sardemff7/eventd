@@ -51,7 +51,7 @@ struct _EventdProtocolJsonPrivate {
     struct {
         EventdProtocolJsonState state;
         EventdProtocolJsonMessageType type;
-        uuid_t uuid;
+        gchar *uuid;
         gchar *category;
         gchar *name;
         GList *answers;

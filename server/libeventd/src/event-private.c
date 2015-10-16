@@ -34,9 +34,6 @@
 EventdEvent *
 eventd_event_new_for_uuid(uuid_t uuid, const gchar *category, const gchar *name)
 {
-    g_return_val_if_fail(category != NULL, NULL);
-    g_return_val_if_fail(name != NULL, NULL);
-
     EventdEvent *self;
 
     self = g_object_new(EVENTD_TYPE_EVENT, NULL);
@@ -47,6 +44,20 @@ eventd_event_new_for_uuid(uuid_t uuid, const gchar *category, const gchar *name)
     self->priv->name = g_strdup(name);
 
     return self;
+}
+
+EventdEvent *
+eventd_event_new_for_uuid_string(const gchar *uuid_string, const gchar *category, const gchar *name)
+{
+    g_return_val_if_fail(uuid_string != NULL, NULL);
+    g_return_val_if_fail(category != NULL, NULL);
+    g_return_val_if_fail(name != NULL, NULL);
+
+    uuid_t uuid;
+    if ( uuid_parse(uuid_string, uuid) < 0 )
+        return NULL;
+
+    return eventd_event_new_for_uuid(uuid, category, name);
 }
 
 const gchar *
