@@ -78,12 +78,14 @@
                             An <type>enumeration</type>:
                             <simplelist type='inline'>
                                 <member><literal>top left</literal></member>
+                                <member><literal>top</literal></member>
                                 <member><literal>top right</literal></member>
                                 <member><literal>bottom left</literal></member>
+                                <member><literal>bottom</literal></member>
                                 <member><literal>bottom right</literal></member>
                             </simplelist>
                         </para>
-                        <para>The screen corner in which the bubble will be placed.</para>
+                        <para>The screen place in which the bubble will be anchored.</para>
                     </listitem>
                 </varlistentry>
 

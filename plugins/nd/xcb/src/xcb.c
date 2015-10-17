@@ -44,15 +44,19 @@
 #include <eventd-nd-backend.h>
 
 typedef enum {
+    EVENTD_ND_XCB_ANCHOR_TOP,
     EVENTD_ND_XCB_ANCHOR_TOP_LEFT,
     EVENTD_ND_XCB_ANCHOR_TOP_RIGHT,
+    EVENTD_ND_XCB_ANCHOR_BOTTOM,
     EVENTD_ND_XCB_ANCHOR_BOTTOM_LEFT,
     EVENTD_ND_XCB_ANCHOR_BOTTOM_RIGHT,
 } EventdNdXcbCornerAnchor;
 
 static const gchar * const _eventd_nd_xcb_corner_anchors[] = {
+    [EVENTD_ND_XCB_ANCHOR_TOP]          = "top",
     [EVENTD_ND_XCB_ANCHOR_TOP_LEFT]     = "top left",
     [EVENTD_ND_XCB_ANCHOR_TOP_RIGHT]    = "top right",
+    [EVENTD_ND_XCB_ANCHOR_BOTTOM]       = "bottom",
     [EVENTD_ND_XCB_ANCHOR_BOTTOM_LEFT]  = "bottom left",
     [EVENTD_ND_XCB_ANCHOR_BOTTOM_RIGHT] = "bottom right",
 };
@@ -524,17 +528,19 @@ _eventd_nd_xcb_update_surfaces(EventdNdDisplay *display)
     GList *surface_;
     EventdNdSurface *surface;
 
-    gboolean right;
-    gboolean bottom;
+    gboolean right, center, bottom;
     right = ( context->placement.anchor == EVENTD_ND_XCB_ANCHOR_TOP_RIGHT ) || ( context->placement.anchor == EVENTD_ND_XCB_ANCHOR_BOTTOM_RIGHT );
-    bottom = ( context->placement.anchor == EVENTD_ND_XCB_ANCHOR_BOTTOM_LEFT ) || ( context->placement.anchor == EVENTD_ND_XCB_ANCHOR_BOTTOM_RIGHT );
+    center = ( context->placement.anchor == EVENTD_ND_XCB_ANCHOR_TOP ) || ( context->placement.anchor == EVENTD_ND_XCB_ANCHOR_BOTTOM );
+    bottom = ( context->placement.anchor == EVENTD_ND_XCB_ANCHOR_BOTTOM_LEFT ) || ( context->placement.anchor == EVENTD_ND_XCB_ANCHOR_BOTTOM ) || ( context->placement.anchor == EVENTD_ND_XCB_ANCHOR_BOTTOM_RIGHT );
 
     guint16 mask = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y;
     guint32 vals[] = { 0, 0 };
     gint x, y;
     x = context->placement.margin;
     y = context->placement.margin;
-    if ( right )
+    if ( center )
+        x = display->base_geometry.width;
+    else if ( right )
         x = display->base_geometry.width - x;
     if ( bottom )
         y = display->base_geometry.height - y;
@@ -549,7 +555,7 @@ _eventd_nd_xcb_update_surfaces(EventdNdDisplay *display)
         if ( bottom )
             y -= height;
 
-        vals[0] = display->base_geometry.x + ( right ? ( x - width ) : x );
+        vals[0] = display->base_geometry.x + ( center ? ( ( x / 2 ) - ( width / 2 ) ) : right ? ( x - width ) : x );
         vals[1] = display->base_geometry.y + y;
         xcb_configure_window(display->xcb_connection, surface->window, mask, vals);
 
