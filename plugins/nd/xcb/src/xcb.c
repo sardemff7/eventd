@@ -664,7 +664,7 @@ _eventd_nd_xcb_surface_update(EventdNdSurface *self, cairo_surface_t *bubble)
     _eventd_nd_xcb_update_surfaces(self->display);
 }
 
-EVENTD_EXPORT const gchar *eventd_nd_backend_id = "eventd-nd-xcb";
+EVENTD_EXPORT const gchar *eventd_nd_backend_id = "nd-xcb";
 EVENTD_EXPORT
 void
 eventd_nd_backend_get_info(EventdNdBackend *backend)

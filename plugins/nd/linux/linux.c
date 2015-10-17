@@ -243,7 +243,7 @@ _eventd_nd_linux_surface_display(EventdNdSurface *self, gint x, gint y)
     cairo_surface_destroy(surface);
 }
 
-EVENTD_EXPORT const gchar *eventd_nd_backend_id = "eventd-nd-linux";
+EVENTD_EXPORT const gchar *eventd_nd_backend_id = "nd-linux";
 EVENTD_EXPORT
 void
 eventd_nd_backend_get_info(EventdNdBackend *backend)
