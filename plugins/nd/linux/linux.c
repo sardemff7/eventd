@@ -209,6 +209,9 @@ _eventd_nd_linux_surface_update(EventdNdSurface *self, cairo_surface_t *bubble)
     self->bubble = cairo_surface_reference(bubble);
 }
 
+/*
+ * TODO: display bubbles again
+ */
 static void
 _eventd_nd_linux_surface_display(EventdNdSurface *self, gint x, gint y)
 {
@@ -255,5 +258,4 @@ eventd_nd_backend_get_info(EventdNdBackend *backend)
     backend->surface_new     = _eventd_nd_linux_surface_new;
     backend->surface_free    = _eventd_nd_linux_surface_free;
     backend->surface_update  = _eventd_nd_linux_surface_update;
-    backend->surface_display = _eventd_nd_linux_surface_display;
 }

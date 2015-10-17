@@ -57,10 +57,20 @@
     <refsect1 id="global-sections">
         <title>Global sections</title>
 
-        <refsect2>
-            <title>Section <varname>[Notification]</varname></title>
+        <refsect2 condition="website;enable_xcb">
+            <title>Section <varname>[NotificationXcb]</varname></title>
+
+            <para>The XCB backend configuration</para>
 
             <variablelist>
+                <varlistentry>
+                    <term><varname>Outputs=</varname></term>
+                    <listitem>
+                        <para>A <type>list of output names</type></para>
+                        <para>The backend will try to find the first available output in the list. If none is found, it will fallback to the primary output, then to use the full screen.</para>
+                    </listitem>
+                </varlistentry>
+
                 <varlistentry>
                     <term><varname>Anchor=</varname> (defaults to <literal>top-right</literal>)</term>
                     <listitem>
@@ -98,22 +108,6 @@
                     <listitem>
                         <para>An <type>integer</type></para>
                         <para>Spacing between each bubble.</para>
-                    </listitem>
-                </varlistentry>
-            </variablelist>
-        </refsect2>
-
-        <refsect2 condition="website;enable_xcb">
-            <title>Section <varname>[NotificationXcb]</varname></title>
-
-            <para>The XCB backend configuration</para>
-
-            <variablelist>
-                <varlistentry>
-                    <term><varname>Outputs=</varname></term>
-                    <listitem>
-                        <para>A <type>list of output names</type></para>
-                        <para>The backend will try to find the first available output in the list. If none is found, it will fallback to the primary output, then to use the full screen.</para>
                     </listitem>
                 </varlistentry>
             </variablelist>

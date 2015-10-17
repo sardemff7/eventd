@@ -42,27 +42,10 @@
 #include "style.h"
 #include "cairo.h"
 
-typedef enum {
-    EVENTD_ND_ANCHOR_TOP_LEFT,
-    EVENTD_ND_ANCHOR_TOP_RIGHT,
-    EVENTD_ND_ANCHOR_BOTTOM_LEFT,
-    EVENTD_ND_ANCHOR_BOTTOM_RIGHT,
-} EventdNdCornerAnchor;
-
-static const gchar * const _eventd_nd_corner_anchors[] = {
-    [EVENTD_ND_ANCHOR_TOP_LEFT]     = "top left",
-    [EVENTD_ND_ANCHOR_TOP_RIGHT]    = "top right",
-    [EVENTD_ND_ANCHOR_BOTTOM_LEFT]  = "bottom left",
-    [EVENTD_ND_ANCHOR_BOTTOM_RIGHT] = "bottom right",
-};
 
 struct _EventdPluginContext {
     EventdNdInterface interface;
     GSList *actions;
-    EventdNdCornerAnchor bubble_anchor;
-    gboolean bubble_reverse;
-    gint bubble_margin;
-    gint bubble_spacing;
     gint max_width;
     gint max_height;
     EventdNdStyle *style;
@@ -102,8 +85,6 @@ _eventd_nd_backend_display_free(gpointer data)
     g_free(display);
 }
 
-static void _eventd_nd_update_notifications(EventdNdContext *context);
-
 static void
 _eventd_nd_backend_remove_display(EventdNdContext *context, const gchar *target)
 {
@@ -121,13 +102,7 @@ _eventd_nd_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *interf
 
     context = g_new0(EventdPluginContext, 1);
 
-    context->interface.update_notifications = _eventd_nd_update_notifications;
     context->interface.remove_display = _eventd_nd_backend_remove_display;
-
-    /* default bubble position */
-    context->bubble_anchor    = EVENTD_ND_ANCHOR_TOP_RIGHT;
-    context->bubble_margin    = 13;
-    context->bubble_spacing   = 13;
 
     context->style = eventd_nd_style_new(NULL);
 
@@ -321,25 +296,6 @@ _eventd_nd_control_command(EventdPluginContext *context, guint64 argc, const gch
 static void
 _eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
 {
-    if ( g_key_file_has_group(config_file, "Notification") )
-    {
-        Int integer;
-        guint64 enum_value;
-        gboolean boolean;
-
-        if ( evhelpers_config_key_file_get_enum(config_file, "Notification", "Anchor", _eventd_nd_corner_anchors, G_N_ELEMENTS(_eventd_nd_corner_anchors), &enum_value) == 0 )
-                context->bubble_anchor = enum_value;
-
-        if ( evhelpers_config_key_file_get_boolean(config_file, "Notification", "OldestFirst", &boolean) == 0 )
-            context->bubble_reverse = boolean;
-
-        if ( evhelpers_config_key_file_get_int(config_file, "Notification", "Margin", &integer) == 0 )
-            context->bubble_margin = integer.value;
-
-        if ( evhelpers_config_key_file_get_int(config_file, "Notification", "Spacing", &integer) == 0 )
-            context->bubble_spacing = integer.value;
-    }
-
     eventd_nd_style_update(context->style, config_file, &context->max_width, &context->max_height);
 
     GHashTableIter iter;
@@ -476,52 +432,10 @@ _eventd_nd_notification_update(EventdNdNotification *self,EventdPluginContext *c
 }
 
 static void
-_eventd_nd_update_notifications(EventdPluginContext *context)
-{
-    GList *notification_;
-    GList *surface_;
-    EventdNdNotification *notification;
-    EventdNdSurfaceContext *surface;
-
-    gboolean right;
-    gboolean bottom;
-    right = ( context->bubble_anchor == EVENTD_ND_ANCHOR_TOP_RIGHT ) || ( context->bubble_anchor == EVENTD_ND_ANCHOR_BOTTOM_RIGHT );
-    bottom = ( context->bubble_anchor == EVENTD_ND_ANCHOR_BOTTOM_LEFT ) || ( context->bubble_anchor == EVENTD_ND_ANCHOR_BOTTOM_RIGHT );
-
-    gint x, y;
-    x = y = context->bubble_margin;
-    if ( right )
-        x *= -1;
-    if ( bottom )
-        y *= -1;
-    for ( notification_ = g_queue_peek_head_link(context->queue) ; notification_ != NULL ; notification_ = g_list_next(notification_) )
-    {
-        notification = notification_->data;
-        if ( bottom )
-            y -= notification->height;
-        if ( right )
-            x -= notification->width;
-        for ( surface_ = notification->surfaces ; surface_ != NULL ; surface_ = g_list_next(surface_) )
-        {
-            surface = surface_->data;
-            if ( surface->backend->surface_display != NULL )
-                surface->backend->surface_display(surface->surface, x, y);
-        }
-        if ( right )
-            x += notification->width;
-        if ( bottom )
-            y -= context->bubble_spacing;
-        else
-            y += notification->height + context->bubble_spacing;
-    }
-}
-
-static void
 _eventd_nd_event_updated(EventdEvent *event, EventdNdNotification *self)
 {
     EventdPluginContext *context = self->context;
     _eventd_nd_notification_update(self, context, event);
-    _eventd_nd_update_notifications(context);
 }
 
 static void
@@ -531,8 +445,6 @@ _eventd_nd_event_ended(EventdEvent *event, EventdEventEndReason reason, EventdNd
 
     g_queue_delete_link(context->queue, notification->notification);
     _eventd_nd_notification_free(notification);
-
-    _eventd_nd_update_notifications(context);
 }
 
 static void
@@ -547,18 +459,8 @@ _eventd_nd_event_action(EventdPluginContext *context, EventdNdStyle *style, Even
     g_signal_connect(event, "updated", G_CALLBACK(_eventd_nd_event_updated), notification);
     g_signal_connect(event, "ended", G_CALLBACK(_eventd_nd_event_ended), notification);
 
-    if ( context->bubble_reverse )
-    {
-        g_queue_push_tail(context->queue, notification);
-        notification->notification = g_queue_peek_tail_link(context->queue);
-    }
-    else
-    {
-        g_queue_push_head(context->queue, notification);
-        notification->notification = g_queue_peek_head_link(context->queue);
-    }
-
-    _eventd_nd_update_notifications(context);
+    g_queue_push_tail(context->queue, notification);
+    notification->notification = g_queue_peek_tail_link(context->queue);
 }
 
 
