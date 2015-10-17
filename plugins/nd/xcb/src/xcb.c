@@ -530,9 +530,10 @@ _eventd_nd_xcb_update_surfaces(EventdNdDisplay *display)
     bottom = ( context->placement.anchor == EVENTD_ND_XCB_ANCHOR_BOTTOM_LEFT ) || ( context->placement.anchor == EVENTD_ND_XCB_ANCHOR_BOTTOM_RIGHT );
 
     guint16 mask = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y;
+    guint32 vals[] = { 0, 0 };
     gint x, y;
-    x = context->placement.margin + display->base_geometry.x;
-    y = context->placement.margin + display->base_geometry.y;
+    x = context->placement.margin;
+    y = context->placement.margin;
     if ( right )
         x = display->base_geometry.width - x;
     if ( bottom )
@@ -548,7 +549,8 @@ _eventd_nd_xcb_update_surfaces(EventdNdDisplay *display)
         if ( bottom )
             y -= height;
 
-        guint32 vals[] = { right ? ( x - width ) : x , y };
+        vals[0] = display->base_geometry.x + ( right ? ( x - width ) : x );
+        vals[1] = display->base_geometry.y + y;
         xcb_configure_window(display->xcb_connection, surface->window, mask, vals);
 
         if ( bottom )
