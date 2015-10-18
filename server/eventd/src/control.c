@@ -28,10 +28,10 @@
 
 #include <glib.h>
 #include <glib-object.h>
-#ifndef HAVE_GIO_UNIX
+#ifndef G_OS_UNIX
 #include <glib/gprintf.h>
 #include <glib/gstdio.h>
-#endif /* ! HAVE_GIO_UNIX */
+#endif /* ! G_OS_UNIX */
 #include <gio/gio.h>
 
 #include <eventdctl.h>
@@ -208,7 +208,7 @@ eventd_control_start(EventdControl *control)
     const gchar *binds[] = { NULL, NULL };
     gchar *bind = NULL;
 
-#ifdef HAVE_GIO_UNIX
+#ifdef G_OS_UNIX
     if ( control->socket != NULL )
     {
         bind = g_strconcat("unix:", control->socket, NULL);
@@ -216,9 +216,9 @@ eventd_control_start(EventdControl *control)
     }
     else
         binds[0] = "unix-runtime:private";
-#else /* ! HAVE_GIO_UNIX */
+#else /* ! G_OS_UNIX */
     binds[0] = "tcp:localhost:0";
-#endif /* ! HAVE_GIO_UNIX */
+#endif /* ! G_OS_UNIX */
 
     sockets = eventd_core_get_sockets(control->core, binds);
 
@@ -237,9 +237,9 @@ eventd_control_start(EventdControl *control)
     if ( ! g_socket_listener_add_socket(G_SOCKET_LISTENER(control->socket_service), socket, NULL, &error) )
         g_warning("Unable to add private socket: %s", error->message);
     else
-#ifdef HAVE_GIO_UNIX
+#ifdef G_OS_UNIX
         ret = TRUE;
-#else /* ! HAVE_GIO_UNIX */
+#else /* ! G_OS_UNIX */
     {
         if ( control->socket == NULL )
             control->socket = g_build_filename(g_get_user_runtime_dir(), PACKAGE_NAME, "private", NULL);
@@ -264,7 +264,7 @@ eventd_control_start(EventdControl *control)
             }
         }
     }
-#endif /* ! HAVE_GIO_UNIX */
+#endif /* ! G_OS_UNIX */
     g_clear_error(&error);
 
     g_list_free_full(sockets, g_object_unref);
@@ -280,10 +280,10 @@ eventd_control_start(EventdControl *control)
 void
 eventd_control_stop(EventdControl *control)
 {
-#ifndef HAVE_GIO_UNIX
+#ifndef G_OS_UNIX
     if ( g_file_test(control->socket, G_FILE_TEST_EXISTS) )
         g_unlink(control->socket);
-#endif /* ! HAVE_GIO_UNIX */
+#endif /* ! G_OS_UNIX */
 
     g_socket_service_stop(control->socket_service);
     g_socket_listener_close(G_SOCKET_LISTENER(control->socket_service));

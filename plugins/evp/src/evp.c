@@ -113,13 +113,13 @@ _eventd_evp_start(EventdPluginContext *self)
     if ( self->binds != NULL )
         sockets = _eventd_evp_add_socket(sockets, self, (const gchar * const *)self->binds);
 
-#ifdef HAVE_GIO_UNIX
+#ifdef G_OS_UNIX
     if ( self->default_unix )
     {
         const gchar *binds[] = { "unix-runtime:" EVP_UNIX_SOCKET, NULL };
         sockets = _eventd_evp_add_socket(sockets, self, binds);
     }
-#endif /* HAVE_GIO_UNIX */
+#endif /* G_OS_UNIX */
 
     g_signal_connect(self->service, "incoming", G_CALLBACK(eventd_evp_client_connection_handler), self);
 
@@ -165,9 +165,9 @@ _eventd_evp_get_option_group(EventdPluginContext *self)
     GOptionEntry entries[] =
     {
         { "listen",         'l', 0,                 G_OPTION_ARG_STRING_ARRAY, &self->binds,        "Add a socket to listen to",     "<socket>" },
-#ifdef HAVE_GIO_UNIX
+#ifdef G_OS_UNIX
         { "listen-default", 'u', 0,                 G_OPTION_ARG_NONE,         &self->default_unix, "Listen on default UNIX socket", NULL },
-#endif /* HAVE_GIO_UNIX */
+#endif /* G_OS_UNIX */
         { "no-avahi",       'A', AVAHI_OPTION_FLAG, G_OPTION_ARG_NONE,         &self->no_avahi,     "Disable avahi publishing",      NULL },
         { NULL }
     };

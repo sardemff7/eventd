@@ -35,9 +35,9 @@
 #endif /* ENABLE_NLS */
 #include <glib/gstdio.h>
 #include <gio/gio.h>
-#ifdef HAVE_GIO_UNIX
+#ifdef G_OS_UNIX
 #include <gio/gunixsocketaddress.h>
-#endif /* HAVE_GIO_UNIX */
+#endif /* G_OS_UNIX */
 
 #include <eventdctl.h>
 
@@ -111,12 +111,12 @@ _eventd_eventdctl_get_connection(const gchar *private_socket, GError **error)
     if ( private_socket == NULL )
         real_socket = default_socket = g_build_filename(g_get_user_runtime_dir(), PACKAGE_NAME, "private", NULL);
 
-#ifdef HAVE_GIO_UNIX
+#ifdef G_OS_UNIX
     if ( ( ! g_file_test(real_socket, G_FILE_TEST_EXISTS) ) || g_file_test(real_socket, G_FILE_TEST_IS_DIR|G_FILE_TEST_IS_REGULAR) )
         goto error;
 
     address = g_unix_socket_address_new(real_socket);
-#else /* ! HAVE_GIO_UNIX */
+#else /* ! G_OS_UNIX */
     if ( ! g_file_test(real_socket, G_FILE_TEST_EXISTS|G_FILE_TEST_IS_REGULAR) )
         goto error;
 
@@ -131,7 +131,7 @@ _eventd_eventdctl_get_connection(const gchar *private_socket, GError **error)
     inet_address = g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV6);
     address = g_inet_socket_address_new(inet_address, CLAMP(parsed_port, 1, 65535));
     g_object_unref(inet_address);
-#endif /* ! HAVE_GIO_UNIX */
+#endif /* ! G_OS_UNIX */
     g_free(default_socket);
 
     client = g_socket_client_new();

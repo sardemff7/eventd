@@ -63,11 +63,11 @@
 
 #include "eventd.h"
 
-#ifdef HAVE_GIO_UNIX
+#ifdef G_OS_UNIX
 #define GIO_UNIX_OPTION_FLAG 0
-#else /* ! HAVE_GIO_UNIX */
+#else /* ! G_OS_UNIX */
 #define GIO_UNIX_OPTION_FLAG G_OPTION_FLAG_HIDDEN
-#endif /* ! HAVE_GIO_UNIX */
+#endif /* ! G_OS_UNIX */
 
 struct _EventdCoreContext {
     EventdConfig *config;
@@ -155,7 +155,7 @@ eventd_core_get_sockets(EventdCoreContext *context, const gchar * const *binds)
             if ( inet_sockets != NULL )
                 sockets = g_list_concat(sockets, inet_sockets);
         }
-#ifdef HAVE_GIO_UNIX
+#ifdef G_OS_UNIX
         else if ( g_str_has_prefix(bind, "unix:") )
         {
             if ( bind[5] == 0 )
@@ -183,7 +183,7 @@ eventd_core_get_sockets(EventdCoreContext *context, const gchar * const *binds)
             if ( socket != NULL )
                 sockets = g_list_prepend(sockets, socket);
         }
-#endif /* HAVE_GIO_UNIX */
+#endif /* G_OS_UNIX */
     }
 
     return sockets;

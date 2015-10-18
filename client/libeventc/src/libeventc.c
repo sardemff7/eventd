@@ -23,9 +23,9 @@
 #include <glib.h>
 #include <glib-object.h>
 #include <gio/gio.h>
-#ifdef HAVE_GIO_UNIX
+#ifdef G_OS_UNIX
 #include <gio/gunixsocketaddress.h>
-#endif /* HAVE_GIO_UNIX */
+#endif /* G_OS_UNIX */
 
 #include <libeventd-event.h>
 #include <libeventd-protocol.h>
@@ -85,7 +85,7 @@ _eventc_get_address(const gchar *host_and_port, GError **error)
     if ( ( host_and_port == NULL ) || ( *host_and_port == '\0' ) )
         host_and_port = "localhost";
 
-#ifdef HAVE_GIO_UNIX
+#ifdef G_OS_UNIX
     if ( g_str_has_prefix(host_and_port, "@") )
     {
         if ( g_unix_socket_address_abstract_names_supported() )
@@ -108,7 +108,7 @@ _eventc_get_address(const gchar *host_and_port, GError **error)
         g_free(path);
         return address;
     }
-#endif /* HAVE_GIO_UNIX */
+#endif /* G_OS_UNIX */
 
     GError *_inner_error_ = NULL;
 

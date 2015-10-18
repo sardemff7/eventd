@@ -9,9 +9,11 @@ dist_event_DATA += \
 	%D%/events/libnotify.action \
 	$(null)
 
+if EV_OS_UNIX
 dbussessionservice_DATA += \
 	%D%/services/org.eventd.fdo-notifications.service \
 	$(null)
+endif
 
 
 fdo_notifications_la_SOURCES = \

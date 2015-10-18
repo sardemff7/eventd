@@ -56,6 +56,17 @@ AC_SUBST([EVP_UNIX_SOCKET])
 
 AC_DEFINE([EVENTD_EXPORT], [__attribute__((visibility("default")))], [Export symbol])
 
+AC_CANONICAL_HOST
+case "${host}" in
+    *-*-mingw*)
+        ev_os_unix=no
+    ;;
+    *)
+        ev_os_unix=yes
+    ;;
+esac
+AM_CONDITIONAL([EV_OS_UNIX], [test x${ev_os_unix} = xyes])
+
 # Common dependencies
 glib_min_major="2"
 glib_min_minor="40"
@@ -123,17 +134,14 @@ PKG_CHECK_MODULES([GOBJECT], [gobject-2.0])
 PKG_CHECK_MODULES([GTHREAD], [gthread-2.0])
 
 gio_unix=
-PKG_CHECK_EXISTS([gio-unix-2.0 >= ${gio_min_version}], have_gio_unix=yes, have_gio_unix=no)
-if test x${have_gio_unix} = xyes; then
-    gio_unix="gio-unix-2.0"
-    AC_DEFINE([HAVE_GIO_UNIX], [1], [UNIX-specific GIO support])
-    AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};have_gio_unix"
+if test x${ev_os_unix} = xyes; then
+    gio_unix="gio-unix-2.0 >= ${gio_min_version}"
 fi
 
 PKG_CHECK_MODULES([GIO], [gio-2.0 >= ${gio_min_version} ${gio_unix}])
 AC_SUBST([gio_unix])
 
-AC_ARG_ENABLE([avahi], AS_HELP_STRING([--disable-avahi], [Disable Avahi support]), [], [enable_avahi=yes])
+AC_ARG_ENABLE([avahi], AS_HELP_STRING([--disable-avahi], [Disable Avahi support]), [], [enable_avahi=${ev_os_unix}])
 if test x${enable_avahi} = xyes; then
     PKG_CHECK_MODULES([AVAHI], [avahi-client avahi-glib])
     AC_DEFINE([ENABLE_AVAHI], [1], [Enable Avahi support])
@@ -195,12 +203,14 @@ fi
 AM_CONDITIONAL([ENABLE_SYSTEMD], [test x${enable_systemd} = xyes])
 
 AC_ARG_WITH([dbussessionservicedir], AS_HELP_STRING([--with-dbussessionservicedir=DIR], [Directory for D-Bus session service files]), [], [with_dbussessionservicedir=yes])
-case "${with_dbussessionservicedir}" in
-    no|"") AC_MSG_ERROR([*** You must define dbussessionservicedir when compiling D-Bus support]) ;;
-    yes) dbussessionservicedir="`${PKG_CONFIG} --variable=session_bus_services_dir dbus-1`" ;;
-    *) dbussessionservicedir="${with_dbussessionservicedir}" ;;
-esac
-AC_SUBST([dbussessionservicedir])
+if test x${ev_os_unix} = xyes; then
+    case "${with_dbussessionservicedir}" in
+        no|"") AC_MSG_ERROR([*** You must define dbussessionservicedir when compiling D-Bus support]) ;;
+        yes) dbussessionservicedir="`${PKG_CONFIG} --variable=session_bus_services_dir dbus-1`" ;;
+        *) dbussessionservicedir="${with_dbussessionservicedir}" ;;
+    esac
+    AC_SUBST([dbussessionservicedir])
+fi
 
 # http plugin
 libsoup_min_version="2.50"
@@ -226,8 +236,8 @@ fi
 AM_CONDITIONAL([ENABLE_NOTIFICATION_DAEMON], [test x${enable_notification_daemon} = xyes])
 
 # nd backends
-AC_ARG_ENABLE([xcb], AS_HELP_STRING([--disable-xcb], [Disable XCB graphical backend]), [], [enable_xcb=yes])
-AC_ARG_ENABLE([linux-framebuffer], AS_HELP_STRING([--disable-linux-framebuffer], [Disable Linux framebuffer backend]), [], [enable_linux_framebuffer=yes])
+AC_ARG_ENABLE([xcb], AS_HELP_STRING([--disable-xcb], [Disable XCB graphical backend]), [], [enable_xcb=${ev_os_unix}])
+AC_ARG_ENABLE([linux-framebuffer], AS_HELP_STRING([--enable-linux-framebuffer], [Enable Linux framebuffer (fbdev) backend]), [], [enable_linux_framebuffer=no])
 
 # Common
 if test x${enable_xcb} = xyes -o x${enable_linux_framebuffer} = xyes; then
@@ -252,7 +262,7 @@ fi
 AM_CONDITIONAL([ENABLE_LINUX_FB], [test x${enable_linux_framebuffer} = xyes])
 
 # IM plugin
-AC_ARG_ENABLE([im], AS_HELP_STRING([--disable-im], [Disable IM support through libpurple]), [], [enable_im=yes])
+AC_ARG_ENABLE([im], AS_HELP_STRING([--disable-im], [Disable IM support through libpurple]), [], [enable_im=${ev_os_unix}])
 if test x${enable_im} = xyes; then
     PKG_CHECK_MODULES([PURPLE], [purple])
     # No existing libpurple allows us to avoid that for now
@@ -263,7 +273,7 @@ AM_CONDITIONAL([ENABLE_IM], [test x${enable_im} = xyes])
 
 # sound plugin
 libpulse_min_version="0.9.15"
-AC_ARG_ENABLE([sound], AS_HELP_STRING([--disable-sound], [Disable sound support through libsndfile]), [], [enable_sound=yes])
+AC_ARG_ENABLE([sound], AS_HELP_STRING([--disable-sound], [Disable sound support through libsndfile]), [], [enable_sound=${ev_os_unix}])
 if test x${enable_sound} = xyes; then
     PKG_CHECK_MODULES([SNDFILE], [sndfile])
     PKG_CHECK_MODULES([PULSEAUDIO], [libpulse >= ${libpulse_min_version} libpulse-mainloop-glib])
@@ -290,7 +300,7 @@ fi
 AM_CONDITIONAL([ENABLE_TTS], [test x${enable_tts} = xyes])
 
 # libnotify plugin
-AC_ARG_ENABLE([libnotify], AS_HELP_STRING([--disable-libnotify], [Disable libnotify support (client side)]), [], [enable_libnotify=yes])
+AC_ARG_ENABLE([libnotify], AS_HELP_STRING([--disable-libnotify], [Disable libnotify support (client side)]), [], [enable_libnotify=${ev_os_unix}])
 if test x${enable_libnotify} = xyes; then
     PKG_CHECK_MODULES([GDK_PIXBUF], [gdk-pixbuf-2.0])
     AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_notify"
@@ -347,13 +357,13 @@ AC_MSG_RESULT([
     Core features:
         Avahi support: ${enable_avahi}
         systemd support: ${enable_systemd}
-        UNIX sockets support: ${have_gio_unix}
+        UNIX sockets support: ${ev_os_unix}
         GObject introspection: ${enable_introspection}
         EVENT JSON protocol library: ${enable_json}
 
     Event collection plugins:
         EVENT protocol: yes
-        org.freedesktop.Notifications interface: yes
+        org.freedesktop.Notifications interface: ${ev_os_unix}
         EVENT JSON protocol over WebSocket: ${enable_http}
 
     Action plugins:

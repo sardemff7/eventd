@@ -28,10 +28,10 @@
 
 #include <glib.h>
 #include <gio/gio.h>
-#ifdef HAVE_GIO_UNIX
+#ifdef G_OS_UNIX
 #include <gio/gunixsocketaddress.h>
 #include <glib/gstdio.h>
-#endif /* HAVE_GIO_UNIX */
+#endif /* G_OS_UNIX */
 
 #ifdef ENABLE_SYSTEMD
 #ifdef HAVE_SYS_SOCKET_H
@@ -207,7 +207,7 @@ eventd_sockets_get_inet_sockets(EventdSockets *sockets, const gchar *address, gu
     return g_list_prepend(NULL, socket);
 }
 
-#ifdef HAVE_GIO_UNIX
+#ifdef G_OS_UNIX
 GSocket *
 eventd_sockets_get_unix_socket(EventdSockets *sockets, const gchar *path, gboolean take_over_socket)
 {
@@ -285,7 +285,7 @@ fail:
     g_clear_error(&error);
     return NULL;
 }
-#endif /* HAVE_GIO_UNIX */
+#endif /* G_OS_UNIX */
 
 EventdSockets *
 eventd_sockets_new(void)
@@ -332,7 +332,7 @@ eventd_sockets_new(void)
     return sockets;
 }
 
-#ifdef HAVE_GIO_UNIX
+#ifdef G_OS_UNIX
 static void
 _eventd_sockets_unix_socket_free(gpointer data)
 {
@@ -340,16 +340,16 @@ _eventd_sockets_unix_socket_free(gpointer data)
     g_unlink(path);
     g_free(path);
 }
-#endif /* HAVE_GIO_UNIX */
+#endif /* G_OS_UNIX */
 
 void
 eventd_sockets_free(EventdSockets *sockets)
 {
     g_list_free_full(sockets->list, g_object_unref);
 
-#ifdef HAVE_GIO_UNIX
+#ifdef G_OS_UNIX
     g_slist_free_full(sockets->created, _eventd_sockets_unix_socket_free);
-#endif /* HAVE_GIO_UNIX */
+#endif /* G_OS_UNIX */
 
     g_free(sockets);
 }
