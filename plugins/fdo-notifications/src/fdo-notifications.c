@@ -31,6 +31,7 @@
 
 #include <libeventd-event.h>
 #include <eventd-plugin.h>
+#include <libeventd-helpers-dirs.h>
 
 #define NOTIFICATION_BUS_NAME      "org.freedesktop.Notifications"
 #define NOTIFICATION_BUS_PATH      "/org/freedesktop/Notifications"
@@ -427,11 +428,8 @@ _eventd_fdo_notifications_on_name_lost(GDBusConnection *connection, const gchar 
 }
 
 static void
-_eventd_fdo_notifications_load_capabilities_dir(const gchar *dir_name, GHashTable *capabilities_set)
+_eventd_fdo_notifications_load_capabilities_dir(gchar *dir_name, GHashTable *capabilities_set)
 {
-    if ( ! g_file_test(dir_name, G_FILE_TEST_EXISTS | G_FILE_TEST_IS_DIR) )
-        return;
-
     GDir *capabilities_dir;
     GError *error = NULL;
     capabilities_dir = g_dir_open(dir_name, 0, &error);
@@ -475,6 +473,7 @@ _eventd_fdo_notifications_load_capabilities_dir(const gchar *dir_name, GHashTabl
         g_free(full_filename);
     }
     g_dir_close(capabilities_dir);
+    g_free(dir_name);
 }
 
 static void
@@ -493,7 +492,11 @@ _eventd_fdo_notifications_init_capabilities(EventdPluginContext *context)
     g_hash_table_add(capabilities_set, "actions");
      */
 
-    _eventd_fdo_notifications_load_capabilities_dir(FDONOTIFICATIONSCAPABILITIESDIR, capabilities_set);
+    gchar **dirs, **dir;
+    dirs = evhelpers_dirs_get_lib(NULL, "plugins" G_DIR_SEPARATOR_S "fdo-notifications");
+    for ( dir = dirs ; *dir != NULL ; ++dir )
+        _eventd_fdo_notifications_load_capabilities_dir(*dir, capabilities_set);
+    g_free(dirs);
 
     GVariantBuilder *builder;
 

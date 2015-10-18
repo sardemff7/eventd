@@ -22,7 +22,6 @@ fdo_notifications_la_SOURCES = \
 
 fdo_notifications_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	-D FDONOTIFICATIONSCAPABILITIESDIR=\"$(fdonotificationscapabilitiesdir)\" \
 	$(GIO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS) \
@@ -36,6 +35,7 @@ fdo_notifications_la_LDFLAGS = \
 fdo_notifications_la_LIBADD = \
 	libeventd.la \
 	libeventd-plugin.la \
+	libeventd-helpers.la \
 	$(GIO_LIBS) \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS) \

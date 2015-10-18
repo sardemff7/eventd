@@ -45,9 +45,6 @@ nd_la_SOURCES = \
 
 nd_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	-D SYSCONFDIR=\"$(sysconfdir)\" \
-	-D LIBDIR=\"$(libdir)\" \
-	-D DATADIR=\"$(datadir)\" \
 	$(GDK_PIXBUF_CFLAGS) \
 	$(CAIRO_CFLAGS) \
 	$(PANGO_CFLAGS) \

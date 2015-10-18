@@ -52,6 +52,7 @@
 
 #include <eventd-plugin-private.h>
 #include <eventdctl.h>
+#include <libeventd-helpers-dirs.h>
 
 #include "types.h"
 
@@ -457,26 +458,22 @@ main(int argc, char *argv[])
 
     if ( print_paths )
     {
-        const gchar *plugins_env, *config_env;
-        plugins_env = g_getenv("EVENTD_PLUGINS_DIR");
-        config_env = g_getenv("EVENTD_CONFIG_DIR");
+        gchar **dirs, **dir;
 
-        g_printf("Plugins search paths:"
-            "\n    $EVENTD_PLUGINS_DIR = '%s'"
-            "\n    $XDG_DATA_HOME" G_DIR_SEPARATOR_S  PACKAGE_NAME G_DIR_SEPARATOR_S "plugins = '%s" G_DIR_SEPARATOR_S  PACKAGE_NAME G_DIR_SEPARATOR_S "plugins'"
-            "\n    " LIBDIR G_DIR_SEPARATOR_S PACKAGE_NAME G_DIR_SEPARATOR_S "plugins"
-            "\n",
-            ( plugins_env != NULL ) ? plugins_env : "",
-            g_get_user_data_dir());
+        dirs = evhelpers_dirs_get_lib("EVENTD_PLUGINS_DIR", "plugins");
+        g_print("Plugins search paths:");
+        for ( dir = dirs ; *dir != NULL ; ++dir )
+            g_print("\n    %s", *dir);
+        g_print("\n");
+        g_strfreev(dirs);
 
-        g_printf("Configuration and events search paths:"
-            "\n    " SYSCONFDIR G_DIR_SEPARATOR_S PACKAGE_NAME
-            "\n    " DATADIR G_DIR_SEPARATOR_S PACKAGE_NAME
-            "\n    $XDG_CONFIG_HOME" G_DIR_SEPARATOR_S  PACKAGE_NAME " = '%s" G_DIR_SEPARATOR_S  PACKAGE_NAME "'"
-            "\n    $EVENTD_CONFIG_DIR = '%s'"
-            "\n",
-            g_get_user_config_dir(),
-            ( config_env != NULL ) ? config_env : "");
+        dirs = evhelpers_dirs_get_config("EVENTD_CONFIG_DIR", NULL);
+        g_print("Configuration and events search paths:");
+        for ( dir = dirs ; *dir != NULL ; ++dir )
+            g_print("\n    %s", *dir);
+        g_print("\n");
+        g_strfreev(dirs);
+
         goto end;
     }
 

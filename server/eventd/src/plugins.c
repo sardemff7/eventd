@@ -33,6 +33,8 @@
 #include <eventd-plugin.h>
 #include <eventd-plugin-private.h>
 
+#include <libeventd-helpers-dirs.h>
+
 #include <eventdctl.h>
 
 #include "plugins.h"
@@ -52,7 +54,7 @@ static GHashTable *plugins = NULL;
 
 
 static void
-_eventd_plugins_load_dir(EventdPluginCoreContext *core, EventdPluginCoreInterface *interface, const gchar *plugins_dir_name,  gchar **whitelist,  gchar **blacklist)
+_eventd_plugins_load_dir(EventdPluginCoreContext *core, EventdPluginCoreInterface *interface, gchar *plugins_dir_name,  gchar **whitelist,  gchar **blacklist)
 {
     GError *error;
     GDir *plugins_dir;
@@ -186,6 +188,7 @@ _eventd_plugins_load_dir(EventdPluginCoreContext *core, EventdPluginCoreInterfac
         g_hash_table_insert(plugins, (gpointer) *id, plugin);
     }
     g_dir_close(plugins_dir);
+    g_free(plugins_dir_name);
 }
 
 static void
@@ -210,10 +213,8 @@ eventd_plugins_load(EventdPluginCoreContext *core, EventdPluginCoreInterface *in
 {
     const gchar *env_whitelist;
     const gchar *env_blacklist;
-    const gchar *env_base_dir;
     gchar **whitelist = NULL;
     gchar **blacklist = NULL;
-    gchar *plugins_dir;
 
     if ( ! g_module_supported() )
     {
@@ -231,28 +232,11 @@ eventd_plugins_load(EventdPluginCoreContext *core, EventdPluginCoreInterface *in
     if ( env_blacklist != NULL )
         blacklist = g_strsplit(env_blacklist, ",", 0);
 
-    env_base_dir = g_getenv("EVENTD_PLUGINS_DIR");
-    if ( env_base_dir != NULL )
-    {
-        if ( env_base_dir[0] == '~' )
-            plugins_dir = g_build_filename(g_get_home_dir(), env_base_dir+2, NULL);
-        else
-            plugins_dir = g_build_filename(env_base_dir,  NULL);
-
-        if ( g_file_test(plugins_dir, G_FILE_TEST_IS_DIR) )
-            _eventd_plugins_load_dir(core, interface, plugins_dir, whitelist, blacklist);
-        g_free(plugins_dir);
-    }
-
-    plugins_dir = g_build_filename(g_get_user_data_dir(), PACKAGE_NAME, "plugins", NULL);
-    if ( g_file_test(plugins_dir, G_FILE_TEST_IS_DIR) )
-        _eventd_plugins_load_dir(core, interface, plugins_dir, whitelist, blacklist);
-    g_free(plugins_dir);
-
-    plugins_dir = g_build_filename(LIBDIR, PACKAGE_NAME, "plugins", NULL);
-    if ( g_file_test(plugins_dir, G_FILE_TEST_IS_DIR) )
-        _eventd_plugins_load_dir(core, interface, plugins_dir, whitelist, blacklist);
-    g_free(plugins_dir);
+    gchar **dirs, **dir;
+    dirs = evhelpers_dirs_get_lib("EVENTD_PLUGINS_DIR", "plugins");
+    for ( dir = dirs ; *dir != NULL ; ++dir )
+        _eventd_plugins_load_dir(core, interface, *dir, whitelist, blacklist);
+    g_free(dirs);
 
     g_strfreev(blacklist);
     g_strfreev(whitelist);

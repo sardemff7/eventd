@@ -28,6 +28,7 @@
 
 #include <libeventd-event.h>
 #include <libeventd-helpers-config.h>
+#include <libeventd-helpers-dirs.h>
 #include <eventdctl.h>
 
 #include "types.h"
@@ -149,13 +150,10 @@ _eventd_config_read_dir(EventdConfig *config, GHashTable *action_files, GHashTab
 }
 
 static void
-_eventd_config_load_dir(EventdConfig *config, GHashTable *action_files, GHashTable *event_files, const gchar *config_dir_name)
+_eventd_config_load_dir(EventdConfig *config, GHashTable *action_files, GHashTable *event_files, gchar *config_dir_name)
 {
     GError *error = NULL;
     gchar *config_file_name = NULL;
-
-    if ( ! g_file_test(config_dir_name, G_FILE_TEST_IS_DIR) )
-        return;
 
     config_file_name = g_build_filename(config_dir_name, PACKAGE_NAME ".conf", NULL);
     if ( g_file_test(config_file_name, G_FILE_TEST_IS_REGULAR) )
@@ -175,6 +173,7 @@ _eventd_config_load_dir(EventdConfig *config, GHashTable *action_files, GHashTab
     g_free(config_file_name);
 
     _eventd_config_read_dir(config, action_files, event_files, config_dir_name);
+    g_free(config_dir_name);
 }
 
 static GKeyFile *
@@ -288,18 +287,11 @@ eventd_config_parse(EventdConfig *config)
     action_files = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_key_file_free);
     event_files = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_key_file_free);
 
-    _eventd_config_load_dir(config, action_files, event_files, DATADIR G_DIR_SEPARATOR_S PACKAGE_NAME);
-    _eventd_config_load_dir(config, action_files, event_files, SYSCONFDIR G_DIR_SEPARATOR_S PACKAGE_NAME);
-
-    gchar *user_config_dir;
-    user_config_dir = g_build_filename(g_get_user_config_dir(), PACKAGE_NAME, NULL);
-    _eventd_config_load_dir(config, action_files, event_files, user_config_dir);
-    g_free(user_config_dir);
-
-    const gchar *env_config_dir;
-    env_config_dir = g_getenv("EVENTD_CONFIG_DIR");
-    if ( env_config_dir != NULL )
-        _eventd_config_load_dir(config, action_files, event_files, env_config_dir);
+    gchar **dirs, **dir;
+    dirs = evhelpers_dirs_get_config("EVENTD_CONFIG_DIR", NULL);
+    for ( dir = dirs ; *dir != NULL ; ++dir )
+        _eventd_config_load_dir(config, action_files, event_files, *dir);
+    g_free(dirs);
 
     /*
      * We check the env early, and skip the configuration if found
