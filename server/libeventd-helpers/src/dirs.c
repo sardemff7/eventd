@@ -62,6 +62,18 @@ evhelpers_dirs_get_config(const gchar *env, const gchar *subdir)
     const gchar *datadir = DATADIR;
     const gchar *sysconfdir = SYSCONFDIR;
 
+#ifdef G_OS_WIN32
+    gchar *datadir_, *sysconfdir_, *installdir;
+
+    installdir = g_win32_get_package_installation_directory_of_module(NULL);
+    datadir_ = g_build_filename(installdir, "share", NULL);
+    sysconfdir_ = g_build_filename(installdir, "etc", NULL);
+    g_free(installdir);
+
+    datadir = datadir_;
+    sysconfdir = sysconfdir_;
+#endif /* G_OS_WIN32 */
+
     gsize i = 0;
     gchar **dirs;
 
@@ -74,6 +86,11 @@ evhelpers_dirs_get_config(const gchar *env, const gchar *subdir)
         i = _evhelpers_dirs_add(dirs, i, g_build_filename(*dir, PACKAGE_NAME, subdir, NULL));
     _evhelpers_dirs_add_env(dirs, i, env);
 
+#ifdef G_OS_WIN32
+    g_free(datadir_);
+    g_free(sysconfdir_);
+#endif /* G_OS_WIN32 */
+
     return dirs;
 }
 
@@ -82,6 +99,16 @@ gchar **
 evhelpers_dirs_get_lib(const gchar *env, const gchar *subdir)
 {
     const gchar *libdir = LIBDIR;
+
+#ifdef G_OS_WIN32
+    gchar *libdir_, *installdir;
+
+    installdir = g_win32_get_package_installation_directory_of_module(NULL);
+    libdir_ = g_build_filename(installdir, "lib", NULL);
+    g_free(installdir);
+
+    libdir = libdir_;
+#endif /* G_OS_WIN32 */
 
     gsize i = 0;
     gchar **dirs;
@@ -94,6 +121,10 @@ evhelpers_dirs_get_lib(const gchar *env, const gchar *subdir)
     i = _evhelpers_dirs_add_env(dirs, i, env);
     for ( dir = dirs_ ; *dir != NULL ; ++dir )
         i = _evhelpers_dirs_add(dirs, i, g_build_filename(*dir, PACKAGE_NAME, subdir, NULL));
+
+#ifdef G_OS_WIN32
+    g_free(libdir_);
+#endif /* G_OS_WIN32 */
 
     return dirs;
 }
