@@ -5,9 +5,15 @@ AM_CFLAGS += \
 	$(null)
 
 
+if EV_OS_UNIX
 pkglib_LTLIBRARIES += \
 	libeventd-helpers.la \
 	$(null)
+else
+lib_LTLIBRARIES += \
+	libeventd-helpers.la \
+	$(null)
+endif
 
 pkginclude_HEADERS += \
 	%D%/include/libeventd-helpers-reconnect.h \
