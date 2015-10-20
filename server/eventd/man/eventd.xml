@@ -388,19 +388,19 @@
                 <listitem condition="website;enable_canberra"><para>Play the <literal>"command-failure"</literal> sound when a command fails</para></listitem>
             </itemizedlist>
             <para>You can trigger the event manually using a command like that:</para>
-            <programlisting>make; eventc command $([ $? -eq 0 ] &amp;&amp; echo success || echo failure) -d command -c make</programlisting>
+            <programlisting>make; eventc command $([ $? -eq 0 ] &amp;&amp; echo success || echo failure) -d command=make</programlisting>
             <para>You can also hook your favorite shell to make it automatic. Here are some example for Zshell, Bash or Fish:</para>
             <programlisting>Zshell zshrc:
     precmd() {
         local s=$? c=( $(fc -l -D -1 ) )
-        eventc command $([[ ${s} == 0 ]] &amp;&amp; echo success || echo failure) -d command -c "${c[3,-1]}" -d time -c "${c[2]}"
+        eventc command $([[ ${s} == 0 ]] &amp;&amp; echo success || echo failure) -d command="${c[3,-1]}" -d time="${c[2]}"
     }
 
 Bash bashrc:
     precmd() {
         command=$(history -1)
         [[ -z "${command} ]] &amp;&amp; return
-        eventc command $([ $? -eq 0 ] &amp;&amp; echo success || echo failure) -d command -c "${command}"
+        eventc command $([ $? -eq 0 ] &amp;&amp; echo success || echo failure) -d command="${command}"
     }
     # This command is called anytime the prompt is displayed
     # so this may not work perfectly as expected
@@ -408,7 +408,7 @@ Bash bashrc:
 
 Fish config:
     function notify_on_command_duration --on-variable CMD_DURATION
-        eventc command $([ $? -eq 0 ] &amp;&amp; echo success || echo failure) -d command -c "$_" -d time -c "$CMD_DURATION"
+        eventc command $([ $? -eq 0 ] &amp;&amp; echo success || echo failure) -d command="$_" -d time="$CMD_DURATION"
     end
             </programlisting>
         </example>

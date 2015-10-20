@@ -141,9 +141,7 @@ main(int argc, char *argv[])
     gchar *host = NULL;
     const gchar *category = NULL;
     const gchar *name = NULL;
-    guint n_length = 0, c_length = 0;
-    gchar **event_data_name = NULL;
-    gchar **event_data_content = NULL;
+    gchar **data = NULL;
     gchar **answers = NULL;
     gboolean subscribe = FALSE;
 
@@ -152,15 +150,14 @@ main(int argc, char *argv[])
 
     GOptionEntry entries[] =
     {
-        { "data-name",    'd', 0, G_OPTION_ARG_STRING_ARRAY, &event_data_name,    "Event data name to send",                                  "<name>" },
-        { "data-content", 'c', 0, G_OPTION_ARG_STRING_ARRAY, &event_data_content, "Event data content to send (must be after a data-name)",   "<content>" },
-        { "answer",       'a', 0, G_OPTION_ARG_STRING_ARRAY, &answers,            "Possibles answers to event",                               "<answer>" },
-        { "host",         'h', 0, G_OPTION_ARG_STRING,       &host,               "Host to connect to (defaults to $EVENTC_HOST if defined)", "<host>" },
-        { "max-tries",    'm', 0, G_OPTION_ARG_INT,          &max_tries,          "Maximum connection attempts (0 for infinite)",             "<times>" },
-        { "wait",         'w', 0, G_OPTION_ARG_NONE,         &wait_event_end,     "Wait the end of the event",                                NULL },
-        { "subscribe",    's', 0, G_OPTION_ARG_NONE,         &subscribe,          "Subscribe mode",                                           NULL },
-        { "insecure",     0,   0, G_OPTION_ARG_NONE,         &insecure,           "Accept insecure certificates (unknown CA)",                NULL },
-        { "version",      'V', 0, G_OPTION_ARG_NONE,         &print_version,      "Print version",                                            NULL },
+        { "data",      'd', 0, G_OPTION_ARG_STRING_ARRAY, &data,           "Event data to send",                                       "<name>=<content>" },
+        { "answer",    'a', 0, G_OPTION_ARG_STRING_ARRAY, &answers,        "Possibles answers to event",                               "<answer>" },
+        { "host",      'h', 0, G_OPTION_ARG_STRING,       &host,           "Host to connect to (defaults to $EVENTC_HOST if defined)", "<host>" },
+        { "max-tries", 'm', 0, G_OPTION_ARG_INT,          &max_tries,      "Maximum connection attempts (0 for infinite)",             "<times>" },
+        { "wait",      'w', 0, G_OPTION_ARG_NONE,         &wait_event_end, "Wait the end of the event",                                NULL },
+        { "subscribe", 's', 0, G_OPTION_ARG_NONE,         &subscribe,      "Subscribe mode",                                           NULL },
+        { "insecure",  0,   0, G_OPTION_ARG_NONE,         &insecure,       "Accept insecure certificates (unknown CA)",                NULL },
+        { "version",   'V', 0, G_OPTION_ARG_NONE,         &print_version,  "Print version",                                            NULL },
         { NULL }
     };
     GOptionContext *opt_context = g_option_context_new("- Basic CLI client for eventd");
@@ -210,14 +207,17 @@ main(int argc, char *argv[])
         goto end;
     }
 
-    n_length = ( event_data_name == NULL ) ? 0 : g_strv_length(event_data_name);
-    c_length = ( event_data_content == NULL ) ? 0 : g_strv_length(event_data_content);
-    if ( n_length != c_length )
+    if ( data != NULL )
     {
-        g_warning("Not the same number of data names and data contents");
-        g_strfreev(event_data_name);
-        g_strfreev(event_data_content);
-        goto end;
+        gchar **d;
+        for ( d = data ; *d != NULL ; ++d )
+        {
+            if ( g_utf8_strchr(*d, -1, '=') == NULL )
+            {
+                g_print("Data format is '<name>=<conntent>': %s", *d);
+                goto end;
+            }
+        }
     }
 
     category = argv[1];
@@ -253,11 +253,16 @@ post_args:
 
     event = eventd_event_new(category, name);
 
-    guint i;
-    for ( i = 0 ; i < n_length ; ++i )
-        eventd_event_add_data(event, event_data_name[i], event_data_content[i]);
-    g_free(event_data_name);
-    g_free(event_data_content);
+    if ( data != NULL )
+    {
+        gchar **d, *c;
+        for ( d = data ; *d != NULL ; ++d )
+        {
+            c = g_utf8_strchr(*d, -1, '=');
+            eventd_event_add_data(event, g_strndup(*d, c - *d), g_strdup(c+1));
+        }
+        g_strfreev(data);
+    }
 
     if ( answers != NULL )
     {
