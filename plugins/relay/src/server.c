@@ -96,10 +96,13 @@ _eventd_relay_server_setup_connection(EventdRelayServer *server)
     {
         gchar **category;
         eventc_connection_set_subscribe(server->connection, TRUE);
-        for ( category = server->subscriptions ; *category != NULL ; ++category )
-            eventc_connection_add_subscription(server->connection, *category);
-        g_free(server->subscriptions);
-        server->subscriptions = NULL;
+        if ( server->subscriptions != NULL )
+        {
+            for ( category = server->subscriptions ; *category != NULL ; ++category )
+                eventc_connection_add_subscription(server->connection, *category);
+            g_free(server->subscriptions);
+            server->subscriptions = NULL;
+        }
     }
 }
 
