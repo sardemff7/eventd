@@ -309,11 +309,16 @@ _eventd_protocol_evp_parse_passive(EventdProtocolEvp *self, const gchar * const 
 static void
 _eventd_protocol_evp_parse_subscribe(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
 {
-    GHashTable *subscriptions;
-    subscriptions = g_hash_table_new(g_str_hash, g_str_equal);
-    g_hash_table_add(subscriptions, (gpointer) argv[0]);
-    g_signal_emit(self, eventd_protocol_signals[SIGNAL_SUBSCRIBE], 0, subscriptions);
-    g_hash_table_unref(subscriptions);
+    if ( argv == NULL )
+        g_signal_emit(self, eventd_protocol_signals[SIGNAL_SUBSCRIBE], 0, NULL);
+    else
+    {
+        GHashTable *subscriptions;
+        subscriptions = g_hash_table_new(g_str_hash, g_str_equal);
+        g_hash_table_add(subscriptions, (gpointer) argv[0]);
+        g_signal_emit(self, eventd_protocol_signals[SIGNAL_SUBSCRIBE], 0, subscriptions);
+        g_hash_table_unref(subscriptions);
+    }
 
     self->priv->base_state = EVENTD_PROTOCOL_EVP_STATE_SUBSCRIBE;
     self->priv->state = self->priv->base_state;
