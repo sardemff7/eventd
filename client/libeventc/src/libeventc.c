@@ -25,7 +25,9 @@
 #include <gio/gio.h>
 #ifdef G_OS_UNIX
 #include <gio/gunixsocketaddress.h>
-#endif /* G_OS_UNIX */
+#else /* ! G_OS_UNIX */
+#define G_IS_UNIX_SOCKET_ADDRESS(a) (FALSE)
+#endif /* ! G_OS_UNIX */
 
 #include <libeventd-event.h>
 #include <libeventd-protocol.h>
@@ -466,7 +468,7 @@ _eventc_connection_get_socket_client(EventcConnection *self)
 
     g_socket_client_set_enable_proxy(client, self->priv->enable_proxy);
 
-    g_socket_client_set_tls(client, ( G_IS_NETWORK_ADDRESS(self->priv->address) || G_IS_INET_SOCKET_ADDRESS(self->priv->address) ));
+    g_socket_client_set_tls(client, ! G_IS_UNIX_SOCKET_ADDRESS(self->priv->address) );
 
     GTlsCertificateFlags flags = G_TLS_CERTIFICATE_VALIDATE_ALL;
 
