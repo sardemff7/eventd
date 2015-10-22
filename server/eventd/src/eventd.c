@@ -496,7 +496,7 @@ main(int argc, char *argv[])
 
     context->sockets = eventd_sockets_new();
 
-    if ( eventd_control_start(context->control) )
+    if ( eventd_control_start(context->control, context->take_over_socket) )
     {
         eventd_plugins_start_all();
 

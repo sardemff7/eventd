@@ -197,7 +197,7 @@ eventd_control_free(EventdControl *control)
 }
 
 gboolean
-eventd_control_start(EventdControl *control)
+eventd_control_start(EventdControl *control, gboolean take_over_socket)
 {
     gboolean ret = FALSE;
     GError *error = NULL;
@@ -244,7 +244,7 @@ eventd_control_start(EventdControl *control)
         if ( control->socket == NULL )
             control->socket = g_build_filename(g_get_user_runtime_dir(), PACKAGE_NAME, "private", NULL);
 
-        if ( g_file_test(control->socket, G_FILE_TEST_EXISTS) )
+        if ( g_file_test(control->socket, G_FILE_TEST_EXISTS) && ( ! take_over_socket ) )
             g_warning("File to write port exists already");
         else
         {
@@ -272,7 +272,13 @@ eventd_control_start(EventdControl *control)
     if ( ret )
         g_signal_connect(control->socket_service, "incoming", G_CALLBACK(_eventd_service_private_connection_handler), control);
     else
-       eventd_control_stop(control);
+    {
+#ifndef G_OS_UNIX
+        g_free(control->socket);
+        control->socket = NULL;
+#endif /* ! G_OS_UNIX */
+        eventd_control_stop(control);
+    }
 
     return ret;
 }
@@ -281,7 +287,7 @@ void
 eventd_control_stop(EventdControl *control)
 {
 #ifndef G_OS_UNIX
-    if ( g_file_test(control->socket, G_FILE_TEST_EXISTS) )
+    if ( control->socket != NULL )
         g_unlink(control->socket);
 #endif /* ! G_OS_UNIX */
 
