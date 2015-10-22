@@ -1,1 +1,4 @@
 /config/eventd.conf
+/config/test.action
+/config/test.event
+/config/test.pem
