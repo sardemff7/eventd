@@ -57,15 +57,18 @@ AC_SUBST([EVP_UNIX_SOCKET])
 AC_DEFINE([EVENTD_EXPORT], [__attribute__((visibility("default")))], [Export symbol])
 
 AC_CANONICAL_HOST
+ev_os_unix=no
+ev_os_win=no
 case "${host}" in
     *-*-mingw*)
-        ev_os_unix=no
+        ev_os_win=yes
     ;;
     *)
         ev_os_unix=yes
     ;;
 esac
 AM_CONDITIONAL([EV_OS_UNIX], [test x${ev_os_unix} = xyes])
+AM_CONDITIONAL([EV_OS_WIN], [test x${ev_os_win} = xyes])
 
 # Common dependencies
 glib_min_major="2"
