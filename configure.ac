@@ -366,7 +366,7 @@ AC_MSG_RESULT([
 
     Event collection plugins:
         EVENT protocol: yes
-        org.freedesktop.Notifications interface: ${ev_os_unix}
+        org.freedesktop.Notifications interface: yes
         EVENT JSON protocol over WebSocket: ${enable_http}
 
     Action plugins:
