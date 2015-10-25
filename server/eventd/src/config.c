@@ -122,8 +122,6 @@ _eventd_config_read_dir(EventdConfig *config, GHashTable *action_files, GHashTab
                 g_clear_error(&error);
                 g_key_file_free(config_file);
             }
-            else if ( ! g_key_file_has_group(config_file, "Event") )
-                g_key_file_free(config_file);
             else
                 g_hash_table_insert(event_files, g_strdup(file), config_file);
         }
@@ -154,6 +152,10 @@ _eventd_config_load_dir(EventdConfig *config, GHashTable *action_files, GHashTab
 {
     GError *error = NULL;
     gchar *config_file_name = NULL;
+
+#ifdef EVENTD_DEBUG
+    g_debug("Scanning configuration dir: %s", config_dir_name);
+#endif /* EVENTD_DEBUG */
 
     config_file_name = g_build_filename(config_dir_name, PACKAGE_NAME ".conf", NULL);
     if ( g_file_test(config_file_name, G_FILE_TEST_IS_REGULAR) )
@@ -308,7 +310,7 @@ eventd_config_parse(EventdConfig *config)
     while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&config_file) )
     {
         if ( ( config_file = _eventd_config_process_config_file(event_files, id, config_file) ) != NULL )
-            eventd_events_parse(config->events, id, config_file);
+            eventd_events_parse(config->events, config_file);
     }
     g_hash_table_unref(event_files);
 

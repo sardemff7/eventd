@@ -1,3 +1,2 @@
-[Event]
-Category = libnotify
+[Event libnotify]
 Actions = libnotify;

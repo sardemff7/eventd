@@ -27,7 +27,7 @@ EventdEvents *eventd_events_new(void);
 void eventd_events_reset(EventdEvents *self);
 void eventd_events_free(EventdEvents *self);
 
-void eventd_events_parse(EventdEvents *self, const gchar *id, GKeyFile *config_file);
+void eventd_events_parse(EventdEvents *self, GKeyFile *config_file);
 void eventd_events_link_actions(EventdEvents *self, EventdActions *actions);
 
 gboolean eventd_events_process_event(EventdEvents *self, EventdEvent *event, GQuark *flags, gint64 timeout, const GList **actions);

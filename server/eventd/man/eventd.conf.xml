@@ -347,33 +347,20 @@
         <title>Event sections</title>
 
         <refsect2>
-            <title>Section <varname>[Event]</varname></title>
+            <title>Section <varname>[Event <replaceable>category</replaceable> <optional><replaceable>name</replaceable> <optional><replaceable>sub-name</replaceable></optional></optional>]</varname></title>
 
             <para>
                 This is the main event configuration section.
                 It contains the core related settings.
+            </para>
+            <para>
+                The <replaceable>category</replaceable> and <replaceable>name</replaceable> are used to match the event while <replaceable>sub-name</replaceable> is only meant to differentiate sections and is not used anywhere in eventd.
             </para>
 
             <refsect3 id="event-matching-keys">
                 <title>Matching keys</title>
 
                 <variablelist>
-                    <varlistentry>
-                        <term><varname>Category=</varname></term>
-                        <listitem>
-                            <para>A <type>string</type></para>
-                            <para>The event category name.</para>
-                        </listitem>
-                    </varlistentry>
-
-                    <varlistentry>
-                        <term><varname>Name=</varname></term>
-                        <listitem>
-                            <para>A <type>string</type></para>
-                            <para>The event name.</para>
-                        </listitem>
-                    </varlistentry>
-
                     <varlistentry>
                         <term><varname>IfData=</varname></term>
                         <listitem>

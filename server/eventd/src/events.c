@@ -22,6 +22,10 @@
 
 #include <config.h>
 
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif /* HAVE_STRING_H */
+
 #include <glib.h>
 #include <glib-object.h>
 
@@ -262,30 +266,41 @@ _eventd_events_parse_event_flags(gchar **flags, gsize length)
     return quarks;
 }
 
-void
-eventd_events_parse(EventdEvents *self, const gchar *id, GKeyFile *config_file)
+static void
+_eventd_events_parse_group(EventdEvents *self, const gchar *group, GKeyFile *config_file)
 {
     gchar *category = NULL;
     gchar *name = NULL;
 
-    if ( evhelpers_config_key_file_get_string(config_file, "Event", "Category", &category) != 0 )
-        return;
-
-    if ( evhelpers_config_key_file_get_string(config_file, "Event", "Name", &name) < 0 )
-        goto fail;
+    const gchar *s;
+    gchar *c;
+    s = group + strlen("Event ");
+    c = g_utf8_strchr(s, -1, ' ');
+    if ( c == NULL )
+        category = g_strdup(s);
+    else
+    {
+        category = g_strndup(s, c - s);
+        s = ++c;
+        c = g_utf8_strchr(s, -1, ' ');
+        if ( c == NULL )
+            name = g_strdup(s);
+        else
+            name = g_strndup(s, c - s);
+    }
 
     gboolean disable = FALSE;
 
-    if ( ( evhelpers_config_key_file_get_boolean(config_file, "Event", "Disable", &disable) < 0 ) || disable )
+    if ( ( evhelpers_config_key_file_get_boolean(config_file, group, "Disable", &disable) < 0 ) || disable )
         goto fail;
 
     gchar **actions = NULL;
 
-    if ( evhelpers_config_key_file_get_string_list(config_file, "Event", "Actions", &actions, NULL) < 0 )
+    if ( evhelpers_config_key_file_get_string_list(config_file, group, "Actions", &actions, NULL) < 0 )
         goto fail;
 
 #ifdef EVENTD_DEBUG
-    g_debug("Parsing event '%s'", id);
+    g_debug("Parsing event: %s", group + strlen("Event "));
 #endif /* EVENTD_DEBUG */
 
     EventdEventsEvent *event;
@@ -302,7 +317,7 @@ eventd_events_parse(EventdEvents *self, const gchar *id, GKeyFile *config_file)
 
     Int timeout;
 
-    if ( evhelpers_config_key_file_get_int(config_file, "Event", "Timeout", &timeout) == 0 )
+    if ( evhelpers_config_key_file_get_int(config_file, group, "Timeout", &timeout) == 0 )
         event->timeout = timeout.value;
 
 
@@ -310,9 +325,9 @@ eventd_events_parse(EventdEvents *self, const gchar *id, GKeyFile *config_file)
     gchar **flags;
     gsize length;
 
-    evhelpers_config_key_file_get_string_list(config_file, "Event", "IfData", &event->if_data, NULL);
+    evhelpers_config_key_file_get_string_list(config_file, group, "IfData", &event->if_data, NULL);
 
-    if ( evhelpers_config_key_file_get_string_list(config_file, "Event", "IfDataMatches", &if_data_matches, &length) == 0 )
+    if ( evhelpers_config_key_file_get_string_list(config_file, group, "IfDataMatches", &if_data_matches, &length) == 0 )
     {
         gchar **if_data_match;
         EventdEventsEventDataMatch *match;
@@ -351,10 +366,10 @@ eventd_events_parse(EventdEvents *self, const gchar *id, GKeyFile *config_file)
         g_strfreev(if_data_matches);
     }
 
-    if ( evhelpers_config_key_file_get_string_list(config_file, "Event", "OnlyIfFlags", &flags, &length) == 0 )
+    if ( evhelpers_config_key_file_get_string_list(config_file, group, "OnlyIfFlags", &flags, &length) == 0 )
         event->flags_whitelist = _eventd_events_parse_event_flags(flags, length);
 
-    if ( evhelpers_config_key_file_get_string_list(config_file, "Event", "NotIfFlags", &flags, &length) == 0 )
+    if ( evhelpers_config_key_file_get_string_list(config_file, group, "NotIfFlags", &flags, &length) == 0 )
         event->flags_blacklist = _eventd_events_parse_event_flags(flags, length);
 
     gint64 default_importance;
@@ -363,7 +378,7 @@ eventd_events_parse(EventdEvents *self, const gchar *id, GKeyFile *config_file)
         default_importance = 0;
     else
         default_importance = G_MAXINT64;
-    evhelpers_config_key_file_get_int_with_default(config_file, "Event", "Importance", default_importance, &event->importance);
+    evhelpers_config_key_file_get_int_with_default(config_file, group, "Importance", default_importance, &event->importance);
 
     gchar *internal_name;
 
@@ -380,6 +395,24 @@ eventd_events_parse(EventdEvents *self, const gchar *id, GKeyFile *config_file)
 fail:
     g_free(name);
     g_free(category);
+}
+
+void
+eventd_events_parse(EventdEvents *self, GKeyFile *config_file)
+{
+    gchar **groups, **group;
+
+    groups = g_key_file_get_groups(config_file, NULL);
+    if ( groups != NULL )
+    {
+        for ( group = groups ; *group != NULL ; ++group )
+        {
+            if ( g_str_has_prefix(*group, "Event ") )
+                _eventd_events_parse_group(self, *group, config_file);
+            g_free(*group);
+        }
+        g_free(groups);
+    }
 }
 
 void
