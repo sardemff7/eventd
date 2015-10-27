@@ -1,2 +1,0 @@
-[Server]
-TLSCertificate=@CONFIG_DIR@/test.pem

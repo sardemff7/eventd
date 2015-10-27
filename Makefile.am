@@ -31,7 +31,7 @@ TESTS =
 XFAIL_TESTS =
 check_PROGRAMS =
 check_LTLIBRARIES =
-check_DATA =
+dist_check_DATA =
 
 man1_MANS =
 man5_MANS =
