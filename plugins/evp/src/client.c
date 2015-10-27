@@ -290,12 +290,28 @@ eventd_evp_client_connection_handler(GSocketService *service, GSocketConnection 
     if ( G_IS_TCP_CONNECTION(connection) )
     {
         GError *error = NULL;
-        tls = g_tls_server_connection_new(G_IO_STREAM(connection), context->certificate, &error);
-        if ( tls == NULL )
+
+        GSocketAddress *address;
+        address = g_socket_connection_get_remote_address(connection, &error);
+        if ( address == NULL )
         {
-            g_warning("Could not initialize TLS connection: %s", error->message);
+            g_warning("Could not get client address: %s", error->message);
             g_clear_error(&error);
             return FALSE;
+        }
+
+        GInetAddress *inet_address;
+        inet_address = g_inet_socket_address_get_address(G_INET_SOCKET_ADDRESS(address));
+
+        if ( ! g_inet_address_get_is_loopback(inet_address) )
+        {
+            tls = g_tls_server_connection_new(G_IO_STREAM(connection), context->certificate, &error);
+            if ( tls == NULL )
+            {
+                g_warning("Could not initialize TLS connection: %s", error->message);
+                g_clear_error(&error);
+                return FALSE;
+            }
         }
     }
     EventdEvpClient *self;

@@ -187,7 +187,6 @@ main(int argc, char *argv[])
     r = 0;
 
     GSocketClient *client = g_socket_client_new();
-    GTlsCertificateFlags flags = G_TLS_CERTIFICATE_VALIDATE_ALL & ~G_TLS_CERTIFICATE_UNKNOWN_CA;
     GInetAddress *inet_address = g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV4);
     GSocketConnectable *address = G_SOCKET_CONNECTABLE(g_inet_socket_address_new(inet_address, 19011));
     g_object_unref(inet_address);
@@ -199,9 +198,6 @@ main(int argc, char *argv[])
     const gchar *message = "Some message";
 
     GError *error = NULL;
-
-    g_socket_client_set_tls(client, TRUE);
-    g_socket_client_set_tls_validation_flags(client, flags);
 
     connection = g_socket_client_connect(client, address, NULL, &error);
     g_object_unref(client);

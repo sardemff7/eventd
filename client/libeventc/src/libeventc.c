@@ -460,15 +460,48 @@ _eventc_connection_expect_disconnected(EventcConnection *self, GError **error)
     return TRUE;
 }
 
+static void
+_eventc_connection_socket_client_event(EventcConnection *self, GSocketClientEvent event, GSocketConnectable *connectable, GIOStream *connection, GSocketClient *client)
+{
+    GError *error = NULL;
+    switch ( event )
+    {
+    case G_SOCKET_CLIENT_CONNECTING:
+    {
+        gboolean safe = TRUE;
+        if ( G_IS_TCP_CONNECTION(connection) )
+        {
+            GSocketAddress *address;
+            address = g_socket_connection_get_remote_address(G_SOCKET_CONNECTION(connection), &error);
+            if ( address == NULL )
+            {
+                g_set_error(&self->priv->error, EVENTC_ERROR, EVENTC_ERROR_CONNECTION, "Could not get address while connecting: %s", error->message);
+                g_clear_error(&error);
+                g_cancellable_cancel(self->priv->cancellable);
+                return;
+            }
+
+            GInetAddress *inet_address;
+            inet_address = g_inet_socket_address_get_address(G_INET_SOCKET_ADDRESS(address));
+
+            safe = g_inet_address_get_is_loopback(inet_address);
+        }
+        g_socket_client_set_tls(client, ! safe);
+    }
+    break;
+    default:
+    break;
+    }
+}
 static GSocketClient *
 _eventc_connection_get_socket_client(EventcConnection *self)
 {
     GSocketClient *client;
     client = g_socket_client_new();
 
-    g_socket_client_set_enable_proxy(client, self->priv->enable_proxy);
+    g_signal_connect_swapped(client, "event", G_CALLBACK(_eventc_connection_socket_client_event), self);
 
-    g_socket_client_set_tls(client, ! G_IS_UNIX_SOCKET_ADDRESS(self->priv->address) );
+    g_socket_client_set_enable_proxy(client, self->priv->enable_proxy);
 
     GTlsCertificateFlags flags = G_TLS_CERTIFICATE_VALIDATE_ALL;
 
@@ -476,6 +509,8 @@ _eventc_connection_get_socket_client(EventcConnection *self)
         flags &= ~G_TLS_CERTIFICATE_UNKNOWN_CA;
 
     g_socket_client_set_tls_validation_flags(client, flags);
+
+    g_cancellable_reset(self->priv->cancellable);
 
     return client;
 }
@@ -485,7 +520,13 @@ _eventc_connection_connect_after(EventcConnection *self, GError *_inner_error_, 
 {
     if ( self->priv->connection == NULL )
     {
-        g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_CONNECTION, "Failed to connect: %s", _inner_error_->message);
+        if ( _inner_error_->code == G_IO_ERROR_CANCELLED )
+        {
+            g_propagate_error(error, self->priv->error);
+            self->priv->error = NULL;
+        }
+        else
+            g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_CONNECTION, "Failed to connect: %s", _inner_error_->message);
         g_error_free(_inner_error_);
         return FALSE;
     }
@@ -496,7 +537,7 @@ _eventc_connection_connect_after(EventcConnection *self, GError *_inner_error_, 
     {
         if ( ! _eventc_connection_send_message(self, eventd_protocol_generate_passive(self->priv->protocol)) )
         {
-            *error = self->priv->error;
+            g_propagate_error(error, self->priv->error);
             self->priv->error = NULL;
             return FALSE;
         }
@@ -505,7 +546,6 @@ _eventc_connection_connect_after(EventcConnection *self, GError *_inner_error_, 
 
     self->priv->in = g_data_input_stream_new(g_io_stream_get_input_stream(G_IO_STREAM(self->priv->connection)));
 
-    g_cancellable_reset(self->priv->cancellable);
     g_data_input_stream_read_line_async(self->priv->in, G_PRIORITY_DEFAULT, self->priv->cancellable, _eventc_connection_read_callback, self);
 
     if ( self->priv->subscribe )
@@ -570,7 +610,7 @@ eventc_connection_connect(EventcConnection *self, GAsyncReadyCallback callback, 
     data->callback = callback;
     data->user_data = user_data;
 
-    g_socket_client_connect_async(client, self->priv->address, NULL, _eventc_connection_connect_callback, data);
+    g_socket_client_connect_async(client, self->priv->address, self->priv->cancellable, _eventc_connection_connect_callback, data);
     g_object_unref(client);
 }
 
@@ -623,7 +663,7 @@ eventc_connection_connect_sync(EventcConnection *self, GError **error)
     client = _eventc_connection_get_socket_client(self);
 
     GError *_inner_error_ = NULL;
-    self->priv->connection = g_socket_client_connect(client, self->priv->address, NULL, &_inner_error_);
+    self->priv->connection = g_socket_client_connect(client, self->priv->address, self->priv->cancellable, &_inner_error_);
     g_object_unref(client);
 
     return _eventc_connection_connect_after(self, _inner_error_, error);
