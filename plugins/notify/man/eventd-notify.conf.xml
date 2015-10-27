@@ -111,6 +111,14 @@
                 </varlistentry>
 
                 <varlistentry>
+                    <term><varname>Timeout=</varname> (defaults to <literal>-1</literal>)</term>
+                    <listitem>
+                        <para>An <type>integer</type></para>
+                        <para>The length of time the notification should be displayed. If -1, use the event's timeout or the top-level timeout. Time is in milliseconds.</para>
+                    </listitem>
+                </varlistentry>
+
+                <varlistentry>
                     <term><varname>Urgency=</varname> (defaults to <literal>normal</literal>)</term>
                     <listitem>
                         <para>An <type>enumeration</type></para>

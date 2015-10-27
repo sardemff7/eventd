@@ -98,6 +98,7 @@ struct _EventdPluginAction {
     Filename *image;
     Filename *icon;
     gdouble scale;
+    gint64 timeout;
     EventdLibnotifyUrgency urgency;
     GHashTable *hints;
 };
@@ -221,7 +222,7 @@ _eventd_libnotify_get_image(EventdPluginAction *action, EventdEvent *event, gboo
  */
 
 static EventdPluginAction *
-_eventd_libnotify_event_new(FormatString *title, FormatString *message, Filename *image, Filename *icon, gint64 scale, EventdLibnotifyUrgency urgency, GHashTable *hints)
+_eventd_libnotify_event_new(FormatString *title, FormatString *message, Filename *image, Filename *icon, gint64 scale, gint64 timeout, EventdLibnotifyUrgency urgency, GHashTable *hints)
 {
     EventdPluginAction *event;
 
@@ -232,6 +233,7 @@ _eventd_libnotify_event_new(FormatString *title, FormatString *message, Filename
     event->image = image;
     event->icon = icon;
     event->scale = (gdouble) scale / 100.;
+    event->timeout = timeout;
     event->urgency = urgency;
     event->hints = hints;
 
@@ -435,6 +437,7 @@ _eventd_libnotify_action_parse(EventdPluginContext *context, GKeyFile *config_fi
     Filename *image = NULL;
     Filename *icon = NULL;
     gint64 scale;
+    gint64 timeout;
     guint64 urgency;
 
     if ( evhelpers_config_key_file_get_locale_format_string_with_default(config_file, "Libnotify", "Title", NULL, "${summary}", &title) < 0 )
@@ -446,6 +449,8 @@ _eventd_libnotify_action_parse(EventdPluginContext *context, GKeyFile *config_fi
     if ( evhelpers_config_key_file_get_filename_with_default(config_file, "Libnotify", "Icon", "icon", &icon) < 0 )
         goto skip;
     if ( evhelpers_config_key_file_get_int_with_default(config_file, "Libnotify", "OverlayScale", 50, &scale) < 0 )
+        goto skip;
+    if ( evhelpers_config_key_file_get_int_with_default(config_file, "Libnotify", "Timeout", -1, &timeout) < 0 )
         goto skip;
     if ( evhelpers_config_key_file_get_enum_with_default(config_file, "Libnotify", "Urgency", _eventd_libnotify_urgency, _EVENTD_LIBNOTIFY_URGENCY_SIZE, EVENTD_LIBNOTIFY_URGENCY_NORMAL, &urgency) < 0 )
         goto skip;
@@ -476,7 +481,7 @@ _eventd_libnotify_action_parse(EventdPluginContext *context, GKeyFile *config_fi
     }
 
     EventdPluginAction *action;
-    action = _eventd_libnotify_event_new(title, message, image, icon, scale, urgency, hints);
+    action = _eventd_libnotify_event_new(title, message, image, icon, scale, timeout, urgency, hints);
     title = message = NULL;
     image = icon = NULL;
 
@@ -593,6 +598,10 @@ _eventd_libnotify_event_action(EventdPluginContext *context, EventdPluginAction 
     GVariantBuilder *actions;
     actions = g_variant_builder_new(G_VARIANT_TYPE_STRING_ARRAY);
 
+    gint32 timeout = action->timeout;
+    if (timeout < 0)
+        timeout = eventd_event_get_timeout(event);
+
     GVariant *args;
     args = g_variant_new("(susssasa{sv}i)",
         PACKAGE_NAME,
@@ -602,7 +611,7 @@ _eventd_libnotify_event_action(EventdPluginContext *context, EventdPluginAction 
         ( message != NULL ) ? message : "",
         actions,
         hints,
-        (gint32) eventd_event_get_timeout(event));
+        timeout);
     g_free(icon_uri);
     g_free(message);
     g_free(title);
