@@ -88,9 +88,7 @@ _eventd_evp_add_socket(GList *used_sockets, EventdPluginContext *self, const gch
         GSocket *socket = socket_->data;
         GError *error = NULL;
 
-        if ( ( g_socket_get_family(socket) != G_SOCKET_FAMILY_UNIX ) && ( self->certificate == NULL ) )
-            g_warning("Cannot add non-UNIX socket: No TLS certificate");
-        else if ( ! g_socket_listener_add_socket(G_SOCKET_LISTENER(self->service), socket, NULL, &error) )
+        if ( ! g_socket_listener_add_socket(G_SOCKET_LISTENER(self->service), socket, NULL, &error) )
         {
             g_warning("Unable to add socket: %s", error->message);
             g_clear_error(&error);

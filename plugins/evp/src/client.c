@@ -305,6 +305,12 @@ eventd_evp_client_connection_handler(GSocketService *service, GSocketConnection 
 
         if ( ! g_inet_address_get_is_loopback(inet_address) )
         {
+            if ( context->certificate == NULL )
+            {
+                g_warning("A TLS connection is required (non-loopback TCP) but no TLS certificate");
+                return FALSE;
+            }
+
             tls = g_tls_server_connection_new(G_IO_STREAM(connection), context->certificate, &error);
             if ( tls == NULL )
             {
