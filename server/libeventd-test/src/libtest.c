@@ -31,7 +31,7 @@
 
 #include <libeventd-test.h>
 
-#define CONFIG_DIR     BUILD_DIR G_DIR_SEPARATOR_S "plugins" G_DIR_SEPARATOR_S "test-plugin" G_DIR_SEPARATOR_S "config"
+#define CONFIG_DIR     SRC_DIR   G_DIR_SEPARATOR_S "plugins" G_DIR_SEPARATOR_S "test-plugin" G_DIR_SEPARATOR_S "config"
 #define RUN_DIR        BUILD_DIR G_DIR_SEPARATOR_S ".test-run"
 #define PLUGINS_DIR    BUILD_DIR G_DIR_SEPARATOR_S LT_OBJDIR
 
