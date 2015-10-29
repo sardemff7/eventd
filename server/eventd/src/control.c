@@ -43,6 +43,12 @@
 
 #include "control.h"
 
+#ifdef G_OS_UNIX
+#define PRIVATE_SOCKET_BIND_PREFIX "unix"
+#else /* ! G_OS_UNIX */
+#define PRIVATE_SOCKET_BIND_PREFIX "tcp-file"
+#endif /* ! G_OS_UNIX */
+
 struct _EventdControl {
     EventdCoreContext *core;
     gchar *socket;
@@ -208,17 +214,13 @@ eventd_control_start(EventdControl *control, gboolean take_over_socket)
     const gchar *binds[] = { NULL, NULL };
     gchar *bind = NULL;
 
-#ifdef G_OS_UNIX
     if ( control->socket != NULL )
     {
-        bind = g_strconcat("unix:", control->socket, NULL);
+        bind = g_strconcat(PRIVATE_SOCKET_BIND_PREFIX ":", control->socket, NULL);
         binds[0] = bind;
     }
     else
-        binds[0] = "unix-runtime:private";
-#else /* ! G_OS_UNIX */
-    binds[0] = "tcp:localhost:0";
-#endif /* ! G_OS_UNIX */
+        binds[0] = PRIVATE_SOCKET_BIND_PREFIX "-runtime:private";
 
     sockets = eventd_core_get_sockets(control->core, binds);
 
@@ -237,34 +239,7 @@ eventd_control_start(EventdControl *control, gboolean take_over_socket)
     if ( ! g_socket_listener_add_socket(G_SOCKET_LISTENER(control->socket_service), socket, NULL, &error) )
         g_warning("Unable to add private socket: %s", error->message);
     else
-#ifdef G_OS_UNIX
         ret = TRUE;
-#else /* ! G_OS_UNIX */
-    {
-        if ( control->socket == NULL )
-            control->socket = g_build_filename(g_get_user_runtime_dir(), PACKAGE_NAME, "private", NULL);
-
-        if ( g_file_test(control->socket, G_FILE_TEST_EXISTS) && ( ! take_over_socket ) )
-            g_warning("File to write port exists already");
-        else
-        {
-            GSocketAddress *address;
-            address = g_socket_get_local_address(socket, &error);
-            if ( address == NULL )
-                g_warning("Couldn't get local address: %s", error->message);
-            else
-            {
-                gchar port_str[6];
-                g_sprintf(port_str, "%u", g_inet_socket_address_get_port(G_INET_SOCKET_ADDRESS(address)));
-
-                if ( g_file_set_contents(control->socket, port_str, -1, &error) )
-                    ret = TRUE;
-                else
-                    g_warning("Couldn't write port to file: %s", error->message);
-            }
-        }
-    }
-#endif /* ! G_OS_UNIX */
     g_clear_error(&error);
 
     g_list_free_full(sockets, g_object_unref);
@@ -272,13 +247,7 @@ eventd_control_start(EventdControl *control, gboolean take_over_socket)
     if ( ret )
         g_signal_connect(control->socket_service, "incoming", G_CALLBACK(_eventd_service_private_connection_handler), control);
     else
-    {
-#ifndef G_OS_UNIX
-        g_free(control->socket);
-        control->socket = NULL;
-#endif /* ! G_OS_UNIX */
         eventd_control_stop(control);
-    }
 
     return ret;
 }
@@ -286,11 +255,6 @@ eventd_control_start(EventdControl *control, gboolean take_over_socket)
 void
 eventd_control_stop(EventdControl *control)
 {
-#ifndef G_OS_UNIX
-    if ( control->socket != NULL )
-        g_unlink(control->socket);
-#endif /* ! G_OS_UNIX */
-
     g_socket_service_stop(control->socket_service);
     g_socket_listener_close(G_SOCKET_LISTENER(control->socket_service));
     g_object_unref(control->socket_service);
