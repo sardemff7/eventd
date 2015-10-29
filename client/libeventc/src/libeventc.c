@@ -100,6 +100,7 @@ _eventc_get_address(const gchar *host_and_port, GError **error)
     }
 #endif /* G_OS_UNIX */
 
+    GError *_inner_error_ = NULL;
     gchar *path = NULL;
 
     if ( g_strcmp0(host_and_port, "localhost") == 0 )
@@ -109,15 +110,36 @@ _eventc_get_address(const gchar *host_and_port, GError **error)
     {
 #ifdef G_OS_UNIX
         address = G_SOCKET_CONNECTABLE(g_unix_socket_address_new(host_and_port));
-#endif /* G_OS_UNIX */
+#else /* ! G_OS_UNIX */
+        if ( g_file_test(host_and_port, G_FILE_TEST_EXISTS|G_FILE_TEST_IS_REGULAR) )
+        {
+            gchar *str;
+            guint64 port;
+            g_file_get_contents(host_and_port, &str, NULL, &_inner_error_);
+            if ( str == NULL )
+            {
+                g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_HOSTNAME, "Could not read file '%s': %s", path, _inner_error_->message);
+                g_error_free(_inner_error_);
+            }
+            else
+            {
+                port = g_ascii_strtoull(str, NULL, 10);
+                g_free(str);
+                if ( ( port == 0 ) || ( port > G_MAXUINT16 ) )
+                    g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_HOSTNAME, "File '%s' contains wrong port '%" G_GINT64_MODIFIER "u'", path, port);
+                else
+                    address = g_network_address_new_loopback(port);
+            }
+        }
+        else
+            g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_HOSTNAME, "File '%s' does not exist", path);
+#endif /* ! G_OS_UNIX */
         host_and_port = NULL;
     }
 
     g_free(path);
     if ( ( host_and_port == NULL ) || ( path != NULL ) )
         return address;
-
-    GError *_inner_error_ = NULL;
 
     address = g_network_address_parse(host_and_port, 0, &_inner_error_);
 
