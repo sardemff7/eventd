@@ -61,12 +61,11 @@ eventd_sockets_get_systemd_sockets(EventdSockets *sockets)
 static gboolean
 _eventd_sockets_inet_address_equal(GInetSocketAddress *socket_address1, GInetAddress *address2, guint16 port)
 {
-    if ( g_inet_socket_address_get_port(socket_address1) != port )
-        return FALSE;
-
-    GInetAddress *address1 = g_inet_socket_address_get_address(socket_address1);
-
-    return g_inet_address_equal(address1, address2);
+    gboolean ret = FALSE;
+    if ( g_inet_socket_address_get_port(socket_address1) == port )
+        ret = g_inet_address_equal(g_inet_socket_address_get_address(socket_address1), address2);
+    g_object_unref(socket_address1);
+    return ret;
 }
 
 static GSocket *
@@ -99,6 +98,7 @@ _eventd_sockets_get_inet_socket(EventdSockets *sockets, GInetAddress *inet_addre
             return socket;
         }
     }
+    address = NULL;
 
     if ( ( socket = g_socket_new(g_inet_address_get_family(inet_address), G_SOCKET_TYPE_STREAM, 0, &error)  ) == NULL )
     {
@@ -119,6 +119,8 @@ _eventd_sockets_get_inet_socket(EventdSockets *sockets, GInetAddress *inet_addre
         goto fail;
     }
 
+    g_object_unref(address);
+    g_object_unref(inet_address);
     return socket;
 
 fail:
@@ -127,6 +129,7 @@ fail:
     if ( address != NULL )
         g_object_unref(address);
     g_clear_error(&error);
+    g_object_unref(inet_address);
     return NULL;
 }
 
@@ -134,44 +137,19 @@ GList *
 eventd_sockets_get_inet_sockets(EventdSockets *sockets, const gchar *address, guint16 port)
 {
     GSocket *socket;
-    GInetAddress *inet_address;
 
     if ( address == NULL )
-    {
-        inet_address = g_inet_address_new_any(G_SOCKET_FAMILY_IPV6);
-        socket = _eventd_sockets_get_inet_socket(sockets, inet_address, port);
-        g_object_unref(inet_address);
-    }
+        socket = _eventd_sockets_get_inet_socket(sockets, g_inet_address_new_any(G_SOCKET_FAMILY_IPV6), port);
     else if ( g_strcmp0(address, "localhost6") == 0 )
-    {
-        inet_address = g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV6);
-        socket = _eventd_sockets_get_inet_socket(sockets, inet_address, port);
-        g_object_unref(inet_address);
-    }
+        socket = _eventd_sockets_get_inet_socket(sockets, g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV6), port);
     else if ( g_strcmp0(address, "localhost4") == 0 )
-    {
-        inet_address = g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV4);
-        socket = _eventd_sockets_get_inet_socket(sockets, inet_address, port);
-        g_object_unref(inet_address);
-    }
+        socket = _eventd_sockets_get_inet_socket(sockets, g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV4), port);
     else if ( g_strcmp0(address, "localhost") == 0 )
     {
-        GList *ret_sockets = NULL;
-
-        inet_address = g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV6);
-        socket = _eventd_sockets_get_inet_socket(sockets, inet_address, port);
-        g_object_unref(inet_address);
+        socket = _eventd_sockets_get_inet_socket(sockets, g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV6), port);
         /* IPv6 is sufficient for localhost, but fallback to IPv4 if needed */
-        if ( socket != NULL )
-            return g_list_prepend(ret_sockets, socket);
-
-        inet_address = g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV4);
-        socket = _eventd_sockets_get_inet_socket(sockets, inet_address, port);
-        g_object_unref(inet_address);
-        if ( socket != NULL )
-            ret_sockets = g_list_prepend(ret_sockets, socket);
-
-        return ret_sockets;
+        if ( socket == NULL )
+            socket = _eventd_sockets_get_inet_socket(sockets, g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV4), port);
     }
     else
     {
@@ -193,7 +171,7 @@ eventd_sockets_get_inet_sockets(EventdSockets *sockets, const gchar *address, gu
 
         for ( inet_address_ = inet_addresses ; inet_address_ != NULL ; inet_address_ = g_list_next(inet_address_) )
         {
-            socket = _eventd_sockets_get_inet_socket(sockets, inet_address_->data, port);
+            socket = _eventd_sockets_get_inet_socket(sockets, g_object_ref(inet_address_->data), port);
             if ( socket != NULL )
                 ret_sockets = g_list_prepend(ret_sockets, socket);
         }
