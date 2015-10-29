@@ -76,6 +76,7 @@ _eventd_sockets_get_inet_socket(EventdSockets *sockets, GInetAddress *inet_addre
     GSocketAddress *address = NULL;
     GList *socket_;
 
+    if ( port != 0 )
     for ( socket_ = sockets->list ; socket_ != NULL ; socket_ = g_list_next(socket_) )
     {
         GSocketFamily family;
