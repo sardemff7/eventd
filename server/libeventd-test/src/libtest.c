@@ -31,13 +31,6 @@
 
 #include <libeventd-test.h>
 
-#define CONFIG_DIR     SRC_DIR   G_DIR_SEPARATOR_S "plugins" G_DIR_SEPARATOR_S "test-plugin" G_DIR_SEPARATOR_S "config"
-#define RUN_DIR        BUILD_DIR G_DIR_SEPARATOR_S ".test-run"
-#define PLUGINS_DIR    BUILD_DIR G_DIR_SEPARATOR_S LT_OBJDIR
-
-#define EVENTD_PATH    BUILD_DIR G_DIR_SEPARATOR_S "eventd" EXEEXT
-#define EVENTDCTL_PATH BUILD_DIR G_DIR_SEPARATOR_S "eventdctl" EXEEXT
-
 struct _EventdTestsEnv {
     const gchar *dir;
     gchar **env;
@@ -52,24 +45,38 @@ eventd_tests_env_setup(gchar **argv)
     g_setenv("G_MESSAGES_DEBUG", "all", FALSE);
 #endif /* EVENTD_DEBUG */
 
-    gchar *tmp = g_path_get_basename(argv[0]);
+    gchar *tmp, *pwd;
+    tmp = g_path_get_basename(argv[0]);
     g_set_prgname(tmp);
     g_free(tmp);
+
+    pwd = g_get_current_dir();
+    tmp = g_build_filename(pwd, ".test-run", NULL);
 
     const gchar *tmp_dir;
     tmp_dir = g_getenv("EVENTD_TESTS_TMP_DIR");
 
     if ( tmp_dir == NULL )
-        g_setenv("EVENTD_TESTS_TMP_DIR", tmp_dir = RUN_DIR, TRUE);
+        g_setenv("EVENTD_TESTS_TMP_DIR", tmp_dir = tmp, TRUE);
     g_setenv("XDG_RUNTIME_DIR", tmp_dir, TRUE);
 
     if ( ( ! g_file_test(tmp_dir, G_FILE_TEST_IS_DIR) ) && ( g_mkdir_with_parents(tmp_dir, 0755) < 0 ) )
         g_warning("Couldn't create the test temp dir '%s': %s", tmp_dir, g_strerror(errno));
 
-    g_setenv("EVENTD_CONFIG_DIR", CONFIG_DIR, TRUE);
-    g_setenv("EVENTD_PLUGINS_DIR", PLUGINS_DIR, TRUE);
+    g_free(tmp);
+
+    tmp = g_build_filename(pwd, SRC_DIR G_DIR_SEPARATOR_S "plugins" G_DIR_SEPARATOR_S "test-plugin" G_DIR_SEPARATOR_S "config", NULL);
+    g_setenv("EVENTD_CONFIG_DIR", tmp, TRUE);
+    g_free(tmp);
+
+    tmp = g_build_filename(pwd, LT_OBJDIR, NULL);
+    g_setenv("EVENTD_PLUGINS_DIR", tmp, TRUE);
+    g_free(tmp);
+
     g_unsetenv("EVENTD_PLUGINS_WHITELIST");
     g_unsetenv("EVENTD_PLUGINS_BLACKLIST");
+
+    g_free(pwd);
 }
 
 EventdTestsEnv *
@@ -97,13 +104,16 @@ eventd_tests_env_new(const gchar *plugins, gchar **argv, gint argc)
     g_unlink(socket_path);
     g_free(socket_path);
 
+    gchar *pwd;
+    pwd = g_get_current_dir();
+
     self->start_args = g_new(char *, 10+argc);
-    self->start_args[0] = g_strdup(EVENTDCTL_PATH);
+    self->start_args[0] = g_build_filename(pwd, "eventdctl" EXEEXT, NULL);
     self->start_args[1] = g_strdup("--socket");
     self->start_args[2] = socket;
     self->start_args[3] = g_strdup("start");
     self->start_args[4] = g_strdup("--argv0");
-    self->start_args[5] = g_strdup(EVENTD_PATH);
+    self->start_args[5] = g_build_filename(pwd, "eventd" EXEEXT, NULL);
     self->start_args[6] = g_strdup("--take-over");
     self->start_args[7] = g_strdup("--private-socket");
     self->start_args[8] = g_strdup(socket);
@@ -112,9 +122,10 @@ eventd_tests_env_new(const gchar *plugins, gchar **argv, gint argc)
     self->start_args[9+i] = NULL;
     g_free(argv);
 
+    g_free(pwd);
 
     self->stop_args = g_new(char *, 5);
-    self->stop_args[0] = g_strdup(EVENTDCTL_PATH);
+    self->stop_args[0] = g_strdup(self->start_args[0]);
     self->stop_args[1] = g_strdup("--socket");
     self->stop_args[2] = g_strdup(socket);
     self->stop_args[3] = g_strdup("stop");

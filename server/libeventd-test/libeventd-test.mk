@@ -18,8 +18,7 @@ libeventd_test_la_SOURCES = \
 
 libeventd_test_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	-D SRC_DIR=\"$(abs_srcdir)\" \
-	-D BUILD_DIR=\"$(abs_builddir)\" \
+	-D SRC_DIR=\"$(srcdir)\" \
 	-D EXEEXT=\"$(EXEEXT)\" \
 	$(GIO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
