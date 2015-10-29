@@ -76,6 +76,7 @@ ndbackends_LTLIBRARIES =
 
 include %D%/xcb/xcb.mk
 include %D%/linux/linux.mk
+include %D%/win/win.mk
 
 
 #

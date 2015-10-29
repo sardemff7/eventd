@@ -114,6 +114,58 @@
                 </varlistentry>
             </variablelist>
         </refsect2>
+
+        <refsect2 condition="website;enable_windows">
+            <title>Section <varname>[NotificationWin]</varname></title>
+
+            <para>The Windows backend configuration</para>
+            <para>Placement will take the taskbar into account.</para>
+            <para>Plain red (<literal>#FF0000</literal>, <literal>rgb(255, 0, 0)</literal>) is used as the colour key for transparency. Do not use it in your theme.</para>
+
+            <variablelist>
+                <varlistentry>
+                    <term><varname>Anchor=</varname> (defaults to <literal>top-right</literal>)</term>
+                    <listitem>
+                        <para>
+                            An <type>enumeration</type>:
+                            <simplelist type='inline'>
+                                <member><literal>top left</literal></member>
+                                <member><literal>top</literal></member>
+                                <member><literal>top right</literal></member>
+                                <member><literal>bottom left</literal></member>
+                                <member><literal>bottom</literal></member>
+                                <member><literal>bottom right</literal></member>
+                            </simplelist>
+                        </para>
+                        <para>The screen place in which the bubble will be anchored.</para>
+                    </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                    <term><varname>OldestFirst=</varname> (defaults to <literal>false</literal>)</term>
+                    <listitem>
+                        <para>A <type>boolean</type></para>
+                        <para>If <literal>true</literal>, the first bubble is the oldest, new bubbles will be pushed at the end of the queue.</para>
+                    </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                    <term><varname>Margin=</varname> (defaults to <literal>13</literal>)</term>
+                    <listitem>
+                        <para>An <type>integer</type></para>
+                        <para>Margin between bubble and screen's edge.</para>
+                    </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                    <term><varname>Spacing=</varname> (defaults to <literal>13</literal>)</term>
+                    <listitem>
+                        <para>An <type>integer</type></para>
+                        <para>Spacing between each bubble.</para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+        </refsect2>
     </refsect1>
 
     <refsect1 id="action-sections">
