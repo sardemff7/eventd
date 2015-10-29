@@ -156,6 +156,33 @@ eventd_core_get_sockets(EventdCoreContext *context, const gchar * const *binds)
             if ( inet_sockets != NULL )
                 sockets = g_list_concat(sockets, inet_sockets);
         }
+        else if ( g_str_has_prefix(bind, "tcp-file:") )
+        {
+            if ( bind[9] == 0 )
+                continue;
+
+            GSocket *socket;
+
+            socket = eventd_sockets_get_inet_socket_file(context->sockets, bind+9, context->take_over_socket);
+
+            if ( socket != NULL )
+                sockets = g_list_prepend(sockets, socket);
+        }
+        else if ( g_str_has_prefix(bind, "tcp-file-runtime:") )
+        {
+            if ( bind[17] == 0 )
+                continue;
+
+            GSocket *socket;
+            gchar *path;
+
+            path = g_build_filename(context->runtime_dir, bind+17, NULL);
+            socket = eventd_sockets_get_inet_socket_file(context->sockets, path, context->take_over_socket);
+            g_free(path);
+
+            if ( socket != NULL )
+                sockets = g_list_prepend(sockets, socket);
+        }
 #ifdef G_OS_UNIX
         else if ( g_str_has_prefix(bind, "unix:") )
         {

@@ -27,10 +27,10 @@
 #endif /* HAVE_STRING_H */
 
 #include <glib.h>
+#include <glib/gstdio.h>
 #include <gio/gio.h>
 #ifdef G_OS_UNIX
 #include <gio/gunixsocketaddress.h>
-#include <glib/gstdio.h>
 #endif /* G_OS_UNIX */
 
 #ifdef ENABLE_SYSTEMD
@@ -186,6 +186,50 @@ eventd_sockets_get_inet_sockets(EventdSockets *sockets, const gchar *address, gu
     return g_list_prepend(NULL, socket);
 }
 
+GSocket *
+eventd_sockets_get_inet_socket_file(EventdSockets *sockets, const gchar *file, gboolean take_over_socket)
+{
+    if ( g_file_test(file, G_FILE_TEST_EXISTS) && ( ! take_over_socket ) )
+    {
+        g_warning("File to write port exists already");
+        return NULL;
+    }
+
+    GSocket *socket;
+    GSocketAddress *address;
+    gchar port_str[6];
+    GError *error = NULL;
+
+    socket = _eventd_sockets_get_inet_socket(sockets, g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV6), 0);
+    /* IPv6 is sufficient for localhost, but fallback to IPv4 if needed */
+    if ( socket == NULL )
+        socket = _eventd_sockets_get_inet_socket(sockets, g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV4), 0);
+    if ( socket == NULL )
+        return NULL;
+
+    address = g_socket_get_local_address(socket, &error);
+    if ( address == NULL )
+    {
+        g_warning("Couldn't get socket local address: %s", error->message);
+        goto fail;
+    }
+    g_sprintf(port_str, "%u", g_inet_socket_address_get_port(G_INET_SOCKET_ADDRESS(address)));
+    g_object_unref(address);
+
+    if ( g_file_set_contents(file, port_str, -1, &error) )
+    {
+        sockets->created = g_slist_prepend(sockets->created, g_strdup(file));
+        return socket;
+}
+
+    g_warning("Couldn't write port to file: %s", error->message);
+
+fail:
+    g_clear_error(&error);
+    g_object_unref(socket);
+    return NULL;
+}
+
 #ifdef G_OS_UNIX
 GSocket *
 eventd_sockets_get_unix_socket(EventdSockets *sockets, const gchar *path, gboolean take_over_socket)
@@ -311,24 +355,20 @@ eventd_sockets_new(void)
     return sockets;
 }
 
-#ifdef G_OS_UNIX
 static void
-_eventd_sockets_unix_socket_free(gpointer data)
+_eventd_sockets_created_socket_free(gpointer data)
 {
     gchar *path = data;
     g_unlink(path);
     g_free(path);
 }
-#endif /* G_OS_UNIX */
 
 void
 eventd_sockets_free(EventdSockets *sockets)
 {
     g_list_free_full(sockets->list, g_object_unref);
 
-#ifdef G_OS_UNIX
-    g_slist_free_full(sockets->created, _eventd_sockets_unix_socket_free);
-#endif /* G_OS_UNIX */
+    g_slist_free_full(sockets->created, _eventd_sockets_created_socket_free);
 
     g_free(sockets);
 }
