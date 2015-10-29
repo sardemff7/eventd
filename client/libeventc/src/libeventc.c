@@ -98,19 +98,24 @@ _eventc_get_address(const gchar *host_and_port, GError **error)
             return NULL;
         }
     }
+#endif /* G_OS_UNIX */
 
-    if ( g_path_is_absolute(host_and_port) )
-        return G_SOCKET_CONNECTABLE(g_unix_socket_address_new(host_and_port));
+    gchar *path = NULL;
 
     if ( g_strcmp0(host_and_port, "localhost") == 0 )
+        host_and_port = path = g_build_filename(g_get_user_runtime_dir(), PACKAGE_NAME, EVP_UNIX_SOCKET, NULL);
+
+    if ( g_path_is_absolute(host_and_port) )
     {
-        gchar *path = NULL;
-        path = g_build_filename(g_get_user_runtime_dir(), PACKAGE_NAME, EVP_UNIX_SOCKET, NULL);
-        address = G_SOCKET_CONNECTABLE(g_unix_socket_address_new(path));
-        g_free(path);
-        return address;
-    }
+#ifdef G_OS_UNIX
+        address = G_SOCKET_CONNECTABLE(g_unix_socket_address_new(host_and_port));
 #endif /* G_OS_UNIX */
+        host_and_port = NULL;
+    }
+
+    g_free(path);
+    if ( ( host_and_port == NULL ) || ( path != NULL ) )
+        return address;
 
     GError *_inner_error_ = NULL;
 
