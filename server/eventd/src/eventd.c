@@ -22,18 +22,9 @@
 
 #include <config.h>
 
-#ifdef HAVE_ERRNO_H
-#include <errno.h>
-#endif /* HAVE_ERRNO_H */
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif /* HAVE_UNISTD_H */
 #ifdef HAVE_LOCALE_H
 #include <locale.h>
 #endif /* HAVE_LOCALE_H */
-#ifdef HAVE_FCNTL_H
-#include <fcntl.h>
-#endif /* HAVE_FCNTL_H */
 
 #include <glib.h>
 #ifdef ENABLE_NLS
