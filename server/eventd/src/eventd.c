@@ -34,7 +34,10 @@
 #include <glib/gprintf.h>
 #ifdef G_OS_UNIX
 #include <glib-unix.h>
-#endif /* G_OS_UNIX */
+#else /* ! G_OS_UNIX */
+#include <process.h>
+#include <io.h>
+#endif /* ! G_OS_UNIX */
 #include <gio/gio.h>
 
 #ifdef ENABLE_SYSTEMD
@@ -519,23 +522,25 @@ main(int argc, char *argv[])
         eventd_plugins_start_all();
 
 #ifdef G_OS_UNIX
-        if ( daemonize )
-        {
-            g_setenv("G_MESSAGES_DEBUG", "", TRUE);
-            close(0);
-            close(1);
-            close(2);
-            open("/dev/null", O_RDWR);
-            dup2(0,1);
-            dup2(0,2);
-        }
-
         g_unix_signal_add(SIGTERM, _eventd_core_stop, context);
         g_unix_signal_add(SIGINT, _eventd_core_stop, context);
 
         /* Ignore SIGPIPE as it is useless */
         signal(SIGPIPE, SIG_IGN);
 #endif /* G_OS_UNIX */
+
+        if ( daemonize )
+        {
+            g_setenv("G_MESSAGES_DEBUG", "", TRUE);
+            close(0);
+            close(1);
+            close(2);
+#ifdef G_OS_UNIX
+            open("/dev/null", O_RDWR);
+            dup2(0,1);
+            dup2(0,2);
+#endif /* G_OS_UNIX */
+        }
 
 #ifdef ENABLE_SYSTEMD
         sd_notify(1,
