@@ -531,6 +531,7 @@ main(int argc, char *argv[])
 
         if ( daemonize )
         {
+            g_print("READY=1\n");
             g_setenv("G_MESSAGES_DEBUG", "", TRUE);
             close(0);
             close(1);

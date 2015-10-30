@@ -86,10 +86,11 @@ _eventd_eventdctl_start_eventd(int argc, gchar *argv[], GError **error)
 #endif /* ! G_OS_UNIX */
 
     gchar *data;
-    gsize length;
-
-    if ( g_io_channel_read_to_end(stdin_io, &data, &length, error) == G_IO_STATUS_NORMAL )
+    gsize eol;
+    while ( ( ! retval ) && ( g_io_channel_read_line(stdin_io, &data, NULL, &eol, error) == G_IO_STATUS_NORMAL ) )
     {
+        data[eol] = '\0';
+        if ( g_strcmp0(data, "READY=1") == 0 )
             retval = TRUE;
         g_free(data);
     }
