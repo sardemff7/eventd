@@ -90,9 +90,11 @@ _eventd_eventdctl_start_eventd(int argc, gchar *argv[], GError **error)
 
     if ( g_io_channel_read_to_end(stdin_io, &data, &length, error) == G_IO_STATUS_NORMAL )
         g_free(data);
-    g_free(stdin_io);
 
     retval = TRUE;
+
+    g_io_channel_unref(stdin_io);
+    g_spawn_close_pid(pid);
 
 fail:
     g_free(args);
