@@ -89,9 +89,10 @@ _eventd_eventdctl_start_eventd(int argc, gchar *argv[], GError **error)
     gsize length;
 
     if ( g_io_channel_read_to_end(stdin_io, &data, &length, error) == G_IO_STATUS_NORMAL )
+    {
+            retval = TRUE;
         g_free(data);
-
-    retval = TRUE;
+    }
 
     g_io_channel_unref(stdin_io);
     g_spawn_close_pid(pid);
