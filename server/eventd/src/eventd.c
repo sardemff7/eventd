@@ -37,6 +37,7 @@
 #else /* ! G_OS_UNIX */
 #include <process.h>
 #include <io.h>
+void FreeConsole(void);
 #endif /* ! G_OS_UNIX */
 #include <gio/gio.h>
 
@@ -540,7 +541,9 @@ main(int argc, char *argv[])
             open("/dev/null", O_RDWR);
             dup2(0,1);
             dup2(0,2);
-#endif /* G_OS_UNIX */
+#else /* ! G_OS_UNIX */
+            FreeConsole();
+#endif /* ! G_OS_UNIX */
         }
 
 #ifdef ENABLE_SYSTEMD
