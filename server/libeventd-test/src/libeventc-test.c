@@ -34,30 +34,63 @@
 #include <libeventd-event.h>
 #include <libeventc.h>
 
+#define MAX_CONNECTION 3
+
 static GError *error = NULL;
 static EventdEvent *event = NULL;
 static GMainLoop *loop = NULL;
 static guint timeout = 0;
 
-static enum {
-    STATE_FIRST_CONNECTION_FIRST_EVENT,
-    STATE_FIRST_CONNECTION_SECOND_EVENT,
-    STATE_FIRST_CONNECTION_THIRD_EVENT,
-    STATE_SECOND_CONNECTION_FIRST_EVENT,
-    STATE_SECOND_CONNECTION_SECOND_EVENT,
-    STATE_SECOND_CONNECTION_THIRD_EVENT,
-    STATE_END
-} state = STATE_FIRST_CONNECTION_FIRST_EVENT;
+typedef enum {
+    STATE_START,
+    STATE_SENT,
+    STATE_ANSWERED,
+    STATE_ENDED
+} State;
 
-static const gchar *state_names[] = {
-    [STATE_FIRST_CONNECTION_FIRST_EVENT] = "First connection, First event",
-    [STATE_FIRST_CONNECTION_SECOND_EVENT] = "First connection, Second event",
-    [STATE_FIRST_CONNECTION_THIRD_EVENT] = "First connection, Third event",
-    [STATE_SECOND_CONNECTION_FIRST_EVENT] = "Second connection, First event",
-    [STATE_SECOND_CONNECTION_SECOND_EVENT] = "Second connection, Second event",
-    [STATE_SECOND_CONNECTION_THIRD_EVENT] = "Second connection, Third event",
-    [STATE_END] = "End",
+static struct{
+    gssize connection;
+    gssize event;
+    State state;
+} _test_state = {
+    .connection = 1,
+    .event = 0,
+    .state = STATE_START
 };
+
+static const gchar *_state_names[] = {
+    [STATE_START] = "start",
+    [STATE_SENT] = "sent",
+    [STATE_ANSWERED] = "answered",
+    [STATE_ENDED] = "ended"
+};
+
+static gboolean
+_check_state(gssize connection, gssize event, State state)
+{
+    if ( ( connection > -1 ) && ( _test_state.connection != connection ) )
+    {
+        g_warning("Expected connection %zu, got %zu", connection, _test_state.connection);
+        g_main_loop_quit(loop);
+        return FALSE;
+    }
+
+    if ( ( event > -1 ) && ( _test_state.event != event ) )
+    {
+        g_warning("[%zu] Expected event %zu, got %zu", _test_state.connection, event, _test_state.event);
+        g_main_loop_quit(loop);
+        return FALSE;
+    }
+
+    if ( ( _test_state.state != state ) )
+    {
+        g_warning("[%zu, %zu] Expected state '%s', got '%s'", _test_state.connection, _test_state.event, _state_names[state], _state_names[_test_state.state]);
+        g_main_loop_quit(loop);
+        return FALSE;
+    }
+
+    return TRUE;
+}
 
 static gboolean
 _timeout_callback(gpointer user_data)
@@ -70,16 +103,24 @@ _timeout_callback(gpointer user_data)
 static void _ended_callback(EventdEvent *e, EventdEventEndReason reason, EventcConnection *client);
 static void _answered_callback(EventdEvent *e, const gchar *answer, EventcConnection *client);
 static void
-_create_event(EventcConnection *client, gboolean with_file)
+_create_event(EventcConnection *client)
 {
     event = eventd_event_new("test", "test");
-    if ( with_file )
+
+    switch ( ++_test_state.event )
+    {
+    case 1:
+    case 2:
     {
         gchar *tmp = g_strconcat(g_get_prgname(), "-file", NULL );
         eventd_event_add_data(event, g_strdup("file"), g_build_filename(g_getenv("EVENTD_TESTS_TMP_DIR"), tmp, NULL));
         g_free(tmp);
         eventd_event_add_data(event, g_strdup("test"), g_strdup_printf("Some message\nfrom %s", g_get_prgname()));
         eventd_event_add_answer(event,"test");
+    }
+    case 3:
+    default:
+    break;
     }
 
     g_signal_connect(event, "answered", G_CALLBACK(_answered_callback), client);
@@ -96,28 +137,38 @@ _connect_callback(GObject *obj, GAsyncResult *res, gpointer user_data)
 {
     EventcConnection *client = EVENTC_CONNECTION(obj);
 
-    if ( eventc_connection_connect_finish(client, res, &error) )
+    if ( ! eventc_connection_connect_finish(client, res, &error) )
     {
-        switch ( state )
-        {
-        case STATE_SECOND_CONNECTION_FIRST_EVENT:
-            g_object_unref(event);
-            _create_event(client, TRUE);
-        case STATE_FIRST_CONNECTION_FIRST_EVENT:
-            if ( ! eventc_connection_event(client, event, &error) )
-                break;
-            return;
-        break;
-        default:
-            g_warning("Should never be in that state '%s'", state_names[state]);
-        }
+        g_main_loop_quit(loop);
+        return;
     }
-    g_main_loop_quit(loop);
+    if ( ! _check_state(-1, 0, STATE_START) )
+        return;
+
+    switch ( _test_state.connection )
+    {
+    case 2:
+        g_object_unref(event);
+    case 1:
+        _create_event(client);
+        if ( eventc_connection_event(client, event, &error) )
+            _test_state.state = STATE_SENT;
+        else
+            g_main_loop_quit(loop);
+
+        return;
+    break;
+    default:
+        g_return_if_reached();
+    }
 }
 
 static void
 _answered_callback(EventdEvent *e, const gchar *answer, EventcConnection *client)
 {
+    if ( ! _check_state(-1, -1, STATE_SENT) )
+        return;
+
     if ( g_strcmp0(answer, "test") != 0 )
     {
         g_warning("Wrond answer to event: %s", answer);
@@ -140,6 +191,7 @@ _answered_callback(EventdEvent *e, const gchar *answer, EventcConnection *client
         goto fail;
     }
 
+    ++_test_state.state;
     return;
 fail:
     g_main_loop_quit(loop);
@@ -148,39 +200,34 @@ fail:
 static gboolean
 _ended_close_idle_callback(gpointer user_data)
 {
+    if ( ! _check_state(-1, 3, STATE_ENDED) )
+        return FALSE;
+
     EventcConnection *client = user_data;
 
-    switch ( state )
+    if ( ! eventc_connection_close(client, &error) )
     {
-    case STATE_FIRST_CONNECTION_THIRD_EVENT:
-        if ( ! eventc_connection_close(client, &error) )
-            break;
-        eventc_connection_connect(client, _connect_callback, NULL);
-        state = STATE_SECOND_CONNECTION_FIRST_EVENT;
+        g_main_loop_quit(loop);
         return FALSE;
-    case STATE_SECOND_CONNECTION_THIRD_EVENT:
-        eventc_connection_close(client, &error);
-        state = STATE_END;
-    break;
-    default:
-        g_warning("Should never be in that state '%s'", state_names[state]);
     }
-    g_main_loop_quit(loop);
+
+    _test_state.event = 0;
+    _test_state.state = STATE_START;
+
+    if ( ++_test_state.connection < MAX_CONNECTION )
+        eventc_connection_connect(client, _connect_callback, NULL);
+    else
+        g_main_loop_quit(loop);
     return FALSE;
 }
 
 static gboolean
 _end_idle_callback(gpointer user_data)
 {
-    switch ( state )
+    if ( _check_state(-1, 3, STATE_SENT) )
     {
-    case STATE_FIRST_CONNECTION_THIRD_EVENT:
-    case STATE_SECOND_CONNECTION_THIRD_EVENT:
+        ++_test_state.state;
         eventd_event_end(event, EVENTD_EVENT_END_REASON_CLIENT_DISMISS);
-    break;
-    default:
-        g_warning("Should never be in that state '%s'", state_names[state]);
-        g_main_loop_quit(loop);
     }
     return FALSE;
 }
@@ -188,35 +235,33 @@ _end_idle_callback(gpointer user_data)
 static void
 _ended_callback(EventdEvent *e, EventdEventEndReason reason, EventcConnection *client)
 {
+    if ( ! _check_state(-1, -1, STATE_ANSWERED) )
+        return;
     g_return_if_fail(eventd_event_end_reason_is_valid_value(reason));
-    gboolean with_file = TRUE;
-    switch ( state )
+    switch ( _test_state.event )
     {
-    case STATE_FIRST_CONNECTION_SECOND_EVENT:
-    case STATE_SECOND_CONNECTION_SECOND_EVENT:
-        with_file = FALSE;
-        g_idle_add(_end_idle_callback, client);
-    case STATE_FIRST_CONNECTION_FIRST_EVENT:
-    case STATE_SECOND_CONNECTION_FIRST_EVENT:
+    case 2:
+        g_idle_add(_end_idle_callback, NULL);
+    case 1:
         if ( reason != EVENTD_EVENT_END_REASON_TEST )
             break;
         g_object_unref(event);
-        _create_event(client, with_file);
+        _create_event(client);
         if ( ! eventc_connection_event(client, event, &error) )
             g_main_loop_quit(loop);
         else
-            ++state;
+            _test_state.state = STATE_SENT;
         return;
-    case STATE_FIRST_CONNECTION_THIRD_EVENT:
-    case STATE_SECOND_CONNECTION_THIRD_EVENT:
+    case 3:
         if ( reason != EVENTD_EVENT_END_REASON_CLIENT_DISMISS )
             break;
         g_idle_add(_ended_close_idle_callback, client);
+        ++_test_state.state;
         return;
     default:
-        g_warning("Should never be in that state '%s'", state_names[state]);
+        g_return_if_reached();
     }
-    g_warning("Wrong end reason: %s", eventd_event_end_reason_get_value_nick(reason));
+    g_warning("[%zu, %zu] Wrong end reason: %s", _test_state.connection, _test_state.event, eventd_event_end_reason_get_value_nick(reason));
     g_main_loop_quit(loop);
 }
 
@@ -232,8 +277,6 @@ eventd_tests_run_libeventc(const gchar *host)
     if ( client == NULL )
         goto error;
 
-    _create_event(client, TRUE);
-
     loop = g_main_loop_new(NULL, FALSE);
 
     eventc_connection_connect(client, _connect_callback, NULL);
@@ -241,9 +284,9 @@ eventd_tests_run_libeventc(const gchar *host)
     g_main_loop_run(loop);
     g_main_loop_unref(loop);
 
-    if ( state != STATE_END )
+    if ( _test_state.connection != MAX_CONNECTION )
     {
-        g_warning("Wrong ending state: %s", state_names[state]);
+        g_warning("Wrong ending state");
         r = 1;
     }
 
