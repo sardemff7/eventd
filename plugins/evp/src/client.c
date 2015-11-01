@@ -45,6 +45,7 @@ struct _EventdEvpClient {
     GDataInputStream *in;
     GDataOutputStream *out;
     GHashTable *events;
+    gboolean processing_message;
     GList *subscribe_all;
     GHashTable *subscriptions;
 };
@@ -81,39 +82,32 @@ end:
 static void
 _eventd_evp_client_event_answered(EventdEvpClient *self, const gchar *answer, EventdEvent *event)
 {
-    EventdEvpEventHandlers *handlers;
-    handlers = g_hash_table_lookup(self->events, event);
-    g_return_if_fail(handlers != NULL);
-
-    g_signal_handler_disconnect(event, handlers->answered);
-    handlers->answered = 0;
-    _eventd_evp_client_send_message(self, eventd_protocol_generate_answered(self->protocol, event, answer));
+    if ( ! self->processing_message )
+        _eventd_evp_client_send_message(self, eventd_protocol_generate_answered(self->protocol, event, answer));
 }
 
 static void
 _eventd_evp_client_protocol_answered(EventdEvpClient *self, EventdEvent *event, const gchar *answer, EventdProtocol *protocol)
 {
-    EventdEvpEventHandlers *handlers;
-    handlers = g_hash_table_lookup(self->events, event);
-    g_return_if_fail(handlers != NULL);
-
-    g_signal_handler_disconnect(event, handlers->answered);
-    handlers->answered = 0;
+    self->processing_message = TRUE;
     eventd_event_answer(event, answer);
+    self->processing_message = FALSE;
 }
 
 static void
 _eventd_evp_client_event_ended(EventdEvpClient *self, EventdEventEndReason reason, EventdEvent *event)
 {
+    if ( ! self->processing_message )
+        _eventd_evp_client_send_message(self, eventd_protocol_generate_ended(self->protocol, event, reason));
     g_hash_table_remove(self->events, event);
-    _eventd_evp_client_send_message(self, eventd_protocol_generate_ended(self->protocol, event, reason));
 }
 
 static void
 _eventd_evp_client_protocol_ended(EventdEvpClient *self, EventdEvent *event, EventdEventEndReason reason, EventdProtocol *protocol)
 {
-    g_hash_table_remove(self->events, event);
+    self->processing_message = TRUE;
     eventd_event_end(event, reason);
+    self->processing_message = FALSE;
 }
 
 static void
@@ -206,8 +200,7 @@ _eventd_evp_client_event_handlers_free(gpointer data)
 {
     EventdEvpEventHandlers *handlers = data;
 
-    if ( handlers->answered > 0 )
-        g_signal_handler_disconnect(handlers->event, handlers->answered);
+    g_signal_handler_disconnect(handlers->event, handlers->answered);
     g_signal_handler_disconnect(handlers->event, handlers->ended);
 
     g_object_unref(handlers->event);
