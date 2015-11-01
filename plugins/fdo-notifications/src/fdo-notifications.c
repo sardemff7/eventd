@@ -276,7 +276,7 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
     eventd_event_set_timeout(event, ( timeout > -1 ) ? timeout : ( urgency > -1 ) ? ( 3000 + urgency * 2000 ) : -1);
 
     if ( id > 0 )
-        eventd_event_update(event, NULL);
+        eventd_event_update(event);
     else
         id = _eventd_fdo_notifications_notification_new(context, sender, event);
 

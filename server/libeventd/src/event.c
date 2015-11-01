@@ -274,21 +274,14 @@ _eventd_event_finalize(GObject *object)
 /**
  * eventd_event_update:
  * @event: an #EventdEvent
- * @name: the new name of the event
  *
  * Updates the name of @event.
  */
 EVENTD_EXPORT
 void
-eventd_event_update(EventdEvent *self, const gchar *name)
+eventd_event_update(EventdEvent *self)
 {
     g_return_if_fail(EVENTD_IS_EVENT(self));
-
-    if ( name != NULL )
-    {
-        g_free(self->priv->name);
-        self->priv->name = g_strdup(name);
-    }
 
     g_signal_emit(self, _eventd_event_signals[SIGNAL_UPDATED], 0);
 }

@@ -88,7 +88,7 @@ struct _EventdEventClass
  */
 EventdEvent *eventd_event_new(const gchar *category, const gchar *name);
 
-void eventd_event_update(EventdEvent *event, const gchar *name);
+void eventd_event_update(EventdEvent *event);
 void eventd_event_answer(EventdEvent *event, const gchar *answer);
 void eventd_event_end(EventdEvent *event, EventdEventEndReason reason);
 
