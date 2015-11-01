@@ -46,6 +46,7 @@ struct _EventdProtocolInterface
     gboolean (*parse)(EventdProtocol *protocol, gchar **buffer, GError **error);
 
     gchar *(*generate_event)(EventdProtocol *protocol, EventdEvent *event);
+    gchar *(*generate_updated)(EventdProtocol *protocol, EventdEvent *event);
     gchar *(*generate_answered)(EventdProtocol *protocol, EventdEvent *event, const gchar *answer);
     gchar *(*generate_ended)(EventdProtocol *protocol, EventdEvent *event, EventdEventEndReason reason);
 
@@ -55,6 +56,7 @@ struct _EventdProtocolInterface
 
     /* Signals */
     void (*event)(EventdProtocol *protocol, EventdEvent *event);
+    void (*updated)(EventdProtocol *protocol, EventdEvent *event);
     void (*answered)(EventdProtocol *protocol, EventdEvent *event, const gchar *answer);
     void (*ended)(EventdProtocol *protocol, EventdEvent *event, EventdEventEndReason reason);
 
@@ -122,6 +124,7 @@ EventdProtocol *eventd_protocol_evp_new(void);
 gboolean eventd_protocol_parse(EventdProtocol *protocol, gchar **buffer, GError **error);
 
 gchar *eventd_protocol_generate_event(EventdProtocol *protocol, EventdEvent *event);
+gchar *eventd_protocol_generate_updated(EventdProtocol *protocol, EventdEvent *event);
 gchar *eventd_protocol_generate_answered(EventdProtocol *protocol, EventdEvent *event, const gchar *answer);
 gchar *eventd_protocol_generate_ended(EventdProtocol *protocol, EventdEvent *event, EventdEventEndReason reason);
 

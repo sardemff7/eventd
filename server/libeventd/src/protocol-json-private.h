@@ -68,6 +68,7 @@ gboolean eventd_protocol_json_parse(EventdProtocol *protocol, gchar **buffer, GE
 void eventd_protocol_json_parse_free(EventdProtocolJson *self);
 
 gchar *eventd_protocol_json_generate_event(EventdProtocol *protocol, EventdEvent *event);
+gchar *eventd_protocol_json_generate_updated(EventdProtocol *protocol, EventdEvent *event);
 gchar *eventd_protocol_json_generate_answered(EventdProtocol *protocol, EventdEvent *event, const gchar *answer);
 gchar *eventd_protocol_json_generate_ended(EventdProtocol *protocol, EventdEvent *event, EventdEventEndReason reason);
 

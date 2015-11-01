@@ -64,6 +64,7 @@ _eventd_protocol_evp_parser_interface_init(EventdProtocolInterface *iface)
     iface->parse = eventd_protocol_evp_parse;
 
     iface->generate_event = eventd_protocol_evp_generate_event;
+    iface->generate_updated = eventd_protocol_evp_generate_updated;
     iface->generate_answered = eventd_protocol_evp_generate_answered;
     iface->generate_ended = eventd_protocol_evp_generate_ended;
 
