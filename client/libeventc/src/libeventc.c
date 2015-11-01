@@ -60,6 +60,7 @@ struct _EventcConnectionPrivate {
     GDataInputStream *in;
     GDataOutputStream *out;
     GHashTable* events;
+    gboolean processing_message;
 };
 
 typedef struct {
@@ -216,39 +217,32 @@ _eventc_connection_protocol_event(EventcConnection *self, EventdEvent *event, Ev
 static void
 _eventc_connection_event_answered(EventcConnection *self, const gchar *answer, EventdEvent *event)
 {
-    EventdConnectionEventHandlers *handlers;
-    handlers = g_hash_table_lookup(self->priv->events, event);
-    g_return_if_fail(handlers != NULL);
-
-    g_signal_handler_disconnect(event, handlers->answered);
-    handlers->answered = 0;
-    _eventc_connection_send_message(self, eventd_protocol_generate_answered(self->priv->protocol, event, answer));
+    if ( ! self->priv->processing_message )
+        _eventc_connection_send_message(self, eventd_protocol_generate_answered(self->priv->protocol, event, answer));
 }
 
 static void
 _eventc_connection_protocol_answered(EventcConnection *self, EventdEvent *event, const gchar *answer, EventdProtocol *protocol)
 {
-    EventdConnectionEventHandlers *handlers;
-    handlers = g_hash_table_lookup(self->priv->events, event);
-    g_return_if_fail(handlers != NULL);
-
-    g_signal_handler_disconnect(event, handlers->answered);
-    handlers->answered = 0;
+    self->priv->processing_message = TRUE;
     eventd_event_answer(event, answer);
+    self->priv->processing_message = FALSE;
 }
 
 static void
 _eventc_connection_event_ended(EventcConnection *self, EventdEventEndReason reason, EventdEvent *event)
 {
+    if ( ! self->priv->processing_message )
+        _eventc_connection_send_message(self, eventd_protocol_generate_ended(self->priv->protocol, event, reason));
     g_hash_table_remove(self->priv->events, event);
-    _eventc_connection_send_message(self, eventd_protocol_generate_ended(self->priv->protocol, event, reason));
 }
 
 static void
 _eventc_connection_protocol_ended(EventcConnection *self, EventdEvent *event, EventdEventEndReason reason, EventdProtocol *protocol)
 {
-    g_hash_table_remove(self->priv->events, event);
+    self->priv->processing_message = TRUE;
     eventd_event_end(event, reason);
+    self->priv->processing_message = FALSE;
 }
 
 static void
@@ -275,8 +269,7 @@ _eventc_connection_event_handlers_free(gpointer data)
 {
     EventdConnectionEventHandlers *handlers = data;
 
-    if ( handlers->answered > 0 )
-        g_signal_handler_disconnect(handlers->event, handlers->answered);
+    g_signal_handler_disconnect(handlers->event, handlers->answered);
     g_signal_handler_disconnect(handlers->event, handlers->ended);
 
     g_object_unref(handlers->event);
