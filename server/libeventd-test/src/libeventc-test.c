@@ -44,6 +44,7 @@ static guint timeout = 0;
 typedef enum {
     STATE_START,
     STATE_SENT,
+    STATE_UPDATED,
     STATE_ANSWERED,
     STATE_ENDED
 } State;
@@ -61,6 +62,7 @@ static struct{
 static const gchar *_state_names[] = {
     [STATE_START] = "start",
     [STATE_SENT] = "sent",
+    [STATE_UPDATED] = "updated",
     [STATE_ANSWERED] = "answered",
     [STATE_ENDED] = "ended"
 };
@@ -102,6 +104,7 @@ _timeout_callback(gpointer user_data)
 
 static void _ended_callback(EventdEvent *e, EventdEventEndReason reason, EventcConnection *client);
 static void _answered_callback(EventdEvent *e, const gchar *answer, EventcConnection *client);
+static void _updated_callback(EventdEvent *e, EventcConnection *client);
 static void
 _create_event(EventcConnection *client)
 {
@@ -110,6 +113,8 @@ _create_event(EventcConnection *client)
     switch ( ++_test_state.event )
     {
     case 1:
+        if ( _test_state.connection == 1 )
+            eventd_event_add_data(event, g_strdup("new-test"), g_strdup_printf("Some new\nmessage from %s", g_get_prgname()));
     case 2:
     {
         gchar *tmp = g_strconcat(g_get_prgname(), "-file", NULL );
@@ -123,6 +128,7 @@ _create_event(EventcConnection *client)
     break;
     }
 
+    g_signal_connect(event, "updated", G_CALLBACK(_updated_callback), client);
     g_signal_connect(event, "answered", G_CALLBACK(_answered_callback), client);
     g_signal_connect(event, "ended", G_CALLBACK(_ended_callback), client);
 
@@ -152,7 +158,8 @@ _connect_callback(GObject *obj, GAsyncResult *res, gpointer user_data)
     case 1:
         _create_event(client);
         if ( eventc_connection_event(client, event, &error) )
-            _test_state.state = STATE_SENT;
+            /* We cheat here by considering the event updated */
+            _test_state.state = ( _test_state.connection == 1 ) ? STATE_SENT : STATE_UPDATED;
         else
             g_main_loop_quit(loop);
 
@@ -164,9 +171,25 @@ _connect_callback(GObject *obj, GAsyncResult *res, gpointer user_data)
 }
 
 static void
+_updated_callback(EventdEvent *e, EventcConnection *client)
+{
+    if ( ! _check_state(1, 1, STATE_SENT) )
+        return;
+
+    if ( g_strcmp0(eventd_event_get_data(event, "test"), eventd_event_get_data(event, "new-test")) != 0 )
+    {
+        g_warning("Event not updated");
+        g_main_loop_quit(loop);
+        return;
+    }
+
+    ++_test_state.state;
+}
+
+static void
 _answered_callback(EventdEvent *e, const gchar *answer, EventcConnection *client)
 {
-    if ( ! _check_state(-1, -1, STATE_SENT) )
+    if ( ! _check_state(-1, -1, STATE_UPDATED) )
         return;
 
     if ( g_strcmp0(answer, "test") != 0 )
@@ -224,7 +247,7 @@ _ended_close_idle_callback(gpointer user_data)
 static gboolean
 _end_idle_callback(gpointer user_data)
 {
-    if ( _check_state(-1, 3, STATE_SENT) )
+    if ( _check_state(-1, 3, STATE_UPDATED) )
     {
         ++_test_state.state;
         eventd_event_end(event, EVENTD_EVENT_END_REASON_CLIENT_DISMISS);
@@ -250,7 +273,8 @@ _ended_callback(EventdEvent *e, EventdEventEndReason reason, EventcConnection *c
         if ( ! eventc_connection_event(client, event, &error) )
             g_main_loop_quit(loop);
         else
-            _test_state.state = STATE_SENT;
+            /* We cheat here by considering the event updated */
+            _test_state.state = STATE_UPDATED;
         return;
     case 3:
         if ( reason != EVENTD_EVENT_END_REASON_CLIENT_DISMISS )
