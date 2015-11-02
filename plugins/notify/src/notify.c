@@ -657,7 +657,7 @@ _eventd_libnotify_event_action(EventdPluginContext *context, EventdPluginAction 
     }
     if ( image_uri != NULL )
     {
-        g_variant_builder_add(hints, "{s<s>}", image_path_hint, image_uri);
+        g_variant_builder_add(hints, "{sv}", image_path_hint, g_variant_new_string(image_uri));
         g_free(image_uri);
     }
 
