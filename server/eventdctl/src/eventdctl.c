@@ -121,7 +121,7 @@ _eventd_eventdctl_get_connection(const gchar *private_socket, GError **error)
 
     address = g_unix_socket_address_new(real_socket);
 #else /* ! G_OS_UNIX */
-    if ( ! g_file_test(real_socket, G_FILE_TEST_EXISTS|G_FILE_TEST_IS_REGULAR) )
+    if ( ! g_file_test(real_socket, G_FILE_TEST_IS_REGULAR) )
         goto error;
 
     gchar *contents = NULL;
