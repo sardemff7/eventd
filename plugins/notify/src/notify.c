@@ -91,6 +91,7 @@ struct _EventdPluginContext
     GSList *actions;
     struct {
         gboolean overlay_icon;
+        gboolean svg_support;
     } capabilities;
 };
 
@@ -126,7 +127,10 @@ _eventd_libnotify_get_image(EventdPluginContext *context, EventdPluginAction *ac
     uri = evhelpers_filename_get_uri(action->image, event, "icons");
     if ( uri != NULL )
     {
-        if ( g_str_has_prefix(uri, "file://") )
+        if ( g_str_has_prefix(uri, "file://")
+                /* Check for SVG support */
+                && ( context->capabilities.svg_support || ( ! g_str_has_suffix(uri, ".svg") ) )
+            )
             *image_uri = uri;
         else
             image = eventd_nd_pixbuf_from_uri(uri, 0, 0);
@@ -135,7 +139,10 @@ _eventd_libnotify_get_image(EventdPluginContext *context, EventdPluginAction *ac
     uri = evhelpers_filename_get_uri(action->icon, event, "icons");
     if ( uri != NULL )
     {
-        if ( g_str_has_prefix(uri, "file://") )
+        if ( g_str_has_prefix(uri, "file://")
+                /* Check for SVG support */
+                && ( context->capabilities.svg_support || ( ! g_str_has_suffix(uri, ".svg") ) )
+            )
             *icon_uri = uri;
         else
             icon = eventd_nd_pixbuf_from_uri(uri, 0, 0);
@@ -354,6 +361,8 @@ _eventd_libnotify_proxy_get_capabilities(GObject *obj, GAsyncResult *res, gpoint
     {
         if ( g_strcmp0(*capability, "x-eventd-overlay-icon") == 0 )
             context->capabilities.overlay_icon = TRUE;
+        else if ( g_strcmp0(*capability, "image/svg+xml") == 0 )
+            context->capabilities.svg_support = TRUE;
     }
 
     g_free(capabilities);
@@ -375,6 +384,7 @@ _eventd_libnotify_proxy_create_callback(GObject *obj, GAsyncResult *res, gpointe
     }
 
     context->capabilities.overlay_icon = FALSE;
+    context->capabilities.svg_support = FALSE;
 
     g_dbus_proxy_call(context->server, "GetCapabilities", NULL, G_DBUS_CALL_FLAGS_NONE, -1, NULL, _eventd_libnotify_proxy_get_capabilities, context);
 }
