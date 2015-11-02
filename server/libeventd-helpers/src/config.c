@@ -527,10 +527,11 @@ evhelpers_filename_get_uri(const Filename *filename, EventdEvent *event, const g
         if ( ! g_path_is_absolute(p) )
         {
             gchar *tmp = uri;
-            uri = g_build_filename(g_get_user_data_dir(), PACKAGE_NAME, subdir, p, NULL);
+            uri = g_strconcat("file://", g_get_user_data_dir(), G_DIR_SEPARATOR_S PACKAGE_NAME G_DIR_SEPARATOR_S, subdir, G_DIR_SEPARATOR_S, p, NULL);
             g_free(tmp);
+            p = uri + strlen("file://");
         }
-        if ( g_file_test(uri, G_FILE_TEST_EXISTS|G_FILE_TEST_IS_REGULAR|G_FILE_TEST_IS_SYMLINK) )
+        if ( g_file_test(p, G_FILE_TEST_IS_REGULAR) )
             return uri;
     }
 
