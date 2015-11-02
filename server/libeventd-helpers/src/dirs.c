@@ -33,7 +33,7 @@
 static gsize
 _evhelpers_dirs_add(gchar **dirs, gsize i, gchar *path)
 {
-    if ( g_file_test(path, G_FILE_TEST_EXISTS|G_FILE_TEST_IS_DIR) )
+    if ( g_file_test(path, G_FILE_TEST_IS_DIR) )
         dirs[i++] = path;
     else
         g_free(path);
@@ -50,7 +50,7 @@ _evhelpers_dirs_add_env(gchar **dirs, gsize i, const gchar *env)
         return i;
     if ( g_str_has_prefix(env, "~/") )
         i = _evhelpers_dirs_add(dirs, i, g_build_filename(g_get_home_dir(), env + strlen("~/"), NULL));
-    else if ( g_file_test(env, G_FILE_TEST_EXISTS|G_FILE_TEST_IS_DIR) )
+    else if ( g_file_test(env, G_FILE_TEST_IS_DIR) )
         dirs[i++] = g_strdup(env);
     return i;
 }
