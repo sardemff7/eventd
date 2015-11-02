@@ -74,6 +74,11 @@ static const gchar introspection_xml[] =
 "    </interface>"
 "</node>";
 
+typedef enum {
+    EVENTD_LIBNOTIFY_SPEC_VERSION_OLD,
+    EVENTD_LIBNOTIFY_SPEC_VERSION_1_1,
+    EVENTD_LIBNOTIFY_SPEC_VERSION_1_2,
+} EventdLibnotifySpecVersion;
 
 typedef enum {
     EVENTD_LIBNOTIFY_URGENCY_LOW,
@@ -89,6 +94,9 @@ struct _EventdPluginContext
     gboolean bus_name_owned;
     GDBusProxy *server;
     GSList *actions;
+    struct {
+        EventdLibnotifySpecVersion spec_version;
+    } information;
     struct {
         gboolean overlay_icon;
         gboolean svg_support;
@@ -128,6 +136,8 @@ _eventd_libnotify_get_image(EventdPluginContext *context, EventdPluginAction *ac
     if ( uri != NULL )
     {
         if ( g_str_has_prefix(uri, "file://")
+                /* Check that the server supports at least image_path hint */
+                && ( context->information.spec_version >= EVENTD_LIBNOTIFY_SPEC_VERSION_1_1 )
                 /* Check for SVG support */
                 && ( context->capabilities.svg_support || ( ! g_str_has_suffix(uri, ".svg") ) )
             )
@@ -340,6 +350,34 @@ _eventd_libnotify_uninit(EventdPluginContext *context)
  */
 
 static void
+_eventd_libnotify_proxy_get_server_information(GObject *obj, GAsyncResult *res, gpointer user_data)
+{
+    EventdPluginContext *context = user_data;
+    GError *error = NULL;
+    GVariant *ret;
+
+    ret = g_dbus_proxy_call_finish(context->server, res, &error);
+    if ( ret == NULL )
+    {
+        g_warning("Couldn't get org.freedesktop.Notifications server information: %s", error->message);
+        g_clear_error(&error);
+        return;
+    }
+
+    const gchar *spec_version;
+    g_variant_get(ret, "(&s&s&s&s)", NULL, NULL, NULL, &spec_version);
+
+    if ( g_strcmp0(spec_version, "1.2") == 0 )
+        context->information.spec_version = EVENTD_LIBNOTIFY_SPEC_VERSION_1_2;
+    else if ( g_strcmp0(spec_version, "1.1") == 0 )
+        context->information.spec_version = EVENTD_LIBNOTIFY_SPEC_VERSION_1_1;
+    else
+        context->information.spec_version = EVENTD_LIBNOTIFY_SPEC_VERSION_OLD;
+
+    g_variant_unref(ret);
+}
+
+static void
 _eventd_libnotify_proxy_get_capabilities(GObject *obj, GAsyncResult *res, gpointer user_data)
 {
     EventdPluginContext *context = user_data;
@@ -386,6 +424,7 @@ _eventd_libnotify_proxy_create_callback(GObject *obj, GAsyncResult *res, gpointe
     context->capabilities.overlay_icon = FALSE;
     context->capabilities.svg_support = FALSE;
 
+    g_dbus_proxy_call(context->server, "GetServerInformation", NULL, G_DBUS_CALL_FLAGS_NONE, -1, NULL, _eventd_libnotify_proxy_get_server_information, context);
     g_dbus_proxy_call(context->server, "GetCapabilities", NULL, G_DBUS_CALL_FLAGS_NONE, -1, NULL, _eventd_libnotify_proxy_get_capabilities, context);
 }
 
@@ -583,6 +622,24 @@ _eventd_libnotify_event_action(EventdPluginContext *context, EventdPluginAction 
 
     g_variant_builder_add(hints, "{sv}", "urgency", g_variant_new_byte(action->urgency));
 
+    const gchar *image_path_hint = NULL;
+    const gchar *image_data_hint = NULL;
+    switch ( context->information.spec_version )
+    {
+    case EVENTD_LIBNOTIFY_SPEC_VERSION_1_2:
+        image_path_hint = "image-path";
+        image_data_hint = "image-data";
+    break;
+    case EVENTD_LIBNOTIFY_SPEC_VERSION_1_1:
+        image_path_hint = "image_path";
+        image_data_hint = "image_data";
+    break;
+    case EVENTD_LIBNOTIFY_SPEC_VERSION_OLD:
+        image_path_hint = NULL; /* This is safe anyway since we check for that in get_image() */
+        image_data_hint = "icon_data";
+    break;
+    }
+
     if ( image != NULL )
     {
         gint32 width, height, rowstride, bits, channels;
@@ -595,12 +652,12 @@ _eventd_libnotify_event_action(EventdPluginContext *context, EventdPluginAction 
         bits = gdk_pixbuf_get_bits_per_sample(image);
         channels = gdk_pixbuf_get_n_channels(image);
         data = g_variant_new_from_data(G_VARIANT_TYPE_BYTESTRING, gdk_pixbuf_read_pixels(image), gdk_pixbuf_get_byte_length(image), TRUE, NULL, NULL);
-        g_variant_builder_add(hints, "{sv}", "image-data", g_variant_new("(iiibii@ay)", width, height, rowstride, alpha, bits, channels, data));
+        g_variant_builder_add(hints, "{sv}", image_data_hint, g_variant_new("(iiibii@ay)", width, height, rowstride, alpha, bits, channels, data));
         g_object_unref(image);
     }
     if ( image_uri != NULL )
     {
-        g_variant_builder_add(hints, "{s<s>}", "image-path", image_uri);
+        g_variant_builder_add(hints, "{s<s>}", image_path_hint, image_uri);
         g_free(image_uri);
     }
 
