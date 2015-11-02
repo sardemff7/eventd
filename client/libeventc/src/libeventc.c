@@ -113,7 +113,7 @@ _eventc_get_address(const gchar *host_and_port, GError **error)
 #ifdef G_OS_UNIX
         address = G_SOCKET_CONNECTABLE(g_unix_socket_address_new(host_and_port));
 #else /* ! G_OS_UNIX */
-        if ( g_file_test(host_and_port, G_FILE_TEST_EXISTS|G_FILE_TEST_IS_REGULAR) )
+        if ( g_file_test(host_and_port, G_FILE_TEST_IS_REGULAR) )
         {
             gchar *str;
             guint64 port;
