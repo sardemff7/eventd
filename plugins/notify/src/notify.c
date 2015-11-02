@@ -89,7 +89,9 @@ struct _EventdPluginContext
     gboolean bus_name_owned;
     GDBusProxy *server;
     GSList *actions;
-    gboolean overlay_icon;
+    struct {
+        gboolean overlay_icon;
+    } capabilities;
 };
 
 struct _EventdPluginAction {
@@ -115,7 +117,7 @@ const gchar * const _eventd_libnotify_urgency[_EVENTD_LIBNOTIFY_URGENCY_SIZE] = 
 };
 
 static GdkPixbuf *
-_eventd_libnotify_get_image(EventdPluginAction *action, EventdEvent *event, gboolean server_support, gchar **icon_uri, gchar **image_uri)
+_eventd_libnotify_get_image(EventdPluginContext *context, EventdPluginAction *action, EventdEvent *event, gchar **icon_uri, gchar **image_uri)
 {
     gchar *uri;
     GdkPixbuf *image = NULL;
@@ -150,7 +152,7 @@ _eventd_libnotify_get_image(EventdPluginAction *action, EventdEvent *event, gboo
      * We have an icon URI and an image (either URI or data)
      * We give it both
      */
-    if ( server_support && ( *icon_uri != NULL ) && ( ( *image_uri != NULL ) || ( image != NULL ) ) )
+    if ( context->capabilities.overlay_icon && ( *icon_uri != NULL ) && ( ( *image_uri != NULL ) || ( image != NULL ) ) )
         return image;
 
     /*
@@ -351,7 +353,7 @@ _eventd_libnotify_proxy_get_capabilities(GObject *obj, GAsyncResult *res, gpoint
     for ( capability = capabilities ; *capability != NULL ; ++capability )
     {
         if ( g_strcmp0(*capability, "x-eventd-overlay-icon") == 0 )
-            context->overlay_icon = TRUE;
+            context->capabilities.overlay_icon = TRUE;
     }
 
     g_free(capabilities);
@@ -371,6 +373,8 @@ _eventd_libnotify_proxy_create_callback(GObject *obj, GAsyncResult *res, gpointe
         g_clear_error(&error);
         return;
     }
+
+    context->capabilities.overlay_icon = FALSE;
 
     g_dbus_proxy_call(context->server, "GetCapabilities", NULL, G_DBUS_CALL_FLAGS_NONE, -1, NULL, _eventd_libnotify_proxy_get_capabilities, context);
 }
@@ -544,7 +548,7 @@ _eventd_libnotify_event_action(EventdPluginContext *context, EventdPluginAction 
     title = evhelpers_format_string_get_string(action->title, event, NULL, NULL);
     message = evhelpers_format_string_get_string(action->message, event, NULL, NULL);
 
-    image = _eventd_libnotify_get_image(action, event, context->overlay_icon, &icon_uri, &image_uri);
+    image = _eventd_libnotify_get_image(context, action, event, &icon_uri, &image_uri);
 
     GVariantBuilder *hints;
     hints = g_variant_builder_new(G_VARIANT_TYPE_VARDICT);
