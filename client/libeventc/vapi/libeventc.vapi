@@ -1,7 +1,7 @@
 /*
  * libeventc - Library to communicate with eventd
  *
- * Copyright © 2011-2012 Quentin "Sardem FF7" Glidic
+ * Copyright © 2011-2015 Quentin "Sardem FF7" Glidic
  *
  * This file is part of eventd.
  *

@@ -1,7 +1,7 @@
 /*
  * libeventd - Internal helper
  *
- * Copyright © 2011-2014 Quentin "Sardem FF7" Glidic
+ * Copyright © 2011-2015 Quentin "Sardem FF7" Glidic
  *
  * This file is part of eventd.
  *
