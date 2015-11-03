@@ -527,7 +527,10 @@ evhelpers_filename_get_uri(const Filename *filename, EventdEvent *event, const g
         if ( ! g_path_is_absolute(p) )
         {
             gchar *tmp = uri;
-            uri = g_strconcat("file://", g_get_user_data_dir(), G_DIR_SEPARATOR_S PACKAGE_NAME G_DIR_SEPARATOR_S, subdir, G_DIR_SEPARATOR_S, p, NULL);
+            if ( g_path_is_absolute(subdir) )
+                uri = g_strconcat("file://", subdir, G_DIR_SEPARATOR_S, p, NULL);
+            else
+                uri = g_strconcat("file://", g_get_user_data_dir(), G_DIR_SEPARATOR_S PACKAGE_NAME G_DIR_SEPARATOR_S, subdir, G_DIR_SEPARATOR_S, p, NULL);
             g_free(tmp);
             p = uri + strlen("file://");
         }
