@@ -7,7 +7,7 @@
 <!--
   eventd - Small daemon to act on remote or local events
 
-  Copyright © 2011-2012 Quentin "Sardem FF7" Glidic
+  Copyright © 2011-2015 Quentin "Sardem FF7" Glidic
 
   This file is part of eventd.
 
@@ -133,6 +133,11 @@
                 <varlistentry>
                     <term><command>exec</command> (see <citerefentry><refentrytitle>eventd-exec.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
                     <listitem><para>a simple exec plugin, to exec arbitrary commands</para></listitem>
+                </varlistentry>
+
+                <varlistentry>
+                    <term><command>file</command> (see <citerefentry><refentrytitle>eventd-file.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
+                    <listitem><para>a simple file writer plugin, to write arbitrary string to arbitrary files</para></listitem>
                 </varlistentry>
 
                 <varlistentry condition="website;enable_notification_daemon">

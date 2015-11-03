@@ -88,6 +88,7 @@ include plugins/http/http.mk
 include plugins/fdo-notifications/fdo-notifications.mk
 include plugins/relay/relay.mk
 include plugins/exec/exec.mk
+include plugins/file/file.mk
 include plugins/nd/nd.mk
 include plugins/im/im.mk
 include plugins/sound/sound.mk
