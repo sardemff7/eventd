@@ -263,7 +263,7 @@ _eventd_nd_win_update_surfaces(EventdNdDisplay *self)
         if ( bottom )
             y -= height;
 
-        DeferWindowPos(wp, surface->window, NULL, center ? ( x / 2 - width / 2 ) : right ? ( x - width ) : x, y, 0, 0, SWP_NOSIZE|SWP_NOZORDER);
+        DeferWindowPos(wp, surface->window, NULL, center ? ( x / 2 - width / 2 ) : right ? ( x - width ) : x, y, 0, 0, SWP_NOACTIVATE | SWP_NOSIZE | SWP_NOZORDER);
 
         if ( bottom )
             y -= self->placement.spacing;
@@ -292,7 +292,7 @@ _eventd_nd_win_surface_new(EventdEvent *event, EventdNdDisplay *display, cairo_s
     self->event = g_object_ref(event);
     self->bubble = cairo_surface_reference(bubble);
 
-    self->window = CreateWindowEx(WS_EX_LAYERED|WS_EX_TOPMOST|WS_EX_TOOLWINDOW|WS_EX_NOACTIVATE, display->window_class.lpszClassName, "Bubble", WS_POPUP, 0, 0, width, height, NULL, NULL, NULL, NULL);
+    self->window = CreateWindowEx(WS_EX_LAYERED | WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE, display->window_class.lpszClassName, "Bubble", WS_POPUP, 0, 0, width, height, NULL, NULL, NULL, NULL);
     SetLayeredWindowAttributes(self->window, RGB(255, 0, 0), 255, LWA_COLORKEY);
 
     if ( display->placement.reverse )
@@ -309,7 +309,7 @@ _eventd_nd_win_surface_new(EventdEvent *event, EventdNdDisplay *display, cairo_s
     SetProp(self->window, "EventdNdSurface", self);
 
     _eventd_nd_win_update_surfaces(display);
-    ShowWindow(self->window, TRUE);
+    ShowWindow(self->window, SW_SHOWNA);
 
     return self;
 }
@@ -344,7 +344,7 @@ _eventd_nd_win_surface_update(EventdNdSurface *self, cairo_surface_t *bubble)
     width = cairo_image_surface_get_width(bubble);
     height = cairo_image_surface_get_height(bubble);
 
-    SetWindowPos(self->window, NULL, 0, 0, width, height, SWP_NOMOVE|SWP_NOZORDER);
+    SetWindowPos(self->window, NULL, 0, 0, width, height, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
 
     _eventd_nd_win_update_surfaces(self->display);
 }
