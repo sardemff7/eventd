@@ -210,12 +210,15 @@ _eventd_libcanberra_event_action(EventdPluginContext *context, EventdPluginActio
 
     gchar *sound_name;
     sound_name = evhelpers_format_string_get_string(action->sound_name, event, NULL, NULL);
-    error = ca_context_play(context->context, 1,
-        CA_PROP_EVENT_ID, sound_name,
-        CA_PROP_MEDIA_ROLE, "event",
-        NULL);
-    if ( error < 0 )
-        g_warning("Couldn't play named sound '%s': %s", sound_name, ca_strerror(error));
+    if ( *sound_name != '\0' )
+    {
+        error = ca_context_play(context->context, 1,
+            CA_PROP_EVENT_ID, sound_name,
+            CA_PROP_MEDIA_ROLE, "event",
+            NULL);
+        if ( error < 0 )
+            g_warning("Couldn't play named sound '%s': %s", sound_name, ca_strerror(error));
+    }
     g_free(sound_name);
 
 #ifndef ENABLE_SOUND
