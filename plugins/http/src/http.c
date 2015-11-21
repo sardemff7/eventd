@@ -112,6 +112,9 @@ _eventd_http_start(EventdPluginContext *self)
 static void
 _eventd_http_stop(EventdPluginContext *self)
 {
+    if ( self->server == NULL )
+        return;
+
     g_hash_table_unref(self->subscribe_categories);
     self->subscribe_categories = NULL;
     g_list_free(self->subscribe_all);
@@ -120,8 +123,7 @@ _eventd_http_stop(EventdPluginContext *self)
     g_list_free_full(self->clients, eventd_http_websocket_client_disconnect);
     self->clients = NULL;
 
-    if ( self->server != NULL )
-        g_object_unref(self->server);
+    g_object_unref(self->server);
 }
 
 
@@ -206,6 +208,9 @@ _eventd_http_config_reset(EventdPluginContext *self)
 static void
 _eventd_http_event_dispatch(EventdPluginContext *self, EventdEvent *event)
 {
+    if ( self->server == NULL )
+        return;
+
     GList *subscribers;
     GList *client;
 
