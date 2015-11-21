@@ -380,6 +380,7 @@ _eventd_im_action_parse(EventdPluginContext *context, GKeyFile *config_file)
     if ( conv == NULL )
     {
         conv = g_slice_new0(EventdImConv);
+        conv->account = account;
         conv->type = PURPLE_CONV_TYPE_CHAT;
         conv->name = room;
         if ( account->prpl_info->join_chat == NULL )
