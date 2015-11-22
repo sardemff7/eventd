@@ -452,7 +452,7 @@ _eventd_im_event_action(EventdPluginContext *context, EventdPluginAction *action
     EventdImAccount *account = conv->account;
 
     if ( ! purple_account_is_connected(account->account) )
-        return;
+        return _eventd_im_account_connect(account);
 
     PurpleConnection *gc;
     gchar *message;
