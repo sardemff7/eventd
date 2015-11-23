@@ -51,9 +51,14 @@ Event related messages
     An arbitrary number of subcategories is accepted.
     The message may contain data using the corresponding messages.
     The message may contain possible answers using the corresponding message.
+    This message is for the event creator only.
 
     ANSWER <name>
         Add a possible answer to the event
+
+.RELAY <id> <category> <name>
+    The same as the .EVENT message, but for a relay (a client that did not create
+    the event).
 
 .UPDATED <id>
     Updates an event.

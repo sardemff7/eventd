@@ -60,8 +60,8 @@ _eventd_protocol_generate_data(GString *str, GHashTable *data)
     g_hash_table_unref(data);
 }
 
-gchar *
-eventd_protocol_evp_generate_event(EventdProtocol *protocol, EventdEvent *event)
+static gchar *
+_eventd_protocol_evp_generate_event(EventdProtocol *protocol, EventdEvent *event, gchar *message)
 {
     g_return_val_if_fail(EVENTD_IS_PROTOCOL_EVP(protocol), NULL);
     EventdProtocolEvp *self = EVENTD_PROTOCOL_EVP(protocol);
@@ -75,7 +75,7 @@ eventd_protocol_evp_generate_event(EventdProtocol *protocol, EventdEvent *event)
     answers = eventd_event_get_answers(event);
 
     if ( ( data == NULL ) && ( answers == NULL ) )
-        return g_strdup_printf("EVENT %s %s %s\n", eventd_event_get_uuid(event), eventd_event_get_category(event), eventd_event_get_name(event));
+        return g_strdup_printf("%s %s %s %s\n", message, eventd_event_get_uuid(event), eventd_event_get_category(event), eventd_event_get_name(event));
 
     gsize size;
     size = strlen(".EVENT 1b4e28ba-2fa1-11d2-883f-0016d3cca427 test-category test-name\n.\n") + ( ( data != NULL ) ? ( g_hash_table_size(data) * strlen(DATA_SAMPLE) ) : 0 ) + g_list_length(answers) * strlen("ANSWER test-answer");
@@ -83,7 +83,7 @@ eventd_protocol_evp_generate_event(EventdProtocol *protocol, EventdEvent *event)
     GString *str;
     str = g_string_sized_new(size);
 
-    g_string_append_printf(str, ".EVENT %s %s %s\n", eventd_event_get_uuid(event), eventd_event_get_category(event), eventd_event_get_name(event));
+    g_string_append_printf(str, ".%s %s %s %s\n", message, eventd_event_get_uuid(event), eventd_event_get_category(event), eventd_event_get_name(event));
 
     GList *answer;
     for ( answer = answers ; answer != NULL ; answer = g_list_next(answer) )
@@ -94,6 +94,18 @@ eventd_protocol_evp_generate_event(EventdProtocol *protocol, EventdEvent *event)
     g_string_append(str, ".\n");
 
     return g_string_free(str, FALSE);
+}
+
+gchar *
+eventd_protocol_evp_generate_event(EventdProtocol *protocol, EventdEvent *event)
+{
+    return _eventd_protocol_evp_generate_event(protocol, event, "EVENT");
+}
+
+gchar *
+eventd_protocol_evp_generate_relay(EventdProtocol *protocol, EventdEvent *event)
+{
+    return _eventd_protocol_evp_generate_event(protocol, event, "RELAY");
 }
 
 gchar *
