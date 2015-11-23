@@ -146,7 +146,7 @@ eventd_protocol_json_generate_updated(EventdProtocol *protocol, EventdEvent *eve
     eventd_protocol_json_add_event(self, event);
 
     yajl_gen gen;
-    gen = _eventd_protocol_json_message_open("event", event);
+    gen = _eventd_protocol_json_message_open("updated", event);
 
     GHashTable *data;
     data = eventd_event_get_all_data(event);
