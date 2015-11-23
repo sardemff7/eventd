@@ -139,7 +139,7 @@ _eventd_http_websocket_client_handle_event(EventdHttpWebsocketClient *self, Even
 }
 
 static void
-_eventd_http_websocket_client_protocol_event(EventdHttpWebsocketClient *self, EventdEvent *event, EventdProtocol *protocol)
+_eventd_http_websocket_client_protocol_event_common(EventdHttpWebsocketClient *self, EventdEvent *event, gboolean discard)
 {
 #ifdef EVENTD_DEBUG
     g_debug("Received an event (category: %s): %s", eventd_event_get_category(event), eventd_event_get_name(event));
@@ -147,11 +147,26 @@ _eventd_http_websocket_client_protocol_event(EventdHttpWebsocketClient *self, Ev
 
     if ( ! eventd_plugin_core_push_event(self->context->core, self->context->core_interface, event) )
     {
-        _eventd_http_websocket_client_send_message(self, eventd_protocol_generate_ended(self->protocol, event, EVENTD_EVENT_END_REASON_DISCARD));
+        if ( discard )
+            _eventd_http_websocket_client_send_message(self, eventd_protocol_generate_ended(self->protocol, event, EVENTD_EVENT_END_REASON_DISCARD));
+        else
+            eventd_protocol_remove_event(self->protocol, event);
         return;
     }
 
     _eventd_http_websocket_client_handle_event(self, event);
+}
+
+static void
+_eventd_http_websocket_client_protocol_event(EventdHttpWebsocketClient *self, EventdEvent *event, EventdProtocol *protocol)
+{
+    _eventd_http_websocket_client_protocol_event_common(self, event, TRUE);
+}
+
+static void
+_eventd_http_websocket_client_protocol_relay(EventdHttpWebsocketClient *self, EventdEvent *event, EventdProtocol *protocol)
+{
+    _eventd_http_websocket_client_protocol_event_common(self, event, FALSE);
 }
 
 static void
@@ -307,6 +322,7 @@ eventd_http_websocket_client_handler(SoupServer *server, SoupWebsocketConnection
     g_signal_connect_swapped(self->connection, "closed", G_CALLBACK(_eventd_http_websocket_client_closed), self);
 
     g_signal_connect_swapped(self->protocol, "event", G_CALLBACK(_eventd_http_websocket_client_protocol_event), self);
+    g_signal_connect_swapped(self->protocol, "relay", G_CALLBACK(_eventd_http_websocket_client_protocol_relay), self);
     g_signal_connect_swapped(self->protocol, "answered", G_CALLBACK(_eventd_http_websocket_client_protocol_answered), self);
     g_signal_connect_swapped(self->protocol, "ended", G_CALLBACK(_eventd_http_websocket_client_protocol_ended), self);
     g_signal_connect_swapped(self->protocol, "passive", G_CALLBACK(_eventd_http_websocket_client_protocol_passive), self);
@@ -335,6 +351,6 @@ eventd_http_websocket_client_event_dispatch(EventdHttpWebsocketClient *self, Eve
         /* Do not send back our own events */
         return;
 
-    _eventd_http_websocket_client_send_message(self, eventd_protocol_generate_event(self->protocol, event));
+    _eventd_http_websocket_client_send_message(self, eventd_protocol_generate_relay(self->protocol, event));
     _eventd_http_websocket_client_handle_event(self, event);
 }
