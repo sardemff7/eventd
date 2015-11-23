@@ -154,6 +154,44 @@ eventd_protocol_default_init(EventdProtocolInterface *iface)
 }
 
 /**
+ * eventd_protocol_add_event:
+ * @protocol: an #EventdProtocol
+ * @event: the #EventdEVent to add to the known list
+ *
+ * Adds an event to the protocol object known events list.
+ * If a message is parsed concerning this event, the corresponding
+ * signals will be fired.
+ */
+EVENTD_EXPORT
+void
+eventd_protocol_add_event(EventdProtocol *self, EventdEvent *event)
+{
+    g_return_if_fail(EVENTD_IS_PROTOCOL(self));
+    g_return_if_fail(EVENTD_IS_EVENT(event));
+
+    return EVENTD_PROTOCOL_GET_INTERFACE(self)->add_event(self, event);
+}
+
+/**
+ * eventd_protocol_remove_event:
+ * @protocol: an #EventdProtocol
+ * @event: the #EventdEVent to add to the known list
+ *
+ * Removes an event from the protocol object known events list.
+ * If a message is parsed concerning this event, they will be
+ * ignored.
+ */
+EVENTD_EXPORT
+void
+eventd_protocol_remove_event(EventdProtocol *self, EventdEvent *event)
+{
+    g_return_if_fail(EVENTD_IS_PROTOCOL(self));
+    g_return_if_fail(EVENTD_IS_EVENT(event));
+
+    return EVENTD_PROTOCOL_GET_INTERFACE(self)->remove_event(self, event);
+}
+
+/**
  * eventd_protocol_parse:
  * @protocol: an #EventdProtocol
  * @buffer: a pointer to a buffer

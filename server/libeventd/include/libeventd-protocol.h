@@ -43,6 +43,9 @@ struct _EventdProtocolInterface
 {
     GTypeInterface parent_iface;
 
+    void (*add_event)(EventdProtocol *protocol, EventdEvent *event);
+    void (*remove_event)(EventdProtocol *protocol, EventdEvent *event);
+
     gboolean (*parse)(EventdProtocol *protocol, gchar **buffer, GError **error);
 
     gchar *(*generate_event)(EventdProtocol *protocol, EventdEvent *event);
@@ -115,6 +118,9 @@ GQuark eventd_protocol_parse_error_quark(void);
  */
 
 EventdProtocol *eventd_protocol_evp_new(void);
+
+void eventd_protocol_add_event(EventdProtocol *protocol, EventdEvent *event);
+void eventd_protocol_remove_event(EventdProtocol *protocol, EventdEvent *event);
 
 /*
  * Generator

@@ -59,8 +59,29 @@ eventd_protocol_evp_class_init(EventdProtocolEvpClass *klass)
 
 
 static void
+_eventd_protocol_evp_add_event(EventdProtocol *protocol, EventdEvent *event)
+{
+    g_return_if_fail(EVENTD_IS_PROTOCOL_EVP(protocol));
+    EventdProtocolEvp *self = EVENTD_PROTOCOL_EVP(protocol);
+
+    eventd_protocol_evp_add_event(self, event);
+}
+
+static void
+_eventd_protocol_evp_remove_event(EventdProtocol *protocol, EventdEvent *event)
+{
+    g_return_if_fail(EVENTD_IS_PROTOCOL_EVP(protocol));
+    EventdProtocolEvp *self = EVENTD_PROTOCOL_EVP(protocol);
+
+    eventd_protocol_evp_remove_event(self, event);
+}
+
+static void
 _eventd_protocol_evp_parser_interface_init(EventdProtocolInterface *iface)
 {
+    iface->add_event = _eventd_protocol_evp_add_event;
+    iface->remove_event = _eventd_protocol_evp_remove_event;
+
     iface->parse = eventd_protocol_evp_parse;
 
     iface->generate_event = eventd_protocol_evp_generate_event;

@@ -88,8 +88,29 @@ eventd_protocol_json_class_init(EventdProtocolJsonClass *klass)
 
 
 static void
+_eventd_protocol_json_add_event(EventdProtocol *protocol, EventdEvent *event)
+{
+    g_return_if_fail(EVENTD_IS_PROTOCOL_JSON(protocol));
+    EventdProtocolJson *self = EVENTD_PROTOCOL_JSON(protocol);
+
+    eventd_protocol_json_add_event(self, event);
+}
+
+static void
+_eventd_protocol_json_remove_event(EventdProtocol *protocol, EventdEvent *event)
+{
+    g_return_if_fail(EVENTD_IS_PROTOCOL_JSON(protocol));
+    EventdProtocolJson *self = EVENTD_PROTOCOL_JSON(protocol);
+
+    eventd_protocol_json_remove_event(self, event);
+}
+
+static void
 _eventd_protocol_json_parser_interface_init(EventdProtocolInterface *iface)
 {
+    iface->add_event = _eventd_protocol_json_add_event;
+    iface->remove_event = _eventd_protocol_json_remove_event;
+
     iface->parse = eventd_protocol_json_parse;
 
     iface->generate_event = eventd_protocol_json_generate_event;
