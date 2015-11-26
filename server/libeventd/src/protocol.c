@@ -55,22 +55,6 @@ eventd_protocol_default_init(EventdProtocolInterface *iface)
                      G_TYPE_NONE, 1, EVENTD_TYPE_EVENT);
 
     /**
-     * EventdProtocol::updated:
-     * @protocol: the #EventdProtocol that parsed the message
-     * @event: the #EventdEvent that was updated
-     *
-     * Emitted when parsed a UPDATED message.
-     */
-    eventd_protocol_signals[SIGNAL_UPDATED] =
-        g_signal_new("updated",
-                     G_TYPE_FROM_INTERFACE(iface),
-                     G_SIGNAL_RUN_FIRST,
-                     G_STRUCT_OFFSET(EventdProtocolInterface, updated),
-                     NULL, NULL,
-                     g_cclosure_marshal_generic,
-                     G_TYPE_NONE, 1, EVENTD_TYPE_EVENT);
-
-    /**
      * EventdProtocol::answered:
      * @protocol: the #EventdProtocol that parsed the message
      * @event: the #EventdEvent that was answered remotely
@@ -229,25 +213,6 @@ eventd_protocol_generate_event(EventdProtocol *self, EventdEvent *event)
     g_return_val_if_fail(EVENTD_IS_EVENT(event), NULL);
 
     return EVENTD_PROTOCOL_GET_INTERFACE(self)->generate_event(self, event);
-}
-
-/**
- * eventd_protocol_generate_updated:
- * @protocol: an #EventdProtocol
- * @event: the #EventdEVent to generate a message for
- *
- * Generates an UPDATED message.
- *
- * Returns: (transfer full): the message
- */
-EVENTD_EXPORT
-gchar *
-eventd_protocol_generate_updated(EventdProtocol *self, EventdEvent *event)
-{
-    g_return_val_if_fail(EVENTD_IS_PROTOCOL(self), NULL);
-    g_return_val_if_fail(EVENTD_IS_EVENT(event), NULL);
-
-    return EVENTD_PROTOCOL_GET_INTERFACE(self)->generate_updated(self, event);
 }
 
 /**

@@ -138,38 +138,6 @@ eventd_protocol_json_generate_event(EventdProtocol *protocol, EventdEvent *event
 }
 
 gchar *
-eventd_protocol_json_generate_updated(EventdProtocol *protocol, EventdEvent *event)
-{
-    g_return_val_if_fail(EVENTD_IS_PROTOCOL_JSON(protocol), NULL);
-    EventdProtocolJson *self = EVENTD_PROTOCOL_JSON(protocol);
-
-    eventd_protocol_json_add_event(self, event);
-
-    yajl_gen gen;
-    gen = _eventd_protocol_json_message_open("updated", event);
-
-    GHashTable *data;
-    data = eventd_event_get_all_data(event);
-
-    GList *answers;
-    answers = eventd_event_get_answers(event);
-
-    if ( answers != NULL )
-    {
-        _yajl_gen_string(gen, "answers");
-        yajl_gen_array_open(gen);
-        GList *answer;
-        for ( answer = answers ; answer != NULL ; answer = g_list_next(answer) )
-            yajl_gen_string(gen, answer->data, strlen(answer->data));
-        yajl_gen_array_close(gen);
-    }
-
-    _eventd_protocol_json_generate_data(gen, data);
-
-    return _eventd_protocol_json_message_close(gen);
-}
-
-gchar *
 eventd_protocol_json_generate_answered(EventdProtocol *protocol, EventdEvent *event, const gchar *answer)
 {
     g_return_val_if_fail(EVENTD_IS_PROTOCOL_JSON(protocol), NULL);

@@ -43,7 +43,6 @@ static const gchar *_eventd_protocol_evp_states[_EVENTD_PROTOCOL_EVP_STATE_SIZE]
     [EVENTD_PROTOCOL_EVP_STATE_BYE]           = "bye",
     [EVENTD_PROTOCOL_EVP_STATE_DOT_DATA]      = "dot message DATA",
     [EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT]     = "dot message EVENT",
-    [EVENTD_PROTOCOL_EVP_STATE_DOT_UPDATED]   = "dot message UPDATED",
     [EVENTD_PROTOCOL_EVP_STATE_DOT_ANSWERED]  = "dot message ANSWERED",
     [EVENTD_PROTOCOL_EVP_STATE_DOT_SUBSCRIBE] = "dot message SUBSCRIBE",
     [EVENTD_PROTOCOL_EVP_STATE_IGNORING]      = "ignoring",
@@ -159,43 +158,22 @@ _eventd_protocol_evp_parse_dot_event_start(EventdProtocolEvp *self, const gchar 
     if ( self->priv->event == NULL )
         return _eventd_protocol_evp_parse_dot_catchall_start(self, argv, error);
 
+
     self->priv->state = EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT;
 }
 
 static void
 _eventd_protocol_evp_parse_dot_event_end(EventdProtocolEvp *self, GError **error)
 {
-    eventd_event_set_all_data(self->priv->event, self->priv->data.hash);
+    if ( self->priv->data.hash != NULL )
+    {
+        eventd_event_set_all_data(self->priv->event, self->priv->data.hash);
+        self->priv->data.hash = NULL;
+    }
 
     g_signal_emit(self, eventd_protocol_signals[SIGNAL_EVENT], 0, self->priv->event);
 
     g_object_unref(self->priv->event);
-    self->priv->data.hash = NULL;
-    self->priv->event = NULL;
-
-    self->priv->state = self->priv->base_state;
-}
-
-/* .UPDATED */
-static void
-_eventd_protocol_evp_parse_dot_updated_start(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
-{
-    self->priv->event = g_hash_table_lookup(self->priv->events, argv[0]);
-
-    if ( self->priv->event == NULL )
-        return _eventd_protocol_evp_parse_dot_catchall_start(self, argv, error);
-
-    self->priv->state = EVENTD_PROTOCOL_EVP_STATE_DOT_UPDATED;
-}
-
-static void
-_eventd_protocol_evp_parse_dot_updated_end(EventdProtocolEvp *self, GError **error)
-{
-    eventd_event_set_all_data(self->priv->event, self->priv->data.hash);
-
-    g_signal_emit(self, eventd_protocol_signals[SIGNAL_UPDATED], 0, self->priv->event);
-
-    self->priv->data.hash = NULL;
     self->priv->event = NULL;
 
     self->priv->state = self->priv->base_state;
@@ -358,7 +336,7 @@ _eventd_protocol_evp_parse_bye(EventdProtocolEvp *self, const gchar * const *arg
 
 static const EventdProtocolEvpTokens _eventd_protocol_evp_dot_messages[] = {
     {"DATA", 1, 1,
-            { EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT, EVENTD_PROTOCOL_EVP_STATE_DOT_UPDATED, EVENTD_PROTOCOL_EVP_STATE_DOT_ANSWERED, _EVENTD_PROTOCOL_EVP_STATE_SIZE },
+            { EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT, EVENTD_PROTOCOL_EVP_STATE_DOT_ANSWERED, _EVENTD_PROTOCOL_EVP_STATE_SIZE },
             _eventd_protocol_evp_parse_dot_data_start,
             EVENTD_PROTOCOL_EVP_STATE_DOT_DATA,
             _eventd_protocol_evp_parse_dot_data_continue,
@@ -370,13 +348,6 @@ static const EventdProtocolEvpTokens _eventd_protocol_evp_dot_messages[] = {
             EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT,
             _eventd_protocol_evp_parse_dot__continue_noeat,
             _eventd_protocol_evp_parse_dot_event_end
-    },
-    {"UPDATED", 1, 1,
-            { EVENTD_PROTOCOL_EVP_STATE_BASE, EVENTD_PROTOCOL_EVP_STATE_PASSIVE, EVENTD_PROTOCOL_EVP_STATE_SUBSCRIBE, _EVENTD_PROTOCOL_EVP_STATE_SIZE },
-            _eventd_protocol_evp_parse_dot_updated_start,
-            EVENTD_PROTOCOL_EVP_STATE_DOT_UPDATED,
-            _eventd_protocol_evp_parse_dot__continue_noeat,
-            _eventd_protocol_evp_parse_dot_updated_end
     },
     {"ANSWERED", 2, 2,
             { EVENTD_PROTOCOL_EVP_STATE_BASE, EVENTD_PROTOCOL_EVP_STATE_PASSIVE, EVENTD_PROTOCOL_EVP_STATE_SUBSCRIBE,_EVENTD_PROTOCOL_EVP_STATE_SIZE },
@@ -405,7 +376,7 @@ static const EventdProtocolEvpTokens _eventd_protocol_evp_dot_messages[] = {
 
 static const EventdProtocolEvpTokens _eventd_protocol_evp_messages[] = {
     {"DATA", 2, 2,
-            { EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT, EVENTD_PROTOCOL_EVP_STATE_DOT_UPDATED, EVENTD_PROTOCOL_EVP_STATE_DOT_ANSWERED, _EVENTD_PROTOCOL_EVP_STATE_SIZE },
+            { EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT, EVENTD_PROTOCOL_EVP_STATE_DOT_ANSWERED, _EVENTD_PROTOCOL_EVP_STATE_SIZE },
             _eventd_protocol_evp_parse_data,
             _EVENTD_PROTOCOL_EVP_STATE_SIZE, NULL, NULL
     },
@@ -415,7 +386,7 @@ static const EventdProtocolEvpTokens _eventd_protocol_evp_messages[] = {
             _EVENTD_PROTOCOL_EVP_STATE_SIZE, NULL, NULL
     },
     {"ANSWER", 1, 1,
-            { EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT, EVENTD_PROTOCOL_EVP_STATE_DOT_UPDATED, _EVENTD_PROTOCOL_EVP_STATE_SIZE },
+            { EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT, _EVENTD_PROTOCOL_EVP_STATE_SIZE },
             _eventd_protocol_evp_parse_answer,
             _EVENTD_PROTOCOL_EVP_STATE_SIZE, NULL, NULL
     },
@@ -577,13 +548,13 @@ recheck:
         self->priv->state = self->priv->data.return_state;
     goto recheck;
     case EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT:
-        if ( self->priv->event != NULL )
-            g_object_unref(self->priv->event);
-    case EVENTD_PROTOCOL_EVP_STATE_DOT_UPDATED:
-        self->priv->event = NULL;
         if ( self->priv->data.hash != NULL )
             g_hash_table_unref(self->priv->data.hash);
         self->priv->data.hash = NULL;
+
+        if ( self->priv->event != NULL )
+            g_object_unref(self->priv->event);
+        self->priv->event = NULL;
     break;
     case EVENTD_PROTOCOL_EVP_STATE_DOT_ANSWERED:
         if ( self->priv->data.hash != NULL )

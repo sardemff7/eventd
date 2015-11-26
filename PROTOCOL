@@ -55,12 +55,6 @@ Event related messages
     ANSWER <name>
         Add a possible answer to the event
 
-.UPDATED <id>
-    Updates an event.
-    This message will override everything from the event, except category and name.
-    It must contain all the data from the event, even the ones that did not change.
-    It must also contain all the answers that are still relevant.
-
 ENDED <id> <reason>
     Inform the client of an event ending.
 

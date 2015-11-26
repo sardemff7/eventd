@@ -97,39 +97,6 @@ eventd_protocol_evp_generate_event(EventdProtocol *protocol, EventdEvent *event)
 }
 
 gchar *
-eventd_protocol_evp_generate_updated(EventdProtocol *protocol, EventdEvent *event)
-{
-    g_return_val_if_fail(EVENTD_IS_PROTOCOL_EVP(protocol), NULL);
-    EventdProtocolEvp *self = EVENTD_PROTOCOL_EVP(protocol);
-
-    eventd_protocol_evp_add_event(self, event);
-
-    GHashTable *data;
-    data = eventd_event_get_all_data(event);
-
-    GList *answers;
-    answers = eventd_event_get_answers(event);
-
-    gsize size;
-    size = strlen(".UPDATED 1b4e28ba-2fa1-11d2-883f-0016d3cca427\n.\n") + ( ( data != NULL ) ? ( g_hash_table_size(data) * strlen(DATA_SAMPLE) ) : 0 ) + g_list_length(answers) * strlen("ANSWER test-answer");
-
-    GString *str;
-    str = g_string_sized_new(size);
-
-    g_string_append_printf(str, ".UPDATED %s\n", eventd_event_get_uuid(event));
-
-    GList *answer;
-    for ( answer = answers ; answer != NULL ; answer = g_list_next(answer) )
-        g_string_append_printf(str, "ANSWER %s\n", (const gchar *) answer->data);
-
-    _eventd_protocol_generate_data(str, data);
-
-    g_string_append(str, ".\n");
-
-    return g_string_free(str, FALSE);
-}
-
-gchar *
 eventd_protocol_evp_generate_answered(EventdProtocol *protocol, EventdEvent *event, const gchar *answer)
 {
     g_return_val_if_fail(EVENTD_IS_PROTOCOL_EVP(protocol), NULL);
