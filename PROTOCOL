@@ -50,17 +50,9 @@ Event related messages
     with the addition of "/" to separate subcategories.
     An arbitrary number of subcategories is accepted.
     The message may contain data using the corresponding messages.
-    The message may contain possible answers using the corresponding message.
-
-    ANSWER <name>
-        Add a possible answer to the event
 
 ENDED <id> <reason>
     Inform the client of an event ending.
-
-.ANSWERED <id> <name>
-    Inform the client of an answer to an event.
-    The server may specify data using the corresponding messages.
 
 
 Connection related messages

@@ -123,9 +123,6 @@ _eventd_protocol_json_parse_string(gpointer user_data, const guchar *str_, gsize
     case EVENTD_PROTOCOL_JSON_STATE_NAME:
         self->priv->message.name = str;
     break;
-    case EVENTD_PROTOCOL_JSON_STATE_ANSWERS:
-        self->priv->message.answers = g_list_prepend(self->priv->message.answers, str);
-    break;
     case EVENTD_PROTOCOL_JSON_STATE_CATEGORIES:
         g_hash_table_add(self->priv->message.categories, str);
     break;
@@ -216,15 +213,6 @@ _eventd_protocol_json_parse_map_key(gpointer user_data, const guchar *key_, gsiz
             }
             self->priv->message.state = EVENTD_PROTOCOL_JSON_STATE_NAME;
         }
-        else if ( g_ascii_strncasecmp(key, "answers", len) == 0 )
-        {
-            if ( self->priv->message.answers != NULL )
-            {
-                g_set_error_literal(&self->priv->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_MALFORMED, "Got at least two answers lists");
-                break;
-            }
-            self->priv->message.state = EVENTD_PROTOCOL_JSON_STATE_ANSWERS;
-        }
         else if ( g_ascii_strncasecmp(key, "categories", len) == 0 )
         {
             if ( self->priv->message.categories != NULL )
@@ -270,8 +258,6 @@ _eventd_protocol_json_parse_start_array(gpointer user_data)
 
     switch ( self->priv->message.state )
     {
-    case EVENTD_PROTOCOL_JSON_STATE_ANSWERS:
-        return 1;
     case EVENTD_PROTOCOL_JSON_STATE_CATEGORIES:
         self->priv->message.categories = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
         return 1;
@@ -290,7 +276,6 @@ _eventd_protocol_json_parse_end_array(gpointer user_data)
 
     switch ( self->priv->message.state )
     {
-    case EVENTD_PROTOCOL_JSON_STATE_ANSWERS:
     case EVENTD_PROTOCOL_JSON_STATE_CATEGORIES:
         self->priv->message.state = EVENTD_PROTOCOL_JSON_STATE_MESSAGE;
         return 1;

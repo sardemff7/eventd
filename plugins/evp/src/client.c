@@ -52,7 +52,6 @@ struct _EventdEvpClient {
 
 typedef struct {
     EventdEvent *event;
-    gulong answered;
     gulong ended;
 } EventdEvpEventHandlers;
 
@@ -80,21 +79,6 @@ end:
 }
 
 static void
-_eventd_evp_client_event_answered(EventdEvpClient *self, const gchar *answer, EventdEvent *event)
-{
-    if ( ! self->processing_message )
-        _eventd_evp_client_send_message(self, eventd_protocol_generate_answered(self->protocol, event, answer));
-}
-
-static void
-_eventd_evp_client_protocol_answered(EventdEvpClient *self, EventdEvent *event, const gchar *answer, EventdProtocol *protocol)
-{
-    self->processing_message = TRUE;
-    eventd_event_answer(event, answer);
-    self->processing_message = FALSE;
-}
-
-static void
 _eventd_evp_client_event_ended(EventdEvpClient *self, EventdEventEndReason reason, EventdEvent *event)
 {
     if ( ! self->processing_message )
@@ -118,7 +102,6 @@ _eventd_evp_client_handle_event(EventdEvpClient *self, EventdEvent *event)
     handlers = g_slice_new(EventdEvpEventHandlers);
     handlers->event = g_object_ref(event);
 
-    handlers->answered = g_signal_connect_swapped(event, "answered", G_CALLBACK(_eventd_evp_client_event_answered), self);
     handlers->ended = g_signal_connect_swapped(event, "ended", G_CALLBACK(_eventd_evp_client_event_ended), self);
 
     g_hash_table_insert(self->events, event, handlers);
@@ -200,7 +183,6 @@ _eventd_evp_client_event_handlers_free(gpointer data)
 {
     EventdEvpEventHandlers *handlers = data;
 
-    g_signal_handler_disconnect(handlers->event, handlers->answered);
     g_signal_handler_disconnect(handlers->event, handlers->ended);
 
     g_object_unref(handlers->event);
@@ -246,7 +228,6 @@ static void
 _eventd_evp_client_connect(EventdEvpClient *self, GIOStream *stream)
 {
     g_signal_connect_swapped(self->protocol, "event", G_CALLBACK(_eventd_evp_client_protocol_event), self);
-    g_signal_connect_swapped(self->protocol, "answered", G_CALLBACK(_eventd_evp_client_protocol_answered), self);
     g_signal_connect_swapped(self->protocol, "ended", G_CALLBACK(_eventd_evp_client_protocol_ended), self);
     g_signal_connect_swapped(self->protocol, "passive", G_CALLBACK(_eventd_evp_client_protocol_passive), self);
     g_signal_connect_swapped(self->protocol, "subscribe", G_CALLBACK(_eventd_evp_client_protocol_subscribe), self);

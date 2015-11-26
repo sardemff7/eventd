@@ -76,21 +76,3 @@ eventd_event_set_all_data(EventdEvent *self, GHashTable *data)
         g_hash_table_unref(self->priv->data);
     self->priv->data = data;
 }
-
-void
-eventd_event_set_all_answer_data(EventdEvent *self, GHashTable *data)
-{
-    g_return_if_fail(EVENTD_IS_EVENT(self));
-
-    if ( self->priv->answer_data != NULL )
-        g_hash_table_unref(self->priv->answer_data);
-    self->priv->answer_data = data;
-}
-
-GList *
-eventd_event_get_answers(EventdEvent *self)
-{
-    g_return_val_if_fail(EVENTD_IS_EVENT(self), NULL);
-
-    return self->priv->answers;
-}

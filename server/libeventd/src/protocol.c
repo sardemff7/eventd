@@ -55,23 +55,6 @@ eventd_protocol_default_init(EventdProtocolInterface *iface)
                      G_TYPE_NONE, 1, EVENTD_TYPE_EVENT);
 
     /**
-     * EventdProtocol::answered:
-     * @protocol: the #EventdProtocol that parsed the message
-     * @event: the #EventdEvent that was answered remotely
-     * @answer: the answer
-     *
-     * Emitted when parsed a ANSWERED message.
-     */
-    eventd_protocol_signals[SIGNAL_ANSWERED] =
-        g_signal_new("answered",
-                     G_TYPE_FROM_INTERFACE(iface),
-                     G_SIGNAL_RUN_FIRST,
-                     G_STRUCT_OFFSET(EventdProtocolInterface, answered),
-                     NULL, NULL,
-                     g_cclosure_marshal_generic,
-                     G_TYPE_NONE, 2, EVENTD_TYPE_EVENT, G_TYPE_STRING);
-
-    /**
      * EventdProtocol::ended:
      * @protocol: the #EventdProtocol that parsed the message
      * @event: the #EventdEvent that ended remotely
@@ -213,27 +196,6 @@ eventd_protocol_generate_event(EventdProtocol *self, EventdEvent *event)
     g_return_val_if_fail(EVENTD_IS_EVENT(event), NULL);
 
     return EVENTD_PROTOCOL_GET_INTERFACE(self)->generate_event(self, event);
-}
-
-/**
- * eventd_protocol_generate_answered:
- * @protocol: an #EventdProtocol
- * @event: the #EventdEVent to generate a message for
- * @answer: the answer to put in the message
- *
- * Generates an ANSWERED message.
- *
- * Returns: (transfer full): the message
- */
-EVENTD_EXPORT
-gchar *
-eventd_protocol_generate_answered(EventdProtocol *self, EventdEvent *event, const gchar *answer)
-{
-    g_return_val_if_fail(EVENTD_IS_PROTOCOL(self), NULL);
-    g_return_val_if_fail(EVENTD_IS_EVENT(event), NULL);
-    g_return_val_if_fail(answer != NULL, NULL);
-
-    return EVENTD_PROTOCOL_GET_INTERFACE(self)->generate_answered(self, event, answer);
 }
 
 /**

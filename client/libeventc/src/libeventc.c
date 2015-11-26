@@ -65,7 +65,6 @@ struct _EventcConnectionPrivate {
 
 typedef struct {
     EventdEvent *event;
-    gulong answered;
     gulong ended;
 } EventdConnectionEventHandlers;
 
@@ -215,21 +214,6 @@ _eventc_connection_protocol_event(EventcConnection *self, EventdEvent *event, Ev
 }
 
 static void
-_eventc_connection_event_answered(EventcConnection *self, const gchar *answer, EventdEvent *event)
-{
-    if ( ! self->priv->processing_message )
-        _eventc_connection_send_message(self, eventd_protocol_generate_answered(self->priv->protocol, event, answer));
-}
-
-static void
-_eventc_connection_protocol_answered(EventcConnection *self, EventdEvent *event, const gchar *answer, EventdProtocol *protocol)
-{
-    self->priv->processing_message = TRUE;
-    eventd_event_answer(event, answer);
-    self->priv->processing_message = FALSE;
-}
-
-static void
 _eventc_connection_event_ended(EventcConnection *self, EventdEventEndReason reason, EventdEvent *event)
 {
     if ( ! self->priv->processing_message )
@@ -258,7 +242,6 @@ _eventc_connection_handle_event(EventcConnection *self, EventdEvent *event)
     handlers = g_slice_new(EventdConnectionEventHandlers);
     handlers->event = g_object_ref(event);
 
-    handlers->answered = g_signal_connect_swapped(event, "answered", G_CALLBACK(_eventc_connection_event_answered), self);
     handlers->ended = g_signal_connect_swapped(event, "ended", G_CALLBACK(_eventc_connection_event_ended), self);
 
     g_hash_table_insert(self->priv->events, event, handlers);
@@ -269,7 +252,6 @@ _eventc_connection_event_handlers_free(gpointer data)
 {
     EventdConnectionEventHandlers *handlers = data;
 
-    g_signal_handler_disconnect(handlers->event, handlers->answered);
     g_signal_handler_disconnect(handlers->event, handlers->ended);
 
     g_object_unref(handlers->event);
@@ -343,7 +325,6 @@ eventc_connection_init(EventcConnection *self)
     self->priv->cancellable = g_cancellable_new();
 
     g_signal_connect_swapped(self->priv->protocol, "event", G_CALLBACK(_eventc_connection_protocol_event), self);
-    g_signal_connect_swapped(self->priv->protocol, "answered", G_CALLBACK(_eventc_connection_protocol_answered), self);
     g_signal_connect_swapped(self->priv->protocol, "ended", G_CALLBACK(_eventc_connection_protocol_ended), self);
     g_signal_connect_swapped(self->priv->protocol, "bye", G_CALLBACK(_eventc_connection_protocol_bye), self);
 }

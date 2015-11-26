@@ -41,8 +41,6 @@ namespace Eventd
 
         public void set_timeout(int64 timeout);
         public void add_data(owned string name, owned string content);
-        public void add_answer(string name);
-        public void add_answer_data(owned string name, owned string content);
 
         public unowned string get_category();
         public unowned string get_name();
@@ -50,13 +48,9 @@ namespace Eventd
         public bool has_data(string name);
         public unowned string get_data(string name);
         public GLib.HashTable<weak string,weak string>? get_all_data();
-        public unowned string get_answer_data(string name);
-        public GLib.HashTable<weak string,weak string>? get_all_answer_data();
 
-        public void answer(string answer);
         public void end(EventEndReason reason);
 
-        public signal void answered(string answer);
         public signal void ended(EventEndReason reason);
     }
 
@@ -78,14 +72,12 @@ namespace Eventd
         public abstract bool parse(string buffer) throws ProtocolParseError;
 
         public abstract string generate_event(Eventd.Event event);
-        public abstract string generate_answered(Eventd.Event event, string answer);
         public abstract string generate_ended(Eventd.Event event, Eventd.EventEndReason reason);
         public abstract string generate_passive();
         public abstract string generate_subscribe(GLib.HashTable<string, string>? categories);
         public abstract string generate_bye(string? message);
 
         public signal void event(Eventd.Event event);
-        public signal void answered(Eventd.Event event, string answer);
         public signal void ended(Eventd.Event event, Eventd.EventEndReason reason);
         public signal void passive();
         public signal void subscribe(GLib.HashTable<string, string>? categories);

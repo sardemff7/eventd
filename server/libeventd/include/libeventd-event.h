@@ -78,7 +78,6 @@ struct _EventdEventClass
     GObjectClass parent_class;
 
     /* Signals */
-    void (*answered) (EventdEvent *event, const gchar *answer);
     void (*ended)    (EventdEvent *event, EventdEventEndReason reason);
 };
 
@@ -87,14 +86,11 @@ struct _EventdEventClass
  */
 EventdEvent *eventd_event_new(const gchar *category, const gchar *name);
 
-void eventd_event_answer(EventdEvent *event, const gchar *answer);
 void eventd_event_end(EventdEvent *event, EventdEventEndReason reason);
 
 
 void eventd_event_set_timeout(EventdEvent *event, gint64 timeout);
 void eventd_event_add_data(EventdEvent *event, gchar *name, gchar *content);
-void eventd_event_add_answer(EventdEvent *event, const gchar *name);
-void eventd_event_add_answer_data(EventdEvent *event, gchar *name, gchar *content);
 
 const gchar *eventd_event_get_category(const EventdEvent *event);
 const gchar *eventd_event_get_name(const EventdEvent *event);
@@ -102,8 +98,6 @@ gint64 eventd_event_get_timeout(const EventdEvent *event);
 gboolean eventd_event_has_data(const EventdEvent *event, const gchar *name);
 const gchar *eventd_event_get_data(const EventdEvent *event, const gchar *name);
 GHashTable *eventd_event_get_all_data(const EventdEvent *event);
-const gchar *eventd_event_get_answer_data(const EventdEvent *event, const gchar *name);
-GHashTable *eventd_event_get_all_answer_data(const EventdEvent *event);
 
 G_END_DECLS
 

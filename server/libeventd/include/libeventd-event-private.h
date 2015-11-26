@@ -25,8 +25,6 @@ EventdEvent *eventd_event_new_for_uuid_string(const gchar *uuid_string, const gc
 const gchar *eventd_event_get_uuid(EventdEvent *event);
 
 void eventd_event_set_all_data(EventdEvent *event, GHashTable *data);
-GList *eventd_event_get_answers(EventdEvent *event);
-void eventd_event_set_all_answer_data(EventdEvent *event, GHashTable *data);
 
 G_END_DECLS
 

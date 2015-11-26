@@ -40,10 +40,9 @@ connection_test(GDataInputStream *input, GDataOutputStream *output, const gchar 
     gchar *e = NULL;
 
 
-    /* Sending a first event an wait for the answer */
+    /* Sending a first event an wait for the ended */
 
     if ( ! g_data_output_stream_put_string(output, ".EVENT 2e6894bb-cf96-462e-a435-766c9b1b4f8a test test\n", NULL, error) ) goto fail;
-    if ( ! g_data_output_stream_put_string(output, "ANSWER test\n", NULL, error) ) goto fail;
     m = g_strdup_printf("DATA file %s\n", filename);
     if ( ! g_data_output_stream_put_string(output, m, NULL, error) ) goto fail;
     g_free(m);
@@ -51,38 +50,6 @@ connection_test(GDataInputStream *input, GDataOutputStream *output, const gchar 
     if ( ! g_data_output_stream_put_string(output, m, NULL, error) ) goto fail;
     m = (g_free(m), NULL);
     if ( ! g_data_output_stream_put_string(output, ".\n", NULL, error) ) goto fail;
-
-    r = g_data_input_stream_read_upto(input, "\n", -1, NULL, NULL, error);
-    if ( r == NULL ) goto fail;
-    if ( ! g_data_input_stream_read_byte(input, NULL, error) ) goto fail;
-    if ( g_strcmp0(r, ".ANSWERED 2e6894bb-cf96-462e-a435-766c9b1b4f8a test") != 0 )
-    {
-        e = g_strdup_printf("Wrong ANSWER to EVENT: %s", r);
-        goto fail;
-    }
-    g_free(r);
-
-    r = g_data_input_stream_read_upto(input, "\n", -1, NULL, NULL, error);
-    if ( r == NULL ) goto fail;
-    if ( ! g_data_input_stream_read_byte(input, NULL, error) ) goto fail;
-    m = g_strdup_printf("DATA test %s", message);
-    if ( g_strcmp0(r, m) != 0 )
-    {
-        e = g_strdup_printf("Wrong ANSWER DATA to EVENT: %s", r);
-        goto fail;
-    }
-    m = (g_free(m), NULL);
-    g_free(r);
-
-    r = g_data_input_stream_read_upto(input, "\n", -1, NULL, NULL, error);
-    if ( r == NULL ) goto fail;
-    if ( ! g_data_input_stream_read_byte(input, NULL, error) ) goto fail;
-    if ( g_strcmp0(r, ".") != 0 )
-    {
-        e = g_strdup_printf("Wrong ANSWER end to EVENT: %s", r);
-        goto fail;
-    }
-    g_free(r);
 
     r = g_data_input_stream_read_upto(input, "\n", -1, NULL, NULL, error);
     if ( r == NULL ) goto fail;

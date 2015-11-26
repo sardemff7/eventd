@@ -44,7 +44,6 @@ static guint timeout = 0;
 typedef enum {
     STATE_START,
     STATE_SENT,
-    STATE_ANSWERED,
     STATE_ENDED
 } State;
 
@@ -61,7 +60,6 @@ static struct{
 static const gchar *_state_names[] = {
     [STATE_START] = "start",
     [STATE_SENT] = "sent",
-    [STATE_ANSWERED] = "answered",
     [STATE_ENDED] = "ended"
 };
 
@@ -101,7 +99,6 @@ _timeout_callback(gpointer user_data)
 }
 
 static void _ended_callback(EventdEvent *e, EventdEventEndReason reason, EventcConnection *client);
-static void _answered_callback(EventdEvent *e, const gchar *answer, EventcConnection *client);
 static void
 _create_event(EventcConnection *client)
 {
@@ -116,14 +113,12 @@ _create_event(EventcConnection *client)
         eventd_event_add_data(event, g_strdup("file"), g_build_filename(g_getenv("EVENTD_TESTS_TMP_DIR"), tmp, NULL));
         g_free(tmp);
         eventd_event_add_data(event, g_strdup("test"), g_strdup_printf("Some message\nfrom %s", g_get_prgname()));
-        eventd_event_add_answer(event,"test");
     }
     case 3:
     default:
     break;
     }
 
-    g_signal_connect(event, "answered", G_CALLBACK(_answered_callback), client);
     g_signal_connect(event, "ended", G_CALLBACK(_ended_callback), client);
 
     if ( timeout > 0 )
@@ -163,40 +158,6 @@ _connect_callback(GObject *obj, GAsyncResult *res, gpointer user_data)
     }
 }
 
-static void
-_answered_callback(EventdEvent *e, const gchar *answer, EventcConnection *client)
-{
-    if ( ! _check_state(-1, -1, STATE_SENT) )
-        return;
-
-    if ( g_strcmp0(answer, "test") != 0 )
-    {
-        g_warning("Wrond answer to event: %s", answer);
-        goto fail;
-    }
-
-    const gchar *filename = eventd_event_get_data(event, "file");
-    gchar *contents;
-    if ( ! g_file_get_contents(filename, &contents, NULL, &error) ) goto fail;
-    if ( g_strcmp0(eventd_event_get_data(event, "test"), contents) != 0 )
-    {
-        g_warning("Wrong test file contents: %s", contents);
-        g_free(contents);
-        goto fail;
-    }
-    g_free(contents);
-    if ( g_unlink(filename) < 0 )
-    {
-        g_warning("Couldn't remove the file: %s", g_strerror(errno));
-        goto fail;
-    }
-
-    ++_test_state.state;
-    return;
-fail:
-    g_main_loop_quit(loop);
-}
-
 static gboolean
 _ended_close_idle_callback(gpointer user_data)
 {
@@ -225,17 +186,14 @@ static gboolean
 _end_idle_callback(gpointer user_data)
 {
     if ( _check_state(-1, 3, STATE_SENT) )
-    {
-        ++_test_state.state;
         eventd_event_end(event, EVENTD_EVENT_END_REASON_CLIENT_DISMISS);
-    }
     return FALSE;
 }
 
 static void
 _ended_callback(EventdEvent *e, EventdEventEndReason reason, EventcConnection *client)
 {
-    if ( ! _check_state(-1, -1, STATE_ANSWERED) )
+    if ( ! _check_state(-1, -1, STATE_SENT) )
         return;
     g_return_if_fail(eventd_event_end_reason_is_valid_value(reason));
     switch ( _test_state.event )

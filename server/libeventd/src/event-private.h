@@ -27,8 +27,6 @@ struct _EventdEventPrivate {
     gchar *name;
     gint64 timeout;
     GHashTable *data;
-    GList *answers;
-    GHashTable *answer_data;
 };
 
 EventdEvent *eventd_event_new_for_uuid(NkUuid uuid, const gchar *category, const gchar *name);

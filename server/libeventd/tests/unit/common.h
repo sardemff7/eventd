@@ -34,7 +34,6 @@
 #define EVENTD_EVENT_TEST_NAME "test-name"
 #define EVENTD_EVENT_TEST_CATEGORY "test-category"
 #define EVENTD_EVENT_TEST_TIMEOUT -1
-#define EVENTD_EVENT_TEST_ANSWER "test-answer"
 #define EVENTD_EVENT_TEST_DATA_NAME "test-name"
 #define EVENTD_EVENT_TEST_DATA_CONTENT "test-content"
 #define EVENTD_EVENT_TEST_DATA_NEWLINE_NAME "test-name-newline"

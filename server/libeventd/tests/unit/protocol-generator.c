@@ -32,13 +32,9 @@ static void
 _init_data(gpointer fixture, gconstpointer user_data)
 {
     GeneratorData *data = fixture;
-    gboolean with_answer = GPOINTER_TO_INT(user_data);
 
     data->protocol = eventd_protocol_evp_new();
     data->event = eventd_event_new_for_uuid_string(EVENTD_EVENT_TEST_UUID, EVENTD_EVENT_TEST_NAME, EVENTD_EVENT_TEST_NAME);
-
-    if ( with_answer )
-        eventd_event_add_answer(data->event, EVENTD_EVENT_TEST_ANSWER);
 }
 
 static void
@@ -49,8 +45,6 @@ _init_data_with_data(gpointer fixture, gconstpointer user_data)
 
     eventd_event_add_data(data->event, g_strdup(EVENTD_EVENT_TEST_DATA_NAME), g_strdup(EVENTD_EVENT_TEST_DATA_CONTENT));
     eventd_event_add_data(data->event, g_strdup(EVENTD_EVENT_TEST_DATA_NEWLINE_NAME ), g_strdup(EVENTD_EVENT_TEST_DATA_NEWLINE_CONTENT));
-    eventd_event_add_answer_data(data->event, g_strdup(EVENTD_EVENT_TEST_DATA_NAME), g_strdup(EVENTD_EVENT_TEST_DATA_CONTENT));
-    eventd_event_add_answer_data(data->event, g_strdup(EVENTD_EVENT_TEST_DATA_NEWLINE_NAME ), g_strdup(EVENTD_EVENT_TEST_DATA_NEWLINE_CONTENT));
 }
 
 static void
@@ -79,7 +73,6 @@ _test_evp_generate_event(gpointer fixture, gconstpointer user_data)
 {
     GeneratorData *data = fixture;
     GHashTable *data_hash;
-    gboolean with_answer = GPOINTER_TO_INT(user_data);
     const gchar *expected;
     gchar *message;
 
@@ -88,65 +81,16 @@ _test_evp_generate_event(gpointer fixture, gconstpointer user_data)
     if ( data_hash != NULL )
     {
         g_hash_table_unref(data_hash);
-        if ( with_answer )
-        {
-            expected =
-                ".EVENT " EVENTD_EVENT_TEST_UUID " " EVENTD_EVENT_TEST_NAME " " EVENTD_EVENT_TEST_NAME "\n"
-                "ANSWER " EVENTD_EVENT_TEST_ANSWER "\n"
-                "DATA " EVENTD_EVENT_TEST_DATA_NAME " " EVENTD_EVENT_TEST_DATA_CONTENT "\n"
-                ".DATA " EVENTD_EVENT_TEST_DATA_NEWLINE_NAME "\n" EVENTD_EVENT_TEST_DATA_NEWLINE_CONTENT "\n.\n"
-                ".\n";
-        }
-        else
-        {
-            expected =
-                ".EVENT " EVENTD_EVENT_TEST_UUID " " EVENTD_EVENT_TEST_NAME " " EVENTD_EVENT_TEST_NAME "\n"
-                "DATA " EVENTD_EVENT_TEST_DATA_NAME " " EVENTD_EVENT_TEST_DATA_CONTENT "\n"
-                ".DATA " EVENTD_EVENT_TEST_DATA_NEWLINE_NAME "\n" EVENTD_EVENT_TEST_DATA_NEWLINE_CONTENT "\n.\n"
-                ".\n";
-        }
-    }
-    else
-    {
-        if ( with_answer )
-        {
-            expected =
-                ".EVENT " EVENTD_EVENT_TEST_UUID " " EVENTD_EVENT_TEST_NAME " " EVENTD_EVENT_TEST_NAME "\n"
-                "ANSWER " EVENTD_EVENT_TEST_ANSWER "\n"
-                ".\n";
-        }
-        else
-            expected = "EVENT " EVENTD_EVENT_TEST_UUID " " EVENTD_EVENT_TEST_NAME " " EVENTD_EVENT_TEST_NAME "\n";
-    }
-
-    message = eventd_protocol_generate_event(data->protocol, data->event);
-    g_assert_cmpstr(message, ==, expected);
-
-    g_free(message);
-}
-
-static void
-_test_evp_generate_answered(gpointer fixture, gconstpointer user_data)
-{
-    GeneratorData *data = fixture;
-    GHashTable *data_hash;
-    const gchar *expected;
-    gchar *message;
-
-    data_hash = eventd_event_get_all_answer_data(data->event);
-    if ( data_hash != NULL )
-    {
-        g_hash_table_unref(data_hash);
         expected =
-            ".ANSWERED " EVENTD_EVENT_TEST_UUID " " EVENTD_EVENT_TEST_ANSWER "\n"
+            ".EVENT " EVENTD_EVENT_TEST_UUID " " EVENTD_EVENT_TEST_NAME " " EVENTD_EVENT_TEST_NAME "\n"
             "DATA " EVENTD_EVENT_TEST_DATA_NAME " " EVENTD_EVENT_TEST_DATA_CONTENT "\n"
             ".DATA " EVENTD_EVENT_TEST_DATA_NEWLINE_NAME "\n" EVENTD_EVENT_TEST_DATA_NEWLINE_CONTENT "\n.\n"
             ".\n";
     }
     else
-        expected = "ANSWERED " EVENTD_EVENT_TEST_UUID " " EVENTD_EVENT_TEST_ANSWER "\n";
+        expected = "EVENT " EVENTD_EVENT_TEST_UUID " " EVENTD_EVENT_TEST_NAME " " EVENTD_EVENT_TEST_NAME "\n";
 
-    message = eventd_protocol_generate_answered(data->protocol, data->event, EVENTD_EVENT_TEST_ANSWER);
+    message = eventd_protocol_generate_event(data->protocol, data->event);
     g_assert_cmpstr(message, ==, expected);
 
     g_free(message);
@@ -198,10 +142,6 @@ eventd_tests_unit_eventd_protocol_suite_generator(void)
     g_test_suite_add(suite, g_test_create_case("evp_generate_passive()",           sizeof(GeneratorData), NULL,                  _init_data,           _test_evp_generate_passive,  _clean_data));
     g_test_suite_add(suite, g_test_create_case("evp_generate_event()",             sizeof(GeneratorData), NULL,                  _init_data,           _test_evp_generate_event,    _clean_data));
     g_test_suite_add(suite, g_test_create_case("evp_generate_event(data)",         sizeof(GeneratorData), NULL,                  _init_data_with_data, _test_evp_generate_event,    _clean_data));
-    g_test_suite_add(suite, g_test_create_case("evp_generate_event(answer, data)", sizeof(GeneratorData), GINT_TO_POINTER(TRUE), _init_data_with_data, _test_evp_generate_event,    _clean_data));
-    g_test_suite_add(suite, g_test_create_case("evp_generate_event(answer)",       sizeof(GeneratorData), GINT_TO_POINTER(TRUE), _init_data,           _test_evp_generate_event,    _clean_data));
-    g_test_suite_add(suite, g_test_create_case("evp_generate_answered()",          sizeof(GeneratorData), NULL,                  _init_data,           _test_evp_generate_answered, _clean_data));
-    g_test_suite_add(suite, g_test_create_case("evp_generate_answered(data)",      sizeof(GeneratorData), NULL,                  _init_data_with_data, _test_evp_generate_answered, _clean_data));
     g_test_suite_add(suite, g_test_create_case("evp_generate_ended()",             sizeof(GeneratorData), NULL,                  _init_data,           _test_evp_generate_ended,    _clean_data));
     g_test_suite_add(suite, g_test_create_case("evp_generate_bye()",               sizeof(GeneratorData), NULL,                  _init_data,           _test_evp_generate_bye,      _clean_data));
     g_test_suite_add(suite, g_test_create_case("evp_generate_bye(message)",        sizeof(GeneratorData), GINT_TO_POINTER(TRUE), _init_data,           _test_evp_generate_bye,      _clean_data));

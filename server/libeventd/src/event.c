@@ -159,7 +159,6 @@ eventd_event_end_reason_get_value_nick(EventdEventEndReason reason)
 
 
 enum {
-    SIGNAL_ANSWERED,
     SIGNAL_ENDED,
     LAST_SIGNAL
 };
@@ -179,22 +178,6 @@ eventd_event_class_init(EventdEventClass *klass)
     eventd_event_parent_class = g_type_class_peek_parent(klass);
 
     object_class->finalize = _eventd_event_finalize;
-
-    /**
-     * EventdEvent::answered:
-     * @event: the #EventdEvent that was answered
-     * @answer: (transfer none): the answer given
-     *
-     * Emitted when an event is answered.
-     */
-    _eventd_event_signals[SIGNAL_ANSWERED] =
-        g_signal_new("answered",
-                     G_TYPE_FROM_CLASS(object_class),
-                     G_SIGNAL_RUN_FIRST,
-                     G_STRUCT_OFFSET(EventdEventClass, answered),
-                     NULL, NULL,
-                     g_cclosure_marshal_generic,
-                     G_TYPE_NONE, 1, G_TYPE_STRING);
 
     /**
      * EventdEvent::ended:
@@ -256,25 +239,6 @@ _eventd_event_finalize(GObject *object)
 }
 
 /**
- * eventd_event_answer:
- * @event: an #EventdEvent
- * @answer: the answer to the event
- *
- * Responds to the event with the given answer.
- */
-EVENTD_EXPORT
-void
-eventd_event_answer(EventdEvent *self, const gchar *answer)
-{
-    g_return_if_fail(EVENTD_IS_EVENT(self));
-    GList *answer_;
-    answer_ = g_list_find_custom(self->priv->answers, answer, (GCompareFunc)g_strcmp0);
-    g_return_if_fail(answer_ != NULL);
-
-    g_signal_emit(self, _eventd_event_signals[SIGNAL_ANSWERED], 0, answer_->data);
-}
-
-/**
  * eventd_event_end:
  * @event: an #EventdEvent
  * @reason: the reason for ending the event
@@ -310,44 +274,6 @@ eventd_event_add_data(EventdEvent *self, gchar *name, gchar *content)
     if ( self->priv->data == NULL )
         self->priv->data = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
     g_hash_table_insert(self->priv->data, name, content);
-}
-
-/**
- * eventd_event_add_answer:
- * @event: an #EventdEvent
- * @name: an answer for the event
- *
- * Adds a valid answer value for the event.
- */
-EVENTD_EXPORT
-void
-eventd_event_add_answer(EventdEvent *self, const gchar *name)
-{
-    g_return_if_fail(EVENTD_IS_EVENT(self));
-    g_return_if_fail(name != NULL);
-
-    self->priv->answers = g_list_prepend(self->priv->answers, g_strdup(name));
-}
-
-/**
- * eventd_event_add_answer_data:
- * @event: an #EventdEvent
- * @name: (transfer full): a name for the data
- * @content: (transfer full): the data to add
- *
- * Attaches named data to the answer.
- */
-EVENTD_EXPORT
-void
-eventd_event_add_answer_data(EventdEvent *self, gchar *name, gchar *content)
-{
-    g_return_if_fail(EVENTD_IS_EVENT(self));
-    g_return_if_fail(name != NULL);
-    g_return_if_fail(content != NULL);
-
-    if ( self->priv->answer_data == NULL )
-        self->priv->answer_data = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-    g_hash_table_insert(self->priv->answer_data, name, content);
 }
 
 /**
@@ -481,46 +407,4 @@ eventd_event_get_all_data(const EventdEvent *self)
         return NULL;
 
     return g_hash_table_ref(self->priv->data);
-}
-
-/**
- * eventd_event_get_answer_data:
- * @event: an #EventdEvent
- * @name: a name of the answer data
- *
- * Retrieves the answer data with a given name.
- *
- * Returns: (transfer none): the data in the event for the answer
- */
-EVENTD_EXPORT
-const gchar *
-eventd_event_get_answer_data(const EventdEvent *self, const gchar *name)
-{
-    g_return_val_if_fail(EVENTD_IS_EVENT(self), NULL);
-    g_return_val_if_fail(name != NULL, NULL);
-
-    if ( self->priv->answer_data == NULL )
-        return NULL;
-
-    return g_hash_table_lookup(self->priv->answer_data, name);
-}
-
-/**
- * eventd_event_get_all_answer_data:
- * @event: an #EventdEvent
- *
- * Retrieves the answer data table from the event.
- *
- * Returns: (nullable) (transfer container) (element-type utf8 utf8): the answer data table
- */
-EVENTD_EXPORT
-GHashTable *
-eventd_event_get_all_answer_data(const EventdEvent *self)
-{
-    g_return_val_if_fail(EVENTD_IS_EVENT(self), NULL);
-
-    if ( self->priv->answer_data == NULL )
-        return NULL;
-
-    return g_hash_table_ref(self->priv->answer_data);
 }

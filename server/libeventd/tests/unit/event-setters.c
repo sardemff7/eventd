@@ -189,109 +189,6 @@ _test_add_data_notnull_good_bad(gpointer fixture, gconstpointer user_data)
     g_test_trap_assert_failed();
 }
 
-static void
-_test_add_answer_notnull_good(gpointer fixture, gconstpointer user_data)
-{
-    SettersData *data = fixture;
-
-    if ( g_test_subprocess() )
-    {
-        eventd_event_add_answer(data->event, EVENTD_EVENT_TEST_ANSWER);
-        exit(0);
-    }
-    g_test_trap_subprocess(NULL, 0, 0);
-    g_test_trap_assert_passed();
-}
-
-static void
-_test_add_answer_null_good(gpointer fixture, gconstpointer user_data)
-{
-    if ( ! g_test_undefined() )
-            return;
-    if ( g_test_subprocess() )
-    {
-        eventd_event_add_answer(NULL, EVENTD_EVENT_TEST_ANSWER);
-        exit(0);
-    }
-    g_test_trap_subprocess(NULL, 0, 0);
-    g_test_trap_assert_failed();
-}
-
-static void
-_test_add_answer_notnull_bad(gpointer fixture, gconstpointer user_data)
-{
-    SettersData *data = fixture;
-
-    if ( ! g_test_undefined() )
-            return;
-    if ( g_test_subprocess() )
-    {
-        eventd_event_add_answer(data->event, NULL);
-        exit(0);
-    }
-    g_test_trap_subprocess(NULL, 0, 0);
-    g_test_trap_assert_failed();
-}
-static void
-_test_add_answer_data_notnull_good_good(gpointer fixture, gconstpointer user_data)
-{
-    SettersData *data = fixture;
-
-    if ( g_test_subprocess() )
-    {
-        eventd_event_add_answer_data(data->event, EVENTD_EVENT_TEST_DATA_NAME, EVENTD_EVENT_TEST_DATA_CONTENT);
-        exit(0);
-    }
-    g_test_trap_subprocess(NULL, 0, 0);
-    g_test_trap_assert_passed();
-}
-
-static void
-_test_add_answer_data_null_good_good(gpointer fixture, gconstpointer user_data)
-{
-    if ( ! g_test_undefined() )
-            return;
-    if ( g_test_subprocess() )
-    {
-        eventd_event_add_answer_data(NULL, EVENTD_EVENT_TEST_DATA_NAME, EVENTD_EVENT_TEST_DATA_CONTENT);
-        exit(0);
-    }
-    g_test_trap_subprocess(NULL, 0, 0);
-    g_test_trap_assert_failed();
-}
-
-static void
-_test_add_answer_data_notnull_bad_good(gpointer fixture, gconstpointer user_data)
-{
-    SettersData *data = fixture;
-
-    if ( ! g_test_undefined() )
-            return;
-    if ( g_test_subprocess() )
-    {
-        eventd_event_add_answer_data(data->event, NULL, EVENTD_EVENT_TEST_DATA_CONTENT);
-        exit(0);
-    }
-    g_test_trap_subprocess(NULL, 0, 0);
-    g_test_trap_assert_failed();
-}
-
-static void
-_test_add_answer_data_notnull_good_bad(gpointer fixture, gconstpointer user_data)
-{
-    SettersData *data = fixture;
-
-    if ( ! g_test_undefined() )
-            return;
-    if ( g_test_subprocess() )
-    {
-        eventd_event_add_answer_data(data->event, EVENTD_EVENT_TEST_DATA_NAME, NULL);
-        exit(0);
-    }
-    g_test_trap_subprocess(NULL, 0, 0);
-    g_test_trap_assert_failed();
-}
-
 void
 eventd_tests_unit_eventd_event_suite_setters(void)
 {
@@ -311,15 +208,6 @@ eventd_tests_unit_eventd_event_suite_setters(void)
     g_test_suite_add(suite, g_test_create_case("add_data(NULL,)",                    sizeof(SettersData), NULL, NULL,       _test_add_data_null_good_good,           NULL));
     g_test_suite_add(suite, g_test_create_case("add_data(event, NULL,)",             sizeof(SettersData), NULL, _init_data, _test_add_data_notnull_bad_good,         _clean_data));
     g_test_suite_add(suite, g_test_create_case("add_data(event, NULL, NULL)",        sizeof(SettersData), NULL, _init_data, _test_add_data_notnull_good_bad,         _clean_data));
-
-    g_test_suite_add(suite, g_test_create_case("add_answer(event, name)",            sizeof(SettersData), NULL, _init_data, _test_add_answer_notnull_good,           _clean_data));
-    g_test_suite_add(suite, g_test_create_case("add_answer(NULL,)",                  sizeof(SettersData), NULL, NULL,       _test_add_answer_null_good,              NULL));
-    g_test_suite_add(suite, g_test_create_case("add_answer(event, NULL)",            sizeof(SettersData), NULL, _init_data, _test_add_answer_notnull_bad,            _clean_data));
-
-    g_test_suite_add(suite, g_test_create_case("add_answer_data(event, name, data)", sizeof(SettersData), NULL, _init_data, _test_add_answer_data_notnull_good_good, _clean_data));
-    g_test_suite_add(suite, g_test_create_case("add_answer_data(NULL,)",             sizeof(SettersData), NULL, NULL,       _test_add_answer_data_null_good_good,    NULL));
-    g_test_suite_add(suite, g_test_create_case("add_answer_data(event, NULL,)",      sizeof(SettersData), NULL, _init_data, _test_add_answer_data_notnull_bad_good,  _clean_data));
-    g_test_suite_add(suite, g_test_create_case("add_answer_data(event, NULL, NULL)", sizeof(SettersData), NULL, _init_data, _test_add_answer_data_notnull_good_bad,  _clean_data));
 
     g_test_suite_add_suite(g_test_get_root(), suite);
 }

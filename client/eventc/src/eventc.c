@@ -102,7 +102,6 @@ main(int argc, char *argv[])
     const gchar *category = NULL;
     const gchar *name = NULL;
     gchar **data = NULL;
-    gchar **answers = NULL;
     gboolean subscribe = FALSE;
 
     gboolean insecure = FALSE;
@@ -111,7 +110,6 @@ main(int argc, char *argv[])
     GOptionEntry entries[] =
     {
         { "data",      'd', 0, G_OPTION_ARG_STRING_ARRAY, &data,           "Event data to send",                                       "<name>=<content>" },
-        { "answer",    'a', 0, G_OPTION_ARG_STRING_ARRAY, &answers,        "Possibles answers to event",                               "<answer>" },
         { "host",      'h', 0, G_OPTION_ARG_STRING,       &host,           "Host to connect to (defaults to $EVENTC_HOST if defined)", "<host>" },
         { "max-tries", 'm', 0, G_OPTION_ARG_INT,          &max_tries,      "Maximum connection attempts (0 for infinite)",             "<times>" },
         { "subscribe", 's', 0, G_OPTION_ARG_NONE,         &subscribe,      "Subscribe mode",                                           NULL },
@@ -219,14 +217,6 @@ post_args:
             eventd_event_add_data(event, g_strndup(*d, c - *d), g_strdup(c+1));
         }
         g_strfreev(data);
-    }
-
-    if ( answers != NULL )
-    {
-        gchar **answer;
-        for ( answer = answers ; *answer != NULL ; ++answer )
-            eventd_event_add_answer(event, *answer);
-        g_strfreev(answers);
     }
 
 post_event:

@@ -57,7 +57,6 @@ struct _EventdHttpWebsocketClient {
 
 typedef struct {
     EventdEvent *event;
-    gulong answered;
     gulong ended;
 } EventdHttpEventHandlers;
 
@@ -87,30 +86,6 @@ _eventd_http_websocket_client_send_message(EventdHttpWebsocketClient *self, gcha
 }
 
 static void
-_eventd_http_websocket_client_event_answered(EventdHttpWebsocketClient *self, const gchar *answer, EventdEvent *event)
-{
-    EventdHttpEventHandlers *handlers;
-    handlers = g_hash_table_lookup(self->events, event);
-    g_return_if_fail(handlers != NULL);
-
-    g_signal_handler_disconnect(event, handlers->answered);
-    handlers->answered = 0;
-    _eventd_http_websocket_client_send_message(self, eventd_protocol_generate_answered(self->protocol, event, answer));
-}
-
-static void
-_eventd_http_websocket_client_protocol_answered(EventdHttpWebsocketClient *self, EventdEvent *event, const gchar *answer, EventdProtocol *protocol)
-{
-    EventdHttpEventHandlers *handlers;
-    handlers = g_hash_table_lookup(self->events, event);
-    g_return_if_fail(handlers != NULL);
-
-    g_signal_handler_disconnect(event, handlers->answered);
-    handlers->answered = 0;
-    eventd_event_answer(event, answer);
-}
-
-static void
 _eventd_http_websocket_client_event_ended(EventdHttpWebsocketClient *self, EventdEventEndReason reason, EventdEvent *event)
 {
     g_hash_table_remove(self->events, event);
@@ -132,7 +107,6 @@ _eventd_http_websocket_client_handle_event(EventdHttpWebsocketClient *self, Even
     handlers = g_slice_new(EventdHttpEventHandlers);
     handlers->event = g_object_ref(event);
 
-    handlers->answered = g_signal_connect_swapped(event, "answered", G_CALLBACK(_eventd_http_websocket_client_event_answered), self);
     handlers->ended = g_signal_connect_swapped(event, "ended", G_CALLBACK(_eventd_http_websocket_client_event_ended), self);
 
     g_hash_table_insert(self->events, event, handlers);
@@ -205,8 +179,6 @@ _eventd_http_websocket_client_event_handlers_free(gpointer data)
 {
     EventdHttpEventHandlers *handlers = data;
 
-    if ( handlers->answered > 0 )
-        g_signal_handler_disconnect(handlers->event, handlers->answered);
     g_signal_handler_disconnect(handlers->event, handlers->ended);
 
     g_object_unref(handlers->event);
@@ -307,7 +279,6 @@ eventd_http_websocket_client_handler(SoupServer *server, SoupWebsocketConnection
     g_signal_connect_swapped(self->connection, "closed", G_CALLBACK(_eventd_http_websocket_client_closed), self);
 
     g_signal_connect_swapped(self->protocol, "event", G_CALLBACK(_eventd_http_websocket_client_protocol_event), self);
-    g_signal_connect_swapped(self->protocol, "answered", G_CALLBACK(_eventd_http_websocket_client_protocol_answered), self);
     g_signal_connect_swapped(self->protocol, "ended", G_CALLBACK(_eventd_http_websocket_client_protocol_ended), self);
     g_signal_connect_swapped(self->protocol, "passive", G_CALLBACK(_eventd_http_websocket_client_protocol_passive), self);
     g_signal_connect_swapped(self->protocol, "subscribe", G_CALLBACK(_eventd_http_websocket_client_protocol_subscribe), self);
