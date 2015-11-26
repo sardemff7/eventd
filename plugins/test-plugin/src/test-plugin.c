@@ -33,8 +33,6 @@ _eventd_test_event_end_earlier(gpointer user_data)
 {
     EventdEvent *event = user_data;
 
-    if ( eventd_event_get_data(event, "new-test") != NULL )
-        eventd_event_update(event);
     eventd_event_answer(event, "test");
     eventd_event_end(event, EVENTD_EVENT_END_REASON_TEST);
     g_object_unref(event);
@@ -58,17 +56,9 @@ _eventd_test_event_action(EventdPluginContext *context, EventdPluginAction *acti
 
     const gchar *filename;
     const gchar *contents;
-    const gchar *new_contents;
 
     filename = eventd_event_get_data(event, "file");
     contents = eventd_event_get_data(event, "test");
-    new_contents = eventd_event_get_data(event, "new-test");
-
-    if ( new_contents != NULL )
-    {
-        eventd_event_add_data(event, g_strdup("test"), g_strdup(new_contents));
-        contents = new_contents;
-    }
 
     if ( ( filename == NULL ) || ( contents == NULL ) )
         return;
