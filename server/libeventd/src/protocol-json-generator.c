@@ -100,8 +100,8 @@ _eventd_protocol_json_generate_data(yajl_gen gen, GHashTable *data)
     g_hash_table_unref(data);
 }
 
-static gchar *
-_eventd_protocol_json_generate_event(EventdProtocol *protocol, EventdEvent *event, const gchar *message)
+gchar *
+eventd_protocol_json_generate_event(EventdProtocol *protocol, EventdEvent *event)
 {
     g_return_val_if_fail(EVENTD_IS_PROTOCOL_JSON(protocol), NULL);
     EventdProtocolJson *self = EVENTD_PROTOCOL_JSON(protocol);
@@ -109,7 +109,7 @@ _eventd_protocol_json_generate_event(EventdProtocol *protocol, EventdEvent *even
     eventd_protocol_json_add_event(self, event);
 
     yajl_gen gen;
-    gen = _eventd_protocol_json_message_open(message, event);
+    gen = _eventd_protocol_json_message_open("event", event);
 
     _yajl_gen_string(gen, "category");
     _yajl_gen_string(gen, eventd_event_get_category(event));
@@ -135,18 +135,6 @@ _eventd_protocol_json_generate_event(EventdProtocol *protocol, EventdEvent *even
     _eventd_protocol_json_generate_data(gen, data);
 
     return _eventd_protocol_json_message_close(gen);
-}
-
-gchar *
-eventd_protocol_json_generate_event(EventdProtocol *protocol, EventdEvent *event)
-{
-    return _eventd_protocol_json_generate_event(protocol, event, "event");
-}
-
-gchar *
-eventd_protocol_json_generate_relay(EventdProtocol *protocol, EventdEvent *event)
-{
-    return _eventd_protocol_json_generate_event(protocol, event, "relay");
 }
 
 gchar *

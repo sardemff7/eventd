@@ -29,7 +29,6 @@ typedef enum {
     EVENTD_PROTOCOL_EVP_STATE_DOT_SUBSCRIBE,
     EVENTD_PROTOCOL_EVP_STATE_DOT_DATA,
     EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT,
-    EVENTD_PROTOCOL_EVP_STATE_DOT_RELAY,
     EVENTD_PROTOCOL_EVP_STATE_DOT_UPDATED,
     EVENTD_PROTOCOL_EVP_STATE_DOT_ANSWERED,
     EVENTD_PROTOCOL_EVP_STATE_IGNORING,
@@ -66,7 +65,6 @@ gboolean eventd_protocol_evp_parse(EventdProtocol *protocol, gchar **buffer, GEr
 void eventd_protocol_evp_parse_free(EventdProtocolEvp *self);
 
 gchar *eventd_protocol_evp_generate_event(EventdProtocol *protocol, EventdEvent *event);
-gchar *eventd_protocol_evp_generate_relay(EventdProtocol *protocol, EventdEvent *event);
 gchar *eventd_protocol_evp_generate_updated(EventdProtocol *protocol, EventdEvent *event);
 gchar *eventd_protocol_evp_generate_answered(EventdProtocol *protocol, EventdEvent *event, const gchar *answer);
 gchar *eventd_protocol_evp_generate_ended(EventdProtocol *protocol, EventdEvent *event, EventdEventEndReason reason);

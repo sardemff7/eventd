@@ -43,7 +43,6 @@ static const gchar *_eventd_protocol_evp_states[_EVENTD_PROTOCOL_EVP_STATE_SIZE]
     [EVENTD_PROTOCOL_EVP_STATE_BYE]           = "bye",
     [EVENTD_PROTOCOL_EVP_STATE_DOT_DATA]      = "dot message DATA",
     [EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT]     = "dot message EVENT",
-    [EVENTD_PROTOCOL_EVP_STATE_DOT_RELAY]     = "dot message RELAY",
     [EVENTD_PROTOCOL_EVP_STATE_DOT_UPDATED]   = "dot message UPDATED",
     [EVENTD_PROTOCOL_EVP_STATE_DOT_ANSWERED]  = "dot message ANSWERED",
     [EVENTD_PROTOCOL_EVP_STATE_DOT_SUBSCRIBE] = "dot message SUBSCRIBE",
@@ -151,54 +150,30 @@ _eventd_protocol_evp_parser_get_event(EventdProtocolEvp *self, const gchar * con
     return event;
 }
 
+/* .EVENT */
 static void
-_eventd_protocol_evp_parse_dot_event_common_start(EventdProtocolEvp *self, const gchar * const *argv, EventdProtocolEvpState state, GError **error)
+_eventd_protocol_evp_parse_dot_event_start(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
 {
     self->priv->event = _eventd_protocol_evp_parser_get_event(self, argv, error);
 
     if ( self->priv->event == NULL )
         return _eventd_protocol_evp_parse_dot_catchall_start(self, argv, error);
 
-    self->priv->state = state;
+    self->priv->state = EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT;
 }
 
 static void
-_eventd_protocol_evp_parse_dot_event_common_end(EventdProtocolEvp *self, guint signal, GError **error)
+_eventd_protocol_evp_parse_dot_event_end(EventdProtocolEvp *self, GError **error)
 {
     eventd_event_set_all_data(self->priv->event, self->priv->data.hash);
 
-    g_signal_emit(self, eventd_protocol_signals[signal], 0, self->priv->event);
+    g_signal_emit(self, eventd_protocol_signals[SIGNAL_EVENT], 0, self->priv->event);
 
     g_object_unref(self->priv->event);
     self->priv->data.hash = NULL;
     self->priv->event = NULL;
 
     self->priv->state = self->priv->base_state;
-}
-
-/* .EVENT */
-static void
-_eventd_protocol_evp_parse_dot_event_start(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
-{
-    _eventd_protocol_evp_parse_dot_event_common_start(self, argv, EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT, error);
-}
-
-static void
-_eventd_protocol_evp_parse_dot_event_end(EventdProtocolEvp *self, GError **error)
-{
-    _eventd_protocol_evp_parse_dot_event_common_end(self, SIGNAL_EVENT, error);
-}
-
-/* .RELAY */
-static void
-_eventd_protocol_evp_parse_dot_relay_start(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
-{
-    _eventd_protocol_evp_parse_dot_event_common_start(self, argv, EVENTD_PROTOCOL_EVP_STATE_DOT_RELAY, error);
-}
-static void
-_eventd_protocol_evp_parse_dot_relay_end(EventdProtocolEvp *self, GError **error)
-{
-    _eventd_protocol_evp_parse_dot_event_common_end(self, SIGNAL_RELAY, error);
 }
 
 /* .UPDATED */
@@ -294,30 +269,17 @@ _eventd_protocol_evp_parse_data(EventdProtocolEvp *self, const gchar * const *ar
     _eventd_protocol_evp_add_data(self, g_strdup(argv[0]), g_strdup(argv[1]));
 }
 
+/* EVENT */
 static void
-_eventd_protocol_evp_parse_event_common(EventdProtocolEvp *self, const gchar * const *argv, guint signal, GError **error)
+_eventd_protocol_evp_parse_event(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
 {
     EventdEvent *event;
 
     event = _eventd_protocol_evp_parser_get_event(self, argv, error);
     if ( event == NULL )
         return;
-    g_signal_emit(self, eventd_protocol_signals[signal], 0, event);
+    g_signal_emit(self, eventd_protocol_signals[SIGNAL_EVENT], 0, event);
     g_object_unref(event);
-}
-
-/* EVENT */
-static void
-_eventd_protocol_evp_parse_event(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
-{
-    _eventd_protocol_evp_parse_event_common(self, argv, SIGNAL_EVENT, error);
-}
-
-/* EVENT */
-static void
-_eventd_protocol_evp_parse_relay(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
-{
-    _eventd_protocol_evp_parse_event_common(self, argv, SIGNAL_RELAY, error);
 }
 
 /* ANSWER */
@@ -396,7 +358,7 @@ _eventd_protocol_evp_parse_bye(EventdProtocolEvp *self, const gchar * const *arg
 
 static const EventdProtocolEvpTokens _eventd_protocol_evp_dot_messages[] = {
     {"DATA", 1, 1,
-            { EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT, EVENTD_PROTOCOL_EVP_STATE_DOT_RELAY, EVENTD_PROTOCOL_EVP_STATE_DOT_UPDATED, EVENTD_PROTOCOL_EVP_STATE_DOT_ANSWERED, _EVENTD_PROTOCOL_EVP_STATE_SIZE },
+            { EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT, EVENTD_PROTOCOL_EVP_STATE_DOT_UPDATED, EVENTD_PROTOCOL_EVP_STATE_DOT_ANSWERED, _EVENTD_PROTOCOL_EVP_STATE_SIZE },
             _eventd_protocol_evp_parse_dot_data_start,
             EVENTD_PROTOCOL_EVP_STATE_DOT_DATA,
             _eventd_protocol_evp_parse_dot_data_continue,
@@ -408,13 +370,6 @@ static const EventdProtocolEvpTokens _eventd_protocol_evp_dot_messages[] = {
             EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT,
             _eventd_protocol_evp_parse_dot__continue_noeat,
             _eventd_protocol_evp_parse_dot_event_end
-    },
-    {"RELAY", 3, 3,
-            { EVENTD_PROTOCOL_EVP_STATE_BASE, EVENTD_PROTOCOL_EVP_STATE_PASSIVE, EVENTD_PROTOCOL_EVP_STATE_SUBSCRIBE, _EVENTD_PROTOCOL_EVP_STATE_SIZE },
-            _eventd_protocol_evp_parse_dot_relay_start,
-            EVENTD_PROTOCOL_EVP_STATE_DOT_RELAY,
-            _eventd_protocol_evp_parse_dot__continue_noeat,
-            _eventd_protocol_evp_parse_dot_relay_end
     },
     {"UPDATED", 1, 1,
             { EVENTD_PROTOCOL_EVP_STATE_BASE, EVENTD_PROTOCOL_EVP_STATE_PASSIVE, EVENTD_PROTOCOL_EVP_STATE_SUBSCRIBE, _EVENTD_PROTOCOL_EVP_STATE_SIZE },
@@ -450,7 +405,7 @@ static const EventdProtocolEvpTokens _eventd_protocol_evp_dot_messages[] = {
 
 static const EventdProtocolEvpTokens _eventd_protocol_evp_messages[] = {
     {"DATA", 2, 2,
-            { EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT, EVENTD_PROTOCOL_EVP_STATE_DOT_RELAY, EVENTD_PROTOCOL_EVP_STATE_DOT_UPDATED, EVENTD_PROTOCOL_EVP_STATE_DOT_ANSWERED, _EVENTD_PROTOCOL_EVP_STATE_SIZE },
+            { EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT, EVENTD_PROTOCOL_EVP_STATE_DOT_UPDATED, EVENTD_PROTOCOL_EVP_STATE_DOT_ANSWERED, _EVENTD_PROTOCOL_EVP_STATE_SIZE },
             _eventd_protocol_evp_parse_data,
             _EVENTD_PROTOCOL_EVP_STATE_SIZE, NULL, NULL
     },
@@ -459,13 +414,8 @@ static const EventdProtocolEvpTokens _eventd_protocol_evp_messages[] = {
             _eventd_protocol_evp_parse_event,
             _EVENTD_PROTOCOL_EVP_STATE_SIZE, NULL, NULL
     },
-    {"RELAY", 3, 3,
-            { EVENTD_PROTOCOL_EVP_STATE_BASE, EVENTD_PROTOCOL_EVP_STATE_PASSIVE, EVENTD_PROTOCOL_EVP_STATE_SUBSCRIBE, _EVENTD_PROTOCOL_EVP_STATE_SIZE },
-            _eventd_protocol_evp_parse_relay,
-            _EVENTD_PROTOCOL_EVP_STATE_SIZE, NULL, NULL
-    },
     {"ANSWER", 1, 1,
-            { EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT, EVENTD_PROTOCOL_EVP_STATE_DOT_RELAY, EVENTD_PROTOCOL_EVP_STATE_DOT_UPDATED, _EVENTD_PROTOCOL_EVP_STATE_SIZE },
+            { EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT, EVENTD_PROTOCOL_EVP_STATE_DOT_UPDATED, _EVENTD_PROTOCOL_EVP_STATE_SIZE },
             _eventd_protocol_evp_parse_answer,
             _EVENTD_PROTOCOL_EVP_STATE_SIZE, NULL, NULL
     },
@@ -627,7 +577,6 @@ recheck:
         self->priv->state = self->priv->data.return_state;
     goto recheck;
     case EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT:
-    case EVENTD_PROTOCOL_EVP_STATE_DOT_RELAY:
         if ( self->priv->event != NULL )
             g_object_unref(self->priv->event);
     case EVENTD_PROTOCOL_EVP_STATE_DOT_UPDATED:

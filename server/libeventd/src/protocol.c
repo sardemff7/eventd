@@ -55,22 +55,6 @@ eventd_protocol_default_init(EventdProtocolInterface *iface)
                      G_TYPE_NONE, 1, EVENTD_TYPE_EVENT);
 
     /**
-     * EventdProtocol::relay:
-     * @protocol: the #EventdProtocol that parsed the message
-     * @event: the #EventdEvent that was relayed
-     *
-     * Emitted when parsed a RELAY message.
-     */
-    eventd_protocol_signals[SIGNAL_RELAY] =
-        g_signal_new("relay",
-                     G_TYPE_FROM_INTERFACE(iface),
-                     G_SIGNAL_RUN_FIRST,
-                     G_STRUCT_OFFSET(EventdProtocolInterface, relay),
-                     NULL, NULL,
-                     g_cclosure_marshal_generic,
-                     G_TYPE_NONE, 1, EVENTD_TYPE_EVENT);
-
-    /**
      * EventdProtocol::updated:
      * @protocol: the #EventdProtocol that parsed the message
      * @event: the #EventdEvent that was updated
@@ -245,25 +229,6 @@ eventd_protocol_generate_event(EventdProtocol *self, EventdEvent *event)
     g_return_val_if_fail(EVENTD_IS_EVENT(event), NULL);
 
     return EVENTD_PROTOCOL_GET_INTERFACE(self)->generate_event(self, event);
-}
-
-/**
- * eventd_protocol_generate_relay:
- * @protocol: an #EventdProtocol
- * @event: the #EventdEVent to generate a message for
- *
- * Generates a RELAY message.
- *
- * Returns: (transfer full): the message
- */
-EVENTD_EXPORT
-gchar *
-eventd_protocol_generate_relay(EventdProtocol *self, EventdEvent *event)
-{
-    g_return_val_if_fail(EVENTD_IS_PROTOCOL(self), NULL);
-    g_return_val_if_fail(EVENTD_IS_EVENT(event), NULL);
-
-    return EVENTD_PROTOCOL_GET_INTERFACE(self)->generate_relay(self, event);
 }
 
 /**
