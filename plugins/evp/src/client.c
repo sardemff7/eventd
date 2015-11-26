@@ -153,8 +153,6 @@ _eventd_evp_client_protocol_event(EventdEvpClient *self, EventdEvent *event, Eve
         if ( self->out != NULL )
             /* Client not in passive mode */
             _eventd_evp_client_send_message(self, eventd_protocol_generate_ended(self->protocol, event, EVENTD_EVENT_END_REASON_DISCARD));
-        else
-            eventd_protocol_remove_event(self->protocol, event);
         return;
     }
 
