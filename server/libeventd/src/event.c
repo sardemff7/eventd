@@ -159,7 +159,6 @@ eventd_event_end_reason_get_value_nick(EventdEventEndReason reason)
 
 
 enum {
-    SIGNAL_UPDATED,
     SIGNAL_ANSWERED,
     SIGNAL_ENDED,
     LAST_SIGNAL
@@ -180,21 +179,6 @@ eventd_event_class_init(EventdEventClass *klass)
     eventd_event_parent_class = g_type_class_peek_parent(klass);
 
     object_class->finalize = _eventd_event_finalize;
-
-    /**
-     * EventdEvent::updated:
-     * @event: the #EventdEvent that was updated
-     *
-     * Emitted when an event is updated with a new name.
-     */
-    _eventd_event_signals[SIGNAL_UPDATED] =
-        g_signal_new("updated",
-                     G_TYPE_FROM_CLASS(object_class),
-                     G_SIGNAL_RUN_FIRST,
-                     G_STRUCT_OFFSET(EventdEventClass, updated),
-                     NULL, NULL,
-                     g_cclosure_marshal_generic,
-                     G_TYPE_NONE, 0);
 
     /**
      * EventdEvent::answered:
@@ -269,21 +253,6 @@ _eventd_event_finalize(GObject *object)
     g_free(self->priv->name);
 
     G_OBJECT_CLASS(eventd_event_parent_class)->finalize(object);
-}
-
-/**
- * eventd_event_update:
- * @event: an #EventdEvent
- *
- * Updates the name of @event.
- */
-EVENTD_EXPORT
-void
-eventd_event_update(EventdEvent *self)
-{
-    g_return_if_fail(EVENTD_IS_EVENT(self));
-
-    g_signal_emit(self, _eventd_event_signals[SIGNAL_UPDATED], 0);
 }
 
 /**

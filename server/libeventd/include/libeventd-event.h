@@ -78,7 +78,6 @@ struct _EventdEventClass
     GObjectClass parent_class;
 
     /* Signals */
-    void (*updated)  (EventdEvent *event);
     void (*answered) (EventdEvent *event, const gchar *answer);
     void (*ended)    (EventdEvent *event, EventdEventEndReason reason);
 };
@@ -88,7 +87,6 @@ struct _EventdEventClass
  */
 EventdEvent *eventd_event_new(const gchar *category, const gchar *name);
 
-void eventd_event_update(EventdEvent *event);
 void eventd_event_answer(EventdEvent *event, const gchar *answer);
 void eventd_event_end(EventdEvent *event, EventdEventEndReason reason);
 

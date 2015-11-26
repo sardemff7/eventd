@@ -276,7 +276,11 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
     eventd_event_set_timeout(event, ( timeout > -1 ) ? timeout : ( urgency > -1 ) ? ( 3000 + urgency * 2000 ) : -1);
 
     if ( id > 0 )
-        eventd_event_update(event);
+    {
+        g_object_unref(event);
+        g_dbus_method_invocation_return_dbus_error(invocation, NOTIFICATION_BUS_NAME ".NotSupported", "This server does not (yet) support notification update");
+        return;
+    }
     else
         id = _eventd_fdo_notifications_notification_new(context, sender, event);
 

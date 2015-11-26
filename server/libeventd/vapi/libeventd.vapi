@@ -53,11 +53,9 @@ namespace Eventd
         public unowned string get_answer_data(string name);
         public GLib.HashTable<weak string,weak string>? get_all_answer_data();
 
-        public void update(string name);
         public void answer(string answer);
         public void end(EventEndReason reason);
 
-        public signal void updated();
         public signal void answered(string answer);
         public signal void ended(EventEndReason reason);
     }

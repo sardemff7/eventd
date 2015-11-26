@@ -431,6 +431,9 @@ _eventd_nd_notification_update(EventdNdNotification *self,EventdPluginContext *c
     cairo_surface_destroy(bubble);
 }
 
+/*
+ * TODO: Rework notification update detection
+ */
 static void
 _eventd_nd_event_updated(EventdEvent *event, EventdNdNotification *self)
 {
@@ -456,7 +459,6 @@ _eventd_nd_event_action(EventdPluginContext *context, EventdNdStyle *style, Even
     EventdNdNotification *notification;
     notification = _eventd_nd_notification_new(context, event, style);
 
-    g_signal_connect(event, "updated", G_CALLBACK(_eventd_nd_event_updated), notification);
     g_signal_connect(event, "ended", G_CALLBACK(_eventd_nd_event_ended), notification);
 
     g_queue_push_tail(context->queue, notification);

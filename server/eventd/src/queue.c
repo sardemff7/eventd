@@ -46,7 +46,6 @@ typedef struct {
     GList *link;
     const GList *actions;
     EventdEvent *event;
-    gulong answered_handler;
     gulong ended_handler;
     guint timeout_id;
 } EventdQueueEvent;
@@ -58,8 +57,6 @@ _eventd_queue_event_free(gpointer data)
 {
     EventdQueueEvent *event = data;
 
-    if ( event->answered_handler > 0 )
-        g_signal_handler_disconnect(event->event, event->answered_handler);
     if ( event->ended_handler > 0 )
         g_signal_handler_disconnect(event->event, event->ended_handler);
     if ( event->timeout_id > 0 )
@@ -98,18 +95,6 @@ _eventd_queue_event_set_timeout(EventdQueue *queue, EventdQueueEvent *event)
 }
 
 static void
-_eventd_queue_event_updated(GObject *object, gpointer user_data)
-{
-    EventdQueueEvent *event = user_data;
-
-    if ( event->timeout_id > 0 )
-        g_source_remove(event->timeout_id);
-    event->timeout_id = 0;
-
-    _eventd_queue_event_set_timeout(event->queue, event);
-}
-
-static void
 _eventd_queue_event_ended(GObject *object, gint reason, gpointer user_data)
 {
     EventdQueueEvent *event = user_data;
@@ -130,7 +115,6 @@ _eventd_queue_source_dispatch(EventdQueue *queue, EventdQueueEvent *event)
     eventd_plugins_event_dispatch_all(event->event);
     eventd_actions_trigger(event->actions, event->event);
 
-    event->answered_handler = g_signal_connect(event->event, "updated", G_CALLBACK(_eventd_queue_event_updated), event);
     event->ended_handler = g_signal_connect(event->event, "ended", G_CALLBACK(_eventd_queue_event_ended), event);
     _eventd_queue_event_set_timeout(queue, event);
 }
