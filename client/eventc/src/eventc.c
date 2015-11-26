@@ -40,7 +40,6 @@ static GMainLoop *loop = NULL;
 
 static gint tries = 0;
 static gint max_tries = 3;
-static gboolean wait_event_end = FALSE;
 
 static void _eventc_send_event(void);
 static gboolean _eventc_disconnect(gpointer user_data);
@@ -69,57 +68,18 @@ _eventc_connect(gpointer user_data)
 }
 
 static void
-_eventc_event_answer_callback(EventdEvent *event, const gchar *answer, gpointer user_data)
-{
-    g_print("%s\n", answer);
-
-    GHashTable *answer_data;
-    answer_data = eventd_event_get_all_answer_data(event);
-
-    if ( answer_data == NULL )
-        return;
-
-    GHashTableIter iter;
-    gchar *name, *data;
-    g_hash_table_iter_init(&iter, answer_data);
-    while ( g_hash_table_iter_next(&iter, (gpointer *) &name, (gpointer *) &data) )
-        g_print("%s=%s\n", name, data);
-
-    g_hash_table_unref(answer_data);
-}
-
-static void
-_eventc_event_end_callback(EventdEvent *event, EventdEventEndReason reason, gpointer user_data)
+_eventc_event_callback(EventcConnection *connection, EventdEvent *event, gpointer user_data)
 {
     g_idle_add(_eventc_disconnect, NULL);
 }
 
 static void
-_eventc_event_callback(EventcConnection *connection, EventdEvent *event, gpointer user_data)
-{
-    if ( wait_event_end )
-    {
-        g_signal_connect(event, "answered", G_CALLBACK(_eventc_event_answer_callback), NULL);
-        g_signal_connect(event, "ended", G_CALLBACK(_eventc_event_end_callback), NULL);
-    }
-    else
-        g_idle_add(_eventc_disconnect, NULL);
-}
-
-static void
 _eventc_send_event(void)
 {
-    if ( wait_event_end )
-    {
-        g_signal_connect(event, "answered", G_CALLBACK(_eventc_event_answer_callback), NULL);
-        g_signal_connect(event, "ended", G_CALLBACK(_eventc_event_end_callback), NULL);
-    }
-
     GError *error = NULL;
     if ( ! eventc_connection_event(client, event, &error) )
         g_warning("Couldn't send event '%s', '%s': %s", eventd_event_get_category(event), eventd_event_get_name(event), error->message);
-    if ( ! wait_event_end )
-       _eventc_disconnect(NULL);
+   _eventc_disconnect(NULL);
 }
 
 static gboolean
@@ -154,7 +114,6 @@ main(int argc, char *argv[])
         { "answer",    'a', 0, G_OPTION_ARG_STRING_ARRAY, &answers,        "Possibles answers to event",                               "<answer>" },
         { "host",      'h', 0, G_OPTION_ARG_STRING,       &host,           "Host to connect to (defaults to $EVENTC_HOST if defined)", "<host>" },
         { "max-tries", 'm', 0, G_OPTION_ARG_INT,          &max_tries,      "Maximum connection attempts (0 for infinite)",             "<times>" },
-        { "wait",      'w', 0, G_OPTION_ARG_NONE,         &wait_event_end, "Wait the end of the event",                                NULL },
         { "subscribe", 's', 0, G_OPTION_ARG_NONE,         &subscribe,      "Subscribe mode",                                           NULL },
         { "insecure",  0,   0, G_OPTION_ARG_NONE,         &insecure,       "Accept insecure certificates (unknown CA)",                NULL },
         { "version",   'V', 0, G_OPTION_ARG_NONE,         &print_version,  "Print version",                                            NULL },
@@ -165,11 +124,9 @@ main(int argc, char *argv[])
     g_option_context_set_summary(opt_context, ""
         "Normal mode: eventc <event category> <event name>"
         "\n  eventc will connect to <host> and send an event."
-        "\n  If --wait is specified, eventc will only return after receiving the ENDED message for the event."
         "\n\n"
         "Subscribe mode: eventc --subscribe [<event category>...]"
         "\n  eventc will connect to <host> and wait for an event of the specified categories. If no category is specified, it will wait for any event."
-        "\n  If --wait is specified, eventc will only return after receiving the ENDED message for the event."
         "");
 
     g_option_context_add_main_entries(opt_context, entries, GETTEXT_PACKAGE);
@@ -249,7 +206,7 @@ post_args:
         goto post_event;
     }
 
-    eventc_connection_set_passive(client, !wait_event_end);
+    eventc_connection_set_passive(client, TRUE);
 
     event = eventd_event_new(category, name);
 
