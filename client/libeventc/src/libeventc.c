@@ -361,7 +361,6 @@ eventc_connection_init(EventcConnection *self)
     self->priv->cancellable = g_cancellable_new();
 
     g_signal_connect_swapped(self->priv->protocol, "event", G_CALLBACK(_eventc_connection_protocol_event), self);
-    g_signal_connect_swapped(self->priv->protocol, "relay", G_CALLBACK(_eventc_connection_protocol_event), self);
     g_signal_connect_swapped(self->priv->protocol, "updated", G_CALLBACK(_eventc_connection_protocol_updated), self);
     g_signal_connect_swapped(self->priv->protocol, "answered", G_CALLBACK(_eventc_connection_protocol_answered), self);
     g_signal_connect_swapped(self->priv->protocol, "ended", G_CALLBACK(_eventc_connection_protocol_ended), self);
@@ -697,8 +696,19 @@ eventc_connection_connect_sync(EventcConnection *self, GError **error)
     return _eventc_connection_connect_after(self, _inner_error_, error);
 }
 
-static gboolean
-_eventc_connection_event(EventcConnection *self, EventdEvent *event, gchar *(*generator)(EventdProtocol *protocol, EventdEvent *event), GError **error)
+/**
+ * eventc_connection_event:
+ * @connection: an #EventcConnection
+ * @event: an #EventdEvent to send to the server
+ * @error: (out) (optional): return location for error or %NULL to ignore
+ *
+ * Sends an event across the connection.
+ *
+ * Returns: %TRUE if the event was sent successfully
+ */
+EVENTD_EXPORT
+gboolean
+eventc_connection_event(EventcConnection *self, EventdEvent *event, GError **error)
 {
     g_return_val_if_fail(EVENTC_IS_CONNECTION(self), FALSE);
     g_return_val_if_fail(EVENTD_IS_EVENT(event), FALSE);
@@ -715,7 +725,7 @@ _eventc_connection_event(EventcConnection *self, EventdEvent *event, gchar *(*ge
     if ( ! _eventc_connection_expect_connected(self, error) )
         return FALSE;
 
-    if ( ! _eventc_connection_send_message(self, generator(self->priv->protocol, event)) )
+    if ( ! _eventc_connection_send_message(self, eventd_protocol_generate_event(self->priv->protocol, event)) )
     {
         g_propagate_error(error, self->priv->error);
         self->priv->error = NULL;
@@ -725,40 +735,6 @@ _eventc_connection_event(EventcConnection *self, EventdEvent *event, gchar *(*ge
     _eventc_connection_handle_event(self, event);
 
     return TRUE;
-}
-
-/**
- * eventc_connection_event:
- * @connection: an #EventcConnection
- * @event: an #EventdEvent to send to the server
- * @error: (out) (optional): return location for error or %NULL to ignore
- *
- * Sends an event across the connection.
- *
- * Returns: %TRUE if the event was sent successfully
- */
-EVENTD_EXPORT
-gboolean
-eventc_connection_event(EventcConnection *self, EventdEvent *event, GError **error)
-{
-    return _eventc_connection_event(self, event, eventd_protocol_generate_event, error);
-}
-
-/**
- * eventc_connection_relay:
- * @connection: an #EventcConnection
- * @event: an #EventdEvent to relay to the server
- * @error: (out) (optional): return location for error or %NULL to ignore
- *
- * Sends an event across the connection.
- *
- * Returns: %TRUE if the event was sent successfully
- */
-EVENTD_EXPORT
-gboolean
-eventc_connection_relay(EventcConnection *self, EventdEvent *event, GError **error)
-{
-    return _eventc_connection_event(self, event, eventd_protocol_generate_relay, error);
 }
 
 /**
