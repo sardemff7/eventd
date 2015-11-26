@@ -104,9 +104,6 @@ gchar *
 eventd_protocol_json_generate_event(EventdProtocol *protocol, EventdEvent *event)
 {
     g_return_val_if_fail(EVENTD_IS_PROTOCOL_JSON(protocol), NULL);
-    EventdProtocolJson *self = EVENTD_PROTOCOL_JSON(protocol);
-
-    eventd_protocol_json_add_event(self, event);
 
     yajl_gen gen;
     gen = _eventd_protocol_json_message_open("event", event);
@@ -123,24 +120,6 @@ eventd_protocol_json_generate_event(EventdProtocol *protocol, EventdEvent *event
 
     return _eventd_protocol_json_message_close(gen);
 }
-
-gchar *
-eventd_protocol_json_generate_ended(EventdProtocol *protocol, EventdEvent *event, EventdEventEndReason reason)
-{
-    g_return_val_if_fail(EVENTD_IS_PROTOCOL_JSON(protocol), NULL);
-    EventdProtocolJson *self = EVENTD_PROTOCOL_JSON(protocol);
-
-    eventd_protocol_json_remove_event(self, event);
-
-    yajl_gen gen;
-    gen = _eventd_protocol_json_message_open("ended", event);
-
-    _yajl_gen_string(gen, "reason");
-    _yajl_gen_string(gen, eventd_event_end_reason_get_value_nick(reason));
-
-    return _eventd_protocol_json_message_close(gen);
-}
-
 
 gchar *
 eventd_protocol_json_generate_passive(EventdProtocol *protocol)
@@ -170,7 +149,6 @@ eventd_protocol_json_generate_subscribe(EventdProtocol *protocol, GHashTable *ca
             _yajl_gen_string(gen, category);
 
         yajl_gen_array_close(gen);
-        g_hash_table_unref(categories);
     }
 
     return _eventd_protocol_json_message_close(gen);

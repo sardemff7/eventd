@@ -51,9 +51,6 @@ Event related messages
     An arbitrary number of subcategories is accepted.
     The message may contain data using the corresponding messages.
 
-ENDED <id> <reason>
-    Inform the client of an event ending.
-
 
 Connection related messages
 ---------------------------

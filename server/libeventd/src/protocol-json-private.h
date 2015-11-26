@@ -45,7 +45,6 @@ typedef enum {
 } EventdProtocolJsonState;
 
 struct _EventdProtocolJsonPrivate {
-    GHashTable *events;
     GError *error;
     struct {
         EventdProtocolJsonState state;
@@ -59,14 +58,10 @@ struct _EventdProtocolJsonPrivate {
     } message;
 };
 
-void eventd_protocol_json_add_event(EventdProtocolJson *self, EventdEvent *event);
-void eventd_protocol_json_remove_event(EventdProtocolJson *self, EventdEvent *event);
-
 gboolean eventd_protocol_json_parse(EventdProtocol *protocol, gchar **buffer, GError **error);
 void eventd_protocol_json_parse_free(EventdProtocolJson *self);
 
 gchar *eventd_protocol_json_generate_event(EventdProtocol *protocol, EventdEvent *event);
-gchar *eventd_protocol_json_generate_ended(EventdProtocol *protocol, EventdEvent *event, EventdEventEndReason reason);
 
 gchar *eventd_protocol_json_generate_passive(EventdProtocol *protocol);
 gchar *eventd_protocol_json_generate_subscribe(EventdProtocol *protocol, GHashTable *categories);

@@ -46,22 +46,15 @@ struct _EventdPluginAction {
     gchar **subscriptions;
     EventcConnection *connection;
     LibeventdReconnectHandler *reconnect;
+    EventdEvent *current;
 };
 
-static gboolean
-_eventd_relay_server_discard_event(gpointer data)
-{
-    EventdEvent *event = data;
-
-    eventd_event_end(event, EVENTD_EVENT_END_REASON_DISCARD);
-
-    return FALSE;
-}
 static void
 _eventd_relay_server_event(EventdRelayServer *self, EventdEvent *event, EventcConnection *connection)
 {
-    if ( ! eventd_plugin_core_push_event(self->core, self->core_interface, event) )
-        g_idle_add(_eventd_relay_server_discard_event, event);
+    self->current = event;
+    eventd_plugin_core_push_event(self->core, self->core_interface, event);
+    self->current = NULL;
 }
 
 static void
@@ -201,6 +194,10 @@ eventd_relay_server_stop(EventdRelayServer *server)
 void
 eventd_relay_server_event(EventdRelayServer *server, EventdEvent *event)
 {
+    if ( server->current == event )
+        /* Do not send back events we just got */
+        return;
+
     GError *error = NULL;
     if ( ! eventc_connection_is_connected(server->connection, &error) )
     {

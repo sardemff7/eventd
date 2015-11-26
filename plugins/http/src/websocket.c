@@ -57,7 +57,6 @@ struct _EventdHttpWebsocketClient {
 
 typedef struct {
     EventdEvent *event;
-    gulong ended;
 } EventdHttpEventHandlers;
 
 static void
@@ -86,28 +85,12 @@ _eventd_http_websocket_client_send_message(EventdHttpWebsocketClient *self, gcha
 }
 
 static void
-_eventd_http_websocket_client_event_ended(EventdHttpWebsocketClient *self, EventdEventEndReason reason, EventdEvent *event)
-{
-    g_hash_table_remove(self->events, event);
-    _eventd_http_websocket_client_send_message(self, eventd_protocol_generate_ended(self->protocol, event, reason));
-}
-
-static void
-_eventd_http_websocket_client_protocol_ended(EventdHttpWebsocketClient *self, EventdEvent *event, EventdEventEndReason reason, EventdProtocol *protocol)
-{
-    g_hash_table_remove(self->events, event);
-    eventd_event_end(event, reason);
-}
-
-static void
 _eventd_http_websocket_client_handle_event(EventdHttpWebsocketClient *self, EventdEvent *event)
 {
     EventdHttpEventHandlers *handlers;
 
     handlers = g_slice_new(EventdHttpEventHandlers);
     handlers->event = g_object_ref(event);
-
-    handlers->ended = g_signal_connect_swapped(event, "ended", G_CALLBACK(_eventd_http_websocket_client_event_ended), self);
 
     g_hash_table_insert(self->events, event, handlers);
 }
@@ -119,13 +102,7 @@ _eventd_http_websocket_client_protocol_event(EventdHttpWebsocketClient *self, Ev
     g_debug("Received an event (category: %s): %s", eventd_event_get_category(event), eventd_event_get_name(event));
 #endif /* EVENTD_DEBUG */
 
-    if ( ! eventd_plugin_core_push_event(self->context->core, self->context->core_interface, event) )
-    {
-        _eventd_http_websocket_client_send_message(self, eventd_protocol_generate_ended(self->protocol, event, EVENTD_EVENT_END_REASON_DISCARD));
-        return;
-    }
-
-    _eventd_http_websocket_client_handle_event(self, event);
+    eventd_plugin_core_push_event(self->context->core, self->context->core_interface, event);
 }
 
 static void
@@ -178,8 +155,6 @@ static void
 _eventd_http_websocket_client_event_handlers_free(gpointer data)
 {
     EventdHttpEventHandlers *handlers = data;
-
-    g_signal_handler_disconnect(handlers->event, handlers->ended);
 
     g_object_unref(handlers->event);
 
@@ -279,7 +254,6 @@ eventd_http_websocket_client_handler(SoupServer *server, SoupWebsocketConnection
     g_signal_connect_swapped(self->connection, "closed", G_CALLBACK(_eventd_http_websocket_client_closed), self);
 
     g_signal_connect_swapped(self->protocol, "event", G_CALLBACK(_eventd_http_websocket_client_protocol_event), self);
-    g_signal_connect_swapped(self->protocol, "ended", G_CALLBACK(_eventd_http_websocket_client_protocol_ended), self);
     g_signal_connect_swapped(self->protocol, "passive", G_CALLBACK(_eventd_http_websocket_client_protocol_passive), self);
     g_signal_connect_swapped(self->protocol, "subscribe", G_CALLBACK(_eventd_http_websocket_client_protocol_subscribe), self);
     g_signal_connect_swapped(self->protocol, "bye", G_CALLBACK(_eventd_http_websocket_client_protocol_bye), self);

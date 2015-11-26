@@ -30,6 +30,6 @@ void eventd_events_free(EventdEvents *self);
 void eventd_events_parse(EventdEvents *self, GKeyFile *config_file);
 void eventd_events_link_actions(EventdEvents *self, EventdActions *actions);
 
-gboolean eventd_events_process_event(EventdEvents *self, EventdEvent *event, GQuark *flags, gint64 timeout, const GList **actions);
+gboolean eventd_events_process_event(EventdEvents *self, EventdEvent *event, GQuark *flags, const GList **actions);
 
 #endif /* __EVENTD_EVENTS_H__ */

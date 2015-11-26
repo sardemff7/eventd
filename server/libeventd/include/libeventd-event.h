@@ -27,29 +27,6 @@
 G_BEGIN_DECLS
 
 /*
- * EventdEventEndReason
- */
-typedef enum {
-    EVENTD_EVENT_END_REASON_NONE = 0,
-    EVENTD_EVENT_END_REASON_DISCARD,
-    EVENTD_EVENT_END_REASON_TIMEOUT,
-    EVENTD_EVENT_END_REASON_USER_DISMISS,
-    EVENTD_EVENT_END_REASON_CLIENT_DISMISS,
-    EVENTD_EVENT_END_REASON_TEST = G_MAXUINT32 - 2,
-    EVENTD_EVENT_END_REASON_UNKNOWN = G_MAXUINT32 - 1,
-    EVENTD_EVENT_END_REASON_RESERVED = G_MAXUINT32
-} EventdEventEndReason;
-
-GType eventd_event_end_reason_get_type(void) G_GNUC_CONST;
-
-#define EVENTD_TYPE_EVENT_END_REASON (eventd_event_end_reason_get_type())
-
-gboolean eventd_event_end_reason_is_valid_value(EventdEventEndReason reason);
-const gchar *eventd_event_end_reason_get_value_name(EventdEventEndReason reason);
-const gchar *eventd_event_end_reason_get_value_nick(EventdEventEndReason reason);
-
-
-/*
  * EventdEvent
  */
 typedef struct _EventdEvent EventdEvent;
@@ -76,9 +53,6 @@ struct _EventdEvent
 struct _EventdEventClass
 {
     GObjectClass parent_class;
-
-    /* Signals */
-    void (*ended)    (EventdEvent *event, EventdEventEndReason reason);
 };
 
 /*
@@ -86,15 +60,10 @@ struct _EventdEventClass
  */
 EventdEvent *eventd_event_new(const gchar *category, const gchar *name);
 
-void eventd_event_end(EventdEvent *event, EventdEventEndReason reason);
-
-
-void eventd_event_set_timeout(EventdEvent *event, gint64 timeout);
 void eventd_event_add_data(EventdEvent *event, gchar *name, gchar *content);
 
 const gchar *eventd_event_get_category(const EventdEvent *event);
 const gchar *eventd_event_get_name(const EventdEvent *event);
-gint64 eventd_event_get_timeout(const EventdEvent *event);
 gboolean eventd_event_has_data(const EventdEvent *event, const gchar *name);
 const gchar *eventd_event_get_data(const EventdEvent *event, const gchar *name);
 GHashTable *eventd_event_get_all_data(const EventdEvent *event);

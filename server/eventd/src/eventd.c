@@ -53,8 +53,8 @@ void FreeConsole(void);
 
 #include "plugins.h"
 #include "config.h"
+#include "actions.h"
 #include "control.h"
-#include "queue.h"
 #include "sockets.h"
 
 #include "eventd.h"
@@ -68,7 +68,6 @@ void FreeConsole(void);
 struct _EventdCoreContext {
     EventdConfig *config;
     EventdControl *control;
-    EventdQueue *queue;
     EventdSockets *sockets;
     gchar *runtime_dir;
     gboolean take_over_socket;
@@ -215,19 +214,27 @@ eventd_core_get_sockets(EventdCoreContext *context, const gchar * const *binds)
 gboolean
 eventd_core_push_event(EventdCoreContext *context, EventdEvent *event)
 {
-    return eventd_queue_push(context->queue, event, context->flags);
+    const GList *actions;
+    if ( ! eventd_config_process_event(context->config, event, context->flags, &actions) )
+        return FALSE;
+
+    eventd_plugins_event_dispatch_all(event);
+    eventd_actions_trigger(actions, event);
+
+    return TRUE;
 }
 
 void
 eventd_core_pause(EventdCoreContext *context)
 {
-    eventd_queue_pause(context->queue);
+    /*
+     * FIXME: add back pause/resume
+     */
 }
 
 void
 eventd_core_resume(EventdCoreContext *context)
 {
-    eventd_queue_resume(context->queue);
 }
 
 void
@@ -457,7 +464,6 @@ main(int argc, char *argv[])
         eventd_plugins_load(context, &interface);
 
     context->config = eventd_config_new();
-    context->queue = eventd_queue_new(context->config);
 
 
     option_context = g_option_context_new("- small daemon to act on remote or local events");
@@ -571,7 +577,6 @@ main(int argc, char *argv[])
 
     g_free(context->runtime_dir);
 end:
-    eventd_queue_free(context->queue);
     eventd_config_free(context->config);
 
     eventd_plugins_unload();

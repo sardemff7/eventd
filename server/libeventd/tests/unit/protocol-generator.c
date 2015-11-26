@@ -97,19 +97,6 @@ _test_evp_generate_event(gpointer fixture, gconstpointer user_data)
 }
 
 static void
-_test_evp_generate_ended(gpointer fixture, gconstpointer user_data)
-{
-    GeneratorData *data = fixture;
-    const gchar *expected = "ENDED " EVENTD_EVENT_TEST_UUID " timeout\n";
-    gchar *message;
-
-    message = eventd_protocol_generate_ended(data->protocol, data->event, EVENTD_EVENT_END_REASON_TIMEOUT);
-    g_assert_cmpstr(message, ==, expected);
-
-    g_free(message);
-}
-
-static void
 _test_evp_generate_bye(gpointer fixture, gconstpointer user_data)
 {
     GeneratorData *data = fixture;
@@ -142,7 +129,6 @@ eventd_tests_unit_eventd_protocol_suite_generator(void)
     g_test_suite_add(suite, g_test_create_case("evp_generate_passive()",           sizeof(GeneratorData), NULL,                  _init_data,           _test_evp_generate_passive,  _clean_data));
     g_test_suite_add(suite, g_test_create_case("evp_generate_event()",             sizeof(GeneratorData), NULL,                  _init_data,           _test_evp_generate_event,    _clean_data));
     g_test_suite_add(suite, g_test_create_case("evp_generate_event(data)",         sizeof(GeneratorData), NULL,                  _init_data_with_data, _test_evp_generate_event,    _clean_data));
-    g_test_suite_add(suite, g_test_create_case("evp_generate_ended()",             sizeof(GeneratorData), NULL,                  _init_data,           _test_evp_generate_ended,    _clean_data));
     g_test_suite_add(suite, g_test_create_case("evp_generate_bye()",               sizeof(GeneratorData), NULL,                  _init_data,           _test_evp_generate_bye,      _clean_data));
     g_test_suite_add(suite, g_test_create_case("evp_generate_bye(message)",        sizeof(GeneratorData), GINT_TO_POINTER(TRUE), _init_data,           _test_evp_generate_bye,      _clean_data));
 

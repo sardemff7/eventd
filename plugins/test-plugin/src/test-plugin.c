@@ -27,16 +27,24 @@
 
 #include <eventd-plugin.h>
 #include <libeventd-event.h>
+#include <libeventd-event-private.h>
 
-static gboolean
-_eventd_test_event_end_earlier(gpointer user_data)
+static struct _EventdPluginContext {
+    EventdPluginCoreContext *core;
+    EventdPluginCoreInterface *interface;
+} _eventd_test_context;
+
+static EventdPluginContext *
+_eventd_test_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *interface)
 {
-    EventdEvent *event = user_data;
+    _eventd_test_context.core = core;
+    _eventd_test_context.interface = interface;
+    return &_eventd_test_context;
+}
 
-    eventd_event_end(event, EVENTD_EVENT_END_REASON_TEST);
-    g_object_unref(event);
-
-    return FALSE;
+static void
+_eventd_test_uninit(EventdPluginContext *context)
+{
 }
 
 static EventdPluginAction *
@@ -66,7 +74,9 @@ _eventd_test_event_action(EventdPluginContext *context, EventdPluginAction *acti
         g_warning("Couldn’t write to file: %s", error->message);
     g_clear_error(&error);
 
-    g_idle_add(_eventd_test_event_end_earlier, g_object_ref(event));
+    event = eventd_event_new_for_uuid_string("cedb8a77-b7fb-4e32-b3e4-3a772664f1f4", "test", "answer");
+    eventd_plugin_core_push_event(context->core, context->interface, event);
+    g_object_unref(event);
 }
 
 EVENTD_EXPORT const gchar *eventd_plugin_id = "test-plugin";
@@ -74,6 +84,9 @@ EVENTD_EXPORT
 void
 eventd_plugin_get_interface(EventdPluginInterface *interface)
 {
+    eventd_plugin_interface_add_init_callback(interface, _eventd_test_init);
+    eventd_plugin_interface_add_uninit_callback(interface, _eventd_test_uninit);
+
     eventd_plugin_interface_add_action_parse_callback(interface, _eventd_test_action_parse);
     eventd_plugin_interface_add_event_action_callback(interface, _eventd_test_event_action);
 }

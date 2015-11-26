@@ -71,7 +71,6 @@
 
         <para>
             <emphasis>An event file is <emphasis>mandatory</emphasis> for the event to be processed by eventd.</emphasis>
-            Unknown events are <emphasis>ended on receive</emphasis>.
         </para>
     </refsynopsisdiv>
 
@@ -88,7 +87,6 @@
         <refsect2>
             <title>Global configuration file</title>
 
-            <para>eventd will read the global file for generic configuration like the default timeout or the number of events to dispatch at the same time.</para>
             <para>This file is passed to every plugin so they can read their global configuration too.</para>
             <para>Sections read in these files are identified as “Global sections”.</para>
         </refsect2>
@@ -187,28 +185,6 @@
 
     <refsect1 id="global-sections">
         <title>Global sections</title>
-
-        <refsect2>
-            <title>Section <varname>[Event]</varname></title>
-
-            <variablelist>
-                <varlistentry>
-                    <term><varname>Stack=</varname> (defaults to <literal>1</literal>)</term>
-                    <listitem>
-                        <para>An <type>integer</type></para>
-                        <para>The number of events to dispatch at the same time.</para>
-                    </listitem>
-                </varlistentry>
-
-                <varlistentry>
-                    <term><varname>Timeout=</varname> (defaults to <literal>3000</literal>)</term>
-                    <listitem>
-                        <para>A time in <type>milliseconds</type></para>
-                        <para>Global event timeout.</para>
-                    </listitem>
-                </varlistentry>
-            </variablelist>
-        </refsect2>
 
         <refsect2>
             <title>Section <varname>[Server]</varname></title>
@@ -414,14 +390,6 @@
                         <listitem>
                             <para>A <type>boolean</type></para>
                             <para>If <literal>true</literal>, the event is not dispatched.</para>
-                        </listitem>
-                    </varlistentry>
-
-                    <varlistentry>
-                        <term><varname>Timeout=</varname></term>
-                        <listitem>
-                            <para>A time in <type>milliseconds</type></para>
-                            <para>Event's timeout.</para>
                         </listitem>
                     </varlistentry>
 

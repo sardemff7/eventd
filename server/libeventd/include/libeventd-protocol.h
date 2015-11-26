@@ -49,16 +49,12 @@ struct _EventdProtocolInterface
     gboolean (*parse)(EventdProtocol *protocol, gchar **buffer, GError **error);
 
     gchar *(*generate_event)(EventdProtocol *protocol, EventdEvent *event);
-    gchar *(*generate_ended)(EventdProtocol *protocol, EventdEvent *event, EventdEventEndReason reason);
-
     gchar *(*generate_passive)(EventdProtocol *protocol);
     gchar *(*generate_subscribe)(EventdProtocol *protocol, GHashTable *categories);
     gchar *(*generate_bye)(EventdProtocol *protocol, const gchar *message);
 
     /* Signals */
     void (*event)(EventdProtocol *protocol, EventdEvent *event);
-    void (*ended)(EventdProtocol *protocol, EventdEvent *event, EventdEventEndReason reason);
-
     void (*passive)(EventdProtocol *protocol);
     void (*subscribe)(EventdProtocol *protocol, GHashTable *categories);
     void (*bye)(EventdProtocol *protocol, const gchar *message);
@@ -126,8 +122,6 @@ void eventd_protocol_remove_event(EventdProtocol *protocol, EventdEvent *event);
 gboolean eventd_protocol_parse(EventdProtocol *protocol, gchar **buffer, GError **error);
 
 gchar *eventd_protocol_generate_event(EventdProtocol *protocol, EventdEvent *event);
-gchar *eventd_protocol_generate_ended(EventdProtocol *protocol, EventdEvent *event, EventdEventEndReason reason);
-
 gchar *eventd_protocol_generate_passive(EventdProtocol *protocol);
 gchar *eventd_protocol_generate_subscribe(EventdProtocol *protocol, GHashTable *categories);
 gchar *eventd_protocol_generate_bye(EventdProtocol *protocol, const gchar *message);

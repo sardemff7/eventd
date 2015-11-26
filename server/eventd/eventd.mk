@@ -27,8 +27,6 @@ eventd_SOURCES = \
 	%D%/src/actions.c \
 	%D%/src/plugins.h \
 	%D%/src/plugins.c \
-	%D%/src/queue.h \
-	%D%/src/queue.c \
 	%D%/src/control.h \
 	%D%/src/control.c \
 	%D%/src/sockets.h \

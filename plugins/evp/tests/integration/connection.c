@@ -40,7 +40,7 @@ connection_test(GDataInputStream *input, GDataOutputStream *output, const gchar 
     gchar *e = NULL;
 
 
-    /* Sending a first event an wait for the ended */
+    if ( ! g_data_output_stream_put_string(output, "SUBSCRIBE test\n", NULL, error) ) goto fail;
 
     if ( ! g_data_output_stream_put_string(output, ".EVENT 2e6894bb-cf96-462e-a435-766c9b1b4f8a test test\n", NULL, error) ) goto fail;
     m = g_strdup_printf("DATA file %s\n", filename);
@@ -54,9 +54,9 @@ connection_test(GDataInputStream *input, GDataOutputStream *output, const gchar 
     r = g_data_input_stream_read_upto(input, "\n", -1, NULL, NULL, error);
     if ( r == NULL ) goto fail;
     if ( ! g_data_input_stream_read_byte(input, NULL, error) ) goto fail;
-    if ( g_strcmp0(r, "ENDED 2e6894bb-cf96-462e-a435-766c9b1b4f8a test") != 0 )
+    if ( g_strcmp0(r, "EVENT cedb8a77-b7fb-4e32-b3e4-3a772664f1f4 test answer") != 0 )
     {
-        e = g_strdup_printf("No ENDED or bad ENDED to EVENT: %s", r);
+        e = g_strdup_printf("No or bad answer EVENT: %s", r);
         goto fail;
     }
     r = (g_free(r), NULL);
@@ -113,8 +113,6 @@ connection_test(GDataInputStream *input, GDataOutputStream *output, const gchar 
     if ( ! g_data_output_stream_put_string(output, ".EVENT 8d099ddd-2b3b-4bd6-8ff7-374632032493 test test\n", NULL, error) ) goto fail;
     if ( ! g_data_output_stream_put_string(output, ".\n", NULL, error) ) goto fail;
 
-    if ( ! g_data_output_stream_put_string(output, "ENDED 8d099ddd-2b3b-4bd6-8ff7-374632032493 client-dismiss\n", NULL, error) ) goto fail;
-
     /* Sending a third event to test empty newline in DATA */
 
     if ( ! g_data_output_stream_put_string(output, ".EVENT 2fcdb771-9307-448d-89ab-33cbf8047cc9 test test\n", NULL, error) ) goto fail;
@@ -122,8 +120,6 @@ connection_test(GDataInputStream *input, GDataOutputStream *output, const gchar 
     if ( ! g_data_output_stream_put_string(output, "\n", NULL, error) ) goto fail;
     if ( ! g_data_output_stream_put_string(output, ".\n", NULL, error) ) goto fail;
     if ( ! g_data_output_stream_put_string(output, ".\n", NULL, error) ) goto fail;
-
-    if ( ! g_data_output_stream_put_string(output, "ENDED 2fcdb771-9307-448d-89ab-33cbf8047cc9 client-dismiss\n", NULL, error) ) goto fail;
 
     g_data_output_stream_put_string(output, "BYE\n", NULL, error);
 

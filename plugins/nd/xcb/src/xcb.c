@@ -478,7 +478,9 @@ _eventd_nd_xcb_surface_expose_event(EventdNdSurface *self, xcb_expose_event_t *e
 static void
 _eventd_nd_xcb_surface_button_release_event(EventdNdSurface *self)
 {
-    eventd_event_end(self->event, EVENTD_EVENT_END_REASON_USER_DISMISS);
+    /*
+     * FIXME: Add notification close event when needed
+     */
 }
 
 static void

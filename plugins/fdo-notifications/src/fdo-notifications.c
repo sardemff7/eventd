@@ -59,7 +59,7 @@ typedef struct {
 } EventdDbusNotification;
 
 static void
-_eventd_fdo_notifications_event_ended(EventdEvent *event, EventdEventEndReason reason, EventdDbusNotification *notification)
+_eventd_fdo_notifications_event_ended(EventdEvent *event, EventdDbusNotification *notification)
 {
     /*
      * We have to emit the NotificationClosed signal for our D-Bus client
@@ -67,7 +67,7 @@ _eventd_fdo_notifications_event_ended(EventdEvent *event, EventdEventEndReason r
 
     g_dbus_connection_emit_signal(notification->context->connection, notification->sender,
                                   NOTIFICATION_BUS_PATH, NOTIFICATION_BUS_NAME,
-                                  "NotificationClosed", g_variant_new("(uu)", notification->id, reason),
+                                  "NotificationClosed", g_variant_new("(uu)", notification->id, 0),
                                   NULL);
     g_hash_table_remove(notification->context->notifications, GUINT_TO_POINTER(notification->id));
 }
@@ -94,7 +94,6 @@ _eventd_fdo_notifications_notification_new(EventdPluginContext *context, const g
     eventd_event_add_data(event, g_strdup("id"), g_strdup_printf("%u", notification->id));
 
     g_hash_table_insert(context->notifications, GUINT_TO_POINTER(notification->id), notification);
-    g_signal_connect(event, "ended", G_CALLBACK(_eventd_fdo_notifications_event_ended), notification);
 
     return notification->id;
 }
@@ -273,8 +272,6 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
     }
 
 
-    eventd_event_set_timeout(event, ( timeout > -1 ) ? timeout : ( urgency > -1 ) ? ( 3000 + urgency * 2000 ) : -1);
-
     if ( id > 0 )
     {
         g_object_unref(event);
@@ -309,9 +306,6 @@ _eventd_fdo_notifications_close_notification(EventdPluginContext *context, GVari
     }
 
     notification = g_hash_table_lookup(context->notifications, GUINT_TO_POINTER(id));
-
-    if ( notification != NULL )
-        eventd_event_end(notification->event, EVENTD_EVENT_END_REASON_CLIENT_DISMISS);
 
     g_dbus_method_invocation_return_value(invocation, NULL);
 }

@@ -140,9 +140,7 @@ _eventd_protocol_evp_parser_get_event(EventdProtocolEvp *self, const gchar * con
     EventdEvent *event;
     event = eventd_event_new_for_uuid_string(argv[0], argv[1], argv[2]);
 
-    if ( event != NULL )
-        eventd_protocol_evp_add_event(self, event);
-    else
+    if ( event == NULL )
         g_set_error(error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_WRONG_UUID, "Error while parsing UUID %s", argv[0]);
 
     return event;
@@ -229,34 +227,6 @@ _eventd_protocol_evp_parse_event(EventdProtocolEvp *self, const gchar * const *a
     g_object_unref(event);
 }
 
-/* ENDED */
-static void
-_eventd_protocol_evp_parse_ended(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
-{
-    EventdEvent *event;
-    event = g_hash_table_lookup(self->priv->events, argv[0]);
-    if ( event == NULL )
-        return;
-
-    /*
-     * For forward-compatibility, we use the 'unknown' reason if we
-     * do not have the real one at compile time
-     */
-    EventdEventEndReason reason = EVENTD_EVENT_END_REASON_UNKNOWN;
-    GEnumClass *enum_class;
-    GEnumValue *enum_value;
-
-    enum_class = g_type_class_ref(EVENTD_TYPE_EVENT_END_REASON);
-    enum_value = g_enum_get_value_by_nick(enum_class, argv[1]);
-    if ( enum_value != NULL )
-        reason = enum_value->value;
-    g_type_class_unref(enum_class);
-
-    g_signal_emit(self, eventd_protocol_signals[SIGNAL_ENDED], 0, event, reason);
-
-    eventd_protocol_evp_remove_event(self, event);
-}
-
 /* PASSIVE */
 static void
 _eventd_protocol_evp_parse_passive(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
@@ -338,11 +308,6 @@ static const EventdProtocolEvpTokens _eventd_protocol_evp_messages[] = {
     {"EVENT", 3, 3,
             { EVENTD_PROTOCOL_EVP_STATE_BASE, EVENTD_PROTOCOL_EVP_STATE_PASSIVE, EVENTD_PROTOCOL_EVP_STATE_SUBSCRIBE, _EVENTD_PROTOCOL_EVP_STATE_SIZE },
             _eventd_protocol_evp_parse_event,
-            _EVENTD_PROTOCOL_EVP_STATE_SIZE, NULL, NULL
-    },
-    {"ENDED", 2, 2,
-            { EVENTD_PROTOCOL_EVP_STATE_BASE, EVENTD_PROTOCOL_EVP_STATE_PASSIVE, EVENTD_PROTOCOL_EVP_STATE_SUBSCRIBE, _EVENTD_PROTOCOL_EVP_STATE_SIZE },
-            _eventd_protocol_evp_parse_ended,
             _EVENTD_PROTOCOL_EVP_STATE_SIZE, NULL, NULL
     },
     {"SUBSCRIBE", 0, 1,

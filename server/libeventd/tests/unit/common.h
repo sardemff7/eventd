@@ -33,7 +33,6 @@
 #define EVENTD_EVENT_TEST_UUID "1b4e28ba-2fa1-11d2-883f-b9a761bde3fb"
 #define EVENTD_EVENT_TEST_NAME "test-name"
 #define EVENTD_EVENT_TEST_CATEGORY "test-category"
-#define EVENTD_EVENT_TEST_TIMEOUT -1
 #define EVENTD_EVENT_TEST_DATA_NAME "test-name"
 #define EVENTD_EVENT_TEST_DATA_CONTENT "test-content"
 #define EVENTD_EVENT_TEST_DATA_NEWLINE_NAME "test-name-newline"

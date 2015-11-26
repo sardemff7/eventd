@@ -59,13 +59,10 @@ struct _EventcConnectionPrivate {
     GSocketConnection *connection;
     GDataInputStream *in;
     GDataOutputStream *out;
-    GHashTable* events;
-    gboolean processing_message;
 };
 
 typedef struct {
     EventdEvent *event;
-    gulong ended;
 } EventdConnectionEventHandlers;
 
 typedef struct {
@@ -205,58 +202,16 @@ end:
     return r;
 }
 
-static void _eventc_connection_handle_event(EventcConnection *self, EventdEvent *event);
 static void
 _eventc_connection_protocol_event(EventcConnection *self, EventdEvent *event, EventdProtocol *protocol)
 {
-    _eventc_connection_handle_event(self, event);
     g_signal_emit(self, _eventc_connection_signals[SIGNAL_EVENT], 0, event);
-}
-
-static void
-_eventc_connection_event_ended(EventcConnection *self, EventdEventEndReason reason, EventdEvent *event)
-{
-    if ( ! self->priv->processing_message )
-        _eventc_connection_send_message(self, eventd_protocol_generate_ended(self->priv->protocol, event, reason));
-    g_hash_table_remove(self->priv->events, event);
-}
-
-static void
-_eventc_connection_protocol_ended(EventcConnection *self, EventdEvent *event, EventdEventEndReason reason, EventdProtocol *protocol)
-{
-    self->priv->processing_message = TRUE;
-    eventd_event_end(event, reason);
-    self->priv->processing_message = FALSE;
 }
 
 static void
 _eventc_connection_protocol_bye(EventcConnection *self, EventdProtocol *protocol)
 {
     g_cancellable_cancel(self->priv->cancellable);
-}
-
-static void
-_eventc_connection_handle_event(EventcConnection *self, EventdEvent *event)
-{
-    EventdConnectionEventHandlers *handlers;
-    handlers = g_slice_new(EventdConnectionEventHandlers);
-    handlers->event = g_object_ref(event);
-
-    handlers->ended = g_signal_connect_swapped(event, "ended", G_CALLBACK(_eventc_connection_event_ended), self);
-
-    g_hash_table_insert(self->priv->events, event, handlers);
-}
-
-static void
-_eventc_connection_event_handlers_free(gpointer data)
-{
-    EventdConnectionEventHandlers *handlers = data;
-
-    g_signal_handler_disconnect(handlers->event, handlers->ended);
-
-    g_object_unref(handlers->event);
-
-    g_slice_free(EventdConnectionEventHandlers, handlers);
 }
 
 static void
@@ -321,11 +276,9 @@ eventc_connection_init(EventcConnection *self)
     self->priv = EVENTC_CONNECTION_GET_PRIVATE(self);
 
     self->priv->protocol = eventd_protocol_evp_new();
-    self->priv->events = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, _eventc_connection_event_handlers_free);
     self->priv->cancellable = g_cancellable_new();
 
     g_signal_connect_swapped(self->priv->protocol, "event", G_CALLBACK(_eventc_connection_protocol_event), self);
-    g_signal_connect_swapped(self->priv->protocol, "ended", G_CALLBACK(_eventc_connection_protocol_ended), self);
     g_signal_connect_swapped(self->priv->protocol, "bye", G_CALLBACK(_eventc_connection_protocol_bye), self);
 }
 
@@ -341,7 +294,6 @@ _eventc_connection_finalize(GObject *object)
         g_object_unref(self->priv->address);
 
     g_object_unref(self->priv->cancellable);
-    g_hash_table_unref(self->priv->events);
     g_object_unref(self->priv->protocol);
 
     G_OBJECT_CLASS(eventc_connection_parent_class)->finalize(object);
@@ -676,14 +628,6 @@ eventc_connection_event(EventcConnection *self, EventdEvent *event, GError **err
     g_return_val_if_fail(EVENTD_IS_EVENT(event), FALSE);
     g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-    EventdEvent *old;
-    old = g_hash_table_lookup(self->priv->events, event);
-    if ( old != NULL )
-    {
-        g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_EVENT, "This event was already sent to the server");
-        return FALSE;
-    }
-
     if ( ! _eventc_connection_expect_connected(self, error) )
         return FALSE;
 
@@ -693,8 +637,6 @@ eventc_connection_event(EventcConnection *self, EventdEvent *event, GError **err
         self->priv->error = NULL;
         return FALSE;
     }
-
-    _eventc_connection_handle_event(self, event);
 
     return TRUE;
 }
@@ -752,8 +694,6 @@ _eventc_connection_close_internal(EventcConnection *self)
     self->priv->out = NULL;
     self->priv->in = NULL;
     self->priv->connection = NULL;
-
-    g_hash_table_remove_all(self->priv->events);
 }
 
 

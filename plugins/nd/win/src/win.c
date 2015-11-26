@@ -126,7 +126,10 @@ _eventd_nd_win_surface_event_callback(HWND hwnd, UINT message, WPARAM wParam, LP
     {
         self = GetProp(hwnd, "EventdNdSurface");
         g_return_val_if_fail(self != NULL, 1);
+        /*
+         * FIXME: add back
         eventd_event_end(self->event, EVENTD_EVENT_END_REASON_USER_DISMISS);
+         */
     }
     default:
         return DefWindowProc(hwnd,message,wParam,lParam);

@@ -49,8 +49,6 @@ typedef struct {
 } EventdEventsEventDataMatch;
 
 typedef struct {
-    gint64 timeout;
-
     gint64 importance;
     GList *actions;
 
@@ -208,7 +206,7 @@ _eventd_events_get_event(EventdEvents *self, EventdEvent *event, GQuark *current
 }
 
 gboolean
-eventd_events_process_event(EventdEvents *self, EventdEvent *event, GQuark *flags, gint64 config_timeout, const GList **actions)
+eventd_events_process_event(EventdEvents *self, EventdEvent *event, GQuark *flags, const GList **actions)
 {
     EventdEventsEvent *config_event;
     config_event = _eventd_events_get_event(self, event, flags);
@@ -217,18 +215,6 @@ eventd_events_process_event(EventdEvents *self, EventdEvent *event, GQuark *flag
         return FALSE;
 
     *actions = config_event->actions;
-
-    gint64 timeout;
-
-    timeout = eventd_event_get_timeout(event);
-    if ( timeout < 0 )
-    {
-        if ( ( config_event == NULL ) || ( config_event->timeout < 0 ) )
-            timeout = config_timeout;
-        else
-            timeout = config_event->timeout;
-    }
-    eventd_event_set_timeout(event, timeout);
 
     return TRUE;
 }
@@ -305,7 +291,6 @@ _eventd_events_parse_group(EventdEvents *self, const gchar *group, GKeyFile *con
 
     EventdEventsEvent *event;
     event = g_new0(EventdEventsEvent, 1);
-    event->timeout = -1;
 
     if ( actions != NULL )
     {
@@ -314,11 +299,6 @@ _eventd_events_parse_group(EventdEvents *self, const gchar *group, GKeyFile *con
             event->actions = g_list_prepend(event->actions, *action);
         g_free(actions);
     }
-
-    Int timeout;
-
-    if ( evhelpers_config_key_file_get_int(config_file, group, "Timeout", &timeout) == 0 )
-        event->timeout = timeout.value;
 
 
     gchar **if_data_matches;

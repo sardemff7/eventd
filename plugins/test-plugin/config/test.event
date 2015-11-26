@@ -1,3 +1,2 @@
 [Event test]
-Timeout = 10000
 Actions = test;

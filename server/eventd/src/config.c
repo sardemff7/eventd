@@ -43,8 +43,6 @@ struct _EventdConfig {
     gboolean loaded;
     const gchar *gnutls_priorities_env;
     gchar *gnutls_priorities;
-    guint64 stack;
-    gint64 timeout;
     EventdEvents *events;
     EventdActions *actions;
 };
@@ -52,22 +50,18 @@ struct _EventdConfig {
 gboolean
 eventd_config_process_event(EventdConfig *config, EventdEvent *event, GQuark *flags, const GList **actions)
 {
-    return eventd_events_process_event(config->events, event, flags, config->timeout, actions);
+    return eventd_events_process_event(config->events, event, flags, actions);
 }
 
 
 static void
 _eventd_config_defaults(EventdConfig *config)
 {
-    config->stack = 1;
-    config->timeout = 3000;
 }
 
 static void
 _eventd_config_parse_global(EventdConfig *config, GKeyFile *config_file)
 {
-    Int integer;
-
     if ( g_tls_backend_supports_tls(g_tls_backend_get_default()) && g_key_file_has_group(config_file, "Server") )
     {
         gchar *priorities;
@@ -77,15 +71,6 @@ _eventd_config_parse_global(EventdConfig *config, GKeyFile *config_file)
             config->gnutls_priorities = priorities;
         }
 
-    }
-
-    if ( g_key_file_has_group(config_file, "Event") )
-    {
-        if ( evhelpers_config_key_file_get_int(config_file, "Event", "Stack", &integer) == 0 )
-            config->stack = integer.value;
-
-        if ( evhelpers_config_key_file_get_int(config_file, "Event", "Timeout", &integer) == 0 )
-            config->timeout = MAX(0, integer.value);
     }
 }
 
@@ -335,10 +320,4 @@ eventd_config_free(EventdConfig *config)
     eventd_events_free(config->events);
 
     g_free(config);
-}
-
-guint64
-eventd_config_get_stack(EventdConfig *config)
-{
-    return config->stack;
 }

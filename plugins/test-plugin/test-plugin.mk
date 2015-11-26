@@ -11,11 +11,14 @@ dist_check_DATA += \
 
 
 test_plugin_la_SOURCES = \
+	%D%/include/libeventd-event-private.h \
+	server/libeventd/src/event-private.c \
 	%D%/src/test-plugin.c \
 	$(null)
 
 test_plugin_la_CFLAGS = \
 	$(AM_CFLAGS) \
+	$(NKUTILS_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(null)
 
@@ -28,5 +31,6 @@ test_plugin_la_LDFLAGS = \
 test_plugin_la_LIBADD = \
 	libeventd.la \
 	libeventd-plugin.la \
+	$(NKUTILS_LIBS) \
 	$(GLIB_LIBS) \
 	$(null)

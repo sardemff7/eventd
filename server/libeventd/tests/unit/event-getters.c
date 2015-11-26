@@ -33,7 +33,6 @@ _init_data(gpointer fixture, gconstpointer user_data)
     GettersData *data = fixture;
 
     data->event = eventd_event_new_for_uuid_string(EVENTD_EVENT_TEST_UUID, EVENTD_EVENT_TEST_CATEGORY, EVENTD_EVENT_TEST_NAME);
-    eventd_event_set_timeout(data->event, EVENTD_EVENT_TEST_TIMEOUT);
 }
 
 static void
@@ -120,28 +119,6 @@ _test_get_name_notnull(gpointer fixture, gconstpointer user_data)
 }
 
 static void
-_test_get_timeout_notnull(gpointer fixture, gconstpointer user_data)
-{
-    GettersData *data = fixture;
-
-    g_assert_cmpint(eventd_event_get_timeout(data->event), ==, EVENTD_EVENT_TEST_TIMEOUT);
-}
-
-static void
-_test_get_timeout_null(gpointer fixture, gconstpointer user_data)
-{
-    if ( ! g_test_undefined() )
-            return;
-    if ( g_test_subprocess() )
-    {
-        eventd_event_get_timeout(NULL);
-        exit(0);
-    }
-    g_test_trap_subprocess(NULL, 0, 0);
-    g_test_trap_assert_failed();
-}
-
-static void
 _test_get_data_notnull_good__null(gpointer fixture, gconstpointer user_data)
 {
     GettersData *data = fixture;
@@ -210,9 +187,6 @@ eventd_tests_unit_eventd_event_suite_getters(void)
 
     g_test_suite_add(suite, g_test_create_case("get_name(event)",                        sizeof(GettersData), NULL, _init_data,           _test_get_name_notnull,                      _clean_data));
     g_test_suite_add(suite, g_test_create_case("get_name(NULL)",                         sizeof(GettersData), NULL, NULL      ,           _test_get_name_null,                         NULL));
-
-    g_test_suite_add(suite, g_test_create_case("get_timeout(event)",                     sizeof(GettersData), NULL, _init_data,           _test_get_timeout_notnull,                   _clean_data));
-    g_test_suite_add(suite, g_test_create_case("get_timeout(NULL)",                      sizeof(GettersData), NULL, NULL,                 _test_get_timeout_null,                      NULL));
 
     g_test_suite_add(suite, g_test_create_case("get_data(event, name) = NULL",           sizeof(GettersData), NULL, _init_data,           _test_get_data_notnull_good__null,           _clean_data));
     g_test_suite_add(suite, g_test_create_case("get_data(event, name2) = NULL",          sizeof(GettersData), NULL, _init_data_with_data, _test_get_data_notnull_good2__null,          _clean_data));

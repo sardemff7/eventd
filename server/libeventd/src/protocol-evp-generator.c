@@ -64,9 +64,6 @@ gchar *
 eventd_protocol_evp_generate_event(EventdProtocol *protocol, EventdEvent *event)
 {
     g_return_val_if_fail(EVENTD_IS_PROTOCOL_EVP(protocol), NULL);
-    EventdProtocolEvp *self = EVENTD_PROTOCOL_EVP(protocol);
-
-    eventd_protocol_evp_add_event(self, event);
 
     GHashTable *data;
     data = eventd_event_get_all_data(event);
@@ -88,21 +85,6 @@ eventd_protocol_evp_generate_event(EventdProtocol *protocol, EventdEvent *event)
 
     return g_string_free(str, FALSE);
 }
-
-gchar *
-eventd_protocol_evp_generate_ended(EventdProtocol *protocol, EventdEvent *event, EventdEventEndReason reason)
-{
-    g_return_val_if_fail(EVENTD_IS_PROTOCOL_EVP(protocol), NULL);
-    EventdProtocolEvp *self = EVENTD_PROTOCOL_EVP(protocol);
-
-    eventd_protocol_evp_remove_event(self, event);
-
-    const gchar *nick;
-    nick = eventd_event_end_reason_get_value_nick(reason);
-
-    return g_strdup_printf("ENDED %s %s\n", eventd_event_get_uuid(event), nick);
-}
-
 
 gchar *
 eventd_protocol_evp_generate_passive(EventdProtocol *protocol)
@@ -150,7 +132,6 @@ eventd_protocol_evp_generate_subscribe(EventdProtocol *protocol, GHashTable *cat
     message = g_string_free(str, FALSE);
 
 ret:
-    g_hash_table_unref(categories);
     return message;
 }
 

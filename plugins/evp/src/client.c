@@ -44,16 +44,10 @@ struct _EventdEvpClient {
     GIOStream *tls;
     GDataInputStream *in;
     GDataOutputStream *out;
-    GHashTable *events;
-    gboolean processing_message;
+    EventdEvent *current;
     GList *subscribe_all;
     GHashTable *subscriptions;
 };
-
-typedef struct {
-    EventdEvent *event;
-    gulong ended;
-} EventdEvpEventHandlers;
 
 
 static void _eventd_evp_client_disconnect_internal(EventdEvpClient *self);
@@ -79,54 +73,15 @@ end:
 }
 
 static void
-_eventd_evp_client_event_ended(EventdEvpClient *self, EventdEventEndReason reason, EventdEvent *event)
-{
-    if ( ! self->processing_message )
-        _eventd_evp_client_send_message(self, eventd_protocol_generate_ended(self->protocol, event, reason));
-    g_hash_table_remove(self->events, event);
-}
-
-static void
-_eventd_evp_client_protocol_ended(EventdEvpClient *self, EventdEvent *event, EventdEventEndReason reason, EventdProtocol *protocol)
-{
-    self->processing_message = TRUE;
-    eventd_event_end(event, reason);
-    self->processing_message = FALSE;
-}
-
-static void
-_eventd_evp_client_handle_event(EventdEvpClient *self, EventdEvent *event)
-{
-    EventdEvpEventHandlers *handlers;
-
-    handlers = g_slice_new(EventdEvpEventHandlers);
-    handlers->event = g_object_ref(event);
-
-    handlers->ended = g_signal_connect_swapped(event, "ended", G_CALLBACK(_eventd_evp_client_event_ended), self);
-
-    g_hash_table_insert(self->events, event, handlers);
-}
-
-static void
 _eventd_evp_client_protocol_event(EventdEvpClient *self, EventdEvent *event, EventdProtocol *protocol)
 {
 #ifdef EVENTD_DEBUG
     g_debug("Received an event (category: %s): %s", eventd_event_get_category(event), eventd_event_get_name(event));
 #endif /* EVENTD_DEBUG */
 
-    if ( ! eventd_plugin_core_push_event(self->context->core, self->context->core_interface, event) )
-    {
-        if ( self->out != NULL )
-            /* Client not in passive mode */
-            _eventd_evp_client_send_message(self, eventd_protocol_generate_ended(self->protocol, event, EVENTD_EVENT_END_REASON_DISCARD));
-        return;
-    }
-
-    if ( self->out == NULL )
-        /* Client in passive mode */
-        return;
-
-    _eventd_evp_client_handle_event(self, event);
+    self->current = event;
+    eventd_plugin_core_push_event(self->context->core, self->context->core_interface, event);
+    self->current = NULL;
 }
 
 static void
@@ -179,18 +134,6 @@ _eventd_evp_client_protocol_bye(EventdEvpClient *self, EventdProtocol *protocol)
 }
 
 static void
-_eventd_evp_client_event_handlers_free(gpointer data)
-{
-    EventdEvpEventHandlers *handlers = data;
-
-    g_signal_handler_disconnect(handlers->event, handlers->ended);
-
-    g_object_unref(handlers->event);
-
-    g_slice_free(EventdEvpEventHandlers, handlers);
-}
-
-static void
 _eventd_evp_client_read_callback(GObject *obj, GAsyncResult *res, gpointer user_data)
 {
     EventdEvpClient *self = user_data;
@@ -228,7 +171,6 @@ static void
 _eventd_evp_client_connect(EventdEvpClient *self, GIOStream *stream)
 {
     g_signal_connect_swapped(self->protocol, "event", G_CALLBACK(_eventd_evp_client_protocol_event), self);
-    g_signal_connect_swapped(self->protocol, "ended", G_CALLBACK(_eventd_evp_client_protocol_ended), self);
     g_signal_connect_swapped(self->protocol, "passive", G_CALLBACK(_eventd_evp_client_protocol_passive), self);
     g_signal_connect_swapped(self->protocol, "subscribe", G_CALLBACK(_eventd_evp_client_protocol_subscribe), self);
     g_signal_connect_swapped(self->protocol, "bye", G_CALLBACK(_eventd_evp_client_protocol_bye), self);
@@ -300,7 +242,6 @@ eventd_evp_client_connection_handler(GSocketService *service, GSocketConnection 
     self->context = context;
 
     self->protocol = eventd_protocol_evp_new();
-    self->events = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, _eventd_evp_client_event_handlers_free);
     self->subscriptions = g_hash_table_new(g_str_hash, g_str_equal);
 
     self->cancellable = g_cancellable_new();
@@ -350,7 +291,6 @@ eventd_evp_client_disconnect(gpointer data)
     EventdEvpClient *self = data;
 
     g_hash_table_unref(self->subscriptions);
-    g_hash_table_unref(self->events);
 
     if ( self->in != NULL )
         g_object_unref(self->in);
@@ -375,10 +315,9 @@ eventd_evp_client_disconnect(gpointer data)
 void
 eventd_evp_client_event_dispatch(EventdEvpClient *self, EventdEvent *event)
 {
-    if ( g_hash_table_contains(self->events, event) )
+    if ( self->current == event )
         /* Do not send back our own events */
         return;
 
     _eventd_evp_client_send_message(self, eventd_protocol_generate_event(self->protocol, event));
-    _eventd_evp_client_handle_event(self, event);
 }

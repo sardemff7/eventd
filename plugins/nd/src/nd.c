@@ -442,7 +442,7 @@ _eventd_nd_event_updated(EventdEvent *event, EventdNdNotification *self)
 }
 
 static void
-_eventd_nd_event_ended(EventdEvent *event, EventdEventEndReason reason, EventdNdNotification *notification)
+_eventd_nd_event_ended(EventdEvent *event, EventdNdNotification *notification)
 {
     EventdPluginContext *context = notification->context;
 
@@ -458,8 +458,6 @@ _eventd_nd_event_action(EventdPluginContext *context, EventdNdStyle *style, Even
 
     EventdNdNotification *notification;
     notification = _eventd_nd_notification_new(context, event, style);
-
-    g_signal_connect(event, "ended", G_CALLBACK(_eventd_nd_event_ended), notification);
 
     g_queue_push_tail(context->queue, notification);
     notification->notification = g_queue_peek_tail_link(context->queue);

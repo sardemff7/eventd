@@ -35,137 +35,6 @@
 EVENTD_EXPORT GType eventd_event_get_type(void);
 G_DEFINE_TYPE(EventdEvent, eventd_event, G_TYPE_OBJECT)
 
-/**
- * EventdEventEndReason:
- * @EVENTD_EVENT_END_REASON_NONE: No reason given.
- * @EVENTD_EVENT_END_REASON_DISCARD: The event is discarded, the server has no relevant configuration for it.
- * @EVENTD_EVENT_END_REASON_TIMEOUT: The event timed out.
- * @EVENTD_EVENT_END_REASON_USER_DISMISS: The user dismissed the event.
- * @EVENTD_EVENT_END_REASON_CLIENT_DISMISS: The source of the event dismissed the event.
- * @EVENTD_EVENT_END_REASON_TEST: Test reason. To be used in tests.
- * @EVENTD_EVENT_END_REASON_UNKNOWN: Unknown reason. When the reason comes from a remote server, the value may have been introduced in a new version.
- * @EVENTD_EVENT_END_REASON_RESERVED: Internal use only.
- */
-
-EVENTD_EXPORT
-GType
-eventd_event_end_reason_get_type(void)
-{
-    static volatile gsize g_define_type_id__volatile = 0;
-
-    if ( g_once_init_enter(&g_define_type_id__volatile))
-    {
-        static const GEnumValue values[] = {
-            { EVENTD_EVENT_END_REASON_NONE,           "EVENTD_EVENT_END_REASON_NONE",           "none" },
-            { EVENTD_EVENT_END_REASON_DISCARD,        "EVENTD_EVENT_END_REASON_DISCARD",        "discard" },
-            { EVENTD_EVENT_END_REASON_TIMEOUT,        "EVENTD_EVENT_END_REASON_TIMEOUT",        "timeout" },
-            { EVENTD_EVENT_END_REASON_USER_DISMISS,   "EVENTD_EVENT_END_REASON_USER_DISMISS",   "user-dismiss" },
-            { EVENTD_EVENT_END_REASON_CLIENT_DISMISS, "EVENTD_EVENT_END_REASON_CLIENT_DISMISS", "client-dismiss" },
-            { EVENTD_EVENT_END_REASON_TEST,           "EVENTD_EVENT_END_REASON_TEST",           "test" },
-            { EVENTD_EVENT_END_REASON_UNKNOWN,        "EVENTD_EVENT_END_REASON_UNKNOWN",        "unknown" },
-            { EVENTD_EVENT_END_REASON_RESERVED,       "EVENTD_EVENT_END_REASON_RESERVED",       "reserved" },
-            { 0, NULL, NULL }
-        };
-        GType g_define_type_id = g_enum_register_static(g_intern_static_string("EventdEventEndReason"), values);
-        g_once_init_leave(&g_define_type_id__volatile, g_define_type_id);
-    }
-
-    return g_define_type_id__volatile;
-}
-
-/**
- * eventd_event_end_reason_is_valid_value:
- * @reason: an #EventdEventEndReason
- *
- * Checks if @reason is a valid #EventdEventEndReason value.
- *
- * Returns: %TRUE if @reason is a valid #EventdEventEndReason value.
- */
-EVENTD_EXPORT
-gboolean
-eventd_event_end_reason_is_valid_value(EventdEventEndReason reason)
-{
-    GEnumClass *enum_class;
-    GEnumValue *enum_value;
-
-    enum_class = g_type_class_ref(EVENTD_TYPE_EVENT_END_REASON);
-    enum_value = g_enum_get_value(enum_class, reason);
-    g_type_class_unref(enum_class);
-
-    return ( enum_value != NULL );
-}
-
-/**
- * eventd_event_end_reason_get_value_name:
- * @reason: an #EventdEventEndReason
- *
- * Looks up the name of @reason.
- *
- * Returns: (transfer none): the name of @reason
- */
-EVENTD_EXPORT
-const gchar *
-eventd_event_end_reason_get_value_name(EventdEventEndReason reason)
-{
-    g_return_val_if_fail(eventd_event_end_reason_is_valid_value(reason), NULL);
-
-    GEnumClass *enum_class;
-    GEnumValue *enum_value;
-    const gchar *name;
-
-    enum_class = g_type_class_ref(EVENTD_TYPE_EVENT_END_REASON);
-    enum_value = g_enum_get_value(enum_class, reason);
-    name = enum_value->value_name;
-    g_type_class_unref(enum_class);
-
-    /*
-     * It is safe to return this pointer here because we
-     * set it in eventd_event_end_reason_get_type and it
-     * is a compile-time const string
-     */
-    return name;
-}
-
-/**
- * eventd_event_end_reason_get_value_nick:
- * @reason: an #EventdEventEndReason
- *
- * CLooks up the nickname of @reason.
- *
- * Returns: (transfer none): the nickname of @reason
- */
-EVENTD_EXPORT
-const gchar *
-eventd_event_end_reason_get_value_nick(EventdEventEndReason reason)
-{
-    g_return_val_if_fail(eventd_event_end_reason_is_valid_value(reason), NULL);
-
-    GEnumClass *enum_class;
-    GEnumValue *enum_value;
-    const gchar *nick;
-
-    enum_class = g_type_class_ref(EVENTD_TYPE_EVENT_END_REASON);
-    enum_value = g_enum_get_value(enum_class, reason);
-    nick = enum_value->value_nick;
-    g_type_class_unref(enum_class);
-
-    /*
-     * It is safe to return this pointer here because we
-     * set it in eventd_event_end_reason_get_type and it
-     * is a compile-time const string
-     */
-    return nick;
-}
-
-
-enum {
-    SIGNAL_ENDED,
-    LAST_SIGNAL
-};
-
-static guint _eventd_event_signals[LAST_SIGNAL] = { 0 };
-
-
 static void _eventd_event_finalize(GObject *object);
 
 static void
@@ -178,22 +47,6 @@ eventd_event_class_init(EventdEventClass *klass)
     eventd_event_parent_class = g_type_class_peek_parent(klass);
 
     object_class->finalize = _eventd_event_finalize;
-
-    /**
-     * EventdEvent::ended:
-     * @event: the #EventdEvent that ended
-     * @reason: an #EventdEventEndReason for the end
-     *
-     * Emitted when an event is complete.
-     */
-    _eventd_event_signals[SIGNAL_ENDED] =
-        g_signal_new("ended",
-                     G_TYPE_FROM_CLASS(object_class),
-                     G_SIGNAL_RUN_FIRST,
-                     G_STRUCT_OFFSET(EventdEventClass, ended),
-                     NULL, NULL,
-                     g_cclosure_marshal_generic,
-                     G_TYPE_NONE, 1, EVENTD_TYPE_EVENT_END_REASON);
 }
 
 /**
@@ -222,8 +75,6 @@ static void
 eventd_event_init(EventdEvent *self)
 {
     self->priv = EVENTD_EVENT_GET_PRIVATE(self);
-
-    self->priv->timeout = -1;
 }
 
 static void
@@ -236,23 +87,6 @@ _eventd_event_finalize(GObject *object)
     g_free(self->priv->name);
 
     G_OBJECT_CLASS(eventd_event_parent_class)->finalize(object);
-}
-
-/**
- * eventd_event_end:
- * @event: an #EventdEvent
- * @reason: the reason for ending the event
- *
- * Terminates an event.
- */
-EVENTD_EXPORT
-void
-eventd_event_end(EventdEvent *self, EventdEventEndReason reason)
-{
-    g_return_if_fail(EVENTD_IS_EVENT(self));
-    g_return_if_fail(eventd_event_end_reason_is_valid_value(reason));
-
-    g_signal_emit(self, _eventd_event_signals[SIGNAL_ENDED], 0, reason);
 }
 
 /**
@@ -274,23 +108,6 @@ eventd_event_add_data(EventdEvent *self, gchar *name, gchar *content)
     if ( self->priv->data == NULL )
         self->priv->data = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
     g_hash_table_insert(self->priv->data, name, content);
-}
-
-/**
- * eventd_event_set_timeout:
- * @event: an #EventdEvent
- * @timeout: the event timeout (in milliseconds)
- *
- * Sets how long the event before be active before it timesout.
- */
-EVENTD_EXPORT
-void
-eventd_event_set_timeout(EventdEvent *self, gint64 timeout)
-{
-    g_return_if_fail(EVENTD_IS_EVENT(self));
-    g_return_if_fail(timeout >= -1);
-
-    self->priv->timeout = timeout;
 }
 
 
@@ -326,23 +143,6 @@ eventd_event_get_name(const EventdEvent *self)
     g_return_val_if_fail(EVENTD_IS_EVENT(self), NULL);
 
     return self->priv->name;
-}
-
-/**
- * eventd_event_get_timeout:
- * @event: an #EventdEvent
- *
- * Retrieves the timeout for the event.
- *
- * Returns: the timeout of the event
- */
-EVENTD_EXPORT
-gint64
-eventd_event_get_timeout(const EventdEvent *self)
-{
-    g_return_val_if_fail(EVENTD_IS_EVENT(self), G_MININT64);
-
-    return self->priv->timeout;
 }
 
 /**

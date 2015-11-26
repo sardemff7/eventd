@@ -44,7 +44,7 @@ static guint timeout = 0;
 typedef enum {
     STATE_START,
     STATE_SENT,
-    STATE_ENDED
+    STATE_END,
 } State;
 
 static struct{
@@ -60,7 +60,7 @@ static struct{
 static const gchar *_state_names[] = {
     [STATE_START] = "start",
     [STATE_SENT] = "sent",
-    [STATE_ENDED] = "ended"
+    [STATE_END] = "end",
 };
 
 static gboolean
@@ -98,7 +98,6 @@ _timeout_callback(gpointer user_data)
     return FALSE;
 }
 
-static void _ended_callback(EventdEvent *e, EventdEventEndReason reason, EventcConnection *client);
 static void
 _create_event(EventcConnection *client)
 {
@@ -118,8 +117,6 @@ _create_event(EventcConnection *client)
     default:
     break;
     }
-
-    g_signal_connect(event, "ended", G_CALLBACK(_ended_callback), client);
 
     if ( timeout > 0 )
         g_source_remove(timeout);
@@ -161,7 +158,7 @@ _connect_callback(GObject *obj, GAsyncResult *res, gpointer user_data)
 static gboolean
 _ended_close_idle_callback(gpointer user_data)
 {
-    if ( ! _check_state(-1, 3, STATE_ENDED) )
+    if ( ! _check_state(-1, 3, STATE_SENT) )
         return FALSE;
 
     EventcConnection *client = user_data;
@@ -182,26 +179,23 @@ _ended_close_idle_callback(gpointer user_data)
     return FALSE;
 }
 
-static gboolean
-_end_idle_callback(gpointer user_data)
-{
-    if ( _check_state(-1, 3, STATE_SENT) )
-        eventd_event_end(event, EVENTD_EVENT_END_REASON_CLIENT_DISMISS);
-    return FALSE;
-}
-
 static void
-_ended_callback(EventdEvent *e, EventdEventEndReason reason, EventcConnection *client)
+_ended_callback(EventcConnection *client, EventdEvent *e, gpointer user_data)
 {
     if ( ! _check_state(-1, -1, STATE_SENT) )
         return;
-    g_return_if_fail(eventd_event_end_reason_is_valid_value(reason));
+
+    const gchar *category;
+    const gchar *name;
+
+    category = eventd_event_get_category(e);
+    name = eventd_event_get_name(e);
     switch ( _test_state.event )
     {
     case 2:
-        g_idle_add(_end_idle_callback, NULL);
+        g_idle_add(_ended_close_idle_callback, client);
     case 1:
-        if ( reason != EVENTD_EVENT_END_REASON_TEST )
+        if ( ( g_strcmp0(category, "test") != 0 ) || ( g_strcmp0(name, "answer") != 0 ) )
             break;
         g_object_unref(event);
         _create_event(client);
@@ -211,15 +205,9 @@ _ended_callback(EventdEvent *e, EventdEventEndReason reason, EventcConnection *c
             _test_state.state = STATE_SENT;
         return;
     case 3:
-        if ( reason != EVENTD_EVENT_END_REASON_CLIENT_DISMISS )
-            break;
-        g_idle_add(_ended_close_idle_callback, client);
-        ++_test_state.state;
-        return;
     default:
         g_return_if_reached();
     }
-    g_warning("[%zu, %zu] Wrong end reason: %s", _test_state.connection, _test_state.event, eventd_event_end_reason_get_value_nick(reason));
     g_main_loop_quit(loop);
 }
 
@@ -234,6 +222,10 @@ eventd_tests_run_libeventc(const gchar *host)
 
     if ( client == NULL )
         goto error;
+
+    eventc_connection_set_subscribe(client, TRUE);
+    eventc_connection_add_subscription(client, g_strdup("test"));
+    g_signal_connect(client, "event", G_CALLBACK(_ended_callback), NULL);
 
     loop = g_main_loop_new(NULL, FALSE);
 

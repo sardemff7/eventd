@@ -21,37 +21,18 @@
 namespace Eventd
 {
     [CCode (cheader_filename = "libeventd-event.h")]
-    public enum EventEndReason
-    {
-        NONE,
-        DISCARD,
-        TIMEOUT,
-        USER_DISMISS,
-        CLIENT_DISMISS,
-        TEST,
-        UNKNOWN,
-        RESERVED;
-    }
-
-    [CCode (cheader_filename = "libeventd-event.h")]
     public class Event : GLib.Object
     {
         [CCode (has_construct_function = false)]
         public Event(string category, string name);
 
-        public void set_timeout(int64 timeout);
         public void add_data(owned string name, owned string content);
 
         public unowned string get_category();
         public unowned string get_name();
-        public int64 get_timeout();
         public bool has_data(string name);
         public unowned string get_data(string name);
         public GLib.HashTable<weak string,weak string>? get_all_data();
-
-        public void end(EventEndReason reason);
-
-        public signal void ended(EventEndReason reason);
     }
 
     [CCode (cheader_filename = "libeventd-protocol.h")]
@@ -72,13 +53,11 @@ namespace Eventd
         public abstract bool parse(string buffer) throws ProtocolParseError;
 
         public abstract string generate_event(Eventd.Event event);
-        public abstract string generate_ended(Eventd.Event event, Eventd.EventEndReason reason);
         public abstract string generate_passive();
         public abstract string generate_subscribe(GLib.HashTable<string, string>? categories);
         public abstract string generate_bye(string? message);
 
         public signal void event(Eventd.Event event);
-        public signal void ended(Eventd.Event event, Eventd.EventEndReason reason);
         public signal void passive();
         public signal void subscribe(GLib.HashTable<string, string>? categories);
         public signal void bye(string? message);

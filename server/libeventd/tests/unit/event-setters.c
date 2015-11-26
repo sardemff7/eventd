@@ -86,50 +86,6 @@ _test_new_good_null(gpointer fixture, gconstpointer user_data)
 }
 
 static void
-_test_set_timeout_notnull_good(gpointer fixture, gconstpointer user_data)
-{
-    SettersData *data = fixture;
-
-    if ( g_test_subprocess() )
-    {
-        eventd_event_set_timeout(data->event, 1);
-        exit(0);
-    }
-    g_test_trap_subprocess(NULL, 0, 0);
-    g_test_trap_assert_passed();
-}
-
-static void
-_test_set_timeout_null_good(gpointer fixture, gconstpointer user_data)
-{
-    if ( ! g_test_undefined() )
-            return;
-    if ( g_test_subprocess() )
-    {
-        eventd_event_set_timeout(NULL, EVENTD_EVENT_TEST_TIMEOUT);
-        exit(0);
-    }
-    g_test_trap_subprocess(NULL, 0, 0);
-    g_test_trap_assert_failed();
-}
-
-static void
-_test_set_timeout_notnull_bad(gpointer fixture, gconstpointer user_data)
-{
-    SettersData *data = fixture;
-
-    if ( ! g_test_undefined() )
-            return;
-    if ( g_test_subprocess() )
-    {
-        eventd_event_set_timeout(data->event, -2);
-        exit(0);
-    }
-    g_test_trap_subprocess(NULL, 0, 0);
-    g_test_trap_assert_failed();
-}
-
-static void
 _test_add_data_notnull_good_good(gpointer fixture, gconstpointer user_data)
 {
     SettersData *data = fixture;
@@ -199,10 +155,6 @@ eventd_tests_unit_eventd_event_suite_setters(void)
     g_test_suite_add(suite, g_test_create_case("new(category, name)",                sizeof(SettersData), NULL, NULL,       _test_new_good_good,                     NULL));
     g_test_suite_add(suite, g_test_create_case("new(NULL, name)",                    sizeof(SettersData), NULL, NULL,       _test_new_null_good,                     NULL));
     g_test_suite_add(suite, g_test_create_case("new(category, NULL)",                sizeof(SettersData), NULL, NULL,       _test_new_good_null,                     NULL));
-
-    g_test_suite_add(suite, g_test_create_case("set_timeout(event, timeout)",        sizeof(SettersData), NULL, _init_data, _test_set_timeout_notnull_good,          _clean_data));
-    g_test_suite_add(suite, g_test_create_case("set_timeout(NULL,)",                 sizeof(SettersData), NULL, NULL,       _test_set_timeout_null_good,             NULL));
-    g_test_suite_add(suite, g_test_create_case("set_timeout(event, NULL)",           sizeof(SettersData), NULL, _init_data, _test_set_timeout_notnull_bad,           _clean_data));
 
     g_test_suite_add(suite, g_test_create_case("add_data(event, name, data)",        sizeof(SettersData), NULL, _init_data, _test_add_data_notnull_good_good,        _clean_data));
     g_test_suite_add(suite, g_test_create_case("add_data(NULL,)",                    sizeof(SettersData), NULL, NULL,       _test_add_data_null_good_good,           NULL));

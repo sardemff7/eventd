@@ -301,7 +301,7 @@ _eventd_libnotify_notification_close(GObject *obj, GAsyncResult *res, gpointer u
 }
 
 static void
-_eventd_libnotify_event_ended(EventdLibnotifyNotification *self, EventdEventEndReason reason, EventdEvent *event)
+_eventd_libnotify_event_ended(EventdLibnotifyNotification *self, EventdEvent *event)
 {
     if ( self->id > 0 )
         g_dbus_proxy_call(self->context->server, "CloseNotification", g_variant_new("(u)", self->id), G_DBUS_CALL_FLAGS_NONE, -1, NULL, _eventd_libnotify_notification_close, self);
@@ -673,7 +673,9 @@ _eventd_libnotify_event_action(EventdPluginContext *context, EventdPluginAction 
         ( message != NULL ) ? message : "",
         actions,
         hints,
-        (gint32) eventd_event_get_timeout(event));
+        /*
+         * FIXME: Add a timeout setting
+         */ -1);
     g_free(icon_uri);
     g_free(message);
     g_free(title);
