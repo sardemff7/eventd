@@ -142,7 +142,7 @@ _eventd_evp_client_handle_event(EventdEvpClient *self, EventdEvent *event)
 }
 
 static void
-_eventd_evp_client_protocol_event_common(EventdEvpClient *self, EventdEvent *event, gboolean discard)
+_eventd_evp_client_protocol_event(EventdEvpClient *self, EventdEvent *event, EventdProtocol *protocol)
 {
 #ifdef EVENTD_DEBUG
     g_debug("Received an event (category: %s): %s", eventd_event_get_category(event), eventd_event_get_name(event));
@@ -150,7 +150,7 @@ _eventd_evp_client_protocol_event_common(EventdEvpClient *self, EventdEvent *eve
 
     if ( ! eventd_plugin_core_push_event(self->context->core, self->context->core_interface, event) )
     {
-        if ( ( self->out != NULL ) && discard )
+        if ( self->out != NULL )
             /* Client not in passive mode */
             _eventd_evp_client_send_message(self, eventd_protocol_generate_ended(self->protocol, event, EVENTD_EVENT_END_REASON_DISCARD));
         else
@@ -163,18 +163,6 @@ _eventd_evp_client_protocol_event_common(EventdEvpClient *self, EventdEvent *eve
         return;
 
     _eventd_evp_client_handle_event(self, event);
-}
-
-static void
-_eventd_evp_client_protocol_event(EventdEvpClient *self, EventdEvent *event, EventdProtocol *protocol)
-{
-    _eventd_evp_client_protocol_event_common(self, event, TRUE);
-}
-
-static void
-_eventd_evp_client_protocol_relay(EventdEvpClient *self, EventdEvent *event, EventdProtocol *protocol)
-{
-    _eventd_evp_client_protocol_event_common(self, event, FALSE);
 }
 
 static void
@@ -278,7 +266,6 @@ static void
 _eventd_evp_client_connect(EventdEvpClient *self, GIOStream *stream)
 {
     g_signal_connect_swapped(self->protocol, "event", G_CALLBACK(_eventd_evp_client_protocol_event), self);
-    g_signal_connect_swapped(self->protocol, "relay", G_CALLBACK(_eventd_evp_client_protocol_relay), self);
     g_signal_connect_swapped(self->protocol, "updated", G_CALLBACK(_eventd_evp_client_protocol_updated), self);
     g_signal_connect_swapped(self->protocol, "answered", G_CALLBACK(_eventd_evp_client_protocol_answered), self);
     g_signal_connect_swapped(self->protocol, "ended", G_CALLBACK(_eventd_evp_client_protocol_ended), self);
@@ -432,6 +419,6 @@ eventd_evp_client_event_dispatch(EventdEvpClient *self, EventdEvent *event)
         /* Do not send back our own events */
         return;
 
-    _eventd_evp_client_send_message(self, eventd_protocol_generate_relay(self->protocol, event));
+    _eventd_evp_client_send_message(self, eventd_protocol_generate_event(self->protocol, event));
     _eventd_evp_client_handle_event(self, event);
 }
