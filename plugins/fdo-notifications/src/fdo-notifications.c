@@ -127,7 +127,7 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
     GVariantIter *hints;
     gchar *hint_name;
     GVariant *hint;
-    const gchar *event_name = "libnotify";
+    const gchar *event_name = "open";
     gint16 urgency = -1;
     GVariant *image_data = NULL;
     const gchar *image_path = NULL;
@@ -199,14 +199,14 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
         event = notification->event;
     }
     else
-        event = eventd_event_new("libnotify", event_name);
+        event = eventd_event_new("notification", event_name);
 
     eventd_event_add_data(event, g_strdup("client-name"), g_strdup(app_name));
 
-    eventd_event_add_data(event, g_strdup("summary"), g_strdup(summary));
+    eventd_event_add_data(event, g_strdup("title"), g_strdup(summary));
 
     if ( body != NULL )
-        eventd_event_add_data(event, g_strdup("body"), g_strdup(body));
+        eventd_event_add_data(event, g_strdup("message"), g_strdup(body));
 
     if ( ( icon != NULL ) && ( *icon != 0 ) )
     {

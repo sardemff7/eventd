@@ -135,8 +135,8 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
 {
     /* template */
     style->template.set     = TRUE;
-    style->template.title   = evhelpers_format_string_new(g_strdup("${name}"));
-    style->template.message = evhelpers_format_string_new(g_strdup("${text}"));
+    style->template.title   = evhelpers_format_string_new(g_strdup("${title}"));
+    style->template.message = evhelpers_format_string_new(g_strdup("${message}"));
     style->template.image   = evhelpers_filename_new(g_strdup("image"));
     style->template.icon    = evhelpers_filename_new(g_strdup("icon"));
 

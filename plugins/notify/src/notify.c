@@ -490,9 +490,9 @@ _eventd_libnotify_action_parse(EventdPluginContext *context, GKeyFile *config_fi
     gint64 scale;
     guint64 urgency;
 
-    if ( evhelpers_config_key_file_get_locale_format_string_with_default(config_file, "Libnotify", "Title", NULL, "${summary}", &title) < 0 )
+    if ( evhelpers_config_key_file_get_locale_format_string_with_default(config_file, "Libnotify", "Title", NULL, "${title}", &title) < 0 )
         goto skip;
-    if ( evhelpers_config_key_file_get_locale_format_string_with_default(config_file, "Libnotify", "Message", NULL, "${body}", &message) < 0 )
+    if ( evhelpers_config_key_file_get_locale_format_string_with_default(config_file, "Libnotify", "Message", NULL, "${message}", &message) < 0 )
         goto skip;
     if ( evhelpers_config_key_file_get_filename_with_default(config_file, "Libnotify", "Image", "image", &image) < 0 )
         goto skip;

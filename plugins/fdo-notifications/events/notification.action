@@ -1,9 +1,7 @@
 [Action]
-Name = libnotify
+Name = notification
 
 [Notification]
-Title = ${summary}
-Message = ${body}
 
 [Sound]
 

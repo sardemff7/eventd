@@ -5,8 +5,8 @@ plugins_LTLIBRARIES += \
 	$(null)
 
 dist_event_DATA += \
-	%D%/events/libnotify.event \
-	%D%/events/libnotify.action \
+	%D%/events/notification.event \
+	%D%/events/notification.action \
 	$(null)
 
 if EV_OS_UNIX

@@ -55,5 +55,4 @@ gboolean
 eventd_plugin_core_push_event(EventdPluginCoreContext *context, EventdPluginCoreInterface *interface, EventdEvent *event)
 {
     return interface->push_event(context, event);
-
 }
