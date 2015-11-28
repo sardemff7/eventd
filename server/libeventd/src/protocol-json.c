@@ -64,68 +64,36 @@ yajl_alloc_funcs eventd_protocol_json_alloc_funcs = {
     .free    = _eventd_protocol_json_alloc_free
 };
 
-#define EVENTD_PROTOCOL_JSON_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), EVENTD_TYPE_PROTOCOL_JSON, EventdProtocolJsonPrivate))
-
-static void _eventd_protocol_json_parser_interface_init(EventdProtocolInterface *iface);
-
-EVENTD_EXPORT GType eventd_protocol_json_get_type(void);
-G_DEFINE_TYPE_WITH_CODE(EventdProtocolJson, eventd_protocol_json, G_TYPE_OBJECT, G_IMPLEMENT_INTERFACE(EVENTD_TYPE_PROTOCOL, _eventd_protocol_json_parser_interface_init))
-
-
-static void _eventd_protocol_json_finalize(GObject *object);
-
 static void
-eventd_protocol_json_class_init(EventdProtocolJsonClass *klass)
+_eventd_protocol_json_free(EventdProtocol *protocol)
 {
-    GObjectClass *object_class = G_OBJECT_CLASS(klass);
+    EventdProtocolJson *self = (EventdProtocolJson *) protocol;
 
-    g_type_class_add_private(klass, sizeof(EventdProtocolJsonPrivate));
+    eventd_protocol_json_parse_free(self);
 
-    eventd_protocol_json_parent_class = g_type_class_peek_parent(klass);
-
-    object_class->finalize = _eventd_protocol_json_finalize;
-}
-
-
-static void
-_eventd_protocol_json_parser_interface_init(EventdProtocolInterface *iface)
-{
-    iface->parse = eventd_protocol_json_parse;
-
-    iface->generate_event = eventd_protocol_json_generate_event;
-    iface->generate_passive = eventd_protocol_json_generate_passive;
-    iface->generate_subscribe = eventd_protocol_json_generate_subscribe;
-    iface->generate_bye = eventd_protocol_json_generate_bye;
+    g_free(self);
 }
 
 /**
  * eventd_protocol_json_new:
  *
- * Returns: (transfer full) (type EventdProtocolJson): An #EventdProtocol for EvP
+ * Returns: (transfer full): An #EventdProtocol for JSON
  */
 EVENTD_EXPORT
 EventdProtocol *
-eventd_protocol_json_new(void)
+eventd_protocol_json_new(const EventdProtocolCallbacks *callbacks, gpointer user_data, GDestroyNotify notify)
 {
-    EventdProtocol *self;
+    EventdProtocol *protocol;
 
-    self = g_object_new(EVENTD_TYPE_PROTOCOL_JSON, NULL);
+    protocol = eventd_protocol_new(sizeof(EventdProtocolJson), callbacks, user_data, notify);
+    protocol->free = _eventd_protocol_json_free;
 
-    return self;
-}
+    protocol->parse = eventd_protocol_json_parse;
 
-static void
-eventd_protocol_json_init(EventdProtocolJson *self)
-{
-    self->priv = EVENTD_PROTOCOL_JSON_GET_PRIVATE(self);
-}
+    protocol->generate_event = eventd_protocol_json_generate_event;
+    protocol->generate_passive = eventd_protocol_json_generate_passive;
+    protocol->generate_subscribe = eventd_protocol_json_generate_subscribe;
+    protocol->generate_bye = eventd_protocol_json_generate_bye;
 
-static void
-_eventd_protocol_json_finalize(GObject *object)
-{
-    EventdProtocolJson *self = EVENTD_PROTOCOL_JSON(object);
-
-    eventd_protocol_json_parse_free(self);
-
-    G_OBJECT_CLASS(eventd_protocol_json_parent_class)->finalize(object);
+    return protocol;
 }

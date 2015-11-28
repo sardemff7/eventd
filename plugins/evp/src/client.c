@@ -73,8 +73,10 @@ end:
 }
 
 static void
-_eventd_evp_client_protocol_event(EventdEvpClient *self, EventdEvent *event, EventdProtocol *protocol)
+_eventd_evp_client_protocol_event(EventdProtocol *protocol, EventdEvent *event, gpointer user_data)
 {
+    EventdEvpClient *self = user_data;
+
 #ifdef EVENTD_DEBUG
     g_debug("Received an event (category: %s): %s", eventd_event_get_category(event), eventd_event_get_name(event));
 #endif /* EVENTD_DEBUG */
@@ -85,8 +87,10 @@ _eventd_evp_client_protocol_event(EventdEvpClient *self, EventdEvent *event, Eve
 }
 
 static void
-_eventd_evp_client_protocol_passive(EventdEvpClient *self, EventdProtocol *protocol)
+_eventd_evp_client_protocol_passive(EventdProtocol *protocol, gpointer user_data)
 {
+    EventdEvpClient *self = user_data;
+
     if ( self->out == NULL )
         return _eventd_evp_client_disconnect_internal(self);
     g_object_unref(self->out);
@@ -94,8 +98,10 @@ _eventd_evp_client_protocol_passive(EventdEvpClient *self, EventdProtocol *proto
 }
 
 static void
-_eventd_evp_client_protocol_subscribe(EventdEvpClient *self, GHashTable *categories, EventdProtocol *protocol)
+_eventd_evp_client_protocol_subscribe(EventdProtocol *protocol, GHashTable *categories, gpointer user_data)
 {
+    EventdEvpClient *self = user_data;
+
     if ( categories == NULL )
     {
         self->context->subscribe_all = g_list_prepend(self->context->subscribe_all, self);
@@ -124,14 +130,23 @@ _eventd_evp_client_protocol_subscribe(EventdEvpClient *self, GHashTable *categor
 }
 
 static void
-_eventd_evp_client_protocol_bye(EventdEvpClient *self, EventdProtocol *protocol)
+_eventd_evp_client_protocol_bye(EventdProtocol *protocol, const gchar *message, gpointer user_data)
 {
+    EventdEvpClient *self = user_data;
+
 #ifdef EVENTD_DEBUG
     g_debug("Client connection closed");
 #endif /* EVENTD_DEBUG */
 
     g_cancellable_cancel(self->cancellable);
 }
+
+static const EventdProtocolCallbacks _eventd_evp_client_protocol_callbacks = {
+    .event = _eventd_evp_client_protocol_event,
+    .passive = _eventd_evp_client_protocol_passive,
+    .subscribe = _eventd_evp_client_protocol_subscribe,
+    .bye = _eventd_evp_client_protocol_bye
+};
 
 static void
 _eventd_evp_client_read_callback(GObject *obj, GAsyncResult *res, gpointer user_data)
@@ -170,11 +185,6 @@ end:
 static void
 _eventd_evp_client_connect(EventdEvpClient *self, GIOStream *stream)
 {
-    g_signal_connect_swapped(self->protocol, "event", G_CALLBACK(_eventd_evp_client_protocol_event), self);
-    g_signal_connect_swapped(self->protocol, "passive", G_CALLBACK(_eventd_evp_client_protocol_passive), self);
-    g_signal_connect_swapped(self->protocol, "subscribe", G_CALLBACK(_eventd_evp_client_protocol_subscribe), self);
-    g_signal_connect_swapped(self->protocol, "bye", G_CALLBACK(_eventd_evp_client_protocol_bye), self);
-
     self->in = g_data_input_stream_new(g_io_stream_get_input_stream(stream));
     self->out = g_data_output_stream_new(g_io_stream_get_output_stream(stream));
     g_data_input_stream_set_newline_type(self->in, G_DATA_STREAM_NEWLINE_TYPE_LF);
@@ -241,7 +251,7 @@ eventd_evp_client_connection_handler(GSocketService *service, GSocketConnection 
     self = g_new0(EventdEvpClient, 1);
     self->context = context;
 
-    self->protocol = eventd_protocol_evp_new();
+    self->protocol = eventd_protocol_evp_new(&_eventd_evp_client_protocol_callbacks, self, NULL);
     self->subscriptions = g_hash_table_new(g_str_hash, g_str_equal);
 
     self->cancellable = g_cancellable_new();
@@ -307,7 +317,7 @@ eventd_evp_client_disconnect(gpointer data)
     }
 
     g_object_unref(self->cancellable);
-    g_object_unref(self->protocol);
+    eventd_protocol_unref(self->protocol);
 
     g_free(self);
 }

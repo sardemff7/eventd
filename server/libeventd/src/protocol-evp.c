@@ -35,68 +35,36 @@
 
 #include "protocol-evp-private.h"
 
-#define EVENTD_PROTOCOL_EVP_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), EVENTD_TYPE_PROTOCOL_EVP, EventdProtocolEvpPrivate))
-
-static void _eventd_protocol_evp_parser_interface_init(EventdProtocolInterface *iface);
-
-EVENTD_EXPORT GType eventd_protocol_evp_get_type(void);
-G_DEFINE_TYPE_WITH_CODE(EventdProtocolEvp, eventd_protocol_evp, G_TYPE_OBJECT, G_IMPLEMENT_INTERFACE(EVENTD_TYPE_PROTOCOL, _eventd_protocol_evp_parser_interface_init))
-
-
-static void _eventd_protocol_evp_finalize(GObject *object);
-
 static void
-eventd_protocol_evp_class_init(EventdProtocolEvpClass *klass)
+_eventd_protocol_evp_free(EventdProtocol *protocol)
 {
-    GObjectClass *object_class = G_OBJECT_CLASS(klass);
+    EventdProtocolEvp *self = (EventdProtocolEvp *) protocol;
 
-    g_type_class_add_private(klass, sizeof(EventdProtocolEvpPrivate));
+    eventd_protocol_evp_parse_free(self);
 
-    eventd_protocol_evp_parent_class = g_type_class_peek_parent(klass);
-
-    object_class->finalize = _eventd_protocol_evp_finalize;
-}
-
-
-static void
-_eventd_protocol_evp_parser_interface_init(EventdProtocolInterface *iface)
-{
-    iface->parse = eventd_protocol_evp_parse;
-
-    iface->generate_event = eventd_protocol_evp_generate_event;
-    iface->generate_passive = eventd_protocol_evp_generate_passive;
-    iface->generate_subscribe = eventd_protocol_evp_generate_subscribe;
-    iface->generate_bye = eventd_protocol_evp_generate_bye;
+    g_free(self);
 }
 
 /**
  * eventd_protocol_evp_new:
  *
- * Returns: (transfer full) (type EventdProtocolEvp): An #EventdProtocol for EvP
+ * Returns: (transfer full): An #EventdProtocol for EvP
  */
 EVENTD_EXPORT
 EventdProtocol *
-eventd_protocol_evp_new(void)
+eventd_protocol_evp_new(const EventdProtocolCallbacks *callbacks, gpointer user_data, GDestroyNotify notify)
 {
-    EventdProtocol *self;
+    EventdProtocol *protocol;
 
-    self = g_object_new(EVENTD_TYPE_PROTOCOL_EVP, NULL);
+    protocol = eventd_protocol_new(sizeof(EventdProtocolEvp), callbacks, user_data, notify);
+    protocol->free = _eventd_protocol_evp_free;
 
-    return self;
-}
+    protocol->parse = eventd_protocol_evp_parse;
 
-static void
-eventd_protocol_evp_init(EventdProtocolEvp *self)
-{
-    self->priv = EVENTD_PROTOCOL_EVP_GET_PRIVATE(self);
-}
+    protocol->generate_event = eventd_protocol_evp_generate_event;
+    protocol->generate_passive = eventd_protocol_evp_generate_passive;
+    protocol->generate_subscribe = eventd_protocol_evp_generate_subscribe;
+    protocol->generate_bye = eventd_protocol_evp_generate_bye;
 
-static void
-_eventd_protocol_evp_finalize(GObject *object)
-{
-    EventdProtocolEvp *self = EVENTD_PROTOCOL_EVP(object);
-
-    eventd_protocol_evp_parse_free(self);
-
-    G_OBJECT_CLASS(eventd_protocol_evp_parent_class)->finalize(object);
+    return protocol;
 }

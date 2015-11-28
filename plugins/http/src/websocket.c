@@ -81,8 +81,10 @@ _eventd_http_websocket_client_send_message(EventdHttpWebsocketClient *self, gcha
 }
 
 static void
-_eventd_http_websocket_client_protocol_event(EventdHttpWebsocketClient *self, EventdEvent *event, EventdProtocol *protocol)
+_eventd_http_websocket_client_protocol_event(EventdProtocol *protocol, EventdEvent *event, gpointer user_data)
 {
+    EventdHttpWebsocketClient *self = user_data;
+
 #ifdef EVENTD_DEBUG
     g_debug("Received an event (category: %s): %s", eventd_event_get_category(event), eventd_event_get_name(event));
 #endif /* EVENTD_DEBUG */
@@ -93,14 +95,18 @@ _eventd_http_websocket_client_protocol_event(EventdHttpWebsocketClient *self, Ev
 }
 
 static void
-_eventd_http_websocket_client_protocol_passive(EventdHttpWebsocketClient *self, EventdProtocol *protocol)
+_eventd_http_websocket_client_protocol_passive(EventdProtocol *protocol, gpointer user_data)
 {
+    EventdHttpWebsocketClient *self = user_data;
+
     soup_websocket_connection_close(self->connection, SOUP_WEBSOCKET_CLOSE_PROTOCOL_ERROR, "PASSIVE not supported for WebSockets");
 }
 
 static void
-_eventd_http_websocket_client_protocol_subscribe(EventdHttpWebsocketClient *self, GHashTable *categories, EventdProtocol *protocol)
+_eventd_http_websocket_client_protocol_subscribe(EventdProtocol *protocol, GHashTable *categories, gpointer user_data)
 {
+    EventdHttpWebsocketClient *self = user_data;
+
     if ( categories == NULL )
     {
         self->context->subscribe_all = g_list_prepend(self->context->subscribe_all, self);
@@ -129,14 +135,23 @@ _eventd_http_websocket_client_protocol_subscribe(EventdHttpWebsocketClient *self
 }
 
 static void
-_eventd_http_websocket_client_protocol_bye(EventdHttpWebsocketClient *self, EventdProtocol *protocol)
+_eventd_http_websocket_client_protocol_bye(EventdProtocol *protocol, const gchar *message, gpointer user_data)
 {
+    EventdHttpWebsocketClient *self = user_data;
+
 #ifdef EVENTD_DEBUG
     g_debug("Client connection closed");
 #endif /* EVENTD_DEBUG */
 
     soup_websocket_connection_close(self->connection, SOUP_WEBSOCKET_CLOSE_PROTOCOL_ERROR, "BYE not supported for WebSockets");
 }
+
+static const EventdProtocolCallbacks _eventd_http_websocket_client_protocol_callbacks = {
+    .event = _eventd_http_websocket_client_protocol_event,
+    .passive = _eventd_http_websocket_client_protocol_passive,
+    .subscribe = _eventd_http_websocket_client_protocol_subscribe,
+    .bye = _eventd_http_websocket_client_protocol_bye
+};
 
 static void
 _eventd_http_websocket_client_message(EventdHttpWebsocketClient *self, gint type, GBytes *message, SoupWebsocketConnection *connection)
@@ -190,7 +205,7 @@ _eventd_http_websocket_client_closed(EventdHttpWebsocketClient *self, SoupWebsoc
     if ( self->connection != NULL )
         g_object_unref(self->connection);
 
-    g_object_unref(self->protocol);
+    eventd_protocol_unref(self->protocol);
 
     g_free(self);
 }
@@ -215,10 +230,10 @@ eventd_http_websocket_client_handler(SoupServer *server, SoupWebsocketConnection
     switch ( self->type )
     {
     case EVENTD_HTTP_WEBSOCKET_CLIENT_TYPE_EVP:
-        self->protocol = eventd_protocol_evp_new();
+        self->protocol = eventd_protocol_evp_new(&_eventd_http_websocket_client_protocol_callbacks, self, NULL);
     break;
     case EVENTD_HTTP_WEBSOCKET_CLIENT_TYPE_JSON:
-        self->protocol = eventd_protocol_json_new();
+        self->protocol = eventd_protocol_json_new(&_eventd_http_websocket_client_protocol_callbacks, self, NULL);
     break;
     }
     self->subscriptions = g_hash_table_new(g_str_hash, g_str_equal);
@@ -226,11 +241,6 @@ eventd_http_websocket_client_handler(SoupServer *server, SoupWebsocketConnection
     self->connection = g_object_ref(connection);
     g_signal_connect_swapped(self->connection, "message", G_CALLBACK(_eventd_http_websocket_client_message), self);
     g_signal_connect_swapped(self->connection, "closed", G_CALLBACK(_eventd_http_websocket_client_closed), self);
-
-    g_signal_connect_swapped(self->protocol, "event", G_CALLBACK(_eventd_http_websocket_client_protocol_event), self);
-    g_signal_connect_swapped(self->protocol, "passive", G_CALLBACK(_eventd_http_websocket_client_protocol_passive), self);
-    g_signal_connect_swapped(self->protocol, "subscribe", G_CALLBACK(_eventd_http_websocket_client_protocol_subscribe), self);
-    g_signal_connect_swapped(self->protocol, "bye", G_CALLBACK(_eventd_http_websocket_client_protocol_bye), self);
 
     self->link = context->clients = g_list_prepend(context->clients, self);
 }

@@ -43,21 +43,23 @@ typedef struct {
 } EvpData;
 
 static void
-_test_evp_event_callback(EventdProtocolEvp *parser, EventdEvent *event, gpointer user_data)
+_test_evp_event_callback(EventdProtocol *parser, EventdEvent *event, gpointer user_data)
 {
     EvpData *data = user_data;
 
     data->event = g_object_ref(event);
 }
 
+static const EventdProtocolCallbacks _callbacks = {
+    .event = _test_evp_event_callback
+};
+
 static void
 _init_data_evp(gpointer fixture, gconstpointer user_data)
 {
     EvpData *data = fixture;
 
-    data->protocol = eventd_protocol_evp_new();
-
-    g_signal_connect(data->protocol, "event", G_CALLBACK(_test_evp_event_callback), data);
+    data->protocol = eventd_protocol_evp_new(&_callbacks, data, NULL);
 }
 
 static void
@@ -68,7 +70,7 @@ _clean_data_evp(gpointer fixture, gconstpointer user_data)
     if ( data->event != NULL )
         g_object_unref(data->event);
 
-    g_object_unref(data->protocol);
+    eventd_protocol_unref(data->protocol);
 }
 
 static void

@@ -65,9 +65,9 @@ typedef struct {
 static void
 _eventd_protocol_evp_add_data(EventdProtocolEvp *self, gchar *name, gchar *value)
 {
-    if ( self->priv->data.hash == NULL )
-        self->priv->data.hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-    g_hash_table_insert(self->priv->data.hash, name, value);
+    if ( self->data.hash == NULL )
+        self->data.hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+    g_hash_table_insert(self->data.hash, name, value);
 }
 
 static gboolean
@@ -80,34 +80,34 @@ _eventd_protocol_evp_parse_dot__continue_noeat(EventdProtocolEvp *self, const gc
 static void
 _eventd_protocol_evp_parse_dot_catchall_start(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
 {
-    ++self->priv->catchall.level;
-    self->priv->state = EVENTD_PROTOCOL_EVP_STATE_IGNORING;
+    ++self->catchall.level;
+    self->state = EVENTD_PROTOCOL_EVP_STATE_IGNORING;
 }
 
 static gboolean
 _eventd_protocol_evp_parse_dot_catchall_continue(EventdProtocolEvp *self, const gchar *line, GError **error)
 {
     if ( g_str_has_prefix(line, ".") && ( ! g_str_has_prefix(line, "..") ) )
-        ++self->priv->catchall.level;
+        ++self->catchall.level;
     return TRUE;
 }
 
 static void
 _eventd_protocol_evp_parse_dot_catchall_end(EventdProtocolEvp *self, GError **error)
 {
-    if ( --self->priv->catchall.level < 1 )
-        self->priv->state = self->priv->base_state;
+    if ( --self->catchall.level < 1 )
+        self->state = self->base_state;
 }
 
 /* .DATA */
 static void
 _eventd_protocol_evp_parse_dot_data_start(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
 {
-    self->priv->data.name = g_strdup(argv[0]);
-    self->priv->data.value = g_string_new("");
+    self->data.name = g_strdup(argv[0]);
+    self->data.value = g_string_new("");
 
-    self->priv->data.return_state = self->priv->state;
-    self->priv->state = EVENTD_PROTOCOL_EVP_STATE_DOT_DATA;
+    self->data.return_state = self->state;
+    self->state = EVENTD_PROTOCOL_EVP_STATE_DOT_DATA;
 }
 
 static gboolean
@@ -117,7 +117,7 @@ _eventd_protocol_evp_parse_dot_data_continue(EventdProtocolEvp *self, const gcha
         ++line; /* Skip the first dot */
     else if ( g_str_has_prefix(line, ".") )
         g_set_error(error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_MALFORMED, "Malformed data line, starting with a single dot (expected two dots): %s", line);
-    g_string_append_c(g_string_append(self->priv->data.value, line), '\n');
+    g_string_append_c(g_string_append(self->data.value, line), '\n');
     return TRUE;
 }
 
@@ -125,13 +125,13 @@ static void
 _eventd_protocol_evp_parse_dot_data_end(EventdProtocolEvp *self, GError **error)
 {
     /* Strip the last added newline */
-    g_string_truncate(self->priv->data.value, self->priv->data.value->len - 1);
+    g_string_truncate(self->data.value, self->data.value->len - 1);
 
-    _eventd_protocol_evp_add_data(self, self->priv->data.name, g_string_free(self->priv->data.value, FALSE));
-    self->priv->data.name = NULL;
-    self->priv->data.value = NULL;
+    _eventd_protocol_evp_add_data(self, self->data.name, g_string_free(self->data.value, FALSE));
+    self->data.name = NULL;
+    self->data.value = NULL;
 
-    self->priv->state = self->priv->data.return_state;
+    self->state = self->data.return_state;
 }
 
 static EventdEvent *
@@ -150,61 +150,61 @@ _eventd_protocol_evp_parser_get_event(EventdProtocolEvp *self, const gchar * con
 static void
 _eventd_protocol_evp_parse_dot_event_start(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
 {
-    self->priv->event = _eventd_protocol_evp_parser_get_event(self, argv, error);
+    self->event = _eventd_protocol_evp_parser_get_event(self, argv, error);
 
-    if ( self->priv->event == NULL )
+    if ( self->event == NULL )
         return _eventd_protocol_evp_parse_dot_catchall_start(self, argv, error);
 
 
-    self->priv->state = EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT;
+    self->state = EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT;
 }
 
 static void
 _eventd_protocol_evp_parse_dot_event_end(EventdProtocolEvp *self, GError **error)
 {
-    if ( self->priv->data.hash != NULL )
+    if ( self->data.hash != NULL )
     {
-        eventd_event_set_all_data(self->priv->event, self->priv->data.hash);
-        self->priv->data.hash = NULL;
+        eventd_event_set_all_data(self->event, self->data.hash);
+        self->data.hash = NULL;
     }
 
-    g_signal_emit(self, eventd_protocol_signals[SIGNAL_EVENT], 0, self->priv->event);
+    eventd_protocol_call_event((EventdProtocol *) self, self->event);
 
-    g_object_unref(self->priv->event);
-    self->priv->event = NULL;
+    g_object_unref(self->event);
+    self->event = NULL;
 
-    self->priv->state = self->priv->base_state;
+    self->state = self->base_state;
 }
 
 /* .SUBSCRIBE */
 static void
 _eventd_protocol_evp_parse_dot_subscribe_start(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
 {
-    self->priv->subscriptions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+    self->subscriptions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 
-    self->priv->state = EVENTD_PROTOCOL_EVP_STATE_DOT_SUBSCRIBE;
-    self->priv->base_state = EVENTD_PROTOCOL_EVP_STATE_SUBSCRIBE;
+    self->state = EVENTD_PROTOCOL_EVP_STATE_DOT_SUBSCRIBE;
+    self->base_state = EVENTD_PROTOCOL_EVP_STATE_SUBSCRIBE;
 }
 
 static gboolean
 _eventd_protocol_evp_parse_dot_subscribe_continue(EventdProtocolEvp *self, const gchar *line, GError **error)
 {
-    g_hash_table_add(self->priv->subscriptions, g_strdup(line));
+    g_hash_table_add(self->subscriptions, g_strdup(line));
     return TRUE;
 }
 
 static void
 _eventd_protocol_evp_parse_dot_subscribe_end(EventdProtocolEvp *self, GError **error)
 {
-    if ( g_hash_table_size(self->priv->subscriptions) < 2 )
+    if ( g_hash_table_size(self->subscriptions) < 2 )
         return g_set_error(error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_MALFORMED, "SUBSCRIBE dot message requires at least two categories");
 
-    g_signal_emit(self, eventd_protocol_signals[SIGNAL_SUBSCRIBE], 0, self->priv->subscriptions);
+    eventd_protocol_call_subscribe((EventdProtocol *) self, self->subscriptions);
 
-    g_hash_table_unref(self->priv->subscriptions);
-    self->priv->subscriptions = NULL;
+    g_hash_table_unref(self->subscriptions);
+    self->subscriptions = NULL;
 
-    self->priv->state = self->priv->base_state;
+    self->state = self->base_state;
 }
 
 /* DATA */
@@ -223,7 +223,7 @@ _eventd_protocol_evp_parse_event(EventdProtocolEvp *self, const gchar * const *a
     event = _eventd_protocol_evp_parser_get_event(self, argv, error);
     if ( event == NULL )
         return;
-    g_signal_emit(self, eventd_protocol_signals[SIGNAL_EVENT], 0, event);
+    eventd_protocol_call_event((EventdProtocol *) self, event);
     g_object_unref(event);
 }
 
@@ -231,10 +231,10 @@ _eventd_protocol_evp_parse_event(EventdProtocolEvp *self, const gchar * const *a
 static void
 _eventd_protocol_evp_parse_passive(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
 {
-    g_signal_emit(self, eventd_protocol_signals[SIGNAL_PASSIVE], 0);
+    eventd_protocol_call_passive((EventdProtocol *) self);
 
-    self->priv->base_state = EVENTD_PROTOCOL_EVP_STATE_PASSIVE;
-    self->priv->state = self->priv->base_state;
+    self->base_state = EVENTD_PROTOCOL_EVP_STATE_PASSIVE;
+    self->state = self->base_state;
 }
 
 /* SUBSCRIBE */
@@ -242,28 +242,28 @@ static void
 _eventd_protocol_evp_parse_subscribe(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
 {
     if ( argv == NULL )
-        g_signal_emit(self, eventd_protocol_signals[SIGNAL_SUBSCRIBE], 0, NULL);
+        eventd_protocol_call_subscribe((EventdProtocol *) self, NULL);
     else
     {
         GHashTable *subscriptions;
         subscriptions = g_hash_table_new(g_str_hash, g_str_equal);
         g_hash_table_add(subscriptions, (gpointer) argv[0]);
-        g_signal_emit(self, eventd_protocol_signals[SIGNAL_SUBSCRIBE], 0, subscriptions);
+        eventd_protocol_call_subscribe((EventdProtocol *) self, subscriptions);
         g_hash_table_unref(subscriptions);
     }
 
-    self->priv->base_state = EVENTD_PROTOCOL_EVP_STATE_SUBSCRIBE;
-    self->priv->state = self->priv->base_state;
+    self->base_state = EVENTD_PROTOCOL_EVP_STATE_SUBSCRIBE;
+    self->state = self->base_state;
 }
 
 /* BYE */
 static void
 _eventd_protocol_evp_parse_bye(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
 {
-    g_signal_emit(self, eventd_protocol_signals[SIGNAL_BYE], 0, ( argv == NULL ) ? NULL : argv[0]);
+    eventd_protocol_call_bye((EventdProtocol *) self, ( argv == NULL ) ? NULL : argv[0]);
 
-    self->priv->base_state = EVENTD_PROTOCOL_EVP_STATE_BYE;
-    self->priv->state = self->priv->base_state;
+    self->base_state = EVENTD_PROTOCOL_EVP_STATE_BYE;
+    self->state = self->base_state;
 }
 
 static const EventdProtocolEvpTokens _eventd_protocol_evp_dot_messages[] = {
@@ -332,7 +332,7 @@ static void
 _eventd_protocol_evp_parse_line(EventdProtocolEvp *self, const gchar *line, GError **error)
 {
 #ifdef EVENTD_DEBUG
-    g_debug("[%s] Parse line: %s", _eventd_protocol_evp_states[self->priv->state], line);
+    g_debug("[%s] Parse line: %s", _eventd_protocol_evp_states[self->state], line);
 #endif /* EVENTD_DEBUG */
 
     const EventdProtocolEvpTokens *message;
@@ -344,10 +344,10 @@ _eventd_protocol_evp_parse_line(EventdProtocolEvp *self, const gchar *line, GErr
     {
         for ( message = _eventd_protocol_evp_dot_messages ; message->message != NULL ; ++message )
         {
-            if ( self->priv->state == message->continue_state )
+            if ( self->state == message->continue_state )
                 return message->stop_func(self, error);
         }
-        return g_set_error(error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_UNEXPECTED_TOKEN, "Got '.' in an invalid state '%s'", _eventd_protocol_evp_states[self->priv->state]);
+        return g_set_error(error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_UNEXPECTED_TOKEN, "Got '.' in an invalid state '%s'", _eventd_protocol_evp_states[self->state]);
     }
 
     /*
@@ -355,7 +355,7 @@ _eventd_protocol_evp_parse_line(EventdProtocolEvp *self, const gchar *line, GErr
      */
     for ( message = _eventd_protocol_evp_dot_messages ; message->message != NULL ; ++message )
     {
-        if ( self->priv->state == message->continue_state )
+        if ( self->state == message->continue_state )
         {
             if ( message->continue_func(self, line, error) )
                 return;
@@ -403,13 +403,13 @@ _eventd_protocol_evp_parse_line(EventdProtocolEvp *self, const gchar *line, GErr
         gboolean valid = FALSE;
         for ( state = message->start_states ; *state != _EVENTD_PROTOCOL_EVP_STATE_SIZE ; ++state )
         {
-            if ( self->priv->state == *state )
+            if ( self->state == *state )
                 valid = TRUE;
         }
         if ( valid )
             message->start_func(self, (const gchar * const *) argv, error);
         else
-            g_set_error(error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_UNEXPECTED_TOKEN, "Message '%s' in an invalid state '%s'", message->message, _eventd_protocol_evp_states[self->priv->state]);
+            g_set_error(error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_UNEXPECTED_TOKEN, "Message '%s' in an invalid state '%s'", message->message, _eventd_protocol_evp_states[self->state]);
         return;
     }
 }
@@ -417,9 +417,8 @@ _eventd_protocol_evp_parse_line(EventdProtocolEvp *self, const gchar *line, GErr
 gboolean
 eventd_protocol_evp_parse(EventdProtocol *protocol, gchar **buffer, GError **error)
 {
-    g_return_val_if_fail(EVENTD_IS_PROTOCOL_EVP(protocol), FALSE);
-    EventdProtocolEvp *self = EVENTD_PROTOCOL_EVP(protocol);
-    g_return_val_if_fail(self->priv->state != _EVENTD_PROTOCOL_EVP_STATE_SIZE, FALSE);
+    EventdProtocolEvp *self = (EventdProtocolEvp *) protocol;
+    g_return_val_if_fail(self->state != _EVENTD_PROTOCOL_EVP_STATE_SIZE, FALSE);
 
     GError *_inner_error_ = NULL;
 
@@ -446,38 +445,38 @@ void
 eventd_protocol_evp_parse_free(EventdProtocolEvp *self)
 {
 recheck:
-    switch ( self->priv->state )
+    switch ( self->state )
     {
     case EVENTD_PROTOCOL_EVP_STATE_DOT_DATA:
-        if ( self->priv->data.hash != NULL )
-            g_hash_table_unref(self->priv->data.hash);
-        self->priv->data.hash = NULL;
+        if ( self->data.hash != NULL )
+            g_hash_table_unref(self->data.hash);
+        self->data.hash = NULL;
 
-        g_free(self->priv->data.name);
-        self->priv->data.name = NULL;
+        g_free(self->data.name);
+        self->data.name = NULL;
 
-        if ( self->priv->data.value != NULL )
-            g_string_free(self->priv->data.value, TRUE);
-        self->priv->data.value = NULL;
+        if ( self->data.value != NULL )
+            g_string_free(self->data.value, TRUE);
+        self->data.value = NULL;
 
-        self->priv->state = self->priv->data.return_state;
+        self->state = self->data.return_state;
     goto recheck;
     case EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT:
-        if ( self->priv->data.hash != NULL )
-            g_hash_table_unref(self->priv->data.hash);
-        self->priv->data.hash = NULL;
+        if ( self->data.hash != NULL )
+            g_hash_table_unref(self->data.hash);
+        self->data.hash = NULL;
 
-        if ( self->priv->event != NULL )
-            g_object_unref(self->priv->event);
-        self->priv->event = NULL;
+        if ( self->event != NULL )
+            g_object_unref(self->event);
+        self->event = NULL;
     break;
     case EVENTD_PROTOCOL_EVP_STATE_DOT_SUBSCRIBE:
-        g_hash_table_unref(self->priv->subscriptions);
-        self->priv->subscriptions = NULL;
+        g_hash_table_unref(self->subscriptions);
+        self->subscriptions = NULL;
     break;
     default:
     break;
     }
 
-    self->priv->state = _EVENTD_PROTOCOL_EVP_STATE_SIZE;
+    self->state = _EVENTD_PROTOCOL_EVP_STATE_SIZE;
 }

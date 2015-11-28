@@ -53,7 +53,7 @@ _eventd_protocol_json_parse_null(gpointer user_data)
 {
     EventdProtocolJson *self = user_data;
 
-    g_set_error_literal(&self->priv->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_UNEXPECTED_TOKEN, "Unexpected null");
+    g_set_error_literal(&self->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_UNEXPECTED_TOKEN, "Unexpected null");
     return 0;
 }
 
@@ -62,7 +62,7 @@ _eventd_protocol_json_parse_boolean(gpointer user_data, gint val)
 {
     EventdProtocolJson *self = user_data;
 
-    g_set_error(&self->priv->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_UNEXPECTED_TOKEN, "Unexpected boolean %s", val ? "true" : "false");
+    g_set_error(&self->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_UNEXPECTED_TOKEN, "Unexpected boolean %s", val ? "true" : "false");
     return 0;
 }
 
@@ -71,7 +71,7 @@ _eventd_protocol_json_parse_integer(gpointer user_data, long long val)
 {
     EventdProtocolJson *self = user_data;
 
-    g_set_error(&self->priv->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_UNEXPECTED_TOKEN, "Unexpected integer %lld", val);
+    g_set_error(&self->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_UNEXPECTED_TOKEN, "Unexpected integer %lld", val);
     return 0;
 }
 
@@ -80,7 +80,7 @@ _eventd_protocol_json_parse_double(gpointer user_data, gdouble val)
 {
     EventdProtocolJson *self = user_data;
 
-    g_set_error(&self->priv->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_UNEXPECTED_TOKEN, "Unexpected double %lf", val);
+    g_set_error(&self->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_UNEXPECTED_TOKEN, "Unexpected double %lf", val);
     return 0;
 }
 
@@ -89,7 +89,7 @@ _eventd_protocol_json_parse_number(gpointer user_data, const char *numberVal, gs
 {
     EventdProtocolJson *self = user_data;
 
-    g_set_error_literal(&self->priv->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_UNEXPECTED_TOKEN, "Unexpected number");
+    g_set_error_literal(&self->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_UNEXPECTED_TOKEN, "Unexpected number");
     return 0;
 }
 
@@ -100,38 +100,38 @@ _eventd_protocol_json_parse_string(gpointer user_data, const guchar *str_, gsize
     gchar *str;
     str = g_strndup((const gchar *) str_, len);
 
-    switch ( self->priv->message.state )
+    switch ( self->message.state )
     {
     case EVENTD_PROTOCOL_JSON_STATE_DATA:
-        g_hash_table_insert(self->priv->message.data, self->priv->message.data_name, str);
-        self->priv->message.data_name = NULL;
+        g_hash_table_insert(self->message.data, self->message.data_name, str);
+        self->message.data_name = NULL;
         return 1;
     case EVENTD_PROTOCOL_JSON_STATE_TYPE:
     {
         guint64 type = EVENTD_PROTOCOL_JSON_MESSAGE_TYPE_UNKNOWN;
         nk_enum_parse(str, _eventd_protocol_json_message_types, _EVENTD_PROTOCOL_JSON_MESSAGE_TYPE_SIZE, TRUE, &type);
-        self->priv->message.type = type;
+        self->message.type = type;
         g_free(str);
     }
     break;
     case EVENTD_PROTOCOL_JSON_STATE_UUID:
-        self->priv->message.uuid = str;
+        self->message.uuid = str;
     break;
     case EVENTD_PROTOCOL_JSON_STATE_CATEGORY:
-        self->priv->message.category = str;
+        self->message.category = str;
     break;
     case EVENTD_PROTOCOL_JSON_STATE_NAME:
-        self->priv->message.name = str;
+        self->message.name = str;
     break;
     case EVENTD_PROTOCOL_JSON_STATE_CATEGORIES:
-        g_hash_table_add(self->priv->message.categories, str);
+        g_hash_table_add(self->message.categories, str);
     break;
     default:
-        g_set_error(&self->priv->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_UNEXPECTED_TOKEN, "Unexpected string '%s'", str);
+        g_set_error(&self->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_UNEXPECTED_TOKEN, "Unexpected string '%s'", str);
         g_free(str);
         return 0;
     }
-    self->priv->message.state = EVENTD_PROTOCOL_JSON_STATE_MESSAGE;
+    self->message.state = EVENTD_PROTOCOL_JSON_STATE_MESSAGE;
     return 1;
 }
 
@@ -140,19 +140,19 @@ _eventd_protocol_json_parse_start_map(gpointer user_data)
 {
     EventdProtocolJson *self = user_data;
 
-    switch ( self->priv->message.state )
+    switch ( self->message.state )
     {
     case EVENTD_PROTOCOL_JSON_STATE_BASE:
-        self->priv->message.state = EVENTD_PROTOCOL_JSON_STATE_MESSAGE;
+        self->message.state = EVENTD_PROTOCOL_JSON_STATE_MESSAGE;
         return 1;
     case EVENTD_PROTOCOL_JSON_STATE_DATA:
-        self->priv->message.data = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+        self->message.data = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
         return 1;
     default:
     break;
     }
 
-    g_set_error_literal(&self->priv->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_UNEXPECTED_TOKEN, "Unexpected map");
+    g_set_error_literal(&self->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_UNEXPECTED_TOKEN, "Unexpected map");
     return 0;
 }
 
@@ -162,69 +162,69 @@ _eventd_protocol_json_parse_map_key(gpointer user_data, const guchar *key_, gsiz
     EventdProtocolJson *self = user_data;
     const gchar *key = (const gchar *) key_;
 
-    switch ( self->priv->message.state )
+    switch ( self->message.state )
     {
     case EVENTD_PROTOCOL_JSON_STATE_DATA:
-        self->priv->message.data_name = g_strndup(key, len);
+        self->message.data_name = g_strndup(key, len);
         return 1;
     case EVENTD_PROTOCOL_JSON_STATE_MESSAGE:
         if ( g_ascii_strncasecmp(key, "data", len) == 0 )
         {
-            if ( self->priv->message.data != NULL )
+            if ( self->message.data != NULL )
             {
-                g_set_error_literal(&self->priv->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_MALFORMED, "Got at least two data objects");
+                g_set_error_literal(&self->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_MALFORMED, "Got at least two data objects");
                 break;
             }
-            self->priv->message.state = EVENTD_PROTOCOL_JSON_STATE_DATA;
+            self->message.state = EVENTD_PROTOCOL_JSON_STATE_DATA;
         }
         else if ( g_ascii_strncasecmp(key, "message-type", len) == 0 )
         {
-            if ( self->priv->message.type != EVENTD_PROTOCOL_JSON_MESSAGE_TYPE_MISSING )
+            if ( self->message.type != EVENTD_PROTOCOL_JSON_MESSAGE_TYPE_MISSING )
             {
-                g_set_error_literal(&self->priv->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_MALFORMED, "Got at least two message-type");
+                g_set_error_literal(&self->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_MALFORMED, "Got at least two message-type");
                 break;
             }
-            self->priv->message.state = EVENTD_PROTOCOL_JSON_STATE_TYPE;
+            self->message.state = EVENTD_PROTOCOL_JSON_STATE_TYPE;
         }
         else if ( g_ascii_strncasecmp(key, "uuid", len) == 0 )
         {
-            if ( self->priv->message.uuid != NULL )
+            if ( self->message.uuid != NULL )
             {
-                g_set_error_literal(&self->priv->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_MALFORMED, "Got at least two UUIDs");
+                g_set_error_literal(&self->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_MALFORMED, "Got at least two UUIDs");
                 break;
             }
-            self->priv->message.state = EVENTD_PROTOCOL_JSON_STATE_UUID;
+            self->message.state = EVENTD_PROTOCOL_JSON_STATE_UUID;
         }
         else if ( g_ascii_strncasecmp(key, "category", len) == 0 )
         {
-            if ( self->priv->message.category != NULL )
+            if ( self->message.category != NULL )
             {
-                g_set_error_literal(&self->priv->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_MALFORMED, "Got at least two categories");
+                g_set_error_literal(&self->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_MALFORMED, "Got at least two categories");
                 break;
             }
-            self->priv->message.state = EVENTD_PROTOCOL_JSON_STATE_CATEGORY;
+            self->message.state = EVENTD_PROTOCOL_JSON_STATE_CATEGORY;
         }
         else if ( g_ascii_strncasecmp(key, "name", len) == 0 )
         {
-            if ( self->priv->message.name != NULL )
+            if ( self->message.name != NULL )
             {
-                g_set_error_literal(&self->priv->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_MALFORMED, "Got at least two names");
+                g_set_error_literal(&self->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_MALFORMED, "Got at least two names");
                 break;
             }
-            self->priv->message.state = EVENTD_PROTOCOL_JSON_STATE_NAME;
+            self->message.state = EVENTD_PROTOCOL_JSON_STATE_NAME;
         }
         else if ( g_ascii_strncasecmp(key, "categories", len) == 0 )
         {
-            if ( self->priv->message.categories != NULL )
+            if ( self->message.categories != NULL )
             {
-                g_set_error_literal(&self->priv->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_MALFORMED, "Got at least two categories lists");
+                g_set_error_literal(&self->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_MALFORMED, "Got at least two categories lists");
                 break;
             }
-            self->priv->message.state = EVENTD_PROTOCOL_JSON_STATE_CATEGORIES;
+            self->message.state = EVENTD_PROTOCOL_JSON_STATE_CATEGORIES;
         }
         return 1;
     default:
-        g_set_error(&self->priv->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_UNEXPECTED_TOKEN, "Unexpected map key '%.*s'", (gint) len, key);
+        g_set_error(&self->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_UNEXPECTED_TOKEN, "Unexpected map key '%.*s'", (gint) len, key);
     }
 
     return 0;
@@ -235,19 +235,19 @@ _eventd_protocol_json_parse_end_map(gpointer user_data)
 {
     EventdProtocolJson *self = user_data;
 
-    switch ( self->priv->message.state )
+    switch ( self->message.state )
     {
     case EVENTD_PROTOCOL_JSON_STATE_MESSAGE:
-        self->priv->message.state = EVENTD_PROTOCOL_JSON_STATE_BASE;
+        self->message.state = EVENTD_PROTOCOL_JSON_STATE_BASE;
         return 1;
     case EVENTD_PROTOCOL_JSON_STATE_DATA:
-        self->priv->message.state = EVENTD_PROTOCOL_JSON_STATE_MESSAGE;
+        self->message.state = EVENTD_PROTOCOL_JSON_STATE_MESSAGE;
         return 1;
     default:
     break;
     }
 
-    g_set_error_literal(&self->priv->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_UNEXPECTED_TOKEN, "Unexpected map end");
+    g_set_error_literal(&self->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_UNEXPECTED_TOKEN, "Unexpected map end");
     return 0;
 }
 
@@ -256,16 +256,16 @@ _eventd_protocol_json_parse_start_array(gpointer user_data)
 {
     EventdProtocolJson *self = user_data;
 
-    switch ( self->priv->message.state )
+    switch ( self->message.state )
     {
     case EVENTD_PROTOCOL_JSON_STATE_CATEGORIES:
-        self->priv->message.categories = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+        self->message.categories = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
         return 1;
     default:
     break;
     }
 
-    g_set_error_literal(&self->priv->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_UNEXPECTED_TOKEN, "Unexpected array");
+    g_set_error_literal(&self->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_UNEXPECTED_TOKEN, "Unexpected array");
     return 0;
 }
 
@@ -274,16 +274,16 @@ _eventd_protocol_json_parse_end_array(gpointer user_data)
 {
     EventdProtocolJson *self = user_data;
 
-    switch ( self->priv->message.state )
+    switch ( self->message.state )
     {
     case EVENTD_PROTOCOL_JSON_STATE_CATEGORIES:
-        self->priv->message.state = EVENTD_PROTOCOL_JSON_STATE_MESSAGE;
+        self->message.state = EVENTD_PROTOCOL_JSON_STATE_MESSAGE;
         return 1;
     default:
     break;
     }
 
-    g_set_error_literal(&self->priv->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_UNEXPECTED_TOKEN, "Unexpected array end");
+    g_set_error_literal(&self->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_UNEXPECTED_TOKEN, "Unexpected array end");
     return 0;
 }
 
@@ -304,31 +304,31 @@ static const yajl_callbacks _eventd_protocol_json_parse_callbacks = {
 static gboolean
 _eventd_protocol_json_check_message(EventdProtocolJson *self, GError **error)
 {
-    switch ( self->priv->message.type )
+    switch ( self->message.type )
     {
     case EVENTD_PROTOCOL_JSON_MESSAGE_TYPE_EVENT:
     {
         EventdEvent *event;
-        event = eventd_event_new_for_uuid_string(self->priv->message.uuid, self->priv->message.category, self->priv->message.name);
+        event = eventd_event_new_for_uuid_string(self->message.uuid, self->message.category, self->message.name);
         if ( event == NULL )
         {
-            g_set_error(&self->priv->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_WRONG_UUID, "Error while parsing UUID '%s'", self->priv->message.uuid);
+            g_set_error(&self->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_WRONG_UUID, "Error while parsing UUID '%s'", self->message.uuid);
             return FALSE;
         }
-        if ( self->priv->message.data != NULL )
-            eventd_event_set_all_data(event, self->priv->message.data);
-        g_signal_emit(self, eventd_protocol_signals[SIGNAL_EVENT], 0, event);
+        if ( self->message.data != NULL )
+            eventd_event_set_all_data(event, self->message.data);
+        eventd_protocol_call_event((EventdProtocol *) self, event);
         g_object_unref(event);
         return TRUE;
     }
     case EVENTD_PROTOCOL_JSON_MESSAGE_TYPE_SUBSCRIBE:
-        if ( ( self->priv->message.categories != NULL ) && ( g_hash_table_size(self->priv->message.categories) < 1 ) )
+        if ( ( self->message.categories != NULL ) && ( g_hash_table_size(self->message.categories) < 1 ) )
         {
-            g_set_error_literal(&self->priv->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_MALFORMED, "Got at least two categories lists");
+            g_set_error_literal(&self->error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_MALFORMED, "Got at least two categories lists");
             return FALSE;
         }
 
-        g_signal_emit(self, eventd_protocol_signals[SIGNAL_SUBSCRIBE], 0, self->priv->message.categories);
+        eventd_protocol_call_subscribe((EventdProtocol *) self, self->message.categories);
         return TRUE;
     case EVENTD_PROTOCOL_JSON_MESSAGE_TYPE_UNKNOWN:
         return TRUE;
@@ -344,8 +344,7 @@ _eventd_protocol_json_check_message(EventdProtocolJson *self, GError **error)
 gboolean
 eventd_protocol_json_parse(EventdProtocol *protocol, gchar **buffer, GError **error)
 {
-    g_return_val_if_fail(EVENTD_IS_PROTOCOL_JSON(protocol), FALSE);
-    EventdProtocolJson *self = EVENTD_PROTOCOL_JSON(protocol);
+    EventdProtocolJson *self = (EventdProtocolJson *) protocol;
 
     const guchar *json = (const guchar *) *buffer;
     gsize json_length = strlen(*buffer), consumed;
@@ -366,15 +365,15 @@ eventd_protocol_json_parse(EventdProtocol *protocol, gchar **buffer, GError **er
     {
     case yajl_status_ok:
     {
-        if ( ( self->priv->message.state == EVENTD_PROTOCOL_JSON_STATE_BASE ) && ( consumed == ( json_length + 1 ) ) )
+        if ( ( self->message.state == EVENTD_PROTOCOL_JSON_STATE_BASE ) && ( consumed == ( json_length + 1 ) ) )
             ret = _eventd_protocol_json_check_message(self, error);
         else
             g_set_error_literal(error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_MALFORMED, "Malformed JSON message");
     }
     break;
     case yajl_status_client_canceled:
-        g_propagate_error(error, self->priv->error);
-        self->priv->error = NULL;
+        g_propagate_error(error, self->error);
+        self->error = NULL;
     break;
     case yajl_status_error:
     {
@@ -395,16 +394,16 @@ eventd_protocol_json_parse(EventdProtocol *protocol, gchar **buffer, GError **er
 void
 eventd_protocol_json_parse_free(EventdProtocolJson *self)
 {
-    self->priv->message.type = EVENTD_PROTOCOL_JSON_MESSAGE_TYPE_MISSING;
+    self->message.type = EVENTD_PROTOCOL_JSON_MESSAGE_TYPE_MISSING;
 
-    g_free(self->priv->message.uuid);
-    g_free(self->priv->message.category);
-    g_free(self->priv->message.name);
-    self->priv->message.category = NULL;
-    self->priv->message.name = NULL;
-    self->priv->message.data = NULL;
+    g_free(self->message.uuid);
+    g_free(self->message.category);
+    g_free(self->message.name);
+    self->message.category = NULL;
+    self->message.name = NULL;
+    self->message.data = NULL;
 
-    if ( self->priv->message.categories != NULL )
-        g_hash_table_unref(self->priv->message.categories);
-    self->priv->message.categories = NULL;
+    if ( self->message.categories != NULL )
+        g_hash_table_unref(self->message.categories);
+    self->message.categories = NULL;
 }

@@ -21,14 +21,65 @@
 #ifndef __EVENTD_PROTOCOL_PRIVATE_H__
 #define __EVENTD_PROTOCOL_PRIVATE_H__
 
-enum {
-    SIGNAL_EVENT,
-    SIGNAL_PASSIVE,
-    SIGNAL_SUBSCRIBE,
-    SIGNAL_BYE,
-    LAST_SIGNAL
+struct _EventdProtocol {
+    guint64 refcount;
+
+    const EventdProtocolCallbacks *callbacks;
+    gpointer user_data;
+    GDestroyNotify notify;
+
+    void (*free)(EventdProtocol *protocol);
+
+    gboolean (*parse)(EventdProtocol *protocol, gchar **buffer, GError **error);
+
+    gchar *(*generate_event)(EventdProtocol *protocol, EventdEvent *event);
+    gchar *(*generate_passive)(EventdProtocol *protocol);
+    gchar *(*generate_subscribe)(EventdProtocol *protocol, GHashTable *categories);
+    gchar *(*generate_bye)(EventdProtocol *protocol, const gchar *message);
+
 };
 
-extern guint eventd_protocol_signals[LAST_SIGNAL];
+static inline EventdProtocol *
+eventd_protocol_new(gsize size, const EventdProtocolCallbacks *callbacks, gpointer user_data, GDestroyNotify notify)
+{
+    EventdProtocol *self;
+
+    self = g_malloc0_n(1, size);
+    self->refcount = 1;
+
+    self->callbacks = callbacks;
+    self->user_data = user_data;
+    self->notify = notify;
+
+    return self;
+}
+
+static inline void
+eventd_protocol_call_event(EventdProtocol *self, EventdEvent *event)
+{
+    if ( self->callbacks->event != NULL )
+        self->callbacks->event(self, event, self->user_data);
+}
+
+static inline void
+eventd_protocol_call_passive(EventdProtocol *self)
+{
+    if ( self->callbacks->passive != NULL )
+        self->callbacks->passive(self, self->user_data);
+}
+
+static inline void
+eventd_protocol_call_subscribe(EventdProtocol *self, GHashTable *subscriptions)
+{
+    if ( self->callbacks->subscribe != NULL )
+        self->callbacks->subscribe(self, subscriptions, self->user_data);
+}
+
+static inline void
+eventd_protocol_call_bye(EventdProtocol *self, const gchar *message)
+{
+    if ( self->callbacks->bye != NULL )
+        self->callbacks->bye(self, message, self->user_data);
+}
 
 #endif /* __EVENTD_PROTOCOL_PRIVATE_H__ */

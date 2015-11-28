@@ -63,8 +63,6 @@ _eventd_protocol_generate_data(GString *str, GHashTable *data)
 gchar *
 eventd_protocol_evp_generate_event(EventdProtocol *protocol, EventdEvent *event)
 {
-    g_return_val_if_fail(EVENTD_IS_PROTOCOL_EVP(protocol), NULL);
-
     GHashTable *data;
     data = eventd_event_get_all_data(event);
 
@@ -89,16 +87,12 @@ eventd_protocol_evp_generate_event(EventdProtocol *protocol, EventdEvent *event)
 gchar *
 eventd_protocol_evp_generate_passive(EventdProtocol *protocol)
 {
-    g_return_val_if_fail(EVENTD_IS_PROTOCOL_EVP(protocol), NULL);
-
     return g_strdup("PASSIVE\n");
 }
 
 gchar *
 eventd_protocol_evp_generate_subscribe(EventdProtocol *protocol, GHashTable *categories)
 {
-    g_return_val_if_fail(EVENTD_IS_PROTOCOL_EVP(protocol), NULL);
-
     if ( categories == NULL )
         return g_strdup("SUBSCRIBE\n");
 
@@ -134,8 +128,6 @@ eventd_protocol_evp_generate_subscribe(EventdProtocol *protocol, GHashTable *cat
 gchar *
 eventd_protocol_evp_generate_bye(EventdProtocol *protocol, const gchar *message)
 {
-    g_return_val_if_fail(EVENTD_IS_PROTOCOL_EVP(protocol), NULL);
-
     if ( message == NULL )
         return g_strdup("BYE\n");
 

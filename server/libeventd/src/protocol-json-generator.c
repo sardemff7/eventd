@@ -103,8 +103,6 @@ _eventd_protocol_json_generate_data(yajl_gen gen, GHashTable *data)
 gchar *
 eventd_protocol_json_generate_event(EventdProtocol *protocol, EventdEvent *event)
 {
-    g_return_val_if_fail(EVENTD_IS_PROTOCOL_JSON(protocol), NULL);
-
     yajl_gen gen;
     gen = _eventd_protocol_json_message_open("event", event);
 
@@ -124,16 +122,12 @@ eventd_protocol_json_generate_event(EventdProtocol *protocol, EventdEvent *event
 gchar *
 eventd_protocol_json_generate_passive(EventdProtocol *protocol)
 {
-    g_return_val_if_fail(EVENTD_IS_PROTOCOL_JSON(protocol), NULL);
-
     return NULL;
 }
 
 gchar *
 eventd_protocol_json_generate_subscribe(EventdProtocol *protocol, GHashTable *categories)
 {
-    g_return_val_if_fail(EVENTD_IS_PROTOCOL_JSON(protocol), NULL);
-
     yajl_gen gen;
     gen = _eventd_protocol_json_message_open("subscribe", NULL);
 
@@ -157,7 +151,5 @@ eventd_protocol_json_generate_subscribe(EventdProtocol *protocol, GHashTable *ca
 gchar *
 eventd_protocol_json_generate_bye(EventdProtocol *protocol, const gchar *message)
 {
-    g_return_val_if_fail(EVENTD_IS_PROTOCOL_JSON(protocol), NULL);
-
     return NULL;
 }

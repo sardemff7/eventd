@@ -23,6 +23,8 @@
 
 #include <yajl/yajl_common.h>
 
+#include "protocol-private.h"
+
 yajl_alloc_funcs eventd_protocol_json_alloc_funcs;
 
 typedef enum {
@@ -44,7 +46,9 @@ typedef enum {
     EVENTD_PROTOCOL_JSON_STATE_DATA,
 } EventdProtocolJsonState;
 
-struct _EventdProtocolJsonPrivate {
+typedef struct {
+    EventdProtocol protocol;
+
     GError *error;
     struct {
         EventdProtocolJsonState state;
@@ -56,7 +60,7 @@ struct _EventdProtocolJsonPrivate {
         GHashTable *data;
         gchar *data_name;
     } message;
-};
+} EventdProtocolJson;
 
 gboolean eventd_protocol_json_parse(EventdProtocol *protocol, gchar **buffer, GError **error);
 void eventd_protocol_json_parse_free(EventdProtocolJson *self);

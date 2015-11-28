@@ -30,63 +30,18 @@ G_BEGIN_DECLS
  */
 
 typedef struct _EventdProtocol               EventdProtocol;
-typedef struct _EventdProtocolInterface      EventdProtocolInterface;
+typedef struct _EventdProtocolCallbacks      EventdProtocolCallbacks;
 
 GType eventd_protocol_get_type(void);
 
 #define EVENTD_TYPE_PROTOCOL                (eventd_protocol_get_type())
-#define EVENTD_PROTOCOL(obj)                (G_TYPE_CHECK_INSTANCE_CAST((obj), EVENTD_TYPE_PROTOCOL, EventdProtocol))
-#define EVENTD_IS_PROTOCOL(obj)             (G_TYPE_CHECK_INSTANCE_TYPE((obj), EVENTD_TYPE_PROTOCOL))
-#define EVENTD_PROTOCOL_GET_INTERFACE(inst) (G_TYPE_INSTANCE_GET_INTERFACE((inst), EVENTD_TYPE_PROTOCOL, EventdProtocolInterface))
 
-struct _EventdProtocolInterface
+struct _EventdProtocolCallbacks
 {
-    GTypeInterface parent_iface;
-
-    void (*add_event)(EventdProtocol *protocol, EventdEvent *event);
-    void (*remove_event)(EventdProtocol *protocol, EventdEvent *event);
-
-    gboolean (*parse)(EventdProtocol *protocol, gchar **buffer, GError **error);
-
-    gchar *(*generate_event)(EventdProtocol *protocol, EventdEvent *event);
-    gchar *(*generate_passive)(EventdProtocol *protocol);
-    gchar *(*generate_subscribe)(EventdProtocol *protocol, GHashTable *categories);
-    gchar *(*generate_bye)(EventdProtocol *protocol, const gchar *message);
-
-    /* Signals */
-    void (*event)(EventdProtocol *protocol, EventdEvent *event);
-    void (*passive)(EventdProtocol *protocol);
-    void (*subscribe)(EventdProtocol *protocol, GHashTable *categories);
-    void (*bye)(EventdProtocol *protocol, const gchar *message);
-};
-
-/*
- * EventdProtocolEvp
- */
-typedef struct _EventdProtocolEvp EventdProtocolEvp;
-typedef struct _EventdProtocolEvpClass EventdProtocolEvpClass;
-typedef struct _EventdProtocolEvpPrivate EventdProtocolEvpPrivate;
-
-GType eventd_protocol_evp_get_type(void) G_GNUC_CONST;
-
-#define EVENTD_TYPE_PROTOCOL_EVP            (eventd_protocol_evp_get_type())
-#define EVENTD_PROTOCOL_EVP(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), EVENTD_TYPE_PROTOCOL_EVP, EventdProtocolEvp))
-#define EVENTD_IS_PROTOCOL_EVP(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), EVENTD_TYPE_PROTOCOL_EVP))
-#define EVENTD_PROTOCOL_EVP_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), EVENTD_TYPE_PROTOCOL_EVP, EventdProtocolEvpClass))
-#define EVENTD_IS_PROTOCOL_EVP_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), EVENTD_TYPE_PROTOCOL_EVP))
-#define EVENTD_PROTOCOL_EVP_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), EVENTD_TYPE_PROTOCOL_EVP, EventdProtocolEvpClass))
-
-struct _EventdProtocolEvp
-{
-    GObject parent_object;
-
-    /*< private >*/
-    EventdProtocolEvpPrivate *priv;
-};
-
-struct _EventdProtocolEvpClass
-{
-    GObjectClass parent_class;
+    void (*event)(EventdProtocol *protocol, EventdEvent *event, gpointer user_data);
+    void (*passive)(EventdProtocol *protocol, gpointer user_data);
+    void (*subscribe)(EventdProtocol *protocol, GHashTable *categories, gpointer user_data);
+    void (*bye)(EventdProtocol *protocol, const gchar *message, gpointer user_data);
 };
 
 /*
@@ -109,15 +64,8 @@ GQuark eventd_protocol_parse_error_quark(void);
  * Functions
  */
 
-EventdProtocol *eventd_protocol_evp_new(void);
-
-void eventd_protocol_add_event(EventdProtocol *protocol, EventdEvent *event);
-void eventd_protocol_remove_event(EventdProtocol *protocol, EventdEvent *event);
-
-/*
- * Generator
- */
-
+EventdProtocol *eventd_protocol_ref(EventdProtocol *protocol);
+void eventd_protocol_unref(EventdProtocol *protocol);
 
 gboolean eventd_protocol_parse(EventdProtocol *protocol, gchar **buffer, GError **error);
 
@@ -125,6 +73,8 @@ gchar *eventd_protocol_generate_event(EventdProtocol *protocol, EventdEvent *eve
 gchar *eventd_protocol_generate_passive(EventdProtocol *protocol);
 gchar *eventd_protocol_generate_subscribe(EventdProtocol *protocol, GHashTable *categories);
 gchar *eventd_protocol_generate_bye(EventdProtocol *protocol, const gchar *message);
+
+EventdProtocol *eventd_protocol_evp_new(const EventdProtocolCallbacks *callbacks, gpointer user_data, GDestroyNotify notify);
 
 G_END_DECLS
 

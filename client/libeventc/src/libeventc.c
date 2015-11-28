@@ -203,16 +203,25 @@ end:
 }
 
 static void
-_eventc_connection_protocol_event(EventcConnection *self, EventdEvent *event, EventdProtocol *protocol)
+_eventc_connection_protocol_event(EventdProtocol *protocol, EventdEvent *event, gpointer user_data)
 {
+    EventcConnection *self = user_data;
+
     g_signal_emit(self, _eventc_connection_signals[SIGNAL_EVENT], 0, event);
 }
 
 static void
-_eventc_connection_protocol_bye(EventcConnection *self, EventdProtocol *protocol)
+_eventc_connection_protocol_bye(EventdProtocol *protocol, const gchar *message, gpointer user_data)
 {
+    EventcConnection *self = user_data;
+
     g_cancellable_cancel(self->priv->cancellable);
 }
+
+static const EventdProtocolCallbacks _eventc_connection_protocol_callbacks = {
+    .event = _eventc_connection_protocol_event,
+    .bye = _eventc_connection_protocol_bye,
+};
 
 static void
 _eventc_connection_read_callback(GObject *obj, GAsyncResult *res, gpointer user_data)
@@ -275,11 +284,8 @@ eventc_connection_init(EventcConnection *self)
 {
     self->priv = EVENTC_CONNECTION_GET_PRIVATE(self);
 
-    self->priv->protocol = eventd_protocol_evp_new();
+    self->priv->protocol = eventd_protocol_evp_new(&_eventc_connection_protocol_callbacks, self, NULL);
     self->priv->cancellable = g_cancellable_new();
-
-    g_signal_connect_swapped(self->priv->protocol, "event", G_CALLBACK(_eventc_connection_protocol_event), self);
-    g_signal_connect_swapped(self->priv->protocol, "bye", G_CALLBACK(_eventc_connection_protocol_bye), self);
 }
 
 static void
@@ -294,7 +300,7 @@ _eventc_connection_finalize(GObject *object)
         g_object_unref(self->priv->address);
 
     g_object_unref(self->priv->cancellable);
-    g_object_unref(self->priv->protocol);
+    eventd_protocol_unref(self->priv->protocol);
 
     G_OBJECT_CLASS(eventc_connection_parent_class)->finalize(object);
 }

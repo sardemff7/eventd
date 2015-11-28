@@ -26,39 +26,10 @@
 G_BEGIN_DECLS
 
 /*
- * EventdProtocolJson
- */
-typedef struct _EventdProtocolJson EventdProtocolJson;
-typedef struct _EventdProtocolJsonClass EventdProtocolJsonClass;
-typedef struct _EventdProtocolJsonPrivate EventdProtocolJsonPrivate;
-
-GType eventd_protocol_json_get_type(void) G_GNUC_CONST;
-
-#define EVENTD_TYPE_PROTOCOL_JSON            (eventd_protocol_json_get_type())
-#define EVENTD_PROTOCOL_JSON(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), EVENTD_TYPE_PROTOCOL_JSON, EventdProtocolJson))
-#define EVENTD_IS_PROTOCOL_JSON(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), EVENTD_TYPE_PROTOCOL_JSON))
-#define EVENTD_PROTOCOL_JSON_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), EVENTD_TYPE_PROTOCOL_JSON, EventdProtocolJsonClass))
-#define EVENTD_IS_PROTOCOL_JSON_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), EVENTD_TYPE_PROTOCOL_JSON))
-#define EVENTD_PROTOCOL_JSON_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), EVENTD_TYPE_PROTOCOL_JSON, EventdProtocolJsonClass))
-
-struct _EventdProtocolJson
-{
-    GObject parent_object;
-
-    /*< private >*/
-    EventdProtocolJsonPrivate *priv;
-};
-
-struct _EventdProtocolJsonClass
-{
-    GObjectClass parent_class;
-};
-
-/*
  * Functions
  */
 
-EventdProtocol *eventd_protocol_json_new(void);
+EventdProtocol *eventd_protocol_json_new(const EventdProtocolCallbacks *callbacks, gpointer user_data, GDestroyNotify notify);
 
 G_END_DECLS
 

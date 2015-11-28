@@ -29,77 +29,47 @@
 
 #include "protocol-private.h"
 
-EVENTD_EXPORT
-guint eventd_protocol_signals[LAST_SIGNAL] = { 0 };
-
 EVENTD_EXPORT GType eventd_protocol_get_type(void);
-G_DEFINE_INTERFACE(EventdProtocol, eventd_protocol, 0);
+G_DEFINE_BOXED_TYPE(EventdProtocol, eventd_protocol, eventd_protocol_ref, eventd_protocol_unref);
 
-static void
-eventd_protocol_default_init(EventdProtocolInterface *iface)
+/**
+ * eventd_protocol_ref:
+ * @protocol: an #EventdProtocol
+ *
+ * Increments the reference counter of @protocol.
+ *
+ * Returns: (transfer full): the #EventdProtocol
+ */
+EVENTD_EXPORT
+EventdProtocol *
+eventd_protocol_ref(EventdProtocol *self)
 {
-    /**
-     * EventdProtocol::event:
-     * @protocol: the #EventdProtocol that parsed the message
-     * @event: the #EventdEvent that was sent
-     *
-     * Emitted when parsed an EVENT message.
-     */
-    eventd_protocol_signals[SIGNAL_EVENT] =
-        g_signal_new("event",
-                     G_TYPE_FROM_INTERFACE(iface),
-                     G_SIGNAL_RUN_FIRST,
-                     G_STRUCT_OFFSET(EventdProtocolInterface, event),
-                     NULL, NULL,
-                     g_cclosure_marshal_generic,
-                     G_TYPE_NONE, 1, EVENTD_TYPE_EVENT);
+    g_return_val_if_fail(self != NULL, NULL);
 
-    /**
-     * EventdProtocol::passive:
-     * @protocol: the #EventdProtocol that parsed the message
-     *
-     * Emitted when parsed a PASSIVE message.
-     */
-    eventd_protocol_signals[SIGNAL_PASSIVE] =
-        g_signal_new("passive",
-                     G_TYPE_FROM_INTERFACE(iface),
-                     G_SIGNAL_RUN_FIRST,
-                     G_STRUCT_OFFSET(EventdProtocolInterface, passive),
-                     NULL, NULL,
-                     g_cclosure_marshal_generic,
-                     G_TYPE_NONE, 0);
+    ++self->refcount;
 
-    /**
-     * EventdProtocol::subscribe:
-     * @protocol: the #EventdProtocol that parsed the message
-     * @categories: (element-type utf8 utf8) (nullable): the categories of events the client wants to subscribe to as a set (key == value)
-     *
-     * Emitted when parsed a SUBSCRIBE message.
-     */
-    eventd_protocol_signals[SIGNAL_SUBSCRIBE] =
-        g_signal_new("subscribe",
-                     G_TYPE_FROM_INTERFACE(iface),
-                     G_SIGNAL_RUN_FIRST,
-                     G_STRUCT_OFFSET(EventdProtocolInterface, subscribe),
-                     NULL, NULL,
-                     g_cclosure_marshal_generic,
-                     G_TYPE_NONE, 1, G_TYPE_HASH_TABLE);
+    return self;
+}
+/**
+ * eventd_protocol_unref:
+ * @protocol: an #EventdProtocol
+ *
+ * Decrements the reference counter of @protocol.
+ * If it reaches 0, free @protocol.
+ */
+EVENTD_EXPORT
+void
+eventd_protocol_unref(EventdProtocol *self)
+{
+    g_return_if_fail(self != NULL);
 
-    /**
-     * EventdProtocol::bye:
-     * @protocol: the #EventdProtocol that parsed the message
-     * @message: (nullable): the optional message
-     *
-     * Emitted when parsed a BYE message.
-     */
-    eventd_protocol_signals[SIGNAL_BYE] =
-        g_signal_new("bye",
-                     G_TYPE_FROM_INTERFACE(iface),
-                     G_SIGNAL_RUN_FIRST,
-                     G_STRUCT_OFFSET(EventdProtocolInterface, bye),
-                     NULL, NULL,
-                     g_cclosure_marshal_generic,
-                     G_TYPE_NONE, 1, G_TYPE_STRING);
+    if ( --self->refcount > 0 )
+        return;
+
+    if ( self->notify != NULL )
+        self->notify(self->user_data);
+
+    self->free(self);
 }
 
 /**
@@ -116,11 +86,11 @@ EVENTD_EXPORT
 gboolean
 eventd_protocol_parse(EventdProtocol *self, gchar **buffer, GError **error)
 {
-    g_return_val_if_fail(EVENTD_IS_PROTOCOL(self), FALSE);
+    g_return_val_if_fail(self != NULL, FALSE);
     g_return_val_if_fail(buffer != NULL && *buffer != NULL, FALSE);
     g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-    return EVENTD_PROTOCOL_GET_INTERFACE(self)->parse(self, buffer, error);
+    return self->parse(self, buffer, error);
 }
 
 /**
@@ -136,10 +106,10 @@ EVENTD_EXPORT
 gchar *
 eventd_protocol_generate_event(EventdProtocol *self, EventdEvent *event)
 {
-    g_return_val_if_fail(EVENTD_IS_PROTOCOL(self), NULL);
+    g_return_val_if_fail(self != NULL, NULL);
     g_return_val_if_fail(EVENTD_IS_EVENT(event), NULL);
 
-    return EVENTD_PROTOCOL_GET_INTERFACE(self)->generate_event(self, event);
+    return self->generate_event(self, event);
 }
 
 /**
@@ -154,9 +124,9 @@ EVENTD_EXPORT
 gchar *
 eventd_protocol_generate_passive(EventdProtocol *self)
 {
-    g_return_val_if_fail(EVENTD_IS_PROTOCOL(self), NULL);
+    g_return_val_if_fail(self != NULL, NULL);
 
-    return EVENTD_PROTOCOL_GET_INTERFACE(self)->generate_passive(self);
+    return self->generate_passive(self);
 }
 
 /**
@@ -172,10 +142,10 @@ EVENTD_EXPORT
 gchar *
 eventd_protocol_generate_subscribe(EventdProtocol *self, GHashTable *categories)
 {
-    g_return_val_if_fail(EVENTD_IS_PROTOCOL(self), NULL);
+    g_return_val_if_fail(self != NULL, NULL);
     g_return_val_if_fail(categories == NULL || g_hash_table_size(categories) > 0, NULL);
 
-    return EVENTD_PROTOCOL_GET_INTERFACE(self)->generate_subscribe(self, categories);
+    return self->generate_subscribe(self, categories);
 }
 
 /**
@@ -191,9 +161,9 @@ EVENTD_EXPORT
 gchar *
 eventd_protocol_generate_bye(EventdProtocol *self, const gchar *message)
 {
-    g_return_val_if_fail(EVENTD_IS_PROTOCOL(self), NULL);
+    g_return_val_if_fail(self != NULL, NULL);
 
-    return EVENTD_PROTOCOL_GET_INTERFACE(self)->generate_bye(self, message);
+    return self->generate_bye(self, message);
 }
 
 

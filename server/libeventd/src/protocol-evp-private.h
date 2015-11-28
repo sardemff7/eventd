@@ -21,6 +21,8 @@
 #ifndef __EVENTD_PROTOCOL_EVP_PRIVATE_H__
 #define __EVENTD_PROTOCOL_EVP_PRIVATE_H__
 
+#include "protocol-private.h"
+
 typedef enum {
     EVENTD_PROTOCOL_EVP_STATE_BASE = 0,
     EVENTD_PROTOCOL_EVP_STATE_PASSIVE,
@@ -33,7 +35,9 @@ typedef enum {
     _EVENTD_PROTOCOL_EVP_STATE_SIZE
 } EventdProtocolEvpState;
 
-struct _EventdProtocolEvpPrivate {
+typedef struct {
+    EventdProtocol protocol;
+
     EventdProtocolEvpState state;
     EventdProtocolEvpState base_state;
     union {
@@ -49,7 +53,7 @@ struct _EventdProtocolEvpPrivate {
         gchar *name;
         GString *value;
     } data;
-};
+} EventdProtocolEvp;
 
 gboolean eventd_protocol_evp_parse(EventdProtocol *protocol, gchar **buffer, GError **error);
 void eventd_protocol_evp_parse_free(EventdProtocolEvp *self);
