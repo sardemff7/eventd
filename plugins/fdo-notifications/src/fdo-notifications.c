@@ -38,6 +38,13 @@
 
 #define NOTIFICATION_SPEC_VERSION  "1.2"
 
+typedef enum {
+    EVENTD_FDO_NOTIFICATIONS_CLOSE_REASON_EXPIRED = 1,
+    EVENTD_FDO_NOTIFICATIONS_CLOSE_REASON_DISMISS = 2,
+    EVENTD_FDO_NOTIFICATIONS_CLOSE_REASON_CALL = 3,
+    EVENTD_FDO_NOTIFICATIONS_CLOSE_REASON_RESERVED = 4,
+} EventdFdoNotificationsCloseReason;
+
 struct _EventdPluginContext {
     EventdPluginCoreContext *core;
     EventdPluginCoreInterface *core_interface;
@@ -59,16 +66,20 @@ typedef struct {
 } EventdDbusNotification;
 
 static void
-_eventd_fdo_notifications_event_ended(EventdEvent *event, EventdDbusNotification *notification)
+_eventd_fdo_notifications_notification_closed(EventdPluginContext *context, guint32 id, EventdFdoNotificationsCloseReason reason)
 {
     /*
      * We have to emit the NotificationClosed signal for our D-Bus client
      */
+    EventdDbusNotification *notification;
+
+    notification = g_hash_table_lookup(context->notifications, GUINT_TO_POINTER(id));
 
     g_dbus_connection_emit_signal(notification->context->connection, notification->sender,
                                   NOTIFICATION_BUS_PATH, NOTIFICATION_BUS_NAME,
-                                  "NotificationClosed", g_variant_new("(uu)", notification->id, 0),
+                                  "NotificationClosed", g_variant_new("(uu)", notification->id, reason),
                                   NULL);
+
     g_hash_table_remove(notification->context->notifications, GUINT_TO_POINTER(notification->id));
 }
 
@@ -188,6 +199,10 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
 
     if ( id > 0 )
     {
+        g_dbus_method_invocation_return_dbus_error(invocation, NOTIFICATION_BUS_NAME ".NotSupported", "This server does not (yet) support notification update");
+        return;
+        /*
+         * FIXME: dispatch again
         EventdDbusNotification *notification;
 
         notification = g_hash_table_lookup(context->notifications, GUINT_TO_POINTER(id));
@@ -197,6 +212,7 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
             return;
         }
         event = notification->event;
+        */
     }
     else
         event = eventd_event_new("notification", event_name);
@@ -271,15 +287,7 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
             eventd_event_add_data(event, g_strdup("sound-file"), g_strdup_printf("file://%s", sound_file));
     }
 
-
-    if ( id > 0 )
-    {
-        g_object_unref(event);
-        g_dbus_method_invocation_return_dbus_error(invocation, NOTIFICATION_BUS_NAME ".NotSupported", "This server does not (yet) support notification update");
-        return;
-    }
-    else
-        id = _eventd_fdo_notifications_notification_new(context, sender, event);
+    id = _eventd_fdo_notifications_notification_new(context, sender, event);
 
     if ( id == 0 )
     {
@@ -289,11 +297,16 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
     }
 
     g_dbus_method_invocation_return_value(invocation, g_variant_new("(u)", id));
+
+    _eventd_fdo_notifications_notification_closed(context, id, EVENTD_FDO_NOTIFICATIONS_CLOSE_REASON_RESERVED);
 }
 
 static void
 _eventd_fdo_notifications_close_notification(EventdPluginContext *context, GVariant *parameters, GDBusMethodInvocation *invocation)
 {
+    g_dbus_method_invocation_return_value(invocation, NULL);
+    /*
+     * FIXME: add back
     guint32 id;
     EventdDbusNotification *notification;
 
@@ -308,6 +321,7 @@ _eventd_fdo_notifications_close_notification(EventdPluginContext *context, GVari
     notification = g_hash_table_lookup(context->notifications, GUINT_TO_POINTER(id));
 
     g_dbus_method_invocation_return_value(invocation, NULL);
+    */
 }
 
 static void
