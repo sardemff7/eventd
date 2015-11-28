@@ -112,6 +112,23 @@ eventd_event_add_data(EventdEvent *self, gchar *name, gchar *content)
 
 
 /**
+ * eventd_event_get_uuid:
+ * @event: an #EventdEvent
+ *
+ * Retrieves the UUID (as a string) for the event.
+ *
+ * Returns: (transfer none): the UUID of the event
+ */
+EVENTD_EXPORT
+const gchar *
+eventd_event_get_uuid(EventdEvent *self)
+{
+    g_return_val_if_fail(EVENTD_IS_EVENT(self), NULL);
+
+    return self->priv->uuid.string;
+}
+
+/**
  * eventd_event_get_category:
  * @event: an #EventdEvent
  *

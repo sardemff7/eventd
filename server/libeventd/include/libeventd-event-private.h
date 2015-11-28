@@ -22,7 +22,6 @@
 #define __EVENTD_EVENT_PRIVATE_H__
 
 EventdEvent *eventd_event_new_for_uuid_string(const gchar *uuid_string, const gchar *category, const gchar *name);
-const gchar *eventd_event_get_uuid(EventdEvent *event);
 
 void eventd_event_set_all_data(EventdEvent *event, GHashTable *data);
 

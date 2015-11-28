@@ -59,14 +59,6 @@ eventd_event_new_for_uuid_string(const gchar *uuid_string, const gchar *category
     return eventd_event_new_for_uuid(uuid, category, name);
 }
 
-const gchar *
-eventd_event_get_uuid(EventdEvent *self)
-{
-    g_return_val_if_fail(EVENTD_IS_EVENT(self), NULL);
-
-    return self->priv->uuid.string;
-}
-
 void
 eventd_event_set_all_data(EventdEvent *self, GHashTable *data)
 {
