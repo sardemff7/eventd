@@ -41,27 +41,27 @@
  */
 
 static gpointer
-_eventd_protocol_json_malloc(gpointer user_data, gsize s)
+_eventd_protocol_json_alloc_malloc(gpointer user_data, gsize s)
 {
     return g_malloc(s);
 }
 
 static gpointer
-_eventd_protocol_json_realloc(gpointer user_data, gpointer data, gsize s)
+_eventd_protocol_json_alloc_realloc(gpointer user_data, gpointer data, gsize s)
 {
     return g_realloc(data, s);
 }
 
 static void
-_eventd_protocol_json_free(gpointer user_data, gpointer data)
+_eventd_protocol_json_alloc_free(gpointer user_data, gpointer data)
 {
     g_free(data);
 }
 
 yajl_alloc_funcs eventd_protocol_json_alloc_funcs = {
-    .malloc = _eventd_protocol_json_malloc,
-    .realloc = _eventd_protocol_json_realloc,
-    .free = _eventd_protocol_json_free
+    .malloc  = _eventd_protocol_json_alloc_malloc,
+    .realloc = _eventd_protocol_json_alloc_realloc,
+    .free    = _eventd_protocol_json_alloc_free
 };
 
 #define EVENTD_PROTOCOL_JSON_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), EVENTD_TYPE_PROTOCOL_JSON, EventdProtocolJsonPrivate))
