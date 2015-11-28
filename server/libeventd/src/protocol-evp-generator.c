@@ -113,10 +113,7 @@ eventd_protocol_evp_generate_subscribe(EventdProtocol *protocol, GHashTable *cat
     g_hash_table_iter_next(&iter, (gpointer *) &category, &dummy);
 
     if ( length == 1 )
-    {
-        message = g_strdup_printf("SUBSCRIBE %s\n", category);
-        goto ret;
-    }
+        return g_strdup_printf("SUBSCRIBE %s\n", category);
 
     gsize size;
     GString *str;
@@ -124,14 +121,13 @@ eventd_protocol_evp_generate_subscribe(EventdProtocol *protocol, GHashTable *cat
     str = g_string_sized_new(size);
 
     g_string_append(str, ".SUBSCRIBE\n");
+    do
         g_string_append_c(g_string_append(str, category), '\n');
-    while ( g_hash_table_iter_next(&iter, (gpointer *) &category, &dummy) )
-        g_string_append_c(g_string_append(str, category), '\n');
+    while ( g_hash_table_iter_next(&iter, (gpointer *) &category, &dummy) );
     g_string_append(str, ".\n");
 
     message = g_string_free(str, FALSE);
 
-ret:
     return message;
 }
 
