@@ -282,34 +282,6 @@ _eventd_libnotify_notification_free(gpointer data)
     g_slice_free(EventdLibnotifyNotification, self);
 }
 
-static void
-_eventd_libnotify_notification_close(GObject *obj, GAsyncResult *res, gpointer user_data)
-{
-    EventdLibnotifyNotification *self = user_data;
-    GVariant *ret;
-    GError *error = NULL;
-
-    ret = g_dbus_proxy_call_finish(self->context->server, res, &error);
-    if ( ret == NULL )
-    {
-        g_warning("Couldn't close the notification: %s", error->message);
-        g_clear_error(&error);
-    }
-    else
-        g_variant_unref(ret);
-    _eventd_libnotify_notification_free(self);
-}
-
-static void
-_eventd_libnotify_event_ended(EventdLibnotifyNotification *self, EventdEvent *event)
-{
-    if ( self->id > 0 )
-        g_dbus_proxy_call(self->context->server, "CloseNotification", g_variant_new("(u)", self->id), G_DBUS_CALL_FLAGS_NONE, -1, NULL, _eventd_libnotify_notification_close, self);
-    else
-        _eventd_libnotify_notification_free(self);
-}
-
-
 /*
  * Init interface
  */
@@ -568,11 +540,20 @@ _eventd_libnotify_proxy_notify(GObject *obj, GAsyncResult *res, gpointer user_da
     {
         g_warning("Server refused notification: %s", error->message);
         g_clear_error(&error);
+        /*
+         * FIXME: Send closed event, reason: reserved
+         */
+        _eventd_libnotify_notification_free(self);
         return;
     }
 
     g_variant_get(ret, "(u)", &self->id);
     g_variant_unref(ret);
+
+    /*
+     * FIXME: Listen for the NotificationClosed signal
+     */
+    _eventd_libnotify_notification_free(self);
 }
 
 static void
@@ -686,7 +667,6 @@ _eventd_libnotify_event_action(EventdPluginContext *context, EventdPluginAction 
     notification->event = g_object_ref(event);
 
     g_dbus_proxy_call(context->server, "Notify", args, G_DBUS_CALL_FLAGS_NONE, -1, NULL, _eventd_libnotify_proxy_notify, notification);
-    g_signal_connect_swapped(notification->event, "ended", G_CALLBACK(_eventd_libnotify_event_ended), notification);
 }
 
 
