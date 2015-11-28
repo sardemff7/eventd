@@ -51,7 +51,7 @@ struct _EventdPluginContext {
     EventdNdStyle *style;
     GHashTable *backends;
     GHashTable *displays;
-    GQueue *queue;
+    GHashTable *notifications;
 };
 
 typedef struct {
@@ -68,6 +68,7 @@ typedef struct {
 typedef struct {
     EventdNdContext *context;
     EventdNdStyle *style;
+    EventdEvent *event;
     GList *notification;
     gint width;
     gint height;
@@ -92,6 +93,28 @@ _eventd_nd_backend_remove_display(EventdNdContext *context, const gchar *target)
     g_hash_table_remove(context->displays, target);
 }
 
+
+static void
+_eventd_nd_notification_surface_context_free(gpointer data)
+{
+    EventdNdSurfaceContext *surface = data;
+
+    surface->backend->surface_free(surface->surface);
+
+    g_free(surface);
+}
+
+static void
+_eventd_nd_notification_free(gpointer data)
+{
+    EventdNdNotification *self = data;
+
+    g_list_free_full(self->surfaces, _eventd_nd_notification_surface_context_free);
+
+    g_free(self);
+}
+
+
 /*
  * Initialization interface
  */
@@ -110,7 +133,7 @@ _eventd_nd_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *interf
     context->backends = eventd_nd_backends_load(context, &context->interface);
     context->displays = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_nd_backend_display_free);
 
-    context->queue = g_queue_new();
+    context->notifications = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, _eventd_nd_notification_free);
 
     eventd_nd_cairo_init();
 
@@ -124,7 +147,7 @@ _eventd_nd_uninit(EventdPluginContext *context)
 
     eventd_nd_cairo_uninit();
 
-    g_queue_free(context->queue);
+    g_hash_table_unref(context->notifications);
 
     g_hash_table_unref(context->displays);
     g_hash_table_unref(context->backends);
@@ -344,32 +367,13 @@ _eventd_nd_config_reset(EventdPluginContext *context)
  * Event action interface
  */
 
-static void
-_eventd_nd_notification_surface_context_free(gpointer data)
-{
-    EventdNdSurfaceContext *surface = data;
-
-    surface->backend->surface_free(surface->surface);
-
-    g_free(surface);
-}
-
-static void
-_eventd_nd_notification_free(EventdNdNotification *self)
-{
-    g_list_free_full(self->surfaces, _eventd_nd_notification_surface_context_free);
-
-    g_free(self);
-}
-
 static gboolean
 _eventd_nd_event_timedout(gpointer user_data)
 {
     EventdNdNotification *self = user_data;
     EventdPluginContext *context = self->context;
 
-    g_queue_delete_link(context->queue, self->notification);
-    _eventd_nd_notification_free(self);
+    g_hash_table_remove(context->notifications, eventd_event_get_uuid(self->event));
 
     return FALSE;
 }
@@ -377,6 +381,10 @@ _eventd_nd_event_timedout(gpointer user_data)
 static void
 _eventd_nd_notification_set(EventdNdNotification *self, EventdPluginContext *context, EventdEvent *event, cairo_surface_t **bubble)
 {
+    if ( self->event != NULL )
+        g_object_unref(self->event);
+    self->event = g_object_ref(event);
+
     EventdNdNotificationContents *notification;
 
     notification = eventd_nd_notification_contents_new(self->style, event, context->max_width, context->max_height);
@@ -399,6 +407,7 @@ _eventd_nd_notification_new(EventdPluginContext *context, EventdEvent *event, Ev
     self = g_new0(EventdNdNotification, 1);
     self->context = context;
     self->style = style;
+    self->event = g_object_ref(event);
 
     cairo_surface_t *bubble;
 
@@ -448,16 +457,6 @@ _eventd_nd_notification_update(EventdNdNotification *self,EventdPluginContext *c
     cairo_surface_destroy(bubble);
 }
 
-/*
- * TODO: Rework notification update detection
- */
-static void
-_eventd_nd_event_updated(EventdEvent *event, EventdNdNotification *self)
-{
-    EventdPluginContext *context = self->context;
-    _eventd_nd_notification_update(self, context, event);
-}
-
 static void
 _eventd_nd_event_action(EventdPluginContext *context, EventdNdStyle *style, EventdEvent *event)
 {
@@ -465,10 +464,15 @@ _eventd_nd_event_action(EventdPluginContext *context, EventdNdStyle *style, Even
         return;
 
     EventdNdNotification *notification;
-    notification = _eventd_nd_notification_new(context, event, style);
+    notification = g_hash_table_lookup(context->notifications, eventd_event_get_uuid(event));
 
-    g_queue_push_tail(context->queue, notification);
-    notification->notification = g_queue_peek_tail_link(context->queue);
+    if ( notification == NULL )
+    {
+        notification = _eventd_nd_notification_new(context, event, style);
+        g_hash_table_insert(context->notifications, (gpointer) eventd_event_get_uuid(event), notification);
+    }
+    else
+        _eventd_nd_notification_update(notification, context, event);
 }
 
 
