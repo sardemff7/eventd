@@ -77,6 +77,8 @@ struct _EventdPluginAction {
     struct {
         gboolean set;
 
+        gint timeout;
+
         gint   min_width;
         gint   max_width;
 
@@ -142,6 +144,9 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
 
     /* bubble */
     style->bubble.set = TRUE;
+
+    /* bubble timing */
+    style->bubble.timeout = 3000;
 
     /* bubble geometry */
     style->bubble.min_width = 200;
@@ -504,6 +509,14 @@ eventd_nd_style_get_template_icon(EventdNdStyle *self)
     if ( self->template.set )
         return self->template.icon;
     return eventd_nd_style_get_template_icon(self->parent);
+}
+
+gint
+eventd_nd_style_get_bubble_timeout(EventdNdStyle *self)
+{
+    if ( self->bubble.set )
+        return self->bubble.timeout;
+    return eventd_nd_style_get_bubble_timeout(self->parent);
 }
 
 gint

@@ -54,6 +54,8 @@ FormatString *eventd_nd_style_get_template_message(EventdNdStyle *style);
 Filename *eventd_nd_style_get_template_image(EventdNdStyle *style);
 Filename *eventd_nd_style_get_template_icon(EventdNdStyle *style);
 
+gint eventd_nd_style_get_bubble_timeout(EventdNdStyle *style);
+
 gint eventd_nd_style_get_bubble_min_width(EventdNdStyle *style);
 gint eventd_nd_style_get_bubble_max_width(EventdNdStyle *style);
 

@@ -71,6 +71,7 @@ typedef struct {
     GList *notification;
     gint width;
     gint height;
+    guint timeout;
     GList *surfaces;
 } EventdNdNotification;
 
@@ -344,6 +345,36 @@ _eventd_nd_config_reset(EventdPluginContext *context)
  */
 
 static void
+_eventd_nd_notification_surface_context_free(gpointer data)
+{
+    EventdNdSurfaceContext *surface = data;
+
+    surface->backend->surface_free(surface->surface);
+
+    g_free(surface);
+}
+
+static void
+_eventd_nd_notification_free(EventdNdNotification *self)
+{
+    g_list_free_full(self->surfaces, _eventd_nd_notification_surface_context_free);
+
+    g_free(self);
+}
+
+static gboolean
+_eventd_nd_event_timedout(gpointer user_data)
+{
+    EventdNdNotification *self = user_data;
+    EventdPluginContext *context = self->context;
+
+    g_queue_delete_link(context->queue, self->notification);
+    _eventd_nd_notification_free(self);
+
+    return FALSE;
+}
+
+static void
 _eventd_nd_notification_set(EventdNdNotification *self, EventdPluginContext *context, EventdEvent *event, cairo_surface_t **bubble)
 {
     EventdNdNotificationContents *notification;
@@ -354,6 +385,10 @@ _eventd_nd_notification_set(EventdNdNotification *self, EventdPluginContext *con
 
     self->width = cairo_image_surface_get_width(*bubble);
     self->height = cairo_image_surface_get_height(*bubble);
+
+    if ( self->timeout > 0 )
+        g_source_remove(self->timeout);
+    self->timeout = g_timeout_add_full(G_PRIORITY_DEFAULT, eventd_nd_style_get_bubble_timeout(self->style), _eventd_nd_event_timedout, self, NULL);
 }
 
 static EventdNdNotification *
@@ -391,24 +426,6 @@ _eventd_nd_notification_new(EventdPluginContext *context, EventdEvent *event, Ev
 }
 
 static void
-_eventd_nd_notification_surface_context_free(gpointer data)
-{
-    EventdNdSurfaceContext *surface = data;
-
-    surface->backend->surface_free(surface->surface);
-
-    g_free(surface);
-}
-
-static void
-_eventd_nd_notification_free(EventdNdNotification *self)
-{
-    g_list_free_full(self->surfaces, _eventd_nd_notification_surface_context_free);
-
-    g_free(self);
-}
-
-static void
 _eventd_nd_notification_update(EventdNdNotification *self,EventdPluginContext *context,  EventdEvent *event)
 {
     cairo_surface_t *bubble;
@@ -439,15 +456,6 @@ _eventd_nd_event_updated(EventdEvent *event, EventdNdNotification *self)
 {
     EventdPluginContext *context = self->context;
     _eventd_nd_notification_update(self, context, event);
-}
-
-static void
-_eventd_nd_event_ended(EventdEvent *event, EventdNdNotification *notification)
-{
-    EventdPluginContext *context = notification->context;
-
-    g_queue_delete_link(context->queue, notification->notification);
-    _eventd_nd_notification_free(notification);
 }
 
 static void

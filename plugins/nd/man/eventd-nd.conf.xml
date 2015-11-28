@@ -252,6 +252,14 @@
 
                 <variablelist>
                     <varlistentry>
+                        <term><varname>Timeout=</varname> (defaults to <literal>3000</literal>)</term>
+                        <listitem>
+                            <para>A <type>time in milliseconds</type></para>
+                            <para>Time for which the bubble will appear on screen.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
                         <term><varname>MinWidth=</varname> (defaults to <literal>200</literal>)</term>
                         <term><varname>MaxWidth=</varname> (defaults to <literal>-1</literal>, unlimited)</term>
                         <listitem>
