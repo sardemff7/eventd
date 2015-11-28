@@ -50,14 +50,10 @@ struct _EventdHttpWebsocketClient {
     EventdHttpWebsocketClientType type;
     EventdProtocol *protocol;
     SoupWebsocketConnection *connection;
-    GHashTable *events;
     GList *subscribe_all;
     GHashTable *subscriptions;
+    EventdEvent *current;
 };
-
-typedef struct {
-    EventdEvent *event;
-} EventdHttpEventHandlers;
 
 static void
 _eventd_http_websocket_client_send_message(EventdHttpWebsocketClient *self, gchar *message)
@@ -85,24 +81,15 @@ _eventd_http_websocket_client_send_message(EventdHttpWebsocketClient *self, gcha
 }
 
 static void
-_eventd_http_websocket_client_handle_event(EventdHttpWebsocketClient *self, EventdEvent *event)
-{
-    EventdHttpEventHandlers *handlers;
-
-    handlers = g_slice_new(EventdHttpEventHandlers);
-    handlers->event = g_object_ref(event);
-
-    g_hash_table_insert(self->events, event, handlers);
-}
-
-static void
 _eventd_http_websocket_client_protocol_event(EventdHttpWebsocketClient *self, EventdEvent *event, EventdProtocol *protocol)
 {
 #ifdef EVENTD_DEBUG
     g_debug("Received an event (category: %s): %s", eventd_event_get_category(event), eventd_event_get_name(event));
 #endif /* EVENTD_DEBUG */
 
+    self->current = event;
     eventd_plugin_core_push_event(self->context->core, self->context->core_interface, event);
+    self->current = NULL;
 }
 
 static void
@@ -149,16 +136,6 @@ _eventd_http_websocket_client_protocol_bye(EventdHttpWebsocketClient *self, Even
 #endif /* EVENTD_DEBUG */
 
     soup_websocket_connection_close(self->connection, SOUP_WEBSOCKET_CLOSE_PROTOCOL_ERROR, "BYE not supported for WebSockets");
-}
-
-static void
-_eventd_http_websocket_client_event_handlers_free(gpointer data)
-{
-    EventdHttpEventHandlers *handlers = data;
-
-    g_object_unref(handlers->event);
-
-    g_slice_free(EventdHttpEventHandlers, handlers);
 }
 
 static void
@@ -210,8 +187,6 @@ _eventd_http_websocket_client_closed(EventdHttpWebsocketClient *self, SoupWebsoc
     if ( self->link != NULL )
         self->context->clients = g_list_remove_link(self->context->clients, self->link);
 
-    g_hash_table_unref(self->events);
-
     if ( self->connection != NULL )
         g_object_unref(self->connection);
 
@@ -246,7 +221,6 @@ eventd_http_websocket_client_handler(SoupServer *server, SoupWebsocketConnection
         self->protocol = eventd_protocol_json_new();
     break;
     }
-    self->events = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, _eventd_http_websocket_client_event_handlers_free);
     self->subscriptions = g_hash_table_new(g_str_hash, g_str_equal);
 
     self->connection = g_object_ref(connection);
@@ -276,10 +250,9 @@ eventd_http_websocket_client_disconnect(gpointer data)
 void
 eventd_http_websocket_client_event_dispatch(EventdHttpWebsocketClient *self, EventdEvent *event)
 {
-    if ( g_hash_table_contains(self->events, event) )
+    if ( self->current == event )
         /* Do not send back our own events */
         return;
 
     _eventd_http_websocket_client_send_message(self, eventd_protocol_generate_event(self->protocol, event));
-    _eventd_http_websocket_client_handle_event(self, event);
 }
