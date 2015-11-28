@@ -107,7 +107,7 @@ gchar *
 eventd_protocol_generate_event(EventdProtocol *self, EventdEvent *event)
 {
     g_return_val_if_fail(self != NULL, NULL);
-    g_return_val_if_fail(EVENTD_IS_EVENT(event), NULL);
+    g_return_val_if_fail(event != NULL, NULL);
 
     return self->generate_event(self, event);
 }

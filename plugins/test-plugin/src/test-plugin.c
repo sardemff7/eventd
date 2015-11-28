@@ -76,7 +76,7 @@ _eventd_test_event_action(EventdPluginContext *context, EventdPluginAction *acti
 
     event = eventd_event_new_for_uuid_string("cedb8a77-b7fb-4e32-b3e4-3a772664f1f4", "test", "answer");
     eventd_plugin_core_push_event(context->core, context->interface, event);
-    g_object_unref(event);
+    eventd_event_unref(event);
 }
 
 EVENTD_EXPORT const gchar *eventd_plugin_id = "test-plugin";

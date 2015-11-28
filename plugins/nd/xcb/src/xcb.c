@@ -586,7 +586,7 @@ _eventd_nd_xcb_surface_new(EventdEvent *event, EventdNdDisplay *display, cairo_s
 
     surface = g_new0(EventdNdSurface, 1);
 
-    surface->event = g_object_ref(event);
+    surface->event = eventd_event_ref(event);
 
     surface->display = display;
     surface->width = width;
@@ -645,7 +645,7 @@ _eventd_nd_xcb_surface_free(EventdNdSurface *surface)
 
     cairo_surface_destroy(surface->bubble);
 
-    g_object_unref(surface->event);
+    eventd_event_unref(surface->event);
 
     g_free(surface);
 

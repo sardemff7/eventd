@@ -30,24 +30,9 @@
 
 #include "event-private.h"
 
-#define EVENTD_EVENT_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), EVENTD_TYPE_EVENT, EventdEventPrivate))
-
 EVENTD_EXPORT GType eventd_event_get_type(void);
-G_DEFINE_TYPE(EventdEvent, eventd_event, G_TYPE_OBJECT)
+G_DEFINE_BOXED_TYPE(EventdEvent, eventd_event, eventd_event_ref, eventd_event_unref)
 
-static void _eventd_event_finalize(GObject *object);
-
-static void
-eventd_event_class_init(EventdEventClass *klass)
-{
-    GObjectClass *object_class = G_OBJECT_CLASS(klass);
-
-    g_type_class_add_private(klass, sizeof(EventdEventPrivate));
-
-    eventd_event_parent_class = g_type_class_peek_parent(klass);
-
-    object_class->finalize = _eventd_event_finalize;
-}
 
 /**
  * eventd_event_new:
@@ -72,21 +57,50 @@ eventd_event_new(const gchar *category, const gchar *name)
 }
 
 static void
-eventd_event_init(EventdEvent *self)
+_eventd_event_free(EventdEvent *self)
 {
-    self->priv = EVENTD_EVENT_GET_PRIVATE(self);
+    if ( self->data != NULL )
+        g_hash_table_unref(self->data);
+    g_free(self->name);
 }
 
-static void
-_eventd_event_finalize(GObject *object)
+/**
+ * eventd_event_ref:
+ * @event: an #EventdEvent
+ *
+ * Increments the reference counter of @event.
+ *
+ * Returns: (transfer full): the #EventdEvent
+ */
+EVENTD_EXPORT
+EventdEvent *
+eventd_event_ref(EventdEvent *self)
 {
-    EventdEvent *self = EVENTD_EVENT(object);
+    g_return_val_if_fail(self != NULL, NULL);
 
-    if ( self->priv->data != NULL )
-        g_hash_table_unref(self->priv->data);
-    g_free(self->priv->name);
+    ++self->refcount;
 
-    G_OBJECT_CLASS(eventd_event_parent_class)->finalize(object);
+    return self;
+}
+
+/**
+ * eventd_event_unref:
+ * @event: (nullable): an #EventdEvent
+ *
+ * Decrements the reference counter of @event.
+ * If it reaches 0, free @event.
+ *
+ * Can safely be called on %NULL.
+ */
+EVENTD_EXPORT
+void
+eventd_event_unref(EventdEvent *self)
+{
+    if ( self == NULL )
+        return;
+
+    if ( --self->refcount < 1 )
+        _eventd_event_free(self);
 }
 
 /**
@@ -101,13 +115,13 @@ EVENTD_EXPORT
 void
 eventd_event_add_data(EventdEvent *self, gchar *name, gchar *content)
 {
-    g_return_if_fail(EVENTD_IS_EVENT(self));
+    g_return_if_fail(self != NULL);
     g_return_if_fail(name != NULL);
     g_return_if_fail(content != NULL);
 
-    if ( self->priv->data == NULL )
-        self->priv->data = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-    g_hash_table_insert(self->priv->data, name, content);
+    if ( self->data == NULL )
+        self->data = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+    g_hash_table_insert(self->data, name, content);
 }
 
 
@@ -123,9 +137,9 @@ EVENTD_EXPORT
 const gchar *
 eventd_event_get_uuid(EventdEvent *self)
 {
-    g_return_val_if_fail(EVENTD_IS_EVENT(self), NULL);
+    g_return_val_if_fail(self != NULL, NULL);
 
-    return self->priv->uuid.string;
+    return self->uuid.string;
 }
 
 /**
@@ -140,9 +154,9 @@ EVENTD_EXPORT
 const gchar *
 eventd_event_get_category(const EventdEvent *self)
 {
-    g_return_val_if_fail(EVENTD_IS_EVENT(self), NULL);
+    g_return_val_if_fail(self != NULL, NULL);
 
-    return self->priv->category;
+    return self->category;
 }
 
 /**
@@ -157,9 +171,9 @@ EVENTD_EXPORT
 const gchar *
 eventd_event_get_name(const EventdEvent *self)
 {
-    g_return_val_if_fail(EVENTD_IS_EVENT(self), NULL);
+    g_return_val_if_fail(self != NULL, NULL);
 
-    return self->priv->name;
+    return self->name;
 }
 
 /**
@@ -175,13 +189,13 @@ EVENTD_EXPORT
 gboolean
 eventd_event_has_data(const EventdEvent *self, const gchar *name)
 {
-    g_return_val_if_fail(EVENTD_IS_EVENT(self), FALSE);
+    g_return_val_if_fail(self != NULL, FALSE);
     g_return_val_if_fail(name != NULL, FALSE);
 
-    if ( self->priv->data == NULL )
+    if ( self->data == NULL )
         return FALSE;
 
-    return g_hash_table_contains(self->priv->data, name);
+    return g_hash_table_contains(self->data, name);
 }
 
 /**
@@ -197,13 +211,13 @@ EVENTD_EXPORT
 const gchar *
 eventd_event_get_data(const EventdEvent *self, const gchar *name)
 {
-    g_return_val_if_fail(EVENTD_IS_EVENT(self), NULL);
+    g_return_val_if_fail(self != NULL, NULL);
     g_return_val_if_fail(name != NULL, NULL);
 
-    if ( self->priv->data == NULL )
+    if ( self->data == NULL )
         return NULL;
 
-    return g_hash_table_lookup(self->priv->data, name);
+    return g_hash_table_lookup(self->data, name);
 }
 
 /**
@@ -218,10 +232,10 @@ EVENTD_EXPORT
 GHashTable *
 eventd_event_get_all_data(const EventdEvent *self)
 {
-    g_return_val_if_fail(EVENTD_IS_EVENT(self), NULL);
+    g_return_val_if_fail(self != NULL, NULL);
 
-    if ( self->priv->data == NULL )
+    if ( self->data == NULL )
         return NULL;
 
-    return g_hash_table_ref(self->priv->data);
+    return g_hash_table_ref(self->data);
 }

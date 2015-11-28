@@ -21,7 +21,8 @@
 #ifndef __EVENTD_EVENT_EVENT_PRIVATE_H__
 #define __EVENTD_EVENT_EVENT_PRIVATE_H__
 
-struct _EventdEventPrivate {
+struct _EventdEvent {
+    guint64 refcount;
     NkUuid uuid;
     gchar *category;
     gchar *name;

@@ -47,7 +47,7 @@ _test_evp_event_callback(EventdProtocol *parser, EventdEvent *event, gpointer us
 {
     EvpData *data = user_data;
 
-    data->event = g_object_ref(event);
+    data->event = eventd_event_ref(event);
 }
 
 static const EventdProtocolCallbacks _callbacks = {
@@ -67,8 +67,7 @@ _clean_data_evp(gpointer fixture, gconstpointer user_data)
 {
     EvpData *data = fixture;
 
-    if ( data->event != NULL )
-        g_object_unref(data->event);
+    eventd_event_unref(data->event);
 
     eventd_protocol_unref(data->protocol);
 }
@@ -98,7 +97,6 @@ _test_evp_parse_passive_good(gpointer fixture, gconstpointer user_data)
     g_assert_no_error(error);
     g_assert_null(line);
     g_assert_nonnull(data->event);
-    g_assert_true(EVENTD_IS_EVENT(data->event));
 }
 
 static void
@@ -143,7 +141,6 @@ _test_evp_parse_parts_good(gpointer fixture, gconstpointer user_data)
     g_assert_no_error(error);
     g_assert_null(line);
     g_assert_nonnull(data->event);
-    g_assert_true(EVENTD_IS_EVENT(data->event));
 }
 
 static void

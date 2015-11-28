@@ -277,7 +277,7 @@ _eventd_libnotify_notification_free(gpointer data)
 {
     EventdLibnotifyNotification *self = data;
 
-    g_object_unref(self->event);
+    eventd_event_unref(self->event);
 
     g_slice_free(EventdLibnotifyNotification, self);
 }
@@ -664,7 +664,7 @@ _eventd_libnotify_event_action(EventdPluginContext *context, EventdPluginAction 
     EventdLibnotifyNotification *notification;
     notification = g_slice_new0(EventdLibnotifyNotification);
     notification->context = context;
-    notification->event = g_object_ref(event);
+    notification->event = eventd_event_ref(event);
 
     g_dbus_proxy_call(context->server, "Notify", args, G_DBUS_CALL_FLAGS_NONE, -1, NULL, _eventd_libnotify_proxy_notify, notification);
 }

@@ -381,9 +381,8 @@ _eventd_nd_event_timedout(gpointer user_data)
 static void
 _eventd_nd_notification_set(EventdNdNotification *self, EventdPluginContext *context, EventdEvent *event, cairo_surface_t **bubble)
 {
-    if ( self->event != NULL )
-        g_object_unref(self->event);
-    self->event = g_object_ref(event);
+    eventd_event_unref(self->event);
+    self->event = eventd_event_ref(event);
 
     EventdNdNotificationContents *notification;
 
@@ -407,7 +406,7 @@ _eventd_nd_notification_new(EventdPluginContext *context, EventdEvent *event, Ev
     self = g_new0(EventdNdNotification, 1);
     self->context = context;
     self->style = style;
-    self->event = g_object_ref(event);
+    self->event = eventd_event_ref(event);
 
     cairo_surface_t *bubble;
 

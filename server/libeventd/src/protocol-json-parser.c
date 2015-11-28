@@ -318,7 +318,7 @@ _eventd_protocol_json_check_message(EventdProtocolJson *self, GError **error)
         if ( self->message.data != NULL )
             eventd_event_set_all_data(event, self->message.data);
         eventd_protocol_call_event((EventdProtocol *) self, event);
-        g_object_unref(event);
+        eventd_event_unref(event);
         return TRUE;
     }
     case EVENTD_PROTOCOL_JSON_MESSAGE_TYPE_SUBSCRIBE:

@@ -292,7 +292,7 @@ _eventd_nd_win_surface_new(EventdEvent *event, EventdNdDisplay *display, cairo_s
     self = g_new0(EventdNdSurface, 1);
     self->display = display;
 
-    self->event = g_object_ref(event);
+    self->event = eventd_event_ref(event);
     self->bubble = cairo_surface_reference(bubble);
 
     self->window = CreateWindowEx(WS_EX_LAYERED | WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE, display->window_class.lpszClassName, "Bubble", WS_POPUP, 0, 0, width, height, NULL, NULL, NULL, NULL);
@@ -329,7 +329,7 @@ _eventd_nd_win_surface_free(EventdNdSurface *self)
     DestroyWindow(self->window);
 
     cairo_surface_destroy(self->bubble);
-    g_object_unref(self->event);
+    eventd_event_unref(self->event);
 
     g_free(self);
 

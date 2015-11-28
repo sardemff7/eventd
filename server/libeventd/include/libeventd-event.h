@@ -30,35 +30,17 @@ G_BEGIN_DECLS
  * EventdEvent
  */
 typedef struct _EventdEvent EventdEvent;
-typedef struct _EventdEventClass EventdEventClass;
-typedef struct _EventdEventPrivate EventdEventPrivate;
 
 GType eventd_event_get_type(void) G_GNUC_CONST;
 
 #define EVENTD_TYPE_EVENT            (eventd_event_get_type())
-#define EVENTD_EVENT(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), EVENTD_TYPE_EVENT, EventdEvent))
-#define EVENTD_IS_EVENT(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), EVENTD_TYPE_EVENT))
-#define EVENTD_EVENT_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), EVENTD_TYPE_EVENT, EventdEventClass))
-#define EVENTD_IS_EVENT_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), EVENTD_TYPE_EVENT))
-#define EVENTD_EVENT_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), EVENTD_TYPE_EVENT, EventdEventClass))
-
-struct _EventdEvent
-{
-    GObject parent_object;
-
-    /*< private >*/
-    EventdEventPrivate *priv;
-};
-
-struct _EventdEventClass
-{
-    GObjectClass parent_class;
-};
 
 /*
  * Functions
  */
 EventdEvent *eventd_event_new(const gchar *category, const gchar *name);
+EventdEvent *eventd_event_ref(EventdEvent *event);
+void eventd_event_unref(EventdEvent *event);
 
 void eventd_event_add_data(EventdEvent *event, gchar *name, gchar *content);
 

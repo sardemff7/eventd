@@ -631,7 +631,7 @@ gboolean
 eventc_connection_event(EventcConnection *self, EventdEvent *event, GError **error)
 {
     g_return_val_if_fail(EVENTC_IS_CONNECTION(self), FALSE);
-    g_return_val_if_fail(EVENTD_IS_EVENT(event), FALSE);
+    g_return_val_if_fail(event != NULL, FALSE);
     g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
     if ( ! _eventc_connection_expect_connected(self, error) )

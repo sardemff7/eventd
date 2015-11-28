@@ -226,8 +226,7 @@ post_event:
     g_main_loop_run(loop);
     g_main_loop_unref(loop);
 
-    if ( event != NULL )
-        g_object_unref(event);
+    eventd_event_unref(event);
 
     g_object_unref(client);
 

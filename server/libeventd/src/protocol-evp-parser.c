@@ -170,7 +170,7 @@ _eventd_protocol_evp_parse_dot_event_end(EventdProtocolEvp *self, GError **error
 
     eventd_protocol_call_event((EventdProtocol *) self, self->event);
 
-    g_object_unref(self->event);
+    eventd_event_unref(self->event);
     self->event = NULL;
 
     self->state = self->base_state;
@@ -224,7 +224,7 @@ _eventd_protocol_evp_parse_event(EventdProtocolEvp *self, const gchar * const *a
     if ( event == NULL )
         return;
     eventd_protocol_call_event((EventdProtocol *) self, event);
-    g_object_unref(event);
+    eventd_event_unref(event);
 }
 
 /* PASSIVE */
@@ -466,8 +466,7 @@ recheck:
             g_hash_table_unref(self->data.hash);
         self->data.hash = NULL;
 
-        if ( self->event != NULL )
-            g_object_unref(self->event);
+        eventd_event_unref(self->event);
         self->event = NULL;
     break;
     case EVENTD_PROTOCOL_EVP_STATE_DOT_SUBSCRIBE:

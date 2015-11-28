@@ -114,7 +114,7 @@ _eventd_fdo_notifications_notification_free(gpointer user_data)
 {
     EventdDbusNotification *notification = user_data;
 
-    g_object_unref(notification->event);
+    eventd_event_unref(notification->event);
 
     g_free(notification->sender);
 
@@ -291,7 +291,7 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
 
     if ( id == 0 )
     {
-        g_object_unref(event);
+        eventd_event_unref(event);
         g_dbus_method_invocation_return_dbus_error(invocation, NOTIFICATION_BUS_NAME ".InvalidNotification", "Invalid notification type");
         return;
     }

@@ -40,7 +40,7 @@ _clean_data(gpointer fixture, gconstpointer user_data)
 {
     SettersData *data = fixture;
 
-    g_object_unref(data->event);
+    eventd_event_unref(data->event);
 }
 
 static void

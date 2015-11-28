@@ -36,11 +36,12 @@ eventd_event_new_for_uuid(NkUuid uuid, const gchar *category, const gchar *name)
 {
     EventdEvent *self;
 
-    self = g_object_new(EVENTD_TYPE_EVENT, NULL);
+    self = g_new0(EventdEvent, 1);
+    self->refcount = 1;
 
-    self->priv->uuid = uuid;
-    self->priv->category = g_strdup(category);
-    self->priv->name = g_strdup(name);
+    self->uuid = uuid;
+    self->category = g_strdup(category);
+    self->name = g_strdup(name);
 
     return self;
 }
@@ -62,9 +63,9 @@ eventd_event_new_for_uuid_string(const gchar *uuid_string, const gchar *category
 void
 eventd_event_set_all_data(EventdEvent *self, GHashTable *data)
 {
-    g_return_if_fail(EVENTD_IS_EVENT(self));
+    g_return_if_fail(self != NULL);
 
-    if ( self->priv->data != NULL )
-        g_hash_table_unref(self->priv->data);
-    self->priv->data = data;
+    if ( self->data != NULL )
+        g_hash_table_unref(self->data);
+    self->data = data;
 }

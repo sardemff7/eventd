@@ -140,7 +140,7 @@ _connect_callback(GObject *obj, GAsyncResult *res, gpointer user_data)
     switch ( _test_state.connection )
     {
     case 2:
-        g_object_unref(event);
+        eventd_event_unref(event);
     case 1:
         _create_event(client);
         if ( eventc_connection_event(client, event, &error) )
@@ -197,7 +197,7 @@ _ended_callback(EventcConnection *client, EventdEvent *e, gpointer user_data)
     case 1:
         if ( ( g_strcmp0(category, "test") != 0 ) || ( g_strcmp0(name, "answer") != 0 ) )
             break;
-        g_object_unref(event);
+        eventd_event_unref(event);
         _create_event(client);
         if ( ! eventc_connection_event(client, event, &error) )
             g_main_loop_quit(loop);
@@ -240,7 +240,7 @@ eventd_tests_run_libeventc(const gchar *host)
         r = 1;
     }
 
-    g_object_unref(event);
+    eventd_event_unref(event);
 
     g_object_unref(client);
 

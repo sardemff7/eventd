@@ -49,7 +49,7 @@ _clean_data(gpointer fixture, gconstpointer user_data)
 {
     GettersData *data = fixture;
 
-    g_object_unref(data->event);
+    eventd_event_unref(data->event);
 }
 
 static void
