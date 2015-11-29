@@ -247,8 +247,12 @@ _eventc_connection_read_callback(GObject *obj, GAsyncResult *res, gpointer user_
         return;
     }
 
-    if ( ! eventd_protocol_parse(self->priv->protocol, &line, &self->priv->error) )
+    if ( ! eventd_protocol_parse(self->priv->protocol, line, &self->priv->error) )
+    {
+        g_free(line);
         return;
+    }
+    g_free(line);
 
     g_data_input_stream_read_line_async(self->priv->in, G_PRIORITY_DEFAULT, self->priv->cancellable, _eventc_connection_read_callback, self);
 }

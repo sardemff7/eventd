@@ -67,7 +67,7 @@ GQuark eventd_protocol_parse_error_quark(void);
 EventdProtocol *eventd_protocol_ref(EventdProtocol *protocol);
 void eventd_protocol_unref(EventdProtocol *protocol);
 
-gboolean eventd_protocol_parse(EventdProtocol *protocol, gchar **buffer, GError **error);
+gboolean eventd_protocol_parse(EventdProtocol *protocol, const gchar *buffer, GError **error);
 
 gchar *eventd_protocol_generate_event(EventdProtocol *protocol, EventdEvent *event);
 gchar *eventd_protocol_generate_passive(EventdProtocol *protocol);

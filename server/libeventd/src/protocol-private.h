@@ -30,7 +30,7 @@ struct _EventdProtocol {
 
     void (*free)(EventdProtocol *protocol);
 
-    gboolean (*parse)(EventdProtocol *protocol, gchar **buffer, GError **error);
+    gboolean (*parse)(EventdProtocol *protocol, const gchar *buffer, GError **error);
 
     gchar *(*generate_event)(EventdProtocol *protocol, EventdEvent *event);
     gchar *(*generate_passive)(EventdProtocol *protocol);

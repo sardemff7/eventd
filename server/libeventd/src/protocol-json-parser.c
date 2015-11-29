@@ -342,12 +342,12 @@ _eventd_protocol_json_check_message(EventdProtocolJson *self, GError **error)
 }
 
 gboolean
-eventd_protocol_json_parse(EventdProtocol *protocol, gchar **buffer, GError **error)
+eventd_protocol_json_parse(EventdProtocol *protocol, const gchar *buffer, GError **error)
 {
     EventdProtocolJson *self = (EventdProtocolJson *) protocol;
 
-    const guchar *json = (const guchar *) *buffer;
-    gsize json_length = strlen(*buffer), consumed;
+    const guchar *json = (const guchar *) buffer;
+    gsize json_length = strlen(buffer), consumed;
     yajl_handle hand;
     yajl_status status;
     gboolean ret = FALSE;
@@ -387,7 +387,6 @@ eventd_protocol_json_parse(EventdProtocol *protocol, gchar **buffer, GError **er
 
     eventd_protocol_json_parse_free(self);
     yajl_free(hand);
-    g_free(*buffer);
     return ret;
 }
 

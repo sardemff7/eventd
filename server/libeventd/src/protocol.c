@@ -75,7 +75,7 @@ eventd_protocol_unref(EventdProtocol *self)
 /**
  * eventd_protocol_parse:
  * @protocol: an #EventdProtocol
- * @buffer: a pointer to a buffer
+ * @buffer: the buffer to parse (NUL-terminated)
  * @error: (out) (optional): return location for error or %NULL to ignore
  *
  * Parses @buffer for messages.
@@ -84,10 +84,10 @@ eventd_protocol_unref(EventdProtocol *self)
  */
 EVENTD_EXPORT
 gboolean
-eventd_protocol_parse(EventdProtocol *self, gchar **buffer, GError **error)
+eventd_protocol_parse(EventdProtocol *self, const gchar *buffer, GError **error)
 {
     g_return_val_if_fail(self != NULL, FALSE);
-    g_return_val_if_fail(buffer != NULL && *buffer != NULL, FALSE);
+    g_return_val_if_fail(buffer != NULL, FALSE);
     g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
     return self->parse(self, buffer, error);

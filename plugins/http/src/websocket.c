@@ -163,11 +163,8 @@ _eventd_http_websocket_client_message(EventdHttpWebsocketClient *self, gint type
     else
     {
         gconstpointer data;
-        gsize length;
-        gchar *line;
-        data = g_bytes_get_data(message, &length);
-        line = g_strndup(data, length);
-        if ( ! eventd_protocol_parse(self->protocol, &line, &error) )
+        data = g_bytes_get_data(message, NULL);
+        if ( ! eventd_protocol_parse(self->protocol, data, &error) )
         {
             g_warning("Parse error: %s", error->message);
             soup_websocket_connection_close(self->connection, SOUP_WEBSOCKET_CLOSE_PROTOCOL_ERROR, error->message);

@@ -163,8 +163,9 @@ _eventd_evp_client_read_callback(GObject *obj, GAsyncResult *res, gpointer user_
         goto error;
     }
 
-    if ( ! eventd_protocol_parse(self->protocol, &line, &error) )
+    if ( ! eventd_protocol_parse(self->protocol, line, &error) )
         goto error;
+    g_free(line);
 
     return g_data_input_stream_read_line_async(self->in, G_PRIORITY_DEFAULT, self->cancellable, _eventd_evp_client_read_callback, self);
 
@@ -173,6 +174,7 @@ error:
         /* Client not in passive mode */
         _eventd_evp_client_send_message(self, eventd_protocol_generate_bye(self->protocol, error->message));
 end:
+    g_free(line);
     g_clear_error(&error);
     return _eventd_evp_client_disconnect_internal(self);
 }

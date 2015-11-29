@@ -62,7 +62,7 @@ typedef struct {
     } message;
 } EventdProtocolJson;
 
-gboolean eventd_protocol_json_parse(EventdProtocol *protocol, gchar **buffer, GError **error);
+gboolean eventd_protocol_json_parse(EventdProtocol *protocol, const gchar *buffer, GError **error);
 void eventd_protocol_json_parse_free(EventdProtocolJson *self);
 
 gchar *eventd_protocol_json_generate_event(EventdProtocol *protocol, EventdEvent *event);
