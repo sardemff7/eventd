@@ -176,24 +176,28 @@ eventc_error_quark(void)
 }
 
 static gboolean
-_eventc_connection_send_message(EventcConnection *self, gchar *message)
+_eventc_connection_send_message(EventcConnection *self, gchar *message, GError **error)
 {
     gboolean r = FALSE;
     if ( self->priv->error != NULL )
+    {
+        g_propagate_error(error, self->priv->error);
+        self->priv->error = NULL;
         goto end;
+    }
 
-    GError *error = NULL;
+    GError *_inner_error_ = NULL;
 
 #ifdef EVENTD_DEBUG
     g_debug("Sending message:\n%s", message);
 #endif /* EVENTD_DEBUG */
 
-    if ( g_data_output_stream_put_string(self->priv->out, message, NULL, &error) )
+    if ( g_data_output_stream_put_string(self->priv->out, message, NULL, &_inner_error_) )
         r = TRUE;
     else
     {
-        g_set_error(&self->priv->error, EVENTC_ERROR, EVENTC_ERROR_CONNECTION, "Failed to send message: %s", error->message);
-        g_error_free(error);
+        g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_CONNECTION, "Failed to send message: %s", _inner_error_->message);
+        g_error_free(_inner_error_);
         g_cancellable_cancel(self->priv->cancellable);
     }
 
@@ -493,22 +497,14 @@ _eventc_connection_connect_after(EventcConnection *self, GError *_inner_error_, 
     self->priv->out = g_data_output_stream_new(g_io_stream_get_output_stream(G_IO_STREAM(self->priv->connection)));
 
     if ( self->priv->passive )
-    {
-        if ( ! _eventc_connection_send_message(self, eventd_protocol_generate_passive(self->priv->protocol)) )
-        {
-            g_propagate_error(error, self->priv->error);
-            self->priv->error = NULL;
-            return FALSE;
-        }
-        return TRUE;
-    }
+        return _eventc_connection_send_message(self, eventd_protocol_generate_passive(self->priv->protocol), error);
 
     self->priv->in = g_data_input_stream_new(g_io_stream_get_input_stream(G_IO_STREAM(self->priv->connection)));
 
     g_data_input_stream_read_line_async(self->priv->in, G_PRIORITY_DEFAULT, self->priv->cancellable, _eventc_connection_read_callback, self);
 
     if ( self->priv->subscribe )
-        return _eventc_connection_send_message(self, eventd_protocol_generate_subscribe(self->priv->protocol, self->priv->subscriptions));
+        return _eventc_connection_send_message(self, eventd_protocol_generate_subscribe(self->priv->protocol, self->priv->subscriptions), error);
 
     return TRUE;
 }
@@ -637,14 +633,7 @@ eventc_connection_event(EventcConnection *self, EventdEvent *event, GError **err
     if ( ! _eventc_connection_expect_connected(self, error) )
         return FALSE;
 
-    if ( ! _eventc_connection_send_message(self, eventd_protocol_generate_event(self->priv->protocol, event)) )
-    {
-        g_propagate_error(error, self->priv->error);
-        self->priv->error = NULL;
-        return FALSE;
-    }
-
-    return TRUE;
+    return _eventc_connection_send_message(self, eventd_protocol_generate_event(self->priv->protocol, event), error);
 }
 
 /**
@@ -664,7 +653,7 @@ eventc_connection_close(EventcConnection *self, GError **error)
 
     GError *_inner_error_ = NULL;
     if ( eventc_connection_is_connected(self, &_inner_error_) )
-        _eventc_connection_send_message(self, eventd_protocol_generate_bye(self->priv->protocol, NULL));
+        _eventc_connection_send_message(self, eventd_protocol_generate_bye(self->priv->protocol, NULL), NULL);
     else if ( _inner_error_ != NULL )
     {
         g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_BYE, "Couldn't send bye message: %s", _inner_error_->message);
