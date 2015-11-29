@@ -174,6 +174,11 @@ m4_ifdef([GOBJECT_INTROSPECTION_CHECK], [
 AC_SUBST([girdir])
 AC_SUBST([typelibdir])
 
+# libeventc-light
+if test x${ev_os_unix} = xyes; then
+    AC_CHECK_HEADERS([sys/socket.h sys/un.h netinet/in.h])
+fi
+
 # JSON protocol support
 AC_ARG_ENABLE([json], AS_HELP_STRING([--enable-json], [Enable JSON protocol support]), [], [enable_json=no])
 if test x${enable_json} = xyes; then
@@ -359,6 +364,7 @@ AC_CONFIG_FILES([
     server/libeventd-plugin/pkgconfig/libeventd-plugin.pc
     client/libeventc/pkgconfig/libeventc.pc
     client/libeventc/vapi/libeventc.deps
+    client/libeventc-light/pkgconfig/libeventc-light.pc
     src/config.ent
     Makefile
 ])

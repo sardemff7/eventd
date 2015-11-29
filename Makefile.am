@@ -96,6 +96,7 @@ include plugins/tts/tts.mk
 include plugins/notify/notify.mk
 include plugins/canberra/canberra.mk
 include client/libeventc/libeventc.mk
+include client/libeventc-light/libeventc-light.mk
 include client/eventc/eventc.mk
 include server/libeventd-test/libeventd-test.mk
 include plugins/test-plugin/test-plugin.mk
