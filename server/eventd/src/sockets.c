@@ -190,6 +190,7 @@ eventd_sockets_get_inet_socket_file(EventdSockets *sockets, const gchar *file, g
 
     GSocket *socket;
     GSocketAddress *address;
+    guint16 port;
     gchar port_str[6];
     GError *error = NULL;
 
@@ -203,8 +204,10 @@ eventd_sockets_get_inet_socket_file(EventdSockets *sockets, const gchar *file, g
         g_warning("Couldn't get socket local address: %s", error->message);
         goto fail;
     }
-    g_sprintf(port_str, "%u", g_inet_socket_address_get_port(G_INET_SOCKET_ADDRESS(address)));
+    port = g_inet_socket_address_get_port(G_INET_SOCKET_ADDRESS(address));
     g_object_unref(address);
+
+    g_sprintf(port_str, "%u", port);
 
     if ( g_file_set_contents(file, port_str, -1, &error) )
         sockets->created = g_slist_prepend(sockets->created, g_strdup(file));
