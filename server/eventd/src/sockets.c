@@ -141,10 +141,6 @@ eventd_sockets_get_inet_sockets(EventdSockets *sockets, const gchar *address, gu
 
     if ( address == NULL )
         socket = _eventd_sockets_get_inet_socket(sockets, g_inet_address_new_any(G_SOCKET_FAMILY_IPV6), port);
-    else if ( g_strcmp0(address, "localhost6") == 0 )
-        socket = _eventd_sockets_get_inet_socket(sockets, g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV6), port);
-    else if ( g_strcmp0(address, "localhost4") == 0 )
-        socket = _eventd_sockets_get_inet_socket(sockets, g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV4), port);
     else if ( g_strcmp0(address, "localhost") == 0 )
     {
         socket = _eventd_sockets_get_inet_socket(sockets, g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV6), port);
