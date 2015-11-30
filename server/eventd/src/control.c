@@ -232,14 +232,18 @@ eventd_control_start(EventdControl *control, gboolean take_over_socket)
         return ret;
     }
 
-    /* We asked for one socket only, just fail if we have more */
-    g_return_val_if_fail(g_list_next(sockets) == NULL, FALSE);
+    ret = TRUE;
 
-    GSocket *socket = sockets->data;
-    if ( ! g_socket_listener_add_socket(G_SOCKET_LISTENER(control->socket_service), socket, NULL, &error) )
-        g_warning("Unable to add private socket: %s", error->message);
-    else
-        ret = TRUE;
+    GList *socket_;
+    for ( socket_ = sockets ; ( socket_ != NULL ) && ret; socket_ = g_list_next(socket_) )
+    {
+        GSocket *socket = socket_->data;
+        if ( ! g_socket_listener_add_socket(G_SOCKET_LISTENER(control->socket_service), socket, NULL, &error) )
+        {
+            g_warning("Unable to add private socket: %s", error->message);
+            ret = FALSE;
+        }
+    }
     g_clear_error(&error);
 
     g_list_free_full(sockets, g_object_unref);
