@@ -533,8 +533,7 @@ _eventc_connection_connect_callback(GObject *obj, GAsyncResult *res, gpointer us
 /**
  * eventc_connection_connect:
  * @connection: an #EventcConnection
- * @callback: (scope async): a #GAsyncReadyCallback to call when the request is satisfied
- * @user_data: (closure): the data to pass to callback function
+ * @callback: (scope async) (closure user_data): a #GAsyncReadyCallback to call when the request is satisfied
  *
  * Initializes the connection to the stored host.
  */
@@ -641,7 +640,7 @@ eventc_connection_event(EventcConnection *self, EventdEvent *event, GError **err
 }
 
 /**
- * eventc_connection_event_close:
+ * eventc_connection_close:
  * @connection: an #EventcConnection
  * @error: (out) (optional): return location for error or %NULL to ignore
  *
