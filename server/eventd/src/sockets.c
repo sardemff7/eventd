@@ -144,9 +144,6 @@ eventd_sockets_get_inet_sockets(EventdSockets *sockets, const gchar *address, gu
     else if ( g_strcmp0(address, "localhost") == 0 )
     {
         socket = _eventd_sockets_get_inet_socket(sockets, g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV6), port);
-        /* IPv6 is sufficient for localhost, but fallback to IPv4 if needed */
-        if ( socket == NULL )
-            socket = _eventd_sockets_get_inet_socket(sockets, g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV4), port);
     }
     else
     {
@@ -197,9 +194,6 @@ eventd_sockets_get_inet_socket_file(EventdSockets *sockets, const gchar *file, g
     GError *error = NULL;
 
     socket = _eventd_sockets_get_inet_socket(sockets, g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV6), 0);
-    /* IPv6 is sufficient for localhost, but fallback to IPv4 if needed */
-    if ( socket == NULL )
-        socket = _eventd_sockets_get_inet_socket(sockets, g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV4), 0);
     if ( socket == NULL )
         return NULL;
 
