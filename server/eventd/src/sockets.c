@@ -68,8 +68,8 @@ _eventd_sockets_inet_address_equal(GInetSocketAddress *socket_address1, GInetAdd
     return ret;
 }
 
-static GSocket *
-_eventd_sockets_get_inet_socket(EventdSockets *sockets, GInetAddress *inet_address, guint16 port)
+static gboolean
+_eventd_sockets_add_inet_socket(EventdSockets *sockets, GList **list, GInetAddress *inet_address, guint16 port)
 {
     GSocket *socket = NULL;
     GError *error = NULL;
@@ -94,12 +94,14 @@ _eventd_sockets_get_inet_socket(EventdSockets *sockets, GInetAddress *inet_addre
 
         if ( _eventd_sockets_inet_address_equal(G_INET_SOCKET_ADDRESS(address), inet_address, port) )
         {
-            socket = socket_->data;
-            sockets->list = g_list_delete_link(sockets->list, socket_);
-            return socket;
+            sockets->list = g_list_remove_link(sockets->list, socket_);
+            *list = g_list_concat(*list, socket_);
+            return TRUE;
         }
     }
     address = NULL;
+
+    gboolean ret = FALSE;
 
     if ( ( socket = g_socket_new(g_inet_address_get_family(inet_address), G_SOCKET_TYPE_STREAM, 0, &error)  ) == NULL )
     {
@@ -120,9 +122,9 @@ _eventd_sockets_get_inet_socket(EventdSockets *sockets, GInetAddress *inet_addre
         goto fail;
     }
 
-    g_object_unref(address);
-    g_object_unref(inet_address);
-    return socket;
+    *list = g_list_prepend(*list, socket);
+    socket = NULL;
+    ret = TRUE;
 
 fail:
     if ( socket != NULL )
@@ -131,23 +133,24 @@ fail:
         g_object_unref(address);
     g_clear_error(&error);
     g_object_unref(inet_address);
-    return NULL;
+    return ret;
 }
 
 GList *
 eventd_sockets_get_inet_sockets(EventdSockets *sockets, const gchar *address, guint16 port)
 {
-    GSocket *socket;
+    GList *list = NULL;
 
     if ( address == NULL )
-        socket = _eventd_sockets_get_inet_socket(sockets, g_inet_address_new_any(G_SOCKET_FAMILY_IPV6), port);
+    {
+        _eventd_sockets_add_inet_socket(sockets, &list, g_inet_address_new_any(G_SOCKET_FAMILY_IPV6), port);
+    }
     else if ( g_strcmp0(address, "localhost") == 0 )
     {
-        socket = _eventd_sockets_get_inet_socket(sockets, g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV6), port);
+        _eventd_sockets_add_inet_socket(sockets, &list, g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV6), port);
     }
     else
     {
-        GList *ret_sockets = NULL;
         GResolver *resolver;
         GList *inet_addresses;
         GError *error = NULL;
@@ -164,19 +167,12 @@ eventd_sockets_get_inet_sockets(EventdSockets *sockets, const gchar *address, gu
         GList *inet_address_;
 
         for ( inet_address_ = inet_addresses ; inet_address_ != NULL ; inet_address_ = g_list_next(inet_address_) )
-        {
-            socket = _eventd_sockets_get_inet_socket(sockets, g_object_ref(inet_address_->data), port);
-            if ( socket != NULL )
-                ret_sockets = g_list_prepend(ret_sockets, socket);
-        }
+            _eventd_sockets_add_inet_socket(sockets, &list, g_object_ref(inet_address_->data), port);
 
         g_resolver_free_addresses(inet_addresses);
-
-        return ret_sockets;
     }
-    if ( socket == NULL )
-        return NULL;
-    return g_list_prepend(NULL, socket);
+
+    return list;
 }
 
 GList *
@@ -188,15 +184,16 @@ eventd_sockets_get_inet_socket_file(EventdSockets *sockets, const gchar *file, g
         return NULL;
     }
 
+    GList *list = NULL;
     GSocket *socket;
     GSocketAddress *address;
     guint16 port;
     gchar port_str[6];
     GError *error = NULL;
 
-    socket = _eventd_sockets_get_inet_socket(sockets, g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV6), 0);
-    if ( socket == NULL )
+    if ( !_eventd_sockets_add_inet_socket(sockets, &list, g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV6), 0) )
         return NULL;
+    socket = list->data;
 
     address = g_socket_get_local_address(socket, &error);
     if ( address == NULL )
@@ -217,10 +214,10 @@ eventd_sockets_get_inet_socket_file(EventdSockets *sockets, const gchar *file, g
         goto fail;
     }
 
-    return g_list_prepend(NULL, socket);
+    return list;
 fail:
     g_clear_error(&error);
-    g_object_unref(socket);
+    g_list_free_full(list, g_object_unref);
     return NULL;
 }
 
