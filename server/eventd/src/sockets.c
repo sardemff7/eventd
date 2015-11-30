@@ -179,7 +179,7 @@ eventd_sockets_get_inet_sockets(EventdSockets *sockets, const gchar *address, gu
     return g_list_prepend(NULL, socket);
 }
 
-GSocket *
+GList *
 eventd_sockets_get_inet_socket_file(EventdSockets *sockets, const gchar *file, gboolean take_over_socket)
 {
     if ( g_file_test(file, G_FILE_TEST_EXISTS) && ( ! take_over_socket ) )
@@ -207,13 +207,14 @@ eventd_sockets_get_inet_socket_file(EventdSockets *sockets, const gchar *file, g
     g_object_unref(address);
 
     if ( g_file_set_contents(file, port_str, -1, &error) )
-    {
         sockets->created = g_slist_prepend(sockets->created, g_strdup(file));
-        return socket;
-}
+    else
+    {
+        g_warning("Couldn't write port to file: %s", error->message);
+        goto fail;
+    }
 
-    g_warning("Couldn't write port to file: %s", error->message);
-
+    return g_list_prepend(NULL, socket);
 fail:
     g_clear_error(&error);
     g_object_unref(socket);
@@ -221,8 +222,8 @@ fail:
 }
 
 #ifdef G_OS_UNIX
-GSocket *
-eventd_sockets_get_unix_socket(EventdSockets *sockets, const gchar *path, gboolean take_over_socket)
+GList *
+eventd_sockets_get_unix_sockets(EventdSockets *sockets, const gchar *path, gboolean take_over_socket)
 {
     GSocket *socket = NULL;
     GError *error = NULL;
@@ -247,9 +248,8 @@ eventd_sockets_get_unix_socket(EventdSockets *sockets, const gchar *path, gboole
 
         if ( g_strcmp0(path, g_unix_socket_address_get_path(G_UNIX_SOCKET_ADDRESS(address))) == 0 )
         {
-            socket = socket_->data;
-            sockets->list = g_list_delete_link(sockets->list, socket_);
-            return socket;
+            sockets->list = g_list_remove_link(sockets->list, socket_);
+            return socket_;
         }
     }
 
@@ -288,7 +288,7 @@ eventd_sockets_get_unix_socket(EventdSockets *sockets, const gchar *path, gboole
     }
 
     sockets->created = g_slist_prepend(sockets->created, g_strdup(path));
-    return socket;
+    return g_list_prepend(NULL, socket);
 
 fail:
     if ( address != NULL )

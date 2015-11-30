@@ -125,13 +125,10 @@ eventd_core_get_sockets(EventdCoreContext *context, const gchar * const *binds)
         if ( *bind == 0 )
             continue;
 
+        GList *new_sockets = NULL;
+
         if ( g_strcmp0(bind, "systemd") == 0 )
-        {
-            GList *systemd_sockets;
-            systemd_sockets = eventd_sockets_get_systemd_sockets(context->sockets);
-            if ( systemd_sockets != NULL )
-                sockets = g_list_concat(sockets, systemd_sockets);
-        }
+            new_sockets = eventd_sockets_get_systemd_sockets(context->sockets);
         else if ( g_str_has_prefix(bind, "tcp:") )
         {
             if ( bind[4] == 0 )
@@ -142,40 +139,26 @@ eventd_core_get_sockets(EventdCoreContext *context, const gchar * const *binds)
             if ( ! _eventd_core_get_inet_address(bind+4, &address, &port) )
                 continue;
 
-            GList *inet_sockets;
-
-            inet_sockets = eventd_sockets_get_inet_sockets(context->sockets, address, port);
+            new_sockets = eventd_sockets_get_inet_sockets(context->sockets, address, port);
             g_free(address);
-
-            if ( inet_sockets != NULL )
-                sockets = g_list_concat(sockets, inet_sockets);
         }
         else if ( g_str_has_prefix(bind, "tcp-file:") )
         {
             if ( bind[9] == 0 )
                 continue;
 
-            GSocket *socket;
-
-            socket = eventd_sockets_get_inet_socket_file(context->sockets, bind+9, context->take_over_socket);
-
-            if ( socket != NULL )
-                sockets = g_list_prepend(sockets, socket);
+            new_sockets = eventd_sockets_get_inet_socket_file(context->sockets, bind+9, context->take_over_socket);
         }
         else if ( g_str_has_prefix(bind, "tcp-file-runtime:") )
         {
             if ( bind[17] == 0 )
                 continue;
 
-            GSocket *socket;
             gchar *path;
 
             path = g_build_filename(context->runtime_dir, bind+17, NULL);
-            socket = eventd_sockets_get_inet_socket_file(context->sockets, path, context->take_over_socket);
+            new_sockets = eventd_sockets_get_inet_socket_file(context->sockets, path, context->take_over_socket);
             g_free(path);
-
-            if ( socket != NULL )
-                sockets = g_list_prepend(sockets, socket);
         }
 #ifdef G_OS_UNIX
         else if ( g_str_has_prefix(bind, "unix:") )
@@ -183,29 +166,21 @@ eventd_core_get_sockets(EventdCoreContext *context, const gchar * const *binds)
             if ( bind[5] == 0 )
                 continue;
 
-            GSocket *socket;
-
-            socket = eventd_sockets_get_unix_socket(context->sockets, bind+5, context->take_over_socket);
-
-            if ( socket != NULL )
-                sockets = g_list_prepend(sockets, socket);
+            new_sockets = eventd_sockets_get_unix_sockets(context->sockets, bind+5, context->take_over_socket);
         }
         else if ( g_str_has_prefix(bind, "unix-runtime:") )
         {
             if ( bind[13] == 0 )
                 continue;
 
-            GSocket *socket;
             gchar *path;
 
             path = g_build_filename(context->runtime_dir, bind+13, NULL);
-            socket = eventd_sockets_get_unix_socket(context->sockets, path, context->take_over_socket);
+            new_sockets = eventd_sockets_get_unix_sockets(context->sockets, path, context->take_over_socket);
             g_free(path);
-
-            if ( socket != NULL )
-                sockets = g_list_prepend(sockets, socket);
         }
 #endif /* G_OS_UNIX */
+        sockets = g_list_concat(sockets, new_sockets);
     }
 
     return sockets;
