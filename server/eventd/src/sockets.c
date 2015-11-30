@@ -69,7 +69,7 @@ _eventd_sockets_inet_address_equal(GInetSocketAddress *socket_address1, GInetAdd
 }
 
 static gboolean
-_eventd_sockets_add_inet_socket(EventdSockets *sockets, GList **list, GInetAddress *inet_address, guint16 port)
+_eventd_sockets_add_inet_socket(EventdSockets *sockets, GList **list, GInetAddress *inet_address, guint16 port, gboolean ipv6_bound)
 {
     GSocket *socket = NULL;
     GError *error = NULL;
@@ -112,7 +112,10 @@ _eventd_sockets_add_inet_socket(EventdSockets *sockets, GList **list, GInetAddre
     address = g_inet_socket_address_new(inet_address, port);
     if ( ! g_socket_bind(socket, address, TRUE, &error) )
     {
-        g_warning("Unable to bind the IP socket: %s", error->message);
+        if ( ( error->code == G_IO_ERROR_ADDRESS_IN_USE ) && ipv6_bound )
+            ret = TRUE;
+        else
+            g_warning("Unable to bind the IP socket: %s", error->message);
         goto fail;
     }
 
@@ -143,11 +146,13 @@ eventd_sockets_get_inet_sockets(EventdSockets *sockets, const gchar *address, gu
 
     if ( address == NULL )
     {
-        _eventd_sockets_add_inet_socket(sockets, &list, g_inet_address_new_any(G_SOCKET_FAMILY_IPV6), port);
+        if ( _eventd_sockets_add_inet_socket(sockets, &list, g_inet_address_new_any(G_SOCKET_FAMILY_IPV6), port, FALSE) )
+            _eventd_sockets_add_inet_socket(sockets, &list, g_inet_address_new_any(G_SOCKET_FAMILY_IPV4), port, TRUE);
     }
     else if ( g_strcmp0(address, "localhost") == 0 )
     {
-        _eventd_sockets_add_inet_socket(sockets, &list, g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV6), port);
+        if ( _eventd_sockets_add_inet_socket(sockets, &list, g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV6), port, FALSE) )
+            _eventd_sockets_add_inet_socket(sockets, &list, g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV4), port, TRUE);
     }
     else
     {
@@ -167,7 +172,7 @@ eventd_sockets_get_inet_sockets(EventdSockets *sockets, const gchar *address, gu
         GList *inet_address_;
 
         for ( inet_address_ = inet_addresses ; inet_address_ != NULL ; inet_address_ = g_list_next(inet_address_) )
-            _eventd_sockets_add_inet_socket(sockets, &list, g_object_ref(inet_address_->data), port);
+            _eventd_sockets_add_inet_socket(sockets, &list, g_object_ref(inet_address_->data), port, FALSE);
 
         g_resolver_free_addresses(inet_addresses);
     }
@@ -191,7 +196,7 @@ eventd_sockets_get_inet_socket_file(EventdSockets *sockets, const gchar *file, g
     gchar port_str[6];
     GError *error = NULL;
 
-    if ( !_eventd_sockets_add_inet_socket(sockets, &list, g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV6), 0) )
+    if ( !_eventd_sockets_add_inet_socket(sockets, &list, g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV6), 0, FALSE) )
         return NULL;
     socket = list->data;
 
@@ -213,6 +218,8 @@ eventd_sockets_get_inet_socket_file(EventdSockets *sockets, const gchar *file, g
         g_warning("Couldn't write port to file: %s", error->message);
         goto fail;
     }
+
+    _eventd_sockets_add_inet_socket(sockets, &list, g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV4), port, TRUE);
 
     return list;
 fail:
