@@ -67,7 +67,6 @@ void eventd_protocol_json_parse_free(EventdProtocolJson *self);
 
 gchar *eventd_protocol_json_generate_event(EventdProtocol *protocol, EventdEvent *event);
 
-gchar *eventd_protocol_json_generate_passive(EventdProtocol *protocol);
 gchar *eventd_protocol_json_generate_subscribe(EventdProtocol *protocol, GHashTable *categories);
 gchar *eventd_protocol_json_generate_bye(EventdProtocol *protocol, const gchar *message);
 

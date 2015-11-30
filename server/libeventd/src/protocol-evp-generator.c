@@ -85,12 +85,6 @@ eventd_protocol_evp_generate_event(EventdProtocol *protocol, EventdEvent *event)
 }
 
 gchar *
-eventd_protocol_evp_generate_passive(EventdProtocol *protocol)
-{
-    return g_strdup("PASSIVE\n");
-}
-
-gchar *
 eventd_protocol_evp_generate_subscribe(EventdProtocol *protocol, GHashTable *categories)
 {
     if ( categories == NULL )

@@ -95,14 +95,6 @@ _eventd_http_websocket_client_protocol_event(EventdProtocol *protocol, EventdEve
 }
 
 static void
-_eventd_http_websocket_client_protocol_passive(EventdProtocol *protocol, gpointer user_data)
-{
-    EventdHttpWebsocketClient *self = user_data;
-
-    soup_websocket_connection_close(self->connection, SOUP_WEBSOCKET_CLOSE_PROTOCOL_ERROR, "PASSIVE not supported for WebSockets");
-}
-
-static void
 _eventd_http_websocket_client_protocol_subscribe(EventdProtocol *protocol, GHashTable *categories, gpointer user_data)
 {
     EventdHttpWebsocketClient *self = user_data;
@@ -148,7 +140,6 @@ _eventd_http_websocket_client_protocol_bye(EventdProtocol *protocol, const gchar
 
 static const EventdProtocolCallbacks _eventd_http_websocket_client_protocol_callbacks = {
     .event = _eventd_http_websocket_client_protocol_event,
-    .passive = _eventd_http_websocket_client_protocol_passive,
     .subscribe = _eventd_http_websocket_client_protocol_subscribe,
     .bye = _eventd_http_websocket_client_protocol_bye
 };

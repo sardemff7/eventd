@@ -59,19 +59,6 @@ _clean_data(gpointer fixture, gconstpointer user_data)
 }
 
 static void
-_test_evp_generate_passive(gpointer fixture, gconstpointer user_data)
-{
-    GeneratorData *data = fixture;
-    const gchar *expected = "PASSIVE\n";
-    gchar *message;
-
-    message = eventd_protocol_generate_passive(data->protocol);
-    g_assert_cmpstr(message, ==, expected);
-
-    g_free(message);
-}
-
-static void
 _test_evp_generate_event(gpointer fixture, gconstpointer user_data)
 {
     GeneratorData *data = fixture;
@@ -129,7 +116,6 @@ eventd_tests_unit_eventd_protocol_suite_generator(void)
 
     suite = g_test_create_suite("LibeventdEvp generator test suite");
 
-    g_test_suite_add(suite, g_test_create_case("evp_generate_passive()",           sizeof(GeneratorData), NULL,                  _init_data,           _test_evp_generate_passive,  _clean_data));
     g_test_suite_add(suite, g_test_create_case("evp_generate_event()",             sizeof(GeneratorData), NULL,                  _init_data,           _test_evp_generate_event,    _clean_data));
     g_test_suite_add(suite, g_test_create_case("evp_generate_event(data)",         sizeof(GeneratorData), NULL,                  _init_data_with_data, _test_evp_generate_event,    _clean_data));
     g_test_suite_add(suite, g_test_create_case("evp_generate_bye()",               sizeof(GeneratorData), NULL,                  _init_data,           _test_evp_generate_bye,      _clean_data));

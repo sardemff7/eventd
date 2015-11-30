@@ -59,7 +59,6 @@ gboolean eventd_protocol_evp_parse(EventdProtocol *protocol, const gchar *buffer
 void eventd_protocol_evp_parse_free(EventdProtocolEvp *self);
 
 gchar *eventd_protocol_evp_generate_event(EventdProtocol *protocol, EventdEvent *event);
-gchar *eventd_protocol_evp_generate_passive(EventdProtocol *protocol);
 gchar *eventd_protocol_evp_generate_subscribe(EventdProtocol *protocol, GHashTable *categories);
 gchar *eventd_protocol_evp_generate_bye(EventdProtocol *protocol, const gchar *message);
 

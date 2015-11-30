@@ -53,12 +53,10 @@ namespace Eventd
         public abstract bool parse(string buffer) throws ProtocolParseError;
 
         public abstract string generate_event(Eventd.Event event);
-        public abstract string generate_passive();
         public abstract string generate_subscribe(GLib.HashTable<string, string>? categories);
         public abstract string generate_bye(string? message);
 
         public signal void event(Eventd.Event event);
-        public signal void passive();
         public signal void subscribe(GLib.HashTable<string, string>? categories);
         public signal void bye(string? message);
     }

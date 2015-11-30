@@ -49,8 +49,6 @@ static guint _eventc_connection_signals[LAST_SIGNAL];
 struct _EventcConnectionPrivate {
     GSocketConnectable *address;
     gboolean accept_unknown_ca;
-    gboolean passive;
-    gboolean enable_proxy;
     gboolean subscribe;
     GHashTable *subscriptions;
     GError *error;
@@ -468,8 +466,6 @@ _eventc_connection_get_socket_client(EventcConnection *self)
 
     g_signal_connect_swapped(client, "event", G_CALLBACK(_eventc_connection_socket_client_event), self);
 
-    g_socket_client_set_enable_proxy(client, self->priv->enable_proxy);
-
     GTlsCertificateFlags flags = G_TLS_CERTIFICATE_VALIDATE_ALL;
 
     if ( self->priv->accept_unknown_ca )
@@ -499,10 +495,6 @@ _eventc_connection_connect_after(EventcConnection *self, GError *_inner_error_, 
     }
 
     self->priv->out = g_data_output_stream_new(g_io_stream_get_output_stream(G_IO_STREAM(self->priv->connection)));
-
-    if ( self->priv->passive )
-        return _eventc_connection_send_message(self, eventd_protocol_generate_passive(self->priv->protocol), error);
-
     self->priv->in = g_data_input_stream_new(g_io_stream_get_input_stream(G_IO_STREAM(self->priv->connection)));
 
     g_data_input_stream_read_line_async(self->priv->in, G_PRIORITY_DEFAULT, self->priv->cancellable, _eventc_connection_read_callback, self);
@@ -760,43 +752,6 @@ eventc_connection_set_accept_unknown_ca(EventcConnection *self, gboolean accept_
     self->priv->accept_unknown_ca = accept_unknown_ca;
 }
 
-/**
- * eventc_connection_set_passive:
- * @connection: an #EventcConnection
- * @passive: the passive setting
- *
- * Sets whether the connection is passive or not. A passive connection does not
- * receive events back from the server so that the client does not require an
- * event loop.
- *
- * The subscribe setting *must not* be set.
- */
-EVENTD_EXPORT
-void
-eventc_connection_set_passive(EventcConnection *self, gboolean passive)
-{
-    g_return_if_fail(EVENTC_IS_CONNECTION(self));
-    g_return_if_fail(! self->priv->subscribe);
-
-    self->priv->passive = passive;
-}
-
-/**
- * eventc_connection_set_enable_proxy:
- * @connection: an #EventcConnection
- * @enable_proxy: the enable_proxy setting
- *
- * Sets whether the connection is to use a proxy or not on the underlying
- * #GSocketClient.
- */
-EVENTD_EXPORT
-void
-eventc_connection_set_enable_proxy(EventcConnection *self, gboolean enable_proxy)
-{
-    g_return_if_fail(EVENTC_IS_CONNECTION(self));
-
-    self->priv->enable_proxy = enable_proxy;
-}
 
 /**
  * eventc_connection_set_subscribe:
@@ -806,15 +761,12 @@ eventc_connection_set_enable_proxy(EventcConnection *self, gboolean enable_proxy
  * Sets whether the connection will subscribe to events.
  * If you do not add specific categories using eventc_connection_add_subscription(),
  * it will subscribe to *all* events.
- *
- * The passive setting *must not* be set.
  */
 EVENTD_EXPORT
 void
 eventc_connection_set_subscribe(EventcConnection *self, gboolean subscribe)
 {
     g_return_if_fail(EVENTC_IS_CONNECTION(self));
-    g_return_if_fail(! self->priv->passive);
 
     self->priv->subscribe = subscribe;
 }
@@ -836,40 +788,6 @@ eventc_connection_add_subscription(EventcConnection *self, gchar *category)
     if ( self->priv->subscriptions == NULL )
         self->priv->subscriptions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
     g_hash_table_add(self->priv->subscriptions, category);
-}
-
-/**
- * eventc_connection_get_passive:
- * @connection: an #EventcConnection
- *
- * Retrieves whether the connection is passive or not.
- *
- * Returns: %TRUE if the connection is passive
- */
-EVENTD_EXPORT
-gboolean
-eventc_connection_get_passive(EventcConnection *self)
-{
-    g_return_val_if_fail(EVENTC_IS_CONNECTION(self), FALSE);
-
-    return self->priv->passive;
-}
-
-/**
- * eventc_connection_get_enable_proxy:
- * @connection: an #EventcConnection
- *
- * Retrieves whether the connection is to use a proxy or not.
- *
- * Returns: %TRUE if the connection is using a proxy
- */
-EVENTD_EXPORT
-gboolean
-eventc_connection_get_enable_proxy(EventcConnection *self)
-{
-    g_return_val_if_fail(EVENTC_IS_CONNECTION(self), FALSE);
-
-    return self->priv->enable_proxy;
 }
 
 /**

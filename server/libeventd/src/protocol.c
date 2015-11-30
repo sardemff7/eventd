@@ -113,23 +113,6 @@ eventd_protocol_generate_event(EventdProtocol *self, EventdEvent *event)
 }
 
 /**
- * eventd_protocol_generate_passive:
- * @protocol: an #EventdProtocol
- *
- * Generates a PASSIVE message.
- *
- * Returns: (transfer full): the message
- */
-EVENTD_EXPORT
-gchar *
-eventd_protocol_generate_passive(EventdProtocol *self)
-{
-    g_return_val_if_fail(self != NULL, NULL);
-
-    return self->generate_passive(self);
-}
-
-/**
  * eventd_protocol_generate_subscribe:
  * @protocol: an #EventdProtocol
  * @categories: (element-type utf8 utf8) (nullable): the categories of events you want to subscribe to as a set (key == value)

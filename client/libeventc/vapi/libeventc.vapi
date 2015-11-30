@@ -43,15 +43,11 @@ namespace Eventc
 		public Connection(string host) throws Eventc.Error;
 		public Connection.for_connectable(GLib.SocketConnectable connectable);
 
-		public bool get_passive();
-		public bool get_enable_proxy();
 		public bool get_subscribe();
 
 		public bool set_host(string host) throws Eventc.Error;
 		public void set_connectable(GLib.SocketConnectable address);
 		public void set_accept_unknown_ca(bool accept_unknown_ca);
-		public void set_passive(bool passive);
-		public void set_enable_proxy(bool enable_proxy);
 		public void set_subscribe(bool subscribe);
 		public void add_subscription(owned string category);
 

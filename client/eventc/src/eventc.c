@@ -204,8 +204,6 @@ post_args:
         goto post_event;
     }
 
-    eventc_connection_set_passive(client, TRUE);
-
     event = eventd_event_new(category, name);
 
     if ( data != NULL )

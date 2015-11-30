@@ -62,7 +62,6 @@ eventd_protocol_evp_new(const EventdProtocolCallbacks *callbacks, gpointer user_
     protocol->parse = eventd_protocol_evp_parse;
 
     protocol->generate_event = eventd_protocol_evp_generate_event;
-    protocol->generate_passive = eventd_protocol_evp_generate_passive;
     protocol->generate_subscribe = eventd_protocol_evp_generate_subscribe;
     protocol->generate_bye = eventd_protocol_evp_generate_bye;
 

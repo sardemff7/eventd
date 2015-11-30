@@ -87,17 +87,6 @@ _eventd_evp_client_protocol_event(EventdProtocol *protocol, EventdEvent *event, 
 }
 
 static void
-_eventd_evp_client_protocol_passive(EventdProtocol *protocol, gpointer user_data)
-{
-    EventdEvpClient *self = user_data;
-
-    if ( self->out == NULL )
-        return _eventd_evp_client_disconnect_internal(self);
-    g_object_unref(self->out);
-    self->out = NULL;
-}
-
-static void
 _eventd_evp_client_protocol_subscribe(EventdProtocol *protocol, GHashTable *categories, gpointer user_data)
 {
     EventdEvpClient *self = user_data;
@@ -143,7 +132,6 @@ _eventd_evp_client_protocol_bye(EventdProtocol *protocol, const gchar *message, 
 
 static const EventdProtocolCallbacks _eventd_evp_client_protocol_callbacks = {
     .event = _eventd_evp_client_protocol_event,
-    .passive = _eventd_evp_client_protocol_passive,
     .subscribe = _eventd_evp_client_protocol_subscribe,
     .bye = _eventd_evp_client_protocol_bye
 };
@@ -170,9 +158,7 @@ _eventd_evp_client_read_callback(GObject *obj, GAsyncResult *res, gpointer user_
     return g_data_input_stream_read_line_async(self->in, G_PRIORITY_DEFAULT, self->cancellable, _eventd_evp_client_read_callback, self);
 
 error:
-    if ( self->out != NULL )
-        /* Client not in passive mode */
-        _eventd_evp_client_send_message(self, eventd_protocol_generate_bye(self->protocol, error->message));
+    _eventd_evp_client_send_message(self, eventd_protocol_generate_bye(self->protocol, error->message));
 end:
     g_free(line);
     g_clear_error(&error);

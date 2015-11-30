@@ -91,7 +91,6 @@ eventd_protocol_json_new(const EventdProtocolCallbacks *callbacks, gpointer user
     protocol->parse = eventd_protocol_json_parse;
 
     protocol->generate_event = eventd_protocol_json_generate_event;
-    protocol->generate_passive = eventd_protocol_json_generate_passive;
     protocol->generate_subscribe = eventd_protocol_json_generate_subscribe;
     protocol->generate_bye = eventd_protocol_json_generate_bye;
 

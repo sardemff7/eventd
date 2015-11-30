@@ -120,12 +120,6 @@ eventd_protocol_json_generate_event(EventdProtocol *protocol, EventdEvent *event
 }
 
 gchar *
-eventd_protocol_json_generate_passive(EventdProtocol *protocol)
-{
-    return NULL;
-}
-
-gchar *
 eventd_protocol_json_generate_subscribe(EventdProtocol *protocol, GHashTable *categories)
 {
     yajl_gen gen;
