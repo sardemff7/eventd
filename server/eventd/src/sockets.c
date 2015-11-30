@@ -142,17 +142,18 @@ fail:
 GList *
 eventd_sockets_get_inet_sockets(EventdSockets *sockets, const gchar *address, guint16 port)
 {
+    gboolean ret = FALSE;
     GList *list = NULL;
 
     if ( address == NULL )
     {
         if ( _eventd_sockets_add_inet_socket(sockets, &list, g_inet_address_new_any(G_SOCKET_FAMILY_IPV6), port, FALSE) )
-            _eventd_sockets_add_inet_socket(sockets, &list, g_inet_address_new_any(G_SOCKET_FAMILY_IPV4), port, TRUE);
+            ret = _eventd_sockets_add_inet_socket(sockets, &list, g_inet_address_new_any(G_SOCKET_FAMILY_IPV4), port, TRUE);
     }
     else if ( g_strcmp0(address, "localhost") == 0 )
     {
         if ( _eventd_sockets_add_inet_socket(sockets, &list, g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV6), port, FALSE) )
-            _eventd_sockets_add_inet_socket(sockets, &list, g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV4), port, TRUE);
+            ret = _eventd_sockets_add_inet_socket(sockets, &list, g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV4), port, TRUE);
     }
     else
     {
@@ -171,13 +172,20 @@ eventd_sockets_get_inet_sockets(EventdSockets *sockets, const gchar *address, gu
 
         GList *inet_address_;
 
-        for ( inet_address_ = inet_addresses ; inet_address_ != NULL ; inet_address_ = g_list_next(inet_address_) )
-            _eventd_sockets_add_inet_socket(sockets, &list, g_object_ref(inet_address_->data), port, FALSE);
+        ret = TRUE;
+        for ( inet_address_ = inet_addresses ; ret && ( inet_address_ != NULL ) ; inet_address_ = g_list_next(inet_address_) )
+        {
+            if ( ! _eventd_sockets_add_inet_socket(sockets, &list, g_object_ref(inet_address_->data), port, FALSE) )
+                ret = FALSE;
+        }
 
         g_resolver_free_addresses(inet_addresses);
     }
+    if ( ret )
+        return list;
 
-    return list;
+    g_list_free_full(list, g_object_unref);
+    return NULL;
 }
 
 GList *
@@ -219,7 +227,8 @@ eventd_sockets_get_inet_socket_file(EventdSockets *sockets, const gchar *file, g
         goto fail;
     }
 
-    _eventd_sockets_add_inet_socket(sockets, &list, g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV4), port, TRUE);
+    if ( ! _eventd_sockets_add_inet_socket(sockets, &list, g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV4), port, TRUE) )
+        goto fail;
 
     return list;
 fail:
