@@ -123,7 +123,7 @@ install-data-hook: la-files-install-hook
 uninstall-hook: la-files-uninstall-hook
 
 ev_remove_la = $(if $(strip $($(1)_LTLIBRARIES)),( cd $(DESTDIR)$($(1)dir) && rm -f $($(1)_LTLIBRARIES) ))
-ev_remove_so_from_la = $(if $(strip $($(1)_LTLIBRARIES)),( cd $(DESTDIR)$($(1)dir) && rm -f `$(AWK) -F "'" '/^library_names=/ { print $$2 }' $(addprefix "$(abs_builddir)"/,$($(1)_LTLIBRARIES))` ))
+ev_remove_so_from_la = $(if $(strip $($(1)_LTLIBRARIES)),( cd $(DESTDIR)$($(1)dir) && rm -f `$(AWK) -F "'" '/^(library_names|old_library)=/ { print $$2 }' $(addprefix "$(abs_builddir)"/,$($(1)_LTLIBRARIES))` ))
 
 # *.la files cleanup
 la-files-install-hook:
