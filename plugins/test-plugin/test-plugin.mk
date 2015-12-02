@@ -5,6 +5,7 @@ check_LTLIBRARIES += \
 	$(null)
 
 dist_check_DATA += \
+	$(builddir)/%D%/config/eventd.conf \
 	$(builddir)/%D%/config/test.event \
 	$(builddir)/%D%/config/test.action \
 	$(null)
