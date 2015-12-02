@@ -11,7 +11,7 @@ dist_check_DATA += \
 
 
 test_plugin_la_SOURCES = \
-	%D%/include/libeventd-event-private.h \
+	server/libeventd/include/libeventd-event-private.h \
 	server/libeventd/src/event-private.c \
 	%D%/src/test-plugin.c \
 	$(null)
