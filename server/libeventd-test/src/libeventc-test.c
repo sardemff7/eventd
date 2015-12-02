@@ -190,13 +190,40 @@ _ended_callback(EventcConnection *client, EventdEvent *e, gpointer user_data)
 
     category = eventd_event_get_category(e);
     name = eventd_event_get_name(e);
+
     switch ( _test_state.event )
     {
     case 2:
         g_idle_add(_ended_close_idle_callback, client);
     case 1:
+    {
         if ( ( g_strcmp0(category, "test") != 0 ) || ( g_strcmp0(name, "answer") != 0 ) )
             break;
+
+        gchar *contents;
+        const gchar *filename;
+        GError *error = NULL;
+
+        filename = eventd_event_get_data(event, "file");
+        if ( ! g_file_get_contents(filename, &contents, NULL, &error) )
+        {
+            g_warning("Cannot get file contents: %s", error->message);
+            g_clear_error(&error);
+            break;
+        }
+        if ( g_strcmp0(eventd_event_get_data(event, "test"), contents) != 0 )
+        {
+            g_warning("Wrong test file contents: %s", contents);
+            g_free(contents);
+            break;
+        }
+        g_free(contents);
+        if ( g_unlink(filename) < 0 )
+        {
+            g_warning("Couldn't remove the file: %s", g_strerror(errno));
+            break;
+        }
+
         eventd_event_unref(event);
         _create_event(client);
         if ( ! eventc_connection_event(client, event, &error) )
@@ -204,6 +231,7 @@ _ended_callback(EventcConnection *client, EventdEvent *e, gpointer user_data)
         else
             _test_state.state = STATE_SENT;
         return;
+    }
     case 3:
     default:
         g_return_if_reached();
