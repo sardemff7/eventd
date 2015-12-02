@@ -29,7 +29,7 @@ fdo_notifications_la_CFLAGS = \
 
 fdo_notifications_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
-	-avoid-version -module \
+	$(PLUGIN_LDFLAGS) \
 	$(null)
 
 fdo_notifications_la_LIBADD = \

@@ -31,7 +31,7 @@ sound_la_CFLAGS = \
 
 sound_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
-	-avoid-version -module \
+	$(PLUGIN_LDFLAGS) \
 	$(null)
 
 sound_la_LIBADD = \

@@ -28,7 +28,7 @@ http_la_CFLAGS = \
 
 http_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
-	-avoid-version -module \
+	$(PLUGIN_LDFLAGS) \
 	$(null)
 
 http_la_LIBADD = \

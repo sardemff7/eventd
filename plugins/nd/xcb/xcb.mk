@@ -23,7 +23,7 @@ xcb_la_CFLAGS = \
 
 xcb_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
-	-avoid-version -module \
+	$(PLUGIN_LDFLAGS) \
 	$(null)
 
 xcb_la_LIBADD = \

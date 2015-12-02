@@ -26,7 +26,7 @@ im_la_CFLAGS = \
 
 im_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
-	-avoid-version -module \
+	$(PLUGIN_LDFLAGS) \
 	$(null)
 
 im_la_LIBADD = \

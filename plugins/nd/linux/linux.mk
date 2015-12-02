@@ -19,7 +19,7 @@ linux_la_CFLAGS = \
 
 linux_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
-	-avoid-version -module \
+	$(PLUGIN_LDFLAGS) \
 	$(null)
 
 linux_la_LIBADD = \

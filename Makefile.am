@@ -77,6 +77,11 @@ AM_XSLTPROCFLAGS += \
 	--path "$(builddir)/src/" \
 	$(null)
 
+PLUGIN_LDFLAGS = \
+	-avoid-version \
+	-module \
+	-shared \
+	$(null)
 
 include server/libeventd/libeventd.mk
 include server/libeventd-helpers/libeventd-helpers.mk

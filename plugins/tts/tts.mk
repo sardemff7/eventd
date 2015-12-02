@@ -24,7 +24,7 @@ tts_la_CFLAGS = \
 
 tts_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
-	-avoid-version -module \
+	$(PLUGIN_LDFLAGS) \
 	$(null)
 
 tts_la_LIBADD = \

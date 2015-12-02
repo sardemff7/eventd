@@ -27,7 +27,7 @@ canberra_la_CFLAGS = \
 
 canberra_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
-	-avoid-version -module \
+	$(PLUGIN_LDFLAGS) \
 	$(null)
 
 canberra_la_LIBADD = \

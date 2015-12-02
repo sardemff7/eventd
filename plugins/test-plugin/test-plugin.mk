@@ -25,7 +25,7 @@ test_plugin_la_CFLAGS = \
 test_plugin_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
 	-rpath $(abs_builddir) \
-	-avoid-version -module \
+	$(PLUGIN_LDFLAGS) \
 	$(null)
 
 test_plugin_la_LIBADD = \

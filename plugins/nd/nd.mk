@@ -55,7 +55,7 @@ nd_la_CFLAGS = \
 
 nd_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
-	-avoid-version -module \
+	$(PLUGIN_LDFLAGS) \
 	$(null)
 
 nd_la_LIBADD = \

@@ -31,7 +31,7 @@ evp_la_CFLAGS = \
 
 evp_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
-	-avoid-version -module \
+	$(PLUGIN_LDFLAGS) \
 	$(null)
 
 evp_la_LIBADD = \

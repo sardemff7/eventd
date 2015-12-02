@@ -20,7 +20,7 @@ exec_la_CFLAGS = \
 
 exec_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
-	-avoid-version -module \
+	$(PLUGIN_LDFLAGS) \
 	$(null)
 
 exec_la_LIBADD = \

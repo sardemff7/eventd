@@ -30,7 +30,7 @@ relay_la_CFLAGS = \
 
 relay_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
-	-avoid-version -module \
+	$(PLUGIN_LDFLAGS) \
 	$(null)
 
 relay_la_LIBADD = \

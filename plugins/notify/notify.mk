@@ -25,7 +25,7 @@ notify_la_CFLAGS = \
 
 notify_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
-	-avoid-version -module \
+	$(PLUGIN_LDFLAGS) \
 	$(null)
 
 notify_la_LIBADD = \

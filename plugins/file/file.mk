@@ -21,7 +21,7 @@ file_la_CFLAGS = \
 
 file_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
-	-avoid-version -module \
+	$(PLUGIN_LDFLAGS) \
 	$(null)
 
 file_la_LIBADD = \
