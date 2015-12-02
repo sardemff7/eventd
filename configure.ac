@@ -177,6 +177,8 @@ AC_SUBST([typelibdir])
 # libeventc-light
 if test x${ev_os_unix} = xyes; then
     AC_CHECK_HEADERS([sys/socket.h sys/un.h netinet/in.h])
+else
+    AC_CHECK_HEADERS([winsock2.h windows.h])
 fi
 
 # JSON protocol support

@@ -31,6 +31,7 @@ typedef struct _EventcLightConnection EventcLightConnection;
 #ifdef G_OS_UNIX
 typedef gint EventcLightSocket;
 #else /* ! G_OS_UNIX */
+#include <winsock2.h>
 #include <windows.h>
 typedef SOCKET EventcLightSocket;
 #endif /* ! G_OS_UNIX */
