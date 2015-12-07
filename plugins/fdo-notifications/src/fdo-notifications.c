@@ -138,7 +138,7 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
     GVariantIter *hints;
     gchar *hint_name;
     GVariant *hint;
-    const gchar *event_name = "open";
+    const gchar *event_name = "generic";
     gint16 urgency = -1;
     GVariant *image_data = NULL;
     const gchar *image_path = NULL;
