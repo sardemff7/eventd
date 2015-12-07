@@ -62,7 +62,7 @@ typedef struct {
 static gchar *
 _eventd_events_events_get_name(const gchar *category, const gchar *name)
 {
-    return ( name == NULL ) ? g_strdup(category) : g_strconcat(category, "-", name, NULL);
+    return ( name == NULL ) ? g_strdup(category) : g_strconcat(category, " ", name, NULL);
 }
 
 static void
@@ -255,25 +255,15 @@ _eventd_events_parse_event_flags(gchar **flags, gsize length)
 static void
 _eventd_events_parse_group(EventdEvents *self, const gchar *group, GKeyFile *config_file)
 {
-    gchar *category = NULL;
     gchar *name = NULL;
 
     const gchar *s;
     gchar *c;
     s = group + strlen("Event ");
-    c = g_utf8_strchr(s, -1, ' ');
-    if ( c == NULL )
-        category = g_strdup(s);
+    if ( ( ( c = g_utf8_strchr(s, -1, ' ') ) != NULL ) && ( ( c = g_utf8_strchr(c+1, -1, ' ') ) != NULL ) )
+        name = g_strndup(s, c - s);
     else
-    {
-        category = g_strndup(s, c - s);
-        s = ++c;
-        c = g_utf8_strchr(s, -1, ' ');
-        if ( c == NULL )
-            name = g_strdup(s);
-        else
-            name = g_strndup(s, c - s);
-    }
+        name = g_strdup(s);
 
     gboolean disable = FALSE;
 
@@ -286,7 +276,7 @@ _eventd_events_parse_group(EventdEvents *self, const gchar *group, GKeyFile *con
         goto fail;
 
 #ifdef EVENTD_DEBUG
-    g_debug("Parsing event: %s", group + strlen("Event "));
+    g_debug("Parsing event: %s", s);
 #endif /* EVENTD_DEBUG */
 
     EventdEventsEvent *event;
@@ -360,21 +350,17 @@ _eventd_events_parse_group(EventdEvents *self, const gchar *group, GKeyFile *con
         default_importance = G_MAXINT64;
     evhelpers_config_key_file_get_int_with_default(config_file, group, "Importance", default_importance, &event->importance);
 
-    gchar *internal_name;
-
-    internal_name = _eventd_events_events_get_name(category, name);
-
     GList *list = NULL;
     gchar *old_key = NULL;
-    g_hash_table_lookup_extended(self->events, internal_name, (gpointer *)&old_key, (gpointer *)&list);
-    g_hash_table_steal(self->events, internal_name);
+    g_hash_table_lookup_extended(self->events, name, (gpointer *)&old_key, (gpointer *)&list);
+    g_hash_table_steal(self->events, name);
     g_free(old_key);
     list = g_list_insert_sorted(list, event, _eventd_events_compare_event);
-    g_hash_table_insert(self->events, internal_name, list);
+    g_hash_table_insert(self->events, name, list);
+    name = NULL;
 
 fail:
     g_free(name);
-    g_free(category);
 }
 
 void
