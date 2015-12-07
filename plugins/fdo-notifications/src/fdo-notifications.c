@@ -67,15 +67,11 @@ typedef struct {
 } EventdDbusNotification;
 
 static void
-_eventd_fdo_notifications_notification_closed(EventdPluginContext *context, guint32 id, EventdFdoNotificationsCloseReason reason)
+_eventd_fdo_notifications_notification_closed(EventdDbusNotification *notification, EventdFdoNotificationsCloseReason reason)
 {
     /*
      * We have to emit the NotificationClosed signal for our D-Bus client
      */
-    EventdDbusNotification *notification;
-
-    notification = g_hash_table_lookup(context->notifications, GUINT_TO_POINTER(id));
-
     g_dbus_connection_emit_signal(notification->context->connection, notification->sender,
                                   NOTIFICATION_BUS_PATH, NOTIFICATION_BUS_NAME,
                                   "NotificationClosed", g_variant_new("(uu)", notification->id, reason),
@@ -83,7 +79,7 @@ _eventd_fdo_notifications_notification_closed(EventdPluginContext *context, guin
 
     if ( notification->timeout > 0 )
         g_source_remove(notification->timeout);
-    g_hash_table_remove(notification->context->notifications, GUINT_TO_POINTER(notification->id));
+    g_hash_table_remove(notification->context->notifications, eventd_event_get_uuid(notification->event));
 }
 
 static gboolean
@@ -91,7 +87,7 @@ _eventd_fdo_notifications_notification_timout(gpointer user_data)
 {
     EventdDbusNotification *notification = user_data;
     notification->timeout = 0;
-    _eventd_fdo_notifications_notification_closed(notification->context, notification->id, EVENTD_FDO_NOTIFICATIONS_CLOSE_REASON_RESERVED);
+    _eventd_fdo_notifications_notification_closed(notification, EVENTD_FDO_NOTIFICATIONS_CLOSE_REASON_RESERVED);
     return FALSE;
 }
 
@@ -115,7 +111,7 @@ _eventd_fdo_notifications_notification_new(EventdPluginContext *context, const g
 
     eventd_event_add_data(event, g_strdup("libnotify-id"), g_strdup_printf("%u", notification->id));
 
-    g_hash_table_insert(context->notifications, GUINT_TO_POINTER(notification->id), notification);
+    g_hash_table_insert(context->notifications, (gpointer) eventd_event_get_uuid(event), notification);
 
     return notification;
 }
@@ -205,7 +201,7 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
     g_debug("Creating event '%s' for client '%s' ", event_name, app_name);
 #endif /* EVENTD_DEBUG */
 
-    EventdDbusNotification *notification;
+    EventdDbusNotification *notification = NULL;
     if ( id > 0 )
     {
         notification = g_hash_table_lookup(context->notifications, GUINT_TO_POINTER(id));
@@ -293,7 +289,7 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
     {
         if ( ! eventd_plugin_core_push_event(context->core, context->core_interface, event) )
         {
-            _eventd_fdo_notifications_notification_closed(context, id, EVENTD_FDO_NOTIFICATIONS_CLOSE_REASON_RESERVED);
+            _eventd_fdo_notifications_notification_closed(notification, EVENTD_FDO_NOTIFICATIONS_CLOSE_REASON_RESERVED);
             g_dbus_method_invocation_return_dbus_error(invocation, NOTIFICATION_BUS_NAME ".StrangeError", "We have something strange, really");
             return;
         }
@@ -575,7 +571,7 @@ _eventd_fdo_notifications_init(EventdPluginCoreContext *core, EventdPluginCoreIn
     context->server_information = g_variant_new("(ssss)", PACKAGE_NAME, "Quentin 'Sardem FF7' Glidic", PACKAGE_VERSION, NOTIFICATION_SPEC_VERSION);
     _eventd_fdo_notifications_init_capabilities(context);
 
-    context->notifications = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, _eventd_fdo_notifications_notification_free);
+    context->notifications = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, _eventd_fdo_notifications_notification_free);
 
     return context;
 }
@@ -612,6 +608,38 @@ _eventd_fdo_notifications_stop(EventdPluginContext *context)
 
 
 /*
+ * Event dispatching interface
+ */
+
+static void
+_eventd_fdo_notifications_event_dispatch(EventdPluginContext *context, EventdEvent *event)
+{
+    const gchar *category;
+    category = eventd_event_get_category(event);
+    if ( g_strcmp0(category, ".notification") != 0 )
+        return;
+
+    const gchar *uuid;
+    uuid = eventd_event_get_data(event, "source-event");
+    if ( ( uuid == NULL ) || ( ! g_hash_table_contains(context->notifications, uuid) ) )
+        return;
+
+    EventdDbusNotification *notification;
+    notification = g_hash_table_lookup(context->notifications, uuid);
+
+    const gchar *name;
+    name = eventd_event_get_name(event);
+
+    if ( g_strcmp0(name, "timeout") == 0 )
+        _eventd_fdo_notifications_notification_closed(notification, EVENTD_FDO_NOTIFICATIONS_CLOSE_REASON_EXPIRED);
+    else if ( g_strcmp0(name, "dismiss") == 0 )
+        _eventd_fdo_notifications_notification_closed(notification, EVENTD_FDO_NOTIFICATIONS_CLOSE_REASON_DISMISS);
+    else
+        _eventd_fdo_notifications_notification_closed(notification, EVENTD_FDO_NOTIFICATIONS_CLOSE_REASON_RESERVED);
+}
+
+
+/*
  * Plugin interface
  */
 
@@ -625,4 +653,6 @@ eventd_plugin_get_interface(EventdPluginInterface *interface)
 
     eventd_plugin_interface_add_start_callback(interface, _eventd_fdo_notifications_start);
     eventd_plugin_interface_add_stop_callback(interface, _eventd_fdo_notifications_stop);
+
+    eventd_plugin_interface_add_event_dispatch_callback(interface, _eventd_fdo_notifications_event_dispatch);
 }
