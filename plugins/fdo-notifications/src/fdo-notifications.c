@@ -139,7 +139,6 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
     gchar *hint_name;
     GVariant *hint;
     const gchar *event_name = "generic";
-    gint16 urgency = -1;
     GVariant *image_data = NULL;
     const gchar *image_path = NULL;
     const gchar *sound_name = NULL;
@@ -170,9 +169,7 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
         g_debug("Found hint '%s'", hint_name);
 #endif /* EVENTD_DEBUG */
 
-        if ( g_strcmp0(hint_name, "urgency") == 0 )
-            urgency = g_variant_get_byte(hint);
-        else if ( g_strcmp0(hint_name, "category") == 0 )
+        if ( g_strcmp0(hint_name, "category") == 0 )
             event_name = g_variant_get_string(hint, NULL);
         else if ( ( g_strcmp0(hint_name, "image-data") == 0 )
                   || ( g_strcmp0(hint_name, "image_data") == 0 ) )
