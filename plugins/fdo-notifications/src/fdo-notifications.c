@@ -63,6 +63,7 @@ typedef struct {
     guint32 id;
     gchar *sender;
     EventdEvent *event;
+    gulong timeout;
 } EventdDbusNotification;
 
 static void
@@ -80,15 +81,25 @@ _eventd_fdo_notifications_notification_closed(EventdPluginContext *context, guin
                                   "NotificationClosed", g_variant_new("(uu)", notification->id, reason),
                                   NULL);
 
+    if ( notification->timeout > 0 )
+        g_source_remove(notification->timeout);
     g_hash_table_remove(notification->context->notifications, GUINT_TO_POINTER(notification->id));
 }
 
+static gboolean
+_eventd_fdo_notifications_notification_timout(gpointer user_data)
+{
+    EventdDbusNotification *notification = user_data;
+    notification->timeout = 0;
+    _eventd_fdo_notifications_notification_closed(notification->context, notification->id, EVENTD_FDO_NOTIFICATIONS_CLOSE_REASON_RESERVED);
+    return FALSE;
+}
 
 /*
  * Helper functions
  */
 
-static guint32
+static EventdDbusNotification *
 _eventd_fdo_notifications_notification_new(EventdPluginContext *context, const gchar *sender, EventdEvent *event)
 {
     if ( ! eventd_plugin_core_push_event(context->core, context->core_interface, event) )
@@ -106,7 +117,7 @@ _eventd_fdo_notifications_notification_new(EventdPluginContext *context, const g
 
     g_hash_table_insert(context->notifications, GUINT_TO_POINTER(notification->id), notification);
 
-    return notification->id;
+    return notification;
 }
 
 static void
@@ -194,14 +205,9 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
     g_debug("Creating event '%s' for client '%s' ", event_name, app_name);
 #endif /* EVENTD_DEBUG */
 
+    EventdDbusNotification *notification;
     if ( id > 0 )
     {
-        g_dbus_method_invocation_return_dbus_error(invocation, NOTIFICATION_BUS_NAME ".NotSupported", "This server does not (yet) support notification update");
-        return;
-        /*
-         * FIXME: dispatch again
-        EventdDbusNotification *notification;
-
         notification = g_hash_table_lookup(context->notifications, GUINT_TO_POINTER(id));
         if ( notification == NULL )
         {
@@ -209,7 +215,6 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
             return;
         }
         event = notification->event;
-        */
     }
     else
         event = eventd_event_new("notification", event_name);
@@ -284,18 +289,31 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
             eventd_event_add_data(event, g_strdup("sound-file"), g_strdup_printf("file://%s", sound_file));
     }
 
-    id = _eventd_fdo_notifications_notification_new(context, sender, event);
-
-    if ( id == 0 )
+    if ( id > 0 )
     {
-        eventd_event_unref(event);
-        g_dbus_method_invocation_return_dbus_error(invocation, NOTIFICATION_BUS_NAME ".InvalidNotification", "Invalid notification type");
-        return;
+        if ( ! eventd_plugin_core_push_event(context->core, context->core_interface, event) )
+        {
+            _eventd_fdo_notifications_notification_closed(context, id, EVENTD_FDO_NOTIFICATIONS_CLOSE_REASON_RESERVED);
+            g_dbus_method_invocation_return_dbus_error(invocation, NOTIFICATION_BUS_NAME ".StrangeError", "We have something strange, really");
+            return;
+        }
+    }
+    else
+    {
+        notification = _eventd_fdo_notifications_notification_new(context, sender, event);
+        if ( notification == NULL )
+        {
+            eventd_event_unref(event);
+            g_dbus_method_invocation_return_dbus_error(invocation, NOTIFICATION_BUS_NAME ".InvalidNotification", "Invalid notification type");
+            return;
+        }
     }
 
     g_dbus_method_invocation_return_value(invocation, g_variant_new("(u)", id));
 
-    _eventd_fdo_notifications_notification_closed(context, id, EVENTD_FDO_NOTIFICATIONS_CLOSE_REASON_RESERVED);
+    if ( notification->timeout > 0 )
+        g_source_remove(notification->timeout);
+    notification->timeout = g_timeout_add_seconds_full(G_PRIORITY_DEFAULT, 30, _eventd_fdo_notifications_notification_timout, notification, NULL);
 }
 
 static void
