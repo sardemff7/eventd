@@ -46,9 +46,7 @@ Event related messages
     The id is a UUID.
     The name must contain only the characters
     "A-Za-z0-9-." (without the quotes).
-    The category can use the same characters as the name,
-    with the addition of "/" to separate subcategories.
-    An arbitrary number of subcategories is accepted.
+    The category can use the same characters as the name.
     The message may contain data using the corresponding messages.
 
 
