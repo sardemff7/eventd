@@ -213,7 +213,9 @@ eventd_relay_server_event(EventdRelayServer *server, EventdEvent *event)
         /* Do not send back events we just got */
         return;
 
-    if ( ( ! server->forward_all ) && ( server->forwards != NULL ) && ( ! g_hash_table_contains(server->forwards, eventd_event_get_category(event)) ) )
+    const gchar *category;
+    category = eventd_event_get_category(event);
+    if ( ( category[0] != '.' ) && ( ! server->forward_all ) && ( server->forwards != NULL ) && ( ! g_hash_table_contains(server->forwards, category) ) )
         return;
 
     GError *error = NULL;

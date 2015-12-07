@@ -189,6 +189,14 @@ eventd_core_get_sockets(EventdCoreContext *context, const gchar * const *binds)
 gboolean
 eventd_core_push_event(EventdCoreContext *context, EventdEvent *event)
 {
+    const gchar *category;
+    category = eventd_event_get_category(event);
+    if ( category[0] == '.' )
+    {
+        eventd_plugins_event_dispatch_all(event);
+        return TRUE;
+    }
+
     const GList *actions;
     if ( ! eventd_config_process_event(context->config, event, context->flags, &actions) )
         return FALSE;

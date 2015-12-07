@@ -211,8 +211,17 @@ _eventd_http_event_dispatch(EventdPluginContext *self, EventdEvent *event)
     if ( self->server == NULL )
         return;
 
+    const gchar *category;
     GList *subscribers;
     GList *client;
+
+    category = eventd_event_get_category(event);
+    if ( category[0] == '.' )
+    {
+        for ( client = self->clients ; client != NULL ; client = g_list_next(client) )
+            eventd_http_websocket_client_event_dispatch(client->data, event);
+        return;
+    }
 
     subscribers = self->subscribe_all;
     for ( client = subscribers ; client != NULL ; client = g_list_next(client) )

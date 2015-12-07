@@ -261,14 +261,23 @@ _eventd_evp_config_reset(EventdPluginContext *self)
 static void
 _eventd_evp_event_dispatch(EventdPluginContext *self, EventdEvent *event)
 {
+    const gchar *category;
     GList *subscribers;
     GList *client;
+
+    category = eventd_event_get_category(event);
+    if ( category[0] == '.' )
+    {
+        for ( client = self->clients ; client != NULL ; client = g_list_next(client) )
+            eventd_evp_client_event_dispatch(client->data, event);
+        return;
+    }
 
     subscribers = self->subscribe_all;
     for ( client = subscribers ; client != NULL ; client = g_list_next(client) )
         eventd_evp_client_event_dispatch(client->data, event);
 
-    subscribers = g_hash_table_lookup(self->subscribe_categories, eventd_event_get_category(event));
+    subscribers = g_hash_table_lookup(self->subscribe_categories, category);
     for ( client = subscribers ; client != NULL ; client = g_list_next(client) )
         eventd_evp_client_event_dispatch(client->data, event);
 }
