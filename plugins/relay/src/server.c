@@ -38,12 +38,14 @@
 
 #include "server.h"
 
-struct _EventdPluginAction {
+struct _EventdRelayServer {
     EventdPluginCoreContext *core;
     EventdPluginCoreInterface *core_interface;
     gboolean accept_unknown_ca;
     gboolean subscribe;
     gchar **subscriptions;
+    gboolean forward_all;
+    GHashTable *forwards;
     EventcConnection *connection;
     LibeventdReconnectHandler *reconnect;
     EventdEvent *current;
@@ -100,7 +102,7 @@ _eventd_relay_server_setup_connection(EventdRelayServer *server)
 }
 
 EventdRelayServer *
-eventd_relay_server_new(EventdPluginCoreContext *core, EventdPluginCoreInterface *core_interface, gboolean accept_unknown_ca, gboolean subscribe, gchar **subscriptions)
+eventd_relay_server_new(EventdPluginCoreContext *core, EventdPluginCoreInterface *core_interface, gboolean accept_unknown_ca, gchar **forwards, gchar **subscriptions)
 {
     EventdRelayServer *server;
 
@@ -110,8 +112,21 @@ eventd_relay_server_new(EventdPluginCoreContext *core, EventdPluginCoreInterface
 
     server->accept_unknown_ca = accept_unknown_ca;
 
-    server->subscribe = subscribe;
-    if ( server->subscribe && ( subscriptions != NULL ) && ( subscriptions[0] != NULL ) )
+    if ( forwards != NULL )
+    {
+        server->forward_all = ( forwards[0] == NULL );
+        if ( ! server->forward_all )
+        {
+            server->forwards = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+            gchar **forward;
+            for ( forward = forwards ; *forward != NULL ; ++forward )
+                g_hash_table_add(server->forwards, *forward);
+        }
+        g_free(forwards);
+    }
+
+    server->subscribe = ( subscriptions != NULL );
+    if ( server->subscribe && ( subscriptions[0] != NULL ) )
         server->subscriptions = subscriptions;
     else
         g_strfreev(subscriptions);
@@ -122,7 +137,7 @@ eventd_relay_server_new(EventdPluginCoreContext *core, EventdPluginCoreInterface
 }
 
 EventdRelayServer *
-eventd_relay_server_new_for_domain(EventdPluginCoreContext *core, EventdPluginCoreInterface *core_interface, gboolean accept_unknown_ca, gboolean subscribe, gchar **subscriptions, const gchar *domain)
+eventd_relay_server_new_for_domain(EventdPluginCoreContext *core, EventdPluginCoreInterface *core_interface, gboolean accept_unknown_ca, gchar **forwards, gchar **subscriptions, const gchar *domain)
 {
     EventcConnection *connection;
     GError *error = NULL;
@@ -137,7 +152,7 @@ eventd_relay_server_new_for_domain(EventdPluginCoreContext *core, EventdPluginCo
 
     EventdRelayServer *server;
 
-    server = eventd_relay_server_new(core, core_interface, accept_unknown_ca, subscribe, subscriptions);
+    server = eventd_relay_server_new(core, core_interface, accept_unknown_ca, forwards, subscriptions);
     server->connection = connection;
 
     _eventd_relay_server_setup_connection(server);
@@ -196,6 +211,9 @@ eventd_relay_server_event(EventdRelayServer *server, EventdEvent *event)
 {
     if ( server->current == event )
         /* Do not send back events we just got */
+        return;
+
+    if ( ( ! server->forward_all ) && ( server->forwards != NULL ) && ( ! g_hash_table_contains(server->forwards, eventd_event_get_category(event)) ) )
         return;
 
     GError *error = NULL;

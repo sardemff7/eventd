@@ -50,7 +50,6 @@ struct _EventdPluginContext {
     EventdPluginCoreInterface *core_interface;
     EventdRelayAvahi *avahi;
     GHashTable *servers;
-    GSList *actions;
     gboolean no_avahi;
 };
 
@@ -211,13 +210,26 @@ _eventd_relay_control_command(EventdPluginContext *context, guint64 argc, const 
  * Configuration interface
  */
 
-static EventdPluginAction *
-_eventd_relay_server_parse(EventdPluginContext *context, GKeyFile *config_file, const gchar *group, gboolean subscribe, gchar **subscriptions)
+static void
+_eventd_relay_server_parse(EventdPluginContext *context, GKeyFile *config_file, const gchar *server)
 {
+    gsize size = strlen("Relay ") + strlen(server) + 1;
+    gchar group[size];
+    g_snprintf(group, size, "Relay %s", server);
+    if ( ! g_key_file_has_group(config_file, group) )
+        return;
+
     gboolean accept_unknown_ca = FALSE;
+    gchar **forwards = NULL;
+    gchar **subscriptions = NULL;
+    gchar *server_uri = NULL;
 
     if ( evhelpers_config_key_file_get_boolean(config_file, group, "AcceptUnknownCA", &accept_unknown_ca) < 0 )
-        goto err;
+        goto cleanup;
+    if ( evhelpers_config_key_file_get_string_list(config_file, group, "Forwards", &forwards, NULL) < 0 )
+        goto cleanup;
+    if ( evhelpers_config_key_file_get_string_list(config_file, group, "Subscriptions", &subscriptions, NULL) < 0 )
+        goto cleanup;
 
 #ifdef ENABLE_AVAHI
     gchar *avahi_name;
@@ -227,34 +239,38 @@ _eventd_relay_server_parse(EventdPluginContext *context, GKeyFile *config_file, 
         server = g_hash_table_lookup(context->servers, avahi_name);
         if ( server == NULL )
         {
-            server = eventd_relay_server_new(context->core, context->core_interface, accept_unknown_ca, subscribe, subscriptions);
+            server = eventd_relay_server_new(context->core, context->core_interface, accept_unknown_ca, forwards, subscriptions);
             eventd_relay_avahi_server_new(context->avahi, avahi_name, server);
-            g_hash_table_insert(context->servers, g_strdup(avahi_name), server);
+            g_hash_table_insert(context->servers, avahi_name, server);
+            forwards = subscriptions = NULL;
         }
-        g_free(avahi_name);
-        return server;
+        else
+            g_free(avahi_name);
     }
+    else
 #endif /* ENABLE_AVAHI */
-
-    gchar *server_uri = NULL;
     if ( evhelpers_config_key_file_get_string(config_file, group, "Server", &server_uri) == 0 )
     {
         EventdRelayServer *server;
         server = g_hash_table_lookup(context->servers, server_uri);
         if ( server == NULL )
         {
-            server = eventd_relay_server_new_for_domain(context->core, context->core_interface, accept_unknown_ca, subscribe, subscriptions, server_uri);
+            server = eventd_relay_server_new_for_domain(context->core, context->core_interface, accept_unknown_ca, forwards, subscriptions, server_uri);
             if ( server == NULL )
                 g_warning("Couldn't create the connection to server '%s'", server_uri);
             else
-                g_hash_table_insert(context->servers, g_strdup(server_uri), server);
+            {
+                g_hash_table_insert(context->servers, server_uri, server);
+                forwards = subscriptions = NULL;
+            }
         }
-        g_free(server_uri);
-        return server;
+        else
+            g_free(server_uri);
     }
 
-err:
-    return NULL;
+cleanup:
+    g_strfreev(subscriptions);
+    g_strfreev(forwards);
 }
 
 static void
@@ -270,59 +286,16 @@ _eventd_relay_global_parse(EventdPluginContext *context, GKeyFile *config_file)
     if ( servers == NULL )
         return;
 
-    gsize size = 0, len;
     gchar **server;
     for ( server = servers ; *server != NULL ; ++server )
-    {
-        len = strlen(*server);
-        if ( size < len )
-            size = len;
-    }
-
-    size += strlen("Relay ") + 1;
-    gchar group[size];
-    for ( server = servers ; *server != NULL ; ++server )
-    {
-        g_sprintf(group, "Relay %s", *server);
-        if ( ! g_key_file_has_group(config_file, group) )
-            continue;
-
-        g_debug("Add relay %s", *server);
-
-        gchar **subscriptions = NULL;
-        if ( evhelpers_config_key_file_get_string_list(config_file, group, "Subscriptions", &subscriptions, NULL) < 0 )
-            goto next;
-
-        _eventd_relay_server_parse(context, config_file, group, TRUE, subscriptions);
-        subscriptions = NULL;
-
-    next:
-        g_strfreev(subscriptions);
-        g_free(*server);
-    }
-}
-
-static EventdPluginAction *
-_eventd_relay_action_parse(EventdPluginContext *context, GKeyFile *config_file)
-{
-    gboolean disable;
-
-    if ( ! g_key_file_has_group(config_file, "Relay") )
-        return NULL;
-
-    if ( evhelpers_config_key_file_get_boolean(config_file, "Relay", "Disable", &disable) < 0 )
-        return NULL;
-    if ( disable )
-        return NULL;
-
-    return _eventd_relay_server_parse(context, config_file, "Relay", FALSE, NULL);
+        _eventd_relay_server_parse(context, config_file, *server);
+    g_strfreev(servers);
 }
 
 static void
 _eventd_relay_config_reset(EventdPluginContext *context)
 {
-    g_slist_free_full(context->actions, eventd_relay_server_free);
-    context->actions = NULL;
+    g_hash_table_remove_all(context->servers);
 }
 
 
@@ -331,9 +304,14 @@ _eventd_relay_config_reset(EventdPluginContext *context)
  */
 
 static void
-_eventd_relay_event_action(EventdPluginContext *context, EventdRelayServer *server, EventdEvent *event)
+_eventd_relay_event_dispatch(EventdPluginContext *context, EventdEvent *event)
 {
-    eventd_relay_server_event(server, event);
+    GHashTableIter iter;
+    gchar *name;
+    EventdRelayServer *server;
+    g_hash_table_iter_init(&iter, context->servers);
+    while ( g_hash_table_iter_next(&iter, (gpointer *) &name, (gpointer *) &server) )
+        eventd_relay_server_event(server, event);
 }
 
 
@@ -357,9 +335,8 @@ eventd_plugin_get_interface(EventdPluginInterface *interface)
     eventd_plugin_interface_add_control_command_callback(interface, _eventd_relay_control_command);
 
     eventd_plugin_interface_add_global_parse_callback(interface, _eventd_relay_global_parse);
-    eventd_plugin_interface_add_action_parse_callback(interface, _eventd_relay_action_parse);
     eventd_plugin_interface_add_config_reset_callback(interface, _eventd_relay_config_reset);
 
-    eventd_plugin_interface_add_event_action_callback(interface, _eventd_relay_event_action);
+    eventd_plugin_interface_add_event_dispatch_callback(interface, _eventd_relay_event_dispatch);
 }
 

@@ -278,10 +278,11 @@
                 </varlistentry>
 
                 <varlistentry>
-                    <term><varname>Subscribe=</varname></term>
+                    <term><varname>Forwards=</varname></term>
                     <listitem>
-                        <para>A <type>boolean</type></para>
-                        <para>The plugin will subscribe to events from the remote server.</para>
+                        <para>A <type>list of event categories</type></para>
+                        <para>The list of event categories the plugin will forward.</para>
+                        <para>If empty (but present), will forward everything.</para>
                     </listitem>
                 </varlistentry>
 
@@ -289,7 +290,8 @@
                     <term><varname>Subscriptions=</varname></term>
                     <listitem>
                         <para>A <type>list of event categories</type></para>
-                        <para>Restrict the events the plugin will subscribe to.</para>
+                        <para>The list of event categories the plugin will subscribe to.</para>
+                        <para>If empty (but present), will subscribe to everything.</para>
                     </listitem>
                 </varlistentry>
             </variablelist>
@@ -430,65 +432,6 @@
                     <listitem>
                         <para>A <type>list of action names</type></para>
                         <para>The list of sub actions to trigger.</para>
-                    </listitem>
-                </varlistentry>
-            </variablelist>
-        </refsect2>
-
-        <refsect2>
-            <title>Section <varname>[Relay]</varname></title>
-
-            <para>This section controls the <command>relay</command> plugin, listed here as it is considered a core plugin.</para>
-
-            <variablelist>
-                <varlistentry>
-                    <term><varname>Disable=</varname></term>
-                    <listitem>
-                        <para>A <type>boolean</type></para>
-                        <para>If <literal>true</literal>, the event will not be relayed.</para>
-                    </listitem>
-                </varlistentry>
-
-                <varlistentry>
-                    <term><varname>Server=</varname></term>
-                    <listitem>
-                        <para>A <type>server string</type></para>
-                        <para>The form is <replaceable>name</replaceable><optional>:<replaceable>port</replaceable></optional>.</para>
-                        <para>If you omit <replaceable>port</replaceable> or use <literal>0</literal>, the SRV DNS record <literal>&EVP_SERVICE_TYPE;.<replaceable>host</replaceable></literal> will be used to find the real host and port to connect to.</para>
-                        <para>Static servers the relay plugin will connect to.</para>
-                    </listitem>
-                </varlistentry>
-
-                <varlistentry>
-                    <term><varname>Avahi=</varname></term>
-                    <listitem>
-                        <para>An <type>Avahi name</type></para>
-                        <para>Avahi name of servers the relay plugin will connect to.</para>
-                        <para>If you provide both <varname>Server=</varname> and <varname>Avahi=</varname>, the former is ignored.</para>
-                    </listitem>
-                </varlistentry>
-
-                <varlistentry>
-                    <term><varname>AcceptUnknownCA=</varname></term>
-                    <listitem>
-                        <para>A <type>boolean</type></para>
-                        <para>Whether to accept a certificate with an unknown CA (like a self-signed certificate).</para>
-                    </listitem>
-                </varlistentry>
-
-                <varlistentry>
-                    <term><varname>Subscribe=</varname></term>
-                    <listitem>
-                        <para>A <type>boolean</type></para>
-                        <para>The plugin will subscribe to events from the remote server.</para>
-                    </listitem>
-                </varlistentry>
-
-                <varlistentry>
-                    <term><varname>Subscriptions=</varname></term>
-                    <listitem>
-                        <para>A <type>list of event categories</type></para>
-                        <para>Restrict the events the plugin will subscribe to.</para>
                     </listitem>
                 </varlistentry>
             </variablelist>
