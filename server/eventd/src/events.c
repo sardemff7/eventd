@@ -59,12 +59,6 @@ typedef struct {
     GQuark *flags_blacklist;
 } EventdEventsEvent;
 
-static gchar *
-_eventd_events_events_get_name(const gchar *category, const gchar *name)
-{
-    return ( name == NULL ) ? g_strdup(category) : g_strconcat(category, " ", name, NULL);
-}
-
 static void
 _eventd_events_event_free(gpointer data)
 {
@@ -175,18 +169,20 @@ _eventd_events_get_best_match(GList *list, EventdEvent *event, GQuark *current_f
 static EventdEventsEvent *
 _eventd_events_get_event(EventdEvents *self, EventdEvent *event, GQuark *current_flags)
 {
-    const gchar *category;
+    const gchar *category, *name;
+    gsize s;
     GList *list;
     EventdEventsEvent *match;
 
     category = eventd_event_get_category(event);
+    name = eventd_event_get_name(event);
+    s = strlen(category) + strlen(name) + 2;
 
-    gchar *name;
-    name = _eventd_events_events_get_name(category, eventd_event_get_name(event));
-    list = g_hash_table_lookup(self->events, name);
-    g_free(name);
+    gchar full_name[s];
 
+    g_snprintf(full_name, s, "%s %s", category, name);
 
+    list = g_hash_table_lookup(self->events, full_name);
     if ( list != NULL )
     {
         match = _eventd_events_get_best_match(list, event, current_flags);
