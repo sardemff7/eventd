@@ -109,6 +109,9 @@ _eventd_nd_notification_free(gpointer data)
 {
     EventdNdNotification *self = data;
 
+    if ( self->timeout > 0 )
+        g_source_remove(self->timeout);
+
     g_list_free_full(self->surfaces, _eventd_nd_notification_surface_context_free);
 
     g_free(self);
@@ -373,6 +376,7 @@ _eventd_nd_event_timedout(gpointer user_data)
     EventdNdNotification *self = user_data;
     EventdPluginContext *context = self->context;
 
+    self->timeout = 0;
     g_hash_table_remove(context->notifications, eventd_event_get_uuid(self->event));
 
     return FALSE;
@@ -457,6 +461,22 @@ _eventd_nd_notification_update(EventdNdNotification *self,EventdPluginContext *c
 }
 
 static void
+_eventd_nd_event_dispatch(EventdPluginContext *context, EventdEvent *event)
+{
+    const gchar *category;
+    category = eventd_event_get_category(event);
+    if ( g_strcmp0(category, ".notification") != 0 )
+        return;
+
+    const gchar *uuid;
+    uuid = eventd_event_get_data(event, "source-event");
+    if ( ( uuid == NULL ) || ( ! g_hash_table_contains(context->notifications, uuid) ) )
+        return;
+
+    g_hash_table_remove(context->notifications, uuid);
+}
+
+static void
 _eventd_nd_event_action(EventdPluginContext *context, EventdNdStyle *style, EventdEvent *event)
 {
     if ( g_hash_table_size(context->displays) == 0 )
@@ -495,6 +515,7 @@ eventd_plugin_get_interface(EventdPluginInterface *interface)
     eventd_plugin_interface_add_action_parse_callback(interface, _eventd_nd_action_parse);
     eventd_plugin_interface_add_config_reset_callback(interface, _eventd_nd_config_reset);
 
+    eventd_plugin_interface_add_event_dispatch_callback(interface, _eventd_nd_event_dispatch);
     eventd_plugin_interface_add_event_action_callback(interface, _eventd_nd_event_action);
 }
 
