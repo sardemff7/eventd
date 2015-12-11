@@ -32,9 +32,11 @@ typedef struct _EventdNdBackendContext EventdNdBackendContext;
 
 typedef void (*EventdNdSimpleFunc)(EventdNdContext *context);
 typedef void (*EventdNdRemoveDisplayFunc)(EventdNdContext *context, const gchar *target);
+typedef void (*EventdNdRemoveSurfaceFunc)(EventdNdContext *context, const gchar *uuid);
 
 typedef struct {
     EventdNdRemoveDisplayFunc remove_display;
+    EventdNdRemoveSurfaceFunc remove_surface;
 } EventdNdInterface;
 
 typedef EventdNdBackendContext *(*EventdNdBackendInitFunc)(EventdNdContext *nd, EventdNdInterface *nd_interface);

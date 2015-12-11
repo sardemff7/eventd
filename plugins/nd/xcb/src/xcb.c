@@ -478,9 +478,7 @@ _eventd_nd_xcb_surface_expose_event(EventdNdSurface *self, xcb_expose_event_t *e
 static void
 _eventd_nd_xcb_surface_button_release_event(EventdNdSurface *self)
 {
-    /*
-     * FIXME: Add notification close event when needed
-     */
+    self->display->context->nd_interface->remove_surface(self->display->context->nd, eventd_event_get_uuid(self->event));
 }
 
 static void

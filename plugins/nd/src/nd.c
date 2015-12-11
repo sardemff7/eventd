@@ -44,6 +44,8 @@
 
 
 struct _EventdPluginContext {
+    EventdPluginCoreContext *core;
+    EventdPluginCoreInterface *core_interface;
     EventdNdInterface interface;
     GSList *actions;
     gint max_width;
@@ -93,6 +95,16 @@ _eventd_nd_backend_remove_display(EventdNdContext *context, const gchar *target)
     g_hash_table_remove(context->displays, target);
 }
 
+static void
+_eventd_nd_backend_remove_surface(EventdNdContext *context, const gchar *uuid)
+{
+    EventdEvent *event;
+    event = eventd_event_new(".notification", "dismiss");
+    eventd_event_add_data(event, g_strdup("source-event"), g_strdup(uuid));
+    eventd_plugin_core_push_event(context->core, context->core_interface, event);
+    eventd_event_unref(event);
+}
+
 
 static void
 _eventd_nd_notification_surface_context_free(gpointer data)
@@ -128,8 +140,11 @@ _eventd_nd_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *interf
     EventdPluginContext *context;
 
     context = g_new0(EventdPluginContext, 1);
+    context->core = core;
+    context->core_interface = interface;
 
     context->interface.remove_display = _eventd_nd_backend_remove_display;
+    context->interface.remove_surface = _eventd_nd_backend_remove_surface;
 
     context->style = eventd_nd_style_new(NULL);
 
@@ -375,9 +390,13 @@ _eventd_nd_event_timedout(gpointer user_data)
 {
     EventdNdNotification *self = user_data;
     EventdPluginContext *context = self->context;
+    EventdEvent *event;
 
     self->timeout = 0;
-    g_hash_table_remove(context->notifications, eventd_event_get_uuid(self->event));
+    event = eventd_event_new(".notification", "timeout");
+    eventd_event_add_data(event, g_strdup("source-event"), g_strdup(eventd_event_get_uuid(self->event)));
+    eventd_plugin_core_push_event(context->core, context->core_interface, event);
+    eventd_event_unref(event);
 
     return FALSE;
 }
