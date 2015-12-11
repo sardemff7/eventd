@@ -54,7 +54,7 @@ struct _EventdPluginContext {
     GVariant *capabilities;
     GVariant *server_information;
     guint32 count;
-    GHashTable *events;
+    GHashTable *ids;
     GHashTable *notifications;
 };
 
@@ -112,6 +112,7 @@ _eventd_fdo_notifications_notification_new(EventdPluginContext *context, const g
     eventd_event_add_data(event, g_strdup("libnotify-id"), g_strdup_printf("%u", notification->id));
 
     g_hash_table_insert(context->notifications, (gpointer) eventd_event_get_uuid(event), notification);
+    g_hash_table_insert(context->ids, GUINT_TO_POINTER(notification->id), notification);
 
     return notification;
 }
@@ -121,6 +122,7 @@ _eventd_fdo_notifications_notification_free(gpointer user_data)
 {
     EventdDbusNotification *notification = user_data;
 
+    g_hash_table_remove(notification->context->ids, GUINT_TO_POINTER(notification->id));
     eventd_event_unref(notification->event);
 
     g_free(notification->sender);
@@ -316,8 +318,6 @@ static void
 _eventd_fdo_notifications_close_notification(EventdPluginContext *context, GVariant *parameters, GDBusMethodInvocation *invocation)
 {
     g_dbus_method_invocation_return_value(invocation, NULL);
-    /*
-     * FIXME: add back
     guint32 id;
     EventdDbusNotification *notification;
 
@@ -329,10 +329,17 @@ _eventd_fdo_notifications_close_notification(EventdPluginContext *context, GVari
         return;
     }
 
-    notification = g_hash_table_lookup(context->notifications, GUINT_TO_POINTER(id));
+    notification = g_hash_table_lookup(context->ids, GUINT_TO_POINTER(id));
+    if ( notification != NULL )
+    {
+        EventdEvent *event;
+        event = eventd_event_new(".notification", "close");
+        eventd_event_add_data(event, g_strdup("source-event"), g_strdup(eventd_event_get_uuid(notification->event)));
+        eventd_plugin_core_push_event(context->core, context->core_interface, event);
+        eventd_event_unref(event);
+    }
 
     g_dbus_method_invocation_return_value(invocation, NULL);
-    */
 }
 
 static void
@@ -634,6 +641,8 @@ _eventd_fdo_notifications_event_dispatch(EventdPluginContext *context, EventdEve
         _eventd_fdo_notifications_notification_closed(notification, EVENTD_FDO_NOTIFICATIONS_CLOSE_REASON_EXPIRED);
     else if ( g_strcmp0(name, "dismiss") == 0 )
         _eventd_fdo_notifications_notification_closed(notification, EVENTD_FDO_NOTIFICATIONS_CLOSE_REASON_DISMISS);
+    else if ( g_strcmp0(name, "close") == 0 )
+        _eventd_fdo_notifications_notification_closed(notification, EVENTD_FDO_NOTIFICATIONS_CLOSE_REASON_CALL);
     else
         _eventd_fdo_notifications_notification_closed(notification, EVENTD_FDO_NOTIFICATIONS_CLOSE_REASON_RESERVED);
 }
