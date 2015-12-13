@@ -57,7 +57,7 @@
     <refsect1 id="global-sections">
         <title>Global sections</title>
 
-        <refsect2 condition="website;enable_xcb">
+        <refsect2 condition="website;enable_nd_xcb">
             <title>Section <varname>[NotificationXcb]</varname></title>
 
             <para>The XCB backend configuration</para>
@@ -115,7 +115,7 @@
             </variablelist>
         </refsect2>
 
-        <refsect2 condition="website;enable_windows">
+        <refsect2 condition="website;enable_nd_windows">
             <title>Section <varname>[NotificationWin]</varname></title>
 
             <para>The Windows backend configuration</para>

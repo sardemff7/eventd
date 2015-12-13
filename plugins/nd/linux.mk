@@ -1,6 +1,6 @@
 # Linux framebuffer backend
 
-if ENABLE_LINUX_FB
+if ENABLE_ND_LINUX_FB
 ndbackends_LTLIBRARIES += \
 	linux.la \
 	$(null)

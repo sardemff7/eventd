@@ -1,6 +1,6 @@
 # XCB backend
 
-if ENABLE_XCB
+if ENABLE_ND_XCB
 ndbackends_LTLIBRARIES += \
 	xcb.la \
 	$(null)

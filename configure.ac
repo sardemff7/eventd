@@ -246,40 +246,40 @@ fi
 AM_CONDITIONAL([ENABLE_NOTIFICATION_DAEMON], [test x${enable_notification_daemon} = xyes])
 
 # nd backends
-AC_ARG_ENABLE([xcb], AS_HELP_STRING([--disable-xcb], [Disable XCB graphical backend]), [], [enable_xcb=${ev_os_unix}])
-AC_ARG_ENABLE([linux-framebuffer], AS_HELP_STRING([--enable-linux-framebuffer], [Enable Linux framebuffer (fbdev) backend]), [], [enable_linux_framebuffer=no])
-AC_ARG_ENABLE([windows], AS_HELP_STRING([--enable-windows], [Enable Windows backend]), [], [enable_windows=${ev_os_win}])
+AC_ARG_ENABLE([nd-xcb], AS_HELP_STRING([--disable-nd-xcb], [Disable XCB graphical backend]), [], [enable_nd_xcb=${ev_os_unix}])
+AC_ARG_ENABLE([nd-linux-framebuffer], AS_HELP_STRING([--enable-nd-linux-framebuffer], [Enable Linux framebuffer (fbdev) backend]), [], [enable_nd_linux_framebuffer=no])
+AC_ARG_ENABLE([nd-windows], AS_HELP_STRING([--enable-nd-windows], [Enable Windows backend]), [], [enable_nd_windows=${ev_os_win}])
 
 # Common
-if test x${enable_xcb} = xyes -o x${enable_linux_framebuffer} = xyes -o x${enable_windows} = xyes; then
+if test x${enable_nd_xcb} = xyes -o x${enable_nd_linux_framebuffer} = xyes -o x${enable_nd_windows} = xyes; then
     if test x${enable_notification_daemon} = xno; then
         AC_MSG_ERROR([*** XCB or Linux framebuffer backends required but not notification-daemon plugin])
     fi
 fi
 
 # XCB backend
-if test x${enable_xcb} = xyes; then
+if test x${enable_nd_xcb} = xyes; then
     GW_CHECK_XCB([cairo-xcb xcb xcb-aux xcb-randr xcb-shape])
-    AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_xcb"
+    AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_nd_xcb"
 fi
-AM_CONDITIONAL([ENABLE_XCB], [test x${enable_xcb} = xyes])
+AM_CONDITIONAL([ENABLE_ND_XCB], [test x${enable_nd_xcb} = xyes])
 
 # Linux framebuffer backend
-if test x${enable_linux_framebuffer} = xyes; then
+if test x${enable_nd_linux_framebuffer} = xyes; then
     AC_CHECK_HEADER([linux/fb.h])
-    AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_linux_framebuffer"
+    AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_nd_linux_framebuffer"
 fi
-AM_CONDITIONAL([ENABLE_LINUX_FB], [test x${enable_linux_framebuffer} = xyes])
+AM_CONDITIONAL([ENABLE_ND_LINUX_FB], [test x${enable_nd_linux_framebuffer} = xyes])
 
 # Windows API backend
-if test x${enable_windows} = xyes; then
+if test x${enable_nd_windows} = xyes; then
     if test x${ev_os_win} != xyes; then
         AC_MSG_ERROR([*** Windows backends required but not compiling for MinGW])
     fi
     GW_CHECK_WIN([cairo-win32])
-    AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_windows"
+    AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_nd_windows"
 fi
-AM_CONDITIONAL([ENABLE_WINDOWS], [test x${enable_windows} = xyes])
+AM_CONDITIONAL([ENABLE_ND_WINDOWS], [test x${enable_nd_windows} = xyes])
 
 # IM plugin
 AC_ARG_ENABLE([im], AS_HELP_STRING([--disable-im], [Disable IM support through libpurple]), [], [enable_im=${ev_os_unix}])
@@ -392,9 +392,9 @@ AC_MSG_RESULT([
         exec plugin: yes
         notification-daemon: ${enable_notification_daemon}
             Backends:
-                XCB: ${enable_xcb}
-                Linux framebuffer: ${enable_linux_framebuffer}
-                Windows: ${enable_windows}
+                XCB: ${enable_nd_xcb}
+                Linux framebuffer: ${enable_nd_linux_framebuffer}
+                Windows: ${enable_nd_windows}
         IM support through libpurple: ${enable_im}
         Sound files playing through libsndfile: ${enable_sound}
         Text-to-speech through eSpeak: ${enable_tts}

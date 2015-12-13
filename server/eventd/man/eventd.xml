@@ -286,7 +286,7 @@
     <refsect1 id="examples">
         <title>Examples</title>
 
-        <example condition="website;enable_xcb">
+        <example condition="website;enable_nd_xcb">
             <title>As a notification daemon</title>
 
             <para>

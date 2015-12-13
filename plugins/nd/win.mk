@@ -1,6 +1,6 @@
 # Windows backend
 
-if ENABLE_WINDOWS
+if ENABLE_ND_WINDOWS
 ndbackends_LTLIBRARIES += \
 	win.la \
 	$(null)
