@@ -284,6 +284,7 @@ if test x${enable_nd_windows} = xyes; then
         AC_MSG_ERROR([*** Windows backends required but not compiling for MinGW])
     fi
     GW_CHECK_WIN([cairo-win32])
+    AC_DEFINE([ENABLE_ND_WIN], [1], [nd Windows backend])
     AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_nd_windows"
 fi
 AM_CONDITIONAL([ENABLE_ND_WINDOWS], [test x${enable_nd_windows} = xyes])

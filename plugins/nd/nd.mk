@@ -80,3 +80,13 @@ nd_la_SOURCES += \
 	%D%/src/backend-linux.c \
 	$(null)
 endif
+
+if ENABLE_ND_WINDOWS
+include src/libgwater/win.mk
+nd_la_SOURCES += \
+	%D%/src/backend-win.h \
+	%D%/src/backend-win.c \
+	$(null)
+nd_la_CFLAGS += $(GW_WIN_CFLAGS)
+nd_la_LIBADD += $(GW_WIN_LIBS)
+endif

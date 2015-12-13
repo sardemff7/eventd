@@ -33,6 +33,9 @@ typedef enum {
 #ifdef ENABLE_ND_FBDEV
     EVENTD_ND_BACKEND_FBDEV,
 #endif /* ENABLE_ND_FBDEV */
+#ifdef ENABLE_ND_WIN
+    EVENTD_ND_BACKEND_WIN,
+#endif /* ENABLE_ND_WIN */
     _EVENTD_ND_BACKENDS_SIZE
 } EventdNdBackends;
 

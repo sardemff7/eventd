@@ -42,6 +42,7 @@
 
 #include "backend-xcb.h"
 #include "backend-fbdev.h"
+#include "backend-win.h"
 
 typedef struct {
     EventdNdBackendContext *context;
@@ -175,6 +176,9 @@ _eventd_nd_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *interf
 #ifdef ENABLE_ND_FBDEV
     eventd_nd_add_backend(linux, FBDEV);
 #endif /* ENABLE_ND_FBDEV */
+#ifdef ENABLE_ND_WIN
+    eventd_nd_add_backend(win, WIN);
+#endif /* ENABLE_ND_WIN */
 
     EventdNdBackends i;
     for ( i = EVENTD_ND_BACKEND_NONE + 1 ; i < _EVENTD_ND_BACKENDS_SIZE ; ++i )
@@ -230,6 +234,15 @@ _eventd_nd_start(EventdPluginContext *context)
         }
     }
 #endif /* ENABLE_ND_FBDEV */
+#ifdef ENABLE_ND_WIN
+#ifdef G_OS_WIN32
+    if ( backend == EVENTD_ND_BACKEND_NONE )
+    {
+        backend = EVENTD_ND_BACKEND_WIN;
+        target = "dummy";
+    }
+#endif /* G_OS_WIN32 */
+#endif /* ENABLE_ND_WIN */
 
     eventd_nd_backend_switch(context, backend, target);
 }
