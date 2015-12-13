@@ -74,9 +74,9 @@ ndbackendsdir = $(pluginsdir)/nd
 
 ndbackends_LTLIBRARIES =
 
-include %D%/xcb/xcb.mk
-include %D%/linux/linux.mk
-include %D%/win/win.mk
+include %D%/xcb.mk
+include %D%/linux.mk
+include %D%/win.mk
 
 
 #

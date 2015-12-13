@@ -8,7 +8,7 @@ endif
 
 
 linux_la_SOURCES = \
-	%D%/linux.c \
+	%D%/src/backend-linux.c \
 	$(null)
 
 linux_la_CFLAGS = \

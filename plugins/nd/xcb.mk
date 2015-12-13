@@ -1,36 +1,35 @@
-# Windows backend
+# XCB backend
 
-if ENABLE_WINDOWS
+if ENABLE_XCB
 ndbackends_LTLIBRARIES += \
-	win.la \
+	xcb.la \
 	$(null)
 
-include src/libgwater/win.mk
+include src/libgwater/xcb.mk
 endif
 
 
-win_la_SOURCES = \
-	%D%/src/win.c \
+xcb_la_SOURCES = \
+	%D%/src/backend-xcb.c \
 	$(null)
 
-win_la_CFLAGS = \
+xcb_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	$(GW_WIN_CFLAGS) \
+	$(GW_XCB_CFLAGS) \
 	$(CAIRO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(null)
 
-win_la_LDFLAGS = \
+xcb_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
 	$(PLUGIN_LDFLAGS) \
 	$(null)
 
-win_la_LIBADD = \
+xcb_la_LIBADD = \
 	libeventd.la \
 	libeventd-helpers.la \
-	$(GW_WIN_LIBS) \
-	-lgdi32 \
+	$(GW_XCB_LIBS) \
 	$(CAIRO_LIBS) \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS) \
