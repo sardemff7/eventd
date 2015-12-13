@@ -43,16 +43,12 @@
 #include <glib/gstdio.h>
 #include <cairo.h>
 
-#include <eventd-nd-backend.h>
+#include "backend-linux.h"
 
-#define FRAMEBUFFER_TARGET_PREFIX "/dev/tty"
+#define FRAMEBUFFER_TARGET_PREFIX "/dev/fb"
 
 struct _EventdNdBackendContext {
     EventdNdContext *nd;
-    EventdNdInterface *nd_interface;
-};
-
-struct _EventdNdDisplay {
     gint fd;
     guchar *buffer;
     guint64 screensize;
@@ -63,57 +59,51 @@ struct _EventdNdDisplay {
 };
 
 struct _EventdNdSurface {
-    EventdNdDisplay *display;
+    EventdNdBackendContext *display;
     cairo_surface_t *bubble;
     guchar *buffer;
     gint stride;
     gint channels;
 };
 
-static EventdNdBackendContext *
-_eventd_nd_linux_init(EventdNdContext *nd, EventdNdInterface *nd_interface)
+EventdNdBackendContext *
+eventd_nd_linux_init(EventdNdContext *nd)
 {
     EventdNdBackendContext *context;
 
     context = g_new0(EventdNdBackendContext, 1);
 
     context->nd = nd;
-    context->nd_interface = nd_interface;
 
     return context;
 }
 
-static void
-_eventd_nd_linux_uninit(EventdNdBackendContext *context)
+void
+eventd_nd_linux_uninit(EventdNdBackendContext *context)
 {
     g_free(context);
 }
 
-static const gchar *
-_eventd_nd_linux_default_target(EventdNdBackendContext *context)
+void
+eventd_nd_linux_global_parse(EventdNdBackendContext *context, GKeyFile *config_file)
 {
-    return g_getenv("TTY");
 }
 
-static EventdNdDisplay *
-_eventd_nd_linux_display_new(EventdNdBackendContext *context, const gchar *target)
+gboolean
+eventd_nd_linux_start(EventdNdBackendContext *context, const gchar *target)
 {
-    g_return_val_if_fail(target != NULL, NULL);
-
-    EventdNdDisplay *display;
+    EventdNdBackendContext *display = context;
     struct fb_fix_screeninfo finfo;
     struct fb_var_screeninfo vinfo;
 
     if ( ! g_str_has_prefix(target, FRAMEBUFFER_TARGET_PREFIX) )
-        return NULL;
+        return FALSE;
 
-    display = g_new0(EventdNdDisplay, 1);
-
-    display->fd = g_open("/dev/fb0", O_RDWR);
+    display->fd = g_open(target, O_RDWR);
     if ( display->fd == -1 )
     {
         g_warning("Couldn't open framebuffer device: %s", g_strerror(errno));
-        goto fail;
+        return FALSE;
     }
 
     if ( ioctl(display->fd, FBIOGET_FSCREENINFO, &finfo) == -1 )
@@ -143,21 +133,23 @@ _eventd_nd_linux_display_new(EventdNdBackendContext *context, const gchar *targe
         goto fail;
     }
 
-
-    return display;
+    return TRUE;
 
 fail:
-    g_free(display);
-    return NULL;
+    close(context->fd);
+    context->fd = 0;
+    return FALSE;
 }
 
-static void
-_eventd_nd_linux_display_free(EventdNdDisplay *display)
+void
+eventd_nd_linux_stop(EventdNdBackendContext *display)
 {
+    EventdNdBackendContext *context = display;
     munmap(display->buffer, display->screensize);
-    close(display->fd);
+    context->buffer = NULL;
 
-    g_free(display);
+    close(display->fd);
+    context->fd = 0;
 }
 
 static inline guchar
@@ -179,8 +171,8 @@ alpha_div(guchar c, guchar a)
     return c;
 }
 
-static EventdNdSurface *
-_eventd_nd_linux_surface_new(EventdEvent *event, EventdNdDisplay *display, cairo_surface_t *bubble)
+EventdNdSurface *
+eventd_nd_linux_surface_new(EventdNdBackendContext *display, EventdEvent *event, cairo_surface_t *bubble)
 {
     EventdNdSurface *self;
 
@@ -194,16 +186,16 @@ _eventd_nd_linux_surface_new(EventdEvent *event, EventdNdDisplay *display, cairo
     return self;
 }
 
-static void
-_eventd_nd_linux_surface_free(EventdNdSurface *self)
+void
+eventd_nd_linux_surface_free(EventdNdSurface *self)
 {
     cairo_surface_destroy(self->bubble);
 
     g_free(self);
 }
 
-static void
-_eventd_nd_linux_surface_update(EventdNdSurface *self, cairo_surface_t *bubble)
+void
+eventd_nd_linux_surface_update(EventdNdSurface *self, cairo_surface_t *bubble)
 {
     cairo_surface_destroy(self->bubble);
     self->bubble = cairo_surface_reference(bubble);
@@ -215,7 +207,7 @@ _eventd_nd_linux_surface_update(EventdNdSurface *self, cairo_surface_t *bubble)
 static void
 _eventd_nd_linux_surface_display(EventdNdSurface *self, gint x, gint y)
 {
-    EventdNdDisplay *display = self->display;
+    EventdNdBackendContext *display = self->display;
 
     if ( x < 0 )
         x += display->width;
@@ -241,21 +233,4 @@ _eventd_nd_linux_surface_display(EventdNdSurface *self, gint x, gint y)
 
     cairo_destroy(cr);
     cairo_surface_destroy(surface);
-}
-
-EVENTD_EXPORT const gchar *eventd_nd_backend_id = "nd-linux";
-EVENTD_EXPORT
-void
-eventd_nd_backend_get_info(EventdNdBackend *backend)
-{
-    backend->init = _eventd_nd_linux_init;
-    backend->uninit = _eventd_nd_linux_uninit;
-
-    backend->default_target = _eventd_nd_linux_default_target;
-    backend->display_new    = _eventd_nd_linux_display_new;
-    backend->display_free   = _eventd_nd_linux_display_free;
-
-    backend->surface_new     = _eventd_nd_linux_surface_new;
-    backend->surface_free    = _eventd_nd_linux_surface_free;
-    backend->surface_update  = _eventd_nd_linux_surface_update;
 }

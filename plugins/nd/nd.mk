@@ -73,3 +73,10 @@ nd_la_SOURCES += \
 nd_la_CFLAGS += $(GW_XCB_CFLAGS)
 nd_la_LIBADD += $(GW_XCB_LIBS)
 endif
+
+if ENABLE_ND_LINUX_FB
+nd_la_SOURCES += \
+	%D%/src/backend-fbdev.h \
+	%D%/src/backend-linux.c \
+	$(null)
+endif

@@ -273,6 +273,7 @@ AM_CONDITIONAL([ENABLE_ND_XCB], [test x${enable_nd_xcb} = xyes])
 # Linux framebuffer backend
 if test x${enable_nd_linux_framebuffer} = xyes; then
     AC_CHECK_HEADER([linux/fb.h])
+    AC_DEFINE([ENABLE_ND_FBDEV], [1], [nd fbdev backend])
     AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_nd_linux_framebuffer"
 fi
 AM_CONDITIONAL([ENABLE_ND_LINUX_FB], [test x${enable_nd_linux_framebuffer} = xyes])

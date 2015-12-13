@@ -41,6 +41,7 @@
 #include "cairo.h"
 
 #include "backend-xcb.h"
+#include "backend-fbdev.h"
 
 typedef struct {
     EventdNdBackendContext *context;
@@ -87,6 +88,9 @@ static const gchar *_eventd_nd_backends_names[_EVENTD_ND_BACKENDS_SIZE] = {
 #ifdef ENABLE_ND_XCB
     [EVENTD_ND_BACKEND_XCB] = "xcb",
 #endif /* ENABLE_ND_XCB */
+#ifdef ENABLE_ND_FBDEV
+    [EVENTD_ND_BACKEND_FBDEV] = "fbdev",
+#endif /* ENABLE_ND_FBDEV */
 };
 
 void
@@ -168,6 +172,9 @@ _eventd_nd_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *interf
 #ifdef ENABLE_ND_XCB
     eventd_nd_add_backend(xcb, XCB);
 #endif /* ENABLE_ND_XCB */
+#ifdef ENABLE_ND_FBDEV
+    eventd_nd_add_backend(linux, FBDEV);
+#endif /* ENABLE_ND_FBDEV */
 
     EventdNdBackends i;
     for ( i = EVENTD_ND_BACKEND_NONE + 1 ; i < _EVENTD_ND_BACKENDS_SIZE ; ++i )
@@ -211,6 +218,18 @@ _eventd_nd_start(EventdPluginContext *context)
             backend = EVENTD_ND_BACKEND_XCB;
     }
 #endif /* ENABLE_ND_XCB */
+
+#ifdef ENABLE_ND_FBDEV
+    if ( backend == EVENTD_ND_BACKEND_NONE )
+    {
+        target = g_getenv("TTY");
+        if ( ( target != NULL ) && g_str_has_prefix(target, "/dev/tty") )
+        {
+            backend = EVENTD_ND_BACKEND_FBDEV;
+            target = "/dev/fb0";
+        }
+    }
+#endif /* ENABLE_ND_FBDEV */
 
     eventd_nd_backend_switch(context, backend, target);
 }

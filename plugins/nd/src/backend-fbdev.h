@@ -20,27 +20,21 @@
  *
  */
 
-#ifndef __EVENTD_ND_BACKEND_H__
-#define __EVENTD_ND_BACKEND_H__
+#ifndef __EVENTD_ND_BACKEND_FBDEV_H__
+#define __EVENTD_ND_BACKEND_FBDEV_H__
 
-#include <libeventd-event.h>
+#include "backend.h"
 
-typedef enum {
-    EVENTD_ND_BACKEND_NONE = 0,
-#ifdef ENABLE_ND_XCB
-    EVENTD_ND_BACKEND_XCB,
-#endif /* ENABLE_ND_XCB */
-#ifdef ENABLE_ND_FBDEV
-    EVENTD_ND_BACKEND_FBDEV,
-#endif /* ENABLE_ND_FBDEV */
-    _EVENTD_ND_BACKENDS_SIZE
-} EventdNdBackends;
+EventdNdBackendContext *eventd_nd_linux_init(EventdNdContext *nd);
+void eventd_nd_linux_uninit(EventdNdBackendContext *context);
 
-typedef struct _EventdPluginContext EventdNdContext;
-typedef struct _EventdNdBackendContext EventdNdBackendContext;
-typedef struct _EventdNdSurface EventdNdSurface;
+void eventd_nd_linux_global_parse(EventdNdBackendContext *context, GKeyFile *config_file);
 
-gboolean eventd_nd_backend_switch(EventdNdContext *context, EventdNdBackends backend, const gchar *target);
-void eventd_nd_surface_remove(EventdNdContext *context, const gchar *uuid);
+gboolean eventd_nd_linux_start(EventdNdBackendContext *context, const gchar *target);
+void eventd_nd_linux_stop(EventdNdBackendContext *context);
 
-#endif /* __EVENTD_ND_BACKEND_H__ */
+EventdNdSurface *eventd_nd_linux_surface_new(EventdNdBackendContext *context, EventdEvent *event, cairo_surface_t *bubble);
+void eventd_nd_linux_surface_update(EventdNdSurface *surface, cairo_surface_t *bubble);
+void eventd_nd_linux_surface_free(EventdNdSurface *surface);
+
+#endif /* __EVENTD_ND_BACKEND_FBDEV_H__ */
