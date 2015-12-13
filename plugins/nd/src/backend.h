@@ -20,9 +20,21 @@
  *
  */
 
-#ifndef __EVENTD_ND_BACKENDS_H__
-#define __EVENTD_ND_BACKENDS_H__
+#ifndef __EVENTD_ND_BACKEND_H__
+#define __EVENTD_ND_BACKEND_H__
 
-GHashTable *eventd_nd_backends_load(EventdNdContext *context, EventdNdInterface *interface);
+#include <libeventd-event.h>
 
-#endif /* __EVENTD_ND_BACKENDS_H__ */
+typedef enum {
+    EVENTD_ND_BACKEND_NONE = 0,
+    _EVENTD_ND_BACKENDS_SIZE
+} EventdNdBackends;
+
+typedef struct _EventdPluginContext EventdNdContext;
+typedef struct _EventdNdBackendContext EventdNdBackendContext;
+typedef struct _EventdNdSurface EventdNdSurface;
+
+gboolean eventd_nd_backend_switch(EventdNdContext *context, EventdNdBackends backend, const gchar *target);
+void eventd_nd_surface_remove(EventdNdContext *context, const gchar *uuid);
+
+#endif /* __EVENTD_ND_BACKEND_H__ */

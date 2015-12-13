@@ -1,17 +1,8 @@
 # notification plugin
 
-AM_CFLAGS += \
-	-I $(srcdir)/%D%/include \
-	$(null)
-
-
 if ENABLE_NOTIFICATION_DAEMON
 plugins_LTLIBRARIES += \
 	nd.la \
-	$(null)
-
-pkginclude_HEADERS += \
-	%D%/include/eventd-nd-backend.h \
 	$(null)
 
 man1_MANS += \
@@ -37,9 +28,7 @@ nd_la_SOURCES = \
 	%D%/src/style.h \
 	%D%/src/pixbuf.h \
 	%D%/src/pixbuf.c \
-	%D%/include/eventd-nd-backend.h \
-	%D%/src/backends.c \
-	%D%/src/backends.h \
+	%D%/src/backend.h \
 	%D%/src/nd.c \
 	$(null)
 
@@ -70,27 +59,8 @@ nd_la_LIBADD = \
 	$(GLIB_LIBS) \
 	$(null)
 
-ndbackendsdir = $(pluginsdir)/nd
-
-ndbackends_LTLIBRARIES =
-
-include %D%/xcb.mk
-include %D%/linux.mk
-include %D%/win.mk
-
 
 #
-# Hooks
+# Backends
 #
 
-install-data-hook la-files-install-hook: nd-la-files-install-hook
-uninstall-hook la-files-uninstall-hook: nd-la-files-uninstall-hook
-
-# *.la files cleanup
-nd-la-files-install-hook:
-	$(call ev_remove_la,ndbackends)
-
-# Remove *.so files at uninstall since
-# we remove *.la files at install
-nd-la-files-uninstall-hook:
-	$(call ev_remove_so_from_la,ndbackends)

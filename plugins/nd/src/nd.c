@@ -36,36 +36,37 @@
 #include <libeventd-event.h>
 #include <libeventd-helpers-config.h>
 
-#include <eventd-nd-backend.h>
-
-#include "backends.h"
+#include "backend.h"
 #include "style.h"
 #include "cairo.h"
 
+typedef struct {
+    EventdNdBackendContext *context;
+
+    EventdNdBackendContext *(*init)(EventdNdContext *context);
+    void (*uninit)(EventdNdBackendContext *context);
+
+    void (*global_parse)(EventdNdBackendContext *context, GKeyFile *config_file);
+
+    gboolean (*start)(EventdNdBackendContext *context, const gchar *target);
+    void (*stop)(EventdNdBackendContext *context);
+
+    EventdNdSurface *(*surface_new)(EventdNdBackendContext *context, EventdEvent *event, cairo_surface_t *bubble);
+    void (*surface_update)(EventdNdSurface *surface, cairo_surface_t *bubble);
+    void (*surface_free)(EventdNdSurface *surface);
+} EventdNdBackend;
 
 struct _EventdPluginContext {
     EventdPluginCoreContext *core;
     EventdPluginCoreInterface *core_interface;
-    EventdNdInterface interface;
     GSList *actions;
     gint max_width;
     gint max_height;
     EventdNdStyle *style;
-    GHashTable *backends;
-    GHashTable *displays;
+    EventdNdBackend *backend;
+    EventdNdBackend backends[_EVENTD_ND_BACKENDS_SIZE];
     GHashTable *notifications;
 };
-
-typedef struct {
-    EventdNdBackend *backend;
-    EventdNdDisplay *display;
-} EventdNdDisplayContext;
-
-typedef struct {
-    EventdNdBackend *backend;
-    EventdNdDisplay *display;
-    EventdNdSurface *surface;
-} EventdNdSurfaceContext;
 
 typedef struct {
     EventdNdContext *context;
@@ -75,28 +76,16 @@ typedef struct {
     gint width;
     gint height;
     guint timeout;
-    GList *surfaces;
+    EventdNdSurface *surface;
 } EventdNdNotification;
 
 
-static void
-_eventd_nd_backend_display_free(gpointer data)
-{
-    EventdNdDisplayContext *display = data;
+static const gchar *_eventd_nd_backends_names[_EVENTD_ND_BACKENDS_SIZE] = {
+    [EVENTD_ND_BACKEND_NONE] = "none",
+};
 
-    display->backend->display_free(display->display);
-
-    g_free(display);
-}
-
-static void
-_eventd_nd_backend_remove_display(EventdNdContext *context, const gchar *target)
-{
-    g_hash_table_remove(context->displays, target);
-}
-
-static void
-_eventd_nd_backend_remove_surface(EventdNdContext *context, const gchar *uuid)
+void
+eventd_nd_surface_remove(EventdNdContext *context, const gchar *uuid)
 {
     EventdEvent *event;
     event = eventd_event_new(".notification", "dismiss");
@@ -105,16 +94,25 @@ _eventd_nd_backend_remove_surface(EventdNdContext *context, const gchar *uuid)
     eventd_event_unref(event);
 }
 
-
-static void
-_eventd_nd_notification_surface_context_free(gpointer data)
+gboolean
+eventd_nd_backend_switch(EventdNdContext *context, EventdNdBackends backend, const gchar *target)
 {
-    EventdNdSurfaceContext *surface = data;
+    if ( context->backend != NULL )
+    {
+        context->backend->uninit(context->backend->context);
+        context->backend = NULL;
+    }
 
-    surface->backend->surface_free(surface->surface);
+    if ( backend == EVENTD_ND_BACKEND_NONE )
+        return TRUE;
 
-    g_free(surface);
+    if ( ! context->backends[backend].start(context->backends[backend].context, target) )
+        return FALSE;
+
+    context->backend = &context->backends[backend];
+    return TRUE;
 }
+
 
 static void
 _eventd_nd_notification_free(gpointer data)
@@ -124,7 +122,7 @@ _eventd_nd_notification_free(gpointer data)
     if ( self->timeout > 0 )
         g_source_remove(self->timeout);
 
-    g_list_free_full(self->surfaces, _eventd_nd_notification_surface_context_free);
+    self->context->backend->surface_free(self->surface);
 
     g_free(self);
 }
@@ -133,6 +131,19 @@ _eventd_nd_notification_free(gpointer data)
 /*
  * Initialization interface
  */
+
+#define _eventd_nd_add_backend_func(i, prefix, func) context->backends[i].func = prefix##func
+#define _eventd_nd_add_backend(i, prefix) G_STMT_START { \
+        _eventd_nd_add_backend_func(i, prefix, init); \
+        _eventd_nd_add_backend_func(i, prefix, uninit); \
+        _eventd_nd_add_backend_func(i, prefix, global_parse); \
+        _eventd_nd_add_backend_func(i, prefix, start); \
+        _eventd_nd_add_backend_func(i, prefix, stop); \
+        _eventd_nd_add_backend_func(i, prefix, surface_new); \
+        _eventd_nd_add_backend_func(i, prefix, surface_update); \
+        _eventd_nd_add_backend_func(i, prefix, surface_free); \
+    } G_STMT_END
+#define eventd_nd_add_backend(name, Name) _eventd_nd_add_backend(EVENTD_ND_BACKEND_##Name, eventd_nd_##name##_)
 
 static EventdPluginContext *
 _eventd_nd_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *interface)
@@ -143,17 +154,15 @@ _eventd_nd_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *interf
     context->core = core;
     context->core_interface = interface;
 
-    context->interface.remove_display = _eventd_nd_backend_remove_display;
-    context->interface.remove_surface = _eventd_nd_backend_remove_surface;
-
     context->style = eventd_nd_style_new(NULL);
-
-    context->backends = eventd_nd_backends_load(context, &context->interface);
-    context->displays = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_nd_backend_display_free);
 
     context->notifications = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, _eventd_nd_notification_free);
 
     eventd_nd_cairo_init();
+
+    EventdNdBackends i;
+    for ( i = EVENTD_ND_BACKEND_NONE + 1 ; i < _EVENTD_ND_BACKENDS_SIZE ; ++i )
+        context->backends[i].context = context->backends[i].init(context);
 
     return context;
 }
@@ -163,12 +172,13 @@ _eventd_nd_uninit(EventdPluginContext *context)
 {
     eventd_nd_style_free(context->style);
 
+    EventdNdBackends i;
+    for ( i = EVENTD_ND_BACKEND_NONE + 1 ; i < _EVENTD_ND_BACKENDS_SIZE ; ++i )
+        context->backends[i].uninit(context->backends[i].context);
+
     eventd_nd_cairo_uninit();
 
     g_hash_table_unref(context->notifications);
-
-    g_hash_table_unref(context->displays);
-    g_hash_table_unref(context->backends);
 
     g_free(context);
 }
@@ -181,31 +191,16 @@ _eventd_nd_uninit(EventdPluginContext *context)
 static void
 _eventd_nd_start(EventdPluginContext *context)
 {
-    EventdNdDisplay *display;
-    GHashTableIter iter;
-    const gchar *id;
-    EventdNdBackend *backend;
-    const gchar *target;
+    EventdNdBackends backend = EVENTD_ND_BACKEND_NONE;
+    const gchar *target = NULL;
 
-    g_hash_table_iter_init(&iter, context->backends);
-    while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&backend) )
-    {
-        target = backend->default_target(backend->context);
-        if ( target == NULL )
-            continue;
+    eventd_nd_backend_switch(context, backend, target);
+}
 
-        display = backend->display_new(backend->context, target);
-        if ( display == NULL )
-            continue;
-
-        EventdNdDisplayContext *display_context;
-
-        display_context = g_new(EventdNdDisplayContext, 1);
-        display_context->backend = backend;
-        display_context->display = display;
-
-        g_hash_table_insert(context->displays, g_strdup(target), display_context);
-    }
+static void
+_eventd_nd_stop(EventdPluginContext *context)
+{
+    eventd_nd_backend_switch(context, EVENTD_ND_BACKEND_NONE, NULL);
 }
 
 
@@ -217,108 +212,36 @@ static EventdPluginCommandStatus
 _eventd_nd_control_command(EventdPluginContext *context, guint64 argc, const gchar * const *argv, gchar **status)
 {
     EventdPluginCommandStatus r;
-    GHashTableIter iter;
-    const gchar *id;
-    EventdNdBackend *backend;
-    EventdNdDisplay *display;
 
-    if ( g_strcmp0(argv[0], "attach") == 0 )
+    if ( g_strcmp0(argv[0], "switch") == 0 )
     {
         if ( argc < 2 )
+        {
+            *status = g_strdup("No backend specified");
+            r = EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR;
+        }
+        else if ( argc < 3 )
         {
             *status = g_strdup("No target specified");
             r = EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR;
         }
         else
         {
-            const gchar *attached = NULL;
-
-            g_hash_table_iter_init(&iter, context->backends);
-            while ( ( attached == NULL ) && g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&backend) )
-            {
-                display = backend->display_new(backend->context, argv[1]);
-                if ( display == NULL )
-                    continue;
-
-                EventdNdDisplayContext *display_context;
-                display_context = g_new(EventdNdDisplayContext, 1);
-                display_context->backend = backend;
-                display_context->display = display;
-
-                g_hash_table_insert(context->displays, g_strdup(argv[1]), display_context);
-
-                attached = id;
-            }
-            if ( attached != NULL )
-            {
-                *status = g_strdup_printf("Backend %s attached to %s", attached, argv[1]);
-                r = EVENTD_PLUGIN_COMMAND_STATUS_OK;
-            }
-            else
-            {
-                *status = g_strdup("No backend attached");
-                r = EVENTD_PLUGIN_COMMAND_STATUS_EXEC_ERROR;
-            }
-        }
-    }
-    else if ( g_strcmp0(argv[0], "detach") == 0 )
-    {
-        EventdNdDisplayContext *display_context;
-        if ( argc < 2 )
-        {
-            r = EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR;
-            *status = g_strdup("No target specified");
-        }
-        else if ( ( display_context = g_hash_table_lookup(context->displays, argv[1]) ) != NULL )
-        {
-            EventdNdBackend *backend = display_context->backend;
-            g_hash_table_remove(context->displays, argv[1]);
-            *status = g_strdup_printf("Backend %s detached from %s", backend->id, argv[1]);
+            /* FIXME: parse argv[1] */
+            eventd_nd_backend_switch(context, EVENTD_ND_BACKEND_NONE, argv[2]);
             r = EVENTD_PLUGIN_COMMAND_STATUS_OK;
         }
-        else
-        {
-            *status = g_strdup("No backend detached");
-            r = EVENTD_PLUGIN_COMMAND_STATUS_EXEC_ERROR;
-        }
-    }
-    else if ( g_strcmp0(argv[0], "status") == 0 )
-    {
-        if ( g_hash_table_size(context->displays) > 0 )
-        {
-            GString *list;
-            list = g_string_new("Backends attached:");
-
-            GHashTableIter iter;
-            gchar *target;
-            EventdNdDisplayContext *display_context;
-            g_hash_table_iter_init(&iter, context->displays);
-            while ( g_hash_table_iter_next(&iter, (gpointer *)&target, (gpointer *)&display_context) )
-                    g_string_append_printf(list, "\n    %s to %s", display_context->backend->id, target);
-
-            *status = g_string_free(list, FALSE);
-        }
-        else
-            *status = g_strdup("No backend attached");
-        r = EVENTD_PLUGIN_COMMAND_STATUS_OK;
     }
     else if ( g_strcmp0(argv[0], "backends") == 0 )
     {
-        if ( g_hash_table_size(context->backends) > 0 )
-        {
-            GString *list;
-            list = g_string_new("Backends available:");
+        GString *list;
+        list = g_string_new("Backends available:");
 
-            GHashTableIter iter;
-            EventdNdBackend *backend;
-            g_hash_table_iter_init(&iter, context->backends);
-            while ( g_hash_table_iter_next(&iter, NULL, (gpointer *)&backend) )
-                    g_string_append_printf(list, "\n    %s", backend->id);
+        EventdNdBackends i;
+        for ( i = EVENTD_ND_BACKEND_NONE + 1 ; i < _EVENTD_ND_BACKENDS_SIZE ; ++i )
+                g_string_append_printf(list, "\n    %s", _eventd_nd_backends_names[i]);
 
-            *status = g_string_free(list, FALSE);
-        }
-        else
-            *status = g_strdup("No backends available");
+        *status = g_string_free(list, FALSE);
         r = EVENTD_PLUGIN_COMMAND_STATUS_OK;
     }
     else
@@ -339,16 +262,6 @@ static void
 _eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
 {
     eventd_nd_style_update(context->style, config_file, &context->max_width, &context->max_height);
-
-    GHashTableIter iter;
-    const gchar *id;
-    EventdNdBackend *backend;
-    g_hash_table_iter_init(&iter, context->backends);
-    while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&backend) )
-    {
-        if ( backend->global_parse != NULL )
-            backend->global_parse(backend->context, config_file);
-    }
 }
 
 static EventdPluginAction *
@@ -435,21 +348,7 @@ _eventd_nd_notification_new(EventdPluginContext *context, EventdEvent *event, Ev
 
     _eventd_nd_notification_set(self, context, event, &bubble);
 
-    GHashTableIter iter;
-    EventdNdDisplayContext *display;
-
-    g_hash_table_iter_init(&iter, context->displays);
-    while ( g_hash_table_iter_next(&iter, NULL, (gpointer *)&display) )
-    {
-        EventdNdSurfaceContext *surface;
-
-        surface = g_new(EventdNdSurfaceContext, 1);
-        surface->backend = display->backend;
-        surface->display = display->display;
-        surface->surface = display->backend->surface_new(event, display->display, bubble);
-
-        self->surfaces = g_list_prepend(self->surfaces, surface);
-    }
+    self->surface = context->backend->surface_new(context->backend->context, event, bubble);
 
     cairo_surface_destroy(bubble);
 
@@ -457,24 +356,13 @@ _eventd_nd_notification_new(EventdPluginContext *context, EventdEvent *event, Ev
 }
 
 static void
-_eventd_nd_notification_update(EventdNdNotification *self,EventdPluginContext *context,  EventdEvent *event)
+_eventd_nd_notification_update(EventdNdNotification *self, EventdPluginContext *context,  EventdEvent *event)
 {
     cairo_surface_t *bubble;
 
     _eventd_nd_notification_set(self, context, event, &bubble);
 
-    GList *surface_;
-    for ( surface_ = self->surfaces ; surface_ != NULL ; surface_ = g_list_next(surface_) )
-    {
-        EventdNdSurfaceContext *surface = surface_->data;
-        if ( surface->backend->surface_update != NULL )
-            surface->backend->surface_update(surface->surface, bubble);
-        else
-        {
-            surface->backend->surface_free(surface->surface);
-            surface->surface = surface->backend->surface_new(event, surface->display, bubble);
-        }
-    }
+    context->backend->surface_update(self->surface, bubble);
 
     cairo_surface_destroy(bubble);
 }
@@ -498,7 +386,8 @@ _eventd_nd_event_dispatch(EventdPluginContext *context, EventdEvent *event)
 static void
 _eventd_nd_event_action(EventdPluginContext *context, EventdNdStyle *style, EventdEvent *event)
 {
-    if ( g_hash_table_size(context->displays) == 0 )
+    if ( context->backend == EVENTD_ND_BACKEND_NONE )
+        /* No backend connected for now */
         return;
 
     EventdNdNotification *notification;
@@ -527,6 +416,7 @@ eventd_plugin_get_interface(EventdPluginInterface *interface)
     eventd_plugin_interface_add_uninit_callback(interface, _eventd_nd_uninit);
 
     eventd_plugin_interface_add_start_callback(interface, _eventd_nd_start);
+    eventd_plugin_interface_add_stop_callback(interface, _eventd_nd_stop);
 
     eventd_plugin_interface_add_control_command_callback(interface, _eventd_nd_control_command);
 
