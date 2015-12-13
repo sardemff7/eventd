@@ -41,7 +41,7 @@
 #include <libeventd-event.h>
 #include <libeventd-helpers-config.h>
 
-#include <eventd-nd-backend.h>
+#include "backend.h"
 
 typedef enum {
     EVENTD_ND_XCB_ANCHOR_TOP,
@@ -62,7 +62,6 @@ static const gchar * const _eventd_nd_xcb_corner_anchors[] = {
 };
 struct _EventdNdBackendContext {
     EventdNdContext *nd;
-    EventdNdInterface *nd_interface;
     gchar **outputs;
     struct {
         EventdNdXcbCornerAnchor anchor;
@@ -70,13 +69,6 @@ struct _EventdNdBackendContext {
         gint margin;
         gint spacing;
     } placement;
-    GList *displays;
-};
-
-struct _EventdNdDisplay {
-    EventdNdBackendContext *context;
-    gchar *target;
-    GList *link;
     GWaterXcbSource *source;
     xcb_connection_t *xcb_connection;
     xcb_screen_t *screen;
@@ -94,7 +86,7 @@ struct _EventdNdDisplay {
 
 struct _EventdNdSurface {
     EventdEvent *event;
-    EventdNdDisplay *display;
+    EventdNdBackendContext *display;
     GList *link;
     xcb_window_t window;
     gint width;
@@ -102,15 +94,14 @@ struct _EventdNdSurface {
     cairo_surface_t *bubble;
 };
 
-static EventdNdBackendContext *
-_eventd_nd_xcb_init(EventdNdContext *nd, EventdNdInterface *nd_interface)
+EventdNdBackendContext *
+eventd_nd_xcb_init(EventdNdContext *nd)
 {
     EventdNdBackendContext *context;
 
     context = g_new0(EventdNdBackendContext, 1);
 
     context->nd = nd;
-    context->nd_interface = nd_interface;
 
     /* default bubble position */
     context->placement.anchor    = EVENTD_ND_XCB_ANCHOR_TOP_RIGHT;
@@ -120,17 +111,15 @@ _eventd_nd_xcb_init(EventdNdContext *nd, EventdNdInterface *nd_interface)
     return context;
 }
 
-static void
-_eventd_nd_xcb_uninit(EventdNdBackendContext *context)
+void
+eventd_nd_xcb_uninit(EventdNdBackendContext *context)
 {
-    g_list_free_full(context->displays, g_free);
-
     g_free(context);
 }
 
 
-static void
-_eventd_nd_xcb_global_parse(EventdNdBackendContext *context, GKeyFile *config_file)
+void
+eventd_nd_xcb_global_parse(EventdNdBackendContext *context, GKeyFile *config_file)
 {
     if ( ! g_key_file_has_group(config_file, "NotificationXcb") )
         return;
@@ -177,14 +166,14 @@ get_root_visual_type(xcb_screen_t *s)
 }
 
 static void
-_eventd_nd_xcb_geometry_fallback(EventdNdDisplay *display)
+_eventd_nd_xcb_geometry_fallback(EventdNdBackendContext *display)
 {
     display->base_geometry.width = display->screen->width_in_pixels;
     display->base_geometry.height = display->screen->height_in_pixels;
 }
 
 static gboolean
-_eventd_nd_xcb_randr_check_primary(EventdNdDisplay *display)
+_eventd_nd_xcb_randr_check_primary(EventdNdBackendContext *display)
 {
     xcb_randr_get_output_primary_cookie_t pcookie;
     xcb_randr_get_output_primary_reply_t *primary;
@@ -230,7 +219,7 @@ typedef struct {
 } EventdNdXcbRandrOutput;
 
 static gboolean
-_eventd_nd_xcb_randr_check_outputs(EventdNdDisplay *display)
+_eventd_nd_xcb_randr_check_outputs(EventdNdBackendContext *display)
 {
     xcb_randr_get_screen_resources_current_cookie_t rcookie;
     xcb_randr_get_screen_resources_current_reply_t *ressources;
@@ -277,7 +266,7 @@ _eventd_nd_xcb_randr_check_outputs(EventdNdDisplay *display)
 
     gchar **config_output;
     gboolean found = FALSE;
-    for ( config_output = display->context->outputs ; ( *config_output != NULL ) && ( ! found ) ; ++config_output )
+    for ( config_output = display->outputs ; ( *config_output != NULL ) && ( ! found ) ; ++config_output )
     {
         for ( output = outputs ; ( output->output != NULL ) && ( ! found ) ; ++output )
         {
@@ -302,13 +291,13 @@ _eventd_nd_xcb_randr_check_outputs(EventdNdDisplay *display)
     return found;
 }
 
-static void _eventd_nd_xcb_update_surfaces(EventdNdDisplay *display);
+static void _eventd_nd_xcb_update_surfaces(EventdNdBackendContext *display);
 
 static void
-_eventd_nd_xcb_randr_check_geometry(EventdNdDisplay *display)
+_eventd_nd_xcb_randr_check_geometry(EventdNdBackendContext *display)
 {
     gboolean found = FALSE;
-    if ( display->context->outputs != NULL )
+    if ( display->outputs != NULL )
         found = _eventd_nd_xcb_randr_check_outputs(display);
     if ( ! found )
         found = _eventd_nd_xcb_randr_check_primary(display);
@@ -325,12 +314,12 @@ static void _eventd_nd_xcb_surface_button_release_event(EventdNdSurface *self);
 static gboolean
 _eventd_nd_xcb_events_callback(xcb_generic_event_t *event, gpointer user_data)
 {
-    EventdNdDisplay *display = user_data;
+    EventdNdBackendContext *display = user_data;
     EventdNdSurface *surface;
 
     if ( event == NULL )
     {
-        display->context->nd_interface->remove_display(display->context->nd, display->target);
+        eventd_nd_backend_switch(display->nd, EVENTD_ND_BACKEND_NONE, NULL);
         return FALSE;
     }
 
@@ -372,47 +361,29 @@ _eventd_nd_xcb_events_callback(xcb_generic_event_t *event, gpointer user_data)
     return TRUE;
 }
 
-static const gchar *
-_eventd_nd_xcb_default_target(EventdNdBackendContext *context)
+gboolean
+eventd_nd_xcb_start(EventdNdBackendContext *context, const gchar *target)
 {
-    return g_getenv("DISPLAY");
-}
-
-static EventdNdDisplay *
-_eventd_nd_xcb_display_new(EventdNdBackendContext *context, const gchar *target)
-{
-    g_return_val_if_fail(target != NULL, NULL);
-
     gint r;
     gchar *h;
     gint d;
 
     r = xcb_parse_display(target, &h, &d, NULL);
     if ( r == 0 )
-        return NULL;
+        return FALSE;
     free(h);
 
-    if ( g_list_find_custom(context->displays, target, (GCompareFunc) g_strcmp0) != NULL )
-        return NULL;
-
-    EventdNdDisplay *display;
+    EventdNdBackendContext *display = context;
     const xcb_query_extension_reply_t *extension_query;
     gint screen;
-
-    display = g_new0(EventdNdDisplay, 1);
 
     display->source = g_water_xcb_source_new(NULL, target, &screen, _eventd_nd_xcb_events_callback, display, NULL);
     if ( display->source == NULL )
     {
         g_warning("Couldn't initialize X connection for '%s'", target);
-        g_free(display);
-        return NULL;
+        return FALSE;
     }
-    display->context = context;
-
-    display->target = g_strdup(target);
-    context->displays = g_list_prepend(context->displays, display->target);
-    display->link = context->displays;
+    display = context;
 
     display->xcb_connection = g_water_xcb_source_get_connection(display->source);
 
@@ -446,16 +417,16 @@ _eventd_nd_xcb_display_new(EventdNdBackendContext *context, const gchar *target)
         _eventd_nd_xcb_randr_check_geometry(display);
     }
 
-    return display;
+    return TRUE;
 }
 
-static void
-_eventd_nd_xcb_display_free(EventdNdDisplay *display)
+void
+eventd_nd_xcb_stop(EventdNdBackendContext *display)
 {
     g_hash_table_unref(display->bubbles);
     g_water_xcb_source_unref(display->source);
-    display->context->displays = g_list_delete_link(display->context->displays, display->link);
-    g_free(display);
+    display->bubbles = NULL;
+    display->source = NULL;
 }
 
 static void
@@ -478,13 +449,13 @@ _eventd_nd_xcb_surface_expose_event(EventdNdSurface *self, xcb_expose_event_t *e
 static void
 _eventd_nd_xcb_surface_button_release_event(EventdNdSurface *self)
 {
-    self->display->context->nd_interface->remove_surface(self->display->context->nd, eventd_event_get_uuid(self->event));
+    eventd_nd_surface_remove(self->display->nd, eventd_event_get_uuid(self->event));
 }
 
 static void
 _eventd_nd_xcb_surface_shape(EventdNdSurface *self, cairo_surface_t *bubble)
 {
-    EventdNdDisplay *display = self->display;
+    EventdNdBackendContext *display = self->display;
 
     if ( ! display->shape )
         return;
@@ -522,9 +493,9 @@ _eventd_nd_xcb_surface_shape(EventdNdSurface *self, cairo_surface_t *bubble)
 }
 
 static void
-_eventd_nd_xcb_update_surfaces(EventdNdDisplay *display)
+_eventd_nd_xcb_update_surfaces(EventdNdBackendContext *display)
 {
-    EventdNdBackendContext *context = display->context;
+    EventdNdBackendContext *context = display;
     GList *surface_;
     EventdNdSurface *surface;
 
@@ -568,10 +539,10 @@ _eventd_nd_xcb_update_surfaces(EventdNdDisplay *display)
     xcb_flush(display->xcb_connection);
 }
 
-static EventdNdSurface *
-_eventd_nd_xcb_surface_new(EventdEvent *event, EventdNdDisplay *display, cairo_surface_t *bubble)
+EventdNdSurface *
+eventd_nd_xcb_surface_new(EventdNdBackendContext *display, EventdEvent *event, cairo_surface_t *bubble)
 {
-    EventdNdBackendContext *context = display->context;
+    EventdNdBackendContext *context = display;
     guint32 selmask = XCB_CW_OVERRIDE_REDIRECT | XCB_CW_EVENT_MASK;
     guint32 selval[] = { 1, XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_BUTTON_PRESS | XCB_EVENT_MASK_BUTTON_RELEASE };
     EventdNdSurface *surface;
@@ -624,13 +595,13 @@ _eventd_nd_xcb_surface_new(EventdEvent *event, EventdNdDisplay *display, cairo_s
     return surface;
 }
 
-static void
-_eventd_nd_xcb_surface_free(EventdNdSurface *surface)
+void
+eventd_nd_xcb_surface_free(EventdNdSurface *surface)
 {
     if ( surface == NULL )
         return;
 
-    EventdNdDisplay *display = surface->display;
+    EventdNdBackendContext *display = surface->display;
 
     g_queue_delete_link(display->queue, surface->link);
     g_hash_table_remove(display->bubbles, GUINT_TO_POINTER(surface->window));
@@ -649,8 +620,8 @@ _eventd_nd_xcb_surface_free(EventdNdSurface *surface)
 
 }
 
-static void
-_eventd_nd_xcb_surface_update(EventdNdSurface *self, cairo_surface_t *bubble)
+void
+eventd_nd_xcb_surface_update(EventdNdSurface *self, cairo_surface_t *bubble)
 {
     cairo_surface_destroy(self->bubble);
     self->bubble = cairo_surface_reference(bubble);
@@ -670,23 +641,4 @@ _eventd_nd_xcb_surface_update(EventdNdSurface *self, cairo_surface_t *bubble)
     xcb_clear_area(self->display->xcb_connection, TRUE, self->window, 0, 0, width, height);
 
     _eventd_nd_xcb_update_surfaces(self->display);
-}
-
-EVENTD_EXPORT const gchar *eventd_nd_backend_id = "nd-xcb";
-EVENTD_EXPORT
-void
-eventd_nd_backend_get_info(EventdNdBackend *backend)
-{
-    backend->init = _eventd_nd_xcb_init;
-    backend->uninit = _eventd_nd_xcb_uninit;
-
-    backend->global_parse = _eventd_nd_xcb_global_parse;
-
-    backend->default_target = _eventd_nd_xcb_default_target;
-    backend->display_new    = _eventd_nd_xcb_display_new;
-    backend->display_free   = _eventd_nd_xcb_display_free;
-
-    backend->surface_new     = _eventd_nd_xcb_surface_new;
-    backend->surface_free    = _eventd_nd_xcb_surface_free;
-    backend->surface_update  = _eventd_nd_xcb_surface_update;
 }

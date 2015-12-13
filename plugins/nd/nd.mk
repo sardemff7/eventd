@@ -64,3 +64,12 @@ nd_la_LIBADD = \
 # Backends
 #
 
+if ENABLE_ND_XCB
+include src/libgwater/xcb.mk
+nd_la_SOURCES += \
+	%D%/src/backend-xcb.h \
+	%D%/src/backend-xcb.c \
+	$(null)
+nd_la_CFLAGS += $(GW_XCB_CFLAGS)
+nd_la_LIBADD += $(GW_XCB_LIBS)
+endif

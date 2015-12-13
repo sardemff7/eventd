@@ -256,10 +256,16 @@ if test x${enable_nd_xcb} = xyes -o x${enable_nd_linux_framebuffer} = xyes -o x$
         AC_MSG_ERROR([*** XCB or Linux framebuffer backends required but not notification-daemon plugin])
     fi
 fi
+if test x${enable_notification_daemon} = xyes; then
+    if test x${enable_nd_xcb} = xno -a x${enable_nd_linux_framebuffer} = xno -a x${enable_nd_windows} = xno; then
+        AC_MSG_ERROR([*** notification-daemon plugin required but no backend selected])
+    fi
+fi
 
 # XCB backend
 if test x${enable_nd_xcb} = xyes; then
     GW_CHECK_XCB([cairo-xcb xcb xcb-aux xcb-randr xcb-shape])
+    AC_DEFINE([ENABLE_ND_XCB], [1], [nd XCB backend])
     AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_nd_xcb"
 fi
 AM_CONDITIONAL([ENABLE_ND_XCB], [test x${enable_nd_xcb} = xyes])

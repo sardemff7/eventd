@@ -40,6 +40,8 @@
 #include "style.h"
 #include "cairo.h"
 
+#include "backend-xcb.h"
+
 typedef struct {
     EventdNdBackendContext *context;
 
@@ -82,6 +84,9 @@ typedef struct {
 
 static const gchar *_eventd_nd_backends_names[_EVENTD_ND_BACKENDS_SIZE] = {
     [EVENTD_ND_BACKEND_NONE] = "none",
+#ifdef ENABLE_ND_XCB
+    [EVENTD_ND_BACKEND_XCB] = "xcb",
+#endif /* ENABLE_ND_XCB */
 };
 
 void
@@ -160,6 +165,10 @@ _eventd_nd_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *interf
 
     eventd_nd_cairo_init();
 
+#ifdef ENABLE_ND_XCB
+    eventd_nd_add_backend(xcb, XCB);
+#endif /* ENABLE_ND_XCB */
+
     EventdNdBackends i;
     for ( i = EVENTD_ND_BACKEND_NONE + 1 ; i < _EVENTD_ND_BACKENDS_SIZE ; ++i )
         context->backends[i].context = context->backends[i].init(context);
@@ -193,6 +202,15 @@ _eventd_nd_start(EventdPluginContext *context)
 {
     EventdNdBackends backend = EVENTD_ND_BACKEND_NONE;
     const gchar *target = NULL;
+
+#ifdef ENABLE_ND_XCB
+    if ( backend == EVENTD_ND_BACKEND_NONE )
+    {
+        target = g_getenv("DISPLAY");
+        if ( target != NULL )
+            backend = EVENTD_ND_BACKEND_XCB;
+    }
+#endif /* ENABLE_ND_XCB */
 
     eventd_nd_backend_switch(context, backend, target);
 }
