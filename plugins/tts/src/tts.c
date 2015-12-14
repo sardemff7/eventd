@@ -61,7 +61,7 @@ _eventd_tts_action_free(gpointer data)
  */
 
 static EventdPluginContext *
-_eventd_tts_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *interface)
+_eventd_tts_init(EventdPluginCoreContext *core)
 {
     gint sample_rate;
     EventdPluginContext *context;

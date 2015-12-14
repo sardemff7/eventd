@@ -47,7 +47,6 @@
 
 struct _EventdPluginContext {
     EventdPluginCoreContext *core;
-    EventdPluginCoreInterface *core_interface;
     EventdRelayAvahi *avahi;
     GHashTable *servers;
     gboolean no_avahi;
@@ -59,13 +58,12 @@ struct _EventdPluginContext {
  */
 
 static EventdPluginContext *
-_eventd_relay_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *core_interface)
+_eventd_relay_init(EventdPluginCoreContext *core)
 {
     EventdPluginContext *context;
 
     context = g_new0(EventdPluginContext, 1);
     context->core = core;
-    context->core_interface = core_interface;
 
 #ifdef ENABLE_AVAHI
     context->avahi = eventd_relay_avahi_init();
@@ -239,7 +237,7 @@ _eventd_relay_server_parse(EventdPluginContext *context, GKeyFile *config_file, 
         server = g_hash_table_lookup(context->servers, avahi_name);
         if ( server == NULL )
         {
-            server = eventd_relay_server_new(context->core, context->core_interface, accept_unknown_ca, forwards, subscriptions);
+            server = eventd_relay_server_new(context->core, accept_unknown_ca, forwards, subscriptions);
             eventd_relay_avahi_server_new(context->avahi, avahi_name, server);
             g_hash_table_insert(context->servers, avahi_name, server);
             forwards = subscriptions = NULL;
@@ -255,7 +253,7 @@ _eventd_relay_server_parse(EventdPluginContext *context, GKeyFile *config_file, 
         server = g_hash_table_lookup(context->servers, server_uri);
         if ( server == NULL )
         {
-            server = eventd_relay_server_new_for_domain(context->core, context->core_interface, accept_unknown_ca, forwards, subscriptions, server_uri);
+            server = eventd_relay_server_new_for_domain(context->core, accept_unknown_ca, forwards, subscriptions, server_uri);
             if ( server == NULL )
                 g_warning("Couldn't create the connection to server '%s'", server_uri);
             else

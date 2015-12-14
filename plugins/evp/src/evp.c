@@ -46,14 +46,13 @@
  */
 
 static EventdPluginContext *
-_eventd_evp_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *core_interface)
+_eventd_evp_init(EventdPluginCoreContext *core)
 {
     EventdPluginContext *self;
 
     self = g_new0(EventdPluginContext, 1);
 
     self->core = core;
-    self->core_interface= core_interface;
 
     self->avahi_name = g_strdup_printf(PACKAGE_NAME " %s", g_get_host_name());
 
@@ -80,7 +79,7 @@ static GList *
 _eventd_evp_add_socket(GList *used_sockets, EventdPluginContext *self, const gchar * const *binds)
 {
     GList *sockets;
-    sockets = eventd_plugin_core_get_sockets(self->core, self->core_interface, binds);
+    sockets = eventd_plugin_core_get_sockets(self->core, binds);
 
     GList *socket_;
     for ( socket_ = sockets ; socket_ != NULL ; socket_ = g_list_next(socket_) )

@@ -28,22 +28,20 @@
 /**
  * eventd_plugin_core_get_sockets:
  * @context: an #EventdPluginCoreContext
- * @interface: an #EventdPluginCoreInterface
  * @binds: (array zero-terminated=1) (element-type utf8) (nullable): list of strings
  *
  * Returns: (element-type Gio.Socket) (transfer full): list of sockets for the binds
  */
 EVENTD_EXPORT
 GList *
-eventd_plugin_core_get_sockets(EventdPluginCoreContext *context, EventdPluginCoreInterface *interface, const gchar * const *binds)
+eventd_plugin_core_get_sockets(EventdPluginCoreContext *context, const gchar * const *binds)
 {
-    return interface->get_sockets(context, binds);
+    return ((EventdCoreInterface *) context)->get_sockets(context, binds);
 }
 
 /**
  * eventd_plugin_core_push_event:
  * @context: an #EventdPluginCoreContext
- * @interface: an #EventdPluginCoreInterface
  * @event: an #EventdEvent
  *
  * Pushes an event into the queue.
@@ -52,7 +50,7 @@ eventd_plugin_core_get_sockets(EventdPluginCoreContext *context, EventdPluginCor
  */
 EVENTD_EXPORT
 gboolean
-eventd_plugin_core_push_event(EventdPluginCoreContext *context, EventdPluginCoreInterface *interface, EventdEvent *event)
+eventd_plugin_core_push_event(EventdPluginCoreContext *context, EventdEvent *event)
 {
-    return interface->push_event(context, event);
+    return ((EventdCoreInterface *) context)->push_event(context, event);
 }

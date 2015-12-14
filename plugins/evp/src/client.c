@@ -82,7 +82,7 @@ _eventd_evp_client_protocol_event(EventdProtocol *protocol, EventdEvent *event, 
 #endif /* EVENTD_DEBUG */
 
     self->current = event;
-    eventd_plugin_core_push_event(self->context->core, self->context->core_interface, event);
+    eventd_plugin_core_push_event(self->context->core, event);
     self->current = NULL;
 }
 

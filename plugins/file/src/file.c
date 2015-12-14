@@ -59,7 +59,7 @@ _eventd_file_action_free(gpointer data)
  */
 
 static EventdPluginContext *
-_eventd_file_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *interface)
+_eventd_file_init(EventdPluginCoreContext *core)
 {
     EventdPluginContext *context;
 

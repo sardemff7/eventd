@@ -54,7 +54,7 @@ static GHashTable *plugins = NULL;
 
 
 static void
-_eventd_plugins_load_dir(EventdPluginCoreContext *core, EventdPluginCoreInterface *interface, gchar *plugins_dir_name,  gchar **whitelist,  gchar **blacklist)
+_eventd_plugins_load_dir(EventdPluginCoreContext *core, gchar *plugins_dir_name,  gchar **whitelist,  gchar **blacklist)
 {
     GError *error;
     GDir *plugins_dir;
@@ -175,7 +175,7 @@ _eventd_plugins_load_dir(EventdPluginCoreContext *core, EventdPluginCoreInterfac
 
         if ( plugin->interface.init != NULL )
         {
-            plugin->context = plugin->interface.init(core, interface);
+            plugin->context = plugin->interface.init(core);
             if ( plugin->context == NULL )
             {
                 g_warning("Couldn't load plugin '%s'", *id);
@@ -209,7 +209,7 @@ eventd_plugins_action_free(gpointer data)
 }
 
 void
-eventd_plugins_load(EventdPluginCoreContext *core, EventdPluginCoreInterface *interface)
+eventd_plugins_load(EventdPluginCoreContext *core)
 {
     const gchar *env_whitelist;
     const gchar *env_blacklist;
@@ -235,7 +235,7 @@ eventd_plugins_load(EventdPluginCoreContext *core, EventdPluginCoreInterface *in
     gchar **dirs, **dir;
     dirs = evhelpers_dirs_get_lib("EVENTD_PLUGINS_DIR", "plugins");
     for ( dir = dirs ; *dir != NULL ; ++dir )
-        _eventd_plugins_load_dir(core, interface, *dir, whitelist, blacklist);
+        _eventd_plugins_load_dir(core, *dir, whitelist, blacklist);
     g_free(dirs);
 
     g_strfreev(blacklist);

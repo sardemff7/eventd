@@ -40,7 +40,6 @@
 
 struct _EventdRelayServer {
     EventdPluginCoreContext *core;
-    EventdPluginCoreInterface *core_interface;
     gboolean accept_unknown_ca;
     gboolean subscribe;
     gchar **subscriptions;
@@ -55,7 +54,7 @@ static void
 _eventd_relay_server_event(EventdRelayServer *self, EventdEvent *event, EventcConnection *connection)
 {
     self->current = event;
-    eventd_plugin_core_push_event(self->core, self->core_interface, event);
+    eventd_plugin_core_push_event(self->core, event);
     self->current = NULL;
 }
 
@@ -102,13 +101,12 @@ _eventd_relay_server_setup_connection(EventdRelayServer *server)
 }
 
 EventdRelayServer *
-eventd_relay_server_new(EventdPluginCoreContext *core, EventdPluginCoreInterface *core_interface, gboolean accept_unknown_ca, gchar **forwards, gchar **subscriptions)
+eventd_relay_server_new(EventdPluginCoreContext *core, gboolean accept_unknown_ca, gchar **forwards, gchar **subscriptions)
 {
     EventdRelayServer *server;
 
     server = g_new0(EventdRelayServer, 1);
     server->core = core;
-    server->core_interface = core_interface;
 
     server->accept_unknown_ca = accept_unknown_ca;
 
@@ -137,7 +135,7 @@ eventd_relay_server_new(EventdPluginCoreContext *core, EventdPluginCoreInterface
 }
 
 EventdRelayServer *
-eventd_relay_server_new_for_domain(EventdPluginCoreContext *core, EventdPluginCoreInterface *core_interface, gboolean accept_unknown_ca, gchar **forwards, gchar **subscriptions, const gchar *domain)
+eventd_relay_server_new_for_domain(EventdPluginCoreContext *core, gboolean accept_unknown_ca, gchar **forwards, gchar **subscriptions, const gchar *domain)
 {
     EventcConnection *connection;
     GError *error = NULL;
@@ -152,7 +150,7 @@ eventd_relay_server_new_for_domain(EventdPluginCoreContext *core, EventdPluginCo
 
     EventdRelayServer *server;
 
-    server = eventd_relay_server_new(core, core_interface, accept_unknown_ca, forwards, subscriptions);
+    server = eventd_relay_server_new(core, accept_unknown_ca, forwards, subscriptions);
     server->connection = connection;
 
     _eventd_relay_server_setup_connection(server);

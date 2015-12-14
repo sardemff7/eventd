@@ -47,7 +47,6 @@ typedef enum {
 
 struct _EventdPluginContext {
     EventdPluginCoreContext *core;
-    EventdPluginCoreInterface *core_interface;
     GDBusNodeInfo *introspection_data;
     guint id;
     GDBusConnection *connection;
@@ -98,7 +97,7 @@ _eventd_fdo_notifications_notification_timout(gpointer user_data)
 static EventdDbusNotification *
 _eventd_fdo_notifications_notification_new(EventdPluginContext *context, const gchar *sender, EventdEvent *event)
 {
-    if ( ! eventd_plugin_core_push_event(context->core, context->core_interface, event) )
+    if ( ! eventd_plugin_core_push_event(context->core, event) )
         return 0;
 
     EventdDbusNotification *notification;
@@ -289,7 +288,7 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
 
     if ( id > 0 )
     {
-        if ( ! eventd_plugin_core_push_event(context->core, context->core_interface, event) )
+        if ( ! eventd_plugin_core_push_event(context->core, event) )
         {
             _eventd_fdo_notifications_notification_closed(notification, EVENTD_FDO_NOTIFICATIONS_CLOSE_REASON_RESERVED);
             g_dbus_method_invocation_return_dbus_error(invocation, NOTIFICATION_BUS_NAME ".StrangeError", "We have something strange, really");
@@ -335,7 +334,7 @@ _eventd_fdo_notifications_close_notification(EventdPluginContext *context, GVari
         EventdEvent *event;
         event = eventd_event_new(".notification", "close");
         eventd_event_add_data(event, g_strdup("source-event"), g_strdup(eventd_event_get_uuid(notification->event)));
-        eventd_plugin_core_push_event(context->core, context->core_interface, event);
+        eventd_plugin_core_push_event(context->core, event);
         eventd_event_unref(event);
     }
 
@@ -554,7 +553,7 @@ _eventd_fdo_notifications_init_capabilities(EventdPluginContext *context)
  */
 
 static EventdPluginContext *
-_eventd_fdo_notifications_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *core_interface)
+_eventd_fdo_notifications_init(EventdPluginCoreContext *core)
 {
     EventdPluginContext *context;
     GError *error = NULL;
@@ -573,7 +572,6 @@ _eventd_fdo_notifications_init(EventdPluginCoreContext *core, EventdPluginCoreIn
     context->introspection_data = introspection_data;
 
     context->core = core;
-    context->core_interface = core_interface;
 
     context->server_information = g_variant_new("(ssss)", PACKAGE_NAME, "Quentin 'Sardem FF7' Glidic", PACKAGE_VERSION, NOTIFICATION_SPEC_VERSION);
     _eventd_fdo_notifications_init_capabilities(context);

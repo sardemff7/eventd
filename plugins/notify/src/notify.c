@@ -287,7 +287,7 @@ _eventd_libnotify_notification_free(gpointer data)
  */
 
 static EventdPluginContext *
-_eventd_libnotify_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *core_interface)
+_eventd_libnotify_init(EventdPluginCoreContext *core)
 {
     EventdPluginContext *context;
     GError *error = NULL;

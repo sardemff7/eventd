@@ -27,7 +27,6 @@
 
 struct _EventdPluginContext {
     EventdPluginCoreContext *core;
-    EventdPluginCoreInterface *core_interface;
     EventdEvpAvahiContext *avahi;
     gboolean default_unix;
     gchar **binds;

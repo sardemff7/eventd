@@ -27,11 +27,11 @@ typedef GList *(*EventdPluginCoreGetSocketsFunc)(EventdPluginCoreContext *contex
 
 typedef gboolean (*EventdPluginCorePushEventFunc)(EventdPluginCoreContext *context, EventdEvent *event);
 
-struct _EventdPluginCoreInterface {
+typedef struct {
     EventdPluginCoreGetSocketsFunc get_sockets;
 
     EventdPluginCorePushEventFunc push_event;
-};
+} EventdCoreInterface;
 
 struct EventdPluginInterface {
     EventdPluginInitFunc init;

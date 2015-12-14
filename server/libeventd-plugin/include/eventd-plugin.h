@@ -26,7 +26,6 @@
 G_BEGIN_DECLS
 
 typedef struct _EventdCoreContext EventdPluginCoreContext;
-typedef struct _EventdPluginCoreInterface EventdPluginCoreInterface;
 
 typedef struct _EventdPluginContext EventdPluginContext;
 typedef struct EventdPluginInterface EventdPluginInterface;
@@ -45,7 +44,7 @@ GType eventd_plugin_command_status_get_type(void) G_GNUC_CONST;
  * eventd plugin interface
  */
 
-typedef EventdPluginContext *(*EventdPluginInitFunc)(EventdPluginCoreContext *core, EventdPluginCoreInterface *interface);
+typedef EventdPluginContext *(*EventdPluginInitFunc)(EventdPluginCoreContext *core);
 typedef void (*EventdPluginSimpleFunc)(EventdPluginContext *context);
 typedef GOptionGroup *(*EventdPluginGetOptionGroupFunc)(EventdPluginContext *context);
 typedef EventdPluginCommandStatus (*EventdPluginControlCommandFunc)(EventdPluginContext *context, guint64 argc, const gchar * const *argv, gchar **status);
@@ -78,9 +77,9 @@ void eventd_plugin_interface_add_event_action_callback(EventdPluginInterface *in
  * eventd core interface
  */
 
-GList *eventd_plugin_core_get_sockets(EventdPluginCoreContext *context, EventdPluginCoreInterface *interface, const gchar * const *binds);
+GList *eventd_plugin_core_get_sockets(EventdPluginCoreContext *context, const gchar * const *binds);
 
-gboolean eventd_plugin_core_push_event(EventdPluginCoreContext *context, EventdPluginCoreInterface *interface, EventdEvent *event);
+gboolean eventd_plugin_core_push_event(EventdPluginCoreContext *context, EventdEvent *event);
 
 G_END_DECLS
 

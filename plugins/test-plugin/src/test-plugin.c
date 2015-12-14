@@ -31,14 +31,12 @@
 
 static struct _EventdPluginContext {
     EventdPluginCoreContext *core;
-    EventdPluginCoreInterface *interface;
 } _eventd_test_context;
 
 static EventdPluginContext *
-_eventd_test_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *interface)
+_eventd_test_init(EventdPluginCoreContext *core)
 {
     _eventd_test_context.core = core;
-    _eventd_test_context.interface = interface;
     return &_eventd_test_context;
 }
 
@@ -75,7 +73,7 @@ _eventd_test_event_action(EventdPluginContext *context, EventdPluginAction *acti
     g_clear_error(&error);
 
     event = eventd_event_new_for_uuid_string("cedb8a77-b7fb-4e32-b3e4-3a772664f1f4", "test", "answer");
-    eventd_plugin_core_push_event(context->core, context->interface, event);
+    eventd_plugin_core_push_event(context->core, event);
     eventd_event_unref(event);
 }
 

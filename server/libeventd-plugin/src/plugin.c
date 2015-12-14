@@ -43,12 +43,6 @@
  */
 
 /**
- * EventdPluginCoreInterface:
- *
- * An opaque pointer eventd uses to keep track of a plugin.
- */
-
-/**
  * EventdPluginContext:
  *
  * A plugin-defined structure which is used in all plugin interface functions.
@@ -74,7 +68,6 @@
 /**
  * EventdPluginInitFunc:
  * @core: the context to use for the core functions
- * @interface: the plugin interface
  *
  * Returns: (transfer full): a plugin-specific context object
  */

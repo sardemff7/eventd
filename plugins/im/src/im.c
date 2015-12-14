@@ -197,7 +197,7 @@ _eventd_im_conv_joined(PurpleConversation *_conv, EventdPluginContext *context)
  */
 
 static EventdPluginContext *
-_eventd_im_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *interface)
+_eventd_im_init(EventdPluginCoreContext *core)
 {
 #ifdef PURPLE_NEEDS_GLOBAL_LOADING
     /* Some ugly workaround for libpurple plugins that do not link to it */

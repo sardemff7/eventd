@@ -77,7 +77,7 @@ _eventd_libcanberra_action_free(gpointer data)
  */
 
 static EventdPluginContext *
-_eventd_libcanberra_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *interface)
+_eventd_libcanberra_init(EventdPluginCoreContext *core)
 {
     EventdPluginContext *context;
 

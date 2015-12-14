@@ -134,7 +134,7 @@ _eventd_sound_action_free(gpointer data)
  */
 
 static EventdPluginContext *
-_eventd_sound_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *interface)
+_eventd_sound_init(EventdPluginCoreContext *core)
 {
     EventdPluginContext *context;
 

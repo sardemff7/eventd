@@ -62,7 +62,6 @@ typedef struct {
 
 struct _EventdPluginContext {
     EventdPluginCoreContext *core;
-    EventdPluginCoreInterface *core_interface;
     GSList *actions;
     gint max_width;
     gint max_height;
@@ -100,7 +99,7 @@ eventd_nd_surface_remove(EventdNdContext *context, const gchar *uuid)
     EventdEvent *event;
     event = eventd_event_new(".notification", "dismiss");
     eventd_event_add_data(event, g_strdup("source-event"), g_strdup(uuid));
-    eventd_plugin_core_push_event(context->core, context->core_interface, event);
+    eventd_plugin_core_push_event(context->core, event);
     eventd_event_unref(event);
 }
 
@@ -156,13 +155,12 @@ _eventd_nd_notification_free(gpointer data)
 #define eventd_nd_add_backend(name, Name) _eventd_nd_add_backend(EVENTD_ND_BACKEND_##Name, eventd_nd_##name##_)
 
 static EventdPluginContext *
-_eventd_nd_init(EventdPluginCoreContext *core, EventdPluginCoreInterface *interface)
+_eventd_nd_init(EventdPluginCoreContext *core)
 {
     EventdPluginContext *context;
 
     context = g_new0(EventdPluginContext, 1);
     context->core = core;
-    context->core_interface = interface;
 
     context->style = eventd_nd_style_new(NULL);
 
@@ -358,7 +356,7 @@ _eventd_nd_event_timedout(gpointer user_data)
     self->timeout = 0;
     event = eventd_event_new(".notification", "timeout");
     eventd_event_add_data(event, g_strdup("source-event"), g_strdup(eventd_event_get_uuid(self->event)));
-    eventd_plugin_core_push_event(context->core, context->core_interface, event);
+    eventd_plugin_core_push_event(context->core, event);
     eventd_event_unref(event);
 
     return FALSE;

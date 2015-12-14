@@ -66,6 +66,7 @@ void FreeConsole(void);
 #endif /* ! G_OS_UNIX */
 
 struct _EventdCoreContext {
+    EventdCoreInterface interface;
     EventdConfig *config;
     EventdControl *control;
     EventdSockets *sockets;
@@ -366,13 +367,6 @@ int
 main(int argc, char *argv[])
 {
     EventdCoreContext *context;
-    EventdPluginCoreInterface interface =
-    {
-        .get_sockets = eventd_core_get_sockets,
-
-        .push_event = eventd_core_push_event,
-    };
-
 
     gboolean daemonize = FALSE;
     gboolean print_paths = FALSE;
@@ -431,6 +425,8 @@ main(int argc, char *argv[])
 #endif /* EVENTD_DEBUG */
 
     context = g_new0(EventdCoreContext, 1);
+    context->interface.get_sockets = eventd_core_get_sockets;
+    context->interface.push_event = eventd_core_push_event;
 
     GOptionEntry entries[] =
     {
@@ -444,7 +440,7 @@ main(int argc, char *argv[])
     context->control = eventd_control_new(context);
 
     if ( g_getenv("EVENTD_NO_PLUGINS") == NULL )
-        eventd_plugins_load(context, &interface);
+        eventd_plugins_load(context);
 
     context->config = eventd_config_new();
 

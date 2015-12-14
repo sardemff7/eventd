@@ -25,7 +25,6 @@
 
 struct _EventdPluginContext {
     EventdPluginCoreContext *core;
-    EventdPluginCoreInterface *core_interface;
     gchar **binds;
     SoupServer *server;
     GTlsCertificate *certificate;
