@@ -25,16 +25,16 @@
 
 #include "backend.h"
 
-EventdNdBackendContext *eventd_nd_linux_init(EventdNdContext *nd);
-void eventd_nd_linux_uninit(EventdNdBackendContext *context);
+EventdNdBackendContext *eventd_nd_fbdev_init(EventdNdContext *nd);
+void eventd_nd_fbdev_uninit(EventdNdBackendContext *context);
 
-void eventd_nd_linux_global_parse(EventdNdBackendContext *context, GKeyFile *config_file);
+void eventd_nd_fbdev_global_parse(EventdNdBackendContext *context, GKeyFile *config_file);
 
-gboolean eventd_nd_linux_start(EventdNdBackendContext *context, const gchar *target);
-void eventd_nd_linux_stop(EventdNdBackendContext *context);
+gboolean eventd_nd_fbdev_start(EventdNdBackendContext *context, const gchar *target);
+void eventd_nd_fbdev_stop(EventdNdBackendContext *context);
 
-EventdNdSurface *eventd_nd_linux_surface_new(EventdNdBackendContext *context, EventdEvent *event, cairo_surface_t *bubble);
-void eventd_nd_linux_surface_update(EventdNdSurface *surface, cairo_surface_t *bubble);
-void eventd_nd_linux_surface_free(EventdNdSurface *surface);
+EventdNdSurface *eventd_nd_fbdev_surface_new(EventdNdBackendContext *context, EventdEvent *event, cairo_surface_t *bubble);
+void eventd_nd_fbdev_surface_update(EventdNdSurface *surface, cairo_surface_t *bubble);
+void eventd_nd_fbdev_surface_free(EventdNdSurface *surface);
 
 #endif /* __EVENTD_ND_BACKEND_FBDEV_H__ */

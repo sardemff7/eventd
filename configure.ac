@@ -247,17 +247,17 @@ AM_CONDITIONAL([ENABLE_NOTIFICATION_DAEMON], [test x${enable_notification_daemon
 
 # nd backends
 AC_ARG_ENABLE([nd-xcb], AS_HELP_STRING([--disable-nd-xcb], [Disable XCB graphical backend]), [], [enable_nd_xcb=${ev_os_unix}])
-AC_ARG_ENABLE([nd-linux-framebuffer], AS_HELP_STRING([--enable-nd-linux-framebuffer], [Enable Linux framebuffer (fbdev) backend]), [], [enable_nd_linux_framebuffer=no])
+AC_ARG_ENABLE([nd-fbdev], AS_HELP_STRING([--enable-nd-fbdev], [Enable fbdev backend]), [], [enable_nd_fbdev=no])
 AC_ARG_ENABLE([nd-windows], AS_HELP_STRING([--enable-nd-windows], [Enable Windows backend]), [], [enable_nd_windows=${ev_os_win}])
 
 # Common
-if test x${enable_nd_xcb} = xyes -o x${enable_nd_linux_framebuffer} = xyes -o x${enable_nd_windows} = xyes; then
+if test x${enable_nd_xcb} = xyes -o x${enable_nd_fbdev} = xyes -o x${enable_nd_windows} = xyes; then
     if test x${enable_notification_daemon} = xno; then
-        AC_MSG_ERROR([*** XCB or Linux framebuffer backends required but not notification-daemon plugin])
+        AC_MSG_ERROR([*** XCB, fbdev or Windows backends required but not notification-daemon plugin])
     fi
 fi
 if test x${enable_notification_daemon} = xyes; then
-    if test x${enable_nd_xcb} = xno -a x${enable_nd_linux_framebuffer} = xno -a x${enable_nd_windows} = xno; then
+    if test x${enable_nd_xcb} = xno -a x${enable_nd_fbdev} = xno -a x${enable_nd_windows} = xno; then
         AC_MSG_ERROR([*** notification-daemon plugin required but no backend selected])
     fi
 fi
@@ -270,13 +270,13 @@ if test x${enable_nd_xcb} = xyes; then
 fi
 AM_CONDITIONAL([ENABLE_ND_XCB], [test x${enable_nd_xcb} = xyes])
 
-# Linux framebuffer backend
-if test x${enable_nd_linux_framebuffer} = xyes; then
+# fbdev backend
+if test x${enable_nd_fbdev} = xyes; then
     AC_CHECK_HEADER([linux/fb.h])
     AC_DEFINE([ENABLE_ND_FBDEV], [1], [nd fbdev backend])
-    AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_nd_linux_framebuffer"
+    AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_nd_fbdev"
 fi
-AM_CONDITIONAL([ENABLE_ND_LINUX_FB], [test x${enable_nd_linux_framebuffer} = xyes])
+AM_CONDITIONAL([ENABLE_ND_FBDEV], [test x${enable_nd_fbdev} = xyes])
 
 # Windows API backend
 if test x${enable_nd_windows} = xyes; then
@@ -401,7 +401,7 @@ AC_MSG_RESULT([
         notification-daemon: ${enable_notification_daemon}
             Backends:
                 XCB: ${enable_nd_xcb}
-                Linux framebuffer: ${enable_nd_linux_framebuffer}
+                fbdev: ${enable_nd_fbdev}
                 Windows: ${enable_nd_windows}
         IM support through libpurple: ${enable_im}
         Sound files playing through libsndfile: ${enable_sound}

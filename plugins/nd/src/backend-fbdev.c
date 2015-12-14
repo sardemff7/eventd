@@ -43,7 +43,7 @@
 #include <glib/gstdio.h>
 #include <cairo.h>
 
-#include "backend-linux.h"
+#include "backend-fbdev.h"
 
 #define FRAMEBUFFER_TARGET_PREFIX "/dev/fb"
 
@@ -67,7 +67,7 @@ struct _EventdNdSurface {
 };
 
 EventdNdBackendContext *
-eventd_nd_linux_init(EventdNdContext *nd)
+eventd_nd_fbdev_init(EventdNdContext *nd)
 {
     EventdNdBackendContext *context;
 
@@ -79,18 +79,18 @@ eventd_nd_linux_init(EventdNdContext *nd)
 }
 
 void
-eventd_nd_linux_uninit(EventdNdBackendContext *context)
+eventd_nd_fbdev_uninit(EventdNdBackendContext *context)
 {
     g_free(context);
 }
 
 void
-eventd_nd_linux_global_parse(EventdNdBackendContext *context, GKeyFile *config_file)
+eventd_nd_fbdev_global_parse(EventdNdBackendContext *context, GKeyFile *config_file)
 {
 }
 
 gboolean
-eventd_nd_linux_start(EventdNdBackendContext *context, const gchar *target)
+eventd_nd_fbdev_start(EventdNdBackendContext *context, const gchar *target)
 {
     EventdNdBackendContext *display = context;
     struct fb_fix_screeninfo finfo;
@@ -142,7 +142,7 @@ fail:
 }
 
 void
-eventd_nd_linux_stop(EventdNdBackendContext *display)
+eventd_nd_fbdev_stop(EventdNdBackendContext *display)
 {
     EventdNdBackendContext *context = display;
     munmap(display->buffer, display->screensize);
@@ -172,7 +172,7 @@ alpha_div(guchar c, guchar a)
 }
 
 EventdNdSurface *
-eventd_nd_linux_surface_new(EventdNdBackendContext *display, EventdEvent *event, cairo_surface_t *bubble)
+eventd_nd_fbdev_surface_new(EventdNdBackendContext *display, EventdEvent *event, cairo_surface_t *bubble)
 {
     EventdNdSurface *self;
 
@@ -187,7 +187,7 @@ eventd_nd_linux_surface_new(EventdNdBackendContext *display, EventdEvent *event,
 }
 
 void
-eventd_nd_linux_surface_free(EventdNdSurface *self)
+eventd_nd_fbdev_surface_free(EventdNdSurface *self)
 {
     cairo_surface_destroy(self->bubble);
 
@@ -195,7 +195,7 @@ eventd_nd_linux_surface_free(EventdNdSurface *self)
 }
 
 void
-eventd_nd_linux_surface_update(EventdNdSurface *self, cairo_surface_t *bubble)
+eventd_nd_fbdev_surface_update(EventdNdSurface *self, cairo_surface_t *bubble)
 {
     cairo_surface_destroy(self->bubble);
     self->bubble = cairo_surface_reference(bubble);
@@ -205,7 +205,7 @@ eventd_nd_linux_surface_update(EventdNdSurface *self, cairo_surface_t *bubble)
  * TODO: display bubbles again
  */
 static void
-_eventd_nd_linux_surface_display(EventdNdSurface *self, gint x, gint y)
+_eventd_nd_fbdev_surface_display(EventdNdSurface *self, gint x, gint y)
 {
     EventdNdBackendContext *display = self->display;
 

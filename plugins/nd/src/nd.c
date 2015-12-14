@@ -172,7 +172,7 @@ _eventd_nd_init(EventdPluginCoreContext *core)
     eventd_nd_add_backend(xcb, XCB);
 #endif /* ENABLE_ND_XCB */
 #ifdef ENABLE_ND_FBDEV
-    eventd_nd_add_backend(linux, FBDEV);
+    eventd_nd_add_backend(fbdev, FBDEV);
 #endif /* ENABLE_ND_FBDEV */
 #ifdef ENABLE_ND_WIN
     eventd_nd_add_backend(win, WIN);
