@@ -108,7 +108,7 @@ eventd_nd_backend_switch(EventdNdContext *context, EventdNdBackends backend, con
 {
     if ( context->backend != NULL )
     {
-        context->backend->uninit(context->backend->context);
+        context->backend->stop(context->backend->context);
         context->backend = NULL;
     }
 
