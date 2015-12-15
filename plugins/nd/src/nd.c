@@ -36,6 +36,8 @@
 #include <libeventd-event.h>
 #include <libeventd-helpers-config.h>
 
+#include <nkutils-enum.h>
+
 #include "backend.h"
 #include "style.h"
 #include "cairo.h"
@@ -268,16 +270,26 @@ _eventd_nd_control_command(EventdPluginContext *context, guint64 argc, const gch
             *status = g_strdup("No backend specified");
             r = EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR;
         }
-        else if ( argc < 3 )
-        {
-            *status = g_strdup("No target specified");
-            r = EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR;
-        }
         else
         {
-            /* FIXME: parse argv[1] */
-            eventd_nd_backend_switch(context, EVENTD_ND_BACKEND_NONE, argv[2]);
-            r = EVENTD_PLUGIN_COMMAND_STATUS_OK;
+            guint64 backend = EVENTD_ND_BACKEND_NONE;
+            nk_enum_parse(argv[1], _eventd_nd_backends_names, _EVENTD_ND_BACKENDS_SIZE, TRUE, &backend);
+
+            if ( backend == EVENTD_ND_BACKEND_NONE )
+            {
+                eventd_nd_backend_switch(context, backend, NULL);
+                r = EVENTD_PLUGIN_COMMAND_STATUS_OK;
+            }
+            else if ( argc < 3 )
+            {
+                *status = g_strdup("No target specified");
+                r = EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR;
+            }
+            else
+            {
+                eventd_nd_backend_switch(context, backend, argv[2]);
+                r = EVENTD_PLUGIN_COMMAND_STATUS_OK;
+            }
         }
     }
     else if ( g_strcmp0(argv[0], "backends") == 0 )

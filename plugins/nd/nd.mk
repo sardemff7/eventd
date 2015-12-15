@@ -39,6 +39,7 @@ nd_la_CFLAGS = \
 	$(PANGO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
 	$(GMODULE_CFLAGS) \
+	$(NKUTILS_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(null)
 
@@ -56,6 +57,7 @@ nd_la_LIBADD = \
 	$(PANGO_LIBS) \
 	$(GOBJECT_LIBS) \
 	$(GMODULE_LIBS) \
+	$(NKUTILS_LIBS) \
 	$(GLIB_LIBS) \
 	$(null)
 
