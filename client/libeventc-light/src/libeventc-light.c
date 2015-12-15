@@ -508,7 +508,7 @@ eventc_light_connection_read(EventcLightConnection *self)
             if ( ! eventd_protocol_parse(self->protocol, buffer + o, &error) )
             {
                 g_error_free(error);
-                return -EPROTO;
+                return -EINVAL;
             }
             o = c + 1 - buffer;
         }
