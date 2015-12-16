@@ -129,14 +129,14 @@ eventd_nd_fbdev_start(EventdNdBackendContext *context, const gchar *target)
     display->buffer = mmap(NULL, display->screensize, PROT_READ|PROT_WRITE, MAP_SHARED, display->fd, ( vinfo.xoffset ) * display->channels + ( vinfo.yoffset ) * display->stride);
     if ( display->buffer == (void *)-1 )
     {
-        g_warning("Couldn't map framebuffer device to memory: %s", strerror(errno));
+        g_warning("Couldn't map framebuffer device to memory: %s", g_strerror(errno));
         goto fail;
     }
 
     return TRUE;
 
 fail:
-    close(context->fd);
+    g_close(context->fd, NULL);
     context->fd = 0;
     return FALSE;
 }
@@ -148,7 +148,7 @@ eventd_nd_fbdev_stop(EventdNdBackendContext *display)
     munmap(display->buffer, display->screensize);
     context->buffer = NULL;
 
-    close(display->fd);
+    g_close(display->fd, NULL);
     context->fd = 0;
 }
 
