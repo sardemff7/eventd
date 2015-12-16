@@ -319,7 +319,7 @@ _eventd_nd_xcb_events_callback(xcb_generic_event_t *event, gpointer user_data)
 
     if ( event == NULL )
     {
-        eventd_nd_backend_switch(self->nd, EVENTD_ND_BACKEND_NONE, NULL);
+        eventd_nd_backend_stop(self->nd);
         return FALSE;
     }
 

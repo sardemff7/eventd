@@ -43,7 +43,7 @@ typedef struct _EventdPluginContext EventdNdContext;
 typedef struct _EventdNdBackendContext EventdNdBackendContext;
 typedef struct _EventdNdSurface EventdNdSurface;
 
-gboolean eventd_nd_backend_switch(EventdNdContext *context, EventdNdBackends backend, const gchar *target);
+gboolean eventd_nd_backend_stop(EventdNdContext *context);
 void eventd_nd_surface_remove(EventdNdContext *context, const gchar *uuid);
 
 #endif /* __EVENTD_ND_BACKEND_H__ */

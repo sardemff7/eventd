@@ -95,18 +95,8 @@ static const gchar *_eventd_nd_backends_names[_EVENTD_ND_BACKENDS_SIZE] = {
 #endif /* ENABLE_ND_FBDEV */
 };
 
-void
-eventd_nd_surface_remove(EventdNdContext *context, const gchar *uuid)
-{
-    EventdEvent *event;
-    event = eventd_event_new(".notification", "dismiss");
-    eventd_event_add_data(event, g_strdup("source-event"), g_strdup(uuid));
-    eventd_plugin_core_push_event(context->core, event);
-    eventd_event_unref(event);
-}
-
-gboolean
-eventd_nd_backend_switch(EventdNdContext *context, EventdNdBackends backend, const gchar *target)
+static gboolean
+_eventd_nd_backend_switch(EventdNdContext *context, EventdNdBackends backend, const gchar *target)
 {
     if ( context->backend != NULL )
     {
@@ -122,6 +112,22 @@ eventd_nd_backend_switch(EventdNdContext *context, EventdNdBackends backend, con
 
     context->backend = &context->backends[backend];
     return TRUE;
+}
+
+gboolean
+eventd_nd_backend_stop(EventdNdContext *context)
+{
+    return _eventd_nd_backend_switch(context, EVENTD_ND_BACKEND_NONE, NULL);
+}
+
+static void
+_eventd_nd_surface_remove(EventdNdContext *context, const gchar *uuid)
+{
+    EventdEvent *event;
+    event = eventd_event_new(".notification", "dismiss");
+    eventd_event_add_data(event, g_strdup("source-event"), g_strdup(uuid));
+    eventd_plugin_core_push_event(context->core, event);
+    eventd_event_unref(event);
 }
 
 
@@ -234,6 +240,7 @@ _eventd_nd_start(EventdPluginContext *context)
         }
     }
 #endif /* ENABLE_ND_FBDEV */
+
 #ifdef ENABLE_ND_WIN
 #ifdef G_OS_WIN32
     if ( backend == EVENTD_ND_BACKEND_NONE )
@@ -244,13 +251,13 @@ _eventd_nd_start(EventdPluginContext *context)
 #endif /* G_OS_WIN32 */
 #endif /* ENABLE_ND_WIN */
 
-    eventd_nd_backend_switch(context, backend, target);
+    _eventd_nd_backend_switch(context, backend, target);
 }
 
 static void
 _eventd_nd_stop(EventdPluginContext *context)
 {
-    eventd_nd_backend_switch(context, EVENTD_ND_BACKEND_NONE, NULL);
+    eventd_nd_backend_stop(context);
 }
 
 
@@ -277,8 +284,8 @@ _eventd_nd_control_command(EventdPluginContext *context, guint64 argc, const gch
 
             if ( backend == EVENTD_ND_BACKEND_NONE )
             {
-                eventd_nd_backend_switch(context, backend, NULL);
-                r = EVENTD_PLUGIN_COMMAND_STATUS_OK;
+                *status = g_strdup_printf("Unknown backend %s", argv[1]);
+                r = EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR;
             }
             else if ( argc < 3 )
             {
@@ -287,10 +294,15 @@ _eventd_nd_control_command(EventdPluginContext *context, guint64 argc, const gch
             }
             else
             {
-                eventd_nd_backend_switch(context, backend, argv[2]);
+                _eventd_nd_backend_switch(context, backend, argv[2]);
                 r = EVENTD_PLUGIN_COMMAND_STATUS_OK;
             }
         }
+    }
+    else if ( g_strcmp0(argv[0], "stop") == 0 )
+    {
+        eventd_nd_backend_stop(context);
+        r = EVENTD_PLUGIN_COMMAND_STATUS_OK;
     }
     else if ( g_strcmp0(argv[0], "backends") == 0 )
     {
