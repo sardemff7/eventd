@@ -32,7 +32,7 @@
 
 #include <libeventd-helpers-config.h>
 
-#include "backend-win.h"
+#include "backend.h"
 
 #define CLASS_NAME "eventd-nd-win-bubble"
 
@@ -55,7 +55,7 @@ static const gchar * const _eventd_nd_win_corner_anchors[] = {
 };
 
 typedef struct _EventdNdBackendContext {
-    EventdNdContext *nd;
+    EventdNdInterface *nd;
     struct {
         EventdNdWinCornerAnchor anchor;
         gboolean reverse;
@@ -137,8 +137,8 @@ _eventd_nd_win_surface_event_callback(HWND hwnd, UINT message, WPARAM wParam, LP
     return 0;
 }
 
-EventdNdBackendContext *
-eventd_nd_win_init(EventdNdContext *nd)
+static EventdNdBackendContext *
+_eventd_nd_win_init(EventdNdInterface *nd)
 {
     EventdNdDisplay *self;
     self = g_new0(EventdNdDisplay, 1);
@@ -165,8 +165,8 @@ eventd_nd_win_init(EventdNdContext *nd)
     return self;
 }
 
-void
-eventd_nd_win_uninit(EventdNdBackendContext *self_)
+static void
+_eventd_nd_win_uninit(EventdNdBackendContext *self_)
 {
     EventdNdDisplay *self = (EventdNdDisplay *) self_;
 
@@ -175,8 +175,8 @@ eventd_nd_win_uninit(EventdNdBackendContext *self_)
     g_free(self);
 }
 
-void
-eventd_nd_win_global_parse(EventdNdBackendContext *self_, GKeyFile *config_file)
+static void
+_eventd_nd_win_global_parse(EventdNdBackendContext *self_, GKeyFile *config_file)
 {
     EventdNdDisplay *self = (EventdNdDisplay *) self_;
 
@@ -200,8 +200,8 @@ eventd_nd_win_global_parse(EventdNdBackendContext *self_, GKeyFile *config_file)
         self->placement.spacing = integer.value;
 }
 
-gboolean
-eventd_nd_win_start(EventdNdBackendContext *self, const gchar *target)
+static gboolean
+_eventd_nd_win_start(EventdNdBackendContext *self, const gchar *target)
 {
     self->window_class_atom = RegisterClassEx(&self->window_class);
     if ( self->window_class_atom == 0 )
@@ -216,8 +216,8 @@ eventd_nd_win_start(EventdNdBackendContext *self, const gchar *target)
     return TRUE;
 }
 
-void
-eventd_nd_win_stop(EventdNdDisplay *self)
+static void
+_eventd_nd_win_stop(EventdNdDisplay *self)
 {
 }
 
@@ -272,8 +272,8 @@ _eventd_nd_win_update_surfaces(EventdNdDisplay *self)
     EndDeferWindowPos(wp);
 }
 
-EventdNdSurface *
-eventd_nd_win_surface_new(EventdNdDisplay *display, EventdEvent *event, cairo_surface_t *bubble)
+static EventdNdSurface *
+_eventd_nd_win_surface_new(EventdNdDisplay *display, EventdEvent *event, cairo_surface_t *bubble)
 {
     gint width, height;
 
@@ -309,8 +309,8 @@ eventd_nd_win_surface_new(EventdNdDisplay *display, EventdEvent *event, cairo_su
     return self;
 }
 
-void
-eventd_nd_win_surface_free(EventdNdSurface *self)
+static void
+_eventd_nd_win_surface_free(EventdNdSurface *self)
 {
     EventdNdDisplay *display = self->display;
 
@@ -328,8 +328,8 @@ eventd_nd_win_surface_free(EventdNdSurface *self)
     _eventd_nd_win_update_surfaces(display);
 }
 
-void
-eventd_nd_win_surface_update(EventdNdSurface *self, cairo_surface_t *bubble)
+static void
+_eventd_nd_win_surface_update(EventdNdSurface *self, cairo_surface_t *bubble)
 {
     cairo_surface_destroy(self->bubble);
     self->bubble = cairo_surface_reference(bubble);
@@ -342,4 +342,21 @@ eventd_nd_win_surface_update(EventdNdSurface *self, cairo_surface_t *bubble)
     SetWindowPos(self->window, NULL, 0, 0, width, height, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
 
     _eventd_nd_win_update_surfaces(self->display);
+}
+
+EVENTD_EXPORT
+void
+eventd_nd_backend_get_info(EventdNdBackend *backend)
+{
+    backend->init = _eventd_nd_win_init;
+    backend->uninit = _eventd_nd_win_uninit;
+
+    backend->global_parse = _eventd_nd_win_global_parse;
+
+    backend->start = _eventd_nd_win_start;
+    backend->stop  = _eventd_nd_win_stop;
+
+    backend->surface_new     = _eventd_nd_win_surface_new;
+    backend->surface_free    = _eventd_nd_win_surface_free;
+    backend->surface_update  = _eventd_nd_win_surface_update;
 }

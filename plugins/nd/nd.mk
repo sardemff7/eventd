@@ -135,3 +135,31 @@ fbdev_la_LIBADD = \
 	$(ND_BACKENDS_LIBS) \
 	$(null)
 endif
+
+if ENABLE_ND_WINDOWS
+include src/libgwater/win.mk
+
+ndbackends_LTLIBRARIES += \
+	win.la \
+	$(null)
+
+win_la_SOURCES = \
+	%D%/src/backend.h \
+	%D%/src/backend-win.c \
+	$(null)
+
+win_la_CFLAGS = \
+	$(ND_BACKENDS_CFLAGS) \
+	$(GW_WIN_CFLAGS) \
+	$(null)
+
+win_la_LDFLAGS = \
+	$(AM_LDFLAGS) \
+	$(PLUGIN_LDFLAGS) \
+	$(null)
+
+win_la_LIBADD = \
+	$(ND_BACKENDS_LIBS) \
+	$(GW_WIN_LIBS) \
+	$(null)
+endif
