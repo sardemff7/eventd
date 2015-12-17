@@ -75,6 +75,9 @@ const gchar *eventd_nd_backends_names[_EVENTD_ND_BACKENDS_SIZE] = {
 #ifdef ENABLE_ND_FBDEV
     [EVENTD_ND_BACKEND_FBDEV] = "fbdev",
 #endif /* ENABLE_ND_FBDEV */
+#ifdef ENABLE_ND_WIN
+    [EVENTD_ND_BACKEND_WIN] = "win",
+#endif /* ENABLE_ND_WIN */
 };
 
 static gboolean
