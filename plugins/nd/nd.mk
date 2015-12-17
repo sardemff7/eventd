@@ -83,3 +83,31 @@ ND_BACKENDS_LIBS = \
 	$(CAIRO_LIBS) \
 	$(GLIB_LIBS) \
 	$(null)
+
+if ENABLE_ND_XCB
+include src/libgwater/xcb.mk
+
+ndbackends_LTLIBRARIES += \
+	xcb.la \
+	$(null)
+
+xcb_la_SOURCES = \
+	%D%/src/backend.h \
+	%D%/src/backend-xcb.c \
+	$(null)
+
+xcb_la_CFLAGS = \
+	$(ND_BACKENDS_CFLAGS) \
+	$(GW_XCB_CFLAGS) \
+	$(null)
+
+xcb_la_LDFLAGS = \
+	$(AM_LDFLAGS) \
+	$(PLUGIN_LDFLAGS) \
+	$(null)
+
+xcb_la_LIBADD = \
+	$(ND_BACKENDS_LIBS) \
+	$(GW_XCB_LIBS) \
+	$(null)
+endif

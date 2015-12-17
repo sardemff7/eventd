@@ -61,7 +61,7 @@ static const gchar * const _eventd_nd_xcb_corner_anchors[] = {
     [EVENTD_ND_XCB_ANCHOR_BOTTOM_RIGHT] = "bottom right",
 };
 struct _EventdNdBackendContext {
-    EventdNdContext *nd;
+    EventdNdInterface *nd;
     gchar **outputs;
     struct {
         EventdNdXcbCornerAnchor anchor;
@@ -94,8 +94,8 @@ struct _EventdNdSurface {
     cairo_surface_t *bubble;
 };
 
-EventdNdBackendContext *
-eventd_nd_xcb_init(EventdNdContext *nd)
+static EventdNdBackendContext *
+_eventd_nd_xcb_init(EventdNdInterface *nd)
 {
     EventdNdBackendContext *self;
 
@@ -111,15 +111,15 @@ eventd_nd_xcb_init(EventdNdContext *nd)
     return self;
 }
 
-void
-eventd_nd_xcb_uninit(EventdNdBackendContext *self)
+static void
+_eventd_nd_xcb_uninit(EventdNdBackendContext *self)
 {
     g_free(self);
 }
 
 
-void
-eventd_nd_xcb_global_parse(EventdNdBackendContext *self, GKeyFile *config_file)
+static void
+_eventd_nd_xcb_global_parse(EventdNdBackendContext *self, GKeyFile *config_file)
 {
     if ( ! g_key_file_has_group(config_file, "NotificationXcb") )
         return;
@@ -319,7 +319,7 @@ _eventd_nd_xcb_events_callback(xcb_generic_event_t *event, gpointer user_data)
 
     if ( event == NULL )
     {
-        eventd_nd_backend_stop(self->nd);
+        self->nd->backend_stop(self->nd->context);
         return FALSE;
     }
 
@@ -361,8 +361,8 @@ _eventd_nd_xcb_events_callback(xcb_generic_event_t *event, gpointer user_data)
     return TRUE;
 }
 
-gboolean
-eventd_nd_xcb_start(EventdNdBackendContext *self, const gchar *target)
+static gboolean
+_eventd_nd_xcb_start(EventdNdBackendContext *self, const gchar *target)
 {
     gint r;
     gchar *h;
@@ -418,8 +418,8 @@ eventd_nd_xcb_start(EventdNdBackendContext *self, const gchar *target)
     return TRUE;
 }
 
-void
-eventd_nd_xcb_stop(EventdNdBackendContext *self)
+static void
+_eventd_nd_xcb_stop(EventdNdBackendContext *self)
 {
     g_hash_table_unref(self->bubbles);
     g_water_xcb_source_unref(self->source);
@@ -447,7 +447,7 @@ _eventd_nd_xcb_surface_expose_event(EventdNdSurface *self, xcb_expose_event_t *e
 static void
 _eventd_nd_xcb_surface_button_release_event(EventdNdSurface *self)
 {
-    eventd_nd_surface_remove(self->context->nd, eventd_event_get_uuid(self->event));
+    self->context->nd->surface_remove(self->context->nd->context, eventd_event_get_uuid(self->event));
 }
 
 static void
@@ -536,8 +536,8 @@ _eventd_nd_xcb_update_surfaces(EventdNdBackendContext *self)
     xcb_flush(self->xcb_connection);
 }
 
-EventdNdSurface *
-eventd_nd_xcb_surface_new(EventdNdBackendContext *context, EventdEvent *event, cairo_surface_t *bubble)
+static EventdNdSurface *
+_eventd_nd_xcb_surface_new(EventdNdBackendContext *context, EventdEvent *event, cairo_surface_t *bubble)
 {
     guint32 selmask = XCB_CW_OVERRIDE_REDIRECT | XCB_CW_EVENT_MASK;
     guint32 selval[] = { 1, XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_BUTTON_PRESS | XCB_EVENT_MASK_BUTTON_RELEASE };
@@ -591,8 +591,8 @@ eventd_nd_xcb_surface_new(EventdNdBackendContext *context, EventdEvent *event, c
     return self;
 }
 
-void
-eventd_nd_xcb_surface_free(EventdNdSurface *self)
+static void
+_eventd_nd_xcb_surface_free(EventdNdSurface *self)
 {
     if ( self == NULL )
         return;
@@ -616,8 +616,8 @@ eventd_nd_xcb_surface_free(EventdNdSurface *self)
 
 }
 
-void
-eventd_nd_xcb_surface_update(EventdNdSurface *self, cairo_surface_t *bubble)
+static void
+_eventd_nd_xcb_surface_update(EventdNdSurface *self, cairo_surface_t *bubble)
 {
     cairo_surface_destroy(self->bubble);
     self->bubble = cairo_surface_reference(bubble);
@@ -637,4 +637,21 @@ eventd_nd_xcb_surface_update(EventdNdSurface *self, cairo_surface_t *bubble)
     xcb_clear_area(self->context->xcb_connection, TRUE, self->window, 0, 0, width, height);
 
     _eventd_nd_xcb_update_surfaces(self->context);
+}
+
+EVENTD_EXPORT
+void
+eventd_nd_backend_get_info(EventdNdBackend *backend)
+{
+    backend->init = _eventd_nd_xcb_init;
+    backend->uninit = _eventd_nd_xcb_uninit;
+
+    backend->global_parse = _eventd_nd_xcb_global_parse;
+
+    backend->start = _eventd_nd_xcb_start;
+    backend->stop  = _eventd_nd_xcb_stop;
+
+    backend->surface_new     = _eventd_nd_xcb_surface_new;
+    backend->surface_free    = _eventd_nd_xcb_surface_free;
+    backend->surface_update  = _eventd_nd_xcb_surface_update;
 }
