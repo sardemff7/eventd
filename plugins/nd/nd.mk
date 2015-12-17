@@ -29,6 +29,8 @@ nd_la_SOURCES = \
 	%D%/src/pixbuf.h \
 	%D%/src/pixbuf.c \
 	%D%/src/backend.h \
+	%D%/src/backends.h \
+	%D%/src/backends.c \
 	%D%/src/nd.c \
 	$(null)
 
@@ -66,29 +68,18 @@ nd_la_LIBADD = \
 # Backends
 #
 
-if ENABLE_ND_XCB
-include src/libgwater/xcb.mk
-nd_la_SOURCES += \
-	%D%/src/backend-xcb.h \
-	%D%/src/backend-xcb.c \
-	$(null)
-nd_la_CFLAGS += $(GW_XCB_CFLAGS)
-nd_la_LIBADD += $(GW_XCB_LIBS)
-endif
+ndbackendsdir = $(pluginsdir)/nd
+ndbackends_LTLIBRARIES =
 
-if ENABLE_ND_FBDEV
-nd_la_SOURCES += \
-	%D%/src/backend-fbdev.h \
-	%D%/src/backend-fbdev.c \
+ND_BACKENDS_CFLAGS = \
+	$(AM_CFLAGS) \
+	$(CAIRO_CFLAGS) \
+	$(GLIB_CFLAGS) \
 	$(null)
-endif
 
-if ENABLE_ND_WINDOWS
-include src/libgwater/win.mk
-nd_la_SOURCES += \
-	%D%/src/backend-win.h \
-	%D%/src/backend-win.c \
+ND_BACKENDS_LIBS = \
+	libeventd.la \
+	libeventd-helpers.la \
+	$(CAIRO_LIBS) \
+	$(GLIB_LIBS) \
 	$(null)
-nd_la_CFLAGS += $(GW_WIN_CFLAGS)
-nd_la_LIBADD += $(GW_WIN_LIBS)
-endif

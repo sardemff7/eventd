@@ -20,21 +20,10 @@
  *
  */
 
-#ifndef __EVENTD_ND_BACKEND_XCB_H__
-#define __EVENTD_ND_BACKEND_XCB_H__
+#ifndef __EVENTD_ND_BACKENDS_H__
+#define __EVENTD_ND_BACKENDS_H__
 
-#include "backend.h"
+gboolean eventd_nd_backends_load(EventdNdBackend *backends, EventdNdInterface *context);
+void eventd_nd_backends_unload(EventdNdBackend *backends);
 
-EventdNdBackendContext *eventd_nd_xcb_init(EventdNdContext *nd);
-void eventd_nd_xcb_uninit(EventdNdBackendContext *context);
-
-void eventd_nd_xcb_global_parse(EventdNdBackendContext *context, GKeyFile *config_file);
-
-gboolean eventd_nd_xcb_start(EventdNdBackendContext *context, const gchar *target);
-void eventd_nd_xcb_stop(EventdNdBackendContext *context);
-
-EventdNdSurface *eventd_nd_xcb_surface_new(EventdNdBackendContext *context, EventdEvent *event, cairo_surface_t *bubble);
-void eventd_nd_xcb_surface_update(EventdNdSurface *surface, cairo_surface_t *bubble);
-void eventd_nd_xcb_surface_free(EventdNdSurface *surface);
-
-#endif /* __EVENTD_ND_BACKEND_XCB_H__ */
+#endif /* __EVENTD_ND_BACKENDS_H__ */

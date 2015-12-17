@@ -39,38 +39,20 @@
 #include <nkutils-enum.h>
 
 #include "backend.h"
+#include "backends.h"
 #include "style.h"
 #include "cairo.h"
 
-#include "backend-xcb.h"
-#include "backend-fbdev.h"
-#include "backend-win.h"
-
-typedef struct {
-    EventdNdBackendContext *context;
-
-    EventdNdBackendContext *(*init)(EventdNdContext *context);
-    void (*uninit)(EventdNdBackendContext *context);
-
-    void (*global_parse)(EventdNdBackendContext *context, GKeyFile *config_file);
-
-    gboolean (*start)(EventdNdBackendContext *context, const gchar *target);
-    void (*stop)(EventdNdBackendContext *context);
-
-    EventdNdSurface *(*surface_new)(EventdNdBackendContext *context, EventdEvent *event, cairo_surface_t *bubble);
-    void (*surface_update)(EventdNdSurface *surface, cairo_surface_t *bubble);
-    void (*surface_free)(EventdNdSurface *surface);
-} EventdNdBackend;
-
 struct _EventdPluginContext {
     EventdPluginCoreContext *core;
-    GSList *actions;
+    EventdNdInterface interface;
+    EventdNdBackend backends[_EVENTD_ND_BACKENDS_SIZE];
+    EventdNdBackend *backend;
+    EventdNdStyle *style;
     gint max_width;
     gint max_height;
-    EventdNdStyle *style;
-    EventdNdBackend *backend;
-    EventdNdBackend backends[_EVENTD_ND_BACKENDS_SIZE];
     GHashTable *notifications;
+    GSList *actions;
 };
 
 typedef struct {
@@ -85,7 +67,7 @@ typedef struct {
 } EventdNdNotification;
 
 
-static const gchar *_eventd_nd_backends_names[_EVENTD_ND_BACKENDS_SIZE] = {
+const gchar *eventd_nd_backends_names[_EVENTD_ND_BACKENDS_SIZE] = {
     [EVENTD_ND_BACKEND_NONE] = "none",
 #ifdef ENABLE_ND_XCB
     [EVENTD_ND_BACKEND_XCB] = "xcb",
@@ -107,15 +89,20 @@ _eventd_nd_backend_switch(EventdNdContext *context, EventdNdBackends backend, co
     if ( backend == EVENTD_ND_BACKEND_NONE )
         return TRUE;
 
-    if ( ! context->backends[backend].start(context->backends[backend].context, target) )
+    EventdNdBackend *backend_;
+    backend_ = &context->backends[backend];
+    if ( backend_->context == NULL )
         return FALSE;
 
-    context->backend = &context->backends[backend];
+    if ( ! backend_->start(backend_->context, target) )
+        return FALSE;
+
+    context->backend = backend_;
     return TRUE;
 }
 
-gboolean
-eventd_nd_backend_stop(EventdNdContext *context)
+static gboolean
+_eventd_nd_backend_stop(EventdNdContext *context)
 {
     return _eventd_nd_backend_switch(context, EVENTD_ND_BACKEND_NONE, NULL);
 }
@@ -149,19 +136,6 @@ _eventd_nd_notification_free(gpointer data)
  * Initialization interface
  */
 
-#define _eventd_nd_add_backend_func(i, prefix, func) context->backends[i].func = prefix##func
-#define _eventd_nd_add_backend(i, prefix) G_STMT_START { \
-        _eventd_nd_add_backend_func(i, prefix, init); \
-        _eventd_nd_add_backend_func(i, prefix, uninit); \
-        _eventd_nd_add_backend_func(i, prefix, global_parse); \
-        _eventd_nd_add_backend_func(i, prefix, start); \
-        _eventd_nd_add_backend_func(i, prefix, stop); \
-        _eventd_nd_add_backend_func(i, prefix, surface_new); \
-        _eventd_nd_add_backend_func(i, prefix, surface_update); \
-        _eventd_nd_add_backend_func(i, prefix, surface_free); \
-    } G_STMT_END
-#define eventd_nd_add_backend(name, Name) _eventd_nd_add_backend(EVENTD_ND_BACKEND_##Name, eventd_nd_##name##_)
-
 static EventdPluginContext *
 _eventd_nd_init(EventdPluginCoreContext *core)
 {
@@ -170,25 +144,22 @@ _eventd_nd_init(EventdPluginCoreContext *core)
     context = g_new0(EventdPluginContext, 1);
     context->core = core;
 
+    context->interface.context = context;
+    context->interface.backend_stop = _eventd_nd_backend_stop;
+    context->interface.surface_remove = _eventd_nd_surface_remove;
+
+    if ( ! eventd_nd_backends_load(context->backends, &context->interface) )
+    {
+        g_warning("Could not load any backend, aborting");
+        g_free(context);
+        return NULL;
+    }
+
     context->style = eventd_nd_style_new(NULL);
 
     context->notifications = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, _eventd_nd_notification_free);
 
     eventd_nd_cairo_init();
-
-#ifdef ENABLE_ND_XCB
-    eventd_nd_add_backend(xcb, XCB);
-#endif /* ENABLE_ND_XCB */
-#ifdef ENABLE_ND_FBDEV
-    eventd_nd_add_backend(fbdev, FBDEV);
-#endif /* ENABLE_ND_FBDEV */
-#ifdef ENABLE_ND_WIN
-    eventd_nd_add_backend(win, WIN);
-#endif /* ENABLE_ND_WIN */
-
-    EventdNdBackends i;
-    for ( i = EVENTD_ND_BACKEND_NONE + 1 ; i < _EVENTD_ND_BACKENDS_SIZE ; ++i )
-        context->backends[i].context = context->backends[i].init(context);
 
     return context;
 }
@@ -198,13 +169,11 @@ _eventd_nd_uninit(EventdPluginContext *context)
 {
     eventd_nd_style_free(context->style);
 
-    EventdNdBackends i;
-    for ( i = EVENTD_ND_BACKEND_NONE + 1 ; i < _EVENTD_ND_BACKENDS_SIZE ; ++i )
-        context->backends[i].uninit(context->backends[i].context);
-
     eventd_nd_cairo_uninit();
 
     g_hash_table_unref(context->notifications);
+
+    eventd_nd_backends_unload(context->backends);
 
     g_free(context);
 }
@@ -257,7 +226,7 @@ _eventd_nd_start(EventdPluginContext *context)
 static void
 _eventd_nd_stop(EventdPluginContext *context)
 {
-    eventd_nd_backend_stop(context);
+    _eventd_nd_backend_stop(context);
 }
 
 
@@ -280,7 +249,7 @@ _eventd_nd_control_command(EventdPluginContext *context, guint64 argc, const gch
         else
         {
             guint64 backend = EVENTD_ND_BACKEND_NONE;
-            nk_enum_parse(argv[1], _eventd_nd_backends_names, _EVENTD_ND_BACKENDS_SIZE, TRUE, &backend);
+            nk_enum_parse(argv[1], eventd_nd_backends_names, _EVENTD_ND_BACKENDS_SIZE, TRUE, &backend);
 
             if ( backend == EVENTD_ND_BACKEND_NONE )
             {
@@ -301,7 +270,7 @@ _eventd_nd_control_command(EventdPluginContext *context, guint64 argc, const gch
     }
     else if ( g_strcmp0(argv[0], "stop") == 0 )
     {
-        eventd_nd_backend_stop(context);
+        _eventd_nd_backend_stop(context);
         r = EVENTD_PLUGIN_COMMAND_STATUS_OK;
     }
     else if ( g_strcmp0(argv[0], "backends") == 0 )
@@ -311,7 +280,10 @@ _eventd_nd_control_command(EventdPluginContext *context, guint64 argc, const gch
 
         EventdNdBackends i;
         for ( i = EVENTD_ND_BACKEND_NONE + 1 ; i < _EVENTD_ND_BACKENDS_SIZE ; ++i )
-                g_string_append_printf(list, "\n    %s", _eventd_nd_backends_names[i]);
+        {
+            if ( context->backends[i].context != NULL )
+                g_string_append_printf(list, "\n    %s", eventd_nd_backends_names[i]);
+        }
 
         *status = g_string_free(list, FALSE);
         r = EVENTD_PLUGIN_COMMAND_STATUS_OK;
@@ -458,7 +430,7 @@ _eventd_nd_event_dispatch(EventdPluginContext *context, EventdEvent *event)
 static void
 _eventd_nd_event_action(EventdPluginContext *context, EventdNdStyle *style, EventdEvent *event)
 {
-    if ( context->backend == EVENTD_ND_BACKEND_NONE )
+    if ( context->backend == NULL )
         /* No backend connected for now */
         return;
 

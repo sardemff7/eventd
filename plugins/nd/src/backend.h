@@ -39,11 +39,37 @@ typedef enum {
     _EVENTD_ND_BACKENDS_SIZE
 } EventdNdBackends;
 
+const gchar *eventd_nd_backends_names[_EVENTD_ND_BACKENDS_SIZE];
+
 typedef struct _EventdPluginContext EventdNdContext;
+typedef struct {
+    EventdNdContext *context;
+
+    gboolean (*backend_stop)(EventdNdContext *context);
+    void (*surface_remove)(EventdNdContext *context, const gchar *uuid);
+} EventdNdInterface;
+
+
 typedef struct _EventdNdBackendContext EventdNdBackendContext;
 typedef struct _EventdNdSurface EventdNdSurface;
 
-gboolean eventd_nd_backend_stop(EventdNdContext *context);
-void eventd_nd_surface_remove(EventdNdContext *context, const gchar *uuid);
+typedef struct {
+    EventdNdBackendContext *(*init)(EventdNdInterface *context);
+    void (*uninit)(EventdNdBackendContext *context);
+
+    void (*global_parse)(EventdNdBackendContext *context, GKeyFile *config_file);
+
+    gboolean (*start)(EventdNdBackendContext *context, const gchar *target);
+    void (*stop)(EventdNdBackendContext *context);
+
+    EventdNdSurface *(*surface_new)(EventdNdBackendContext *context, EventdEvent *event, cairo_surface_t *bubble);
+    void (*surface_update)(EventdNdSurface *surface, cairo_surface_t *bubble);
+    void (*surface_free)(EventdNdSurface *surface);
+
+    gpointer module;
+    EventdNdBackendContext *context;
+} EventdNdBackend;
+
+typedef void (*EventdNdBackendGetInfoFunc)(EventdNdBackend *backend);
 
 #endif /* __EVENTD_ND_BACKEND_H__ */
