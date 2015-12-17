@@ -43,12 +43,12 @@
 #include <glib/gstdio.h>
 #include <cairo.h>
 
-#include "backend-fbdev.h"
+#include "backend.h"
 
 #define FRAMEBUFFER_TARGET_PREFIX "/dev/fb"
 
 struct _EventdNdBackendContext {
-    EventdNdContext *nd;
+    EventdNdInterface *nd;
     gint fd;
     guchar *buffer;
     guint64 screensize;
@@ -66,8 +66,8 @@ struct _EventdNdSurface {
     gint channels;
 };
 
-EventdNdBackendContext *
-eventd_nd_fbdev_init(EventdNdContext *nd)
+static EventdNdBackendContext *
+_eventd_nd_fbdev_init(EventdNdInterface *nd)
 {
     EventdNdBackendContext *context;
 
@@ -78,19 +78,19 @@ eventd_nd_fbdev_init(EventdNdContext *nd)
     return context;
 }
 
-void
-eventd_nd_fbdev_uninit(EventdNdBackendContext *context)
+static void
+_eventd_nd_fbdev_uninit(EventdNdBackendContext *context)
 {
     g_free(context);
 }
 
-void
-eventd_nd_fbdev_global_parse(EventdNdBackendContext *context, GKeyFile *config_file)
+static void
+_eventd_nd_fbdev_global_parse(EventdNdBackendContext *context, GKeyFile *config_file)
 {
 }
 
-gboolean
-eventd_nd_fbdev_start(EventdNdBackendContext *context, const gchar *target)
+static gboolean
+_eventd_nd_fbdev_start(EventdNdBackendContext *context, const gchar *target)
 {
     EventdNdBackendContext *display = context;
     struct fb_fix_screeninfo finfo;
@@ -141,8 +141,8 @@ fail:
     return FALSE;
 }
 
-void
-eventd_nd_fbdev_stop(EventdNdBackendContext *display)
+static void
+_eventd_nd_fbdev_stop(EventdNdBackendContext *display)
 {
     EventdNdBackendContext *context = display;
     munmap(display->buffer, display->screensize);
@@ -171,8 +171,8 @@ alpha_div(guchar c, guchar a)
     return c;
 }
 
-EventdNdSurface *
-eventd_nd_fbdev_surface_new(EventdNdBackendContext *display, EventdEvent *event, cairo_surface_t *bubble)
+static EventdNdSurface *
+_eventd_nd_fbdev_surface_new(EventdNdBackendContext *display, EventdEvent *event, cairo_surface_t *bubble)
 {
     EventdNdSurface *self;
 
@@ -186,16 +186,16 @@ eventd_nd_fbdev_surface_new(EventdNdBackendContext *display, EventdEvent *event,
     return self;
 }
 
-void
-eventd_nd_fbdev_surface_free(EventdNdSurface *self)
+static void
+_eventd_nd_fbdev_surface_free(EventdNdSurface *self)
 {
     cairo_surface_destroy(self->bubble);
 
     g_free(self);
 }
 
-void
-eventd_nd_fbdev_surface_update(EventdNdSurface *self, cairo_surface_t *bubble)
+static void
+_eventd_nd_fbdev_surface_update(EventdNdSurface *self, cairo_surface_t *bubble)
 {
     cairo_surface_destroy(self->bubble);
     self->bubble = cairo_surface_reference(bubble);
@@ -233,4 +233,21 @@ _eventd_nd_fbdev_surface_display(EventdNdSurface *self, gint x, gint y)
 
     cairo_destroy(cr);
     cairo_surface_destroy(surface);
+}
+
+EVENTD_EXPORT
+void
+eventd_nd_backend_get_info(EventdNdBackend *backend)
+{
+    backend->init = _eventd_nd_fbdev_init;
+    backend->uninit = _eventd_nd_fbdev_uninit;
+
+    backend->global_parse = _eventd_nd_fbdev_global_parse;
+
+    backend->start = _eventd_nd_fbdev_start;
+    backend->stop  = _eventd_nd_fbdev_stop;
+
+    backend->surface_new     = _eventd_nd_fbdev_surface_new;
+    backend->surface_free    = _eventd_nd_fbdev_surface_free;
+    backend->surface_update  = _eventd_nd_fbdev_surface_update;
 }

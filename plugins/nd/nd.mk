@@ -111,3 +111,27 @@ xcb_la_LIBADD = \
 	$(GW_XCB_LIBS) \
 	$(null)
 endif
+
+if ENABLE_ND_FBDEV
+ndbackends_LTLIBRARIES += \
+	fbdev.la \
+	$(null)
+
+fbdev_la_SOURCES = \
+	%D%/src/backend.h \
+	%D%/src/backend-fbdev.c \
+	$(null)
+
+fbdev_la_CFLAGS = \
+	$(ND_BACKENDS_CFLAGS) \
+	$(null)
+
+fbdev_la_LDFLAGS = \
+	$(AM_LDFLAGS) \
+	$(PLUGIN_LDFLAGS) \
+	$(null)
+
+fbdev_la_LIBADD = \
+	$(ND_BACKENDS_LIBS) \
+	$(null)
+endif
