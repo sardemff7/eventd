@@ -577,6 +577,7 @@ _eventd_fdo_notifications_init(EventdPluginCoreContext *core)
     _eventd_fdo_notifications_init_capabilities(context);
 
     context->notifications = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, _eventd_fdo_notifications_notification_free);
+    context->ids = g_hash_table_new(g_direct_hash, g_direct_equal);
 
     return context;
 }
@@ -584,6 +585,7 @@ _eventd_fdo_notifications_init(EventdPluginCoreContext *core)
 static void
 _eventd_fdo_notifications_uninit(EventdPluginContext *context)
 {
+    g_hash_table_unref(context->ids);
     g_hash_table_unref(context->notifications);
 
     g_variant_unref(context->capabilities);
