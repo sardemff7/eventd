@@ -62,9 +62,11 @@ ev_os_win=no
 case "${host}" in
     *-*-mingw*)
         ev_os_win=yes
+        pkg_config_extra_args="--dont-define-prefix"
     ;;
     *)
         ev_os_unix=yes
+        pkg_config_extra_args=
     ;;
 esac
 AM_CONDITIONAL([EV_OS_UNIX], [test x${ev_os_unix} = xyes])
@@ -159,12 +161,12 @@ m4_ifdef([GOBJECT_INTROSPECTION_CHECK], [
         AC_ARG_WITH([typelibdir], AS_HELP_STRING([--with-typelibdir=DIR], [Directory for gobject introspection typelib files]), [], [with_typelibdir=yes])
         case "${with_girdir}" in
             no|"") AC_MSG_ERROR([*** You must define girdir when compiling gobject introspection support]) ;;
-            yes) girdir="`${PKG_CONFIG} --dont-define-prefix --variable=girdir gobject-introspection-1.0`" ;;
+            yes) girdir="`${PKG_CONFIG} ${pkg_config_extra_args} --variable=girdir gobject-introspection-1.0`" ;;
             *) girdir="${with_girdir}" ;;
         esac
         case "${with_typelibdir}" in
             no|"") AC_MSG_ERROR([*** You must define typelibdir when compiling gobject introspection support]) ;;
-            yes) typelibdir="`${PKG_CONFIG} --dont-define-prefix --variable=typelibdir gobject-introspection-1.0`" ;;
+            yes) typelibdir="`${PKG_CONFIG} ${pkg_config_extra_args} --variable=typelibdir gobject-introspection-1.0`" ;;
             *) typelibdir="${with_typelibdir}" ;;
         esac
     fi
@@ -202,7 +204,7 @@ AC_ARG_WITH([systemduserunitdir], AS_HELP_STRING([--with-systemduserunitdir=DIR]
 if test x${enable_systemd} = xyes; then
     case "${with_systemduserunitdir}" in
         no|"") AC_MSG_ERROR([*** You must define systemduserunitdir when compiling systemd support]) ;;
-        yes) systemduserunitdir="`${PKG_CONFIG} --dont-define-prefix --variable=systemduserunitdir systemd`" ;;
+        yes) systemduserunitdir="`${PKG_CONFIG} ${pkg_config_extra_args} --variable=systemduserunitdir systemd`" ;;
         *) systemduserunitdir="${with_systemduserunitdir}" ;;
     esac
     AC_CHECK_HEADERS([sys/socket.h])
@@ -216,7 +218,7 @@ AC_ARG_WITH([dbussessionservicedir], AS_HELP_STRING([--with-dbussessionservicedi
 if test x${ev_os_unix} = xyes; then
     case "${with_dbussessionservicedir}" in
         no|"") AC_MSG_ERROR([*** You must define dbussessionservicedir when compiling D-Bus support]) ;;
-        yes) dbussessionservicedir="`${PKG_CONFIG} --dont-define-prefix --variable=session_bus_services_dir dbus-1`" ;;
+        yes) dbussessionservicedir="`${PKG_CONFIG} ${pkg_config_extra_args} --variable=session_bus_services_dir dbus-1`" ;;
         *) dbussessionservicedir="${with_dbussessionservicedir}" ;;
     esac
     AC_SUBST([dbussessionservicedir])
