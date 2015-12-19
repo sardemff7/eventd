@@ -163,3 +163,20 @@ win_la_LIBADD = \
 	$(GW_WIN_LIBS) \
 	$(null)
 endif
+
+
+#
+# Hooks
+#
+
+install-data-hook la-files-install-hook: nd-la-files-install-hook
+uninstall-hook la-files-uninstall-hook: nd-la-files-uninstall-hook
+
+# *.la files cleanup
+nd-la-files-install-hook:
+	$(call ev_remove_la,ndbackends)
+
+# Remove *.so files at uninstall since
+# we remove *.la files at install
+nd-la-files-uninstall-hook:
+	$(call ev_remove_so_from_la,ndbackends)
