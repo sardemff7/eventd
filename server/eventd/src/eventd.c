@@ -209,19 +209,6 @@ eventd_core_push_event(EventdCoreContext *context, EventdEvent *event)
 }
 
 void
-eventd_core_pause(EventdCoreContext *context)
-{
-    /*
-     * FIXME: add back pause/resume
-     */
-}
-
-void
-eventd_core_resume(EventdCoreContext *context)
-{
-}
-
-void
 eventd_core_flags_add(EventdCoreContext *context, GQuark flag)
 {
     context->flags = g_renew(GQuark, context->flags, ++context->flags_count + 1);

@@ -102,10 +102,6 @@ _eventd_service_private_connection_handler(GSocketService *socket_service, GSock
         eventd_core_stop(control->core);
     else if ( g_strcmp0(argv[0], "reload") == 0 )
         eventd_core_config_reload(control->core);
-    else if ( g_strcmp0(argv[0], "pause") == 0 )
-        eventd_core_pause(control->core);
-    else if ( g_strcmp0(argv[0], "resume") == 0 )
-        eventd_core_resume(control->core);
     else if ( g_strcmp0(argv[0], "version") == 0 )
         status = g_strdup(PACKAGE_NAME " " PACKAGE_VERSION);
     else if ( g_strcmp0(argv[0], "flags") == 0 )
