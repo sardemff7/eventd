@@ -354,7 +354,7 @@ dnl No additional dependencies for tests
 dnl AC_ARG_ENABLE([tests], AS_HELP_STRING([--enable-tests], [Build tests]), [], [enable_tests=yes])
 
 # Debug flags
-AC_ARG_ENABLE([debug], AS_HELP_STRING([--enable-debug], [Enable debug]), [], [enable_debug=no])
+AC_ARG_ENABLE([debug], AS_HELP_STRING([--disable-debug], [Disable debug output]), [], [enable_debug=yes])
 if test x${enable_debug} = xyes; then
     AC_DEFINE([EVENTD_DEBUG], [1], [Activate debug mode])
 fi
@@ -412,5 +412,5 @@ AC_MSG_RESULT([
         libcanberra: ${enable_libcanberra}
 
 dnl     Tests: ${enable_tests}
-    Debug mode: ${enable_debug}
+    Debug output: ${enable_debug}
 ])
