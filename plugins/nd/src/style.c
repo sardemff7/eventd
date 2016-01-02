@@ -190,8 +190,8 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
     style->icon.set = TRUE;
     style->icon.placement  = EVENTD_ND_STYLE_ICON_PLACEMENT_BACKGROUND;
     style->icon.anchor     = EVENTD_ND_ANCHOR_VCENTER;
-    style->icon.max_width  = 50;
-    style->icon.max_height = 50;
+    style->icon.max_width  = 25;
+    style->icon.max_height = 25;
     style->icon.margin     = 10;
     style->icon.fade_width = 0.75;
 }

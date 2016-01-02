@@ -453,8 +453,8 @@
                     </varlistentry>
 
                     <varlistentry>
-                        <term><varname>MaxWidth=</varname> (defaults to <literal>50</literal>)</term>
-                        <term><varname>MaxHeight=</varname> (defaults to <literal>50</literal>)</term>
+                        <term><varname>MaxWidth=</varname> (defaults to <literal>25</literal>)</term>
+                        <term><varname>MaxHeight=</varname> (defaults to <literal>25</literal>)</term>
                         <listitem>
                             <para>Two <type>integers</type>, <literal>-1</literal> is unlimited</para>
                             <para>These two keys control the icon size.</para>
