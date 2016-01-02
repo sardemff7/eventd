@@ -429,10 +429,43 @@
                                     <term><literal>Background</literal></term>
                                     <listitem>
                                         <para>The icon is placed in the bubble's background</para>
-                                        <para>Margin between bubble's icon and text if placement is <literal>Foreground</literal>.</para>
+                                        <para>The icon is rendered as fading behind the text.</para>
+                                    </listitem>
+                                </varlistentry>
+
+                                <varlistentry>
+                                    <term><literal>Overlay</literal></term>
+                                    <listitem>
+                                        <para>The icon is placed over the bubble image</para>
+                                        <para>The icon is rendered over the image, in the bottom right corner, with a quarter of it outside.</para>
+                                    </listitem>
+                                </varlistentry>
+
+                                <varlistentry>
+                                    <term><literal>Foreground</literal></term>
+                                    <listitem>
+                                        <para>The icon is placed on the opposite side of the bubble image</para>
                                     </listitem>
                                 </varlistentry>
                             </variablelist>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>MaxWidth=</varname> (defaults to <literal>25</literal>)</term>
+                        <term><varname>MaxHeight=</varname> (defaults to <literal>25</literal>)</term>
+                        <listitem>
+                            <para>Two <type>integers</type>, <literal>-1</literal> is unlimited</para>
+                            <para>These two keys control the icon size.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>FadeWidth=</varname> (defaults to <literal>75</literal>)</term>
+                        <listitem>
+                            <para>A <type>percentage</type> as an <type>integer</type></para>
+                            <para>Determines the fading width when the icon is placed in background.</para>
+                            <para>Used only if placement is <literal>Background</literal>.</para>
                         </listitem>
                     </varlistentry>
 
@@ -453,29 +486,11 @@
                     </varlistentry>
 
                     <varlistentry>
-                        <term><varname>MaxWidth=</varname> (defaults to <literal>25</literal>)</term>
-                        <term><varname>MaxHeight=</varname> (defaults to <literal>25</literal>)</term>
-                        <listitem>
-                            <para>Two <type>integers</type>, <literal>-1</literal> is unlimited</para>
-                            <para>These two keys control the icon size.</para>
-                        </listitem>
-                    </varlistentry>
-
-                    <varlistentry>
                         <term><varname>Margin=</varname> (defaults to <literal>10</literal>)</term>
                         <listitem>
                             <para>An <type>integer</type></para>
                             <para>Margin between bubble's icon and text.</para>
                             <para>Used only if placement is <literal>Foreground</literal>.</para>
-                        </listitem>
-                    </varlistentry>
-
-                    <varlistentry>
-                        <term><varname>FadeWidth=</varname> (defaults to <literal>75</literal>)</term>
-                        <listitem>
-                            <para>A <type>percentage</type> as an <type>integer</type></para>
-                            <para>Determines the fading width when the icon is placed in background.</para>
-                            <para>Used only if placement is <literal>Background</literal>.</para>
                         </listitem>
                     </varlistentry>
                 </variablelist>

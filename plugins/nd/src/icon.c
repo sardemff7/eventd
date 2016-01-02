@@ -207,8 +207,8 @@ _eventd_nd_cairo_icon_process_overlay(GdkPixbuf *pixbuf, EventdNdStyle *style, g
     w = cairo_image_surface_get_width(icon);
     h = cairo_image_surface_get_height(icon);
 
-    *width += ( w / 2 );
-    *height += ( h / 2 );
+    *width += ( w / 4 );
+    *height += ( h / 4 );
 
     return icon;
 }
@@ -352,10 +352,10 @@ _eventd_nd_cairo_image_and_icon_draw_overlay(cairo_t *cr, cairo_surface_t *image
         w = cairo_image_surface_get_width(icon);
         h =  cairo_image_surface_get_height(icon);
 
-        image_x = padding + w / 4;
-        image_y = padding + h / 4;
-        icon_x = padding + cairo_image_surface_get_width(image) - ( w / 2 );
-        icon_y = padding + cairo_image_surface_get_height(image) - ( h / 2 );
+        image_x = padding;
+        image_y = padding;
+        icon_x = padding + cairo_image_surface_get_width(image) - ( 3 * w / 4 );
+        icon_y = padding + cairo_image_surface_get_height(image) - ( 3 * h / 4 );
 
         _eventd_nd_cairo_surface_draw(cr, image, image_x, image_y);
         _eventd_nd_cairo_surface_draw(cr, icon, icon_x, icon_y);
