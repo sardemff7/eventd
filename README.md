@@ -23,6 +23,8 @@ To build eventd from Git, you will need some additional dependencies:
 - libtool
 - pkg-config 0.25 (or newer) or pkgconf 0.2 (or newer)
 
+Make sure to use `git clone --recursive` to fetch submodules too.
+
 
 Licencing
 ---------
