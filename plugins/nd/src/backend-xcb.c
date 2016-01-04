@@ -43,32 +43,9 @@
 
 #include "backend.h"
 
-typedef enum {
-    EVENTD_ND_XCB_ANCHOR_TOP,
-    EVENTD_ND_XCB_ANCHOR_TOP_LEFT,
-    EVENTD_ND_XCB_ANCHOR_TOP_RIGHT,
-    EVENTD_ND_XCB_ANCHOR_BOTTOM,
-    EVENTD_ND_XCB_ANCHOR_BOTTOM_LEFT,
-    EVENTD_ND_XCB_ANCHOR_BOTTOM_RIGHT,
-} EventdNdXcbCornerAnchor;
-
-static const gchar * const _eventd_nd_xcb_corner_anchors[] = {
-    [EVENTD_ND_XCB_ANCHOR_TOP]          = "top",
-    [EVENTD_ND_XCB_ANCHOR_TOP_LEFT]     = "top left",
-    [EVENTD_ND_XCB_ANCHOR_TOP_RIGHT]    = "top right",
-    [EVENTD_ND_XCB_ANCHOR_BOTTOM]       = "bottom",
-    [EVENTD_ND_XCB_ANCHOR_BOTTOM_LEFT]  = "bottom left",
-    [EVENTD_ND_XCB_ANCHOR_BOTTOM_RIGHT] = "bottom right",
-};
 struct _EventdNdBackendContext {
     EventdNdInterface *nd;
     gchar **outputs;
-    struct {
-        EventdNdXcbCornerAnchor anchor;
-        gboolean reverse;
-        gint margin;
-        gint spacing;
-    } placement;
     GWaterXcbSource *source;
     xcb_connection_t *xcb_connection;
     xcb_screen_t *screen;
@@ -81,13 +58,11 @@ struct _EventdNdBackendContext {
     gint randr_event_base;
     gboolean shape;
     GHashTable *bubbles;
-    GQueue *queue;
 };
 
 struct _EventdNdSurface {
     EventdEvent *event;
     EventdNdBackendContext *context;
-    GList *link;
     xcb_window_t window;
     gint width;
     gint height;
@@ -102,11 +77,6 @@ _eventd_nd_xcb_init(EventdNdInterface *nd)
     self = g_new0(EventdNdBackendContext, 1);
 
     self->nd = nd;
-
-    /* default bubble position */
-    self->placement.anchor    = EVENTD_ND_XCB_ANCHOR_TOP_RIGHT;
-    self->placement.margin    = 13;
-    self->placement.spacing   = 13;
 
     return self;
 }
@@ -124,23 +94,7 @@ _eventd_nd_xcb_global_parse(EventdNdBackendContext *self, GKeyFile *config_file)
     if ( ! g_key_file_has_group(config_file, "NotificationXcb") )
         return;
 
-    Int integer;
-    guint64 enum_value;
-    gboolean boolean;
-
     evhelpers_config_key_file_get_string_list(config_file, "NotificationXcb", "Outputs", &self->outputs, NULL);
-
-    if ( evhelpers_config_key_file_get_enum(config_file, "NotificationXcb", "Anchor", _eventd_nd_xcb_corner_anchors, G_N_ELEMENTS(_eventd_nd_xcb_corner_anchors), &enum_value) == 0 )
-        self->placement.anchor = enum_value;
-
-    if ( evhelpers_config_key_file_get_boolean(config_file, "NotificationXcb", "OldestFirst", &boolean) == 0 )
-        self->placement.reverse = boolean;
-
-    if ( evhelpers_config_key_file_get_int(config_file, "NotificationXcb", "Margin", &integer) == 0 )
-        self->placement.margin = integer.value;
-
-    if ( evhelpers_config_key_file_get_int(config_file, "NotificationXcb", "Spacing", &integer) == 0 )
-        self->placement.spacing = integer.value;
 }
 
 static xcb_visualtype_t *
@@ -291,8 +245,6 @@ _eventd_nd_xcb_randr_check_outputs(EventdNdBackendContext *self)
     return found;
 }
 
-static void _eventd_nd_xcb_update_surfaces(EventdNdBackendContext *self);
-
 static void
 _eventd_nd_xcb_randr_check_geometry(EventdNdBackendContext *self)
 {
@@ -303,8 +255,6 @@ _eventd_nd_xcb_randr_check_geometry(EventdNdBackendContext *self)
         found = _eventd_nd_xcb_randr_check_primary(self);
     if ( ! found )
         _eventd_nd_xcb_geometry_fallback(self);
-
-    _eventd_nd_xcb_update_surfaces(self);
 }
 
 static void _eventd_nd_xcb_surface_expose_event(EventdNdSurface *self, xcb_expose_event_t *event);
@@ -388,7 +338,6 @@ _eventd_nd_xcb_start(EventdNdBackendContext *self, const gchar *target)
     self->screen = xcb_aux_get_screen(self->xcb_connection, screen);
 
     self->bubbles = g_hash_table_new(NULL, NULL);
-    self->queue = g_queue_new();
 
     extension_query = xcb_get_extension_data(self->xcb_connection, &xcb_shape_id);
     if ( ! extension_query->present )
@@ -490,52 +439,6 @@ _eventd_nd_xcb_surface_shape(EventdNdSurface *self, cairo_surface_t *bubble)
     xcb_free_pixmap(context->xcb_connection, shape_id);
 }
 
-static void
-_eventd_nd_xcb_update_surfaces(EventdNdBackendContext *self)
-{
-    GList *surface_;
-    EventdNdSurface *surface;
-
-    gboolean right, center, bottom;
-    right = ( self->placement.anchor == EVENTD_ND_XCB_ANCHOR_TOP_RIGHT ) || ( self->placement.anchor == EVENTD_ND_XCB_ANCHOR_BOTTOM_RIGHT );
-    center = ( self->placement.anchor == EVENTD_ND_XCB_ANCHOR_TOP ) || ( self->placement.anchor == EVENTD_ND_XCB_ANCHOR_BOTTOM );
-    bottom = ( self->placement.anchor == EVENTD_ND_XCB_ANCHOR_BOTTOM_LEFT ) || ( self->placement.anchor == EVENTD_ND_XCB_ANCHOR_BOTTOM ) || ( self->placement.anchor == EVENTD_ND_XCB_ANCHOR_BOTTOM_RIGHT );
-
-    guint16 mask = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y;
-    guint32 vals[] = { 0, 0 };
-    gint x, y;
-    x = self->placement.margin;
-    y = self->placement.margin;
-    if ( center )
-        x = self->base_geometry.width;
-    else if ( right )
-        x = self->base_geometry.width - x;
-    if ( bottom )
-        y = self->base_geometry.height - y;
-    for ( surface_ = g_queue_peek_head_link(self->queue) ; surface_ != NULL ; surface_ = g_list_next(surface_) )
-    {
-        gint width;
-        gint height;
-        surface = surface_->data;
-
-        width = cairo_image_surface_get_width(surface->bubble);
-        height = cairo_image_surface_get_height(surface->bubble);
-        if ( bottom )
-            y -= height;
-
-        vals[0] = self->base_geometry.x + ( center ? ( ( x / 2 ) - ( width / 2 ) ) : right ? ( x - width ) : x );
-        vals[1] = self->base_geometry.y + y;
-        xcb_configure_window(self->xcb_connection, surface->window, mask, vals);
-
-        if ( bottom )
-            y -= self->placement.spacing;
-        else
-            y += height + self->placement.spacing;
-    }
-
-    xcb_flush(self->xcb_connection);
-}
-
 static EventdNdSurface *
 _eventd_nd_xcb_surface_new(EventdNdBackendContext *context, EventdEvent *event, cairo_surface_t *bubble)
 {
@@ -575,45 +478,8 @@ _eventd_nd_xcb_surface_new(EventdNdBackendContext *context, EventdEvent *event, 
     xcb_map_window(context->xcb_connection, self->window);
 
     g_hash_table_insert(context->bubbles, GUINT_TO_POINTER(self->window), self);
-    if ( context->placement.reverse )
-    {
-        g_queue_push_tail(context->queue, self);
-        self->link = g_queue_peek_tail_link(context->queue);
-    }
-    else
-    {
-        g_queue_push_head(context->queue, self);
-        self->link = g_queue_peek_head_link(context->queue);
-    }
-
-    _eventd_nd_xcb_update_surfaces(context);
 
     return self;
-}
-
-static void
-_eventd_nd_xcb_surface_free(EventdNdSurface *self)
-{
-    if ( self == NULL )
-        return;
-
-    EventdNdBackendContext *context = self->context;
-
-    g_queue_delete_link(context->queue, self->link);
-    g_hash_table_remove(context->bubbles, GUINT_TO_POINTER(self->window));
-
-    if ( ! g_source_is_destroyed((GSource *)context->source) )
-    {
-        xcb_unmap_window(context->xcb_connection, self->window);
-        _eventd_nd_xcb_update_surfaces(context);
-    }
-
-    cairo_surface_destroy(self->bubble);
-
-    eventd_event_unref(self->event);
-
-    g_free(self);
-
 }
 
 static void
@@ -635,8 +501,27 @@ _eventd_nd_xcb_surface_update(EventdNdSurface *self, cairo_surface_t *bubble)
     _eventd_nd_xcb_surface_shape(self, bubble);
 
     xcb_clear_area(self->context->xcb_connection, TRUE, self->window, 0, 0, width, height);
+}
 
-    _eventd_nd_xcb_update_surfaces(self->context);
+static void
+_eventd_nd_xcb_surface_free(EventdNdSurface *self)
+{
+    if ( self == NULL )
+        return;
+
+    EventdNdBackendContext *context = self->context;
+
+    g_hash_table_remove(context->bubbles, GUINT_TO_POINTER(self->window));
+
+    if ( ! g_source_is_destroyed((GSource *)context->source) )
+        xcb_unmap_window(context->xcb_connection, self->window);
+
+    cairo_surface_destroy(self->bubble);
+
+    eventd_event_unref(self->event);
+
+    g_free(self);
+
 }
 
 EVENTD_EXPORT
@@ -652,6 +537,6 @@ eventd_nd_backend_get_info(EventdNdBackend *backend)
     backend->stop  = _eventd_nd_xcb_stop;
 
     backend->surface_new     = _eventd_nd_xcb_surface_new;
-    backend->surface_free    = _eventd_nd_xcb_surface_free;
     backend->surface_update  = _eventd_nd_xcb_surface_update;
+    backend->surface_free    = _eventd_nd_xcb_surface_free;
 }

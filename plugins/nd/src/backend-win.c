@@ -36,37 +36,11 @@
 
 #define CLASS_NAME "eventd-nd-win-bubble"
 
-typedef enum {
-    EVENTD_ND_WIN_ANCHOR_TOP,
-    EVENTD_ND_WIN_ANCHOR_TOP_LEFT,
-    EVENTD_ND_WIN_ANCHOR_TOP_RIGHT,
-    EVENTD_ND_WIN_ANCHOR_BOTTOM,
-    EVENTD_ND_WIN_ANCHOR_BOTTOM_LEFT,
-    EVENTD_ND_WIN_ANCHOR_BOTTOM_RIGHT,
-} EventdNdWinCornerAnchor;
-
-static const gchar * const _eventd_nd_win_corner_anchors[] = {
-    [EVENTD_ND_WIN_ANCHOR_TOP]          = "top",
-    [EVENTD_ND_WIN_ANCHOR_TOP_LEFT]     = "top left",
-    [EVENTD_ND_WIN_ANCHOR_TOP_RIGHT]    = "top right",
-    [EVENTD_ND_WIN_ANCHOR_BOTTOM]       = "bottom",
-    [EVENTD_ND_WIN_ANCHOR_BOTTOM_LEFT]  = "bottom left",
-    [EVENTD_ND_WIN_ANCHOR_BOTTOM_RIGHT] = "bottom right",
-};
-
 typedef struct _EventdNdBackendContext {
     EventdNdInterface *nd;
-    struct {
-        EventdNdWinCornerAnchor anchor;
-        gboolean reverse;
-        gint margin;
-        gint spacing;
-    } placement;
     WNDCLASSEX window_class;
     ATOM window_class_atom;
-    RECT base_geometry;
     GWaterWinSource *source;
-    GQueue *windows;
 } EventdNdDisplay;
 
 struct _EventdNdSurface {
@@ -143,13 +117,6 @@ _eventd_nd_win_init(EventdNdInterface *nd)
     self = g_new0(EventdNdDisplay, 1);
     self->nd = nd;
 
-    /* default bubble position */
-    self->placement.anchor    = EVENTD_ND_WIN_ANCHOR_TOP_RIGHT;
-    self->placement.margin    = 13;
-    self->placement.spacing   = 13;
-
-    SystemParametersInfo(SPI_GETWORKAREA, 0, &self->base_geometry, 0);
-
     self->window_class.cbSize        = sizeof(WNDCLASSEX);
     self->window_class.style         = CS_HREDRAW | CS_VREDRAW;
     self->window_class.lpfnWndProc   = _eventd_nd_win_surface_event_callback;
@@ -158,8 +125,6 @@ _eventd_nd_win_init(EventdNdInterface *nd)
     self->window_class.lpszClassName = CLASS_NAME;
 
     self->source = g_water_win_source_new(NULL, QS_PAINT|QS_MOUSEBUTTON);
-
-    self->windows = g_queue_new();
 
     return self;
 }
@@ -177,26 +142,6 @@ _eventd_nd_win_uninit(EventdNdBackendContext *self_)
 static void
 _eventd_nd_win_global_parse(EventdNdBackendContext *self_, GKeyFile *config_file)
 {
-    EventdNdDisplay *self = (EventdNdDisplay *) self_;
-
-    if ( ! g_key_file_has_group(config_file, "NotificationWin") )
-        return;
-
-    Int integer;
-    guint64 enum_value;
-    gboolean boolean;
-
-    if ( evhelpers_config_key_file_get_enum(config_file, "NotificationWin", "Anchor", _eventd_nd_win_corner_anchors, G_N_ELEMENTS(_eventd_nd_win_corner_anchors), &enum_value) == 0 )
-        self->placement.anchor = enum_value;
-
-    if ( evhelpers_config_key_file_get_boolean(config_file, "NotificationWin", "OldestFirst", &boolean) == 0 )
-        self->placement.reverse = boolean;
-
-    if ( evhelpers_config_key_file_get_int(config_file, "NotificationWin", "Margin", &integer) == 0 )
-        self->placement.margin = integer.value;
-
-    if ( evhelpers_config_key_file_get_int(config_file, "NotificationWin", "Spacing", &integer) == 0 )
-        self->placement.spacing = integer.value;
 }
 
 static gboolean
@@ -220,57 +165,6 @@ _eventd_nd_win_stop(EventdNdDisplay *self)
 {
 }
 
-static void
-_eventd_nd_win_update_surfaces(EventdNdDisplay *self)
-{
-    GList *surface_;
-    EventdNdSurface *surface;
-    HDWP wp;
-    gint x, y, full_width, full_height;
-
-    gboolean right, center, bottom;
-    right = ( self->placement.anchor == EVENTD_ND_WIN_ANCHOR_TOP_RIGHT ) || ( self->placement.anchor == EVENTD_ND_WIN_ANCHOR_BOTTOM_RIGHT );
-    center = ( self->placement.anchor == EVENTD_ND_WIN_ANCHOR_TOP ) || ( self->placement.anchor == EVENTD_ND_WIN_ANCHOR_BOTTOM );
-    bottom = ( self->placement.anchor == EVENTD_ND_WIN_ANCHOR_BOTTOM_LEFT ) || ( self->placement.anchor == EVENTD_ND_WIN_ANCHOR_BOTTOM ) || ( self->placement.anchor == EVENTD_ND_WIN_ANCHOR_BOTTOM_RIGHT );
-
-    wp = BeginDeferWindowPos(g_queue_get_length(self->windows));
-    full_width = 0;
-    full_height = 0;
-
-    x = self->placement.margin;
-    y = self->placement.margin;
-    if ( center )
-        x = self->base_geometry.right;
-    else if ( right )
-        x = self->base_geometry.right- x;
-    if ( bottom )
-        y = self->base_geometry.bottom - y;
-    for ( surface_ = g_queue_peek_head_link(self->windows) ; surface_ != NULL ; surface_ = g_list_next(surface_) )
-    {
-        gint width;
-        gint height;
-        surface = surface_->data;
-
-        width = cairo_image_surface_get_width(surface->bubble);
-        height = cairo_image_surface_get_height(surface->bubble);
-
-        if ( bottom )
-            y -= height;
-
-        DeferWindowPos(wp, surface->window, NULL, center ? ( x / 2 - width / 2 ) : right ? ( x - width ) : x, y, 0, 0, SWP_NOACTIVATE | SWP_NOSIZE | SWP_NOZORDER);
-
-        if ( bottom )
-            y -= self->placement.spacing;
-        else
-            y += height + self->placement.spacing;
-
-        if ( width > full_width )
-            full_width = width;
-        full_height += height;
-    }
-    EndDeferWindowPos(wp);
-}
-
 static EventdNdSurface *
 _eventd_nd_win_surface_new(EventdNdDisplay *display, EventdEvent *event, cairo_surface_t *bubble)
 {
@@ -289,42 +183,11 @@ _eventd_nd_win_surface_new(EventdNdDisplay *display, EventdEvent *event, cairo_s
     self->window = CreateWindowEx(WS_EX_LAYERED | WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE, display->window_class.lpszClassName, "Bubble", WS_POPUP, 0, 0, width, height, NULL, NULL, NULL, NULL);
     SetLayeredWindowAttributes(self->window, RGB(255, 0, 0), 255, LWA_COLORKEY);
 
-    if ( display->placement.reverse )
-    {
-        g_queue_push_tail(display->windows, self);
-        self->link = g_queue_peek_tail_link(display->windows);
-    }
-    else
-    {
-        g_queue_push_head(display->windows, self);
-        self->link = g_queue_peek_head_link(display->windows);
-    }
-
     SetProp(self->window, "EventdNdSurface", self);
 
-    _eventd_nd_win_update_surfaces(display);
     ShowWindow(self->window, SW_SHOWNA);
 
     return self;
-}
-
-static void
-_eventd_nd_win_surface_free(EventdNdSurface *self)
-{
-    EventdNdDisplay *display = self->display;
-
-    RemoveProp(self->window, "EventdNdSurface");
-
-    g_queue_delete_link(display->windows, self->link);
-
-    DestroyWindow(self->window);
-
-    cairo_surface_destroy(self->bubble);
-    eventd_event_unref(self->event);
-
-    g_free(self);
-
-    _eventd_nd_win_update_surfaces(display);
 }
 
 static void
@@ -339,8 +202,21 @@ _eventd_nd_win_surface_update(EventdNdSurface *self, cairo_surface_t *bubble)
     height = cairo_image_surface_get_height(bubble);
 
     SetWindowPos(self->window, NULL, 0, 0, width, height, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
+}
 
-    _eventd_nd_win_update_surfaces(self->display);
+static void
+_eventd_nd_win_surface_free(EventdNdSurface *self)
+{
+    EventdNdDisplay *display = self->display;
+
+    RemoveProp(self->window, "EventdNdSurface");
+
+    DestroyWindow(self->window);
+
+    cairo_surface_destroy(self->bubble);
+    eventd_event_unref(self->event);
+
+    g_free(self);
 }
 
 EVENTD_EXPORT
@@ -356,6 +232,6 @@ eventd_nd_backend_get_info(EventdNdBackend *backend)
     backend->stop  = _eventd_nd_win_stop;
 
     backend->surface_new     = _eventd_nd_win_surface_new;
-    backend->surface_free    = _eventd_nd_win_surface_free;
     backend->surface_update  = _eventd_nd_win_surface_update;
+    backend->surface_free    = _eventd_nd_win_surface_free;
 }
