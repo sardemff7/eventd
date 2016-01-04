@@ -259,15 +259,14 @@ _eventd_nd_cairo_bubble_draw(cairo_t *cr, Colour colour, gint radius, gint width
     cairo_fill(cr);
 }
 
-static void
-_eventd_nd_cairo_text_draw(cairo_t *cr, EventdNdStyle *style, PangoLayout *title, PangoLayout *message, gint offset_x, gint offset_y, gint max_width, gint max_height)
+void
+eventd_nd_cairo_text_draw(cairo_t *cr, EventdNdStyle *style, PangoLayout *title, PangoLayout *message, gint offset_x, gint offset_y, gint max_height)
 {
     gint title_height;
     pango_layout_get_pixel_size(title, NULL, &title_height);
 
     if ( message == NULL )
         offset_y += ( max_height - title_height ) / 2;
-    pango_layout_set_width(title, max_width * PANGO_SCALE);
 
     Colour colour;
 
@@ -287,15 +286,10 @@ _eventd_nd_cairo_text_draw(cairo_t *cr, EventdNdStyle *style, PangoLayout *title
         cairo_set_source_rgba(cr, colour.r, colour.g, colour.b, colour.a);
         cairo_new_path(cr);
         cairo_move_to(cr, offset_x, offset_y);
-        pango_layout_set_width(message, max_width * PANGO_SCALE);
         pango_cairo_update_layout(cr, message);
         pango_cairo_layout_path(cr, message);
         cairo_fill(cr);
-
-        g_object_unref(message);
     }
-
-    g_object_unref(title);
 }
 
 cairo_surface_t *
@@ -340,6 +334,9 @@ eventd_nd_cairo_get_surface(EventdEvent *event, EventdNdNotificationContents *no
         /* Let the text take the remaining space if needed (e.g. Right-to-Left) */
         text_width = width - ( 2 * padding + image_width );
     }
+    pango_layout_set_width(title, max_width * PANGO_SCALE);
+    if ( message != NULL )
+        pango_layout_set_width(message, max_width * PANGO_SCALE);
 
     content_height = MAX(image_height, text_height);
     height = 2 * padding + content_height;
@@ -351,8 +348,12 @@ eventd_nd_cairo_get_surface(EventdEvent *event, EventdNdNotificationContents *no
     cr = cairo_create(bubble);
     _eventd_nd_cairo_bubble_draw(cr, eventd_nd_style_get_bubble_colour(style), eventd_nd_style_get_bubble_radius(style), width, height);
     eventd_nd_cairo_image_and_icon_draw(cr, image, icon, style, width, height);
-    _eventd_nd_cairo_text_draw(cr, style, title, message, padding + text_margin, padding, text_width, content_height);
+    eventd_nd_cairo_text_draw(cr, style, title, message, padding + text_margin, padding, content_height);
     cairo_destroy(cr);
+
+    g_object_unref(title);
+    if ( message != NULL )
+        g_object_unref(message);
 
     return bubble;
 }
