@@ -127,6 +127,8 @@ _eventd_nd_fbdev_start(EventdNdBackendContext *context, const gchar *target)
         goto fail;
     }
 
+    context->nd->geometry_update(context->nd->context, 0, 0, display->width, display->height);
+
     return TRUE;
 
 fail:

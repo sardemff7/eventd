@@ -135,6 +135,10 @@ _eventd_nd_win_init(EventdNdInterface *nd)
 
     self->source = g_water_win_source_new(NULL, QS_PAINT|QS_MOUSEBUTTON);
 
+    RECT geometry;
+    SystemParametersInfo(SPI_GETWORKAREA, 0, &geometry, 0);
+    self->nd->geometry_update(self->nd->context, 0, 0, geometry.right, geometry.bottom);
+
     return self;
 }
 
@@ -147,7 +151,6 @@ _eventd_nd_win_uninit(EventdNdBackendContext *self_)
 
     g_free(self);
 }
-
 
 static EventdNdSurface *
 _eventd_nd_win_surface_new(EventdNdDisplay *display, EventdNdNotification *notification, gint width, gint height)

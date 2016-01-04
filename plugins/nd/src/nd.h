@@ -31,6 +31,12 @@ struct _EventdPluginContext {
     EventdNdStyle *style;
     gint max_width;
     gint max_height;
+    struct {
+        gint x;
+        gint y;
+        gint w;
+        gint h;
+    } geometry;
     GHashTable *notifications;
     GSList *actions;
 };

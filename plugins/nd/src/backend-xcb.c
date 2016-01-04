@@ -249,6 +249,11 @@ _eventd_nd_xcb_randr_check_outputs(EventdNdBackendContext *self)
 static void
 _eventd_nd_xcb_randr_check_geometry(EventdNdBackendContext *self)
 {
+    self->base_geometry.x = 0;
+    self->base_geometry.y = 0;
+    self->base_geometry.width = 0;
+    self->base_geometry.height = 0;
+
     gboolean found = FALSE;
     if ( self->outputs != NULL )
         found = _eventd_nd_xcb_randr_check_outputs(self);
@@ -256,6 +261,8 @@ _eventd_nd_xcb_randr_check_geometry(EventdNdBackendContext *self)
         found = _eventd_nd_xcb_randr_check_primary(self);
     if ( ! found )
         _eventd_nd_xcb_geometry_fallback(self);
+
+    self->nd->geometry_update(self->nd->context, self->base_geometry.x, self->base_geometry.y, self->base_geometry.width, self->base_geometry.height);
 }
 
 static void _eventd_nd_xcb_surface_expose_event(EventdNdSurface *self, xcb_expose_event_t *event);
@@ -352,7 +359,7 @@ _eventd_nd_xcb_start(EventdNdBackendContext *self, const gchar *target)
     {
         self->randr_event_base = G_MAXINT;
         g_warning("No RandR extension");
-        _eventd_nd_xcb_geometry_fallback(self);
+        self->nd->geometry_update(self->nd->context, 0, 0, self->screen->width_in_pixels, self->screen->height_in_pixels);
     }
     else
     {

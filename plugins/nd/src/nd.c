@@ -84,6 +84,15 @@ _eventd_nd_backend_switch(EventdNdContext *context, EventdNdBackends backend, co
     return TRUE;
 }
 
+static void
+_eventd_nd_geometry_update(EventdNdContext *context, gint x, gint y, gint w, gint h)
+{
+    context->geometry.x = x;
+    context->geometry.y = y;
+    context->geometry.w = w;
+    context->geometry.h = h;
+}
+
 static gboolean
 _eventd_nd_backend_stop(EventdNdContext *context)
 {
@@ -103,6 +112,7 @@ _eventd_nd_init(EventdPluginCoreContext *core)
     context->core = core;
 
     context->interface.context = context;
+    context->interface.geometry_update = _eventd_nd_geometry_update;
     context->interface.backend_stop = _eventd_nd_backend_stop;
     context->interface.notification_draw = eventd_nd_notification_draw;
     context->interface.notification_dismiss = eventd_nd_notification_dismiss;
