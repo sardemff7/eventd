@@ -47,7 +47,6 @@ struct _EventdNdSurface {
     EventdNdDisplay *display;
     EventdNdNotification *notification;
     HWND window;
-    cairo_surface_t *bubble;
     GList *link;
 };
 
@@ -87,10 +86,10 @@ _eventd_nd_win_surface_event_callback(HWND hwnd, UINT message, WPARAM wParam, LP
         cairo_set_source_rgb(cr, 255, 0, 0);
         cairo_paint(cr);
 
-        cairo_set_source_surface(cr, self->bubble, 0, 0);
-        cairo_paint(cr);
-
         cairo_destroy(cr);
+
+        self->display->nd->notification_draw(self->notification, surface);
+
         cairo_surface_destroy(surface);
 
         EndPaint(hwnd, &ps);
@@ -151,19 +150,13 @@ _eventd_nd_win_uninit(EventdNdBackendContext *self_)
 
 
 static EventdNdSurface *
-_eventd_nd_win_surface_new(EventdNdDisplay *display, EventdNdNotification *notification, cairo_surface_t *bubble)
+_eventd_nd_win_surface_new(EventdNdDisplay *display, EventdNdNotification *notification, gint width, gint height)
 {
-    gint width, height;
-
-    width = cairo_image_surface_get_width(bubble);
-    height = cairo_image_surface_get_height(bubble);
-
     EventdNdSurface *self;
     self = g_new0(EventdNdSurface, 1);
     self->display = display;
 
     self->notification = notification;
-    self->bubble = cairo_surface_reference(bubble);
 
     self->window = CreateWindowEx(WS_EX_LAYERED | WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE, display->window_class.lpszClassName, "Bubble", WS_POPUP, 0, 0, width, height, NULL, NULL, NULL, NULL);
     SetLayeredWindowAttributes(self->window, RGB(255, 0, 0), 255, LWA_COLORKEY);
@@ -176,29 +169,17 @@ _eventd_nd_win_surface_new(EventdNdDisplay *display, EventdNdNotification *notif
 }
 
 static void
-_eventd_nd_win_surface_update(EventdNdSurface *self, cairo_surface_t *bubble)
+_eventd_nd_win_surface_update(EventdNdSurface *self, gint width, gint height)
 {
-    cairo_surface_destroy(self->bubble);
-    self->bubble = cairo_surface_reference(bubble);
-
-    gint width, height;
-
-    width = cairo_image_surface_get_width(bubble);
-    height = cairo_image_surface_get_height(bubble);
-
     SetWindowPos(self->window, NULL, 0, 0, width, height, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
 }
 
 static void
 _eventd_nd_win_surface_free(EventdNdSurface *self)
 {
-    EventdNdDisplay *display = self->display;
-
     RemoveProp(self->window, "EventdNdSurface");
 
     DestroyWindow(self->window);
-
-    cairo_surface_destroy(self->bubble);
 
     g_free(self);
 }

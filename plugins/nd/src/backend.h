@@ -48,6 +48,7 @@ typedef struct {
 
     gboolean (*backend_stop)(EventdNdContext *context);
 
+    void (*notification_draw)(EventdNdNotification *notification, cairo_surface_t *bubble);
     void (*notification_dismiss)(EventdNdNotification *notification);
 } EventdNdInterface;
 
@@ -64,8 +65,8 @@ typedef struct {
     gboolean (*start)(EventdNdBackendContext *context, const gchar *target);
     void (*stop)(EventdNdBackendContext *context);
 
-    EventdNdSurface *(*surface_new)(EventdNdBackendContext *context, EventdNdNotification *notification, cairo_surface_t *bubble);
-    void (*surface_update)(EventdNdSurface *surface, cairo_surface_t *bubble);
+    EventdNdSurface *(*surface_new)(EventdNdBackendContext *context, EventdNdNotification *notification, gint width, gint height);
+    void (*surface_update)(EventdNdSurface *surface, gint width, gint height);
     void (*surface_free)(EventdNdSurface *surface);
 
     gpointer module;

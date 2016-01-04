@@ -104,6 +104,7 @@ _eventd_nd_init(EventdPluginCoreContext *core)
 
     context->interface.context = context;
     context->interface.backend_stop = _eventd_nd_backend_stop;
+    context->interface.notification_draw = eventd_nd_notification_draw;
     context->interface.notification_dismiss = eventd_nd_notification_dismiss;
 
     if ( ! eventd_nd_backends_load(context->backends, &context->interface) )

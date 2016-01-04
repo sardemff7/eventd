@@ -48,6 +48,7 @@ struct _EventdNdNotification {
     EventdNdContext *context;
     EventdNdStyle *style;
     EventdEvent *event;
+    cairo_surface_t *bubble;
     gint width;
     gint height;
     guint timeout;
@@ -71,15 +72,17 @@ _eventd_nd_event_timedout(gpointer user_data)
 }
 
 static void
-_eventd_nd_notification_set(EventdNdNotification *self, EventdPluginContext *context, EventdEvent *event, cairo_surface_t **bubble)
+_eventd_nd_notification_set(EventdNdNotification *self, EventdPluginContext *context, EventdEvent *event)
 {
     eventd_event_unref(self->event);
     self->event = eventd_event_ref(event);
+    if ( self->bubble != NULL )
+        cairo_surface_destroy(self->bubble);
 
-    *bubble = eventd_nd_cairo_get_surface(event, self->style, context->max_width, context->max_height);
+    self->bubble = eventd_nd_cairo_get_surface(event, self->style, context->max_width, context->max_height);
 
-    self->width = cairo_image_surface_get_width(*bubble);
-    self->height = cairo_image_surface_get_height(*bubble);
+    self->width = cairo_image_surface_get_width(self->bubble);
+    self->height = cairo_image_surface_get_height(self->bubble);
 
     if ( self->timeout > 0 )
         g_source_remove(self->timeout);
@@ -96,13 +99,10 @@ eventd_nd_notification_new(EventdPluginContext *context, EventdEvent *event, Eve
     self->style = style;
     self->event = eventd_event_ref(event);
 
-    cairo_surface_t *bubble;
+    _eventd_nd_notification_set(self, self->context, event);
 
-    _eventd_nd_notification_set(self, self->context, event, &bubble);
+    self->surface = context->backend->surface_new(context->backend->context, self, self->width, self->height);
 
-    self->surface = context->backend->surface_new(context->backend->context, self, bubble);
-
-    cairo_surface_destroy(bubble);
 
     return self;
 }
@@ -117,19 +117,26 @@ eventd_nd_notification_free(gpointer data)
 
     self->context->backend->surface_free(self->surface);
 
+    cairo_surface_destroy(self->bubble);
+
     g_free(self);
+}
+
+void
+eventd_nd_notification_draw(EventdNdNotification *self, cairo_surface_t *bubble)
+{
+    cairo_t *cr;
+    cr = cairo_create(bubble);
+    cairo_set_source_surface(cr, self->bubble, 0, 0);
+    cairo_paint(cr);
+    cairo_destroy(cr);
 }
 
 void
 eventd_nd_notification_update(EventdNdNotification *self, EventdEvent *event)
 {
-    cairo_surface_t *bubble;
-
-    _eventd_nd_notification_set(self, self->context, event, &bubble);
-
-    self->context->backend->surface_update(self->surface, bubble);
-
-    cairo_surface_destroy(bubble);
+    _eventd_nd_notification_set(self, self->context, event);
+    self->context->backend->surface_update(self->surface, self->width, self->height);
 }
 
 void

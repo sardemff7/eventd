@@ -436,17 +436,11 @@ _eventd_nd_xcb_surface_shape(EventdNdSurface *self)
 }
 
 static EventdNdSurface *
-_eventd_nd_xcb_surface_new(EventdNdBackendContext *context, EventdNdNotification *notification, cairo_surface_t *bubble)
+_eventd_nd_xcb_surface_new(EventdNdBackendContext *context, EventdNdNotification *notification, gint width, gint height)
 {
     guint32 selmask = XCB_CW_OVERRIDE_REDIRECT | XCB_CW_EVENT_MASK;
     guint32 selval[] = { 1, XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_BUTTON_PRESS | XCB_EVENT_MASK_BUTTON_RELEASE };
     EventdNdSurface *self;
-
-    gint width;
-    gint height;
-
-    width = cairo_image_surface_get_width(bubble);
-    height = cairo_image_surface_get_height(bubble);
 
     self = g_new0(EventdNdSurface, 1);
 
@@ -455,7 +449,6 @@ _eventd_nd_xcb_surface_new(EventdNdBackendContext *context, EventdNdNotification
     self->context = context;
     self->width = width;
     self->height = height;
-    self->bubble = cairo_surface_reference(bubble);
 
     self->window = xcb_generate_id(context->xcb_connection);
     xcb_create_window(context->xcb_connection,
@@ -469,6 +462,9 @@ _eventd_nd_xcb_surface_new(EventdNdBackendContext *context, EventdNdNotification
                                        context->visual->visual_id,    /* visual        */
                                        selmask, selval);              /* masks         */
 
+    self->bubble = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
+
+    context->nd->notification_draw(self->notification, self->bubble);
     _eventd_nd_xcb_surface_shape(self);
 
     xcb_map_window(context->xcb_connection, self->window);
@@ -479,21 +475,19 @@ _eventd_nd_xcb_surface_new(EventdNdBackendContext *context, EventdNdNotification
 }
 
 static void
-_eventd_nd_xcb_surface_update(EventdNdSurface *self, cairo_surface_t *bubble)
+_eventd_nd_xcb_surface_update(EventdNdSurface *self, gint width, gint height)
 {
+    self->width = width;
+    self->height = height;
     cairo_surface_destroy(self->bubble);
-    self->bubble = cairo_surface_reference(bubble);
-
-    gint width;
-    gint height;
-
-    width = cairo_image_surface_get_width(bubble);
-    height = cairo_image_surface_get_height(bubble);
+    self->bubble = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
 
     guint16 mask = XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT;
     guint32 vals[] = { width, height };
 
     xcb_configure_window(self->context->xcb_connection, self->window, mask, vals);
+
+    self->context->nd->notification_draw(self->notification, self->bubble);
     _eventd_nd_xcb_surface_shape(self);
 
     xcb_clear_area(self->context->xcb_connection, TRUE, self->window, 0, 0, width, height);
@@ -530,7 +524,7 @@ eventd_nd_backend_get_info(EventdNdBackend *backend)
     backend->start = _eventd_nd_xcb_start;
     backend->stop  = _eventd_nd_xcb_stop;
 
-    backend->surface_new     = _eventd_nd_xcb_surface_new;
-    backend->surface_update  = _eventd_nd_xcb_surface_update;
-    backend->surface_free    = _eventd_nd_xcb_surface_free;
+    backend->surface_new    = _eventd_nd_xcb_surface_new;
+    backend->surface_update = _eventd_nd_xcb_surface_update;
+    backend->surface_free   = _eventd_nd_xcb_surface_free;
 }

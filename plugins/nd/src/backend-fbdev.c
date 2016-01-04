@@ -61,7 +61,6 @@ struct _EventdNdBackendContext {
 struct _EventdNdSurface {
     EventdNdBackendContext *display;
     EventdNdNotification *notification;
-    cairo_surface_t *bubble;
     gint width;
     gint height;
 };
@@ -167,7 +166,7 @@ alpha_div(guchar c, guchar a)
 }
 
 static EventdNdSurface *
-_eventd_nd_fbdev_surface_new(EventdNdBackendContext *display, EventdNdNotification *notification, cairo_surface_t *bubble)
+_eventd_nd_fbdev_surface_new(EventdNdBackendContext *display, EventdNdNotification *notification, gint width, gint height)
 {
     EventdNdSurface *self;
 
@@ -175,25 +174,19 @@ _eventd_nd_fbdev_surface_new(EventdNdBackendContext *display, EventdNdNotificati
     self->display = display;
 
     self->notification = notification;
-    self->bubble = cairo_surface_reference(bubble);
-    self->width = cairo_image_surface_get_width(bubble);
-    self->height = cairo_image_surface_get_height(bubble);
+    self->width = width;
+    self->height = height;
 
     return self;
 }
 
 static void
-_eventd_nd_fbdev_surface_update(EventdNdSurface *self, cairo_surface_t *bubble)
+_eventd_nd_fbdev_surface_update(EventdNdSurface *self, gint width, gint height)
 {
-    cairo_surface_destroy(self->bubble);
-    self->bubble = cairo_surface_reference(bubble);
-    self->width = cairo_image_surface_get_width(bubble);
-    self->height = cairo_image_surface_get_height(bubble);
+    self->width = width;
+    self->height = height;
 }
 
-/*
- * TODO: display bubbles again
- */
 static void
 _eventd_nd_fbdev_surface_display(EventdNdSurface *self, gint x, gint y)
 {
@@ -207,23 +200,15 @@ _eventd_nd_fbdev_surface_display(EventdNdSurface *self, gint x, gint y)
     guchar *buffer = display->buffer + x * display->channels + y * display->stride;
 
     cairo_surface_t *surface;
-    cairo_t *cr;
 
     surface = cairo_image_surface_create_for_data(buffer, CAIRO_FORMAT_ARGB32, self->width, self->height, display->stride);
-    cr = cairo_create(surface);
-
-    cairo_set_source_surface(cr, self->bubble, 0, 0);
-    cairo_paint(cr);
-
-    cairo_destroy(cr);
+    self->display->nd->notification_draw(self->notification, surface);
     cairo_surface_destroy(surface);
 }
 
 static void
 _eventd_nd_fbdev_surface_free(EventdNdSurface *self)
 {
-    cairo_surface_destroy(self->bubble);
-
     g_free(self);
 }
 
@@ -237,7 +222,7 @@ eventd_nd_backend_get_info(EventdNdBackend *backend)
     backend->start = _eventd_nd_fbdev_start;
     backend->stop  = _eventd_nd_fbdev_stop;
 
-    backend->surface_new     = _eventd_nd_fbdev_surface_new;
-    backend->surface_update  = _eventd_nd_fbdev_surface_update;
-    backend->surface_free    = _eventd_nd_fbdev_surface_free;
+    backend->surface_new    = _eventd_nd_fbdev_surface_new;
+    backend->surface_update = _eventd_nd_fbdev_surface_update;
+    backend->surface_free   = _eventd_nd_fbdev_surface_free;
 }
