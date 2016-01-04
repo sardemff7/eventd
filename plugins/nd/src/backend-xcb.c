@@ -49,6 +49,7 @@ struct _EventdNdBackendContext {
     GWaterXcbSource *source;
     xcb_connection_t *xcb_connection;
     xcb_screen_t *screen;
+    xcb_visualtype_t *visual;
     struct {
         gint x;
         gint y;
@@ -336,6 +337,7 @@ _eventd_nd_xcb_start(EventdNdBackendContext *self, const gchar *target)
     self->xcb_connection = g_water_xcb_source_get_connection(self->source);
 
     self->screen = xcb_aux_get_screen(self->xcb_connection, screen);
+    self->visual = get_root_visual_type(self->screen);
 
     self->bubbles = g_hash_table_new(NULL, NULL);
 
@@ -382,7 +384,7 @@ _eventd_nd_xcb_surface_expose_event(EventdNdSurface *self, xcb_expose_event_t *e
     cairo_surface_t *cs;
     cairo_t *cr;
 
-    cs = cairo_xcb_surface_create(self->context->xcb_connection, self->window, get_root_visual_type(self->context->screen), self->width, self->height);
+    cs = cairo_xcb_surface_create(self->context->xcb_connection, self->window, self->context->visual, self->width, self->height);
     cr = cairo_create(cs);
     cairo_set_source_surface(cr, self->bubble, 0, 0);
     cairo_rectangle(cr, event->x, event->y, event->width, event->height);
@@ -470,7 +472,7 @@ _eventd_nd_xcb_surface_new(EventdNdBackendContext *context, EventdEvent *event, 
                                        width, height,                 /* width, height */
                                        0,                             /* border_width  */
                                        XCB_WINDOW_CLASS_INPUT_OUTPUT, /* class         */
-                                       context->screen->root_visual,  /* visual        */
+                                       context->visual->visual_id,    /* visual        */
                                        selmask, selval);              /* masks         */
 
     _eventd_nd_xcb_surface_shape(self, bubble);
