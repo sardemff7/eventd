@@ -42,11 +42,13 @@ typedef enum {
 const gchar *eventd_nd_backends_names[_EVENTD_ND_BACKENDS_SIZE];
 
 typedef struct _EventdPluginContext EventdNdContext;
+typedef struct _EventdNdNotification EventdNdNotification;
 typedef struct {
     EventdNdContext *context;
 
     gboolean (*backend_stop)(EventdNdContext *context);
-    void (*surface_remove)(EventdNdContext *context, const gchar *uuid);
+
+    void (*notification_dismiss)(EventdNdNotification *notification);
 } EventdNdInterface;
 
 
@@ -62,7 +64,7 @@ typedef struct {
     gboolean (*start)(EventdNdBackendContext *context, const gchar *target);
     void (*stop)(EventdNdBackendContext *context);
 
-    EventdNdSurface *(*surface_new)(EventdNdBackendContext *context, EventdEvent *event, cairo_surface_t *bubble);
+    EventdNdSurface *(*surface_new)(EventdNdBackendContext *context, EventdNdNotification *notification, cairo_surface_t *bubble);
     void (*surface_update)(EventdNdSurface *surface, cairo_surface_t *bubble);
     void (*surface_free)(EventdNdSurface *surface);
 

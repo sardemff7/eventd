@@ -60,6 +60,7 @@ struct _EventdNdBackendContext {
 
 struct _EventdNdSurface {
     EventdNdBackendContext *display;
+    EventdNdNotification *notification;
     cairo_surface_t *bubble;
     gint width;
     gint height;
@@ -166,13 +167,14 @@ alpha_div(guchar c, guchar a)
 }
 
 static EventdNdSurface *
-_eventd_nd_fbdev_surface_new(EventdNdBackendContext *display, EventdEvent *event, cairo_surface_t *bubble)
+_eventd_nd_fbdev_surface_new(EventdNdBackendContext *display, EventdNdNotification *notification, cairo_surface_t *bubble)
 {
     EventdNdSurface *self;
 
     self = g_new0(EventdNdSurface, 1);
     self->display = display;
 
+    self->notification = notification;
     self->bubble = cairo_surface_reference(bubble);
     self->width = cairo_image_surface_get_width(bubble);
     self->height = cairo_image_surface_get_height(bubble);

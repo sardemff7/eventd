@@ -90,12 +90,6 @@ _eventd_nd_backend_stop(EventdNdContext *context)
     return _eventd_nd_backend_switch(context, EVENTD_ND_BACKEND_NONE, NULL);
 }
 
-static void
-_eventd_nd_surface_remove(EventdNdContext *context, const gchar *uuid)
-{
-    eventd_nd_notification_dismiss(g_hash_table_lookup(context->notifications, uuid));
-}
-
 /*
  * Initialization interface
  */
@@ -110,7 +104,7 @@ _eventd_nd_init(EventdPluginCoreContext *core)
 
     context->interface.context = context;
     context->interface.backend_stop = _eventd_nd_backend_stop;
-    context->interface.surface_remove = _eventd_nd_surface_remove;
+    context->interface.notification_dismiss = eventd_nd_notification_dismiss;
 
     if ( ! eventd_nd_backends_load(context->backends, &context->interface) )
     {

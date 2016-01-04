@@ -100,7 +100,7 @@ eventd_nd_notification_new(EventdPluginContext *context, EventdEvent *event, Eve
 
     _eventd_nd_notification_set(self, self->context, event, &bubble);
 
-    self->surface = context->backend->surface_new(context->backend->context, event, bubble);
+    self->surface = context->backend->surface_new(context->backend->context, self, bubble);
 
     cairo_surface_destroy(bubble);
 

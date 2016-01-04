@@ -45,7 +45,7 @@ typedef struct _EventdNdBackendContext {
 
 struct _EventdNdSurface {
     EventdNdDisplay *display;
-    EventdEvent *event;
+    EventdNdNotification *notification;
     HWND window;
     cairo_surface_t *bubble;
     GList *link;
@@ -101,7 +101,7 @@ _eventd_nd_win_surface_event_callback(HWND hwnd, UINT message, WPARAM wParam, LP
         self = GetProp(hwnd, "EventdNdSurface");
         g_return_val_if_fail(self != NULL, 1);
 
-        self->display->nd->surface_remove(self->display->nd->context, eventd_event_get_uuid(self->event));
+        self->display->nd->notification_dismiss(self->notification);
     }
     break;
     default:
@@ -151,7 +151,7 @@ _eventd_nd_win_uninit(EventdNdBackendContext *self_)
 
 
 static EventdNdSurface *
-_eventd_nd_win_surface_new(EventdNdDisplay *display, EventdEvent *event, cairo_surface_t *bubble)
+_eventd_nd_win_surface_new(EventdNdDisplay *display, EventdNdNotification *notification, cairo_surface_t *bubble)
 {
     gint width, height;
 
@@ -162,7 +162,7 @@ _eventd_nd_win_surface_new(EventdNdDisplay *display, EventdEvent *event, cairo_s
     self = g_new0(EventdNdSurface, 1);
     self->display = display;
 
-    self->event = eventd_event_ref(event);
+    self->notification = notification;
     self->bubble = cairo_surface_reference(bubble);
 
     self->window = CreateWindowEx(WS_EX_LAYERED | WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE, display->window_class.lpszClassName, "Bubble", WS_POPUP, 0, 0, width, height, NULL, NULL, NULL, NULL);
@@ -199,7 +199,6 @@ _eventd_nd_win_surface_free(EventdNdSurface *self)
     DestroyWindow(self->window);
 
     cairo_surface_destroy(self->bubble);
-    eventd_event_unref(self->event);
 
     g_free(self);
 }

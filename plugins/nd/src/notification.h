@@ -23,8 +23,6 @@
 #ifndef __EVENTD_ND_NOTIFICATION_H__
 #define __EVENTD_ND_NOTIFICATION_H__
 
-typedef struct _EventdNdNotification EventdNdNotification;
-
 EventdNdNotification *eventd_nd_notification_new(EventdPluginContext *context, EventdEvent *event, EventdNdStyle *style);
 void eventd_nd_notification_free(gpointer data);
 

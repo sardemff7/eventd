@@ -62,7 +62,7 @@ struct _EventdNdBackendContext {
 };
 
 struct _EventdNdSurface {
-    EventdEvent *event;
+    EventdNdNotification *notification;
     EventdNdBackendContext *context;
     xcb_window_t window;
     gint width;
@@ -398,7 +398,7 @@ _eventd_nd_xcb_surface_expose_event(EventdNdSurface *self, xcb_expose_event_t *e
 static void
 _eventd_nd_xcb_surface_button_release_event(EventdNdSurface *self)
 {
-    self->context->nd->surface_remove(self->context->nd->context, eventd_event_get_uuid(self->event));
+    self->context->nd->notification_dismiss(self->notification);
 }
 
 static void
@@ -436,7 +436,7 @@ _eventd_nd_xcb_surface_shape(EventdNdSurface *self)
 }
 
 static EventdNdSurface *
-_eventd_nd_xcb_surface_new(EventdNdBackendContext *context, EventdEvent *event, cairo_surface_t *bubble)
+_eventd_nd_xcb_surface_new(EventdNdBackendContext *context, EventdNdNotification *notification, cairo_surface_t *bubble)
 {
     guint32 selmask = XCB_CW_OVERRIDE_REDIRECT | XCB_CW_EVENT_MASK;
     guint32 selval[] = { 1, XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_BUTTON_PRESS | XCB_EVENT_MASK_BUTTON_RELEASE };
@@ -450,7 +450,7 @@ _eventd_nd_xcb_surface_new(EventdNdBackendContext *context, EventdEvent *event, 
 
     self = g_new0(EventdNdSurface, 1);
 
-    self->event = eventd_event_ref(event);
+    self->notification = notification;
 
     self->context = context;
     self->width = width;
@@ -513,8 +513,6 @@ _eventd_nd_xcb_surface_free(EventdNdSurface *self)
         xcb_unmap_window(context->xcb_connection, self->window);
 
     cairo_surface_destroy(self->bubble);
-
-    eventd_event_unref(self->event);
 
     g_free(self);
 
