@@ -402,18 +402,12 @@ _eventd_nd_xcb_surface_button_release_event(EventdNdSurface *self)
 }
 
 static void
-_eventd_nd_xcb_surface_shape(EventdNdSurface *self, cairo_surface_t *bubble)
+_eventd_nd_xcb_surface_shape(EventdNdSurface *self)
 {
     EventdNdBackendContext *context = self->context;
 
     if ( ! context->shape )
         return;
-
-    gint width;
-    gint height;
-
-    width = cairo_image_surface_get_width(bubble);
-    height = cairo_image_surface_get_height(bubble);
 
     xcb_pixmap_t shape_id;
     cairo_surface_t *shape;
@@ -422,13 +416,13 @@ _eventd_nd_xcb_surface_shape(EventdNdSurface *self, cairo_surface_t *bubble)
     shape_id = xcb_generate_id(context->xcb_connection);
     xcb_create_pixmap(context->xcb_connection, 1,
                       shape_id, context->screen->root,
-                      width, height);
+                      self->width, self->height);
 
-    shape = cairo_xcb_surface_create_for_bitmap(context->xcb_connection, context->screen, shape_id, width, height);
+    shape = cairo_xcb_surface_create_for_bitmap(context->xcb_connection, context->screen, shape_id, self->width, self->height);
     cr = cairo_create(shape);
 
     cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
-    cairo_set_source_surface(cr, bubble, 0, 0);
+    cairo_set_source_surface(cr, self->bubble, 0, 0);
     cairo_paint(cr);
 
     cairo_destroy(cr);
@@ -475,7 +469,7 @@ _eventd_nd_xcb_surface_new(EventdNdBackendContext *context, EventdEvent *event, 
                                        context->visual->visual_id,    /* visual        */
                                        selmask, selval);              /* masks         */
 
-    _eventd_nd_xcb_surface_shape(self, bubble);
+    _eventd_nd_xcb_surface_shape(self);
 
     xcb_map_window(context->xcb_connection, self->window);
 
@@ -500,7 +494,7 @@ _eventd_nd_xcb_surface_update(EventdNdSurface *self, cairo_surface_t *bubble)
     guint32 vals[] = { width, height };
 
     xcb_configure_window(self->context->xcb_connection, self->window, mask, vals);
-    _eventd_nd_xcb_surface_shape(self, bubble);
+    _eventd_nd_xcb_surface_shape(self);
 
     xcb_clear_area(self->context->xcb_connection, TRUE, self->window, 0, 0, width, height);
 }
