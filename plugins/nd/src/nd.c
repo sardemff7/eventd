@@ -42,30 +42,9 @@
 #include "backends.h"
 #include "style.h"
 #include "cairo.h"
+#include "notification.h"
 
-struct _EventdPluginContext {
-    EventdPluginCoreContext *core;
-    EventdNdInterface interface;
-    EventdNdBackend backends[_EVENTD_ND_BACKENDS_SIZE];
-    EventdNdBackend *backend;
-    EventdNdStyle *style;
-    gint max_width;
-    gint max_height;
-    GHashTable *notifications;
-    GSList *actions;
-};
-
-typedef struct {
-    EventdNdContext *context;
-    EventdNdStyle *style;
-    EventdEvent *event;
-    GList *notification;
-    gint width;
-    gint height;
-    guint timeout;
-    EventdNdSurface *surface;
-} EventdNdNotification;
-
+#include "nd.h"
 
 const gchar *eventd_nd_backends_names[_EVENTD_ND_BACKENDS_SIZE] = {
     [EVENTD_ND_BACKEND_NONE] = "none",
@@ -113,27 +92,8 @@ _eventd_nd_backend_stop(EventdNdContext *context)
 static void
 _eventd_nd_surface_remove(EventdNdContext *context, const gchar *uuid)
 {
-    EventdEvent *event;
-    event = eventd_event_new(".notification", "dismiss");
-    eventd_event_add_data(event, g_strdup("source-event"), g_strdup(uuid));
-    eventd_plugin_core_push_event(context->core, event);
-    eventd_event_unref(event);
+    eventd_nd_notification_dismiss(g_hash_table_lookup(context->notifications, uuid));
 }
-
-
-static void
-_eventd_nd_notification_free(gpointer data)
-{
-    EventdNdNotification *self = data;
-
-    if ( self->timeout > 0 )
-        g_source_remove(self->timeout);
-
-    self->context->backend->surface_free(self->surface);
-
-    g_free(self);
-}
-
 
 /*
  * Initialization interface
@@ -160,7 +120,7 @@ _eventd_nd_init(EventdPluginCoreContext *core)
 
     context->style = eventd_nd_style_new(NULL);
 
-    context->notifications = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, _eventd_nd_notification_free);
+    context->notifications = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, eventd_nd_notification_free);
 
     eventd_nd_cairo_init();
 
@@ -345,71 +305,6 @@ _eventd_nd_config_reset(EventdPluginContext *context)
  * Event action interface
  */
 
-static gboolean
-_eventd_nd_event_timedout(gpointer user_data)
-{
-    EventdNdNotification *self = user_data;
-    EventdPluginContext *context = self->context;
-    EventdEvent *event;
-
-    self->timeout = 0;
-    event = eventd_event_new(".notification", "timeout");
-    eventd_event_add_data(event, g_strdup("source-event"), g_strdup(eventd_event_get_uuid(self->event)));
-    eventd_plugin_core_push_event(context->core, event);
-    eventd_event_unref(event);
-
-    return FALSE;
-}
-
-static void
-_eventd_nd_notification_set(EventdNdNotification *self, EventdPluginContext *context, EventdEvent *event, cairo_surface_t **bubble)
-{
-    eventd_event_unref(self->event);
-    self->event = eventd_event_ref(event);
-
-    *bubble = eventd_nd_cairo_get_surface(event, self->style, context->max_width, context->max_height);
-
-    self->width = cairo_image_surface_get_width(*bubble);
-    self->height = cairo_image_surface_get_height(*bubble);
-
-    if ( self->timeout > 0 )
-        g_source_remove(self->timeout);
-    self->timeout = g_timeout_add_full(G_PRIORITY_DEFAULT, eventd_nd_style_get_bubble_timeout(self->style), _eventd_nd_event_timedout, self, NULL);
-}
-
-static EventdNdNotification *
-_eventd_nd_notification_new(EventdPluginContext *context, EventdEvent *event, EventdNdStyle *style)
-{
-    EventdNdNotification *self;
-
-    self = g_new0(EventdNdNotification, 1);
-    self->context = context;
-    self->style = style;
-    self->event = eventd_event_ref(event);
-
-    cairo_surface_t *bubble;
-
-    _eventd_nd_notification_set(self, context, event, &bubble);
-
-    self->surface = context->backend->surface_new(context->backend->context, event, bubble);
-
-    cairo_surface_destroy(bubble);
-
-    return self;
-}
-
-static void
-_eventd_nd_notification_update(EventdNdNotification *self, EventdPluginContext *context,  EventdEvent *event)
-{
-    cairo_surface_t *bubble;
-
-    _eventd_nd_notification_set(self, context, event, &bubble);
-
-    context->backend->surface_update(self->surface, bubble);
-
-    cairo_surface_destroy(bubble);
-}
-
 static void
 _eventd_nd_event_dispatch(EventdPluginContext *context, EventdEvent *event)
 {
@@ -438,11 +333,11 @@ _eventd_nd_event_action(EventdPluginContext *context, EventdNdStyle *style, Even
 
     if ( notification == NULL )
     {
-        notification = _eventd_nd_notification_new(context, event, style);
+        notification = eventd_nd_notification_new(context, event, style);
         g_hash_table_insert(context->notifications, (gpointer) eventd_event_get_uuid(event), notification);
     }
     else
-        _eventd_nd_notification_update(notification, context, event);
+        eventd_nd_notification_update(notification, event);
 }
 
 

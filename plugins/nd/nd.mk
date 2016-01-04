@@ -20,6 +20,9 @@ endif
 
 
 nd_la_SOURCES = \
+	%D%/src/nd.c \
+	%D%/src/notification.h \
+	%D%/src/notification.c \
 	%D%/src/icon.h \
 	%D%/src/icon.c \
 	%D%/src/cairo.c \
@@ -31,7 +34,6 @@ nd_la_SOURCES = \
 	%D%/src/backend.h \
 	%D%/src/backends.h \
 	%D%/src/backends.c \
-	%D%/src/nd.c \
 	$(null)
 
 nd_la_CFLAGS = \
