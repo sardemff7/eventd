@@ -126,11 +126,11 @@ _eventd_nd_init(EventdPluginCoreContext *core)
 static void
 _eventd_nd_uninit(EventdPluginContext *context)
 {
-    eventd_nd_style_free(context->style);
-
     eventd_nd_cairo_uninit();
 
     g_hash_table_unref(context->notifications);
+
+    eventd_nd_style_free(context->style);
 
     eventd_nd_backends_unload(context->backends);
 

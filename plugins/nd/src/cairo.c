@@ -220,8 +220,8 @@ eventd_nd_cairo_text_process(EventdNdStyle *style, EventdEvent *event, gint max_
     g_object_unref(pango_context);
 }
 
-static void
-_eventd_nd_cairo_bubble_draw(cairo_t *cr, Colour colour, gint radius, gint width, gint height)
+void
+eventd_nd_cairo_bubble_draw(cairo_t *cr, Colour colour, gint radius, gint width, gint height)
 {
     cairo_set_source_rgba(cr, colour.r, colour.g, colour.b, colour.a);
 
@@ -296,72 +296,4 @@ eventd_nd_cairo_text_draw(cairo_t *cr, EventdNdStyle *style, PangoLayout *title,
         pango_cairo_layout_path(cr, message);
         cairo_fill(cr);
     }
-}
-
-cairo_surface_t *
-eventd_nd_cairo_get_surface(EventdEvent *event, EventdNdStyle *style, gint max_image_width, gint max_image_height)
-{
-    gint padding;
-    gint min_width, max_width;
-
-    gint width;
-    gint height;
-
-    PangoLayout *title;
-    PangoLayout *message = NULL;
-
-    cairo_surface_t *image = NULL;
-    cairo_surface_t *icon = NULL;
-
-    gint content_height;
-    gint text_width = 0, text_height = 0;
-    gint text_margin = 0;
-    gint image_width = max_image_width, image_height = max_image_height;
-
-    cairo_t *cr;
-
-    padding = eventd_nd_style_get_bubble_padding(style);
-    min_width = eventd_nd_style_get_bubble_min_width(style);
-    max_width = eventd_nd_style_get_bubble_max_width(style);
-
-    /* proccess data and compute the bubble size */
-    eventd_nd_cairo_text_process(style, event, ( max_width > -1 ) ? ( max_width - 2 * padding ) : -1, &title, &message, &text_height, &text_width);
-
-    width = 2 * padding + text_width;
-
-    if ( ( max_width < 0 ) || ( width < max_width ) )
-    {
-        eventd_nd_cairo_image_and_icon_process(style, event, ( max_width > -1 ) ? ( max_width - width ) : -1, &image, &icon, &text_margin, &image_width, &image_height);
-        width += image_width;
-    }
-
-    /* We are sure that min_width < max_width */
-    if ( min_width > width )
-    {
-        width = min_width;
-        /* Let the text take the remaining space if needed (e.g. Right-to-Left) */
-        text_width = width - ( 2 * padding + image_width );
-    }
-    pango_layout_set_width(title, max_width * PANGO_SCALE);
-    if ( message != NULL )
-        pango_layout_set_width(message, max_width * PANGO_SCALE);
-
-    content_height = MAX(image_height, text_height);
-    height = 2 * padding + content_height;
-
-    cairo_surface_t *bubble;
-
-    /* draw the bubble */
-    bubble = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
-    cr = cairo_create(bubble);
-    _eventd_nd_cairo_bubble_draw(cr, eventd_nd_style_get_bubble_colour(style), eventd_nd_style_get_bubble_radius(style), width, height);
-    eventd_nd_cairo_image_and_icon_draw(cr, image, icon, style, width, height);
-    eventd_nd_cairo_text_draw(cr, style, title, message, padding + text_margin, padding, content_height);
-    cairo_destroy(cr);
-
-    g_object_unref(title);
-    if ( message != NULL )
-        g_object_unref(message);
-
-    return bubble;
 }

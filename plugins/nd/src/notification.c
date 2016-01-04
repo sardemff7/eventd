@@ -48,7 +48,13 @@ struct _EventdNdNotification {
     EventdNdContext *context;
     EventdNdStyle *style;
     EventdEvent *event;
-    cairo_surface_t *bubble;
+    struct {
+        PangoLayout *title;
+        PangoLayout *message;
+        gint x;
+    } text;
+    cairo_surface_t *image;
+    cairo_surface_t *icon;
     gint width;
     gint height;
     guint timeout;
@@ -75,8 +81,12 @@ static void
 _eventd_nd_notification_clean(EventdNdNotification *self)
 {
     eventd_event_unref(self->event);
-    if ( self->bubble != NULL )
-        cairo_surface_destroy(self->bubble);
+    if ( self->text.title != NULL )
+        g_object_unref(self->text.title);
+    self->text.title = NULL;
+    if ( self->text.message != NULL )
+        g_object_unref(self->text.message);
+    self->text.message = NULL;
 }
 
 static void
@@ -85,10 +95,40 @@ _eventd_nd_notification_update(EventdNdNotification *self, EventdEvent *event)
     _eventd_nd_notification_clean(self);
     self->event = eventd_event_ref(event);
 
-    self->bubble = eventd_nd_cairo_get_surface(event, self->style, self->context->max_width, self->context->max_height);
+    gint padding;
+    gint min_width, max_width;
 
-    self->width = cairo_image_surface_get_width(self->bubble);
-    self->height = cairo_image_surface_get_height(self->bubble);
+    gint text_width = 0, text_height = 0;
+    gint image_width = self->context->max_width, image_height = self->context->max_height;
+
+
+    padding = eventd_nd_style_get_bubble_padding(self->style);
+    min_width = eventd_nd_style_get_bubble_min_width(self->style);
+    max_width = eventd_nd_style_get_bubble_max_width(self->style);
+
+    /* proccess data and compute the bubble size */
+    eventd_nd_cairo_text_process(self->style, self->event, ( max_width > -1 ) ? ( max_width - 2 * padding ) : -1, &self->text.title, &self->text.message, &text_height, &text_width);
+
+    self->width = 2 * padding + text_width;
+
+    if ( ( max_width < 0 ) || ( self->width < max_width ) )
+    {
+        eventd_nd_cairo_image_and_icon_process(self->style, self->event, ( max_width > -1 ) ? ( max_width - self->width ) : -1, &self->image, &self->icon, &self->text.x, &image_width, &image_height);
+        self->width += image_width;
+    }
+
+    /* We are sure that min_width < max_width */
+    if ( min_width > self->width )
+    {
+        self->width = min_width;
+        /* Let the text take the remaining space if needed (e.g. Right-to-Left) */
+        text_width = ( self->width - ( 2 * padding + image_width ) );
+    }
+    pango_layout_set_width(self->text.title, text_width * PANGO_SCALE);
+    if ( self->text.message != NULL )
+        pango_layout_set_width(self->text.message, text_width * PANGO_SCALE);
+
+    self->height = 2 * padding + MAX(image_height, text_height);
 
     if ( self->timeout > 0 )
         g_source_remove(self->timeout);
@@ -127,10 +167,14 @@ eventd_nd_notification_free(gpointer data)
 void
 eventd_nd_notification_draw(EventdNdNotification *self, cairo_surface_t *bubble)
 {
+    gint padding;
+    padding = eventd_nd_style_get_bubble_padding(self->style);
+
     cairo_t *cr;
     cr = cairo_create(bubble);
-    cairo_set_source_surface(cr, self->bubble, 0, 0);
-    cairo_paint(cr);
+    eventd_nd_cairo_bubble_draw(cr, eventd_nd_style_get_bubble_colour(self->style), eventd_nd_style_get_bubble_radius(self->style), self->width, self->height);
+    eventd_nd_cairo_image_and_icon_draw(cr, self->image, self->icon, self->style, self->width, self->height);
+    eventd_nd_cairo_text_draw(cr, self->style, self->text.title, self->text.message, padding + self->text.x, padding, self->height - ( 2 * padding ));
     cairo_destroy(cr);
 }
 
