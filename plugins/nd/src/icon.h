@@ -23,10 +23,7 @@
 #ifndef __EVENTD_ND_ICON_H__
 #define __EVENTD_ND_ICON_H__
 
-GdkPixbuf *eventd_nd_notification_contents_get_image(EventdNdNotificationContents *self);
-GdkPixbuf *eventd_nd_notification_contents_get_icon(EventdNdNotificationContents *self);
-
-void eventd_nd_cairo_image_and_icon_process(EventdNdNotificationContents *notification, EventdNdStyle *style, gint max_width, cairo_surface_t **image, cairo_surface_t **icon, gint *text_margin, gint *width, gint *height);
+void eventd_nd_cairo_image_and_icon_process(EventdNdStyle *style, EventdEvent *event, gint max_width, cairo_surface_t **image, cairo_surface_t **icon, gint *text_x, gint *width, gint *height);
 void eventd_nd_cairo_image_and_icon_draw(cairo_t *cr, cairo_surface_t *image, cairo_surface_t *icon, EventdNdStyle *style, gint width, gint height);
 
 #endif /* __EVENTD_ND_ICON_H__ */

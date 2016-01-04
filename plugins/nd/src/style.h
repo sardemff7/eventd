@@ -24,7 +24,6 @@
 #define __EVENTD_ND_STYLE_H__
 
 typedef struct _EventdPluginAction EventdNdStyle;
-typedef struct _EventdNdNotificationContents EventdNdNotificationContents;
 
 typedef enum {
     EVENTD_ND_ANCHOR_LEFT,
@@ -83,12 +82,5 @@ gint eventd_nd_style_get_icon_max_width(EventdNdStyle *style);
 gint eventd_nd_style_get_icon_max_height(EventdNdStyle *style);
 gint eventd_nd_style_get_icon_margin(EventdNdStyle *style);
 gdouble eventd_nd_style_get_icon_fade_width(EventdNdStyle *style);
-
-
-EventdNdNotificationContents *eventd_nd_notification_contents_new(EventdNdStyle *style, EventdEvent *event, gint width, gint height);
-void eventd_nd_notification_contents_free(EventdNdNotificationContents *notification);
-
-const gchar *eventd_nd_notification_contents_get_title(EventdNdNotificationContents *notification);
-const gchar *eventd_nd_notification_contents_get_message(EventdNdNotificationContents *notification);
 
 #endif /* __EVENTD_ND_STYLE_H__ */

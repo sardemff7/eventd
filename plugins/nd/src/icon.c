@@ -33,6 +33,7 @@
 #include <libeventd-helpers-config.h>
 
 #include "style.h"
+#include "pixbuf.h"
 
 #include "icon.h"
 
@@ -251,14 +252,25 @@ _eventd_nd_cairo_icon_process_background(GdkPixbuf *pixbuf, EventdNdStyle *style
 }
 
 void
-eventd_nd_cairo_image_and_icon_process(EventdNdNotificationContents *notification, EventdNdStyle *style, gint max_width, cairo_surface_t **image, cairo_surface_t **icon, gint *text_margin, gint *width, gint *height)
+eventd_nd_cairo_image_and_icon_process(EventdNdStyle *style, EventdEvent *event, gint max_width, cairo_surface_t **image, cairo_surface_t **icon, gint *text_x, gint *width, gint *height)
 {
-    GdkPixbuf *image_pixbuf;
-    GdkPixbuf *icon_pixbuf;
+    GdkPixbuf *image_pixbuf = NULL;
+    GdkPixbuf *icon_pixbuf = NULL;
+    const Filename *image_filename = eventd_nd_style_get_template_image(style);
+    const Filename *icon_filename = eventd_nd_style_get_template_icon(style);
+    gchar *uri;
 
-    image_pixbuf = eventd_nd_notification_contents_get_image(notification);
-    icon_pixbuf = eventd_nd_notification_contents_get_icon(notification);
+    uri = evhelpers_filename_get_uri(image_filename, event, "images");
+    if ( uri != NULL )
+       image_pixbuf = eventd_nd_pixbuf_from_uri(uri, *width, *height);
 
+    uri = evhelpers_filename_get_uri(icon_filename, event, "icons");
+    if ( uri != NULL )
+        icon_pixbuf = eventd_nd_pixbuf_from_uri(uri, *width, *height);
+
+    *text_x = 0;
+    *width = 0;
+    *height = 0;
     switch ( eventd_nd_style_get_icon_placement(style) )
     {
     case EVENTD_ND_STYLE_ICON_PLACEMENT_BACKGROUND:
@@ -266,7 +278,7 @@ eventd_nd_cairo_image_and_icon_process(EventdNdNotificationContents *notificatio
              && ( ( max_width < 0 ) || ( gdk_pixbuf_get_width(image_pixbuf) < max_width ) ) )
         {
             *image = _eventd_nd_cairo_image_process(image_pixbuf, style, width, height);
-            *text_margin = *width;
+            *text_x = *width;
             max_width -= *width;
         }
         if ( ( icon_pixbuf != NULL )
@@ -289,7 +301,7 @@ eventd_nd_cairo_image_and_icon_process(EventdNdNotificationContents *notificatio
             if ( ( icon_pixbuf != NULL )
                  && ( ( max_width < 0 ) || ( gdk_pixbuf_get_width(icon_pixbuf) < max_width ) ) )
                 *icon = _eventd_nd_cairo_icon_process_overlay(icon_pixbuf, style, width, height);
-            *text_margin = *width;
+            *text_x = *width;
         }
     break;
     case EVENTD_ND_STYLE_ICON_PLACEMENT_FOREGROUND:
@@ -297,7 +309,7 @@ eventd_nd_cairo_image_and_icon_process(EventdNdNotificationContents *notificatio
              && ( ( max_width < 0 ) || ( gdk_pixbuf_get_width(image_pixbuf) < max_width ) ) )
         {
             *image = _eventd_nd_cairo_image_process(image_pixbuf, style, width, height);
-            *text_margin = *width;
+            *text_x = *width;
             max_width -= *width;
         }
         if ( ( icon_pixbuf != NULL )

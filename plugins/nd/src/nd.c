@@ -367,11 +367,7 @@ _eventd_nd_notification_set(EventdNdNotification *self, EventdPluginContext *con
     eventd_event_unref(self->event);
     self->event = eventd_event_ref(event);
 
-    EventdNdNotificationContents *notification;
-
-    notification = eventd_nd_notification_contents_new(self->style, event, context->max_width, context->max_height);
-    *bubble = eventd_nd_cairo_get_surface(event, notification, self->style);
-    eventd_nd_notification_contents_free(notification);
+    *bubble = eventd_nd_cairo_get_surface(event, self->style, context->max_width, context->max_height);
 
     self->width = cairo_image_surface_get_width(*bubble);
     self->height = cairo_image_surface_get_height(*bubble);

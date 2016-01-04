@@ -125,13 +125,6 @@ struct _EventdPluginAction {
     } message;
 };
 
-struct _EventdNdNotificationContents {
-    gchar *title;
-    gchar *message;
-    GdkPixbuf *image;
-    GdkPixbuf *icon;
-};
-
 static void
 _eventd_nd_style_init_defaults(EventdNdStyle *style)
 {
@@ -694,79 +687,3 @@ eventd_nd_style_get_icon_fade_width(EventdNdStyle *self)
         return self->icon.fade_width;
     return eventd_nd_style_get_icon_fade_width(self->parent);
 }
-
-
-/* EventdNdNotificationContents */
-
-EventdNdNotificationContents *
-eventd_nd_notification_contents_new(EventdNdStyle *style, EventdEvent *event, gint width, gint height)
-{
-    EventdNdNotificationContents *self;
-
-    const FormatString *title = eventd_nd_style_get_template_title(style);
-    const FormatString *message = eventd_nd_style_get_template_message(style);
-
-    self = g_new0(EventdNdNotificationContents, 1);
-
-    self->title = evhelpers_format_string_get_string(title, event, NULL, NULL);
-
-    self->message = evhelpers_format_string_get_string(message, event, NULL, NULL);
-    if ( *self->message == '\0' )
-        /* Empty message, just skip it */
-        self->message = (g_free(self->message), NULL);
-
-    const Filename *image = eventd_nd_style_get_template_image(style);
-    const Filename *icon = eventd_nd_style_get_template_icon(style);
-    gchar *uri;
-
-    uri = evhelpers_filename_get_uri(image, event, "images");
-    if ( uri != NULL )
-       self->image = eventd_nd_pixbuf_from_uri(uri, width, height);
-
-    uri = evhelpers_filename_get_uri(icon, event, "icons");
-    if ( uri != NULL )
-        self->icon = eventd_nd_pixbuf_from_uri(uri, width, height);
-
-    return self;
-}
-
-void
-eventd_nd_notification_contents_free(EventdNdNotificationContents *self)
-{
-    if ( self == NULL )
-        return;
-
-    if ( self->icon != NULL )
-        g_object_unref(self->icon);
-    if ( self->image != NULL )
-        g_object_unref(self->image);
-    g_free(self->message);
-    g_free(self->title);
-
-    g_free(self);
-}
-
-const gchar *
-eventd_nd_notification_contents_get_title(EventdNdNotificationContents *self)
-{
-    return self->title;
-}
-
-const gchar *
-eventd_nd_notification_contents_get_message(EventdNdNotificationContents *self)
-{
-    return self->message;
-}
-
-GdkPixbuf *
-eventd_nd_notification_contents_get_image(EventdNdNotificationContents *self)
-{
-    return self->image;
-}
-
-GdkPixbuf *
-eventd_nd_notification_contents_get_icon(EventdNdNotificationContents *self)
-{
-    return self->icon;
-}
-
