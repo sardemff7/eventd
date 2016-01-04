@@ -72,14 +72,20 @@ _eventd_nd_event_timedout(gpointer user_data)
 }
 
 static void
-_eventd_nd_notification_set(EventdNdNotification *self, EventdPluginContext *context, EventdEvent *event)
+_eventd_nd_notification_clean(EventdNdNotification *self)
 {
     eventd_event_unref(self->event);
-    self->event = eventd_event_ref(event);
     if ( self->bubble != NULL )
         cairo_surface_destroy(self->bubble);
+}
 
-    self->bubble = eventd_nd_cairo_get_surface(event, self->style, context->max_width, context->max_height);
+static void
+_eventd_nd_notification_update(EventdNdNotification *self, EventdEvent *event)
+{
+    _eventd_nd_notification_clean(self);
+    self->event = eventd_event_ref(event);
+
+    self->bubble = eventd_nd_cairo_get_surface(event, self->style, self->context->max_width, self->context->max_height);
 
     self->width = cairo_image_surface_get_width(self->bubble);
     self->height = cairo_image_surface_get_height(self->bubble);
@@ -97,12 +103,9 @@ eventd_nd_notification_new(EventdPluginContext *context, EventdEvent *event, Eve
     self = g_new0(EventdNdNotification, 1);
     self->context = context;
     self->style = style;
-    self->event = eventd_event_ref(event);
 
-    _eventd_nd_notification_set(self, self->context, event);
-
-    self->surface = context->backend->surface_new(context->backend->context, self, self->width, self->height);
-
+    _eventd_nd_notification_update(self, event);
+    self->surface = self->context->backend->surface_new(self->context->backend->context, self, self->width, self->height);
 
     return self;
 }
@@ -116,8 +119,7 @@ eventd_nd_notification_free(gpointer data)
         g_source_remove(self->timeout);
 
     self->context->backend->surface_free(self->surface);
-
-    cairo_surface_destroy(self->bubble);
+    _eventd_nd_notification_clean(self);
 
     g_free(self);
 }
@@ -135,7 +137,7 @@ eventd_nd_notification_draw(EventdNdNotification *self, cairo_surface_t *bubble)
 void
 eventd_nd_notification_update(EventdNdNotification *self, EventdEvent *event)
 {
-    _eventd_nd_notification_set(self, self->context, event);
+    _eventd_nd_notification_update(self, event);
     self->context->backend->surface_update(self->surface, self->width, self->height);
 }
 
