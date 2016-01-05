@@ -187,6 +187,24 @@ _eventd_nd_win_surface_free(EventdNdSurface *self)
     g_free(self);
 }
 
+static gpointer
+_eventd_nd_win_move_begin(EventdNdBackendContext *context, gsize count)
+{
+    return BeginDeferWindowPos(count);
+}
+
+static void
+_eventd_nd_win_move_surface(EventdNdSurface *self, gint x, gint y, gpointer wp)
+{
+    DeferWindowPos(wp, self->window, NULL, x, y, 0, 0, SWP_NOACTIVATE | SWP_NOSIZE | SWP_NOZORDER);
+}
+
+static void
+_eventd_nd_win_move_end(EventdNdBackendContext *context, gpointer wp)
+{
+    EndDeferWindowPos(wp);
+}
+
 EVENTD_EXPORT
 void
 eventd_nd_backend_get_info(EventdNdBackend *backend)
@@ -194,7 +212,11 @@ eventd_nd_backend_get_info(EventdNdBackend *backend)
     backend->init = _eventd_nd_win_init;
     backend->uninit = _eventd_nd_win_uninit;
 
-    backend->surface_new     = _eventd_nd_win_surface_new;
-    backend->surface_update  = _eventd_nd_win_surface_update;
-    backend->surface_free    = _eventd_nd_win_surface_free;
+    backend->surface_new    = _eventd_nd_win_surface_new;
+    backend->surface_update = _eventd_nd_win_surface_update;
+    backend->surface_free   = _eventd_nd_win_surface_free;
+
+    backend->move_begin   = _eventd_nd_win_move_begin;
+    backend->move_surface = _eventd_nd_win_move_surface;
+    backend->move_end     = _eventd_nd_win_move_end;
 }

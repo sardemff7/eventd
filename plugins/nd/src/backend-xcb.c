@@ -516,7 +516,21 @@ _eventd_nd_xcb_surface_free(EventdNdSurface *self)
     cairo_surface_destroy(self->bubble);
 
     g_free(self);
+}
 
+static void
+_eventd_nd_xcb_move_surface(EventdNdSurface *self, gint x, gint y, gpointer data)
+{
+    guint16 mask = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y;
+    guint32 vals[] = { x, y };
+    xcb_configure_window(self->context->xcb_connection, self->window, mask, vals);
+    xcb_clear_area(self->context->xcb_connection, TRUE, self->window, 0, 0, self->width, self->height);
+}
+
+static void
+_eventd_nd_xcb_move_end(EventdNdBackendContext *context, gpointer data)
+{
+    xcb_flush(context->xcb_connection);
 }
 
 EVENTD_EXPORT
@@ -534,4 +548,7 @@ eventd_nd_backend_get_info(EventdNdBackend *backend)
     backend->surface_new    = _eventd_nd_xcb_surface_new;
     backend->surface_update = _eventd_nd_xcb_surface_update;
     backend->surface_free   = _eventd_nd_xcb_surface_free;
+
+    backend->move_surface = _eventd_nd_xcb_move_surface;
+    backend->move_end     = _eventd_nd_xcb_move_end;
 }

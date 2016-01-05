@@ -190,7 +190,13 @@ _eventd_nd_fbdev_surface_update(EventdNdSurface *self, gint width, gint height)
 }
 
 static void
-_eventd_nd_fbdev_surface_display(EventdNdSurface *self, gint x, gint y)
+_eventd_nd_fbdev_surface_free(EventdNdSurface *self)
+{
+    g_free(self);
+}
+
+static void
+_eventd_nd_fbdev_move_surface(EventdNdSurface *self, gint x, gint y, gpointer data)
 {
     EventdNdBackendContext *display = self->display;
 
@@ -208,12 +214,6 @@ _eventd_nd_fbdev_surface_display(EventdNdSurface *self, gint x, gint y)
     cairo_surface_destroy(surface);
 }
 
-static void
-_eventd_nd_fbdev_surface_free(EventdNdSurface *self)
-{
-    g_free(self);
-}
-
 EVENTD_EXPORT
 void
 eventd_nd_backend_get_info(EventdNdBackend *backend)
@@ -227,4 +227,6 @@ eventd_nd_backend_get_info(EventdNdBackend *backend)
     backend->surface_new    = _eventd_nd_fbdev_surface_new;
     backend->surface_update = _eventd_nd_fbdev_surface_update;
     backend->surface_free   = _eventd_nd_fbdev_surface_free;
+
+    backend->move_surface = _eventd_nd_fbdev_move_surface;
 }

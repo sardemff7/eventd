@@ -70,6 +70,10 @@ typedef struct {
     void (*surface_update)(EventdNdSurface *surface, gint width, gint height);
     void (*surface_free)(EventdNdSurface *surface);
 
+    gpointer (*move_begin)(EventdNdBackendContext *context, gsize count);
+    void (*move_surface)(EventdNdSurface *surface, gint x, gint y, gpointer data);
+    void (*move_end)(EventdNdBackendContext *context, gpointer data);
+
     gpointer module;
     EventdNdBackendContext *context;
 } EventdNdBackend;
