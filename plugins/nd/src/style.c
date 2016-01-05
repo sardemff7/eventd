@@ -34,6 +34,15 @@
 
 #include "style.h"
 
+const gchar * const eventd_nd_anchors[_EVENTD_ND_ANCHOR_SIZE] = {
+    [EVENTD_ND_ANCHOR_TOP_LEFT]     = "top left",
+    [EVENTD_ND_ANCHOR_TOP]          = "top",
+    [EVENTD_ND_ANCHOR_TOP_RIGHT]    = "top right",
+    [EVENTD_ND_ANCHOR_BOTTOM_LEFT]  = "bottom left",
+    [EVENTD_ND_ANCHOR_BOTTOM]       = "bottom",
+    [EVENTD_ND_ANCHOR_BOTTOM_RIGHT] = "bottom right",
+};
+
 static const gchar * const _eventd_nd_style_pango_alignments[] = {
     [PANGO_ALIGN_LEFT]   = "left",
     [PANGO_ALIGN_RIGHT]  = "right",
@@ -71,6 +80,8 @@ struct _EventdPluginAction {
 
     struct {
         gboolean set;
+
+        EventdNdAnchor anchor;
 
         gint timeout;
 
@@ -122,6 +133,9 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
 
     /* bubble */
     style->bubble.set = TRUE;
+
+    /* bubble anchor */
+    style->bubble.anchor  = EVENTD_ND_ANCHOR_TOP_RIGHT;
 
     /* bubble timing */
     style->bubble.timeout = 3000;
@@ -229,8 +243,14 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
     {
         self->bubble.set = TRUE;
 
+        guint64 enum_value;
         Int integer;
         Colour colour;
+
+        if ( evhelpers_config_key_file_get_enum(config_file, "NotificationBubble", "Anchor", eventd_nd_anchors, G_N_ELEMENTS(eventd_nd_anchors), &enum_value) == 0 )
+            self->bubble.anchor = enum_value;
+        else if ( self->parent != NULL )
+            self->bubble.anchor = eventd_nd_style_get_bubble_anchor(self->parent);
 
         if ( evhelpers_config_key_file_get_int(config_file, "NotificationBubble", "Timeout", &integer) == 0 )
             self->bubble.timeout = ( integer.value > 0 ) ? integer.value : 0;
@@ -419,6 +439,14 @@ eventd_nd_style_get_template_icon(EventdNdStyle *self)
     if ( self->template.set )
         return self->template.icon;
     return eventd_nd_style_get_template_icon(self->parent);
+}
+
+EventdNdAnchor
+eventd_nd_style_get_bubble_anchor(EventdNdStyle *self)
+{
+    if ( self->bubble.set )
+        return self->bubble.anchor;
+    return eventd_nd_style_get_bubble_anchor(self->parent);
 }
 
 gint

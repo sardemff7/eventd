@@ -101,6 +101,48 @@
 
         <para>These sections are valid in both global and action configurations.</para>
 
+        <refsect2 id="anchor-sections">
+            <title>Section <varname>[Anchor <replaceable>position</replaceable>]</varname></title>
+
+            <para>
+                These sections control the behaviour of the available anchors.
+                They are not required for the anchor to exist and be used in style configuration.
+            </para>
+            <para>
+                There are six available anchors:
+                <simplelist type='inline'>
+                    <member><literal>top left</literal></member>
+                    <member><literal>top</literal></member>
+                    <member><literal>top right</literal></member>
+                    <member><literal>bottom left</literal></member>
+                    <member><literal>bottom</literal></member>
+                    <member><literal>bottom right</literal></member>
+                </simplelist>
+            </para>
+
+            <refsect3>
+                <title>Contents keys</title>
+
+                <variablelist>
+                    <varlistentry>
+                        <term><varname>Margin=</varname> (defaults to <literal>13</literal>)</term>
+                        <listitem>
+                            <para>An <type>integer</type></para>
+                            <para>Margin between bubble and screen's edge.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>Spacing=</varname> (defaults to <literal>13</literal>)</term>
+                        <listitem>
+                            <para>An <type>integer</type></para>
+                            <para>Spacing between each bubble.</para>
+                        </listitem>
+                    </varlistentry>
+                </variablelist>
+            </refsect3>
+        </refsect2>
+
         <refsect2>
             <title>Section <varname>[Notification]</varname></title>
 
@@ -147,6 +189,14 @@
                 <title>Section <varname>[NotificationBubble]</varname></title>
 
                 <variablelist>
+                    <varlistentry>
+                        <term><varname>Anchor=</varname> (defaults to <literal>top right</literal>)</term>
+                        <listitem>
+                            <para>An <type>anchor name</type></para>
+                            <para>See <xref linkend="anchor-sections" /> for the list of available anchors.</para>
+                        </listitem>
+                    </varlistentry>
+
                     <varlistentry>
                         <term><varname>Timeout=</varname> (defaults to <literal>3000</literal>)</term>
                         <listitem>

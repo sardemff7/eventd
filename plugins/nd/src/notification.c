@@ -47,6 +47,7 @@
 struct _EventdNdNotification {
     EventdNdContext *context;
     EventdNdStyle *style;
+    EventdNdQueue *queue;
     GList *link;
     EventdEvent *event;
     struct {
@@ -87,30 +88,45 @@ _eventd_nd_notification_clean(EventdNdNotification *self)
 }
 
 static void
-_eventd_nd_notification_refresh_list(EventdPluginContext *context)
+_eventd_nd_notification_refresh_list(EventdPluginContext *context, EventdNdQueue *queue)
 {
     gpointer data = NULL;
     if ( context->backend->move_begin != NULL )
-        data = context->backend->move_begin(context->backend->context, g_queue_get_length(context->queue));
+        data = context->backend->move_begin(context->backend->context, g_queue_get_length(queue->queue));
 
-    /* For now, we only support top-right placement */
+    gboolean right, center, bottom;
+    right = ( queue->anchor == EVENTD_ND_ANCHOR_TOP_RIGHT ) || ( queue->anchor == EVENTD_ND_ANCHOR_BOTTOM_RIGHT );
+    center = ( queue->anchor == EVENTD_ND_ANCHOR_TOP ) || ( queue->anchor == EVENTD_ND_ANCHOR_BOTTOM );
+    bottom = ( queue->anchor == EVENTD_ND_ANCHOR_BOTTOM_LEFT ) || ( queue->anchor == EVENTD_ND_ANCHOR_BOTTOM ) || ( queue->anchor == EVENTD_ND_ANCHOR_BOTTOM_RIGHT );
 
     gint bx, by;
-    bx = context->geometry.w - 20;
-    by = 20; /* margin */
+    bx = queue->margin;
+    by = queue->margin;
+    if ( center )
+        bx = context->geometry.w;
+    else if ( right )
+        bx = context->geometry.w - bx;
+    if ( bottom )
+        by = context->geometry.h - by;
     bx += context->geometry.x;
     by += context->geometry.y;
     GList *self_;
-    for ( self_ = g_queue_peek_head_link(context->queue) ; self_ != NULL ; self_ = g_list_next(self_) )
+    for ( self_ = g_queue_peek_head_link(queue->queue) ; self_ != NULL ; self_ = g_list_next(self_) )
     {
         EventdNdNotification *self = self_->data;
 
+        if ( bottom )
+            by -= self->height;
+
         gint x, y;
-        x = bx - self->width;
+        x = center ? ( ( bx / 2 ) - ( self->width / 2 ) ) : right ? ( bx - self->width ) : bx;
         y = by;
         context->backend->move_surface(self->surface, x, y, data);
 
-        by += self->height + 10; /* spacing */
+        if ( bottom )
+            by -= queue->spacing;
+        else
+            by += self->height + queue->spacing;
     }
 
     if ( context->backend->move_end != NULL )
@@ -130,7 +146,7 @@ _eventd_nd_notification_update(EventdNdNotification *self, EventdEvent *event)
     gint image_width = self->context->max_width, image_height = self->context->max_height;
 
 
-    margin = 20; /* FIXME: Use the setting when reintroduced */
+    margin = self->queue->margin;
     padding = eventd_nd_style_get_bubble_padding(self->style);
     min_width = eventd_nd_style_get_bubble_min_width(self->style);
     max_width = eventd_nd_style_get_bubble_max_width(self->style);
@@ -173,14 +189,15 @@ eventd_nd_notification_new(EventdPluginContext *context, EventdEvent *event, Eve
 
     self = g_new0(EventdNdNotification, 1);
     self->context = context;
+    self->queue = &context->queues[eventd_nd_style_get_bubble_anchor(style)];
     self->style = style;
 
-    g_queue_push_head(self->context->queue, self);
-    self->link = g_queue_peek_head_link(self->context->queue);
+    g_queue_push_head(self->queue->queue, self);
+    self->link = g_queue_peek_head_link(self->queue->queue);
 
     _eventd_nd_notification_update(self, event);
     self->surface = self->context->backend->surface_new(self->context->backend->context, self, self->width, self->height);
-    _eventd_nd_notification_refresh_list(self->context);
+    _eventd_nd_notification_refresh_list(self->context, self->queue);
 
     return self;
 }
@@ -196,8 +213,8 @@ eventd_nd_notification_free(gpointer data)
     self->context->backend->surface_free(self->surface);
     _eventd_nd_notification_clean(self);
 
-    g_queue_delete_link(self->context->queue, self->link);
-    _eventd_nd_notification_refresh_list(self->context);
+    g_queue_delete_link(self->queue->queue, self->link);
+    _eventd_nd_notification_refresh_list(self->context, self->queue);
 
     g_free(self);
 }
@@ -221,7 +238,7 @@ eventd_nd_notification_update(EventdNdNotification *self, EventdEvent *event)
 {
     _eventd_nd_notification_update(self, event);
     self->context->backend->surface_update(self->surface, self->width, self->height);
-    _eventd_nd_notification_refresh_list(self->context);
+    _eventd_nd_notification_refresh_list(self->context, self->queue);
 }
 
 void

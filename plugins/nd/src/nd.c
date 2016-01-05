@@ -125,7 +125,18 @@ _eventd_nd_init(EventdPluginCoreContext *core)
     }
 
     context->style = eventd_nd_style_new(NULL);
-    context->queue = g_queue_new();
+
+    EventdNdAnchor i;
+    for ( i = EVENTD_ND_ANCHOR_TOP_LEFT ; i < _EVENTD_ND_ANCHOR_SIZE ; ++i )
+    {
+        context->queues[i].anchor = i;
+
+        /* Defaults placement values */
+        context->queues[i].margin = 13;
+        context->queues[i].spacing = 13;
+
+        context->queues[i].queue = g_queue_new();
+    }
 
     context->notifications = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, eventd_nd_notification_free);
 
@@ -137,7 +148,10 @@ _eventd_nd_uninit(EventdPluginContext *context)
 {
     g_hash_table_unref(context->notifications);
 
-    g_queue_free(context->queue);
+    EventdNdAnchor i;
+    for ( i = EVENTD_ND_ANCHOR_TOP_LEFT ; i < _EVENTD_ND_ANCHOR_SIZE ; ++i )
+        g_queue_free(context->queues[i].queue);
+
     eventd_nd_style_free(context->style);
 
     eventd_nd_backends_unload(context->backends);
@@ -279,6 +293,24 @@ _eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
     {
         if ( ( context->backends[i].context != NULL ) && ( context->backends[i].global_parse != NULL ) )
             context->backends[i].global_parse(context->backends[i].context, config_file);
+    }
+
+    gsize anchor_name_length = strlen("Anchor bottom right") + 1;
+    gchar anchor_name[anchor_name_length];
+    EventdNdAnchor j;
+    for ( j = EVENTD_ND_ANCHOR_TOP_LEFT ; j < _EVENTD_ND_ANCHOR_SIZE ; ++j )
+    {
+        g_snprintf(anchor_name, anchor_name_length, "Anchor %s", eventd_nd_anchors[j]);
+        if ( ! g_key_file_has_group(config_file, anchor_name) )
+            continue;
+
+        Int integer;
+
+        if ( evhelpers_config_key_file_get_int(config_file, anchor_name, "Margin", &integer) == 0 )
+            context->queues[j].margin = ( integer.value > 0 ) ? integer.value : 0;
+
+        if ( evhelpers_config_key_file_get_int(config_file, anchor_name, "Spacing", &integer) == 0 )
+            context->queues[j].spacing = ( integer.value > 0 ) ? integer.value : 0;
     }
 }
 

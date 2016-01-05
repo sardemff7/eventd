@@ -23,12 +23,19 @@
 #ifndef __EVENTD_ND_ND_H__
 #define __EVENTD_ND_ND_H__
 
+typedef struct {
+    EventdNdAnchor anchor;
+    gint margin;
+    gint spacing;
+    GQueue *queue;
+} EventdNdQueue;
+
 struct _EventdPluginContext {
     EventdPluginCoreContext *core;
     EventdNdInterface interface;
     EventdNdBackend backends[_EVENTD_ND_BACKENDS_SIZE];
     EventdNdBackend *backend;
-    GQueue *queue;
+    EventdNdQueue queues[_EVENTD_ND_ANCHOR_SIZE];
     EventdNdStyle *style;
     gint max_width;
     gint max_height;
