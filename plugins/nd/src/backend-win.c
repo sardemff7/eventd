@@ -124,6 +124,16 @@ _eventd_nd_win_init(EventdNdInterface *nd)
     self->window_class.hbrBackground =(HBRUSH)COLOR_WINDOW;
     self->window_class.lpszClassName = CLASS_NAME;
 
+    self->window_class_atom = RegisterClassEx(&self->window_class);
+    if ( self->window_class_atom == 0 )
+    {
+        DWORD error;
+        error = GetLastError();
+        g_warning("Couldn't register class: %s", g_win32_error_message(error));
+        g_free(self);
+        return NULL;
+    }
+
     self->source = g_water_win_source_new(NULL, QS_PAINT|QS_MOUSEBUTTON);
 
     return self;
@@ -139,31 +149,6 @@ _eventd_nd_win_uninit(EventdNdBackendContext *self_)
     g_free(self);
 }
 
-static void
-_eventd_nd_win_global_parse(EventdNdBackendContext *self_, GKeyFile *config_file)
-{
-}
-
-static gboolean
-_eventd_nd_win_start(EventdNdBackendContext *self, const gchar *target)
-{
-    self->window_class_atom = RegisterClassEx(&self->window_class);
-    if ( self->window_class_atom == 0 )
-    {
-        DWORD error;
-        error = GetLastError();
-        g_warning("Couldn't register class: %s", g_win32_error_message(error));
-        g_free(self);
-        return FALSE;
-    }
-
-    return TRUE;
-}
-
-static void
-_eventd_nd_win_stop(EventdNdDisplay *self)
-{
-}
 
 static EventdNdSurface *
 _eventd_nd_win_surface_new(EventdNdDisplay *display, EventdEvent *event, cairo_surface_t *bubble)
@@ -225,11 +210,6 @@ eventd_nd_backend_get_info(EventdNdBackend *backend)
 {
     backend->init = _eventd_nd_win_init;
     backend->uninit = _eventd_nd_win_uninit;
-
-    backend->global_parse = _eventd_nd_win_global_parse;
-
-    backend->start = _eventd_nd_win_start;
-    backend->stop  = _eventd_nd_win_stop;
 
     backend->surface_new     = _eventd_nd_win_surface_new;
     backend->surface_update  = _eventd_nd_win_surface_update;

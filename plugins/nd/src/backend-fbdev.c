@@ -84,11 +84,6 @@ _eventd_nd_fbdev_uninit(EventdNdBackendContext *context)
     g_free(context);
 }
 
-static void
-_eventd_nd_fbdev_global_parse(EventdNdBackendContext *context, GKeyFile *config_file)
-{
-}
-
 static gboolean
 _eventd_nd_fbdev_start(EventdNdBackendContext *context, const gchar *target)
 {
@@ -241,8 +236,6 @@ eventd_nd_backend_get_info(EventdNdBackend *backend)
 {
     backend->init = _eventd_nd_fbdev_init;
     backend->uninit = _eventd_nd_fbdev_uninit;
-
-    backend->global_parse = _eventd_nd_fbdev_global_parse;
 
     backend->start = _eventd_nd_fbdev_start;
     backend->stop  = _eventd_nd_fbdev_stop;

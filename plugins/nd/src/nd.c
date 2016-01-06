@@ -64,7 +64,8 @@ _eventd_nd_backend_switch(EventdNdContext *context, EventdNdBackends backend, co
 {
     if ( context->backend != NULL )
     {
-        context->backend->stop(context->backend->context);
+        if ( context->backend->stop != NULL )
+            context->backend->stop(context->backend->context);
         context->backend = NULL;
     }
 
@@ -76,7 +77,7 @@ _eventd_nd_backend_switch(EventdNdContext *context, EventdNdBackends backend, co
     if ( backend_->context == NULL )
         return FALSE;
 
-    if ( ! backend_->start(backend_->context, target) )
+    if ( ( backend_->start != NULL ) && ( ! backend_->start(backend_->context, target) ) )
         return FALSE;
 
     context->backend = backend_;
@@ -269,6 +270,13 @@ static void
 _eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
 {
     eventd_nd_style_update(context->style, config_file, &context->max_width, &context->max_height);
+
+    EventdNdBackends i;
+    for ( i = EVENTD_ND_BACKEND_NONE + 1 ; i < _EVENTD_ND_BACKENDS_SIZE ; ++i )
+    {
+        if ( ( context->backends[i].context != NULL ) && ( context->backends[i].global_parse != NULL ) )
+            context->backends[i].global_parse(context->backends[i].context, config_file);
+    }
 }
 
 static EventdPluginAction *
