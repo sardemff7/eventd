@@ -95,27 +95,30 @@ _eventd_nd_cairo_get_message(gchar *message, guint8 max)
     return g_string_free(message_str, FALSE);
 }
 
-void
-eventd_nd_cairo_text_process(EventdNdStyle *style, EventdEvent *event, gint max_width, PangoLayout **title, gint *text_height, gint *text_width)
+PangoLayout *
+eventd_nd_cairo_text_process(EventdNdStyle *style, EventdEvent *event, gint max_width, gint *text_height, gint *text_width)
 {
     PangoContext *pango_context;
-    gchar *text;
+    gchar *text_;
+    PangoLayout *text;
 
     pango_context = pango_context_new();
     pango_context_set_font_map(pango_context, pango_cairo_font_map_get_default());
 
-    text = evhelpers_format_string_get_string(eventd_nd_style_get_template_text(style), event, NULL, NULL);
-    *title = pango_layout_new(pango_context);
-    pango_layout_set_font_description(*title, eventd_nd_style_get_text_font(style));
-    pango_layout_set_alignment(*title, eventd_nd_style_get_text_align(style));
-    pango_layout_set_wrap(*title, PANGO_WRAP_WORD_CHAR);
-    pango_layout_set_ellipsize(*title, PANGO_ELLIPSIZE_MIDDLE);
-    pango_layout_set_width(*title, max_width * PANGO_SCALE);
-    pango_layout_set_markup(*title, text, -1);
-    pango_layout_get_pixel_size(*title, text_width, text_height);
-    g_free(text);
+    text_ = evhelpers_format_string_get_string(eventd_nd_style_get_template_text(style), event, NULL, NULL);
+    text = pango_layout_new(pango_context);
+    pango_layout_set_font_description(text, eventd_nd_style_get_text_font(style));
+    pango_layout_set_alignment(text, eventd_nd_style_get_text_align(style));
+    pango_layout_set_wrap(text, PANGO_WRAP_WORD_CHAR);
+    pango_layout_set_ellipsize(text, PANGO_ELLIPSIZE_MIDDLE);
+    pango_layout_set_width(text, max_width * PANGO_SCALE);
+    pango_layout_set_markup(text, text_, -1);
+    pango_layout_get_pixel_size(text, text_width, text_height);
+    g_free(text_);
 
     g_object_unref(pango_context);
+
+    return text;
 }
 
 void

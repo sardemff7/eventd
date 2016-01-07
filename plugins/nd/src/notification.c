@@ -140,7 +140,7 @@ _eventd_nd_notification_update(EventdNdNotification *self, EventdEvent *event)
         min_width = max_width;
 
     /* proccess data and compute the bubble size */
-    eventd_nd_cairo_text_process(self->style, self->event, max_width - 2 * padding, &self->text.text, &text_height, &text_width);
+    self->text.text = eventd_nd_cairo_text_process(self->style, self->event, max_width - 2 * padding, &text_height, &text_width);
 
     self->width = 2 * padding + text_width;
 
