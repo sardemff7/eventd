@@ -125,6 +125,7 @@ _eventd_nd_init(EventdPluginCoreContext *core)
     }
 
     context->style = eventd_nd_style_new(NULL);
+    context->queue = g_queue_new();
 
     context->notifications = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, eventd_nd_notification_free);
 
@@ -140,6 +141,7 @@ _eventd_nd_uninit(EventdPluginContext *context)
 
     g_hash_table_unref(context->notifications);
 
+    g_queue_free(context->queue);
     eventd_nd_style_free(context->style);
 
     eventd_nd_backends_unload(context->backends);

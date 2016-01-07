@@ -28,6 +28,7 @@ struct _EventdPluginContext {
     EventdNdInterface interface;
     EventdNdBackend backends[_EVENTD_ND_BACKENDS_SIZE];
     EventdNdBackend *backend;
+    GQueue *queue;
     EventdNdStyle *style;
     gint max_width;
     gint max_height;

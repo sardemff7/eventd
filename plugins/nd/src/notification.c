@@ -47,6 +47,7 @@
 struct _EventdNdNotification {
     EventdNdContext *context;
     EventdNdStyle *style;
+    GList *link;
     EventdEvent *event;
     struct {
         PangoLayout *title;
@@ -87,6 +88,37 @@ _eventd_nd_notification_clean(EventdNdNotification *self)
     if ( self->text.message != NULL )
         g_object_unref(self->text.message);
     self->text.message = NULL;
+}
+
+static void
+_eventd_nd_notification_refresh_list(EventdPluginContext *context)
+{
+    gpointer data = NULL;
+    if ( context->backend->move_begin != NULL )
+        data = context->backend->move_begin(context->backend->context, g_queue_get_length(context->queue));
+
+    /* For now, we only support top-right placement */
+
+    gint bx, by;
+    bx = context->geometry.w - 20;
+    by = 20; /* margin */
+    bx += context->geometry.x;
+    by += context->geometry.y;
+    GList *self_;
+    for ( self_ = g_queue_peek_head_link(context->queue) ; self_ != NULL ; self_ = g_list_next(self_) )
+    {
+        EventdNdNotification *self = self_->data;
+
+        gint x, y;
+        x = bx - self->width;
+        y = by;
+        context->backend->move_surface(self->surface, x, y, data);
+
+        by += self->height + 10; /* spacing */
+    }
+
+    if ( context->backend->move_end != NULL )
+        context->backend->move_end(context->backend->context, data);
 }
 
 static void
@@ -144,8 +176,12 @@ eventd_nd_notification_new(EventdPluginContext *context, EventdEvent *event, Eve
     self->context = context;
     self->style = style;
 
+    g_queue_push_head(self->context->queue, self);
+    self->link = g_queue_peek_head_link(self->context->queue);
+
     _eventd_nd_notification_update(self, event);
     self->surface = self->context->backend->surface_new(self->context->backend->context, self, self->width, self->height);
+    _eventd_nd_notification_refresh_list(self->context);
 
     return self;
 }
@@ -160,6 +196,9 @@ eventd_nd_notification_free(gpointer data)
 
     self->context->backend->surface_free(self->surface);
     _eventd_nd_notification_clean(self);
+
+    g_queue_delete_link(self->context->queue, self->link);
+    _eventd_nd_notification_refresh_list(self->context);
 
     g_free(self);
 }
@@ -183,6 +222,7 @@ eventd_nd_notification_update(EventdNdNotification *self, EventdEvent *event)
 {
     _eventd_nd_notification_update(self, event);
     self->context->backend->surface_update(self->surface, self->width, self->height);
+    _eventd_nd_notification_refresh_list(self->context);
 }
 
 void
