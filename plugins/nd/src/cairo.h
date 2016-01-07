@@ -23,9 +23,6 @@
 #ifndef __EVENTD_ND_CAIRO_H__
 #define __EVENTD_ND_CAIRO_H__
 
-void eventd_nd_cairo_init(void);
-void eventd_nd_cairo_uninit(void);
-
 void eventd_nd_cairo_text_process(EventdNdStyle *style, EventdEvent *event, gint max_width, PangoLayout **title, PangoLayout **message, gint *text_height, gint *text_width);
 
 void eventd_nd_cairo_bubble_draw(cairo_t *cr, Colour colour, gint radius, gint width, gint height);

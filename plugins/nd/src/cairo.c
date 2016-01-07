@@ -45,79 +45,10 @@
 
 #include "cairo.h"
 
-static GRegex *regex_amp = NULL;
-static GRegex *regex_markup = NULL;
-
-void
-eventd_nd_cairo_init(void)
-{
-    GError *error = NULL;
-
-    if ( regex_amp == NULL )
-    {
-        regex_amp = g_regex_new("&(?!amp;|quot;|apos;|lt;|gt;)", G_REGEX_OPTIMIZE, 0, &error);
-        if ( regex_amp == NULL )
-            g_warning("Couldn't create amp regex: %s", error->message);
-        g_clear_error(&error);
-    }
-    else
-        g_regex_ref(regex_amp);
-
-    if ( regex_markup == NULL )
-    {
-        regex_markup = g_regex_new("<(?!/?[biu]>)", G_REGEX_OPTIMIZE, 0, &error);
-        if ( regex_markup == NULL )
-            g_warning("Couldn't create markup regex: %s", error->message);
-        g_clear_error(&error);
-    }
-    else
-        g_regex_ref(regex_markup);
-}
-
-void
-eventd_nd_cairo_uninit(void)
-{
-    if ( regex_markup != NULL )
-        g_regex_unref(regex_markup);
-    if ( regex_amp != NULL )
-        g_regex_unref(regex_amp);
-}
-
 struct _EventdNdBubble {
     GList *surfaces;
 };
 
-static gchar *
-_eventd_nd_cairo_message_escape(const gchar *message)
-{
-    GError *error = NULL;
-    gchar *escaped, *tmp = NULL;
-
-    escaped = g_regex_replace_literal(regex_amp, message, -1, 0, "&amp;" , 0, &error);
-    if ( escaped == NULL )
-    {
-        g_warning("Couldn't escape amp: %s", error->message);
-        goto fallback;
-    }
-
-    escaped = g_regex_replace_literal(regex_markup, tmp = escaped, -1, 0, "&lt;" , 0, &error);
-    if ( escaped == NULL )
-    {
-        g_warning("Couldn't escape markup: %s", error->message);
-        goto fallback;
-    }
-    g_free(tmp);
-
-    if ( ! pango_parse_markup(tmp = escaped, -1, 0, NULL, NULL, NULL, NULL) )
-        goto fallback;
-
-    return escaped;
-
-fallback:
-    g_free(tmp);
-    g_clear_error(&error);
-    return g_markup_escape_text(message, -1);
-}
 
 static gssize
 _eventd_nd_cairo_strccount(const gchar *str, char c)
@@ -138,17 +69,11 @@ _eventd_nd_cairo_strccount(const gchar *str, char c)
 static gchar *
 _eventd_nd_cairo_get_message(gchar *message, guint8 max)
 {
-    gchar *ret;
     gssize count;
     gchar **message_lines;
 
-    count = _eventd_nd_cairo_strccount(message, '\n');
-    if ( ( g_strstr_len(message, -1, "\n") == NULL ) || ( max < 1 ) || ( count <= max ) )
-    {
-        ret = _eventd_nd_cairo_message_escape(message);
-        g_free(message);
-        return ret;
-    }
+    if ( ( max < 1 ) || ( ( count = _eventd_nd_cairo_strccount(message, '\n') ) <= max ) )
+        return message;
 
     message_lines = g_strsplit(message, "\n", -1);
 
@@ -166,11 +91,8 @@ _eventd_nd_cairo_get_message(gchar *message, guint8 max)
     g_strfreev(message_lines);
 
 
-    ret = _eventd_nd_cairo_message_escape(message_str->str);
-    g_string_free(message_str, TRUE);
     g_free(message);
-
-    return ret;
+    return g_string_free(message_str, FALSE);
 }
 
 void

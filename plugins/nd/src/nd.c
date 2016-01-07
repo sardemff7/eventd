@@ -129,16 +129,12 @@ _eventd_nd_init(EventdPluginCoreContext *core)
 
     context->notifications = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, eventd_nd_notification_free);
 
-    eventd_nd_cairo_init();
-
     return context;
 }
 
 static void
 _eventd_nd_uninit(EventdPluginContext *context)
 {
-    eventd_nd_cairo_uninit();
-
     g_hash_table_unref(context->notifications);
 
     g_queue_free(context->queue);
