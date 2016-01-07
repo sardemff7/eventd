@@ -293,10 +293,6 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
             self->bubble.colour = colour;
         else if ( self->parent != NULL )
             self->bubble.colour = eventd_nd_style_get_bubble_colour(self->parent);
-
-        /* We ignore the minimum width if larger than the maximum */
-        if ( ( self->bubble.max_width > -1 ) && ( self->bubble.min_width > self->bubble.max_width ) )
-            self->bubble.min_width = 0;
     }
 
     if ( g_key_file_has_group(config_file, "NotificationTitle") )

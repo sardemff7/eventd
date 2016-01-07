@@ -127,29 +127,34 @@ _eventd_nd_notification_update(EventdNdNotification *self, EventdEvent *event)
     _eventd_nd_notification_clean(self);
     self->event = eventd_event_ref(event);
 
-    gint padding;
+    gint margin, padding;
     gint min_width, max_width;
 
     gint text_width = 0, text_height = 0;
     gint image_width = self->context->max_width, image_height = self->context->max_height;
 
 
+    margin = 20; /* FIXME: Use the setting when reintroduced */
     padding = eventd_nd_style_get_bubble_padding(self->style);
     min_width = eventd_nd_style_get_bubble_min_width(self->style);
     max_width = eventd_nd_style_get_bubble_max_width(self->style);
+    if ( max_width < 0 )
+        max_width = self->context->geometry.w - 2 * margin;
+    if ( min_width > max_width )
+        min_width = max_width;
 
     /* proccess data and compute the bubble size */
-    eventd_nd_cairo_text_process(self->style, self->event, ( max_width > -1 ) ? ( max_width - 2 * padding ) : -1, &self->text.title, &self->text.message, &text_height, &text_width);
+    eventd_nd_cairo_text_process(self->style, self->event, max_width - 2 * padding, &self->text.title, &self->text.message, &text_height, &text_width);
 
     self->width = 2 * padding + text_width;
 
-    if ( ( max_width < 0 ) || ( self->width < max_width ) )
+    if ( self->width < max_width )
     {
-        eventd_nd_cairo_image_and_icon_process(self->style, self->event, ( max_width > -1 ) ? ( max_width - self->width ) : -1, &self->image, &self->icon, &self->text.x, &image_width, &image_height);
+        eventd_nd_cairo_image_and_icon_process(self->style, self->event, max_width - self->width, &self->image, &self->icon, &self->text.x, &image_width, &image_height);
         self->width += image_width;
     }
 
-    /* We are sure that min_width < max_width */
+    /* We are sure that min_width <= max_width */
     if ( min_width > self->width )
     {
         self->width = min_width;
