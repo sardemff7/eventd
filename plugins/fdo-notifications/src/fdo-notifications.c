@@ -52,6 +52,8 @@ struct _EventdPluginContext {
     GDBusConnection *connection;
     GVariant *capabilities;
     GVariant *server_information;
+    GRegex *regex_amp;
+    GRegex *regex_markup;
     guint32 count;
     GHashTable *ids;
     GHashTable *notifications;
@@ -127,6 +129,50 @@ _eventd_fdo_notifications_notification_free(gpointer user_data)
     g_free(notification->sender);
 
     g_free(notification);
+}
+
+static gboolean
+_eventd_fdo_notifications_body_try_parse(const gchar *body)
+{
+    GMarkupParser parser = { NULL };
+    GMarkupParseContext *context;
+    gboolean ret;
+    context = g_markup_parse_context_new(&parser, 0, NULL, NULL);
+    ret = g_markup_parse_context_parse(context, body, -1, NULL) && g_markup_parse_context_end_parse(context, NULL);
+    g_markup_parse_context_free(context);
+    return ret;
+}
+
+static gchar *
+_eventd_fdo_notifications_body_escape(EventdPluginContext *context, const gchar *body)
+{
+    GError *error = NULL;
+    gchar *escaped, *tmp = NULL;
+
+    escaped = g_regex_replace_literal(context->regex_amp, body, -1, 0, "&amp;" , 0, &error);
+    if ( escaped == NULL )
+    {
+        g_warning("Couldn't escape amp: %s", error->message);
+        goto fallback;
+    }
+
+    escaped = g_regex_replace_literal(context->regex_markup, tmp = escaped, -1, 0, "&lt;" , 0, &error);
+    if ( escaped == NULL )
+    {
+        g_warning("Couldn't escape markup: %s", error->message);
+        goto fallback;
+    }
+    g_free(tmp);
+
+    if ( ! _eventd_fdo_notifications_body_try_parse(tmp = escaped) )
+        goto fallback;
+
+    return escaped;
+
+fallback:
+    g_free(tmp);
+    g_clear_error(&error);
+    return g_markup_escape_text(body, -1);
 }
 
 
@@ -218,10 +264,10 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
 
     eventd_event_add_data(event, g_strdup("client-name"), g_strdup(app_name));
 
-    eventd_event_add_data(event, g_strdup("title"), g_strdup(summary));
+    eventd_event_add_data(event, g_strdup("title"), g_markup_escape_text(summary, -1));
 
     if ( body != NULL )
-        eventd_event_add_data(event, g_strdup("message"), g_strdup(body));
+        eventd_event_add_data(event, g_strdup("message"), _eventd_fdo_notifications_body_escape(context, body));
 
     if ( ( icon != NULL ) && ( *icon != 0 ) )
     {
@@ -557,14 +603,29 @@ _eventd_fdo_notifications_init(EventdPluginCoreContext *core)
 {
     EventdPluginContext *context;
     GError *error = NULL;
-    GDBusNodeInfo *introspection_data;
+    GDBusNodeInfo *introspection_data = NULL;
+    GRegex *regex_amp = NULL;
+    GRegex *regex_markup = NULL;
 
     introspection_data = g_dbus_node_info_new_for_xml(introspection_xml, &error);
     if ( introspection_data == NULL )
     {
         g_warning("Couldn't generate introspection data: %s", error->message);
-        g_clear_error(&error);
-        return NULL;
+        goto error;
+    }
+
+    regex_amp = g_regex_new("&(?!amp;|quot;|apos;|lt;|gt;)", G_REGEX_OPTIMIZE, 0, &error);
+    if ( regex_amp == NULL )
+    {
+        g_warning("Couldn't create amp regex: %s", error->message);
+        goto error;
+    }
+
+    regex_markup = g_regex_new("<(?!/?[biu]>)", G_REGEX_OPTIMIZE, 0, &error);
+    if ( regex_markup == NULL )
+    {
+        g_warning("Couldn't create markup regex: %s", error->message);
+        goto error;
     }
 
     context = g_new0(EventdPluginContext, 1);
@@ -576,10 +637,24 @@ _eventd_fdo_notifications_init(EventdPluginCoreContext *core)
     context->server_information = g_variant_new("(ssss)", PACKAGE_NAME, "Quentin 'Sardem FF7' Glidic", PACKAGE_VERSION, NOTIFICATION_SPEC_VERSION);
     _eventd_fdo_notifications_init_capabilities(context);
 
+    context->regex_amp = regex_amp;
+    context->regex_markup = regex_markup;
+
     context->notifications = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, _eventd_fdo_notifications_notification_free);
     context->ids = g_hash_table_new(g_direct_hash, g_direct_equal);
 
     return context;
+
+error:
+    if ( regex_markup != NULL )
+        g_regex_unref(regex_markup);
+    if ( regex_amp != NULL )
+        g_regex_unref(regex_amp);
+    if ( introspection_data != NULL )
+        g_dbus_node_info_unref(introspection_data);
+
+    g_clear_error(&error);
+    return NULL;
 }
 
 static void
@@ -587,6 +662,9 @@ _eventd_fdo_notifications_uninit(EventdPluginContext *context)
 {
     g_hash_table_unref(context->ids);
     g_hash_table_unref(context->notifications);
+
+    g_regex_unref(context->regex_markup);
+    g_regex_unref(context->regex_amp);
 
     g_variant_unref(context->capabilities);
     g_variant_unref(context->server_information);
