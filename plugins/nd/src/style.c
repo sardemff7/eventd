@@ -110,6 +110,7 @@ struct _EventdPluginAction {
 
         PangoFontDescription *font;
         PangoAlignment align;
+        guint8 max_lines;
         Colour colour;
     } text;
 };
@@ -145,6 +146,7 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
     style->text.set = TRUE;
     style->text.font        = pango_font_description_from_string("Linux Libertine O 9");
     style->text.align       = PANGO_ALIGN_LEFT;
+    style->text.max_lines   = 10;
     style->text.colour.r    = 0.9;
     style->text.colour.g    = 0.9;
     style->text.colour.b    = 0.9;
@@ -266,6 +268,7 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
 
         gchar *string;
         guint64 enum_value;
+        Int integer;
         Colour colour;
 
         if ( evhelpers_config_key_file_get_string(config_file, "NotificationText", "Font", &string) == 0 )
@@ -283,6 +286,11 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
             self->text.align = enum_value;
         else if ( self->parent != NULL )
             self->text.align = eventd_nd_style_get_text_align(self->parent);
+
+        if ( evhelpers_config_key_file_get_int(config_file, "NotificationText", "MaxLines", &integer) == 0 )
+            self->text.max_lines = ( integer.value < 0 ) ? 0 : MAX(integer.value, 3);
+        else if ( self->parent != NULL )
+            self->text.max_lines = eventd_nd_style_get_text_max_lines(self->parent);
 
         if ( evhelpers_config_key_file_get_colour(config_file, "NotificationText", "Colour", &colour) == 0 )
             self->text.colour = colour;
@@ -482,6 +490,14 @@ eventd_nd_style_get_text_colour(EventdNdStyle *self)
     if ( self->text.set )
         return self->text.colour;
     return eventd_nd_style_get_text_colour(self->parent);
+}
+
+guint8
+eventd_nd_style_get_text_max_lines(EventdNdStyle *self)
+{
+    if ( self->text.set )
+        return self->text.max_lines;
+    return eventd_nd_style_get_text_max_lines(self->parent);
 }
 
 gint

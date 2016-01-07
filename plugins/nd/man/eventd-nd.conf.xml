@@ -223,6 +223,15 @@
                     </varlistentry>
 
                     <varlistentry>
+                        <term><varname>MaxLines=</varname> (defaults to <literal>10</literal>)</term>
+                        <listitem>
+                            <para>An <type>integer</type>, <literal>3</literal> minimum, <literal>-1</literal> is unlimited</para>
+                            <para>The maximum number of lines the text should show (including the ellipsis).</para>
+                            <para>nd will do its best to display at most this number of line, but it may fail to detect the actual number of drawn lines.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
                         <term><varname>Colour=</varname> (defaults to <literal>"#262626"</literal>)</term>
                         <listitem>
                             <para>A <type>colour string</type></para>

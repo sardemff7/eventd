@@ -63,6 +63,7 @@ Colour eventd_nd_style_get_bubble_colour(EventdNdStyle *style);
 
 const PangoFontDescription *eventd_nd_style_get_text_font(EventdNdStyle *style);
 PangoAlignment eventd_nd_style_get_text_align(EventdNdStyle *style);
+guint8 eventd_nd_style_get_text_max_lines(EventdNdStyle *style);
 Colour eventd_nd_style_get_text_colour(EventdNdStyle *style);
 
 gint eventd_nd_style_get_image_max_width(EventdNdStyle *style);

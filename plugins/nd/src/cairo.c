@@ -54,10 +54,6 @@ static gssize
 _eventd_nd_cairo_strccount(const gchar *str, char c)
 {
     gssize count = 1;
-    if ( str == NULL )
-        return -1;
-    if ( *str == '\0' )
-        return 0;
     for ( ; *str != 0 ; ++str )
     {
         if ( *str == c )
@@ -67,51 +63,105 @@ _eventd_nd_cairo_strccount(const gchar *str, char c)
 }
 
 static gchar *
-_eventd_nd_cairo_get_message(gchar *message, guint8 max)
+_eventd_nd_cairo_find_n_c(gchar *s, gsize n, gunichar c)
 {
+    gsize l;
+    gchar *r;
+    gsize i;
+
+    r = s;
+    l = strlen(s);
+    for ( i = 0 ; ( r != NULL ) && ( i < n ) ; ++i )
+    {
+        /* We know how many \n we have */
+        r = g_utf8_strchr(r, l - ( r - s ), c);
+        ++r;
+    }
+    return r - 1;
+}
+
+static gchar *
+_eventd_nd_cairo_get_text(EventdNdStyle *style, EventdEvent *event, guint8 *max_lines)
+{
+    /*
+     * This function depends on the current Pango implementation,
+     * which is limiting on a per-paragraph basis.
+     * If they switch to a per-layout basis, this whole function will be
+     * replaced by a simple pango_layout_set_height(-lines) call.
+     */
+
+    gchar *text;
+    text = evhelpers_format_string_get_string(eventd_nd_style_get_template_text(style), event, NULL, NULL);
+    if ( *text == '\0' )
+        return NULL;
+
+    guint8 max;
+    max = eventd_nd_style_get_text_max_lines(style);
+
+    if ( max < 1 )
+        goto ret;
+
     gssize count;
-    gchar **message_lines;
 
-    if ( ( max < 1 ) || ( ( count = _eventd_nd_cairo_strccount(message, '\n') ) <= max ) )
-        return message;
+    if ( ( count = _eventd_nd_cairo_strccount(text, '\n') ) <= max )
+    {
+        *max_lines = max / count;
+        goto ret;
+    }
 
-    message_lines = g_strsplit(message, "\n", -1);
+    gchar *b1, *b2;
+    gssize el;
 
-    GString *message_str;
-    guint i;
+    b1 = _eventd_nd_cairo_find_n_c(text, max / 2, '\n');
+    b2 = _eventd_nd_cairo_find_n_c(text, ( count - ( max + 1 ) / 2 + 1 ), '\n');
+    el = strlen("…");
 
-    message_str = g_string_sized_new(strlen(message));
+    if ( ( b2 - b1 ) < el )
+    {
+        gchar *tmp = text;
+        *b1 = '\0';
+        ++b2;
+        text = g_strdup_printf("%s\n…\n%s", text, b2);
+        g_free(tmp);
+    }
+    else
+    {
+        ++b1;
+        strncpy(b1, "…", el);
+        b1 += el;
+        strncpy(b1, b2, strlen(b2) + 1);
+    }
 
-    for ( i = 0 ; i < ( max / 2 ) ; ++i )
-        message_str = g_string_append_c(g_string_append(message_str, message_lines[i]), '\n');
-    /* Ellipsize */
-    g_string_append(message_str, "[…]");
-    for ( i = count - ( ( max + 1 ) / 2 ) ; i < count ; ++i )
-        message_str = g_string_append(g_string_append_c(message_str, '\n'), message_lines[i]);
-    g_strfreev(message_lines);
+    *max_lines = 1;
 
-
-    g_free(message);
-    return g_string_free(message_str, FALSE);
+ret:
+    return text;
 }
 
 PangoLayout *
 eventd_nd_cairo_text_process(EventdNdStyle *style, EventdEvent *event, gint max_width, gint *text_height, gint *text_width)
 {
-    PangoContext *pango_context;
     gchar *text_;
+    guint8 max_lines = 0;
+
+    text_ = _eventd_nd_cairo_get_text(style, event, &max_lines);
+    if ( text_ == NULL )
+        return NULL;
+
+    PangoContext *pango_context;
     PangoLayout *text;
 
     pango_context = pango_context_new();
     pango_context_set_font_map(pango_context, pango_cairo_font_map_get_default());
 
-    text_ = evhelpers_format_string_get_string(eventd_nd_style_get_template_text(style), event, NULL, NULL);
     text = pango_layout_new(pango_context);
     pango_layout_set_font_description(text, eventd_nd_style_get_text_font(style));
     pango_layout_set_alignment(text, eventd_nd_style_get_text_align(style));
     pango_layout_set_wrap(text, PANGO_WRAP_WORD_CHAR);
     pango_layout_set_ellipsize(text, PANGO_ELLIPSIZE_MIDDLE);
     pango_layout_set_width(text, max_width * PANGO_SCALE);
+    if ( max_lines < 1 )
+        pango_layout_set_height(text, -max_lines);
     pango_layout_set_markup(text, text_, -1);
     pango_layout_get_pixel_size(text, text_width, text_height);
     g_free(text_);
