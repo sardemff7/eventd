@@ -48,8 +48,7 @@ void eventd_nd_style_free(gpointer style);
 
 void eventd_nd_style_update(EventdNdStyle *style, GKeyFile *config_file, gint *max_width, gint *max_height);
 
-FormatString *eventd_nd_style_get_template_title(EventdNdStyle *style);
-FormatString *eventd_nd_style_get_template_message(EventdNdStyle *style);
+FormatString *eventd_nd_style_get_template_text(EventdNdStyle *style);
 Filename *eventd_nd_style_get_template_image(EventdNdStyle *style);
 Filename *eventd_nd_style_get_template_icon(EventdNdStyle *style);
 
@@ -62,15 +61,9 @@ gint eventd_nd_style_get_bubble_padding(EventdNdStyle *style);
 gint eventd_nd_style_get_bubble_radius(EventdNdStyle *style);
 Colour eventd_nd_style_get_bubble_colour(EventdNdStyle *style);
 
-const PangoFontDescription *eventd_nd_style_get_title_font(EventdNdStyle *style);
-PangoAlignment eventd_nd_style_get_title_align(EventdNdStyle *style);
-Colour eventd_nd_style_get_title_colour(EventdNdStyle *style);
-
-gint eventd_nd_style_get_message_spacing(EventdNdStyle *style);
-guint8 eventd_nd_style_get_message_max_lines(EventdNdStyle *style);
-const PangoFontDescription *eventd_nd_style_get_message_font(EventdNdStyle *style);
-PangoAlignment eventd_nd_style_get_message_align(EventdNdStyle *style);
-Colour eventd_nd_style_get_message_colour(EventdNdStyle *style);
+const PangoFontDescription *eventd_nd_style_get_text_font(EventdNdStyle *style);
+PangoAlignment eventd_nd_style_get_text_align(EventdNdStyle *style);
+Colour eventd_nd_style_get_text_colour(EventdNdStyle *style);
 
 gint eventd_nd_style_get_image_max_width(EventdNdStyle *style);
 gint eventd_nd_style_get_image_max_height(EventdNdStyle *style);

@@ -50,8 +50,7 @@ struct _EventdNdNotification {
     GList *link;
     EventdEvent *event;
     struct {
-        PangoLayout *title;
-        PangoLayout *message;
+        PangoLayout *text;
         gint x;
     } text;
     cairo_surface_t *image;
@@ -82,12 +81,9 @@ static void
 _eventd_nd_notification_clean(EventdNdNotification *self)
 {
     eventd_event_unref(self->event);
-    if ( self->text.title != NULL )
-        g_object_unref(self->text.title);
-    self->text.title = NULL;
-    if ( self->text.message != NULL )
-        g_object_unref(self->text.message);
-    self->text.message = NULL;
+    if ( self->text.text != NULL )
+        g_object_unref(self->text.text);
+    self->text.text = NULL;
 }
 
 static void
@@ -144,7 +140,7 @@ _eventd_nd_notification_update(EventdNdNotification *self, EventdEvent *event)
         min_width = max_width;
 
     /* proccess data and compute the bubble size */
-    eventd_nd_cairo_text_process(self->style, self->event, max_width - 2 * padding, &self->text.title, &self->text.message, &text_height, &text_width);
+    eventd_nd_cairo_text_process(self->style, self->event, max_width - 2 * padding, &self->text.text, &text_height, &text_width);
 
     self->width = 2 * padding + text_width;
 
@@ -161,9 +157,7 @@ _eventd_nd_notification_update(EventdNdNotification *self, EventdEvent *event)
         /* Let the text take the remaining space if needed (e.g. Right-to-Left) */
         text_width = ( self->width - ( 2 * padding + image_width ) );
     }
-    pango_layout_set_width(self->text.title, text_width * PANGO_SCALE);
-    if ( self->text.message != NULL )
-        pango_layout_set_width(self->text.message, text_width * PANGO_SCALE);
+    pango_layout_set_width(self->text.text, text_width * PANGO_SCALE);
 
     self->height = 2 * padding + MAX(image_height, text_height);
 
@@ -218,7 +212,7 @@ eventd_nd_notification_draw(EventdNdNotification *self, cairo_surface_t *bubble)
     cr = cairo_create(bubble);
     eventd_nd_cairo_bubble_draw(cr, eventd_nd_style_get_bubble_colour(self->style), eventd_nd_style_get_bubble_radius(self->style), self->width, self->height);
     eventd_nd_cairo_image_and_icon_draw(cr, self->image, self->icon, self->style, self->width, self->height);
-    eventd_nd_cairo_text_draw(cr, self->style, self->text.title, self->text.message, padding + self->text.x, padding, self->height - ( 2 * padding ));
+    eventd_nd_cairo_text_draw(cr, self->style, self->text.text, padding + self->text.x, padding, self->height - ( 2 * padding ));
     cairo_destroy(cr);
 }
 

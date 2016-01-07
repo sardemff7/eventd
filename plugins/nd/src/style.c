@@ -68,8 +68,7 @@ struct _EventdPluginAction {
     struct {
         gboolean set;
 
-        FormatString *title;
-        FormatString *message;
+        FormatString *text;
         Filename *image;
         Filename *icon;
     } template;
@@ -112,17 +111,7 @@ struct _EventdPluginAction {
         PangoFontDescription *font;
         PangoAlignment align;
         Colour colour;
-    } title;
-
-    struct {
-        gboolean set;
-
-        gint   spacing;
-        guint8 max_lines;
-        PangoFontDescription *font;
-        PangoAlignment align;
-        Colour colour;
-    } message;
+    } text;
 };
 
 static void
@@ -130,8 +119,7 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
 {
     /* template */
     style->template.set     = TRUE;
-    style->template.title   = evhelpers_format_string_new(g_strdup("${title}"));
-    style->template.message = evhelpers_format_string_new(g_strdup("${message}"));
+    style->template.text   = evhelpers_format_string_new(g_strdup("<b>${title}</b>${\n<message}"));
     style->template.image   = evhelpers_filename_new(g_strdup("image"));
     style->template.icon    = evhelpers_filename_new(g_strdup("icon"));
 
@@ -153,25 +141,14 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
     style->bubble.colour.b = 0.15;
     style->bubble.colour.a = 1.0;
 
-    /* title */
-    style->title.set = TRUE;
-    style->title.font        = pango_font_description_from_string("Linux Libertine O Bold 9");
-    style->title.align       = PANGO_ALIGN_LEFT;
-    style->title.colour.r    = 0.9;
-    style->title.colour.g    = 0.9;
-    style->title.colour.b    = 0.9;
-    style->title.colour.a    = 1.0;
-
-    /* message */
-    style->message.set = TRUE;
-    style->message.spacing     = 5;
-    style->message.max_lines   = 10;
-    style->message.font        = pango_font_description_from_string("Linux Libertine O 9");
-    style->message.align       = PANGO_ALIGN_LEFT;
-    style->message.colour.r    = 0.9;
-    style->message.colour.g    = 0.9;
-    style->message.colour.b    = 0.9;
-    style->message.colour.a    = 1.0;
+    /* text */
+    style->text.set = TRUE;
+    style->text.font        = pango_font_description_from_string("Linux Libertine O 9");
+    style->text.align       = PANGO_ALIGN_LEFT;
+    style->text.colour.r    = 0.9;
+    style->text.colour.g    = 0.9;
+    style->text.colour.b    = 0.9;
+    style->text.colour.a    = 1.0;
 
     /* image */
     style->image.set = TRUE;
@@ -213,27 +190,15 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
 
         FormatString *string = NULL;
 
-        if ( evhelpers_config_key_file_get_locale_format_string(config_file, "Notification", "Title", NULL, &string) == 0 )
+        if ( evhelpers_config_key_file_get_locale_format_string(config_file, "Notification", "Text", NULL, &string) == 0 )
         {
-            evhelpers_format_string_unref(self->template.title);
-            self->template.title = string;
+            evhelpers_format_string_unref(self->template.text);
+            self->template.text = string;
         }
         else if ( self->parent != NULL )
         {
-            evhelpers_format_string_unref(self->template.title);
-            self->template.title = evhelpers_format_string_ref(eventd_nd_style_get_template_title(self->parent));
-        }
-
-        string = NULL;
-        if ( evhelpers_config_key_file_get_locale_format_string(config_file, "Notification", "Message", NULL, &string) == 0 )
-        {
-            evhelpers_format_string_unref(self->template.message);
-            self->template.message = string;
-        }
-        else if ( self->parent != NULL )
-        {
-            evhelpers_format_string_unref(self->template.message);
-            self->template.message = evhelpers_format_string_ref(eventd_nd_style_get_template_message(self->parent));
+            evhelpers_format_string_unref(self->template.text);
+            self->template.text = evhelpers_format_string_ref(eventd_nd_style_get_template_text(self->parent));
         }
 
         Filename *filename = NULL;
@@ -295,77 +260,34 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
             self->bubble.colour = eventd_nd_style_get_bubble_colour(self->parent);
     }
 
-    if ( g_key_file_has_group(config_file, "NotificationTitle") )
+    if ( g_key_file_has_group(config_file, "NotificationText") )
     {
-        self->title.set = TRUE;
+        self->text.set = TRUE;
 
         gchar *string;
         guint64 enum_value;
         Colour colour;
 
-        if ( evhelpers_config_key_file_get_string(config_file, "NotificationTitle", "Font", &string) == 0 )
+        if ( evhelpers_config_key_file_get_string(config_file, "NotificationText", "Font", &string) == 0 )
         {
-            pango_font_description_free(self->title.font);
-            self->title.font = pango_font_description_from_string(string);
+            pango_font_description_free(self->text.font);
+            self->text.font = pango_font_description_from_string(string);
         }
         else if ( self->parent != NULL )
         {
-            pango_font_description_free(self->title.font);
-            self->title.font = pango_font_description_copy_static(eventd_nd_style_get_title_font(self->parent));
+            pango_font_description_free(self->text.font);
+            self->text.font = pango_font_description_copy_static(eventd_nd_style_get_text_font(self->parent));
         }
 
-        if ( evhelpers_config_key_file_get_enum(config_file, "NotificationTitle", "Alignment", _eventd_nd_style_pango_alignments, G_N_ELEMENTS(_eventd_nd_style_pango_alignments), &enum_value) == 0 )
-            self->title.align = enum_value;
+        if ( evhelpers_config_key_file_get_enum(config_file, "NotificationText", "Alignment", _eventd_nd_style_pango_alignments, G_N_ELEMENTS(_eventd_nd_style_pango_alignments), &enum_value) == 0 )
+            self->text.align = enum_value;
         else if ( self->parent != NULL )
-            self->title.align = eventd_nd_style_get_title_align(self->parent);
+            self->text.align = eventd_nd_style_get_text_align(self->parent);
 
-        if ( evhelpers_config_key_file_get_colour(config_file, "NotificationTitle", "Colour", &colour) == 0 )
-            self->title.colour = colour;
+        if ( evhelpers_config_key_file_get_colour(config_file, "NotificationText", "Colour", &colour) == 0 )
+            self->text.colour = colour;
         else if ( self->parent != NULL )
-            self->title.colour = eventd_nd_style_get_title_colour(self->parent);
-
-    }
-
-    if ( g_key_file_has_group(config_file, "NotificationMessage") )
-    {
-        self->message.set = TRUE;
-
-        Int integer;
-        gchar *string;
-        guint64 enum_value;
-        Colour colour;
-
-        if ( evhelpers_config_key_file_get_int(config_file, "NotificationMessage", "Spacing", &integer) == 0 )
-            self->message.spacing = integer.value;
-        else if ( self->parent != NULL )
-            self->message.spacing = eventd_nd_style_get_message_spacing(self->parent);
-
-        if ( evhelpers_config_key_file_get_int(config_file, "NotificationMessage", "MaxLines", &integer) == 0 )
-            self->message.max_lines = integer.value;
-        else if ( self->parent != NULL )
-            self->message.max_lines = eventd_nd_style_get_message_max_lines(self->parent);
-
-        if ( evhelpers_config_key_file_get_string(config_file, "NotificationMessage", "Font", &string) == 0 )
-        {
-            pango_font_description_free(self->message.font);
-            self->message.font = pango_font_description_from_string(string);
-        }
-        else if ( self->parent != NULL )
-        {
-            pango_font_description_free(self->message.font);
-            self->message.font = pango_font_description_copy_static(eventd_nd_style_get_message_font(self->parent));
-        }
-
-        if ( evhelpers_config_key_file_get_enum(config_file, "NotificationMessage", "Alignment", _eventd_nd_style_pango_alignments, G_N_ELEMENTS(_eventd_nd_style_pango_alignments), &enum_value) == 0 )
-            self->message.align = enum_value;
-        else if ( self->parent != NULL )
-            self->message.align = eventd_nd_style_get_message_align(self->parent);
-
-        if ( evhelpers_config_key_file_get_colour(config_file, "NotificationMessage", "Colour", &colour) == 0 )
-            self->message.colour = colour;
-        else if ( self->parent != NULL )
-            self->message.colour = eventd_nd_style_get_message_colour(self->parent);
-
+            self->text.colour = eventd_nd_style_get_text_colour(self->parent);
     }
 
     if ( g_key_file_has_group(config_file, "NotificationImage") )
@@ -456,11 +378,9 @@ eventd_nd_style_free(gpointer data)
     if ( style == NULL )
         return;
 
-    pango_font_description_free(style->title.font);
-    pango_font_description_free(style->message.font);
+    pango_font_description_free(style->text.font);
 
-    evhelpers_format_string_unref(style->template.title);
-    evhelpers_format_string_unref(style->template.message);
+    evhelpers_format_string_unref(style->template.text);
     evhelpers_filename_unref(style->template.image);
     evhelpers_filename_unref(style->template.icon);
 
@@ -469,19 +389,11 @@ eventd_nd_style_free(gpointer data)
 
 
 FormatString *
-eventd_nd_style_get_template_title(EventdNdStyle *self)
+eventd_nd_style_get_template_text(EventdNdStyle *self)
 {
     if ( self->template.set )
-        return self->template.title;
-    return eventd_nd_style_get_template_title(self->parent);
-}
-
-FormatString *
-eventd_nd_style_get_template_message(EventdNdStyle *self)
-{
-    if ( self->template.set )
-        return self->template.message;
-    return eventd_nd_style_get_template_message(self->parent);
+        return self->template.text;
+    return eventd_nd_style_get_template_text(self->parent);
 }
 
 Filename *
@@ -549,67 +461,27 @@ eventd_nd_style_get_bubble_colour(EventdNdStyle *self)
 }
 
 const PangoFontDescription *
-eventd_nd_style_get_title_font(EventdNdStyle *self)
+eventd_nd_style_get_text_font(EventdNdStyle *self)
 {
-    if ( self->title.set )
-        return self->title.font;
-    return eventd_nd_style_get_title_font(self->parent);
+    if ( self->text.set )
+        return self->text.font;
+    return eventd_nd_style_get_text_font(self->parent);
 }
 
 PangoAlignment
-eventd_nd_style_get_title_align(EventdNdStyle *self)
+eventd_nd_style_get_text_align(EventdNdStyle *self)
 {
-    if ( self->title.set )
-        return self->title.align;
-    return eventd_nd_style_get_title_align(self->parent);
+    if ( self->text.set )
+        return self->text.align;
+    return eventd_nd_style_get_text_align(self->parent);
 }
 
 Colour
-eventd_nd_style_get_title_colour(EventdNdStyle *self)
+eventd_nd_style_get_text_colour(EventdNdStyle *self)
 {
-    if ( self->title.set )
-        return self->title.colour;
-    return eventd_nd_style_get_title_colour(self->parent);
-}
-
-gint
-eventd_nd_style_get_message_spacing(EventdNdStyle *self)
-{
-    if ( self->message.set )
-        return self->message.spacing;
-    return eventd_nd_style_get_message_spacing(self->parent);
-}
-
-guint8
-eventd_nd_style_get_message_max_lines(EventdNdStyle *self)
-{
-    if ( self->message.set )
-        return self->message.max_lines;
-    return eventd_nd_style_get_message_max_lines(self->parent);
-}
-
-const PangoFontDescription *
-eventd_nd_style_get_message_font(EventdNdStyle *self)
-{
-    if ( self->message.set )
-        return self->message.font;
-    return eventd_nd_style_get_message_font(self->parent);
-}
-
-PangoAlignment
-eventd_nd_style_get_message_align(EventdNdStyle *self)
-{
-    if ( self->message.set )
-        return self->message.align;
-    return eventd_nd_style_get_message_align(self->parent);
-}
-
-Colour
-eventd_nd_style_get_message_colour(EventdNdStyle *self)
-{
-    if ( self->message.set )
-        return self->message.colour;
-    return eventd_nd_style_get_message_colour(self->parent);
+    if ( self->text.set )
+        return self->text.colour;
+    return eventd_nd_style_get_text_colour(self->parent);
 }
 
 gint

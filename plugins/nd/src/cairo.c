@@ -96,7 +96,7 @@ _eventd_nd_cairo_get_message(gchar *message, guint8 max)
 }
 
 void
-eventd_nd_cairo_text_process(EventdNdStyle *style, EventdEvent *event, gint max_width, PangoLayout **title, PangoLayout **message, gint *text_height, gint *text_width)
+eventd_nd_cairo_text_process(EventdNdStyle *style, EventdEvent *event, gint max_width, PangoLayout **title, gint *text_height, gint *text_width)
 {
     PangoContext *pango_context;
     gchar *text;
@@ -104,37 +104,15 @@ eventd_nd_cairo_text_process(EventdNdStyle *style, EventdEvent *event, gint max_
     pango_context = pango_context_new();
     pango_context_set_font_map(pango_context, pango_cairo_font_map_get_default());
 
-    text = evhelpers_format_string_get_string(eventd_nd_style_get_template_title(style), event, NULL, NULL);
+    text = evhelpers_format_string_get_string(eventd_nd_style_get_template_text(style), event, NULL, NULL);
     *title = pango_layout_new(pango_context);
-    pango_layout_set_font_description(*title, eventd_nd_style_get_title_font(style));
-    pango_layout_set_alignment(*title, eventd_nd_style_get_title_align(style));
+    pango_layout_set_font_description(*title, eventd_nd_style_get_text_font(style));
+    pango_layout_set_alignment(*title, eventd_nd_style_get_text_align(style));
+    pango_layout_set_wrap(*title, PANGO_WRAP_WORD_CHAR);
     pango_layout_set_ellipsize(*title, PANGO_ELLIPSIZE_MIDDLE);
     pango_layout_set_width(*title, max_width * PANGO_SCALE);
-    pango_layout_set_text(*title, text, -1);
+    pango_layout_set_markup(*title, text, -1);
     pango_layout_get_pixel_size(*title, text_width, text_height);
-    g_free(text);
-
-    text = evhelpers_format_string_get_string(eventd_nd_style_get_template_message(style), event, NULL, NULL);
-    if ( ( text != NULL ) && ( *text != '\0' ) )
-    {
-        gint w;
-        gint h;
-
-        text = _eventd_nd_cairo_get_message(text, eventd_nd_style_get_message_max_lines(style));
-
-        *message = pango_layout_new(pango_context);
-        pango_layout_set_font_description(*message, eventd_nd_style_get_message_font(style));
-        pango_layout_set_alignment(*message, eventd_nd_style_get_message_align(style));
-        pango_layout_set_ellipsize(*message, PANGO_ELLIPSIZE_MIDDLE);
-        pango_layout_set_height(*message, -eventd_nd_style_get_message_max_lines(style));
-        pango_layout_set_width(max_width * PANGO_SCALE);
-        pango_layout_set_markup(*message, text, -1);
-        pango_layout_get_pixel_size(*message, &w, &h);
-
-
-        *text_height += eventd_nd_style_get_message_spacing(style) + h;
-        *text_width = MAX(*text_width, w);
-    }
     g_free(text);
 
     g_object_unref(pango_context);
@@ -186,34 +164,15 @@ eventd_nd_cairo_bubble_draw(cairo_t *cr, Colour colour, gint radius, gint width,
 }
 
 void
-eventd_nd_cairo_text_draw(cairo_t *cr, EventdNdStyle *style, PangoLayout *title, PangoLayout *message, gint offset_x, gint offset_y, gint max_height)
+eventd_nd_cairo_text_draw(cairo_t *cr, EventdNdStyle *style, PangoLayout *text, gint offset_x, gint offset_y, gint max_height)
 {
-    gint title_height;
-    pango_layout_get_pixel_size(title, NULL, &title_height);
-
-    if ( message == NULL )
-        offset_y += ( max_height - title_height ) / 2;
-
     Colour colour;
 
-    colour = eventd_nd_style_get_title_colour(style);
+    colour = eventd_nd_style_get_text_colour(style);
     cairo_set_source_rgba(cr, colour.r, colour.g, colour.b, colour.a);
     cairo_new_path(cr);
     cairo_move_to(cr, offset_x, offset_y);
-    pango_cairo_update_layout(cr, title);
-    pango_cairo_layout_path(cr, title);
+    pango_cairo_update_layout(cr, text);
+    pango_cairo_layout_path(cr, text);
     cairo_fill(cr);
-
-    if ( message != NULL )
-    {
-        offset_y += eventd_nd_style_get_message_spacing(style) + title_height;
-
-        colour = eventd_nd_style_get_message_colour(style);
-        cairo_set_source_rgba(cr, colour.r, colour.g, colour.b, colour.a);
-        cairo_new_path(cr);
-        cairo_move_to(cr, offset_x, offset_y);
-        pango_cairo_update_layout(cr, message);
-        pango_cairo_layout_path(cr, message);
-        cairo_fill(cr);
-    }
 }

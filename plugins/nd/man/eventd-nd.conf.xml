@@ -112,18 +112,10 @@
 
                 <variablelist>
                     <varlistentry>
-                        <term><varname>Title=</varname> (defaults to <literal>"${title}"</literal>)</term>
+                        <term><varname>Title=</varname> (defaults to <literal>"&lt;b>${title}&lt;/b>${\n&lt;message}"</literal>)</term>
                         <listitem>
                             <para>A <type>localised format string</type></para>
                             <para>The notification's title. It will be highlighted compared to the message.</para>
-                        </listitem>
-                    </varlistentry>
-
-                    <varlistentry>
-                        <term><varname>Message=</varname> (defaults to <literal>"${message}"</literal>)</term>
-                        <listitem>
-                            <para>A <type>localised format string</type></para>
-                            <para>The notification's message.</para>
                         </listitem>
                     </varlistentry>
 
@@ -202,67 +194,16 @@
             </refsect3>
 
             <refsect3>
-                <title>Section <varname>[NotificationTitle]</varname></title>
+                <title>Section <varname>[NotificationText]</varname></title>
+
+                <para>These are global parameters for the whole text. You can use <ulink url="https://developer.gnome.org/pango/stable/PangoMarkupFormat.html">Pango Markup</ulink> to have finer-grained control on your text.</para>
 
                 <variablelist>
-                    <varlistentry>
-                        <term><varname>Font=</varname> (defaults to <literal>"Linux Libertine O Bold 9"</literal>)</term>
-                        <listitem>
-                            <para>A <type>Pango font description string</type></para>
-                            <para>Fonts for the bubble's title.</para>
-                        </listitem>
-                    </varlistentry>
-
-                    <varlistentry>
-                        <term><varname>Alignment=</varname> (defaults to <literal>Left</literal>)</term>
-                        <listitem>
-                            <para>
-                                An <type>enumeration</type>:
-                                <simplelist type='inline'>
-                                    <member><literal>Left</literal></member>
-                                    <member><literal>Right</literal></member>
-                                    <member><literal>Center</literal></member>
-                                </simplelist>
-                            </para>
-                            <para>Title text horizontal aligment.</para>
-                        </listitem>
-                    </varlistentry>
-
-                    <varlistentry>
-                        <term><varname>Colour=</varname> (defaults to <literal>"#262626"</literal>)</term>
-                        <listitem>
-                            <para>A <type>colour string</type></para>
-                            <para>Colour of bubble's title.</para>
-                        </listitem>
-                    </varlistentry>
-                </variablelist>
-            </refsect3>
-
-            <refsect3>
-                <title>Section <varname>[NotificationMessage]</varname></title>
-
-                <variablelist>
-                    <varlistentry>
-                        <term><varname>Spacing=</varname> (defaults to <literal>5</literal>)</term>
-                        <listitem>
-                            <para>An <type>integer</type></para>
-                            <para>Spacing between bubble's title and message.</para>
-                        </listitem>
-                    </varlistentry>
-
-                    <varlistentry>
-                        <term><varname>MaxLines=</varname> (defaults to <literal>10</literal>)</term>
-                        <listitem>
-                            <para>An <type>integer</type></para>
-                            <para>Maximum lines of bubble's message to print.</para>
-                        </listitem>
-                    </varlistentry>
-
                     <varlistentry>
                         <term><varname>Font=</varname> (defaults to <literal>"Linux Libertine O 9"</literal>)</term>
                         <listitem>
                             <para>A <type>Pango font description string</type></para>
-                            <para>Fonts for the bubble's message.</para>
+                            <para>Fonts for the bubble's text.</para>
                         </listitem>
                     </varlistentry>
 
@@ -277,7 +218,7 @@
                                     <member><literal>Center</literal></member>
                                 </simplelist>
                             </para>
-                            <para>Message text horizontal aligment.</para>
+                            <para>Text horizontal aligment.</para>
                         </listitem>
                     </varlistentry>
 
@@ -285,7 +226,7 @@
                         <term><varname>Colour=</varname> (defaults to <literal>"#262626"</literal>)</term>
                         <listitem>
                             <para>A <type>colour string</type></para>
-                            <para>Colour of bubble's message.</para>
+                            <para>Colour of bubble's text.</para>
                         </listitem>
                     </varlistentry>
                 </variablelist>
