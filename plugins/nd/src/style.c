@@ -232,6 +232,11 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
         Int integer;
         Colour colour;
 
+        if ( evhelpers_config_key_file_get_int(config_file, "NotificationBubble", "Timeout", &integer) == 0 )
+            self->bubble.timeout = ( integer.value > 0 ) ? integer.value : 0;
+        else if ( self->parent != NULL )
+            self->bubble.timeout = eventd_nd_style_get_bubble_timeout(self->parent);
+
         if ( evhelpers_config_key_file_get_int(config_file, "NotificationBubble", "MinWidth", &integer) == 0 )
             self->bubble.min_width = ( integer.value > 0 ) ? integer.value : 0;
         else if ( self->parent != NULL )
