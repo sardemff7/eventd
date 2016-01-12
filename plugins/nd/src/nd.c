@@ -132,9 +132,12 @@ _eventd_nd_init(EventdPluginCoreContext *core)
         context->queues[i].anchor = i;
 
         /* Defaults placement values */
+        context->queues[i].limit = 1;
+
         context->queues[i].margin = 13;
         context->queues[i].spacing = 13;
 
+        context->queues[i].wait_queue = g_queue_new();
         context->queues[i].queue = g_queue_new();
     }
 
@@ -150,7 +153,10 @@ _eventd_nd_uninit(EventdPluginContext *context)
 
     EventdNdAnchor i;
     for ( i = EVENTD_ND_ANCHOR_TOP_LEFT ; i < _EVENTD_ND_ANCHOR_SIZE ; ++i )
+    {
         g_queue_free(context->queues[i].queue);
+        g_queue_free(context->queues[i].wait_queue);
+    }
 
     eventd_nd_style_free(context->style);
 
@@ -305,6 +311,9 @@ _eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
             continue;
 
         Int integer;
+
+        if ( evhelpers_config_key_file_get_int(config_file, anchor_name, "Limit", &integer) == 0 )
+            context->queues[j].limit = ( integer.value > 0 ) ? integer.value : 0;
 
         if ( evhelpers_config_key_file_get_int(config_file, anchor_name, "Margin", &integer) == 0 )
             context->queues[j].margin = ( integer.value > 0 ) ? integer.value : 0;

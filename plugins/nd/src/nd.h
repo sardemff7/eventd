@@ -25,8 +25,10 @@
 
 typedef struct {
     EventdNdAnchor anchor;
+    guint64 limit;
     gint margin;
     gint spacing;
+    GQueue *wait_queue;
     GQueue *queue;
 } EventdNdQueue;
 

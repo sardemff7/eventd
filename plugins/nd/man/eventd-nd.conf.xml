@@ -125,6 +125,14 @@
 
                 <variablelist>
                     <varlistentry>
+                        <term><varname>Limit=</varname> (defaults to <literal>1</literal>)</term>
+                        <listitem>
+                            <para>An <type>integer</type></para>
+                            <para>Maximum number of bubbles at this anchor at the same time.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
                         <term><varname>Margin=</varname> (defaults to <literal>13</literal>)</term>
                         <listitem>
                             <para>An <type>integer</type></para>
