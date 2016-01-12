@@ -324,11 +324,11 @@ _eventd_nd_cairo_get_valign(EventdNdAnchorVertical anchor, gint height, gint pad
 {
     switch ( anchor )
     {
-    case EVENTD_ND_ANCHOR_TOP:
+    case EVENTD_ND_VANCHOR_TOP:
         return padding;
-    case EVENTD_ND_ANCHOR_VCENTER:
+    case EVENTD_ND_VANCHOR_CENTER:
         return ( height / 2 ) - (surface_height / 2);
-    case EVENTD_ND_ANCHOR_BOTTOM:
+    case EVENTD_ND_VANCHOR_BOTTOM:
         return height - padding - surface_height;
     }
     g_assert_not_reached();

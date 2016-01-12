@@ -26,15 +26,15 @@
 typedef struct _EventdPluginAction EventdNdStyle;
 
 typedef enum {
-    EVENTD_ND_ANCHOR_LEFT,
-    EVENTD_ND_ANCHOR_RIGHT,
-    EVENTD_ND_ANCHOR_VCENTER,
+    EVENTD_ND_VANCHOR_TOP,
+    EVENTD_ND_VANCHOR_BOTTOM,
+    EVENTD_ND_VANCHOR_CENTER,
 } EventdNdAnchorVertical;
 
 typedef enum {
-    EVENTD_ND_ANCHOR_TOP,
-    EVENTD_ND_ANCHOR_BOTTOM,
-    EVENTD_ND_ANCHOR_HCENTER,
+    EVENTD_ND_HANCHOR_LEFT,
+    EVENTD_ND_HANCHOR_RIGHT,
+    EVENTD_ND_HANCHOR_CENTER,
 } EventdNdAnchorHorizontal;
 
 typedef enum {

@@ -104,8 +104,6 @@
         <refsect2>
             <title>Section <varname>[Notification]</varname></title>
 
-            <para>This section can accept other keys </para>
-
             <!-- Some other plugin may reuse this section -->
             <refsect3 id="content-keys">
                 <title>Contents keys</title>

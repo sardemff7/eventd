@@ -29,12 +29,8 @@
 #include <glib.h>
 #include <pango/pango.h>
 
-#include <gdk-pixbuf/gdk-pixbuf.h>
-
 #include <libeventd-event.h>
 #include <libeventd-helpers-config.h>
-
-#include "pixbuf.h"
 
 #include "style.h"
 
@@ -45,15 +41,15 @@ static const gchar * const _eventd_nd_style_pango_alignments[] = {
 };
 
 static const gchar * const _eventd_nd_style_anchors_vertical[] = {
-    [EVENTD_ND_ANCHOR_TOP]     = "top",
-    [EVENTD_ND_ANCHOR_BOTTOM]  = "bottom",
-    [EVENTD_ND_ANCHOR_VCENTER] = "center",
+    [EVENTD_ND_VANCHOR_TOP]     = "top",
+    [EVENTD_ND_VANCHOR_BOTTOM]  = "bottom",
+    [EVENTD_ND_VANCHOR_CENTER] = "center",
 };
 
 static const gchar * const _eventd_nd_style_anchors_horizontal[] = {
-    [EVENTD_ND_ANCHOR_LEFT]    = "left",
-    [EVENTD_ND_ANCHOR_RIGHT]   = "right",
-    [EVENTD_ND_ANCHOR_HCENTER] = "center",
+    [EVENTD_ND_HANCHOR_LEFT]    = "left",
+    [EVENTD_ND_HANCHOR_RIGHT]   = "right",
+    [EVENTD_ND_HANCHOR_CENTER] = "center",
 };
 
 static const gchar * const _eventd_nd_style_icon_placements[] = {
@@ -161,7 +157,7 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
     /* icon */
     style->icon.set = TRUE;
     style->icon.placement  = EVENTD_ND_STYLE_ICON_PLACEMENT_BACKGROUND;
-    style->icon.anchor     = EVENTD_ND_ANCHOR_VCENTER;
+    style->icon.anchor     = EVENTD_ND_VANCHOR_CENTER;
     style->icon.max_width  = 25;
     style->icon.max_height = 25;
     style->icon.margin     = 10;
