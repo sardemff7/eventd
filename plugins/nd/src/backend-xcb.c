@@ -68,6 +68,7 @@ struct _EventdNdSurface {
     gint width;
     gint height;
     cairo_surface_t *bubble;
+    gboolean mapped;
 };
 
 static EventdNdBackendContext *
@@ -474,8 +475,6 @@ _eventd_nd_xcb_surface_new(EventdNdBackendContext *context, EventdNdNotification
     context->nd->notification_draw(self->notification, self->bubble);
     _eventd_nd_xcb_surface_shape(self);
 
-    xcb_map_window(context->xcb_connection, self->window);
-
     g_hash_table_insert(context->bubbles, GUINT_TO_POINTER(self->window), self);
 
     return self;
@@ -525,6 +524,12 @@ _eventd_nd_xcb_move_surface(EventdNdSurface *self, gint x, gint y, gpointer data
     guint32 vals[] = { x, y };
     xcb_configure_window(self->context->xcb_connection, self->window, mask, vals);
     xcb_clear_area(self->context->xcb_connection, TRUE, self->window, 0, 0, self->width, self->height);
+
+    if ( ! self->mapped )
+    {
+        xcb_map_window(self->context->xcb_connection, self->window);
+        self->mapped = TRUE;
+    }
 }
 
 static void
