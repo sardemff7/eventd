@@ -319,6 +319,7 @@ _eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
             continue;
 
         Int integer;
+        gboolean boolean;
 
         if ( evhelpers_config_key_file_get_int(config_file, anchor_name, "Limit", &integer) == 0 )
             context->queues[j].limit = ( integer.value > 0 ) ? integer.value : 0;
@@ -328,6 +329,9 @@ _eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
 
         if ( evhelpers_config_key_file_get_int(config_file, anchor_name, "Spacing", &integer) == 0 )
             context->queues[j].spacing = ( integer.value > 0 ) ? integer.value : 0;
+
+        if ( evhelpers_config_key_file_get_boolean(config_file, anchor_name, "OldestAtAnchor", &boolean) == 0 )
+            context->queues[j].reverse = boolean;
     }
 }
 

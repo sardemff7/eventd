@@ -28,6 +28,7 @@ typedef struct _EventdNdQueue {
     guint64 limit;
     gint margin;
     gint spacing;
+    gboolean reverse;
     GQueue *wait_queue;
     GQueue *queue;
 } EventdNdQueue;

@@ -95,7 +95,10 @@ eventd_nd_notification_refresh_list(EventdPluginContext *context, EventdNdQueue 
     {
         GList *link;
         link = g_queue_pop_head_link(queue->wait_queue);
-        g_queue_push_head_link(queue->queue, link);
+        if ( queue->reverse )
+            g_queue_push_tail_link(queue->queue, link);
+        else
+            g_queue_push_head_link(queue->queue, link);
 
         EventdNdNotification *self = link->data;
         self->timeout = g_timeout_add_full(G_PRIORITY_DEFAULT, eventd_nd_style_get_bubble_timeout(self->style), _eventd_nd_event_timedout, self, NULL);

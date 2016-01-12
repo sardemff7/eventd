@@ -147,6 +147,15 @@
                             <para>Spacing between each bubble.</para>
                         </listitem>
                     </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>OldestAtAnchor=</varname> (defaults to <literal>false</literal>)</term>
+                        <listitem>
+                            <para>A <type>boolean</type></para>
+                            <para>If <literal>true</literal>, the oldest of visible bubbles will be at the anchor.</para>
+                            <para>The default is to put the newest displayed bubble at anchor.</para>
+                        </listitem>
+                    </varlistentry>
                 </variablelist>
             </refsect3>
         </refsect2>
