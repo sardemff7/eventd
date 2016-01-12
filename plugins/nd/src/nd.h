@@ -23,7 +23,7 @@
 #ifndef __EVENTD_ND_ND_H__
 #define __EVENTD_ND_ND_H__
 
-typedef struct {
+typedef struct _EventdNdQueue {
     EventdNdAnchor anchor;
     guint64 limit;
     gint margin;

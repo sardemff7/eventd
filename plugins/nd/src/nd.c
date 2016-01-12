@@ -91,6 +91,14 @@ _eventd_nd_geometry_update(EventdNdContext *context, gint x, gint y, gint w, gin
     context->geometry.y = y;
     context->geometry.w = w;
     context->geometry.h = h;
+
+    if ( context->backend == NULL )
+        /* Start phase, nothing to update */
+        return;
+
+    EventdNdAnchor i;
+    for ( i = EVENTD_ND_ANCHOR_TOP_LEFT ; i < _EVENTD_ND_ANCHOR_SIZE ; ++i )
+        eventd_nd_notification_refresh_list(context, &context->queues[i]);
 }
 
 static gboolean

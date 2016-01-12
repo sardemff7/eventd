@@ -88,8 +88,8 @@ _eventd_nd_notification_clean(EventdNdNotification *self)
     self->text.text = NULL;
 }
 
-static void
-_eventd_nd_notification_refresh_list(EventdPluginContext *context, EventdNdQueue *queue)
+void
+eventd_nd_notification_refresh_list(EventdPluginContext *context, EventdNdQueue *queue)
 {
     while ( ( g_queue_get_length(queue->queue) < queue->limit ) && ( ! g_queue_is_empty(queue->wait_queue) ) )
     {
@@ -211,7 +211,7 @@ eventd_nd_notification_new(EventdPluginContext *context, EventdEvent *event, Eve
 
     _eventd_nd_notification_update(self, event);
     self->surface = self->context->backend->surface_new(self->context->backend->context, self, self->width, self->height);
-    _eventd_nd_notification_refresh_list(self->context, self->queue);
+    eventd_nd_notification_refresh_list(self->context, self->queue);
 
     return self;
 }
@@ -232,7 +232,7 @@ eventd_nd_notification_free(gpointer data)
     self->context->backend->surface_free(self->surface);
     _eventd_nd_notification_clean(self);
 
-    _eventd_nd_notification_refresh_list(self->context, self->queue);
+    eventd_nd_notification_refresh_list(self->context, self->queue);
 
     g_free(self);
 }
@@ -256,7 +256,7 @@ eventd_nd_notification_update(EventdNdNotification *self, EventdEvent *event)
 {
     _eventd_nd_notification_update(self, event);
     self->context->backend->surface_update(self->surface, self->width, self->height);
-    _eventd_nd_notification_refresh_list(self->context, self->queue);
+    eventd_nd_notification_refresh_list(self->context, self->queue);
 }
 
 void
