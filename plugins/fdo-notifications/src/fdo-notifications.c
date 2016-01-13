@@ -56,6 +56,7 @@ struct _EventdPluginContext {
     GDBusNodeInfo *introspection_data;
     guint id;
     GDBusConnection *connection;
+    guint object_id;
     GVariant *capabilities;
     GVariant *server_information;
     GRegex *regex_amp;
@@ -491,12 +492,11 @@ _eventd_fdo_notifications_on_bus_acquired(GDBusConnection *connection, const gch
 {
     EventdPluginContext *context = user_data;
     GError *error = NULL;
-    guint object_id;
 
     context->connection = connection;
 
-    object_id = g_dbus_connection_register_object(connection, NOTIFICATION_BUS_PATH, context->introspection_data->interfaces[0], &interface_vtable, context, NULL, &error);
-    if ( object_id == 0 )
+    context->object_id = g_dbus_connection_register_object(connection, NOTIFICATION_BUS_PATH, context->introspection_data->interfaces[0], &interface_vtable, context, NULL, &error);
+    if ( context->object_id == 0 )
     {
         g_warning("Couldn't register object: %s", error->message);
         g_clear_error(&error);
@@ -705,6 +705,9 @@ _eventd_fdo_notifications_start(EventdPluginContext *context)
 static void
 _eventd_fdo_notifications_stop(EventdPluginContext *context)
 {
+    if ( context->object_id > 0 )
+        g_dbus_connection_unregister_object(context->connection, context->object_id);
+    context->object_id = 0;
     g_bus_unown_name(context->id);
 }
 
