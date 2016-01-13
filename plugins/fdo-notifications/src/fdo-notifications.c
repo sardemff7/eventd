@@ -45,6 +45,12 @@ typedef enum {
     EVENTD_FDO_NOTIFICATIONS_CLOSE_REASON_RESERVED = 4,
 } EventdFdoNotificationsCloseReason;
 
+static const gchar * const _eventd_fdo_notifications_urgencies[] = {
+    [0] = "low",
+    [1] = "normal",
+    [2] = "critical",
+};
+
 struct _EventdPluginContext {
     EventdPluginCoreContext *core;
     GDBusNodeInfo *introspection_data;
@@ -194,6 +200,7 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
     GVariant *hint;
     const gchar *event_name = "generic";
     GVariant *image_data = NULL;
+    const gchar *urgency = NULL;
     const gchar *image_path = NULL;
     const gchar *sound_name = NULL;
     const gchar *sound_file = NULL;
@@ -234,6 +241,13 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
         else if ( ( g_strcmp0(hint_name, "icon_data") == 0 )
                   && image_data == NULL )
             image_data = g_variant_ref(hint);
+        else if ( g_strcmp0(hint_name, "urgency") == 0 )
+        {
+            guint8 u;
+            u = g_variant_get_byte(hint);
+            if ( u < G_N_ELEMENTS(_eventd_fdo_notifications_urgencies) )
+                urgency = _eventd_fdo_notifications_urgencies[u];
+        }
         else if ( g_strcmp0(hint_name, "sound-name") == 0 )
             sound_name = g_variant_get_string(hint, NULL);
         else if ( g_strcmp0(hint_name, "sound-file") == 0 )
@@ -322,6 +336,9 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
         if ( g_str_has_prefix(image_path, "file://") )
             eventd_event_add_data(event, g_strdup("image"), g_strdup(image_path));
     }
+
+    if ( urgency != NULL )
+            eventd_event_add_data(event, g_strdup("urgency"), g_strdup(urgency));
 
     if ( ! no_sound )
     {
