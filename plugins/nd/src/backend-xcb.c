@@ -22,6 +22,9 @@
 
 #include <config.h>
 
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif /* HAVE_STRING_H */
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif /* HAVE_STDLIB_H */
@@ -43,8 +46,21 @@
 
 #include "backend.h"
 
+typedef enum {
+    EVENTD_ND_XCB_FOLLOW_FOCUS_NONE,
+    EVENTD_ND_XCB_FOLLOW_FOCUS_KEYBOARD,
+    EVENTD_ND_XCB_FOLLOW_FOCUS_MOUSE,
+} EventdNdXcbFollowFocus;
+
+static const gchar * const _eventd_nd_xcb_follow_focus[] = {
+    [EVENTD_ND_XCB_FOLLOW_FOCUS_NONE]     = "none",
+    [EVENTD_ND_XCB_FOLLOW_FOCUS_KEYBOARD] = "keyboard",
+    [EVENTD_ND_XCB_FOLLOW_FOCUS_MOUSE]    = "mouse",
+};
+
 struct _EventdNdBackendContext {
     EventdNdInterface *nd;
+    EventdNdXcbFollowFocus follow_focus;
     gchar **outputs;
     GWaterXcbSource *source;
     xcb_connection_t *xcb_connection;
@@ -97,6 +113,10 @@ _eventd_nd_xcb_global_parse(EventdNdBackendContext *self, GKeyFile *config_file)
     if ( ! g_key_file_has_group(config_file, "NotificationXcb") )
         return;
 
+    guint64 enum_value;
+
+    if ( evhelpers_config_key_file_get_enum_with_default(config_file, "NotificationXcb", "FollowFocus", _eventd_nd_xcb_follow_focus, G_N_ELEMENTS(_eventd_nd_xcb_follow_focus), EVENTD_ND_XCB_FOLLOW_FOCUS_NONE, &enum_value) == 0 )
+        self->follow_focus = enum_value;
     evhelpers_config_key_file_get_string_list(config_file, "NotificationXcb", "Outputs", &self->outputs, NULL);
 }
 
@@ -199,9 +219,87 @@ _eventd_nd_xcb_randr_check_config_outputs(EventdNdBackendContext *self, EventdNd
 }
 
 static gboolean
+_eventd_nd_xcb_randr_check_focused(EventdNdBackendContext *self, EventdNdXcbRandrOutput *output)
+{
+    gint x, y;
+    switch ( self->follow_focus )
+    {
+    case EVENTD_ND_XCB_FOLLOW_FOCUS_MOUSE:
+    {
+        xcb_query_pointer_cookie_t c;
+        xcb_query_pointer_reply_t *r;
+        c = xcb_query_pointer(self->xcb_connection, self->screen->root);
+        r = xcb_query_pointer_reply(self->xcb_connection, c, NULL);
+        if ( r == NULL )
+            return FALSE;
+
+        x = r->root_x;
+        y = r->root_y;
+        free(r);
+    }
+    break;
+    case EVENTD_ND_XCB_FOLLOW_FOCUS_KEYBOARD:
+    {
+        xcb_intern_atom_cookie_t ac;
+        xcb_intern_atom_reply_t *ar;
+        ac = xcb_intern_atom(self->xcb_connection, FALSE, strlen("_NET_ACTIVE_WINDOW"), "_NET_ACTIVE_WINDOW");
+        ar = xcb_intern_atom_reply(self->xcb_connection, ac, NULL);
+        if ( ar == NULL )
+            return FALSE;
+
+        xcb_atom_t a;
+        a = ar->atom;
+        free(ar);
+
+        xcb_get_property_cookie_t wc;
+        xcb_get_property_reply_t *wr;
+        wc = xcb_get_property(self->xcb_connection, FALSE, self->screen->root, a, XCB_ATOM_WINDOW, 0, sizeof(xcb_window_t));
+        wr = xcb_get_property_reply(self->xcb_connection, wc, NULL);
+        if ( wr == NULL )
+            return FALSE;
+
+        xcb_window_t w;
+        w = *((xcb_window_t *) xcb_get_property_value(wr));
+        free(wr);
+
+        xcb_translate_coordinates_cookie_t cc;
+        xcb_translate_coordinates_reply_t *cr;
+        cc = xcb_translate_coordinates(self->xcb_connection, w, self->screen->root, 0, 0);
+        xcb_generic_error_t *e;
+        cr = xcb_translate_coordinates_reply(self->xcb_connection, cc, &e);
+        if ( cr == NULL )
+        {
+            g_debug("error %d", e->error_code);
+            return FALSE;
+        }
+
+        x = cr->dst_x;
+        y = cr->dst_y;
+        free(cr);
+    }
+    break;
+    default:
+        g_return_val_if_reached(FALSE);
+    }
+
+    for ( ; output->output != NULL ; ++output )
+    {
+        if ( ! ( ( x >= output->crtc->x && x <= ( output->crtc->x + output->crtc->width ) ) && ( y >= output->crtc->y && y <= ( output->crtc->y + output->crtc->height ) ) ) )
+            continue;
+        self->geometry.x = output->crtc->x;
+        self->geometry.y = output->crtc->y;
+        self->geometry.w = output->crtc->width;
+        self->geometry.h = output->crtc->height;
+
+        return TRUE;
+    }
+    return FALSE;
+}
+
+static gboolean
 _eventd_nd_xcb_randr_check_outputs(EventdNdBackendContext *self)
 {
-    if ( self->outputs == NULL )
+    if ( ( self->follow_focus == EVENTD_ND_XCB_FOLLOW_FOCUS_NONE ) && ( self->outputs == NULL ) )
         return FALSE;
 
     xcb_randr_get_screen_resources_current_cookie_t rcookie;
@@ -248,6 +346,9 @@ _eventd_nd_xcb_randr_check_outputs(EventdNdBackendContext *self)
 
     gboolean found;
 
+    if ( self->follow_focus != EVENTD_ND_XCB_FOLLOW_FOCUS_NONE )
+        found = _eventd_nd_xcb_randr_check_focused(self, outputs);
+    else
         found = _eventd_nd_xcb_randr_check_config_outputs(self, outputs);
 
     for ( output = outputs ; output->output != NULL ; ++output )
@@ -336,6 +437,13 @@ _eventd_nd_xcb_events_callback(xcb_generic_event_t *event, gpointer user_data)
             _eventd_nd_xcb_surface_button_release_event(surface);
     }
     break;
+    case XCB_PROPERTY_NOTIFY:
+    {
+        xcb_property_notify_event_t *e = (xcb_property_notify_event_t *)event;
+        if ( e->window == self->screen->root )
+            _eventd_nd_xcb_check_geometry(self);
+    }
+    break;
     default:
     break;
     }
@@ -371,6 +479,12 @@ _eventd_nd_xcb_start(EventdNdBackendContext *self, const gchar *target)
     self->visual = get_root_visual_type(self->screen);
 
     self->bubbles = g_hash_table_new(NULL, NULL);
+
+    if ( self->follow_focus != EVENTD_ND_XCB_FOLLOW_FOCUS_NONE )
+    {
+        guint32 mask[] = { XCB_EVENT_MASK_PROPERTY_CHANGE };
+        xcb_change_window_attributes(self->xcb_connection, self->screen->root, XCB_CW_EVENT_MASK, mask);
+    }
 
     extension_query = xcb_get_extension_data(self->xcb_connection, &xcb_shape_id);
     if ( ! extension_query->present )
