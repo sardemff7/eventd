@@ -46,7 +46,7 @@ typedef struct _EventdNdNotification EventdNdNotification;
 typedef struct {
     EventdNdContext *context;
 
-    void (*geometry_update)(EventdNdContext *context, gint x, gint y, gint w, gint h);
+    void (*geometry_update)(EventdNdContext *context, gint w, gint h);
     gboolean (*backend_stop)(EventdNdContext *context);
 
     void (*notification_draw)(EventdNdNotification *notification, cairo_surface_t *bubble);

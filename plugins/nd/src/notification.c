@@ -123,8 +123,6 @@ eventd_nd_notification_refresh_list(EventdPluginContext *context, EventdNdQueue 
         bx = context->geometry.w - bx;
     if ( bottom )
         by = context->geometry.h - by;
-    bx += context->geometry.x;
-    by += context->geometry.y;
     GList *self_;
     for ( self_ = g_queue_peek_head_link(queue->queue) ; self_ != NULL ; self_ = g_list_next(self_) )
     {

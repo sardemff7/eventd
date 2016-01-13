@@ -41,6 +41,7 @@ typedef struct _EventdNdBackendContext {
     WNDCLASSEX window_class;
     ATOM window_class_atom;
     GWaterWinSource *source;
+    RECT geometry;
 } EventdNdDisplay;
 
 struct _EventdNdSurface {
@@ -135,9 +136,8 @@ _eventd_nd_win_init(EventdNdInterface *nd)
 
     self->source = g_water_win_source_new(NULL, QS_PAINT|QS_MOUSEBUTTON);
 
-    RECT geometry;
-    SystemParametersInfo(SPI_GETWORKAREA, 0, &geometry, 0);
-    self->nd->geometry_update(self->nd->context, 0, 0, geometry.right, geometry.bottom);
+    SystemParametersInfo(SPI_GETWORKAREA, 0, &self->geometry, 0);
+    self->nd->geometry_update(self->nd->context, self->geometry.right, self->geometry.bottom);
 
     return self;
 }
@@ -196,6 +196,8 @@ _eventd_nd_win_move_begin(EventdNdBackendContext *context, gsize count)
 static void
 _eventd_nd_win_move_surface(EventdNdSurface *self, gint x, gint y, gpointer wp)
 {
+    x += self->context->geometry.left;
+    y += self->context->geometry.top;
     DeferWindowPos(wp, self->window, NULL, x, y, 0, 0, SWP_NOACTIVATE | SWP_NOSIZE | SWP_NOZORDER);
 }
 

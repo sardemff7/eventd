@@ -248,7 +248,7 @@ _eventd_nd_xcb_randr_check_outputs(EventdNdBackendContext *self)
 }
 
 static void
-_eventd_nd_xcb_randr_check_geometry(EventdNdBackendContext *self)
+_eventd_nd_xcb_check_geometry(EventdNdBackendContext *self)
 {
     self->base_geometry.x = 0;
     self->base_geometry.y = 0;
@@ -263,7 +263,7 @@ _eventd_nd_xcb_randr_check_geometry(EventdNdBackendContext *self)
     if ( ! found )
         _eventd_nd_xcb_geometry_fallback(self);
 
-    self->nd->geometry_update(self->nd->context, self->base_geometry.x, self->base_geometry.y, self->base_geometry.width, self->base_geometry.height);
+    self->nd->geometry_update(self->nd->context, self->base_geometry.width, self->base_geometry.height);
 }
 
 static void _eventd_nd_xcb_surface_expose_event(EventdNdSurface *self, xcb_expose_event_t *event);
@@ -287,7 +287,7 @@ _eventd_nd_xcb_events_callback(xcb_generic_event_t *event, gpointer user_data)
     switch ( type - self->randr_event_base )
     {
     case XCB_RANDR_SCREEN_CHANGE_NOTIFY:
-        _eventd_nd_xcb_randr_check_geometry(self);
+        _eventd_nd_xcb_check_geometry(self);
     break;
     case XCB_RANDR_NOTIFY:
     break;
@@ -371,7 +371,7 @@ _eventd_nd_xcb_start(EventdNdBackendContext *self, const gchar *target)
                 XCB_RANDR_NOTIFY_MASK_CRTC_CHANGE |
                 XCB_RANDR_NOTIFY_MASK_OUTPUT_PROPERTY);
         xcb_flush(self->xcb_connection);
-        _eventd_nd_xcb_randr_check_geometry(self);
+        _eventd_nd_xcb_check_geometry(self);
     }
 
     return TRUE;
@@ -520,6 +520,9 @@ _eventd_nd_xcb_surface_free(EventdNdSurface *self)
 static void
 _eventd_nd_xcb_move_surface(EventdNdSurface *self, gint x, gint y, gpointer data)
 {
+    x += self->context->base_geometry.x;
+    y += self->context->base_geometry.y;
+
     guint16 mask = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y;
     guint32 vals[] = { x, y };
     xcb_configure_window(self->context->xcb_connection, self->window, mask, vals);

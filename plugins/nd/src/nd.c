@@ -86,10 +86,8 @@ _eventd_nd_backend_switch(EventdNdContext *context, EventdNdBackends backend, co
 }
 
 static void
-_eventd_nd_geometry_update(EventdNdContext *context, gint x, gint y, gint w, gint h)
+_eventd_nd_geometry_update(EventdNdContext *context, gint w, gint h)
 {
-    context->geometry.x = x;
-    context->geometry.y = y;
     context->geometry.w = w;
     context->geometry.h = h;
 
