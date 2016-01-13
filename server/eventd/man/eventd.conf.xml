@@ -334,6 +334,10 @@
             <para>
                 The <replaceable>category</replaceable> and <replaceable>name</replaceable> are used to match the event while <replaceable>sub-name</replaceable> is only meant to differentiate sections and is not used anywhere in eventd.
             </para>
+            <para>
+                You can use an empty <replaceable>name</replaceable> to have data matches on a whole category.
+                This means the <replaceable>category</replaceable> and the <replaceable>sub-name</replaceable> will be separated with two spaces.
+            </para>
 
             <refsect3 id="event-matching-keys">
                 <title>Matching keys</title>

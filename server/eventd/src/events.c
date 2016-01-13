@@ -260,6 +260,7 @@ _eventd_events_parse_group(EventdEvents *self, const gchar *group, GKeyFile *con
         name = g_strndup(s, c - s);
     else
         name = g_strdup(s);
+    g_strstrip(name);
 
     gboolean disable = FALSE;
 
