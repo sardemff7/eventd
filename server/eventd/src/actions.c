@@ -83,7 +83,7 @@ eventd_actions_parse(EventdActions *self, GKeyFile *file, const gchar *default_i
         id = g_strdup(default_id);
 
 #ifdef EVENTD_DEBUG
-    g_debug("Parsing action '%s'", id);
+    g_debug("Parsing action: %s", id);
 #endif /* EVENTD_DEBUG */
 
     action->actions = eventd_plugins_event_parse_all(file);
