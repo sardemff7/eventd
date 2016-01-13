@@ -53,9 +53,9 @@ struct _EventdNdBackendContext {
     struct {
         gint x;
         gint y;
-        gint width;
-        gint height;
-    } base_geometry;
+        gint w;
+        gint h;
+    } geometry;
     gboolean randr;
     gint randr_event_base;
     gboolean shape;
@@ -125,8 +125,10 @@ get_root_visual_type(xcb_screen_t *s)
 static void
 _eventd_nd_xcb_geometry_fallback(EventdNdBackendContext *self)
 {
-    self->base_geometry.width = self->screen->width_in_pixels;
-    self->base_geometry.height = self->screen->height_in_pixels;
+    self->geometry.x = 0;
+    self->geometry.y = 0;
+    self->geometry.w = self->screen->width_in_pixels;
+    self->geometry.h = self->screen->height_in_pixels;
 }
 
 static gboolean
@@ -156,10 +158,10 @@ _eventd_nd_xcb_randr_check_primary(EventdNdBackendContext *self)
         {
             found = TRUE;
 
-            self->base_geometry.x = crtc->x;
-            self->base_geometry.y = crtc->y;
-            self->base_geometry.width = crtc->width;
-            self->base_geometry.height = crtc->height;
+            self->geometry.x = crtc->x;
+            self->geometry.y = crtc->y;
+            self->geometry.w = crtc->width;
+            self->geometry.h = crtc->height;
 
             free(crtc);
         }
@@ -185,10 +187,10 @@ _eventd_nd_xcb_randr_check_config_outputs(EventdNdBackendContext *self, EventdNd
         {
             if ( g_ascii_strncasecmp(*config_output, (const gchar *)xcb_randr_get_output_info_name(output->output), xcb_randr_get_output_info_name_length(output->output)) != 0 )
                 continue;
-            self->base_geometry.x = output->crtc->x;
-            self->base_geometry.y = output->crtc->y;
-            self->base_geometry.width = output->crtc->width;
-            self->base_geometry.height = output->crtc->height;
+            self->geometry.x = output->crtc->x;
+            self->geometry.y = output->crtc->y;
+            self->geometry.w = output->crtc->width;
+            self->geometry.h = output->crtc->height;
 
             return TRUE;
         }
@@ -260,10 +262,11 @@ _eventd_nd_xcb_randr_check_outputs(EventdNdBackendContext *self)
 static void
 _eventd_nd_xcb_check_geometry(EventdNdBackendContext *self)
 {
-    self->base_geometry.x = 0;
-    self->base_geometry.y = 0;
-    self->base_geometry.width = 0;
-    self->base_geometry.height = 0;
+    gint x, y, w, h;
+    x = self->geometry.x;
+    y = self->geometry.y;
+    w = self->geometry.w;
+    h = self->geometry.h;
 
     gboolean found = FALSE;
     if ( self->randr )
@@ -275,7 +278,10 @@ _eventd_nd_xcb_check_geometry(EventdNdBackendContext *self)
     if ( ! found )
         _eventd_nd_xcb_geometry_fallback(self);
 
-    self->nd->geometry_update(self->nd->context, self->base_geometry.width, self->base_geometry.height);
+    if ( ( x == self->geometry.x ) && ( y == self->geometry.y ) && ( w == self->geometry.w ) && ( h == self->geometry.h ) )
+        return;
+
+    self->nd->geometry_update(self->nd->context, self->geometry.w, self->geometry.h);
 }
 
 static void _eventd_nd_xcb_surface_expose_event(EventdNdSurface *self, xcb_expose_event_t *event);
@@ -537,8 +543,8 @@ _eventd_nd_xcb_surface_free(EventdNdSurface *self)
 static void
 _eventd_nd_xcb_move_surface(EventdNdSurface *self, gint x, gint y, gpointer data)
 {
-    x += self->context->base_geometry.x;
-    y += self->context->base_geometry.y;
+    x += self->context->geometry.x;
+    y += self->context->geometry.y;
 
     guint16 mask = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y;
     guint32 vals[] = { x, y };
