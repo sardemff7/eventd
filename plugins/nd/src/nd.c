@@ -64,6 +64,7 @@ _eventd_nd_backend_switch(EventdNdContext *context, EventdNdBackends backend, co
 {
     if ( context->backend != NULL )
     {
+        g_hash_table_remove_all(context->notifications);
         if ( context->backend->stop != NULL )
             context->backend->stop(context->backend->context);
         context->backend = NULL;
