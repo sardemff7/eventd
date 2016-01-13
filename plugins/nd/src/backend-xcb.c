@@ -56,6 +56,7 @@ struct _EventdNdBackendContext {
         gint width;
         gint height;
     } base_geometry;
+    gboolean randr;
     gint randr_event_base;
     gboolean shape;
     GHashTable *bubbles;
@@ -265,6 +266,7 @@ _eventd_nd_xcb_check_geometry(EventdNdBackendContext *self)
     self->base_geometry.height = 0;
 
     gboolean found = FALSE;
+    if ( self->randr )
     {
         found = _eventd_nd_xcb_randr_check_outputs(self);
         if ( ! found )
@@ -294,14 +296,20 @@ _eventd_nd_xcb_events_callback(xcb_generic_event_t *event, gpointer user_data)
 
     gint type = event->response_type & ~0x80;
 
+    /* RandR events */
+    if ( self->randr )
     switch ( type - self->randr_event_base )
     {
     case XCB_RANDR_SCREEN_CHANGE_NOTIFY:
         _eventd_nd_xcb_check_geometry(self);
-    break;
+        return TRUE;
     case XCB_RANDR_NOTIFY:
-    break;
+        return TRUE;
     default:
+    break;
+    }
+
+    /* Core events */
     switch ( type )
     {
     case XCB_EXPOSE:
@@ -324,7 +332,6 @@ _eventd_nd_xcb_events_callback(xcb_generic_event_t *event, gpointer user_data)
     break;
     default:
     break;
-    }
     }
 
     return TRUE;
@@ -368,21 +375,21 @@ _eventd_nd_xcb_start(EventdNdBackendContext *self, const gchar *target)
     extension_query = xcb_get_extension_data(self->xcb_connection, &xcb_randr_id);
     if ( ! extension_query->present )
     {
-        self->randr_event_base = G_MAXINT;
         g_warning("No RandR extension");
-        self->nd->geometry_update(self->nd->context, 0, 0, self->screen->width_in_pixels, self->screen->height_in_pixels);
     }
     else
     {
+        self->randr = TRUE;
         self->randr_event_base = extension_query->first_event;
         xcb_randr_select_input(self->xcb_connection, self->screen->root,
                 XCB_RANDR_NOTIFY_MASK_SCREEN_CHANGE |
                 XCB_RANDR_NOTIFY_MASK_OUTPUT_CHANGE |
                 XCB_RANDR_NOTIFY_MASK_CRTC_CHANGE |
                 XCB_RANDR_NOTIFY_MASK_OUTPUT_PROPERTY);
-        xcb_flush(self->xcb_connection);
-        _eventd_nd_xcb_check_geometry(self);
     }
+
+    xcb_flush(self->xcb_connection);
+    _eventd_nd_xcb_check_geometry(self);
 
     return TRUE;
 }
