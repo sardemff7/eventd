@@ -175,8 +175,32 @@ typedef struct {
 } EventdNdXcbRandrOutput;
 
 static gboolean
+_eventd_nd_xcb_randr_check_config_outputs(EventdNdBackendContext *self, EventdNdXcbRandrOutput *output)
+{
+    gchar **config_output;
+    for ( config_output = self->outputs ; *config_output != NULL ; ++config_output )
+    {
+        for ( ; output->output != NULL ; ++output )
+        {
+            if ( g_ascii_strncasecmp(*config_output, (const gchar *)xcb_randr_get_output_info_name(output->output), xcb_randr_get_output_info_name_length(output->output)) != 0 )
+                continue;
+            self->base_geometry.x = output->crtc->x;
+            self->base_geometry.y = output->crtc->y;
+            self->base_geometry.width = output->crtc->width;
+            self->base_geometry.height = output->crtc->height;
+
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+static gboolean
 _eventd_nd_xcb_randr_check_outputs(EventdNdBackendContext *self)
 {
+    if ( self->outputs == NULL )
+        return FALSE;
+
     xcb_randr_get_screen_resources_current_cookie_t rcookie;
     xcb_randr_get_screen_resources_current_reply_t *ressources;
 
@@ -196,10 +220,9 @@ _eventd_nd_xcb_randr_check_outputs(EventdNdBackendContext *self)
     length = xcb_randr_get_screen_resources_current_outputs_length(ressources);
     randr_outputs = xcb_randr_get_screen_resources_current_outputs(ressources);
 
-    EventdNdXcbRandrOutput *outputs;
+    EventdNdXcbRandrOutput outputs[length + 1];
     EventdNdXcbRandrOutput *output;
 
-    outputs = g_new(EventdNdXcbRandrOutput, length + 1);
     output = outputs;
 
     for ( i = 0 ; i < length ; ++i )
@@ -220,29 +243,15 @@ _eventd_nd_xcb_randr_check_outputs(EventdNdBackendContext *self)
     }
     output->output = NULL;
 
-    gchar **config_output;
-    gboolean found = FALSE;
-    for ( config_output = self->outputs ; ( *config_output != NULL ) && ( ! found ) ; ++config_output )
-    {
-        for ( output = outputs ; ( output->output != NULL ) && ( ! found ) ; ++output )
-        {
-            if ( g_ascii_strncasecmp(*config_output, (const gchar *)xcb_randr_get_output_info_name(output->output), xcb_randr_get_output_info_name_length(output->output)) != 0 )
-                continue;
-            self->base_geometry.x = output->crtc->x;
-            self->base_geometry.y = output->crtc->y;
-            self->base_geometry.width = output->crtc->width;
-            self->base_geometry.height = output->crtc->height;
+    gboolean found;
 
-            found = TRUE;
-        }
-    }
+        found = _eventd_nd_xcb_randr_check_config_outputs(self, outputs);
 
     for ( output = outputs ; output->output != NULL ; ++output )
     {
         free(output->crtc);
         free(output->output);
     }
-    g_free(outputs);
 
     return found;
 }
@@ -256,10 +265,11 @@ _eventd_nd_xcb_check_geometry(EventdNdBackendContext *self)
     self->base_geometry.height = 0;
 
     gboolean found = FALSE;
-    if ( self->outputs != NULL )
+    {
         found = _eventd_nd_xcb_randr_check_outputs(self);
-    if ( ! found )
-        found = _eventd_nd_xcb_randr_check_primary(self);
+        if ( ! found )
+            found = _eventd_nd_xcb_randr_check_primary(self);
+    }
     if ( ! found )
         _eventd_nd_xcb_geometry_fallback(self);
 
