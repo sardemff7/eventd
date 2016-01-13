@@ -54,8 +54,6 @@ _eventd_evp_init(EventdPluginCoreContext *core)
 
     self->core = core;
 
-    self->avahi_name = g_strdup_printf(PACKAGE_NAME " %s", g_get_host_name());
-
     return self;
 }
 
@@ -122,7 +120,11 @@ _eventd_evp_start(EventdPluginContext *self)
 
 #ifdef ENABLE_AVAHI
     if ( ! self->no_avahi )
+    {
+        if ( self->avahi_name == NULL )
+            self->avahi_name = g_strdup_printf(PACKAGE_NAME " %s", g_get_host_name());
         self->avahi = eventd_evp_avahi_start(self->avahi_name, sockets);
+    }
     else
 #endif /* ENABLE_AVAHI */
         g_list_free_full(sockets, g_object_unref);
