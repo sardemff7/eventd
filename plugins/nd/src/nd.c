@@ -133,6 +133,8 @@ _eventd_nd_init(EventdPluginCoreContext *core)
     }
 
     context->style = eventd_nd_style_new(NULL);
+    context->max_width = -1;
+    context->max_height = -1;
 
     EventdNdAnchor i;
     for ( i = EVENTD_ND_ANCHOR_TOP_LEFT ; i < _EVENTD_ND_ANCHOR_SIZE ; ++i )
