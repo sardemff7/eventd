@@ -25,7 +25,7 @@
 
 typedef struct _EventdNdQueue EventdNdQueue;
 
-void eventd_nd_notification_refresh_list(EventdPluginContext *context, EventdNdQueue *queue);
+void eventd_nd_notification_geometry_changed(EventdPluginContext *context, gboolean resize);
 
 EventdNdNotification *eventd_nd_notification_new(EventdPluginContext *context, EventdEvent *event, EventdNdStyle *style);
 void eventd_nd_notification_free(gpointer data);

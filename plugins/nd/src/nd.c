@@ -88,6 +88,9 @@ _eventd_nd_backend_switch(EventdNdContext *context, EventdNdBackends backend, co
 static void
 _eventd_nd_geometry_update(EventdNdContext *context, gint w, gint h)
 {
+    gboolean resize;
+    resize = ( ( context->geometry.w != w ) || ( context->geometry.h != h ) );
+
     context->geometry.w = w;
     context->geometry.h = h;
 
@@ -95,9 +98,7 @@ _eventd_nd_geometry_update(EventdNdContext *context, gint w, gint h)
         /* Start phase, nothing to update */
         return;
 
-    EventdNdAnchor i;
-    for ( i = EVENTD_ND_ANCHOR_TOP_LEFT ; i < _EVENTD_ND_ANCHOR_SIZE ; ++i )
-        eventd_nd_notification_refresh_list(context, &context->queues[i]);
+    eventd_nd_notification_geometry_changed(context, resize);
 }
 
 static gboolean

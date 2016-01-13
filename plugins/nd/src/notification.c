@@ -88,8 +88,8 @@ _eventd_nd_notification_clean(EventdNdNotification *self)
     self->text.text = NULL;
 }
 
-void
-eventd_nd_notification_refresh_list(EventdPluginContext *context, EventdNdQueue *queue)
+static void
+_eventd_nd_notification_refresh_list(EventdPluginContext *context, EventdNdQueue *queue)
 {
     while ( ( g_queue_get_length(queue->queue) < queue->limit ) && ( ! g_queue_is_empty(queue->wait_queue) ) )
     {
@@ -147,7 +147,7 @@ eventd_nd_notification_refresh_list(EventdPluginContext *context, EventdNdQueue 
 }
 
 static void
-_eventd_nd_notification_update(EventdNdNotification *self, EventdEvent *event)
+_eventd_nd_notification_process(EventdNdNotification *self, EventdEvent *event)
 {
     _eventd_nd_notification_clean(self);
     self->event = eventd_event_ref(event);
@@ -210,9 +210,9 @@ eventd_nd_notification_new(EventdPluginContext *context, EventdEvent *event, Eve
     g_queue_push_tail(self->queue->wait_queue, self);
     self->link = g_queue_peek_tail_link(self->queue->wait_queue);
 
-    _eventd_nd_notification_update(self, event);
+    _eventd_nd_notification_process(self, event);
     self->surface = self->context->backend->surface_new(self->context->backend->context, self, self->width, self->height);
-    eventd_nd_notification_refresh_list(self->context, self->queue);
+    _eventd_nd_notification_refresh_list(self->context, self->queue);
 
     return self;
 }
@@ -233,7 +233,7 @@ eventd_nd_notification_free(gpointer data)
     self->context->backend->surface_free(self->surface);
     _eventd_nd_notification_clean(self);
 
-    eventd_nd_notification_refresh_list(self->context, self->queue);
+    _eventd_nd_notification_refresh_list(self->context, self->queue);
 
     g_free(self);
 }
@@ -252,12 +252,18 @@ eventd_nd_notification_draw(EventdNdNotification *self, cairo_surface_t *bubble)
     cairo_destroy(cr);
 }
 
+static void
+_eventd_nd_notification_update(EventdNdNotification *self, EventdEvent *event)
+{
+    _eventd_nd_notification_process(self, event);
+    self->context->backend->surface_update(self->surface, self->width, self->height);
+}
+
 void
 eventd_nd_notification_update(EventdNdNotification *self, EventdEvent *event)
 {
     _eventd_nd_notification_update(self, event);
-    self->context->backend->surface_update(self->surface, self->width, self->height);
-    eventd_nd_notification_refresh_list(self->context, self->queue);
+    _eventd_nd_notification_refresh_list(self->context, self->queue);
 }
 
 void
@@ -268,4 +274,26 @@ eventd_nd_notification_dismiss(EventdNdNotification *self)
     eventd_event_add_data(event, g_strdup("source-event"), g_strdup(eventd_event_get_uuid(self->event)));
     eventd_plugin_core_push_event(self->context->core, event);
     eventd_event_unref(event);
+}
+
+
+void
+eventd_nd_notification_geometry_changed(EventdPluginContext *context, gboolean resize)
+{
+    if ( resize )
+    {
+        GHashTableIter iter;
+        EventdNdNotification *notification;
+        g_hash_table_iter_init(&iter, context->notifications);
+        while ( g_hash_table_iter_next(&iter, NULL, (gpointer *) &notification) )
+        {
+            /* We may be the last user of event, so make sure we keep it alive */
+            _eventd_nd_notification_update(notification, eventd_event_ref(notification->event));
+            eventd_event_unref(notification->event);
+        }
+    }
+
+    EventdNdAnchor i;
+    for ( i = EVENTD_ND_ANCHOR_TOP_LEFT ; i < _EVENTD_ND_ANCHOR_SIZE ; ++i )
+        _eventd_nd_notification_refresh_list(context, &context->queues[i]);
 }
