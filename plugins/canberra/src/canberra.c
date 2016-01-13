@@ -34,7 +34,7 @@
 struct _EventdPluginContext {
     ca_context *context;
     GSList *actions;
-    gboolean started;
+    gboolean connected;
 };
 
 struct _EventdPluginAction {
@@ -111,22 +111,27 @@ _eventd_libcanberra_uninit(EventdPluginContext *context)
 static void
 _eventd_libcanberra_start(EventdPluginContext *context)
 {
+    if ( context->connected )
+        return;
+
     int error;
     error = ca_context_open(context->context);
     if ( error < 0 )
         g_warning("Couldn't open libcanberra context: %s", ca_strerror(error));
     else
-        context->started = TRUE;
+        context->connected = TRUE;
 }
 
 static void
 _eventd_libcanberra_stop(EventdPluginContext *context)
 {
+    /*
+     * FIXME: We should cancel everything here
     int error;
     error = ca_context_cancel(context->context, 1);
     if ( error < 0 )
         g_warning("Couldn't cancel sounds: %s", ca_strerror(error));
-    context->started = FALSE;
+     */
 }
 
 
