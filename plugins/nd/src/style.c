@@ -96,9 +96,10 @@ struct _EventdPluginAction {
     struct {
         gboolean set;
 
-        gint max_width;
-        gint max_height;
-        gint margin;
+        EventdNdAnchorVertical anchor;
+        gint                   max_width;
+        gint                   max_height;
+        gint                   margin;
     } image;
 
     struct {
@@ -164,6 +165,7 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
 
     /* image */
     style->image.set = TRUE;
+    style->image.anchor     = EVENTD_ND_VANCHOR_TOP;
     style->image.max_width  = 50;
     style->image.max_height = 50;
     style->image.margin     = 10;
@@ -323,7 +325,13 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
     {
         self->image.set = TRUE;
 
+        guint64 enum_value;
         Int integer;
+
+        if ( evhelpers_config_key_file_get_enum(config_file, "NotificationImage", "Anchor", _eventd_nd_style_anchors_vertical, G_N_ELEMENTS(_eventd_nd_style_anchors_vertical), &enum_value) == 0 )
+            self->image.anchor = enum_value;
+        else if ( self->parent != NULL )
+            self->image.anchor = eventd_nd_style_get_image_anchor(self->parent);
 
         if ( evhelpers_config_key_file_get_int(config_file, "NotificationImage", "MaxWidth", &integer) == 0 )
         {
@@ -527,6 +535,14 @@ eventd_nd_style_get_text_max_lines(EventdNdStyle *self)
     if ( self->text.set )
         return self->text.max_lines;
     return eventd_nd_style_get_text_max_lines(self->parent);
+}
+
+EventdNdAnchorVertical
+eventd_nd_style_get_image_anchor(EventdNdStyle *self)
+{
+    if ( self->image.set )
+        return self->image.anchor;
+    return eventd_nd_style_get_image_anchor(self->parent);
 }
 
 gint

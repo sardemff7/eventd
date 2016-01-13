@@ -326,6 +326,21 @@
                             <para>Margin between bubble's image and text.</para>
                         </listitem>
                     </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>Anchor=</varname> (defaults to <literal>Top</literal>)</term>
+                        <listitem>
+                            <para>
+                                An <type>enumeration</type>:
+                                <simplelist type='inline'>
+                                    <member><literal>Top</literal></member>
+                                    <member><literal>Bottom</literal></member>
+                                    <member><literal>Center</literal></member>
+                                </simplelist>
+                            </para>
+                            <para>Vertical image's aligment.</para>
+                        </listitem>
+                    </varlistentry>
                 </variablelist>
             </refsect3>
 

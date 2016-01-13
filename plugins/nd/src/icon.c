@@ -352,7 +352,7 @@ _eventd_nd_cairo_image_draw(cairo_t *cr, cairo_surface_t *image, EventdNdStyle *
     padding = eventd_nd_style_get_bubble_padding(style);
 
     x = padding;
-    y = padding;
+    y = _eventd_nd_cairo_get_valign(eventd_nd_style_get_image_anchor(style), height, padding, cairo_image_surface_get_height(image));
     _eventd_nd_cairo_surface_draw(cr, image, x, y);
 }
 
@@ -377,7 +377,7 @@ _eventd_nd_cairo_image_and_icon_draw_overlay(cairo_t *cr, cairo_surface_t *image
         w = cairo_image_surface_get_width(icon);
         h =  cairo_image_surface_get_height(icon);
 
-        image_x = padding;
+        image_x = _eventd_nd_cairo_get_valign(eventd_nd_style_get_image_anchor(style), height, padding, cairo_image_surface_get_height(image));;
         image_y = padding;
         icon_x = image_x + cairo_image_surface_get_width(image) - ( 3 * w / 4 );
         icon_y = image_y + cairo_image_surface_get_height(image) - ( 3 * h / 4 );

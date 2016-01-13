@@ -78,6 +78,7 @@ PangoAlignment eventd_nd_style_get_text_align(EventdNdStyle *style);
 guint8 eventd_nd_style_get_text_max_lines(EventdNdStyle *style);
 Colour eventd_nd_style_get_text_colour(EventdNdStyle *style);
 
+EventdNdAnchorVertical eventd_nd_style_get_image_anchor(EventdNdStyle *style);
 gint eventd_nd_style_get_image_max_width(EventdNdStyle *style);
 gint eventd_nd_style_get_image_max_height(EventdNdStyle *style);
 gint eventd_nd_style_get_image_margin(EventdNdStyle *style);
