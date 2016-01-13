@@ -325,7 +325,7 @@
     Relays=command;
 
     [Relay command]
-    Forwards=relay;
+    Forwards=command;
     Server=myothercomputer.local<phrase condition="website;enable_notification_daemon;enable_sound;enable_canberra;enable_libnotify">
 
 <literal>"<filename>command.event</filename>"</literal>:
