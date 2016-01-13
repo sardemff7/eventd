@@ -101,7 +101,10 @@ _eventd_nd_notification_refresh_list(EventdPluginContext *context, EventdNdQueue
             g_queue_push_head_link(queue->queue, link);
 
         EventdNdNotification *self = link->data;
-        self->timeout = g_timeout_add_full(G_PRIORITY_DEFAULT, eventd_nd_style_get_bubble_timeout(self->style), _eventd_nd_event_timedout, self, NULL);
+        gint timeout;
+        timeout = eventd_nd_style_get_bubble_timeout(self->style);
+        if ( timeout > 0 )
+            self->timeout = g_timeout_add_full(G_PRIORITY_DEFAULT, timeout, _eventd_nd_event_timedout, self, NULL);
         self->visible = TRUE;
     }
 

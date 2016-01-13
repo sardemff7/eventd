@@ -231,7 +231,7 @@
                     </varlistentry>
 
                     <varlistentry>
-                        <term><varname>Timeout=</varname> (defaults to <literal>3000</literal>)</term>
+                        <term><varname>Timeout=</varname> (defaults to <literal>3000</literal>, 0 to disable)</term>
                         <listitem>
                             <para>A <type>time in milliseconds</type></para>
                             <para>Time for which the bubble will appear on screen.</para>
