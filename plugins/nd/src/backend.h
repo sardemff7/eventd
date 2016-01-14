@@ -25,6 +25,8 @@
 
 #include <libeventd-event.h>
 
+#include "types.h"
+
 typedef enum {
     EVENTD_ND_BACKEND_NONE = 0,
 #ifdef ENABLE_ND_XCB
@@ -41,8 +43,6 @@ typedef enum {
 
 const gchar *eventd_nd_backends_names[_EVENTD_ND_BACKENDS_SIZE];
 
-typedef struct _EventdPluginContext EventdNdContext;
-typedef struct _EventdNdNotification EventdNdNotification;
 typedef struct {
     EventdNdContext *context;
 

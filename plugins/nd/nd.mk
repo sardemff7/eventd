@@ -20,6 +20,8 @@ endif
 
 
 nd_la_SOURCES = \
+	%D%/src/types.h \
+	%D%/src/nd.h \
 	%D%/src/nd.c \
 	%D%/src/notification.h \
 	%D%/src/notification.c \

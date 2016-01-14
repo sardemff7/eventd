@@ -23,17 +23,8 @@
 #ifndef __EVENTD_ND_STYLE_H__
 #define __EVENTD_ND_STYLE_H__
 
-typedef struct _EventdPluginAction EventdNdStyle;
+#include "types.h"
 
-typedef enum {
-    EVENTD_ND_ANCHOR_TOP_LEFT,
-    EVENTD_ND_ANCHOR_TOP,
-    EVENTD_ND_ANCHOR_TOP_RIGHT,
-    EVENTD_ND_ANCHOR_BOTTOM_LEFT,
-    EVENTD_ND_ANCHOR_BOTTOM,
-    EVENTD_ND_ANCHOR_BOTTOM_RIGHT,
-    _EVENTD_ND_ANCHOR_SIZE
-} EventdNdAnchor;
 const gchar * const eventd_nd_anchors[_EVENTD_ND_ANCHOR_SIZE];
 
 typedef enum {

@@ -20,38 +20,23 @@
  *
  */
 
-#ifndef __EVENTD_ND_ND_H__
-#define __EVENTD_ND_ND_H__
+#ifndef __EVENTD_ND_TYPES_H__
+#define __EVENTD_ND_TYPES_H__
 
-#include "types.h"
+typedef struct _EventdPluginContext EventdNdContext;
+typedef struct _EventdPluginAction EventdNdStyle;
+typedef struct _EventdNdNotification EventdNdNotification;
+typedef struct _EventdNdQueue EventdNdQueue;
 
-struct _EventdNdQueue {
-    EventdNdAnchor anchor;
-    guint64 limit;
-    gint margin;
-    gint spacing;
-    gboolean reverse;
-    GQueue *wait_queue;
-    GQueue *queue;
-};
+typedef enum {
+    EVENTD_ND_ANCHOR_TOP_LEFT,
+    EVENTD_ND_ANCHOR_TOP,
+    EVENTD_ND_ANCHOR_TOP_RIGHT,
+    EVENTD_ND_ANCHOR_BOTTOM_LEFT,
+    EVENTD_ND_ANCHOR_BOTTOM,
+    EVENTD_ND_ANCHOR_BOTTOM_RIGHT,
+    _EVENTD_ND_ANCHOR_SIZE
+} EventdNdAnchor;
 
-struct _EventdPluginContext {
-    EventdPluginCoreContext *core;
-    EventdNdInterface interface;
-    EventdNdBackend backends[_EVENTD_ND_BACKENDS_SIZE];
-    EventdNdBackend *backend;
-    EventdNdQueue queues[_EVENTD_ND_ANCHOR_SIZE];
-    EventdNdStyle *style;
-    gint max_width;
-    gint max_height;
-    struct {
-        gint x;
-        gint y;
-        gint w;
-        gint h;
-    } geometry;
-    GHashTable *notifications;
-    GSList *actions;
-};
 
-#endif /* __EVENTD_ND_ND_H__ */
+#endif /* __EVENTD_ND_TYPES_H__ */

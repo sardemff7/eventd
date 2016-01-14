@@ -23,7 +23,7 @@
 #ifndef __EVENTD_ND_NOTIFICATION_H__
 #define __EVENTD_ND_NOTIFICATION_H__
 
-typedef struct _EventdNdQueue EventdNdQueue;
+#include "types.h"
 
 void eventd_nd_notification_geometry_changed(EventdPluginContext *context, gboolean resize);
 
