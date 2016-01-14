@@ -308,6 +308,79 @@
             </para>
         </example>
 
+        <example condition="website;enable_nd_xcb">
+            <title>dunst-like style</title>
+
+            <para>
+                This is the same use case as the previous example, with some configuration tweaks to match dunst’s style.
+            </para>
+            <para>
+                Here is the configuration:
+            </para>
+            <programlisting><literal>"<filename>eventd.conf</filename>"</literal>:
+    [Anchor top]
+    Margin=0
+    Spacing=0
+    Limit=10
+
+    [Notification]
+    Text=${title} ${message}
+
+    [NotificationBubble]
+    Anchor=top
+    # We use a really large minimum width so the plugin will clamp it to screen size
+    MinWidth=7777777
+    Padding=2
+    Radius=0
+    Colour=#1793D1
+
+    [NotificationText]
+    Font=Terminus 16px
+    Colour=#DDDDDD
+
+    [NotificationImage]
+    MaxHeight=25
+    Anchor=Center
+
+    [NotificationIcon]
+    Placement=Foreground
+    MaxHeight=25
+
+<literal>"<filename>notification-urgencies.event</filename>"</literal>:
+    [Event notification  low]
+    IfDataMatches=urgency,low;
+    Actions=notification-low;
+
+    [Event notification  critical]
+    IfDataMatches=urgency,critical;
+    Actions=notification-critical;
+
+<literal>"<filename>notification-low.action</filename>"</literal>:
+    [Action]
+    Name=notification-low
+
+    [Notification]
+
+    [NotificationBubble]
+    Colour=#aaaaff
+
+    [NotificationText]
+    Colour=#000000
+
+<literal>"<filename>notification-critical.action</filename>"</literal>:
+    [Action]
+    Name=notification-critical
+
+    [Notification]
+
+    [NotificationBubble]
+    Timeout=0
+    Colour=#ffaaaa
+
+    [NotificationText]
+    Colour=#000000</programlisting>
+        </example>
+
         <example>
             <title>Custom event: notify the end of a command</title>
 
