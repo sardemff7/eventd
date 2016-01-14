@@ -98,14 +98,14 @@
         <title>Commands</title>
         <variablelist>
             <varlistentry>
-                <term><parameter class="command">version</parameter></term>
+                <term><command>version</command></term>
                 <listitem>
                     <para>Query the eventd version.</para>
                 </listitem>
             </varlistentry>
 
             <varlistentry>
-                <term><parameter class="command">start</parameter></term>
+                <term><command>start</command></term>
                 <listitem>
                     <para>Start eventd if needed.</para>
                     <para>It can take the option <option>--argv0</option> which means that the first argument is the command to call. If not specified, <command>eventdctl</command> will search for <command>eventd</command> in <varname>PATH</varname>.</para>
@@ -114,47 +114,47 @@
             </varlistentry>
 
             <varlistentry>
-                <term><parameter class="command">stop</parameter></term>
+                <term><command>stop</command></term>
                 <listitem>
                     <para>Quit eventd.</para>
                 </listitem>
             </varlistentry>
 
             <varlistentry>
-                <term><parameter class="command">reload</parameter></term>
+                <term><command>reload</command></term>
                 <listitem>
                     <para>Make eventd reload its configuration.</para>
                 </listitem>
             </varlistentry>
 
             <varlistentry>
-                <term><parameter class="command">flags</parameter> <parameter class="command"><replaceable class="command">sub-command</replaceable></parameter></term>
+                <term><command>flags <command><replaceable>sub-command</replaceable></command></command></term>
                 <listitem>
                     <para>Control the eventd flags (see <citerefentry><refentrytitle>eventd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</para>
                     <variablelist>
                         <varlistentry>
-                            <term><parameter class="command">add</parameter> <parameter><replaceable class="option">flag</replaceable></parameter></term>
+                            <term><command>add <parameter><replaceable>flag</replaceable></parameter></command></term>
                             <listitem>
-                                <para>Add <replaceable class="option">flag</replaceable> to eventd.</para>
+                                <para>Add <replaceable>flag</replaceable> to eventd.</para>
                             </listitem>
                         </varlistentry>
 
                         <varlistentry>
-                            <term><parameter class="command">remove</parameter> <parameter><replaceable class="option">flag</replaceable></parameter></term>
+                            <term><command>remove <parameter><replaceable>flag</replaceable></parameter></command></term>
                             <listitem>
-                                <para>Remove <replaceable class="option">flag</replaceable> from eventd.</para>
+                                <para>Remove <replaceable>flag</replaceable> from eventd.</para>
                             </listitem>
                         </varlistentry>
 
                         <varlistentry>
-                            <term><parameter class="command">reset</parameter></term>
+                            <term><command>reset</command></term>
                             <listitem>
                                 <para>Reset eventd flags.</para>
                             </listitem>
                         </varlistentry>
 
                         <varlistentry>
-                            <term><parameter class="command">list»</parameter></term>
+                            <term><command>list</command></term>
                             <listitem>
                                 <para>Query current eventd flags.</para>
                             </listitem>
@@ -168,18 +168,18 @@
 
         <variablelist>
             <varlistentry>
-                <term><parameter>relay</parameter> <parameter class="command">connect</parameter> <parameter><replaceable class="option">server</replaceable></parameter></term>
+                <term><command>relay <command>connect <parameter><replaceable>server</replaceable></parameter></command></command></term>
                 <listitem>
-                    <para>Tell the plugin to connect to the specified <replaceable class="option">server</replaceable>.</para>
-                    <para><replaceable class="option">server</replaceable> may be any server configured as a relay (see <citerefentry><refentrytitle>eventd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>).</para>
+                    <para>Tell the plugin to connect to the specified <replaceable>server</replaceable>.</para>
+                    <para><replaceable>server</replaceable> may be any server configured as a relay (see <citerefentry><refentrytitle>eventd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>).</para>
                 </listitem>
             </varlistentry>
 
             <varlistentry>
-                <term><parameter>relay</parameter> <parameter class="command">disconnect</parameter> <parameter><replaceable class="option">server</replaceable></parameter></term>
+                <term><command>relay <command>disconnect <parameter><replaceable>server</replaceable></parameter></command></command></term>
                 <listitem>
-                    <para>Tell the plugin to disconnect from the specified <replaceable class="option">server</replaceable>.</para>
-                    <para><replaceable class="option">server</replaceable> may be any server configured as a relay (see <citerefentry><refentrytitle>eventd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>).</para>
+                    <para>Tell the plugin to disconnect from the specified <replaceable>server</replaceable>.</para>
+                    <para><replaceable>server</replaceable> may be any server configured as a relay (see <citerefentry><refentrytitle>eventd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>).</para>
                 </listitem>
             </varlistentry>
         </variablelist>
@@ -193,7 +193,7 @@
                 <term><literal>0</literal></term>
                 <listitem>
                     <para>The command was successful.</para>
-                    <para>With the <parameter class="command">start</parameter> command, it will return <literal>0</literal> if eventd is already started.</para>
+                    <para>With the <command>start</command> command, it will return <literal>0</literal> if eventd is already started.</para>
                 </listitem>
             </varlistentry>
 
@@ -214,7 +214,7 @@
             <varlistentry>
                 <term><literal>11</literal></term>
                 <listitem>
-                    <para>eventd invocation faild. Either with the <parameter class="command">start</parameter> command, or the <option>--auto-spawn</option> option.</para>
+                    <para>eventd invocation faild. Either with the <command>start</command> command, or the <option>--auto-spawn</option> option.</para>
                 </listitem>
             </varlistentry>
 

@@ -63,16 +63,16 @@
 
         <variablelist>
             <varlistentry>
-                <term><parameter class="command">switch</parameter> <parameter><replaceable class="option">backend</replaceable></parameter> <parameter><replaceable class="option">target</replaceable></parameter></term>
+                <term><command>switch <parameter><replaceable>backend</replaceable></parameter> <parameter><replaceable>target</replaceable></parameter></command></term>
                 <listitem>
-                    <para>Tell the plugin to switch to the specified <replaceable class="option">backend</replaceable> for the specified <replaceable class="option">target</replaceable>.</para>
-                    <para><replaceable class="option">backend</replaceable> may be any backend built in <command>nd</command>.</para>
-                    <para><replaceable class="option">target</replaceable> is backend-specific.</para>
+                    <para>Tell the plugin to switch to the specified <replaceable>backend</replaceable> for the specified <replaceable>target</replaceable>.</para>
+                    <para><replaceable>backend</replaceable> may be any backend built in <command>nd</command>.</para>
+                    <para><replaceable>target</replaceable> is backend-specific.</para>
                 </listitem>
             </varlistentry>
 
             <varlistentry>
-                <term><parameter class="command">stop</parameter></term>
+                <term><command>stop</command></term>
                 <listitem>
                     <para>Tell the plugin to stop the current running backend.</para>
                 </listitem>
