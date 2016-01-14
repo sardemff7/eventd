@@ -300,3 +300,54 @@ eventd_nd_notification_geometry_changed(EventdPluginContext *context, gboolean r
     for ( i = EVENTD_ND_ANCHOR_TOP_LEFT ; i < _EVENTD_ND_ANCHOR_SIZE ; ++i )
         _eventd_nd_notification_refresh_list(context, &context->queues[i]);
 }
+
+void
+eventd_nd_notification_dismiss_target(EventdPluginContext *context, EventdNdDismissTarget target, EventdNdAnchor anchor)
+{
+    if ( anchor == _EVENTD_ND_ANCHOR_SIZE )
+    {
+        for ( anchor = EVENTD_ND_ANCHOR_TOP_LEFT ; anchor < _EVENTD_ND_ANCHOR_SIZE ; ++anchor )
+            eventd_nd_notification_dismiss_target(context, target, anchor);
+        return;
+    }
+
+    EventdNdQueue *queue = &context->queues[anchor];
+    GList *notification = NULL;
+
+    switch ( target )
+    {
+    case EVENTD_ND_DISMISS_NONE:
+    break;
+    case EVENTD_ND_DISMISS_ALL:
+    {
+        notification = g_queue_peek_head_link(queue->queue);
+        while ( notification != NULL )
+        {
+            GList *next = g_list_next(notification);
+
+            eventd_nd_notification_dismiss(notification->data);
+
+            notification = next;
+        }
+        return;
+    }
+    case EVENTD_ND_DISMISS_OLDEST:
+    {
+        if ( queue->reverse )
+            notification = g_queue_peek_head_link(queue->queue);
+        else
+            notification = g_queue_peek_tail_link(queue->queue);
+    }
+    break;
+    case EVENTD_ND_DISMISS_NEWEST:
+    {
+        if ( queue->reverse )
+            notification = g_queue_peek_tail_link(queue->queue);
+        else
+            notification = g_queue_peek_head_link(queue->queue);
+    }
+    break;
+    }
+    if ( notification != NULL )
+        eventd_nd_notification_dismiss(notification->data);
+}

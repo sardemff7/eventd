@@ -26,6 +26,7 @@
 #include "types.h"
 
 void eventd_nd_notification_geometry_changed(EventdPluginContext *context, gboolean resize);
+void eventd_nd_notification_dismiss_target(EventdPluginContext *context, EventdNdDismissTarget target, EventdNdAnchor anchor);
 
 EventdNdNotification *eventd_nd_notification_new(EventdPluginContext *context, EventdEvent *event, EventdNdStyle *style);
 void eventd_nd_notification_free(gpointer data);

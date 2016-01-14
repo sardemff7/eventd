@@ -38,5 +38,12 @@ typedef enum {
     _EVENTD_ND_ANCHOR_SIZE
 } EventdNdAnchor;
 
+typedef enum {
+    EVENTD_ND_DISMISS_NONE,
+    EVENTD_ND_DISMISS_ALL,
+    EVENTD_ND_DISMISS_OLDEST,
+    EVENTD_ND_DISMISS_NEWEST,
+} EventdNdDismissTarget;
+
 
 #endif /* __EVENTD_ND_TYPES_H__ */

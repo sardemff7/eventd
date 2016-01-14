@@ -59,6 +59,13 @@ const gchar *eventd_nd_backends_names[_EVENTD_ND_BACKENDS_SIZE] = {
 #endif /* ENABLE_ND_WIN */
 };
 
+static const gchar * const _eventd_nd_dismiss_targets[] = {
+    [EVENTD_ND_DISMISS_NONE]   = "none",
+    [EVENTD_ND_DISMISS_ALL]    = "all",
+    [EVENTD_ND_DISMISS_OLDEST] = "oldest",
+    [EVENTD_ND_DISMISS_NEWEST] = "newest",
+};
+
 static gboolean
 _eventd_nd_backend_switch(EventdNdContext *context, EventdNdBackends backend, const gchar *target)
 {
@@ -269,6 +276,41 @@ _eventd_nd_control_command(EventdPluginContext *context, guint64 argc, const gch
     {
         _eventd_nd_backend_stop(context);
         r = EVENTD_PLUGIN_COMMAND_STATUS_OK;
+    }
+    else if ( g_strcmp0(argv[0], "dismiss") == 0 )
+    {
+        r = EVENTD_PLUGIN_COMMAND_STATUS_OK;
+        if ( argc < 2 )
+        {
+            *status = g_strdup("No dismiss target specified");
+            r = EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR;
+        }
+        else
+        {
+            guint64 target = EVENTD_ND_DISMISS_NONE;
+            guint64 anchor = _EVENTD_ND_ANCHOR_SIZE;
+            nk_enum_parse(argv[1], _eventd_nd_dismiss_targets, G_N_ELEMENTS(_eventd_nd_dismiss_targets), TRUE, &target);
+            if ( argc > 2 )
+            {
+                const gchar *a = argv[2];
+                gsize l = strlen("bottom right") + 1;
+                gchar a_[l];
+                if ( argc > 3 )
+                {
+                    g_snprintf(a_, l, "%s %s", argv[2], argv[3]);
+                    a = a_;
+                }
+                nk_enum_parse(a, eventd_nd_anchors, _EVENTD_ND_ANCHOR_SIZE, TRUE, &anchor);
+            }
+
+            if ( target != EVENTD_ND_DISMISS_NONE )
+                eventd_nd_notification_dismiss_target(context, target, anchor);
+            else
+            {
+                *status = g_strdup_printf("Unknown dismiss target '%s'", argv[1]);
+                r = EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR;
+            }
+        }
     }
     else if ( g_strcmp0(argv[0], "backends") == 0 )
     {
