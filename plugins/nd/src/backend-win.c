@@ -48,6 +48,7 @@ struct _EventdNdSurface {
     EventdNdDisplay *display;
     EventdNdNotification *notification;
     HWND window;
+    gboolean mapped;
     GList *link;
 };
 
@@ -166,8 +167,6 @@ _eventd_nd_win_surface_new(EventdNdDisplay *display, EventdNdNotification *notif
 
     SetProp(self->window, "EventdNdSurface", self);
 
-    ShowWindow(self->window, SW_SHOWNA);
-
     return self;
 }
 
@@ -196,9 +195,15 @@ _eventd_nd_win_move_begin(EventdNdBackendContext *context, gsize count)
 static void
 _eventd_nd_win_move_surface(EventdNdSurface *self, gint x, gint y, gpointer wp)
 {
-    x += self->context->geometry.left;
-    y += self->context->geometry.top;
+    x += self->display->geometry.left;
+    y += self->display->geometry.top;
     DeferWindowPos(wp, self->window, NULL, x, y, 0, 0, SWP_NOACTIVATE | SWP_NOSIZE | SWP_NOZORDER);
+
+    if ( ! self->mapped )
+    {
+        ShowWindow(self->window, SW_SHOWNA);
+        self->mapped = TRUE;
+    }
 }
 
 static void
