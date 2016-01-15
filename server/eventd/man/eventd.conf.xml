@@ -135,6 +135,8 @@
             <para>A <type>format string</type> can contain references to event data.</para>
 
             <xi:include href="libnkutils-man.xml" xpointer="xpointer(id('nk-token-reference-description')/*)" />
+
+            <para>Please note that the config file format uses the backslash (\) for escaping sequences. Therefore, you will have to escape it if it is needed in your format string (e.g. to uses backreferences in the replacement part of the regex syntax).</para>
         </refsect2>
 
         <refsect2>

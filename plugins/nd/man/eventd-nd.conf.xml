@@ -185,7 +185,7 @@
 
                 <variablelist>
                     <varlistentry>
-                        <term><varname>Text=</varname> (defaults to <literal>"&lt;b>${title}&lt;/b>${\n&lt;message}"</literal>)</term>
+                        <term><varname>Text=</varname> (defaults to <literal>"&lt;b>${title}&lt;/b>${message/^/\n}"</literal>)</term>
                         <listitem>
                             <para>A <type>localised format string</type></para>
                             <para>The notification's title. It will be highlighted compared to the message.</para>
