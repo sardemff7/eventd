@@ -41,6 +41,7 @@ typedef struct _EventdNdBackendContext {
     WNDCLASSEX window_class;
     ATOM window_class_atom;
     GWaterWinSource *source;
+    HWND window;
     RECT geometry;
 } EventdNdDisplay;
 
@@ -76,6 +77,25 @@ _eventd_nd_win_surface_event_callback(HWND hwnd, UINT message, WPARAM wParam, LP
 {
     switch ( message )
     {
+    case WM_SETTINGCHANGE:
+    {
+        if ( GetParent(hwnd) != NULL )
+            return DefWindowProc(hwnd,message,wParam,lParam);
+
+        EventdNdBackendContext *self;
+        self = GetProp(hwnd, "EventdNdBackendContext");
+        g_return_val_if_fail(self != NULL, 1);
+
+        switch ( (UINT) wParam )
+        {
+        case SPI_SETWORKAREA:
+            _eventd_nd_win_update_geometry(self);
+        break;
+        default:
+            return DefWindowProc(hwnd,message,wParam,lParam);
+        }
+    }
+    break;
     case WM_PAINT:
     {
         EventdNdSurface *self;
@@ -145,6 +165,10 @@ _eventd_nd_win_init(EventdNdInterface *nd)
 
     self->source = g_water_win_source_new(NULL, QS_PAINT|QS_MOUSEBUTTON);
 
+    self->window = CreateWindowEx(WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE, self->window_class.lpszClassName, "Control", WS_POPUP, 0, 0, 0, 0, NULL, NULL, NULL, NULL);
+
+    SetProp(self->window, "EventdNdBackendContext", self);
+
     _eventd_nd_win_update_geometry(self);
 
     return self;
@@ -154,6 +178,9 @@ static void
 _eventd_nd_win_uninit(EventdNdBackendContext *self_)
 {
     EventdNdDisplay *self = (EventdNdDisplay *) self_;
+
+    RemoveProp(self->window, "EventdNdBackendContext");
+    DestroyWindow(self->window);
 
     g_water_win_source_unref(self->source);
 
@@ -169,7 +196,7 @@ _eventd_nd_win_surface_new(EventdNdDisplay *display, EventdNdNotification *notif
 
     self->notification = notification;
 
-    self->window = CreateWindowEx(WS_EX_LAYERED | WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE, display->window_class.lpszClassName, "Bubble", WS_POPUP, 0, 0, width, height, NULL, NULL, NULL, NULL);
+    self->window = CreateWindowEx(WS_EX_LAYERED | WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE, display->window_class.lpszClassName, "Bubble", WS_POPUP, 0, 0, width, height, display->window, NULL, NULL, NULL);
     SetLayeredWindowAttributes(self->window, RGB(255, 0, 0), 255, LWA_COLORKEY);
 
     SetProp(self->window, "EventdNdSurface", self);
