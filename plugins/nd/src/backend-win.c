@@ -52,6 +52,13 @@ struct _EventdNdSurface {
     GList *link;
 };
 
+static void
+_eventd_nd_win_update_geometry(EventdNdBackendContext *self)
+{
+    SystemParametersInfo(SPI_GETWORKAREA, 0, &self->geometry, 0);
+    self->nd->geometry_update(self->nd->context, self->geometry.right - self->geometry.left, self->geometry.bottom - self->geometry.top);
+}
+
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 #define RED_BYTE 2
 #define GREEN_BYTE 1
@@ -67,11 +74,11 @@ struct _EventdNdSurface {
 LRESULT CALLBACK
 _eventd_nd_win_surface_event_callback(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    EventdNdSurface *self;
     switch ( message )
     {
     case WM_PAINT:
     {
+        EventdNdSurface *self;
         self = GetProp(hwnd, "EventdNdSurface");
         g_return_val_if_fail(self != NULL, 1);
 
@@ -99,6 +106,7 @@ _eventd_nd_win_surface_event_callback(HWND hwnd, UINT message, WPARAM wParam, LP
     break;
     case WM_LBUTTONUP:
     {
+        EventdNdSurface *self;
         self = GetProp(hwnd, "EventdNdSurface");
         g_return_val_if_fail(self != NULL, 1);
 
@@ -137,8 +145,7 @@ _eventd_nd_win_init(EventdNdInterface *nd)
 
     self->source = g_water_win_source_new(NULL, QS_PAINT|QS_MOUSEBUTTON);
 
-    SystemParametersInfo(SPI_GETWORKAREA, 0, &self->geometry, 0);
-    self->nd->geometry_update(self->nd->context, self->geometry.right, self->geometry.bottom);
+    _eventd_nd_win_update_geometry(self);
 
     return self;
 }
