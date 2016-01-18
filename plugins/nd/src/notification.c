@@ -89,6 +89,64 @@ _eventd_nd_notification_clean(EventdNdNotification *self)
 }
 
 static void
+_eventd_nd_notification_process(EventdNdNotification *self, EventdEvent *event)
+{
+    _eventd_nd_notification_clean(self);
+    self->event = eventd_event_ref(event);
+
+    gint margin, padding;
+    gint min_width, max_width;
+
+    gint text_width = 0, text_height = 0;
+    gint image_width = self->context->max_width, image_height = self->context->max_height;
+
+
+    margin = self->queue->margin;
+    padding = eventd_nd_style_get_bubble_padding(self->style);
+    min_width = eventd_nd_style_get_bubble_min_width(self->style);
+    max_width = eventd_nd_style_get_bubble_max_width(self->style);
+    if ( max_width < 0 )
+        max_width = self->context->geometry.w - 2 * margin;
+    if ( min_width > max_width )
+        min_width = max_width;
+
+    /* proccess data and compute the bubble size */
+    self->text.text = eventd_nd_cairo_text_process(self->style, self->event, max_width - 2 * padding, &text_height, &text_width);
+
+    self->width = 2 * padding + text_width;
+
+    if ( self->width < max_width )
+    {
+        eventd_nd_cairo_image_and_icon_process(self->style, self->event, max_width - self->width, &self->image, &self->icon, &self->text.x, &image_width, &image_height);
+        self->width += image_width;
+    }
+
+    /* We are sure that min_width <= max_width */
+    if ( min_width > self->width )
+    {
+        self->width = min_width;
+        /* Let the text take the remaining space if needed (e.g. Right-to-Left) */
+        text_width = ( self->width - ( 2 * padding + image_width ) );
+    }
+    pango_layout_set_width(self->text.text, text_width * PANGO_SCALE);
+
+    self->height = 2 * padding + MAX(image_height, text_height);
+
+    if ( self->timeout > 0 )
+    {
+        g_source_remove(self->timeout);
+        self->timeout = g_timeout_add_full(G_PRIORITY_DEFAULT, eventd_nd_style_get_bubble_timeout(self->style), _eventd_nd_event_timedout, self, NULL);
+    }
+}
+
+static void
+_eventd_nd_notification_update(EventdNdNotification *self, EventdEvent *event)
+{
+    _eventd_nd_notification_process(self, event);
+    self->context->backend->surface_update(self->surface, self->width, self->height);
+}
+
+static void
 _eventd_nd_notification_refresh_list(EventdPluginContext *context, EventdNdQueue *queue)
 {
     while ( ( g_queue_get_length(queue->queue) < queue->limit ) && ( ! g_queue_is_empty(queue->wait_queue) ) )
@@ -149,57 +207,6 @@ _eventd_nd_notification_refresh_list(EventdPluginContext *context, EventdNdQueue
         context->backend->move_end(context->backend->context, data);
 }
 
-static void
-_eventd_nd_notification_process(EventdNdNotification *self, EventdEvent *event)
-{
-    _eventd_nd_notification_clean(self);
-    self->event = eventd_event_ref(event);
-
-    gint margin, padding;
-    gint min_width, max_width;
-
-    gint text_width = 0, text_height = 0;
-    gint image_width = self->context->max_width, image_height = self->context->max_height;
-
-
-    margin = self->queue->margin;
-    padding = eventd_nd_style_get_bubble_padding(self->style);
-    min_width = eventd_nd_style_get_bubble_min_width(self->style);
-    max_width = eventd_nd_style_get_bubble_max_width(self->style);
-    if ( max_width < 0 )
-        max_width = self->context->geometry.w - 2 * margin;
-    if ( min_width > max_width )
-        min_width = max_width;
-
-    /* proccess data and compute the bubble size */
-    self->text.text = eventd_nd_cairo_text_process(self->style, self->event, max_width - 2 * padding, &text_height, &text_width);
-
-    self->width = 2 * padding + text_width;
-
-    if ( self->width < max_width )
-    {
-        eventd_nd_cairo_image_and_icon_process(self->style, self->event, max_width - self->width, &self->image, &self->icon, &self->text.x, &image_width, &image_height);
-        self->width += image_width;
-    }
-
-    /* We are sure that min_width <= max_width */
-    if ( min_width > self->width )
-    {
-        self->width = min_width;
-        /* Let the text take the remaining space if needed (e.g. Right-to-Left) */
-        text_width = ( self->width - ( 2 * padding + image_width ) );
-    }
-    pango_layout_set_width(self->text.text, text_width * PANGO_SCALE);
-
-    self->height = 2 * padding + MAX(image_height, text_height);
-
-    if ( self->timeout > 0 )
-    {
-        g_source_remove(self->timeout);
-        self->timeout = g_timeout_add_full(G_PRIORITY_DEFAULT, eventd_nd_style_get_bubble_timeout(self->style), _eventd_nd_event_timedout, self, NULL);
-    }
-}
-
 EventdNdNotification *
 eventd_nd_notification_new(EventdPluginContext *context, EventdEvent *event, EventdNdStyle *style)
 {
@@ -253,13 +260,6 @@ eventd_nd_notification_draw(EventdNdNotification *self, cairo_surface_t *bubble)
     eventd_nd_cairo_image_and_icon_draw(cr, self->image, self->icon, self->style, self->width, self->height);
     eventd_nd_cairo_text_draw(cr, self->style, self->text.text, padding + self->text.x, padding, self->height - ( 2 * padding ));
     cairo_destroy(cr);
-}
-
-static void
-_eventd_nd_notification_update(EventdNdNotification *self, EventdEvent *event)
-{
-    _eventd_nd_notification_process(self, event);
-    self->context->backend->surface_update(self->surface, self->width, self->height);
 }
 
 void
