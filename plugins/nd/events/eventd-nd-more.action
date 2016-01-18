@@ -1,0 +1,5 @@
+[Action]
+Name = eventd-nd-more
+
+[Notification]
+Text=${size} more

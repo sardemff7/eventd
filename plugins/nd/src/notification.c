@@ -149,6 +149,9 @@ _eventd_nd_notification_update(EventdNdNotification *self, EventdEvent *event)
 static void
 _eventd_nd_notification_refresh_list(EventdPluginContext *context, EventdNdQueue *queue)
 {
+    if ( queue->more_notification != NULL )
+        g_queue_pop_tail_link(queue->queue);
+
     while ( ( g_queue_get_length(queue->queue) < queue->limit ) && ( ! g_queue_is_empty(queue->wait_queue) ) )
     {
         GList *link;
@@ -164,6 +167,31 @@ _eventd_nd_notification_refresh_list(EventdPluginContext *context, EventdNdQueue
         if ( timeout > 0 )
             self->timeout = g_timeout_add_full(G_PRIORITY_DEFAULT, timeout, _eventd_nd_event_timedout, self, NULL);
         self->visible = TRUE;
+    }
+
+    if ( queue->more_indicator )
+    {
+        if ( ! g_queue_is_empty(queue->wait_queue) )
+        {
+            if ( queue->more_notification == NULL )
+            {
+                queue->more_event = eventd_event_new("eventd-nd-more", eventd_nd_anchors[queue->anchor]);
+                if ( eventd_plugin_core_push_event(context->core, queue->more_event) )
+                    return;
+                g_warning("“More” indicator configured, but missing event configuration: disabling indicator");
+                queue->more_indicator = FALSE;
+                eventd_event_unref(queue->more_event);
+                queue->more_event = NULL;
+            }
+            else
+            {
+                eventd_event_add_data(queue->more_event, g_strdup("size"), g_strdup_printf("%u", g_queue_get_length(queue->wait_queue)));
+                _eventd_nd_notification_update(queue->more_notification, queue->more_event);
+                g_queue_push_tail_link(queue->queue, queue->more_notification->link);
+            }
+        }
+        else if ( queue->more_notification != NULL )
+            g_hash_table_remove(context->notifications, eventd_event_get_uuid(queue->more_event));
     }
 
     gpointer data = NULL;
@@ -217,8 +245,17 @@ eventd_nd_notification_new(EventdPluginContext *context, EventdEvent *event, Eve
     self->queue = &context->queues[eventd_nd_style_get_bubble_anchor(style)];
     self->style = style;
 
-    g_queue_push_tail(self->queue->wait_queue, self);
-    self->link = g_queue_peek_tail_link(self->queue->wait_queue);
+    if ( self->queue->more_event != event )
+    {
+        g_queue_push_tail(self->queue->wait_queue, self);
+        self->link = g_queue_peek_tail_link(self->queue->wait_queue);
+    }
+    else
+    {
+        self->queue->more_notification = self;
+        g_queue_push_tail(self->queue->queue, self);
+        self->link = g_queue_peek_tail_link(self->queue->queue);
+    }
 
     _eventd_nd_notification_process(self, event);
     self->surface = self->context->backend->surface_new(self->context->backend->context, self, self->width, self->height);
@@ -239,6 +276,13 @@ eventd_nd_notification_free(gpointer data)
         g_queue_delete_link(self->queue->queue, self->link);
     else
         g_queue_delete_link(self->queue->wait_queue, self->link);
+
+    if ( self->event == self->queue->more_event )
+    {
+        eventd_event_unref(self->queue->more_event);
+        self->queue->more_event = NULL;
+        self->queue->more_notification = NULL;
+    }
 
     self->context->backend->surface_free(self->surface);
     _eventd_nd_notification_clean(self);
@@ -272,6 +316,9 @@ eventd_nd_notification_update(EventdNdNotification *self, EventdEvent *event)
 void
 eventd_nd_notification_dismiss(EventdNdNotification *self)
 {
+    if ( self->queue->more_event == self->event )
+        return;
+
     EventdEvent *event;
     event = eventd_event_new(".notification", "dismiss");
     eventd_event_add_data(event, g_strdup("source-event"), g_strdup(eventd_event_get_uuid(self->event)));

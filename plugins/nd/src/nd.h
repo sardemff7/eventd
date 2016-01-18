@@ -31,6 +31,9 @@ struct _EventdNdQueue {
     gint margin;
     gint spacing;
     gboolean reverse;
+    gboolean more_indicator;
+    EventdEvent *more_event;
+    EventdNdNotification *more_notification;
     GQueue *wait_queue;
     GQueue *queue;
 };

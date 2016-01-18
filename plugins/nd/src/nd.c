@@ -358,6 +358,9 @@ _eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
         if ( evhelpers_config_key_file_get_int(config_file, anchor_name, "Limit", &integer) == 0 )
             context->queues[j].limit = ( integer.value > 0 ) ? integer.value : 0;
 
+        if ( evhelpers_config_key_file_get_boolean(config_file, anchor_name, "MoreIndicator", &boolean) == 0 )
+            context->queues[j].more_indicator = boolean;
+
         if ( evhelpers_config_key_file_get_int(config_file, anchor_name, "Margin", &integer) == 0 )
             context->queues[j].margin = ( integer.value > 0 ) ? integer.value : 0;
 

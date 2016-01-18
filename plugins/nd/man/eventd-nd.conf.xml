@@ -172,6 +172,15 @@
                             <para>The default is to put the newest displayed bubble at anchor.</para>
                         </listitem>
                     </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>MoreIndicator=</varname> (defaults to <literal>false</literal>)</term>
+                        <listitem>
+                            <para>A <type>boolean</type></para>
+                            <para>If <literal>true</literal>, an extra bubble will be displayed if there are notifications waiting for display and the limit is reached.</para>
+                            <para>If you need extra tweaking, you should copy and edit the file <filename>eventd-nd-more.action</filename> in <filename class="directory">/usr/share/&PACKAGE_NAME;/nd</filename>.</para>
+                        </listitem>
+                    </varlistentry>
                 </variablelist>
             </refsect3>
         </refsect2>

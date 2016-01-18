@@ -13,6 +13,18 @@ man5_MANS += \
 	%D%/man/eventd-nd.conf.5 \
 	$(null)
 
+ndeventdir = $(eventdir)/nd
+dist_ndevent_DATA = \
+	%D%/events/eventd-nd-more.event \
+	%D%/events/eventd-nd-more.action \
+	%D%/events/eventd-nd-more-top-left.action \
+	%D%/events/eventd-nd-more-top.action \
+	%D%/events/eventd-nd-more-top-right.action \
+	%D%/events/eventd-nd-more-bottom-left.action \
+	%D%/events/eventd-nd-more-bottom.action \
+	%D%/events/eventd-nd-more-bottom-right.action \
+	$(null)
+
 dist_fdonotificationscapabilities_DATA += \
 	%D%/fdonotificationscapabilities/nd.capabilities \
 	$(null)
