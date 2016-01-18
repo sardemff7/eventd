@@ -35,12 +35,12 @@
 #include "style.h"
 
 const gchar * const eventd_nd_anchors[_EVENTD_ND_ANCHOR_SIZE] = {
-    [EVENTD_ND_ANCHOR_TOP_LEFT]     = "top left",
+    [EVENTD_ND_ANCHOR_TOP_LEFT]     = "top-left",
     [EVENTD_ND_ANCHOR_TOP]          = "top",
-    [EVENTD_ND_ANCHOR_TOP_RIGHT]    = "top right",
-    [EVENTD_ND_ANCHOR_BOTTOM_LEFT]  = "bottom left",
+    [EVENTD_ND_ANCHOR_TOP_RIGHT]    = "top-right",
+    [EVENTD_ND_ANCHOR_BOTTOM_LEFT]  = "bottom-left",
     [EVENTD_ND_ANCHOR_BOTTOM]       = "bottom",
-    [EVENTD_ND_ANCHOR_BOTTOM_RIGHT] = "bottom right",
+    [EVENTD_ND_ANCHOR_BOTTOM_RIGHT] = "bottom-right",
 };
 
 static const gchar * const _eventd_nd_style_pango_alignments[] = {

@@ -291,17 +291,7 @@ _eventd_nd_control_command(EventdPluginContext *context, guint64 argc, const gch
             guint64 anchor = _EVENTD_ND_ANCHOR_SIZE;
             nk_enum_parse(argv[1], _eventd_nd_dismiss_targets, G_N_ELEMENTS(_eventd_nd_dismiss_targets), TRUE, &target);
             if ( argc > 2 )
-            {
-                const gchar *a = argv[2];
-                gsize l = strlen("bottom right") + 1;
-                gchar a_[l];
-                if ( argc > 3 )
-                {
-                    g_snprintf(a_, l, "%s %s", argv[2], argv[3]);
-                    a = a_;
-                }
-                nk_enum_parse(a, eventd_nd_anchors, _EVENTD_ND_ANCHOR_SIZE, TRUE, &anchor);
-            }
+                nk_enum_parse(argv[2], eventd_nd_anchors, _EVENTD_ND_ANCHOR_SIZE, TRUE, &anchor);
 
             if ( target != EVENTD_ND_DISMISS_NONE )
                 eventd_nd_notification_dismiss_target(context, target, anchor);
@@ -353,7 +343,7 @@ _eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
             context->backends[i].global_parse(context->backends[i].context, config_file);
     }
 
-    gsize anchor_name_length = strlen("Anchor bottom right") + 1;
+    gsize anchor_name_length = strlen("Anchor bottom-right") + 1;
     gchar anchor_name[anchor_name_length];
     EventdNdAnchor j;
     for ( j = EVENTD_ND_ANCHOR_TOP_LEFT ; j < _EVENTD_ND_ANCHOR_SIZE ; ++j )

@@ -93,12 +93,12 @@
                     <para>
                         <replaceable>anchor</replaceable> is optional and can be:
                         <simplelist type='inline'>
-                            <member><literal>top left</literal></member>
+                            <member><literal>top-left</literal></member>
                             <member><literal>top</literal></member>
-                            <member><literal>top right</literal></member>
-                            <member><literal>bottom left</literal></member>
+                            <member><literal>top-right</literal></member>
+                            <member><literal>bottom-left</literal></member>
                             <member><literal>bottom</literal></member>
-                            <member><literal>bottom right</literal></member>
+                            <member><literal>bottom-right</literal></member>
                         </simplelist>.
                     </para>
                     <para>
