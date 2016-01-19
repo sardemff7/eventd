@@ -287,7 +287,8 @@ eventd_nd_notification_free(gpointer data)
     self->context->backend->surface_free(self->surface);
     _eventd_nd_notification_clean(self);
 
-    _eventd_nd_notification_refresh_list(self->context, self->queue);
+    if ( ( ! self->context->no_refresh ) && ( self->visible ) )
+        _eventd_nd_notification_refresh_list(self->context, self->queue);
 
     g_free(self);
 }
