@@ -150,7 +150,10 @@ static void
 _eventd_nd_notification_refresh_list(EventdPluginContext *context, EventdNdQueue *queue)
 {
     if ( queue->more_notification != NULL )
+    {
         g_queue_pop_tail_link(queue->queue);
+        queue->more_notification->visible = FALSE;
+    }
 
     while ( ( g_queue_get_length(queue->queue) < queue->limit ) && ( ! g_queue_is_empty(queue->wait_queue) ) )
     {
@@ -188,6 +191,7 @@ _eventd_nd_notification_refresh_list(EventdPluginContext *context, EventdNdQueue
                 eventd_event_add_data(queue->more_event, g_strdup("size"), g_strdup_printf("%u", g_queue_get_length(queue->wait_queue)));
                 _eventd_nd_notification_update(queue->more_notification, queue->more_event);
                 g_queue_push_tail_link(queue->queue, queue->more_notification->link);
+                queue->more_notification->visible = TRUE;
             }
         }
         else if ( queue->more_notification != NULL )
@@ -274,6 +278,8 @@ eventd_nd_notification_free(gpointer data)
 
     if ( self->visible )
         g_queue_delete_link(self->queue->queue, self->link);
+    else if ( self->event == self->queue->more_event )
+        g_list_free_1(self->link);
     else
         g_queue_delete_link(self->queue->wait_queue, self->link);
 
