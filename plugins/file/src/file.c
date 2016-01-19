@@ -115,8 +115,6 @@ _eventd_file_action_parse(EventdPluginContext *context, GKeyFile *config_file)
     action->string = string;
     action->truncate = truncate;
 
-    g_debug("WE WILL WRITE TO FILE!");
-
     context->actions = g_slist_prepend(context->actions, action);
 
     return action;
