@@ -399,6 +399,13 @@ _eventd_nd_action_parse(EventdPluginContext *context, GKeyFile *config_file)
 static void
 _eventd_nd_config_reset(EventdPluginContext *context)
 {
+    EventdNdBackends i;
+    for ( i = EVENTD_ND_BACKEND_NONE + 1 ; i < _EVENTD_ND_BACKENDS_SIZE ; ++i )
+    {
+        if ( ( context->backends[i].context != NULL ) && ( context->backends[i].config_reset != NULL ) )
+            context->backends[i].config_reset(context->backends[i].context);
+    }
+
     g_slist_free_full(context->actions, eventd_nd_style_free);
     context->actions = NULL;
 }

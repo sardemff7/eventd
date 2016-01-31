@@ -62,6 +62,7 @@ typedef struct {
     void (*uninit)(EventdNdBackendContext *context);
 
     void (*global_parse)(EventdNdBackendContext *context, GKeyFile *config_file);
+    void (*config_reset)(EventdNdBackendContext *context);
 
     gboolean (*start)(EventdNdBackendContext *context, const gchar *target);
     void (*stop)(EventdNdBackendContext *context);

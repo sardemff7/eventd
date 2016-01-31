@@ -120,6 +120,14 @@ _eventd_nd_xcb_global_parse(EventdNdBackendContext *self, GKeyFile *config_file)
     evhelpers_config_key_file_get_string_list(config_file, "NotificationXcb", "Outputs", &self->outputs, NULL);
 }
 
+static void
+_eventd_nd_xcb_config_reset(EventdNdBackendContext *self)
+{
+    self->follow_focus = FALSE;
+    g_strfreev(self->outputs);
+    self->outputs = NULL;
+}
+
 static xcb_visualtype_t *
 get_root_visual_type(xcb_screen_t *s)
 {
@@ -686,6 +694,7 @@ eventd_nd_backend_get_info(EventdNdBackend *backend)
     backend->uninit = _eventd_nd_xcb_uninit;
 
     backend->global_parse = _eventd_nd_xcb_global_parse;
+    backend->config_reset = _eventd_nd_xcb_config_reset;
 
     backend->start = _eventd_nd_xcb_start;
     backend->stop  = _eventd_nd_xcb_stop;
