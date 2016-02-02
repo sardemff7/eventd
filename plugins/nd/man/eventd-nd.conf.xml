@@ -54,7 +54,7 @@
         </para>
     </refsect1>
 
-    <refsect1 id="global-sections">
+    <refsect1 id="global-sections" condition="website;enable_nd_xcb">
         <title>Global sections</title>
 
         <refsect2 condition="website;enable_nd_xcb">
