@@ -408,6 +408,11 @@ _eventd_nd_config_reset(EventdPluginContext *context)
 
     g_slist_free_full(context->actions, eventd_nd_style_free);
     context->actions = NULL;
+
+    eventd_nd_style_free(context->style);
+    context->style = eventd_nd_style_new(NULL);
+    context->max_width = -1;
+    context->max_height = -1;
 }
 
 
