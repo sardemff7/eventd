@@ -526,7 +526,7 @@ static void
 _eventd_nd_xcb_stop(EventdNdBackendContext *self)
 {
     g_hash_table_unref(self->bubbles);
-    g_water_xcb_source_unref(self->source);
+    g_water_xcb_source_free(self->source);
     self->bubbles = NULL;
     self->source = NULL;
 }
