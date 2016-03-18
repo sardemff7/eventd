@@ -29,9 +29,9 @@ Make sure to use `git clone --recursive` to fetch submodules too.
 Licencing
 ---------
 
-eventd is distributed under the terms of the [GNU General Public License version 3](http://www.gnu.org/licenses/gpl-3.0.html) (ou version ultérieure).
+eventd is distributed under the terms of the [GNU General Public License version 3](http://www.gnu.org/licenses/gpl-3.0.html) (or any later version).
 However, some parts of it are distributed under other licences:
-- Under the terms of the [GNU Lesser General Public License version 3](http://www.gnu.org/licenses/lgpl-3.0.html) (ou version ultérieure):
+- Under the terms of the [GNU Lesser General Public License version 3](http://www.gnu.org/licenses/lgpl-3.0.html) (or any later version):
   - libeventd-event
   - libeventc
   - libeventd-plugin
