@@ -17,7 +17,6 @@ tts_la_SOURCES = \
 
 tts_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	$(ESPEAK_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(null)

@@ -29,7 +29,7 @@
 #include <glib.h>
 #include <glib-object.h>
 
-#include <speak_lib.h>
+#include <espeak/speak_lib.h>
 
 #include <eventd-plugin.h>
 #include <libeventd-event.h>
