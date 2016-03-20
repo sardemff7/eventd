@@ -118,6 +118,7 @@ nodist_wayland_la_SOURCES = \
 	$(null)
 
 wayland_la_CFLAGS = \
+	-I $(builddir)/%D%/src \
 	$(ND_BACKENDS_CFLAGS) \
 	$(GW_WAYLAND_CFLAGS) \
 	$(null)
@@ -137,7 +138,7 @@ CLEANFILES += \
 	%D%/src/notification-area-unstable-v1-client-protocol.h \
 	$(null)
 
-wayland.la %D%/src/wayland_la-wayland.lo: %D%/src/notification-area-unstable-v1-client-protocol.h
+wayland.la %D%/src/wayland_la-backend-wayland.lo: %D%/src/notification-area-unstable-v1-client-protocol.h
 endif
 
 if ENABLE_ND_XCB
