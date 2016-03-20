@@ -30,6 +30,9 @@
 #include <glib-object.h>
 
 #include <gdk-pixbuf/gdk-pixbuf.h>
+#if ( ( GDK_PIXBUF_MAJOR < 2 ) || ( ( GDK_PIXBUF_MAJOR == 2 ) && ( GDK_PIXBUF_MINOR < 32 ) ) )
+#define gdk_pixbuf_read_pixels gdk_pixbuf_get_pixels
+#endif /* gdk-pixbux < 2.32 */
 
 #include <libeventd-event.h>
 #include <eventd-plugin.h>
