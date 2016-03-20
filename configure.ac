@@ -267,12 +267,13 @@ if test x${enable_notification_daemon} = xyes; then
 fi
 
 # Wayland backend
+wayland_min_version=1.9.91
 if test x${enable_nd_wayland} = xyes; then
     AC_CHECK_HEADER([sys/mman.h])
     if test x${ac_cv_func_mmap_fixed_mapped} = xno; then
         AC_MSG_ERROR([*** mmap() function is required for the Wayland backend of the notification-daemon plugin])
     fi
-    GW_CHECK_WAYLAND([wayland-cursor wayland-notification-area])
+    GW_CHECK_WAYLAND([wayland-client >= ${wayland_min_version} wayland-cursor wayland-notification-area])
     AC_ARG_VAR([WAYLAND_SCANNER], [Wayland XML scanner executable])
     AC_PATH_PROG([WAYLAND_SCANNER], [wayland-scanner])
     if test -z "${WAYLAND_SCANNER}"; then
