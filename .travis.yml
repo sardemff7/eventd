@@ -1,0 +1,50 @@
+dist: trusty
+sudo: required
+
+language: c
+compiler:
+    - gcc
+    - clang
+
+addons:
+    apt:
+        packages:
+            - autoconf
+            - automake
+            - make
+            - xsltproc
+            - docbook-xsl
+            - docbook-xml
+            - uuid-dev
+            - libglib2.0-dev
+            - libyajl-dev
+            - libsoup2.4-dev
+            - libcairo2-dev
+            - libpango1.0-dev
+            - libgdk-pixbuf2.0-dev
+            - libxcb1-dev
+            - libxcb-util0-dev
+            - libxcb-randr0-dev
+            - libxcb-shape0-dev
+            - libpurple-dev
+            - libpulse-dev
+            - libsndfile1-dev
+            - libespeak-dev
+            - libcanberra-dev
+install:
+    # Could be worked around with: libgnomevfs2-dev libdbus-glib-1-dev
+    - sudo apt-get install -y libavahi-glib-dev libdbus-1-dev
+
+before_script:
+    - autoreconf -fiv
+    - ./configure --disable-silent-rules --enable-debug --enable-json --disable-http --disable-nd-wayland --enable-nd-fbdev --enable-tts --enable-canberra
+script:
+    - make -j2
+    # For now we cannot run tests as Travis Trusty env lacks IPv6 support
+after_failure:
+    - cat test-suite.log
+    - cat eventd-*/test-suite.log
+
+
+notifications:
+    email: false
