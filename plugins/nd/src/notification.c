@@ -37,8 +37,7 @@
 
 #include "backend.h"
 #include "style.h"
-#include "cairo.h"
-#include "icon.h"
+#include "draw.h"
 #include "nd.h"
 
 #include "notification.h"
@@ -111,13 +110,13 @@ _eventd_nd_notification_process(EventdNdNotification *self, EventdEvent *event)
         min_width = max_width;
 
     /* proccess data and compute the bubble size */
-    self->text.text = eventd_nd_cairo_text_process(self->style, self->event, max_width - 2 * padding, &text_height, &text_width);
+    self->text.text = eventd_nd_draw_text_process(self->style, self->event, max_width - 2 * padding, &text_height, &text_width);
 
     self->width = 2 * padding + text_width;
 
     if ( self->width < max_width )
     {
-        eventd_nd_cairo_image_and_icon_process(self->style, self->event, max_width - self->width, &self->image, &self->icon, &self->text.x, &image_width, &image_height);
+        eventd_nd_draw_image_and_icon_process(self->style, self->event, max_width - self->width, &self->image, &self->icon, &self->text.x, &image_width, &image_height);
         self->width += image_width;
     }
 
@@ -307,9 +306,9 @@ eventd_nd_notification_draw(EventdNdNotification *self, cairo_surface_t *bubble)
 
     cairo_t *cr;
     cr = cairo_create(bubble);
-    eventd_nd_cairo_bubble_draw(cr, eventd_nd_style_get_bubble_colour(self->style), eventd_nd_style_get_bubble_radius(self->style), self->width, self->height);
-    eventd_nd_cairo_image_and_icon_draw(cr, self->image, self->icon, self->style, self->width, self->height);
-    eventd_nd_cairo_text_draw(cr, self->style, self->text.text, padding + self->text.x, padding, self->height - ( 2 * padding ));
+    eventd_nd_draw_bubble_draw(cr, eventd_nd_style_get_bubble_colour(self->style), eventd_nd_style_get_bubble_radius(self->style), self->width, self->height);
+    eventd_nd_draw_image_and_icon_draw(cr, self->image, self->icon, self->style, self->width, self->height);
+    eventd_nd_draw_text_draw(cr, self->style, self->text.text, padding + self->text.x, padding, self->height - ( 2 * padding ));
     cairo_destroy(cr);
 }
 

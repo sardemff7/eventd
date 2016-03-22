@@ -37,10 +37,8 @@ nd_la_SOURCES = \
 	%D%/src/nd.c \
 	%D%/src/notification.h \
 	%D%/src/notification.c \
-	%D%/src/icon.h \
-	%D%/src/icon.c \
-	%D%/src/cairo.c \
-	%D%/src/cairo.h \
+	%D%/src/draw.c \
+	%D%/src/draw.h \
 	%D%/src/style.c \
 	%D%/src/style.h \
 	%D%/src/pixbuf.h \

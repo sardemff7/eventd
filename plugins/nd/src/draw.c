@@ -22,6 +22,13 @@
 
 #include <config.h>
 
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif /* HAVE_STRING_H */
+#ifdef HAVE_MATH_H
+#include <math.h>
+#endif /* HAVE_MATH_H */
+
 #include <glib.h>
 #include <glib-object.h>
 
@@ -30,15 +37,138 @@
 #include <pango/pango.h>
 #include <pango/pangocairo.h>
 
+#include <libeventd-event.h>
 #include <libeventd-helpers-config.h>
 
 #include "style.h"
 #include "pixbuf.h"
 
-#include "icon.h"
+#include "cairo.h"
+
+
+static gssize
+_eventd_nd_draw_strccount(const gchar *str, char c)
+{
+    gssize count = 1;
+    for ( ; *str != 0 ; ++str )
+    {
+        if ( *str == c )
+            ++count;
+    }
+    return count;
+}
+
+static gchar *
+_eventd_nd_draw_find_n_c(gchar *s, gsize n, gunichar c)
+{
+    gsize l;
+    gchar *r;
+    gsize i;
+
+    r = s;
+    l = strlen(s);
+    for ( i = 0 ; ( r != NULL ) && ( i < n ) ; ++i )
+    {
+        /* We know how many \n we have */
+        r = g_utf8_strchr(r, l - ( r - s ), c);
+        ++r;
+    }
+    return r - 1;
+}
+
+static gchar *
+_eventd_nd_draw_get_text(EventdNdStyle *style, EventdEvent *event, guint8 *max_lines)
+{
+    /*
+     * This function depends on the current Pango implementation,
+     * which is limiting on a per-paragraph basis.
+     * If they switch to a per-layout basis, this whole function will be
+     * replaced by a simple pango_layout_set_height(-lines) call.
+     */
+
+    gchar *text;
+    text = evhelpers_format_string_get_string(eventd_nd_style_get_template_text(style), event, NULL, NULL);
+    if ( *text == '\0' )
+        return NULL;
+
+    guint8 max;
+    max = eventd_nd_style_get_text_max_lines(style);
+
+    if ( max < 1 )
+        goto ret;
+
+    gssize count;
+
+    if ( ( count = _eventd_nd_draw_strccount(text, '\n') ) <= max )
+    {
+        *max_lines = max / count;
+        goto ret;
+    }
+
+    gchar *b1, *b2;
+    gssize el;
+
+    b1 = _eventd_nd_draw_find_n_c(text, max / 2, '\n');
+    b2 = _eventd_nd_draw_find_n_c(text, ( count - ( max + 1 ) / 2 + 1 ), '\n');
+    el = strlen("…");
+
+    if ( ( b2 - b1 ) < el )
+    {
+        gchar *tmp = text;
+        *b1 = '\0';
+        ++b2;
+        text = g_strdup_printf("%s\n…\n%s", text, b2);
+        g_free(tmp);
+    }
+    else
+    {
+        ++b1;
+        strncpy(b1, "…", el);
+        b1 += el;
+        strncpy(b1, b2, strlen(b2) + 1);
+    }
+
+    *max_lines = 1;
+
+ret:
+    return text;
+}
+
+PangoLayout *
+eventd_nd_draw_text_process(EventdNdStyle *style, EventdEvent *event, gint max_width, gint *text_height, gint *text_width)
+{
+    gchar *text_;
+    guint8 max_lines = 0;
+
+    text_ = _eventd_nd_draw_get_text(style, event, &max_lines);
+    if ( text_ == NULL )
+        return NULL;
+
+    PangoContext *pango_context;
+    PangoLayout *text;
+
+    pango_context = pango_context_new();
+    pango_context_set_font_map(pango_context, pango_cairo_font_map_get_default());
+
+    text = pango_layout_new(pango_context);
+    pango_layout_set_font_description(text, eventd_nd_style_get_text_font(style));
+    pango_layout_set_alignment(text, eventd_nd_style_get_text_align(style));
+    pango_layout_set_wrap(text, PANGO_WRAP_WORD_CHAR);
+    pango_layout_set_ellipsize(text, PANGO_ELLIPSIZE_MIDDLE);
+    pango_layout_set_width(text, max_width * PANGO_SCALE);
+    if ( max_lines < 1 )
+        pango_layout_set_height(text, -max_lines);
+    pango_layout_set_markup(text, text_, -1);
+    pango_layout_get_pixel_size(text, text_width, text_height);
+    g_free(text_);
+
+    g_object_unref(pango_context);
+
+    return text;
+}
 
 static cairo_surface_t *
-_eventd_nd_cairo_limit_size(cairo_surface_t *source, gint max_width, gint max_height)
+_eventd_nd_draw_limit_size(cairo_surface_t *source, gint max_width, gint max_height)
 {
     gdouble s = 1.0;
     gint width, height;
@@ -86,7 +216,7 @@ _eventd_nd_cairo_limit_size(cairo_surface_t *source, gint max_width, gint max_he
 }
 
 /*
- * _eventd_nd_cairo_get_icon_surface and alpha_mult
+ * _eventd_nd_draw_get_icon_surface and alpha_mult
  * are inspired by gdk_cairo_set_source_pixbuf
  * GDK is:
  *     Copyright (C) 2011-2016 Red Hat, Inc.
@@ -120,7 +250,7 @@ alpha_mult(guchar c, guchar a)
 }
 
 static cairo_surface_t *
-_eventd_nd_cairo_get_surface_from_pixbuf(GdkPixbuf *pixbuf)
+_eventd_nd_draw_get_surface_from_pixbuf(GdkPixbuf *pixbuf)
 {
     gint width, height;
     const guchar *pixels;
@@ -181,11 +311,11 @@ _eventd_nd_cairo_get_surface_from_pixbuf(GdkPixbuf *pixbuf)
 }
 
 static cairo_surface_t *
-_eventd_nd_cairo_image_process(GdkPixbuf *pixbuf, EventdNdStyle *style, gint *width, gint *height)
+_eventd_nd_draw_image_process(GdkPixbuf *pixbuf, EventdNdStyle *style, gint *width, gint *height)
 {
     cairo_surface_t *image;
 
-    image = _eventd_nd_cairo_limit_size(_eventd_nd_cairo_get_surface_from_pixbuf(pixbuf),
+    image = _eventd_nd_draw_limit_size(_eventd_nd_draw_get_surface_from_pixbuf(pixbuf),
                                         eventd_nd_style_get_image_max_width(style),
                                         eventd_nd_style_get_image_max_height(style));
 
@@ -196,12 +326,12 @@ _eventd_nd_cairo_image_process(GdkPixbuf *pixbuf, EventdNdStyle *style, gint *wi
 }
 
 static cairo_surface_t *
-_eventd_nd_cairo_icon_process_overlay(GdkPixbuf *pixbuf, EventdNdStyle *style, gint *width, gint *height)
+_eventd_nd_draw_icon_process_overlay(GdkPixbuf *pixbuf, EventdNdStyle *style, gint *width, gint *height)
 {
     cairo_surface_t *icon;
     gint w, h;
 
-    icon = _eventd_nd_cairo_limit_size(_eventd_nd_cairo_get_surface_from_pixbuf(pixbuf),
+    icon = _eventd_nd_draw_limit_size(_eventd_nd_draw_get_surface_from_pixbuf(pixbuf),
                                         eventd_nd_style_get_icon_max_width(style),
                                         eventd_nd_style_get_icon_max_height(style));
 
@@ -215,11 +345,11 @@ _eventd_nd_cairo_icon_process_overlay(GdkPixbuf *pixbuf, EventdNdStyle *style, g
 }
 
 static cairo_surface_t *
-_eventd_nd_cairo_icon_process_foreground(GdkPixbuf *pixbuf, EventdNdStyle *style, gint *width, gint *height)
+_eventd_nd_draw_icon_process_foreground(GdkPixbuf *pixbuf, EventdNdStyle *style, gint *width, gint *height)
 {
     cairo_surface_t *icon;
 
-    icon = _eventd_nd_cairo_limit_size(_eventd_nd_cairo_get_surface_from_pixbuf(pixbuf),
+    icon = _eventd_nd_draw_limit_size(_eventd_nd_draw_get_surface_from_pixbuf(pixbuf),
                                         eventd_nd_style_get_icon_max_width(style),
                                         eventd_nd_style_get_icon_max_height(style));
 
@@ -233,7 +363,7 @@ _eventd_nd_cairo_icon_process_foreground(GdkPixbuf *pixbuf, EventdNdStyle *style
 }
 
 static cairo_surface_t *
-_eventd_nd_cairo_icon_process_background(GdkPixbuf *pixbuf, EventdNdStyle *style, gint max_width, gint *width, gint *height)
+_eventd_nd_draw_icon_process_background(GdkPixbuf *pixbuf, EventdNdStyle *style, gint max_width, gint *width, gint *height)
 {
     gint fade_width;
 
@@ -244,7 +374,7 @@ _eventd_nd_cairo_icon_process_background(GdkPixbuf *pixbuf, EventdNdStyle *style
 
     cairo_surface_t *icon;
 
-    icon = _eventd_nd_cairo_icon_process_foreground(pixbuf, style, width, height);
+    icon = _eventd_nd_draw_icon_process_foreground(pixbuf, style, width, height);
 
     *width -= fade_width;
 
@@ -252,7 +382,7 @@ _eventd_nd_cairo_icon_process_background(GdkPixbuf *pixbuf, EventdNdStyle *style
 }
 
 void
-eventd_nd_cairo_image_and_icon_process(EventdNdStyle *style, EventdEvent *event, gint max_width, cairo_surface_t **image, cairo_surface_t **icon, gint *text_x, gint *width, gint *height)
+eventd_nd_draw_image_and_icon_process(EventdNdStyle *style, EventdEvent *event, gint max_width, cairo_surface_t **image, cairo_surface_t **icon, gint *text_x, gint *width, gint *height)
 {
     GdkPixbuf *image_pixbuf = NULL;
     GdkPixbuf *icon_pixbuf = NULL;
@@ -277,13 +407,13 @@ eventd_nd_cairo_image_and_icon_process(EventdNdStyle *style, EventdEvent *event,
         if ( ( image_pixbuf != NULL )
              && ( ( max_width < 0 ) || ( gdk_pixbuf_get_width(image_pixbuf) < max_width ) ) )
         {
-            *image = _eventd_nd_cairo_image_process(image_pixbuf, style, width, height);
+            *image = _eventd_nd_draw_image_process(image_pixbuf, style, width, height);
             *text_x = *width;
             max_width -= *width;
         }
         if ( ( icon_pixbuf != NULL )
              && ( ( max_width < 0 ) || ( gdk_pixbuf_get_width(icon_pixbuf) < max_width ) ) )
-            *icon = _eventd_nd_cairo_icon_process_background(icon_pixbuf, style, max_width, width, height);
+            *icon = _eventd_nd_draw_icon_process_background(icon_pixbuf, style, max_width, width, height);
     break;
     case EVENTD_ND_STYLE_ICON_PLACEMENT_OVERLAY:
         if ( ( image_pixbuf == NULL ) && ( icon_pixbuf != NULL ) )
@@ -295,12 +425,12 @@ eventd_nd_cairo_image_and_icon_process(EventdNdStyle *style, EventdEvent *event,
         {
             if ( ( max_width < 0 ) || ( gdk_pixbuf_get_width(image_pixbuf) < max_width ) )
             {
-                *image = _eventd_nd_cairo_image_process(image_pixbuf, style, width, height);
+                *image = _eventd_nd_draw_image_process(image_pixbuf, style, width, height);
                 max_width -= *width;
             }
             if ( ( icon_pixbuf != NULL )
                  && ( ( max_width < 0 ) || ( gdk_pixbuf_get_width(icon_pixbuf) < max_width ) ) )
-                *icon = _eventd_nd_cairo_icon_process_overlay(icon_pixbuf, style, width, height);
+                *icon = _eventd_nd_draw_icon_process_overlay(icon_pixbuf, style, width, height);
             *text_x = *width;
         }
     break;
@@ -308,19 +438,79 @@ eventd_nd_cairo_image_and_icon_process(EventdNdStyle *style, EventdEvent *event,
         if ( ( image_pixbuf != NULL )
              && ( ( max_width < 0 ) || ( gdk_pixbuf_get_width(image_pixbuf) < max_width ) ) )
         {
-            *image = _eventd_nd_cairo_image_process(image_pixbuf, style, width, height);
+            *image = _eventd_nd_draw_image_process(image_pixbuf, style, width, height);
             *text_x = *width;
             max_width -= *width;
         }
         if ( ( icon_pixbuf != NULL )
              && ( ( max_width < 0 ) || ( gdk_pixbuf_get_width(icon_pixbuf) < max_width ) ) )
-            *icon = _eventd_nd_cairo_icon_process_foreground(icon_pixbuf, style, width, height);
+            *icon = _eventd_nd_draw_icon_process_foreground(icon_pixbuf, style, width, height);
     break;
     }
 }
 
+
+void
+eventd_nd_draw_bubble_draw(cairo_t *cr, Colour colour, gint radius, gint width, gint height)
+{
+    cairo_set_source_rgba(cr, colour.r, colour.g, colour.b, colour.a);
+
+    if ( radius < 1 )
+    {
+        cairo_paint(cr);
+        return;
+    }
+
+    gint limit;
+
+    limit = MIN(width, height) / 2;
+
+    if ( radius > limit )
+        radius = limit;
+
+    cairo_new_path(cr);
+
+    cairo_move_to(cr, 0, radius);
+    cairo_arc(cr,
+              radius, radius,
+              radius,
+              M_PI, 3.0 * M_PI / 2.0);
+    cairo_line_to(cr, width-radius, 0);
+    cairo_arc(cr,
+              width-radius, radius,
+              radius,
+              3.0 * M_PI / 2.0, 0.0);
+    cairo_line_to(cr, width, height-radius);
+    cairo_arc(cr,
+              width-radius, height-radius,
+              radius,
+              0.0, M_PI / 2.0);
+    cairo_line_to(cr, radius, height);
+    cairo_arc(cr,
+              radius, height-radius,
+              radius,
+              M_PI / 2.0, M_PI);
+    cairo_close_path(cr);
+
+    cairo_fill(cr);
+}
+
+void
+eventd_nd_draw_text_draw(cairo_t *cr, EventdNdStyle *style, PangoLayout *text, gint offset_x, gint offset_y, gint max_height)
+{
+    Colour colour;
+
+    colour = eventd_nd_style_get_text_colour(style);
+    cairo_set_source_rgba(cr, colour.r, colour.g, colour.b, colour.a);
+    cairo_new_path(cr);
+    cairo_move_to(cr, offset_x, offset_y);
+    pango_cairo_update_layout(cr, text);
+    pango_cairo_layout_path(cr, text);
+    cairo_fill(cr);
+}
+
 static gint
-_eventd_nd_cairo_get_valign(EventdNdAnchorVertical anchor, gint height, gint padding, gint surface_height)
+_eventd_nd_draw_get_valign(EventdNdAnchorVertical anchor, gint height, gint padding, gint surface_height)
 {
     switch ( anchor )
     {
@@ -335,7 +525,7 @@ _eventd_nd_cairo_get_valign(EventdNdAnchorVertical anchor, gint height, gint pad
 }
 
 static void
-_eventd_nd_cairo_surface_draw(cairo_t *cr, cairo_surface_t *surface, gint x, gint y)
+_eventd_nd_draw_surface_draw(cairo_t *cr, cairo_surface_t *surface, gint x, gint y)
 {
     cairo_set_source_surface(cr, surface, x, y);
     cairo_rectangle(cr, x, y, cairo_image_surface_get_width(surface), cairo_image_surface_get_height(surface));
@@ -344,7 +534,7 @@ _eventd_nd_cairo_surface_draw(cairo_t *cr, cairo_surface_t *surface, gint x, gin
 }
 
 static void
-_eventd_nd_cairo_image_draw(cairo_t *cr, cairo_surface_t *image, EventdNdStyle *style, gint width, gint height)
+_eventd_nd_draw_image_draw(cairo_t *cr, cairo_surface_t *image, EventdNdStyle *style, gint width, gint height)
 {
     gint x, y;
     gint padding;
@@ -352,12 +542,12 @@ _eventd_nd_cairo_image_draw(cairo_t *cr, cairo_surface_t *image, EventdNdStyle *
     padding = eventd_nd_style_get_bubble_padding(style);
 
     x = padding;
-    y = _eventd_nd_cairo_get_valign(eventd_nd_style_get_image_anchor(style), height, padding, cairo_image_surface_get_height(image));
-    _eventd_nd_cairo_surface_draw(cr, image, x, y);
+    y = _eventd_nd_draw_get_valign(eventd_nd_style_get_image_anchor(style), height, padding, cairo_image_surface_get_height(image));
+    _eventd_nd_draw_surface_draw(cr, image, x, y);
 }
 
 static void
-_eventd_nd_cairo_image_and_icon_draw_overlay(cairo_t *cr, cairo_surface_t *image, cairo_surface_t *icon, EventdNdStyle *style, gint width, gint height)
+_eventd_nd_draw_image_and_icon_draw_overlay(cairo_t *cr, cairo_surface_t *image, cairo_surface_t *icon, EventdNdStyle *style, gint width, gint height)
 {
     if ( image == NULL )
         return;
@@ -367,7 +557,7 @@ _eventd_nd_cairo_image_and_icon_draw_overlay(cairo_t *cr, cairo_surface_t *image
     padding = eventd_nd_style_get_bubble_padding(style);
 
     if ( icon == NULL )
-        _eventd_nd_cairo_image_draw(cr, image, style, width, height);
+        _eventd_nd_draw_image_draw(cr, image, style, width, height);
     else
     {
         gint image_x, image_y;
@@ -377,45 +567,45 @@ _eventd_nd_cairo_image_and_icon_draw_overlay(cairo_t *cr, cairo_surface_t *image
         w = cairo_image_surface_get_width(icon);
         h =  cairo_image_surface_get_height(icon);
 
-        image_x = _eventd_nd_cairo_get_valign(eventd_nd_style_get_image_anchor(style), height, padding, cairo_image_surface_get_height(image));;
+        image_x = _eventd_nd_draw_get_valign(eventd_nd_style_get_image_anchor(style), height, padding, cairo_image_surface_get_height(image));;
         image_y = padding;
         icon_x = image_x + cairo_image_surface_get_width(image) - ( 3 * w / 4 );
         icon_y = image_y + cairo_image_surface_get_height(image) - ( 3 * h / 4 );
 
-        _eventd_nd_cairo_surface_draw(cr, image, image_x, image_y);
-        _eventd_nd_cairo_surface_draw(cr, icon, icon_x, icon_y);
+        _eventd_nd_draw_surface_draw(cr, image, image_x, image_y);
+        _eventd_nd_draw_surface_draw(cr, icon, icon_x, icon_y);
     }
 }
 
 static void
-_eventd_nd_cairo_image_and_icon_draw_foreground(cairo_t *cr, cairo_surface_t *image, cairo_surface_t *icon, EventdNdStyle *style, gint width, gint height)
+_eventd_nd_draw_image_and_icon_draw_foreground(cairo_t *cr, cairo_surface_t *image, cairo_surface_t *icon, EventdNdStyle *style, gint width, gint height)
 {
     gint padding;
 
     padding = eventd_nd_style_get_bubble_padding(style);
 
     if ( image != NULL )
-        _eventd_nd_cairo_image_draw(cr, image, style, width, height);
+        _eventd_nd_draw_image_draw(cr, image, style, width, height);
 
     if ( icon != NULL )
     {
         gint x, y;
 
         x = width - padding - cairo_image_surface_get_width(icon);
-        y = _eventd_nd_cairo_get_valign(eventd_nd_style_get_icon_anchor(style), height, padding, cairo_image_surface_get_height(icon));
-        _eventd_nd_cairo_surface_draw(cr, icon, x, y);
+        y = _eventd_nd_draw_get_valign(eventd_nd_style_get_icon_anchor(style), height, padding, cairo_image_surface_get_height(icon));
+        _eventd_nd_draw_surface_draw(cr, icon, x, y);
     }
 }
 
 static void
-_eventd_nd_cairo_image_and_icon_draw_background(cairo_t *cr, cairo_surface_t *image, cairo_surface_t *icon, EventdNdStyle *style, gint width, gint height)
+_eventd_nd_draw_image_and_icon_draw_background(cairo_t *cr, cairo_surface_t *image, cairo_surface_t *icon, EventdNdStyle *style, gint width, gint height)
 {
     gint padding;
 
     padding = eventd_nd_style_get_bubble_padding(style);
 
     if ( image != NULL )
-        _eventd_nd_cairo_image_draw(cr, image, style, width, height);
+        _eventd_nd_draw_image_draw(cr, image, style, width, height);
 
     if ( icon != NULL )
     {
@@ -424,7 +614,7 @@ _eventd_nd_cairo_image_and_icon_draw_background(cairo_t *cr, cairo_surface_t *im
 
         x2 = width - padding;
         x1 = x2 - cairo_image_surface_get_width(icon);
-        y = _eventd_nd_cairo_get_valign(eventd_nd_style_get_icon_anchor(style), height, padding, cairo_image_surface_get_height(icon));
+        y = _eventd_nd_draw_get_valign(eventd_nd_style_get_icon_anchor(style), height, padding, cairo_image_surface_get_height(icon));
 
         mask = cairo_pattern_create_linear(x1, 0, x2, 0);
         cairo_pattern_add_color_stop_rgba(mask, 0, 0, 0, 0, 0);
@@ -437,18 +627,18 @@ _eventd_nd_cairo_image_and_icon_draw_background(cairo_t *cr, cairo_surface_t *im
 }
 
 void
-eventd_nd_cairo_image_and_icon_draw(cairo_t *cr, cairo_surface_t *image, cairo_surface_t *icon, EventdNdStyle *style, gint width, gint height)
+eventd_nd_draw_image_and_icon_draw(cairo_t *cr, cairo_surface_t *image, cairo_surface_t *icon, EventdNdStyle *style, gint width, gint height)
 {
     switch ( eventd_nd_style_get_icon_placement(style) )
     {
     case EVENTD_ND_STYLE_ICON_PLACEMENT_BACKGROUND:
-        _eventd_nd_cairo_image_and_icon_draw_background(cr, image, icon, style, width, height);
+        _eventd_nd_draw_image_and_icon_draw_background(cr, image, icon, style, width, height);
     break;
     case EVENTD_ND_STYLE_ICON_PLACEMENT_OVERLAY:
-        _eventd_nd_cairo_image_and_icon_draw_overlay(cr, image, icon, style, width, height);
+        _eventd_nd_draw_image_and_icon_draw_overlay(cr, image, icon, style, width, height);
     break;
     case EVENTD_ND_STYLE_ICON_PLACEMENT_FOREGROUND:
-        _eventd_nd_cairo_image_and_icon_draw_foreground(cr, image, icon, style, width, height);
+        _eventd_nd_draw_image_and_icon_draw_foreground(cr, image, icon, style, width, height);
     break;
     }
 }
