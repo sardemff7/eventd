@@ -1,6 +1,6 @@
 m4_define([eventd_version_major], [0])
-m4_define([eventd_version_minor], [13])
-m4_define([eventd_version_patch], [])
+m4_define([eventd_version_minor], [12])
+m4_define([eventd_version_patch], [.1])
 m4_define([eventd_homepage], [http://www.eventd.org])
 m4_define([eventd_bug_report_page], [https://github.com/sardemff7/eventd/issues])
 AC_PREREQ([2.65])
@@ -117,10 +117,8 @@ AC_SUBST([vapidir])
 # eventd specific dirs
 pluginsdir='${pkglibdir}/plugins'
 eventdir='${pkgdatadir}'
-fdonotificationscapabilitiesdir='${pluginsdir}/fdo-notifications'
 AC_SUBST([pluginsdir])
 AC_SUBST([eventdir])
-AC_SUBST([fdonotificationscapabilitiesdir])
 
 dnl GLIB_DEFINE_LOCALEDIR([EVENTD_LOCALEDIR])
 GW_INIT

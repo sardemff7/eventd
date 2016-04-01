@@ -8,10 +8,6 @@ plugins_LTLIBRARIES += \
 man5_MANS += \
 	%D%/man/eventd-sound.conf.5 \
 	$(null)
-
-dist_fdonotificationscapabilities_DATA += \
-	%D%/fdonotificationscapabilities/sound.capabilities \
-	$(null)
 endif
 
 

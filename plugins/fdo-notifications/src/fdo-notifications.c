@@ -520,92 +520,27 @@ _eventd_fdo_notifications_on_name_lost(GDBusConnection *connection, const gchar 
 }
 
 static void
-_eventd_fdo_notifications_load_capabilities_dir(gchar *dir_name, GHashTable *capabilities_set)
-{
-    GDir *capabilities_dir;
-    GError *error = NULL;
-    capabilities_dir = g_dir_open(dir_name, 0, &error);
-    if ( capabilities_dir == NULL )
-    {
-        g_warning("Couldn't read the Freedesktop.org Notifications plugin capabilities directory '%s': %s", dir_name, error->message);
-        g_clear_error(&error);
-        return;
-    }
-
-    const gchar *file;
-    while ( ( file = g_dir_read_name(capabilities_dir) ) != NULL )
-    {
-        if ( g_str_has_prefix(file, "." ) || ( ! g_str_has_suffix(file, ".capabilities") ) )
-            continue;
-
-        gchar *full_filename;
-
-        full_filename = g_build_filename(dir_name, file, NULL);
-        if ( ! g_file_test(full_filename, G_FILE_TEST_IS_REGULAR) )
-            goto next;
-
-        gchar *capabilities;
-        if ( ! g_file_get_contents(full_filename, &capabilities, NULL, &error) )
-        {
-            g_warning("Could not read capability file '%s': %s", file, error->message);
-            g_clear_error(&error);
-            goto next;
-        }
-
-        gchar **capabilitiesv;
-        capabilitiesv = g_strsplit_set(capabilities, " \n,", -1);
-        g_free(capabilities);
-
-        gchar **capability;
-        for ( capability = capabilitiesv ; *capability != NULL ; ++capability )
-            g_hash_table_add(capabilities_set, *capability);
-        g_free(capabilitiesv);
-
-    next:
-        g_free(full_filename);
-    }
-    g_dir_close(capabilities_dir);
-    g_free(dir_name);
-}
-
-static void
 _eventd_fdo_notifications_init_capabilities(EventdPluginContext *context)
 {
-    /*
-     * We use a GHashTable to make sure we
-     * add each capability only once
-     */
-    GHashTable *capabilities_set;
-
-    capabilities_set = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
-
-    /* Common capabilities */
-    /* TODO: or not, these imply “some” work
-    g_hash_table_add(capabilities_set, "actions");
-     */
-
-    gchar **dirs, **dir;
-    dirs = evhelpers_dirs_get_lib(NULL, "plugins" G_DIR_SEPARATOR_S "fdo-notifications");
-    for ( dir = dirs ; *dir != NULL ; ++dir )
-        _eventd_fdo_notifications_load_capabilities_dir(*dir, capabilities_set);
-    g_free(dirs);
-
     GVariantBuilder *builder;
 
     builder = g_variant_builder_new(G_VARIANT_TYPE("as"));
 
-    GHashTableIter iter;
-    const gchar *capability;
-    gpointer dummy;
-    g_hash_table_iter_init(&iter, capabilities_set);
-    while ( g_hash_table_iter_next(&iter, (gpointer *)&capability, &dummy) )
-    {
-        if ( *capability != '\0' )
-            /* Do not add empty capabilities */
-            g_variant_builder_add(builder, "s", capability);
-    }
-
-    g_hash_table_unref(capabilities_set);
+    /*
+     * We consider to support everything as we could
+     * forward to
+     */
+    g_variant_builder_add(builder, "s", "body");
+    g_variant_builder_add(builder, "s", "body-markup");
+    g_variant_builder_add(builder, "s", "body-hyperlinks");
+    g_variant_builder_add(builder, "s", "icon-static");
+    g_variant_builder_add(builder, "s", "icon-multi");
+    g_variant_builder_add(builder, "s", "image/svg+xml");
+    g_variant_builder_add(builder, "s", "x-eventd-overlay-icon");
+    g_variant_builder_add(builder, "s", "sound");
+    g_variant_builder_add(builder, "s", "actions");
+    g_variant_builder_add(builder, "s", "action-icons");
+    g_variant_builder_add(builder, "s", "persistence");
 
     context->capabilities = g_variant_new("(as)", builder);
     g_variant_builder_unref(builder);

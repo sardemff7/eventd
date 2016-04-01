@@ -24,10 +24,6 @@ dist_ndevent_DATA = \
 	%D%/events/eventd-nd-more-bottom.action \
 	%D%/events/eventd-nd-more-bottom-right.action \
 	$(null)
-
-dist_fdonotificationscapabilities_DATA += \
-	%D%/fdonotificationscapabilities/nd.capabilities \
-	$(null)
 endif
 
 

@@ -43,7 +43,6 @@ vapi_DATA =
 dist_event_DATA =
 systemduserunit_DATA =
 dbussessionservice_DATA =
-dist_fdonotificationscapabilities_DATA =
 
 INTROSPECTION_GIRS =
 INTROSPECTION_SCANNER_ARGS = --add-include-path=$(builddir) --warn-all
