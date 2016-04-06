@@ -139,7 +139,7 @@ PKG_CHECK_MODULES([GTHREAD], [gthread-2.0])
 
 gio_unix=
 if test x${ev_os_unix} = xyes; then
-    gio_unix="gio-unix-2.0 >= ${gio_min_version}"
+    gio_unix="gio-unix-2.0"
 fi
 
 PKG_CHECK_MODULES([GIO], [gio-2.0 >= ${gio_min_version} ${gio_unix}])
