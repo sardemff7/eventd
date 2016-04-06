@@ -9,6 +9,6 @@ Name: libeventc-light
 Description: Library to communicate with eventd, light (local-only non-GIO) version
 URL: http://www.eventd.org/
 Version: @VERSION@
-Requires: libeventd glib-2.0
+Requires.private: libeventd glib-2.0
 Libs: -L${libdir} -leventc-light
 Cflags: -I${pkgincludedir}
