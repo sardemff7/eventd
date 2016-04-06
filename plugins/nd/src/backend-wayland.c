@@ -248,6 +248,8 @@ _eventd_nd_wl_pointer_release(EventdNdWlSeat *self)
         wl_pointer_release(self->pointer);
     else
         wl_pointer_destroy(self->pointer);
+
+    self->pointer = NULL;
 }
 
 static void
