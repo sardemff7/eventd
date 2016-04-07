@@ -555,16 +555,20 @@ _eventd_nd_xcb_surface_button_release_event(EventdNdSurface *self)
 }
 
 static void
-_eventd_nd_xcb_surface_shape(EventdNdSurface *self)
+_eventd_nd_xcb_surface_draw(EventdNdSurface *self)
 {
     EventdNdBackendContext *context = self->context;
+
+    cairo_t *cr;
+    cr = cairo_create(self->bubble);
+    self->context->nd->notification_draw(self->notification, cr);
+    cairo_destroy(cr);
 
     if ( ! context->shape )
         return;
 
     xcb_pixmap_t shape_id;
     cairo_surface_t *shape;
-    cairo_t *cr;
 
     shape_id = xcb_generate_id(context->xcb_connection);
     xcb_create_pixmap(context->xcb_connection, 1,
@@ -617,8 +621,7 @@ _eventd_nd_xcb_surface_new(EventdNdBackendContext *context, EventdNdNotification
 
     self->bubble = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
 
-    context->nd->notification_draw(self->notification, self->bubble);
-    _eventd_nd_xcb_surface_shape(self);
+    _eventd_nd_xcb_surface_draw(self);
 
     g_hash_table_insert(context->bubbles, GUINT_TO_POINTER(self->window), self);
 
@@ -638,8 +641,7 @@ _eventd_nd_xcb_surface_update(EventdNdSurface *self, gint width, gint height)
 
     xcb_configure_window(self->context->xcb_connection, self->window, mask, vals);
 
-    self->context->nd->notification_draw(self->notification, self->bubble);
-    _eventd_nd_xcb_surface_shape(self);
+    _eventd_nd_xcb_surface_draw(self);
 
     xcb_clear_area(self->context->xcb_connection, TRUE, self->window, 0, 0, width, height);
 }

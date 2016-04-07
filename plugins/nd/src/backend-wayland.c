@@ -580,8 +580,11 @@ _eventd_nd_wl_create_buffer(EventdNdSurface *self, gint width, gint height, gint
     close(fd);
 
     cairo_surface_t *cairo_surface;
+    cairo_t *cr;
     cairo_surface = cairo_image_surface_create_for_data(data, CAIRO_FORMAT_ARGB32, width, height, 4 * width);
-    self->context->nd->notification_draw(self->notification, cairo_surface);
+    cr = cairo_create(cairo_surface);
+    self->context->nd->notification_draw(self->notification, cr);
+    cairo_destroy(cr);
     cairo_surface_destroy(cairo_surface);
 
     if ( self->buffer != NULL )

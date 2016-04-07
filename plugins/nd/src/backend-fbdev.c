@@ -208,9 +208,12 @@ _eventd_nd_fbdev_move_surface(EventdNdSurface *self, gint x, gint y, gpointer da
     guchar *buffer = display->buffer + x * display->channels + y * display->stride;
 
     cairo_surface_t *surface;
+    cairo_t *cr;
 
     surface = cairo_image_surface_create_for_data(buffer, CAIRO_FORMAT_ARGB32, self->width, self->height, display->stride);
-    self->display->nd->notification_draw(self->notification, surface);
+    cr = cairo_create(surface);
+    self->display->nd->notification_draw(self->notification, cr);
+    cairo_destroy(cr);
     cairo_surface_destroy(surface);
 }
 

@@ -52,7 +52,7 @@ typedef struct {
     void (*geometry_update)(EventdNdContext *context, gint w, gint h);
     gboolean (*backend_stop)(EventdNdContext *context);
 
-    void (*notification_draw)(EventdNdNotification *notification, cairo_surface_t *bubble);
+    void (*notification_draw)(EventdNdNotification *notification, cairo_t *cr);
     void (*notification_dismiss)(EventdNdNotification *notification);
 } EventdNdInterface;
 
