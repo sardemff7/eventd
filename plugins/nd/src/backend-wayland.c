@@ -46,7 +46,7 @@
 
 #include <wayland-client.h>
 #include <wayland-cursor.h>
-#include "notification-area-unstable-v1-client-protocol.h"
+#include "notification-area-unstable-v2-client-protocol.h"
 #include <libgwater-wayland.h>
 
 #include <libeventd-event.h>
@@ -55,7 +55,7 @@
 #include "backend.h"
 
 /* Supported interface versions */
-#define WL_COMPOSITOR_INTERFACE_VERSION 1
+#define WL_COMPOSITOR_INTERFACE_VERSION 3
 #define WP_NOTIFICATION_AREA_INTERFACE_VERSION 1
 #define WL_SHM_INTERFACE_VERSION 1
 #define WL_SEAT_INTERFACE_VERSION 5
@@ -88,7 +88,7 @@ struct _EventdNdBackendContext {
     struct wl_registry *registry;
     uint32_t global_names[_EVENTD_ND_WL_GLOBAL_SIZE];
     struct wl_compositor *compositor;
-    struct zwna_notification_area_v1 *notification_area;
+    struct zwna_notification_area_v2 *notification_area;
     struct wl_shm *shm;
     struct {
         gchar *theme_name;
@@ -101,6 +101,8 @@ struct _EventdNdBackendContext {
     } cursor;
     GSList *seats;
     EventdNdWlFormats formats;
+    gint32 scale;
+    gboolean need_redraw;
 };
 
 typedef struct {
@@ -117,7 +119,7 @@ struct _EventdNdSurface {
     gint width;
     gint height;
     struct wl_surface *surface;
-    struct zwna_notification_v1 *wp_notification;
+    struct zwna_notification_v2 *wp_notification;
 };
 
 static EventdNdBackendContext *
@@ -156,14 +158,17 @@ _eventd_nd_wl_config_reset(EventdNdBackendContext *self)
 }
 
 static void
-_eventd_nd_wl_notification_area_geometry(void *data, struct zwna_notification_area_v1 *notification_area, int32_t width, int32_t height)
+_eventd_nd_wl_notification_area_geometry(void *data, struct zwna_notification_area_v2 *notification_area, int32_t width, int32_t height, int32_t scale)
 {
     EventdNdBackendContext *self = data;
+
+    self->need_redraw = ( self->scale != scale );
+    self->scale = scale;
 
     self->nd->geometry_update(self->nd->context, width, height);
 }
 
-static const struct zwna_notification_area_v1_listener _eventd_nd_wl_notification_area_listener = {
+static const struct zwna_notification_area_v2_listener _eventd_nd_wl_notification_area_listener = {
     .geometry = _eventd_nd_wl_notification_area_geometry
 };
 
@@ -345,11 +350,11 @@ _eventd_nd_wl_registry_handle_global(void *data, struct wl_registry *registry, u
         self->global_names[EVENTD_ND_WL_GLOBAL_COMPOSITOR] = name;
         self->compositor = wl_registry_bind(registry, name, &wl_compositor_interface, MIN(version, WL_COMPOSITOR_INTERFACE_VERSION));
     }
-    else if ( g_strcmp0(interface, "zwna_notification_area_v1") == 0 )
+    else if ( g_strcmp0(interface, "zwna_notification_area_v2") == 0 )
     {
         self->global_names[EVENTD_ND_WL_GLOBAL_NOTIFICATION_DAEMON] = name;
-        self->notification_area = wl_registry_bind(registry, name, &zwna_notification_area_v1_interface, WP_NOTIFICATION_AREA_INTERFACE_VERSION);
-        zwna_notification_area_v1_add_listener(self->notification_area, &_eventd_nd_wl_notification_area_listener, self);
+        self->notification_area = wl_registry_bind(registry, name, &zwna_notification_area_v2_interface, WP_NOTIFICATION_AREA_INTERFACE_VERSION);
+        zwna_notification_area_v2_add_listener(self->notification_area, &_eventd_nd_wl_notification_area_listener, self);
     }
     else if ( g_strcmp0(interface, "wl_shm") == 0 )
     {
@@ -413,7 +418,7 @@ _eventd_nd_wl_registry_handle_global_remove(void *data, struct wl_registry *regi
             self->compositor = NULL;
         break;
         case EVENTD_ND_WL_GLOBAL_NOTIFICATION_DAEMON:
-            zwna_notification_area_v1_destroy(self->notification_area);
+            zwna_notification_area_v2_destroy(self->notification_area);
             self->notification_area = NULL;
         break;
         case EVENTD_ND_WL_GLOBAL_SHM:
@@ -589,6 +594,7 @@ _eventd_nd_wl_create_buffer(EventdNdSurface *self)
     cairo_t *cr;
     cairo_surface = cairo_image_surface_create_for_data(data, CAIRO_FORMAT_ARGB32, width, height, 4 * width);
     cr = cairo_create(cairo_surface);
+    cairo_scale(cr, self->context->scale, self->context->scale);
     self->context->nd->notification_draw(self->notification, cr);
     cairo_destroy(cr);
     cairo_surface_destroy(cairo_surface);
@@ -605,6 +611,8 @@ _eventd_nd_wl_create_buffer(EventdNdSurface *self)
 
     wl_surface_damage(self->surface, 0, 0, self->width, self->height);
     wl_surface_attach(self->surface, self->buffer->buffer, 0, 0);
+    if ( wl_surface_get_version(self->surface) >= WL_SURFACE_SET_BUFFER_SCALE_SINCE_VERSION )
+        wl_surface_set_buffer_scale(self->surface, self->context->scale);
     wl_surface_commit(self->surface);
 
     return TRUE;
@@ -631,7 +639,7 @@ _eventd_nd_wl_surface_new(EventdNdBackendContext *context, EventdNdNotification 
         return NULL;
     }
 
-    self->wp_notification = zwna_notification_area_v1_create_notification(context->notification_area, self->surface);
+    self->wp_notification = zwna_notification_area_v2_create_notification(context->notification_area, self->surface);
 
     return self;
 }
@@ -652,7 +660,7 @@ _eventd_nd_wl_surface_free(EventdNdSurface *self)
 
     _eventd_nd_wl_buffer_release(self->buffer, self->buffer->buffer);
 
-    zwna_notification_v1_destroy(self->wp_notification);
+    zwna_notification_v2_destroy(self->wp_notification);
     wl_surface_destroy(self->surface);
 
     g_free(self);
@@ -661,7 +669,15 @@ _eventd_nd_wl_surface_free(EventdNdSurface *self)
 static void
 _eventd_nd_wl_move_surface(EventdNdSurface *self, gint x, gint y, gpointer data)
 {
-    zwna_notification_v1_move(self->wp_notification, x, y);
+    zwna_notification_v2_move(self->wp_notification, x, y);
+    if ( self->context->need_redraw )
+        _eventd_nd_wl_create_buffer(self);
+}
+
+static void
+_eventd_nd_wl_move_end(EventdNdBackendContext *self, gpointer data)
+{
+    self->need_redraw = FALSE;
 }
 
 EVENTD_EXPORT const gchar *eventd_nd_backend_id = "eventd-nd-wayland";
@@ -683,4 +699,5 @@ eventd_nd_backend_get_info(EventdNdBackend *backend)
     backend->surface_free   = _eventd_nd_wl_surface_free;
 
     backend->move_surface = _eventd_nd_wl_move_surface;
+    backend->move_end = _eventd_nd_wl_move_end;
 }
