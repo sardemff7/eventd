@@ -114,6 +114,8 @@ struct _EventdNdSurface {
     EventdNdNotification *notification;
     EventdNdBackendContext *context;
     EventdNdWlBuffer *buffer;
+    gint width;
+    gint height;
     struct wl_surface *surface;
     struct zwna_notification_v1 *wp_notification;
 };
@@ -540,14 +542,18 @@ static const struct wl_buffer_listener _eventd_nd_wl_buffer_listener = {
 };
 
 static gboolean
-_eventd_nd_wl_create_buffer(EventdNdSurface *self, gint width, gint height, gint stride, uint32_t format)
+_eventd_nd_wl_create_buffer(EventdNdSurface *self)
 {
     struct wl_shm_pool *pool;
     struct wl_buffer *buffer;
     gint fd;
     gpointer data;
+    gint width, height, stride;
     gsize size;
 
+    width = self->width * self->context->scale;
+    height = self->height * self->context->scale;
+    stride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, width);
     size = stride * height;
 
     gchar *filename;
@@ -575,7 +581,7 @@ _eventd_nd_wl_create_buffer(EventdNdSurface *self, gint width, gint height, gint
     }
 
     pool = wl_shm_create_pool(self->context->shm, fd, size);
-    buffer = wl_shm_pool_create_buffer(pool, 0, width, height, stride, format);
+    buffer = wl_shm_pool_create_buffer(pool, 0, width, height, stride, WL_SHM_FORMAT_ARGB8888);
     wl_shm_pool_destroy(pool);
     close(fd);
 
@@ -597,6 +603,10 @@ _eventd_nd_wl_create_buffer(EventdNdSurface *self, gint width, gint height, gint
 
     wl_buffer_add_listener(buffer, &_eventd_nd_wl_buffer_listener, self->buffer);
 
+    wl_surface_damage(self->surface, 0, 0, self->width, self->height);
+    wl_surface_attach(self->surface, self->buffer->buffer, 0, 0);
+    wl_surface_commit(self->surface);
+
     return TRUE;
 }
 
@@ -608,24 +618,20 @@ _eventd_nd_wl_surface_new(EventdNdBackendContext *context, EventdNdNotification 
     self = g_new0(EventdNdSurface, 1);
     self->context = context;
     self->notification = notification;
+    self->width = width;
+    self->height = height;
 
-    gint stride;
+    self->surface = wl_compositor_create_surface(context->compositor);
+    wl_surface_set_user_data(self->surface, self);
 
-    stride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, width);
-
-    if ( ! _eventd_nd_wl_create_buffer(self, width, height, stride, WL_SHM_FORMAT_ARGB8888) )
+    if ( ! _eventd_nd_wl_create_buffer(self) )
     {
+        wl_surface_destroy(self->surface);
         g_free(self);
         return NULL;
     }
 
-    self->surface = wl_compositor_create_surface(context->compositor);
-    wl_surface_set_user_data(self->surface, self);
     self->wp_notification = zwna_notification_area_v1_create_notification(context->notification_area, self->surface);
-
-    wl_surface_damage(self->surface, 0, 0, width, height);
-    wl_surface_attach(self->surface, self->buffer->buffer, 0, 0);
-    wl_surface_commit(self->surface);
 
     return self;
 }
@@ -633,11 +639,9 @@ _eventd_nd_wl_surface_new(EventdNdBackendContext *context, EventdNdNotification 
 static void
 _eventd_nd_wl_surface_update(EventdNdSurface *self, gint width, gint height)
 {
-    gint stride;
-
-    stride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, width);
-
-    _eventd_nd_wl_create_buffer(self, width, height, stride, WL_SHM_FORMAT_ARGB8888);
+    self->width = width;
+    self->height = height;
+    _eventd_nd_wl_create_buffer(self);
 }
 
 static void
