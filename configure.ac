@@ -15,7 +15,7 @@ AM_INIT_AUTOMAKE([1.14 foreign subdir-objects parallel-tests dist-xz no-dist-gzi
 AM_SILENT_RULES([yes])
 
 AH_BOTTOM([#include <src/config-version.h>])
-AM_CONDITIONAL([EVENTD_USE_GIT_VERSION], [test -d .git])
+AM_CONDITIONAL([EVENTD_USE_GIT_VERSION], [test -d "${srcdir}"/.git])
 
 
 AC_ARG_VAR([XSLTPROC], [The xsltproc executable])
