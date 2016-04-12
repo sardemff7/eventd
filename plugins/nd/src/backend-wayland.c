@@ -585,11 +585,6 @@ _eventd_nd_wl_create_buffer(EventdNdSurface *self)
         return FALSE;
     }
 
-    pool = wl_shm_create_pool(self->context->shm, fd, size);
-    buffer = wl_shm_pool_create_buffer(pool, 0, width, height, stride, WL_SHM_FORMAT_ARGB8888);
-    wl_shm_pool_destroy(pool);
-    close(fd);
-
     cairo_surface_t *cairo_surface;
     cairo_t *cr;
     cairo_surface = cairo_image_surface_create_for_data(data, CAIRO_FORMAT_ARGB32, width, height, 4 * width);
@@ -598,6 +593,13 @@ _eventd_nd_wl_create_buffer(EventdNdSurface *self)
     self->context->nd->notification_draw(self->notification, cr);
     cairo_destroy(cr);
     cairo_surface_destroy(cairo_surface);
+
+    munmap(data, size);
+
+    pool = wl_shm_create_pool(self->context->shm, fd, size);
+    buffer = wl_shm_pool_create_buffer(pool, 0, width, height, stride, WL_SHM_FORMAT_ARGB8888);
+    wl_shm_pool_destroy(pool);
+    close(fd);
 
     if ( self->buffer != NULL )
         _eventd_nd_wl_buffer_release(self->buffer, self->buffer->buffer);
