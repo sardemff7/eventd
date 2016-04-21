@@ -54,7 +54,7 @@ static GHashTable *plugins = NULL;
 
 
 static void
-_eventd_plugins_load_dir(EventdPluginCoreContext *core, gchar *plugins_dir_name,  gchar **whitelist,  gchar **blacklist)
+_eventd_plugins_load_dir(EventdPluginCoreContext *core, gchar *plugins_dir_name, gboolean system_mode, gchar **whitelist, gchar **blacklist)
 {
     GError *error;
     GDir *plugins_dir;
@@ -150,6 +150,19 @@ _eventd_plugins_load_dir(EventdPluginCoreContext *core, gchar *plugins_dir_name,
             goto next;
         }
 
+        if ( system_mode )
+        {
+            gboolean *system_mode_support;
+            if ( ( ! g_module_symbol(module, "eventd_plugin_system_mode_support", (gpointer *) &system_mode_support) )
+                 || ( ! *system_mode_support ) )
+            {
+#ifdef EVENTD_DEBUG
+                g_debug("Plugin '%s' does not support system mode", *id);
+#endif /* EVENTD_DEBUG */
+                goto next;
+            }
+        }
+
         if ( ! g_module_symbol(module, "eventd_plugin_get_interface", (void **)&get_interface) )
             goto next;
 
@@ -210,7 +223,7 @@ eventd_plugins_action_free(gpointer data)
 }
 
 void
-eventd_plugins_load(EventdPluginCoreContext *core)
+eventd_plugins_load(EventdPluginCoreContext *core, gboolean system_mode)
 {
     const gchar *env_whitelist;
     const gchar *env_blacklist;
@@ -236,7 +249,7 @@ eventd_plugins_load(EventdPluginCoreContext *core)
     gchar **dirs, **dir;
     dirs = evhelpers_dirs_get_lib("EVENTD_PLUGINS_DIR", "plugins");
     for ( dir = dirs ; *dir != NULL ; ++dir )
-        _eventd_plugins_load_dir(core, *dir, whitelist, blacklist);
+        _eventd_plugins_load_dir(core, *dir, system_mode, whitelist, blacklist);
     g_free(dirs);
 
     g_strfreev(blacklist);

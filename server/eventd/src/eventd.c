@@ -71,6 +71,7 @@ struct _EventdCoreContext {
     EventdControl *control;
     EventdSockets *sockets;
     gchar *runtime_dir;
+    gboolean system_mode;
     gboolean take_over_socket;
     GMainLoop *loop;
     guint flags_count;
@@ -263,7 +264,7 @@ void
 eventd_core_config_reload(EventdCoreContext *context)
 {
     eventd_plugins_stop_all();
-    eventd_config_parse(context->config);
+    eventd_config_parse(context->config, context->system_mode);
     eventd_plugins_start_all();
 }
 
@@ -415,6 +416,10 @@ main(int argc, char *argv[])
     context->interface.get_sockets = eventd_core_get_sockets;
     context->interface.push_event = eventd_core_push_event;
 
+    context->system_mode = ( g_getenv("XDG_RUNTIME_DIR") == NULL );
+    if ( context->system_mode )
+        g_setenv("XDG_RUNTIME_DIR", "/run", TRUE);
+
     GOptionEntry entries[] =
     {
         { "take-over", 't', GIO_UNIX_OPTION_FLAG, G_OPTION_ARG_NONE, &context->take_over_socket, "Take over socket", NULL },
@@ -427,7 +432,7 @@ main(int argc, char *argv[])
     context->control = eventd_control_new(context);
 
     if ( g_getenv("EVENTD_NO_PLUGINS") == NULL )
-        eventd_plugins_load(context);
+        eventd_plugins_load(context, context->system_mode);
 
     context->config = eventd_config_new();
 
@@ -461,7 +466,7 @@ main(int argc, char *argv[])
         g_print("\n");
         g_strfreev(dirs);
 
-        dirs = evhelpers_dirs_get_config("EVENTD_CONFIG_DIR", NULL);
+        dirs = evhelpers_dirs_get_config("EVENTD_CONFIG_DIR", context->system_mode, NULL);
         g_print("Configuration and events search paths:");
         for ( dir = dirs ; *dir != NULL ; ++dir )
             g_print("\n    %s", *dir);
@@ -485,7 +490,7 @@ main(int argc, char *argv[])
         goto end;
     }
 
-    eventd_config_parse(context->config);
+    eventd_config_parse(context->config, context->system_mode);
 
     context->sockets = eventd_sockets_new();
 

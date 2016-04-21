@@ -132,6 +132,7 @@ _eventd_exec_event_action(EventdPluginContext *context, EventdPluginAction *acti
  */
 
 EVENTD_EXPORT const gchar *eventd_plugin_id = "exec";
+EVENTD_EXPORT const gboolean eventd_plugin_system_mode_support = TRUE;
 EVENTD_EXPORT
 void
 eventd_plugin_get_interface(EventdPluginInterface *interface)

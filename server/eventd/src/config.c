@@ -260,7 +260,7 @@ _eventd_config_clean(EventdConfig *config)
 }
 
 void
-eventd_config_parse(EventdConfig *config)
+eventd_config_parse(EventdConfig *config, gboolean system_mode)
 {
     _eventd_config_clean(config);
 
@@ -275,7 +275,7 @@ eventd_config_parse(EventdConfig *config)
     event_files = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify)g_key_file_free);
 
     gchar **dirs, **dir;
-    dirs = evhelpers_dirs_get_config("EVENTD_CONFIG_DIR", NULL);
+    dirs = evhelpers_dirs_get_config("EVENTD_CONFIG_DIR", system_mode, NULL);
     for ( dir = dirs ; *dir != NULL ; ++dir )
         _eventd_config_load_dir(config, action_files, event_files, *dir);
     g_free(dirs);

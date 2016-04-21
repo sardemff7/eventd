@@ -7,7 +7,6 @@ Documentation=https://www.eventd.org/
 [Service]
 Type=notify
 User=eventd
-Environment=XDG_RUNTIME_DIR=/run
 RuntimeDirectory=@PACKAGE_NAME@
 Sockets=eventd-control.socket eventd.socket
 ExecStart=@bindir@/eventd --listen systemd

@@ -492,6 +492,7 @@ _eventd_im_event_action(EventdPluginContext *context, EventdPluginAction *action
  */
 
 EVENTD_EXPORT const gchar *eventd_plugin_id = "im";
+EVENTD_EXPORT const gboolean eventd_plugin_system_mode_support = TRUE;
 EVENTD_EXPORT
 void
 eventd_plugin_get_interface(EventdPluginInterface *interface)

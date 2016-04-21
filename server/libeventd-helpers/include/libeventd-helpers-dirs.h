@@ -25,7 +25,7 @@
 
 #include <libeventd-event.h>
 
-gchar **evhelpers_dirs_get_config(const gchar *env, const gchar *subdir);
+gchar **evhelpers_dirs_get_config(const gchar *env, gboolean system_mode, const gchar *subdir);
 gchar **evhelpers_dirs_get_lib(const gchar *env, const gchar *subdir);
 
 #endif /* __LIBEVENTD_HELPERS_DIRS_H__ */

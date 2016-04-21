@@ -237,6 +237,7 @@ _eventd_http_event_dispatch(EventdPluginContext *self, EventdEvent *event)
  */
 
 EVENTD_EXPORT const gchar *eventd_plugin_id = "http";
+EVENTD_EXPORT const gboolean eventd_plugin_system_mode_support = TRUE;
 EVENTD_EXPORT
 void
 eventd_plugin_get_interface(EventdPluginInterface *interface)

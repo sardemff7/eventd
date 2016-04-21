@@ -45,8 +45,8 @@
         <para>The files are searched in these directories in the following order:</para>
         <orderedlist>
             <listitem><para><filename id="default-events-dir" class="directory">/usr/share/&PACKAGE_NAME;</filename></para></listitem>
-            <listitem><para><filename class="directory">/etc/&PACKAGE_NAME;</filename></para></listitem>
-            <listitem><para><phrase id="home-events-dir"><filename class="directory"><varname>$XDG_CONFIG_HOME</varname>/&PACKAGE_NAME;</filename> (fallback to <filename>~/.config/&PACKAGE_NAME;/</filename>)</phrase></para></listitem>
+            <listitem><para>In user mode (the default): <phrase id="home-events-dir"><filename class="directory"><varname>$XDG_CONFIG_HOME</varname>/&PACKAGE_NAME;</filename> (fallback to <filename>~/.config/&PACKAGE_NAME;/</filename>)</phrase></para></listitem>
+            <listitem><para>In system mode: <filename class="directory">/etc/&PACKAGE_NAME;</filename></para></listitem>
             <listitem><para><filename class="directory"><varname>$EVENTD_CONFIG_DIR</varname></filename> (see <citerefentry><refentrytitle>eventd</refentrytitle><manvolnum>1</manvolnum></citerefentry>)</para></listitem>
         </orderedlist>
         <para>

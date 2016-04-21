@@ -24,7 +24,7 @@
 #define __EVENTD_CONFIG_H__
 
 EventdConfig *eventd_config_new(void);
-void eventd_config_parse(EventdConfig *config);
+void eventd_config_parse(EventdConfig *config, gboolean system_mode);
 void eventd_config_free(EventdConfig *config);
 
 gboolean eventd_config_process_event(EventdConfig *self, EventdEvent *event, GQuark *flags, const GList **actions);

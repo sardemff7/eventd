@@ -56,6 +56,12 @@
             eventd is composed by a core, the daemon itself, and various plugins.
             Plugins may be event collecting plugins or action plugins.
         </para>
+        <para>
+            The default operation mode is user mode.
+            This means the user configuration will be read, and all plugins will be loaded.
+            If <varname>$XDG_RUNTIME_DIR</varname> is not set, eventd will then operate in system mode.
+            This means the system configuration (in <filename>/etc</filename>) will be read, and only some plugin will be loaded.
+        </para>
     </refsect1>
 
     <refsect1 id="events">

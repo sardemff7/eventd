@@ -318,6 +318,7 @@ _eventd_relay_event_dispatch(EventdPluginContext *context, EventdEvent *event)
  */
 
 EVENTD_EXPORT const gchar *eventd_plugin_id = "relay";
+EVENTD_EXPORT const gboolean eventd_plugin_system_mode_support = TRUE;
 EVENTD_EXPORT
 void
 eventd_plugin_get_interface(EventdPluginInterface *interface)

@@ -68,10 +68,10 @@ _evhelpers_dirs_get(const gchar **list, gsize size, const gchar *env, const gcha
 
 EVENTD_EXPORT
 gchar **
-evhelpers_dirs_get_config(const gchar *env, const gchar *subdir)
+evhelpers_dirs_get_config(const gchar *env, gboolean system_mode, const gchar *subdir)
 {
     const gchar *datadir = DATADIR;
-    const gchar *sysconfdir = SYSCONFDIR;
+    const gchar *confdir = SYSCONFDIR;
 
 #ifdef G_OS_WIN32
     gchar *datadir_, *sysconfdir_, *installdir;
@@ -82,10 +82,13 @@ evhelpers_dirs_get_config(const gchar *env, const gchar *subdir)
     g_free(installdir);
 
     datadir = datadir_;
-    sysconfdir = sysconfdir_;
+    confdir = sysconfdir_;
 #endif /* G_OS_WIN32 */
 
-    const gchar *dirs_[] = { datadir, sysconfdir, g_get_user_config_dir(), env };
+    if ( system_mode )
+        confdir = g_get_user_config_dir();
+
+    const gchar *dirs_[] = { datadir, confdir, env };
     gchar **dirs;
 
     dirs = _evhelpers_dirs_get(dirs_, G_N_ELEMENTS(dirs_), env, subdir);
