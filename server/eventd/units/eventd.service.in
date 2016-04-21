@@ -2,7 +2,7 @@
 Description=eventd
 Documentation=man:eventd(1)
 Documentation=man:eventd.conf(5)
-Documentation=http://www.eventd.org/
+Documentation=https://www.eventd.org/
 
 [Service]
 Type=notify
