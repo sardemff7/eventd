@@ -482,8 +482,7 @@ main(int argc, char *argv[])
     if ( ( ! g_file_test(context->runtime_dir, G_FILE_TEST_IS_DIR) ) && ( g_mkdir_with_parents(context->runtime_dir, 0755) < 0 ) )
     {
         g_warning("Couldn't create the run dir '%s': %s", context->runtime_dir, g_strerror(errno));
-        g_free(context->runtime_dir);
-        context->runtime_dir = NULL;
+        goto end;
     }
 
     eventd_config_parse(context->config);
@@ -541,8 +540,8 @@ main(int argc, char *argv[])
 
     eventd_sockets_free(context->sockets);
 
-    g_free(context->runtime_dir);
 end:
+    g_free(context->runtime_dir);
     eventd_config_free(context->config);
 
     eventd_plugins_unload();
