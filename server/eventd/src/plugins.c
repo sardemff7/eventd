@@ -76,7 +76,7 @@ _eventd_plugins_load_dir(EventdPluginCoreContext *core, gchar *plugins_dir_name,
     while ( ( file = g_dir_read_name(plugins_dir) ) != NULL )
     {
         gchar *full_filename;
-        EventdPlugin *plugin;
+        EventdPlugin *plugin = NULL;
         const gchar **id;
         EventdPluginGetInterfaceFunc get_interface;
         GModule *module;
@@ -102,12 +102,12 @@ _eventd_plugins_load_dir(EventdPluginCoreContext *core, gchar *plugins_dir_name,
         g_free(full_filename);
 
         if ( ! g_module_symbol(module, "eventd_plugin_id", (void **)&id) )
-            continue;
+            goto next;
 
         if ( id == NULL )
         {
             g_warning("Plugin '%s' must define eventd_plugin_id", file);
-            continue;
+            goto next;
         }
 
         if ( whitelist != NULL )
@@ -123,7 +123,7 @@ _eventd_plugins_load_dir(EventdPluginCoreContext *core, gchar *plugins_dir_name,
                 }
             }
             if ( ! whitelisted )
-                continue;
+                goto next;
         }
 
         if ( blacklist != NULL )
@@ -139,7 +139,7 @@ _eventd_plugins_load_dir(EventdPluginCoreContext *core, gchar *plugins_dir_name,
                 }
             }
             if ( blacklisted )
-                continue;
+                goto next;
         }
 
         if ( g_hash_table_contains(plugins, *id) )
@@ -147,11 +147,11 @@ _eventd_plugins_load_dir(EventdPluginCoreContext *core, gchar *plugins_dir_name,
 #ifdef EVENTD_DEBUG
             g_debug("Plugin '%s' with id '%s' already loaded", file, *id);
 #endif /* ! EVENTD_DEBUG */
-            continue;
+            goto next;
         }
 
         if ( ! g_module_symbol(module, "eventd_plugin_get_interface", (void **)&get_interface) )
-            continue;
+            goto next;
 
 #ifdef EVENTD_DEBUG
         g_debug("Loading plugin '%s': %s", file, *id);
@@ -168,9 +168,7 @@ _eventd_plugins_load_dir(EventdPluginCoreContext *core, gchar *plugins_dir_name,
             ) )
         {
             g_warning("Plugin '%s' should define either both or neither of action_parse/event_action", *id);
-            g_module_close(plugin->module);
-            g_free(plugin);
-            continue;
+            goto next;
         }
 
         if ( plugin->interface.init != NULL )
@@ -179,13 +177,16 @@ _eventd_plugins_load_dir(EventdPluginCoreContext *core, gchar *plugins_dir_name,
             if ( plugin->context == NULL )
             {
                 g_warning("Couldn't load plugin '%s'", *id);
-                g_module_close(plugin->module);
-                g_free(plugin);
-                continue;
+                goto next;
             }
         }
 
         g_hash_table_insert(plugins, (gpointer) *id, plugin);
+        continue;
+
+    next:
+        g_module_close(module);
+        g_free(plugin);
     }
     g_dir_close(plugins_dir);
     g_free(plugins_dir_name);
