@@ -45,12 +45,6 @@ typedef enum {
     EVENTD_FDO_NOTIFICATIONS_CLOSE_REASON_RESERVED = 4,
 } EventdFdoNotificationsCloseReason;
 
-static const gchar * const _eventd_fdo_notifications_urgencies[] = {
-    [0] = "low",
-    [1] = "normal",
-    [2] = "critical",
-};
-
 struct _EventdPluginContext {
     EventdPluginCoreContext *core;
     GDBusNodeInfo *introspection_data;
@@ -117,7 +111,7 @@ _eventd_fdo_notifications_notification_new(EventdPluginContext *context, const g
     notification->sender = g_strdup(sender);
     notification->event = event;
 
-    eventd_event_add_data_string(event, g_strdup("libnotify-id"), g_strdup_printf("%u", notification->id));
+    eventd_event_add_data(event, g_strdup("libnotify-id"), g_variant_new_uint64(notification->id));
 
     g_hash_table_insert(context->notifications, (gpointer) eventd_event_get_uuid(event), notification);
     g_hash_table_insert(context->ids, GUINT_TO_POINTER(notification->id), notification);
@@ -200,12 +194,16 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
     gchar *hint_name;
     GVariant *hint;
     const gchar *event_name = "generic";
+    const gchar *desktop_entry = NULL;
     GVariant *image_data = NULL;
-    const gchar *urgency = NULL;
+    gint8 urgency = -1;
     const gchar *image_path = NULL;
     const gchar *sound_name = NULL;
     const gchar *sound_file = NULL;
     gboolean no_sound = FALSE;
+    gboolean action_icons = FALSE;
+    gboolean resident = FALSE;
+    gboolean transient = FALSE;
 
     gint timeout;
 
@@ -221,6 +219,12 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
                   &hints,
                   &timeout);
 
+    if ( ( actions != NULL ) && ( ( g_strv_length((gchar **) actions) % 2 ) != 0 ) )
+    {
+        g_dbus_method_invocation_return_dbus_error(invocation, NOTIFICATION_BUS_NAME ".InvalidActionsArray", "Invalid actions array: actions must be a list of pairs");
+        return;
+    }
+
 #ifdef EVENTD_DEBUG
     g_debug("Received notification from '%s': '%s'", app_name, summary);
 #endif /* EVENTD_DEBUG */
@@ -233,6 +237,8 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
 
         if ( g_strcmp0(hint_name, "category") == 0 )
             event_name = g_variant_get_string(hint, NULL);
+        else if ( g_strcmp0(hint_name, "desktop-entry") == 0 )
+            desktop_entry = g_variant_get_string(hint, NULL);
         else if ( ( g_strcmp0(hint_name, "image-data") == 0 )
                   || ( g_strcmp0(hint_name, "image_data") == 0 ) )
             image_data = g_variant_ref(hint);
@@ -243,18 +249,19 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
                   && image_data == NULL )
             image_data = g_variant_ref(hint);
         else if ( g_strcmp0(hint_name, "urgency") == 0 )
-        {
-            guint8 u;
-            u = g_variant_get_byte(hint);
-            if ( u < G_N_ELEMENTS(_eventd_fdo_notifications_urgencies) )
-                urgency = _eventd_fdo_notifications_urgencies[u];
-        }
+            urgency = g_variant_get_byte(hint);
         else if ( g_strcmp0(hint_name, "sound-name") == 0 )
             sound_name = g_variant_get_string(hint, NULL);
         else if ( g_strcmp0(hint_name, "sound-file") == 0 )
             sound_file = g_variant_get_string(hint, NULL);
         else if ( g_strcmp0(hint_name, "suppress-sound") == 0 )
             no_sound = g_variant_get_boolean(hint);
+        else if ( g_strcmp0(hint_name, "action-icons") == 0 )
+            action_icons = g_variant_get_boolean(hint);
+        else if ( g_strcmp0(hint_name, "resident") == 0 )
+            resident = g_variant_get_boolean(hint);
+        else if ( g_strcmp0(hint_name, "transient") == 0 )
+            transient = g_variant_get_boolean(hint);
 
         g_variant_unref(hint);
     }
@@ -300,6 +307,10 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
         }
     }
 
+    if ( desktop_entry != NULL )
+        eventd_event_add_data_string(event, g_strdup("desktop-entry"), g_strdup(desktop_entry));
+
+
     if ( image_data != NULL )
     {
         gboolean a;
@@ -338,8 +349,8 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
             eventd_event_add_data_string(event, g_strdup("image"), g_strdup(image_path));
     }
 
-    if ( urgency != NULL )
-            eventd_event_add_data_string(event, g_strdup("urgency"), g_strdup(urgency));
+    if ( urgency > -1 )
+            eventd_event_add_data(event, g_strdup("urgency"), g_variant_new_byte(urgency));
 
     if ( ! no_sound )
     {
@@ -349,6 +360,25 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
         if ( sound_file != NULL )
             eventd_event_add_data_string(event, g_strdup("sound-file"), g_strdup_printf("file://%s", sound_file));
     }
+    else
+        eventd_event_add_data(event, g_strdup("no-sound"), g_variant_new_boolean(TRUE));
+
+    if ( actions != NULL )
+    {
+        const gchar **action;
+        GVariantBuilder builder;
+        g_variant_builder_init(&builder, G_VARIANT_TYPE("a{ss}"));
+        for ( action = actions ; *action != NULL ; action += 2 )
+            g_variant_builder_add(&builder, "{ss}", *action, *(action + 1));
+        eventd_event_add_data(event, g_strdup("actions"), g_variant_builder_end(&builder));
+        if ( action_icons )
+            eventd_event_add_data(event, g_strdup("action-icons"), g_variant_new_boolean(TRUE));
+    }
+
+    if ( resident )
+        eventd_event_add_data(event, g_strdup("resident"), g_variant_new_boolean(TRUE));
+    if ( transient )
+        eventd_event_add_data(event, g_strdup("transient"), g_variant_new_boolean(TRUE));
 
     if ( id > 0 )
     {
