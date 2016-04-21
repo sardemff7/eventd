@@ -30,29 +30,40 @@
 
 #include <libeventd-helpers-dirs.h>
 
-static gsize
-_evhelpers_dirs_add(gchar **dirs, gsize i, gchar *path)
+static gchar **
+_evhelpers_dirs_get(const gchar **list, gsize size, const gchar *env, const gchar *subdir)
 {
-    if ( g_file_test(path, G_FILE_TEST_IS_DIR) )
-        dirs[i++] = path;
-    else
-        g_free(path);
-    return i;
-}
+    gchar **dirs;
+    gsize i, j = 0;
 
-static gsize
-_evhelpers_dirs_add_env(gchar **dirs, gsize i, const gchar *env)
-{
-    if ( env == NULL )
-        return i;
-    env = g_getenv(env);
-    if ( env == NULL )
-        return i;
-    if ( g_str_has_prefix(env, "~/") )
-        i = _evhelpers_dirs_add(dirs, i, g_build_filename(g_get_home_dir(), env + strlen("~/"), NULL));
-    else if ( g_file_test(env, G_FILE_TEST_IS_DIR) )
-        dirs[i++] = g_strdup(env);
-    return i;
+    dirs = g_new0(gchar *, size + 1);
+    for ( i = 0 ; i < size ; ++i )
+    {
+        gchar *dir;
+        if ( list[i] == NULL )
+            continue;
+
+        if ( list[i] == env )
+        {
+            env = g_getenv(env);
+            if ( env == NULL )
+                continue;
+
+            if ( g_str_has_prefix(env, "~/") )
+                dir = g_build_filename(g_get_home_dir(), env + strlen("~/"), NULL);
+            else
+                dir = g_strdup(env);
+        }
+        else
+            dir = g_build_filename(list[i], PACKAGE_NAME, subdir, NULL);
+
+        if ( g_file_test(dir, G_FILE_TEST_IS_DIR) )
+            dirs[j++] = dir;
+        else
+            g_free(dir);
+    }
+
+    return dirs;
 }
 
 EVENTD_EXPORT
@@ -74,17 +85,10 @@ evhelpers_dirs_get_config(const gchar *env, const gchar *subdir)
     sysconfdir = sysconfdir_;
 #endif /* G_OS_WIN32 */
 
-    gsize i = 0;
+    const gchar *dirs_[] = { datadir, sysconfdir, g_get_user_config_dir(), env };
     gchar **dirs;
 
-    dirs = g_new0(gchar *, 5);
-
-    const gchar *dirs_[] = { datadir, sysconfdir, g_get_user_config_dir(), NULL };
-    const gchar * const *dir;
-
-    for ( dir = dirs_ ; *dir != NULL ; ++dir )
-        i = _evhelpers_dirs_add(dirs, i, g_build_filename(*dir, PACKAGE_NAME, subdir, NULL));
-    _evhelpers_dirs_add_env(dirs, i, env);
+    dirs = _evhelpers_dirs_get(dirs_, G_N_ELEMENTS(dirs_), env, subdir);
 
 #ifdef G_OS_WIN32
     g_free(datadir_);
@@ -110,17 +114,10 @@ evhelpers_dirs_get_lib(const gchar *env, const gchar *subdir)
     libdir = libdir_;
 #endif /* G_OS_WIN32 */
 
-    gsize i = 0;
+    const gchar *dirs_[] = { env, g_get_user_data_dir(), libdir, NULL };
     gchar **dirs;
 
-    dirs = g_new0(gchar *, 4);
-
-    const gchar *dirs_[] = { g_get_user_data_dir(), libdir, NULL };
-    const gchar * const *dir;
-
-    i = _evhelpers_dirs_add_env(dirs, i, env);
-    for ( dir = dirs_ ; *dir != NULL ; ++dir )
-        i = _evhelpers_dirs_add(dirs, i, g_build_filename(*dir, PACKAGE_NAME, subdir, NULL));
+    dirs = _evhelpers_dirs_get(dirs_, G_N_ELEMENTS(dirs_), env, subdir);
 
 #ifdef G_OS_WIN32
     g_free(libdir_);
