@@ -62,9 +62,15 @@ eventd_LDADD = \
 if ENABLE_SYSTEMD
 
 systemduserunit_DATA += \
-	%D%/units/eventd-control.socket \
-	%D%/units/eventd.socket \
-	%D%/units/eventd.service \
+	%D%/units/user/eventd-control.socket \
+	%D%/units/user/eventd.socket \
+	%D%/units/user/eventd.service \
+	$(null)
+
+systemdsystemunit_DATA += \
+	%D%/units/system/eventd-control.socket \
+	%D%/units/system/eventd.socket \
+	%D%/units/system/eventd.service \
 	$(null)
 
 endif

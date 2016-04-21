@@ -1,0 +1,11 @@
+[Unit]
+Description=eventd sockets
+
+[Socket]
+SocketUser=eventd
+SocketGroup=eventd
+SocketMode=0660
+ListenStream=/run/@PACKAGE_NAME@/@EVP_UNIX_SOCKET@
+
+[Install]
+WantedBy=sockets.target

@@ -12,6 +12,7 @@ endif # ! EVENTD_USE_GIT_VERSION
 
 AM_DISTCHECK_CONFIGURE_FLAGS = \
 	--with-systemduserunitdir="$$dc_install_base/$(systemduserunitdir)" \
+	--with-systemdsystemunitdir="$$dc_install_base/$(systemdsystemunitdir)" \
 	--with-dbussessionservicedir="$$dc_install_base/$(dbussessionservicedir)" \
 	--with-girdir="$$dc_install_base/$(girdir)" \
 	--with-typelibdir="$$dc_install_base/$(typelibdir)" \
@@ -42,6 +43,7 @@ dist_vapi_DATA =
 vapi_DATA =
 dist_event_DATA =
 systemduserunit_DATA =
+systemdsystemunit_DATA =
 dbussessionservice_DATA =
 
 INTROSPECTION_GIRS =

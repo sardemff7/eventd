@@ -200,16 +200,23 @@ PKG_CHECK_MODULES([GMODULE], [gmodule-2.0 >= ${gmodule_min_version}])
 
 AC_ARG_ENABLE([systemd], AS_HELP_STRING([--enable-systemd], [Enable systemd activation support]), [], [enable_systemd=no])
 AC_ARG_WITH([systemduserunitdir], AS_HELP_STRING([--with-systemduserunitdir=DIR], [Directory for systemd user unit files]), [], [with_systemduserunitdir=yes])
+AC_ARG_WITH([systemdsystemunitdir], AS_HELP_STRING([--with-systemdsystemunitdir=DIR], [Directory for systemd system unit files]), [], [with_systemdsystemunitdir=yes])
 if test x${enable_systemd} = xyes; then
     case "${with_systemduserunitdir}" in
         no|"") AC_MSG_ERROR([*** You must define systemduserunitdir when compiling systemd support]) ;;
         yes) systemduserunitdir="`${PKG_CONFIG} ${pkg_config_extra_args} --variable=systemduserunitdir systemd`" ;;
         *) systemduserunitdir="${with_systemduserunitdir}" ;;
     esac
+    case "${with_systemdsystemunitdir}" in
+        no|"") AC_MSG_ERROR([*** You must define systemdsystemunitdir when compiling systemd support]) ;;
+        yes) systemdsystemunitdir="`${PKG_CONFIG} ${pkg_config_extra_args} --variable=systemdsystemunitdir systemd`" ;;
+        *) systemdsystemunitdir="${with_systemdsystemunitdir}" ;;
+    esac
     AC_CHECK_HEADERS([sys/socket.h])
     PKG_CHECK_MODULES([SYSTEMD], [libsystemd >= 209],, [PKG_CHECK_MODULES([SYSTEMD], [libsystemd-daemon])])
     AC_DEFINE([ENABLE_SYSTEMD], [1], [Enable systemd activation support])
     AC_SUBST([systemduserunitdir])
+    AC_SUBST([systemdsystemunitdir])
 fi
 AM_CONDITIONAL([ENABLE_SYSTEMD], [test x${enable_systemd} = xyes])
 

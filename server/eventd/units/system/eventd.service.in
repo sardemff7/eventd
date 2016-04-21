@@ -1,0 +1,19 @@
+[Unit]
+Description=eventd
+Documentation=man:eventd(1)
+Documentation=man:eventd.conf(5)
+Documentation=https://www.eventd.org/
+
+[Service]
+Type=notify
+User=eventd
+Environment=XDG_RUNTIME_DIR=/run
+RuntimeDirectory=@PACKAGE_NAME@
+Sockets=eventd-control.socket eventd.socket
+ExecStart=@bindir@/eventd --listen systemd
+ExecReload=@bindir@/eventdctl reload
+
+[Install]
+WantedBy=multi-user.target
+Also=eventd-control.socket
+Also=eventd.socket
