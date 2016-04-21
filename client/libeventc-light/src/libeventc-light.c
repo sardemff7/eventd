@@ -315,7 +315,15 @@ eventc_light_connection_connect(EventcLightConnection *self)
         name = g_getenv("EVENTC_HOST");
 
     if ( ( name == NULL ) || ( *name == '\0' ) || ( g_strcmp0(name, "localhost") == 0 ) )
-        name = name_ = g_build_filename(g_get_user_runtime_dir(), PACKAGE_NAME, EVP_UNIX_SOCKET, NULL);
+    {
+        const gchar *runtime_dir = g_get_user_runtime_dir();
+#ifdef G_OS_UNIX
+        /* System mode */
+        if ( g_getenv("XDG_RUNTIME_DIR") == NULL )
+            runtime_dir = "/run";
+#endif /* G_OS_UNIX */
+        name = name_ = g_build_filename(runtime_dir, PACKAGE_NAME, EVP_UNIX_SOCKET, NULL);
+    }
 
     if ( ! g_path_is_absolute(name) )
     {
