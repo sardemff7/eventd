@@ -85,7 +85,7 @@ evhelpers_dirs_get_config(const gchar *env, gboolean system_mode, const gchar *s
     confdir = sysconfdir_;
 #endif /* G_OS_WIN32 */
 
-    if ( system_mode )
+    if ( ! system_mode )
         confdir = g_get_user_config_dir();
 
     const gchar *dirs_[] = { datadir, confdir, env };
