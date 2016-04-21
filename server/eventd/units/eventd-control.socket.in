@@ -1,0 +1,10 @@
+[Unit]
+Description=eventd control socket
+
+[Socket]
+Service=eventd.service
+SocketMode=0600
+ListenStream=%t/@PACKAGE_NAME@/private
+
+[Install]
+WantedBy=sockets.target

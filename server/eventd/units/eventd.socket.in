@@ -2,7 +2,7 @@
 Description=eventd sockets
 
 [Socket]
-ListenStream=%t/@PACKAGE_NAME@/private
+SocketMode=0660
 ListenStream=%t/@PACKAGE_NAME@/@EVP_UNIX_SOCKET@
 
 [Install]
