@@ -104,7 +104,7 @@ fail:
 }
 
 static GIOStream *
-_eventd_eventdctl_get_connection(const gchar *private_socket, GError **error)
+_eventd_eventdctl_get_connection(const gchar *private_socket, gboolean system_mode, GError **error)
 {
     GSocketAddress *address;
     GSocketClient *client;
@@ -112,8 +112,12 @@ _eventd_eventdctl_get_connection(const gchar *private_socket, GError **error)
 
     const gchar *real_socket = private_socket;
     gchar *default_socket = NULL;
+    const gchar *runtime_dir = g_get_user_runtime_dir();
+    if ( system_mode )
+        runtime_dir = "/run";
+
     if ( private_socket == NULL )
-        real_socket = default_socket = g_build_filename(g_get_user_runtime_dir(), PACKAGE_NAME, "private", NULL);
+        real_socket = default_socket = g_build_filename(runtime_dir, PACKAGE_NAME, "private", NULL);
 
 #ifdef G_OS_UNIX
     if ( ( ! g_file_test(real_socket, G_FILE_TEST_EXISTS) ) || g_file_test(real_socket, G_FILE_TEST_IS_DIR|G_FILE_TEST_IS_REGULAR) )
@@ -212,12 +216,12 @@ fail:
 }
 
 static EventdctlReturnCode
-_eventd_eventdctl_process_command(const gchar *private_socket, gboolean autospawn, int argc, gchar *argv[])
+_eventd_eventdctl_process_command(const gchar *private_socket, gboolean autospawn, gboolean system_mode, int argc, gchar *argv[])
 {
     GError *error = NULL;
     GIOStream *connection;
 
-    connection = _eventd_eventdctl_get_connection(private_socket, &error);
+    connection = _eventd_eventdctl_get_connection(private_socket, system_mode, &error);
 
     EventdctlReturnCode retval = EVENTDCTL_RETURN_CODE_OK;
 
@@ -253,7 +257,7 @@ _eventd_eventdctl_process_command(const gchar *private_socket, gboolean autospaw
             g_warning("Couldn't start eventd: %s", error->message);
             return EVENTDCTL_RETURN_CODE_INVOCATION_ERROR;
         }
-        connection = _eventd_eventdctl_get_connection(private_socket, &error);
+        connection = _eventd_eventdctl_get_connection(private_socket, system_mode, &error);
     }
 
     if ( connection == NULL )
@@ -280,12 +284,14 @@ main(int argc, char *argv[])
 {
     gchar *private_socket = NULL;
     gboolean autospawn = FALSE;
+    gboolean system_mode = ( g_getenv("XDG_RUNTIME_DIR") == NULL );
     gboolean print_version = FALSE;
 
     GOptionEntry entries[] =
     {
         { "socket",     's', 0, G_OPTION_ARG_FILENAME, &private_socket, "eventd control socket",  "<socket>" },
         { "auto-spawn", 'a', 0, G_OPTION_ARG_NONE,     &autospawn,      "Spawn eventd if needed", NULL },
+        { "system",     'S', 0, G_OPTION_ARG_NONE,     &system_mode,    "Talk to system eventd", NULL },
         { "version",    'V', 0, G_OPTION_ARG_NONE,     &print_version,  "Print version",          NULL },
         { NULL }
     };
@@ -317,7 +323,7 @@ main(int argc, char *argv[])
 
     EventdctlReturnCode retval;
 
-    retval = _eventd_eventdctl_process_command(private_socket, autospawn, argc-1, argv+1);
+    retval = _eventd_eventdctl_process_command(private_socket, autospawn, system_mode, argc-1, argv+1);
     g_free(private_socket);
 
     return retval;

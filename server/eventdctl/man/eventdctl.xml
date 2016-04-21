@@ -77,6 +77,16 @@
             </varlistentry>
 
             <varlistentry>
+                <term><option>-S</option></term>
+                <term><option>--system</option></term>
+                <listitem>
+                    <para>Talk to system eventd</para>
+                    <para>It will use <filename>/run</filename> instead of <varname>$XDG_RUNTIME_DIR</varname>. Only has effect for the default socket.</para>
+                    <para>It is the default if <varname>$XDG_RUNTIME_DIR</varname> is unset.</para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
                 <term><option>-V</option></term>
                 <term><option>--version</option></term>
                 <listitem>
