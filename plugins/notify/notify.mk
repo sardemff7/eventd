@@ -19,6 +19,7 @@ notify_la_SOURCES = \
 notify_la_CFLAGS = \
 	$(AM_CFLAGS) \
 	$(GDK_PIXBUF_CFLAGS) \
+	$(GIO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(null)
@@ -33,6 +34,7 @@ notify_la_LIBADD = \
 	libeventd-plugin.la \
 	libeventd-helpers.la \
 	$(GDK_PIXBUF_LIBS) \
+	$(GIO_LIBS) \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS) \
 	$(null)
