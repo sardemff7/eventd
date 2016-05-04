@@ -48,6 +48,7 @@ static guint _eventc_connection_signals[LAST_SIGNAL];
 
 struct _EventcConnectionPrivate {
     GSocketConnectable *address;
+    GSocketConnectable *server_identity;
     gboolean accept_unknown_ca;
     gboolean subscribe;
     GHashTable *subscriptions;
@@ -315,6 +316,9 @@ _eventc_connection_finalize(GObject *object)
     if ( self->priv->subscriptions != NULL )
         g_hash_table_unref(self->priv->subscriptions);
 
+    if ( self->priv->server_identity != NULL )
+        g_object_unref(self->priv->server_identity);
+
     if ( self->priv->address != NULL )
         g_object_unref(self->priv->address);
 
@@ -524,6 +528,8 @@ _eventc_connection_socket_client_event(EventcConnection *self, GSocketClientEven
     break;
     case G_SOCKET_CLIENT_TLS_HANDSHAKING:
         g_signal_connect_swapped(connection, "accept-certificate", G_CALLBACK(_eventc_connection_tls_connection_accept_certificate), self);
+        if ( self->priv->server_identity != NULL )
+            g_tls_client_connection_set_server_identity(G_TLS_CLIENT_CONNECTION(connection), self->priv->server_identity);
     break;
     default:
     break;
@@ -823,6 +829,28 @@ eventc_connection_set_connectable(EventcConnection *self, GSocketConnectable *ad
 
     g_object_unref(self->priv->address);
     self->priv->address = address;
+}
+
+/**
+ * eventc_connection_set_server_identity:
+ * @connection: an #EventcConnection
+ * @server_identity: the server identity
+ *
+ * Sets the server identity to check for in the TLS certificate.
+ */
+EVENTD_EXPORT
+void
+eventc_connection_set_server_identity(EventcConnection *self, GSocketConnectable *server_identity)
+{
+    g_return_if_fail(EVENTC_IS_CONNECTION(self));
+    g_return_if_fail(G_IS_SOCKET_CONNECTABLE(server_identity));
+
+    if ( self->priv->server_identity != NULL )
+        g_object_unref(self->priv->server_identity);
+    if ( self->priv->address == server_identity )
+        self->priv->server_identity = NULL;
+    else
+        self->priv->server_identity = g_object_ref(server_identity);
 }
 
 /**
