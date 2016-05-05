@@ -250,5 +250,9 @@ eventd_relay_server_free(gpointer data)
 
     evhelpers_reconnect_free(server->reconnect);
 
+    if ( server->forwards != NULL )
+        g_hash_table_unref(server->forwards);
+    g_strfreev(server->subscriptions);
+
     g_free(server);
 }
