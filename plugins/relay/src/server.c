@@ -40,6 +40,7 @@
 
 struct _EventdRelayServer {
     EventdPluginCoreContext *core;
+    GSocketConnectable *server_identity;
     gboolean accept_unknown_ca;
     gboolean subscribe;
     gchar **subscriptions;
@@ -86,6 +87,8 @@ static void
 _eventd_relay_server_setup_connection(EventdRelayServer *server)
 {
     g_signal_connect_swapped(server->connection, "event", G_CALLBACK(_eventd_relay_server_event), server);
+    if ( server->server_identity != NULL )
+        eventc_connection_set_server_identity(server->connection, server->server_identity);
     if ( server->subscribe )
     {
         gchar **category;
@@ -101,13 +104,15 @@ _eventd_relay_server_setup_connection(EventdRelayServer *server)
 }
 
 EventdRelayServer *
-eventd_relay_server_new(EventdPluginCoreContext *core, gboolean accept_unknown_ca, gchar **forwards, gchar **subscriptions)
+eventd_relay_server_new(EventdPluginCoreContext *core, GSocketConnectable *server_identity, gboolean accept_unknown_ca, gchar **forwards, gchar **subscriptions)
 {
     EventdRelayServer *server;
 
     server = g_new0(EventdRelayServer, 1);
     server->core = core;
 
+    if ( server_identity != NULL )
+        server->server_identity = g_object_ref(server_identity);
     server->accept_unknown_ca = accept_unknown_ca;
 
     if ( forwards != NULL )
@@ -135,7 +140,7 @@ eventd_relay_server_new(EventdPluginCoreContext *core, gboolean accept_unknown_c
 }
 
 EventdRelayServer *
-eventd_relay_server_new_for_domain(EventdPluginCoreContext *core, gboolean accept_unknown_ca, gchar **forwards, gchar **subscriptions, const gchar *domain)
+eventd_relay_server_new_for_domain(EventdPluginCoreContext *core, GSocketConnectable *server_identity, gboolean accept_unknown_ca, gchar **forwards, gchar **subscriptions, const gchar *domain)
 {
     EventcConnection *connection;
     GError *error = NULL;
@@ -150,7 +155,7 @@ eventd_relay_server_new_for_domain(EventdPluginCoreContext *core, gboolean accep
 
     EventdRelayServer *server;
 
-    server = eventd_relay_server_new(core, accept_unknown_ca, forwards, subscriptions);
+    server = eventd_relay_server_new(core, server_identity, accept_unknown_ca, forwards, subscriptions);
     server->connection = connection;
 
     _eventd_relay_server_setup_connection(server);
@@ -253,6 +258,8 @@ eventd_relay_server_free(gpointer data)
     if ( server->forwards != NULL )
         g_hash_table_unref(server->forwards);
     g_strfreev(server->subscriptions);
+    if ( server->server_identity != NULL )
+        g_object_unref(server->server_identity);
 
     g_free(server);
 }

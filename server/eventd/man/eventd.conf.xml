@@ -272,6 +272,14 @@
                 </varlistentry>
 
                 <varlistentry>
+                    <term><varname>ServerIdentity=</varname></term>
+                    <listitem>
+                        <para>A <type>server name</type></para>
+                        <para>Server identity to check for in TLS certificate.</para>
+                    </listitem>
+                </varlistentry>
+
+                <varlistentry>
                     <term><varname>AcceptUnknownCA=</varname></term>
                     <listitem>
                         <para>A <type>boolean</type></para>

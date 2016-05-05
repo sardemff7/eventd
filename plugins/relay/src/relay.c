@@ -218,10 +218,19 @@ _eventd_relay_server_parse(EventdPluginContext *context, GKeyFile *config_file, 
         return;
 
     gboolean accept_unknown_ca = FALSE;
+    gchar *server_identity_ = NULL;
+    GSocketConnectable *server_identity = NULL;
     gchar **forwards = NULL;
     gchar **subscriptions = NULL;
     gchar *server_uri = NULL;
 
+    if ( evhelpers_config_key_file_get_string(config_file, group, "ServerIdentity", &server_identity_) < 0 )
+        goto cleanup;
+    else if ( server_identity_ != NULL )
+    {
+        server_identity = g_network_address_new(server_identity_, 0);
+        g_free(server_identity_);
+    }
     if ( evhelpers_config_key_file_get_boolean(config_file, group, "AcceptUnknownCA", &accept_unknown_ca) < 0 )
         goto cleanup;
     if ( evhelpers_config_key_file_get_string_list(config_file, group, "Forwards", &forwards, NULL) < 0 )
@@ -237,7 +246,7 @@ _eventd_relay_server_parse(EventdPluginContext *context, GKeyFile *config_file, 
         server = g_hash_table_lookup(context->servers, avahi_name);
         if ( server == NULL )
         {
-            server = eventd_relay_server_new(context->core, accept_unknown_ca, forwards, subscriptions);
+            server = eventd_relay_server_new(context->core, server_identity, accept_unknown_ca, forwards, subscriptions);
             eventd_relay_avahi_server_new(context->avahi, avahi_name, server);
             g_hash_table_insert(context->servers, avahi_name, server);
             forwards = subscriptions = NULL;
@@ -253,7 +262,7 @@ _eventd_relay_server_parse(EventdPluginContext *context, GKeyFile *config_file, 
         server = g_hash_table_lookup(context->servers, server_uri);
         if ( server == NULL )
         {
-            server = eventd_relay_server_new_for_domain(context->core, accept_unknown_ca, forwards, subscriptions, server_uri);
+            server = eventd_relay_server_new_for_domain(context->core, server_identity, accept_unknown_ca, forwards, subscriptions, server_uri);
             if ( server == NULL )
                 g_warning("Couldn't create the connection to server '%s'", server_uri);
             else
@@ -269,6 +278,8 @@ _eventd_relay_server_parse(EventdPluginContext *context, GKeyFile *config_file, 
 cleanup:
     g_strfreev(subscriptions);
     g_strfreev(forwards);
+    if ( server_identity != NULL )
+        g_object_unref(server_identity);
 }
 
 static void
