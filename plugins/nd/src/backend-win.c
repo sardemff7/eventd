@@ -114,10 +114,9 @@ _eventd_nd_win_surface_event_callback(HWND hwnd, UINT message, WPARAM wParam, LP
 
         cairo_set_source_rgb(cr, 255, 0, 0);
         cairo_paint(cr);
+        self->display->nd->notification_draw(self->notification, cr);
 
         cairo_destroy(cr);
-
-        self->display->nd->notification_draw(self->notification, surface);
 
         cairo_surface_destroy(surface);
 
