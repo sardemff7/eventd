@@ -99,6 +99,8 @@ main(int argc, char *argv[])
 {
     int r = 0;
     gchar *host = NULL;
+    gchar *identity = NULL;
+    GSocketConnectable *server_identity = NULL;
     const gchar *category = NULL;
     const gchar *name = NULL;
     gchar **data = NULL;
@@ -111,6 +113,7 @@ main(int argc, char *argv[])
     {
         { "data",      'd', 0, G_OPTION_ARG_STRING_ARRAY, &data,           "Event data to send",                                       "<name>=<content>" },
         { "host",      'h', 0, G_OPTION_ARG_STRING,       &host,           "Host to connect to (defaults to $EVENTC_HOST if defined)", "<host>" },
+        { "identity",  'i', 0, G_OPTION_ARG_STRING,       &identity,       "Server identity to check for in TLS certificate",          "<host>" },
         { "max-tries", 'm', 0, G_OPTION_ARG_INT,          &max_tries,      "Maximum connection attempts (0 for infinite)",             "<times>" },
         { "subscribe", 's', 0, G_OPTION_ARG_NONE,         &subscribe,      "Subscribe mode",                                           NULL },
         { "insecure",  0,   0, G_OPTION_ARG_NONE,         &insecure,       "Accept insecure certificates (unknown CA)",                NULL },
@@ -175,6 +178,16 @@ main(int argc, char *argv[])
         }
     }
 
+    if ( identity != NULL )
+    {
+        server_identity = g_network_address_new(identity, 0);
+        if ( server_identity == NULL )
+        {
+            g_print("Server identity must be a well-formed server name or address\n");
+            goto end;
+        }
+    }
+
     category = argv[1];
     name = argv[2];
 
@@ -191,6 +204,8 @@ post_args:
 
     r = 0; /* Host is fine */
 
+    if ( server_identity != NULL )
+        eventc_connection_set_server_identity(client, server_identity);
     eventc_connection_set_accept_unknown_ca(client, insecure);
 
     if ( subscribe )
@@ -229,6 +244,9 @@ post_event:
     g_object_unref(client);
 
 end:
+    if ( server_identity != NULL )
+        g_object_unref(server_identity);
+    g_free(identity);
     g_free(host);
 
     return r;
