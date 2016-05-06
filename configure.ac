@@ -1,5 +1,5 @@
 m4_define([eventd_version_major], [0])
-m4_define([eventd_version_minor], [15])
+m4_define([eventd_version_minor], [16])
 m4_define([eventd_version_patch], [])
 m4_define([eventd_homepage], [http://www.eventd.org])
 m4_define([eventd_bug_report_page], [https://github.com/sardemff7/eventd/issues])
