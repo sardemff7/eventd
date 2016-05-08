@@ -181,7 +181,7 @@ _eventd_nd_win_uninit(EventdNdBackendContext *self_)
     RemoveProp(self->window, "EventdNdBackendContext");
     DestroyWindow(self->window);
 
-    g_water_win_source_unref(self->source);
+    g_water_win_source_free(self->source);
 
     g_free(self);
 }
