@@ -416,9 +416,11 @@ main(int argc, char *argv[])
     context->interface.get_sockets = eventd_core_get_sockets;
     context->interface.push_event = eventd_core_push_event;
 
+#ifdef G_OS_UNIX
     context->system_mode = ( g_getenv("XDG_RUNTIME_DIR") == NULL );
     if ( context->system_mode )
         g_setenv("XDG_RUNTIME_DIR", "/run", TRUE);
+#endif /* G_OS_UNIX */
 
     GOptionEntry entries[] =
     {
