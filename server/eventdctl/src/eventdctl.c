@@ -284,14 +284,20 @@ main(int argc, char *argv[])
 {
     gchar *private_socket = NULL;
     gboolean autospawn = FALSE;
-    gboolean system_mode = ( g_getenv("XDG_RUNTIME_DIR") == NULL );
+    gboolean system_mode = FALSE;
     gboolean print_version = FALSE;
+
+#ifdef G_OS_UNIX
+    system_mode = ( g_getenv("XDG_RUNTIME_DIR") == NULL );
+#endif /* G_OS_UNIX */
 
     GOptionEntry entries[] =
     {
         { "socket",     's', 0, G_OPTION_ARG_FILENAME, &private_socket, "eventd control socket",  "<socket>" },
         { "auto-spawn", 'a', 0, G_OPTION_ARG_NONE,     &autospawn,      "Spawn eventd if needed", NULL },
+#ifdef G_OS_UNIX
         { "system",     'S', 0, G_OPTION_ARG_NONE,     &system_mode,    "Talk to system eventd", NULL },
+#endif /* G_OS_UNIX */
         { "version",    'V', 0, G_OPTION_ARG_NONE,     &print_version,  "Print version",          NULL },
         { NULL }
     };
