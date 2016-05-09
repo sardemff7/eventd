@@ -96,33 +96,6 @@ _eventd_nd_win_surface_event_callback(HWND hwnd, UINT message, WPARAM wParam, LP
         }
     }
     break;
-    case WM_PAINT:
-    {
-        EventdNdSurface *self;
-        self = GetProp(hwnd, "EventdNdSurface");
-        g_return_val_if_fail(self != NULL, 1);
-
-        HDC dc;
-        PAINTSTRUCT ps;
-        dc = BeginPaint(hwnd, &ps);
-
-        cairo_surface_t *surface;
-        surface = cairo_win32_surface_create(dc);
-
-        cairo_t *cr;
-        cr = cairo_create(surface);
-
-        cairo_set_source_rgb(cr, 255, 0, 0);
-        cairo_paint(cr);
-        self->display->nd->notification_draw(self->notification, cr);
-
-        cairo_destroy(cr);
-
-        cairo_surface_destroy(surface);
-
-        EndPaint(hwnd, &ps);
-    }
-    break;
     case WM_LBUTTONUP:
     {
         EventdNdSurface *self;
@@ -149,7 +122,7 @@ _eventd_nd_win_init(EventdNdInterface *nd)
     self->window_class.style         = CS_HREDRAW | CS_VREDRAW;
     self->window_class.lpfnWndProc   = _eventd_nd_win_surface_event_callback;
     self->window_class.hCursor       = LoadCursor(NULL, IDC_ARROW);
-    self->window_class.hbrBackground =(HBRUSH)COLOR_WINDOW;
+    self->window_class.hbrBackground = (HBRUSH)0;
     self->window_class.lpszClassName = CLASS_NAME;
 
     self->window_class_atom = RegisterClassEx(&self->window_class);
@@ -186,6 +159,35 @@ _eventd_nd_win_uninit(EventdNdBackendContext *self_)
     g_free(self);
 }
 
+static void
+_eventd_nd_win_surface_update(EventdNdSurface *self, gint width, gint height)
+{
+    HDC hdcScreen = GetDC(NULL);
+
+    cairo_surface_t *surface;
+    HDC dc;
+    surface = cairo_win32_surface_create_with_ddb(hdcScreen, CAIRO_FORMAT_ARGB32, width, height);
+    dc = cairo_win32_surface_get_dc(surface);
+
+    cairo_t *cr;
+    cr = cairo_create(surface);
+    self->display->nd->notification_draw(self->notification, cr);
+    cairo_destroy(cr);
+    cairo_surface_flush(surface);
+
+    POINT ptZero = { 0 };
+    SIZE size = { width, height };
+    BLENDFUNCTION blend = {
+        .BlendOp = AC_SRC_OVER,
+        .SourceConstantAlpha = 255,
+        .AlphaFormat = AC_SRC_ALPHA,
+    };
+    UpdateLayeredWindow(self->window, hdcScreen, NULL, &size, dc, &ptZero, 0, &blend, ULW_ALPHA);
+
+    cairo_surface_destroy(surface);
+    ReleaseDC(NULL, hdcScreen);
+}
+
 static EventdNdSurface *
 _eventd_nd_win_surface_new(EventdNdDisplay *display, EventdNdNotification *notification, gint width, gint height)
 {
@@ -195,18 +197,13 @@ _eventd_nd_win_surface_new(EventdNdDisplay *display, EventdNdNotification *notif
 
     self->notification = notification;
 
-    self->window = CreateWindowEx(WS_EX_LAYERED | WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE, display->window_class.lpszClassName, "Bubble", WS_POPUP, 0, 0, width, height, display->window, NULL, NULL, NULL);
-    SetLayeredWindowAttributes(self->window, RGB(255, 0, 0), 255, LWA_COLORKEY);
+    self->window = CreateWindowEx(WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE, display->window_class.lpszClassName, "Bubble", WS_POPUP, 0, 0, width, height, display->window, NULL, NULL, NULL);
 
     SetProp(self->window, "EventdNdSurface", self);
 
-    return self;
-}
+    _eventd_nd_win_surface_update(self, width, height);
 
-static void
-_eventd_nd_win_surface_update(EventdNdSurface *self, gint width, gint height)
-{
-    SetWindowPos(self->window, NULL, 0, 0, width, height, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
+    return self;
 }
 
 static void
