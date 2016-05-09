@@ -8,7 +8,7 @@ pkglibdir=@pkglibdir@
 
 Name: libeventd
 Description: Main eventd library
-URL: http://www.eventd.org/
+URL: https://www.eventd.org/
 Version: @VERSION@
 Requires.private: gobject-2.0 glib-2.0
 Libs: -L${libdir} -leventd

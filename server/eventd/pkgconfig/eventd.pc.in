@@ -8,5 +8,5 @@ eventdir=@eventdir@
 
 Name: eventd
 Description: eventd daemon
-URL: http://www.eventd.org/
+URL: https://www.eventd.org/
 Version: @VERSION@
