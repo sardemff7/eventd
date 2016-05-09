@@ -451,13 +451,11 @@ eventd_nd_draw_image_and_icon_process(EventdNdStyle *style, EventdEvent *event, 
 
 
 void
-eventd_nd_draw_bubble_draw(cairo_t *cr, Colour colour, gint radius, gint width, gint height)
+eventd_nd_draw_bubble_shape(cairo_t *cr, gint radius, gint width, gint height)
 {
-    cairo_set_source_rgba(cr, colour.r, colour.g, colour.b, colour.a);
-
     if ( radius < 1 )
     {
-        cairo_paint(cr);
+        cairo_rectangle(cr, 0, 0, width, height);
         return;
     }
 
@@ -491,7 +489,13 @@ eventd_nd_draw_bubble_draw(cairo_t *cr, Colour colour, gint radius, gint width, 
               radius,
               M_PI / 2.0, M_PI);
     cairo_close_path(cr);
+}
 
+void
+eventd_nd_draw_bubble_draw(cairo_t *cr, Colour colour, gint radius, gint width, gint height)
+{
+    cairo_set_source_rgba(cr, colour.r, colour.g, colour.b, colour.a);
+    eventd_nd_draw_bubble_shape(cr, radius, width, height);
     cairo_fill(cr);
 }
 

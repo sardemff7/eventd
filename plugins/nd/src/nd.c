@@ -134,6 +134,7 @@ _eventd_nd_init(EventdPluginCoreContext *core)
     context->interface.context = context;
     context->interface.geometry_update = _eventd_nd_geometry_update;
     context->interface.backend_stop = _eventd_nd_backend_stop;
+    context->interface.notification_shape = eventd_nd_notification_shape;
     context->interface.notification_draw = eventd_nd_notification_draw;
     context->interface.notification_dismiss = eventd_nd_notification_dismiss;
 

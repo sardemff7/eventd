@@ -299,6 +299,12 @@ eventd_nd_notification_free(gpointer data)
 }
 
 void
+eventd_nd_notification_shape(EventdNdNotification *self, cairo_t *cr)
+{
+    eventd_nd_draw_bubble_shape(cr, eventd_nd_style_get_bubble_radius(self->style), self->width, self->height);
+}
+
+void
 eventd_nd_notification_draw(EventdNdNotification *self, cairo_t *cr)
 {
     gint padding;

@@ -31,6 +31,7 @@ void eventd_nd_notification_dismiss_target(EventdPluginContext *context, EventdN
 EventdNdNotification *eventd_nd_notification_new(EventdPluginContext *context, EventdEvent *event, EventdNdStyle *style);
 void eventd_nd_notification_free(gpointer data);
 
+void eventd_nd_notification_shape(EventdNdNotification *notification, cairo_t *cr);
 void eventd_nd_notification_draw(EventdNdNotification *notification, cairo_t *cr);
 void eventd_nd_notification_update(EventdNdNotification *notification, EventdEvent *event);
 void eventd_nd_notification_dismiss(EventdNdNotification *notification);
