@@ -93,7 +93,7 @@ _eventd_nd_notification_process(EventdNdNotification *self, EventdEvent *event)
     _eventd_nd_notification_clean(self);
     self->event = eventd_event_ref(event);
 
-    gint margin, padding;
+    gint margin, border, padding;
     gint min_width, max_width;
 
     gint text_width = 0, text_height = 0;
@@ -101,6 +101,7 @@ _eventd_nd_notification_process(EventdNdNotification *self, EventdEvent *event)
 
 
     margin = self->queue->margin;
+    border = eventd_nd_style_get_bubble_border(self->style);
     padding = eventd_nd_style_get_bubble_padding(self->style);
     min_width = eventd_nd_style_get_bubble_min_width(self->style);
     max_width = eventd_nd_style_get_bubble_max_width(self->style);
@@ -110,9 +111,9 @@ _eventd_nd_notification_process(EventdNdNotification *self, EventdEvent *event)
         min_width = max_width;
 
     /* proccess data and compute the bubble size */
-    self->text.text = eventd_nd_draw_text_process(self->style, self->event, max_width - 2 * padding, &text_height, &text_width);
+    self->text.text = eventd_nd_draw_text_process(self->style, self->event, max_width - 2 * ( border + padding ), &text_height, &text_width);
 
-    self->width = 2 * padding + text_width;
+    self->width = 2 * ( border + padding ) + text_width;
 
     if ( self->width < max_width )
     {
@@ -129,7 +130,7 @@ _eventd_nd_notification_process(EventdNdNotification *self, EventdEvent *event)
     }
     pango_layout_set_width(self->text.text, text_width * PANGO_SCALE);
 
-    self->height = 2 * padding + MAX(image_height, text_height);
+    self->height = 2 * ( border + padding ) + MAX(image_height, text_height);
 
     if ( self->timeout > 0 )
     {
@@ -301,18 +302,24 @@ eventd_nd_notification_free(gpointer data)
 void
 eventd_nd_notification_shape(EventdNdNotification *self, cairo_t *cr)
 {
-    eventd_nd_draw_bubble_shape(cr, eventd_nd_style_get_bubble_radius(self->style), self->width, self->height);
+    gint border;
+    border = eventd_nd_style_get_bubble_border(self->style);
+    cairo_translate(cr, border, border);
+    eventd_nd_draw_bubble_shape(cr, eventd_nd_style_get_bubble_radius(self->style), self->width, self->height, border);
 }
 
 void
 eventd_nd_notification_draw(EventdNdNotification *self, cairo_t *cr, gboolean shaped)
 {
+    gint border;
     gint padding;
+    border = eventd_nd_style_get_bubble_border(self->style);
     padding = eventd_nd_style_get_bubble_padding(self->style);
 
-    eventd_nd_draw_bubble_draw(cr, eventd_nd_style_get_bubble_colour(self->style), shaped ? eventd_nd_style_get_bubble_radius(self->style) : 0, self->width, self->height);
+    cairo_translate(cr, border, border);
+    eventd_nd_draw_bubble_draw(cr, eventd_nd_style_get_bubble_colour(self->style), shaped ? eventd_nd_style_get_bubble_radius(self->style) : 0, self->width, self->height, border, eventd_nd_style_get_bubble_border_colour(self->style));
     eventd_nd_draw_image_and_icon_draw(cr, self->image, self->icon, self->style, self->width, self->height);
-    eventd_nd_draw_text_draw(cr, self->style, self->text.text, padding + self->text.x, padding, self->height - ( 2 * padding ));
+    eventd_nd_draw_text_draw(cr, self->style, self->text.text, padding + self->text.x, padding, self->height - ( 2 * ( border + padding) ));
 }
 
 void

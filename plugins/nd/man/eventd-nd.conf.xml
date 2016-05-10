@@ -277,6 +277,7 @@
                             <para>Two <type>integers</type>, <literal>-1</literal> is unlimited</para>
                             <para>These two keys control the bubble width.</para>
                             <para>The maximum width overrides the minimum.</para>
+                            <para>These include borders and padding.</para>
                         </listitem>
                     </varlistentry>
 
@@ -301,6 +302,22 @@
                         <listitem>
                             <para>A <type>colour string</type></para>
                             <para>Colour of bubble's background.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>Border=</varname> (defaults to <literal>0</literal>)</term>
+                        <listitem>
+                            <para>An <type>integer</type></para>
+                            <para>Width of bubble's borders.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>BorderColour=</varname> (defaults to <literal>"#191919"</literal>)</term>
+                        <listitem>
+                            <para>A <type>colour string</type></para>
+                            <para>Colour of bubble's borders.</para>
                         </listitem>
                     </varlistentry>
                 </variablelist>

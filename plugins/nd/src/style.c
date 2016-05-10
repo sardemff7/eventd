@@ -88,6 +88,9 @@ struct _EventdPluginAction {
         gint   min_width;
         gint   max_width;
 
+        gint border;
+        Colour border_colour;
+
         gint   padding;
         gint   radius;
         Colour colour;
@@ -152,6 +155,13 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
     style->bubble.colour.g = 0.15;
     style->bubble.colour.b = 0.15;
     style->bubble.colour.a = 1.0;
+
+    /* border style */
+    style->bubble.border          = 0;
+    style->bubble.border_colour.r = 0.1;
+    style->bubble.border_colour.g = 0.1;
+    style->bubble.border_colour.b = 0.1;
+    style->bubble.border_colour.a = 1.0;
 
     /* text */
     style->text.set = TRUE;
@@ -283,6 +293,16 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
             self->bubble.colour = colour;
         else if ( self->parent != NULL )
             self->bubble.colour = eventd_nd_style_get_bubble_colour(self->parent);
+
+        if ( evhelpers_config_key_file_get_int(config_file, "NotificationBubble", "Border", &integer) == 0 )
+            self->bubble.border = integer.value;
+        else if ( self->parent != NULL )
+            self->bubble.border = eventd_nd_style_get_bubble_border(self->parent);
+
+        if ( evhelpers_config_key_file_get_colour(config_file, "NotificationBubble", "BorderColour", &colour) == 0 )
+            self->bubble.border_colour = colour;
+        else if ( self->parent != NULL )
+            self->bubble.border_colour = eventd_nd_style_get_bubble_border_colour(self->parent);
     }
 
     if ( g_key_file_has_group(config_file, "NotificationText") )
@@ -503,6 +523,22 @@ eventd_nd_style_get_bubble_colour(EventdNdStyle *self)
     if ( self->bubble.set )
         return self->bubble.colour;
     return eventd_nd_style_get_bubble_colour(self->parent);
+}
+
+gint
+eventd_nd_style_get_bubble_border(EventdNdStyle *self)
+{
+    if ( self->bubble.set )
+        return self->bubble.border;
+    return eventd_nd_style_get_bubble_border(self->parent);
+}
+
+Colour
+eventd_nd_style_get_bubble_border_colour(EventdNdStyle *self)
+{
+    if ( self->bubble.set )
+        return self->bubble.border_colour;
+    return eventd_nd_style_get_bubble_border_colour(self->parent);
 }
 
 const PangoFontDescription *
