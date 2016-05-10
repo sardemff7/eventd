@@ -74,8 +74,8 @@ struct _EventdNdBackendContext {
         gint h;
     } geometry;
     gboolean randr;
-    gint randr_event_base;
     gboolean shape;
+    gint randr_event_base;
     GHashTable *bubbles;
 };
 
@@ -491,17 +491,9 @@ _eventd_nd_xcb_start(EventdNdBackendContext *self, const gchar *target)
         xcb_change_window_attributes(self->xcb_connection, self->screen->root, XCB_CW_EVENT_MASK, mask);
     }
 
-    extension_query = xcb_get_extension_data(self->xcb_connection, &xcb_shape_id);
-    if ( ! extension_query->present )
-        g_warning("No Shape extension");
-    else
-        self->shape = TRUE;
-
     extension_query = xcb_get_extension_data(self->xcb_connection, &xcb_randr_id);
     if ( ! extension_query->present )
-    {
         g_warning("No RandR extension");
-    }
     else
     {
         self->randr = TRUE;
@@ -512,6 +504,12 @@ _eventd_nd_xcb_start(EventdNdBackendContext *self, const gchar *target)
                 XCB_RANDR_NOTIFY_MASK_CRTC_CHANGE |
                 XCB_RANDR_NOTIFY_MASK_OUTPUT_PROPERTY);
     }
+
+    extension_query = xcb_get_extension_data(self->xcb_connection, &xcb_shape_id);
+    if ( ! extension_query->present )
+        g_warning("No Shape extension");
+    else
+        self->shape = TRUE;
 
     xcb_flush(self->xcb_connection);
     _eventd_nd_xcb_check_geometry(self);
