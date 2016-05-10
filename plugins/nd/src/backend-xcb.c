@@ -40,6 +40,7 @@
 #include <libgwater-xcb.h>
 #include <xcb/randr.h>
 #include <xcb/xcb_ewmh.h>
+#include <xcb/xfixes.h>
 #include <xcb/shape.h>
 
 #include <libeventd-event.h>
@@ -77,10 +78,13 @@ struct _EventdNdBackendContext {
         gint h;
     } geometry;
     gboolean randr;
+    gboolean compositing;
     gboolean custom_map;
+    gboolean xfixes;
     gboolean shape;
     xcb_ewmh_connection_t ewmh;
     gint randr_event_base;
+    gint xfixes_event_base;
     GHashTable *bubbles;
 };
 
@@ -413,6 +417,7 @@ _eventd_nd_xcb_check_geometry(EventdNdBackendContext *self)
 
 static void _eventd_nd_xcb_surface_expose_event(EventdNdSurface *self, xcb_expose_event_t *event);
 static void _eventd_nd_xcb_surface_button_release_event(EventdNdSurface *self);
+static void _eventd_nd_xcb_surface_draw(EventdNdSurface *self, gboolean reshape);
 
 
 static gboolean
@@ -439,6 +444,34 @@ _eventd_nd_xcb_events_callback(xcb_generic_event_t *event, gpointer user_data)
     case XCB_RANDR_NOTIFY:
         return TRUE;
     default:
+    break;
+    }
+
+    /* XFixes events */
+    if ( self->xfixes )
+    switch ( type - self->xfixes_event_base )
+    {
+    case XCB_XFIXES_SELECTION_NOTIFY:
+    {
+        xcb_xfixes_selection_notify_event_t *e = (xcb_xfixes_selection_notify_event_t *)event;
+        if ( e->selection == self->ewmh._NET_WM_CM_Sn[self->screen_number] )
+        {
+            gboolean compositing = ( e->owner != XCB_WINDOW_NONE );
+            if ( self->compositing != compositing )
+            {
+                self->compositing = compositing;
+                GHashTableIter iter;
+                g_hash_table_iter_init(&iter, self->bubbles);
+                while ( g_hash_table_iter_next(&iter, NULL, (gpointer *) &surface) )
+                {
+                    _eventd_nd_xcb_surface_draw(surface, compositing);
+                    xcb_clear_area(self->xcb_connection, TRUE, surface->window, 0, 0, 0, 0);
+                }
+            }
+        }
+
+        return TRUE;
+    }
     break;
     }
 
@@ -533,6 +566,38 @@ _eventd_nd_xcb_start(EventdNdBackendContext *self, const gchar *target)
 
     self->custom_map = _eventd_nd_xcb_get_colormap(self);
 
+    if ( self->custom_map )
+    {
+        /* We have a 32bit color map, try to support compositing */
+        xcb_get_selection_owner_cookie_t oc;
+        xcb_window_t owner;
+        oc = xcb_ewmh_get_wm_cm_owner(&self->ewmh, self->screen_number);
+        self->compositing = xcb_ewmh_get_wm_cm_owner_reply(&self->ewmh, oc, &owner, NULL) && ( owner != XCB_WINDOW_NONE );
+
+        extension_query = xcb_get_extension_data(self->xcb_connection, &xcb_xfixes_id);
+        if ( ! extension_query->present )
+            g_warning("No XFixes extension");
+        else
+        {
+            xcb_xfixes_query_version_cookie_t vc;
+            xcb_xfixes_query_version_reply_t *r;
+            vc = xcb_xfixes_query_version(self->xcb_connection, XCB_XFIXES_MAJOR_VERSION, XCB_XFIXES_MINOR_VERSION);
+            r = xcb_xfixes_query_version_reply(self->xcb_connection, vc, NULL);
+            if ( r == NULL )
+                g_warning("Cannot get XFixes version");
+            else
+            {
+                self->xfixes = TRUE;
+                self->xfixes_event_base = extension_query->first_event;
+                xcb_xfixes_select_selection_input_checked(self->xcb_connection, self->screen->root,
+                    self->ewmh._NET_WM_CM_Sn[self->screen_number],
+                    XCB_XFIXES_SELECTION_EVENT_MASK_SET_SELECTION_OWNER |
+                    XCB_XFIXES_SELECTION_EVENT_MASK_SELECTION_WINDOW_DESTROY |
+                    XCB_XFIXES_SELECTION_EVENT_MASK_SELECTION_CLIENT_CLOSE);
+            }
+        }
+    }
+
     extension_query = xcb_get_extension_data(self->xcb_connection, &xcb_shape_id);
     if ( ! extension_query->present )
         g_warning("No Shape extension");
@@ -583,16 +648,28 @@ _eventd_nd_xcb_surface_button_release_event(EventdNdSurface *self)
 }
 
 static void
-_eventd_nd_xcb_surface_draw(EventdNdSurface *self)
+_eventd_nd_xcb_surface_draw(EventdNdSurface *self, gboolean reshape)
 {
     EventdNdBackendContext *context = self->context;
 
+    if ( reshape )
+    {
+        xcb_rectangle_t rectangles[] = { { 0, 0, self->width, self->height } };
+        xcb_shape_rectangles(self->context->xcb_connection, XCB_SHAPE_SO_UNION, XCB_SHAPE_SK_BOUNDING, 0, self->window, 0, 0, G_N_ELEMENTS(rectangles), rectangles);
+    }
+
     cairo_t *cr;
     cr = cairo_create(self->bubble);
-    self->context->nd->notification_draw(self->notification, cr, FALSE);
+    if ( reshape )
+    {
+        cairo_set_source_rgba(cr, 0, 0, 0, 0);
+        cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+        cairo_paint(cr);
+    }
+    self->context->nd->notification_draw(self->notification, cr, context->compositing);
     cairo_destroy(cr);
 
-    if ( ! context->shape )
+    if ( context->compositing || ( ! context->shape ) )
         return;
 
     xcb_pixmap_t shape_id;
@@ -649,7 +726,7 @@ _eventd_nd_xcb_surface_new(EventdNdBackendContext *context, EventdNdNotification
 
     self->bubble = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
 
-    _eventd_nd_xcb_surface_draw(self);
+    _eventd_nd_xcb_surface_draw(self, FALSE);
 
     g_hash_table_insert(context->bubbles, GUINT_TO_POINTER(self->window), self);
 
@@ -669,7 +746,7 @@ _eventd_nd_xcb_surface_update(EventdNdSurface *self, gint width, gint height)
 
     xcb_configure_window(self->context->xcb_connection, self->window, mask, vals);
 
-    _eventd_nd_xcb_surface_draw(self);
+    _eventd_nd_xcb_surface_draw(self, FALSE);
 
     xcb_clear_area(self->context->xcb_connection, TRUE, self->window, 0, 0, 0, 0);
 }

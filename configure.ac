@@ -294,7 +294,7 @@ AM_CONDITIONAL([ENABLE_ND_WAYLAND], [test x${enable_nd_wayland} = xyes])
 
 # XCB backend
 if test x${enable_nd_xcb} = xyes; then
-    GW_CHECK_XCB([cairo-xcb xcb xcb-aux xcb-randr xcb-ewmh xcb-shape])
+    GW_CHECK_XCB([cairo-xcb xcb xcb-aux xcb-randr xcb-ewmh xcb-xfixes xcb-shape])
     AC_DEFINE([ENABLE_ND_XCB], [1], [nd XCB backend])
     AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_nd_xcb"
 fi
