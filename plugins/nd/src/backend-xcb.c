@@ -66,7 +66,9 @@ struct _EventdNdBackendContext {
     xcb_connection_t *xcb_connection;
     gint screen_number;
     xcb_screen_t *screen;
+    xcb_depth_t *depth;
     xcb_visualtype_t *visual;
+    xcb_colormap_t map;
     struct {
         gint x;
         gint y;
@@ -74,6 +76,7 @@ struct _EventdNdBackendContext {
         gint h;
     } geometry;
     gboolean randr;
+    gboolean custom_map;
     gboolean shape;
     gint randr_event_base;
     GHashTable *bubbles;
@@ -129,26 +132,53 @@ _eventd_nd_xcb_config_reset(EventdNdBackendContext *self)
     self->outputs = NULL;
 }
 
-static xcb_visualtype_t *
-get_root_visual_type(xcb_screen_t *s)
+static gboolean
+_eventd_nd_xcb_get_colormap(EventdNdBackendContext *self)
 {
-    xcb_visualtype_t *visual_type = NULL;
-    xcb_depth_iterator_t depth_iter;
+    xcb_depth_t *root_depth = NULL;
+    xcb_visualtype_t *root_visual = NULL;
 
-    for ( depth_iter = xcb_screen_allowed_depths_iterator(s) ; depth_iter.rem ; xcb_depth_next(&depth_iter) )
+    xcb_depth_iterator_t depth_iter;
+    for ( depth_iter = xcb_screen_allowed_depths_iterator(self->screen) ; depth_iter.rem ; xcb_depth_next(&depth_iter) )
     {
+        xcb_depth_t *d = depth_iter.data;
+
         xcb_visualtype_iterator_t visual_iter;
-        for ( visual_iter = xcb_depth_visuals_iterator(depth_iter.data) ; visual_iter.rem ; xcb_visualtype_next(&visual_iter) )
+        for ( visual_iter = xcb_depth_visuals_iterator(d) ; visual_iter.rem ; xcb_visualtype_next(&visual_iter) )
         {
-            if ( s->root_visual == visual_iter.data->visual_id )
+            xcb_visualtype_t *v = visual_iter.data;
+
+            if ( ( d->depth == 32 ) && ( v->_class >= XCB_VISUAL_CLASS_TRUE_COLOR ) )
             {
-                visual_type = visual_iter.data;
-                break;
+                self->depth = d;
+                self->visual = v;
+            }
+            if ( self->screen->root_visual == v->visual_id )
+            {
+                root_depth = d;
+                root_visual = v;
             }
         }
     }
 
-    return visual_type;
+    if ( self->visual != NULL )
+    {
+        xcb_void_cookie_t c;
+        xcb_generic_error_t *e;
+        self->map = xcb_generate_id(self->xcb_connection);
+        c = xcb_create_colormap_checked(self->xcb_connection, XCB_COLORMAP_ALLOC_NONE, self->map, self->screen->root, self->visual->visual_id);
+        e = xcb_request_check(self->xcb_connection, c);
+        if ( e == NULL )
+            return TRUE;
+
+        xcb_free_colormap(self->xcb_connection, self->map);
+        free(e);
+    }
+
+    self->depth = root_depth;
+    self->visual = root_visual;
+    self->map = self->screen->default_colormap;
+    return FALSE;
 }
 
 static void
@@ -481,7 +511,6 @@ _eventd_nd_xcb_start(EventdNdBackendContext *self, const gchar *target)
     self->xcb_connection = g_water_xcb_source_get_connection(self->source);
     self->screen_number = screen;
     self->screen = xcb_aux_get_screen(self->xcb_connection, screen);
-    self->visual = get_root_visual_type(self->screen);
 
     self->bubbles = g_hash_table_new(NULL, NULL);
 
@@ -505,6 +534,8 @@ _eventd_nd_xcb_start(EventdNdBackendContext *self, const gchar *target)
                 XCB_RANDR_NOTIFY_MASK_OUTPUT_PROPERTY);
     }
 
+    self->custom_map = _eventd_nd_xcb_get_colormap(self);
+
     extension_query = xcb_get_extension_data(self->xcb_connection, &xcb_shape_id);
     if ( ! extension_query->present )
         g_warning("No Shape extension");
@@ -520,6 +551,9 @@ _eventd_nd_xcb_start(EventdNdBackendContext *self, const gchar *target)
 static void
 _eventd_nd_xcb_stop(EventdNdBackendContext *self)
 {
+    if ( self->custom_map )
+        xcb_free_colormap(self->xcb_connection, self->map);
+
     g_hash_table_unref(self->bubbles);
     g_water_xcb_source_free(self->source);
     self->bubbles = NULL;
@@ -590,8 +624,8 @@ _eventd_nd_xcb_surface_draw(EventdNdSurface *self)
 static EventdNdSurface *
 _eventd_nd_xcb_surface_new(EventdNdBackendContext *context, EventdNdNotification *notification, gint width, gint height)
 {
-    guint32 selmask = XCB_CW_OVERRIDE_REDIRECT | XCB_CW_EVENT_MASK;
-    guint32 selval[] = { 1, XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_BUTTON_PRESS | XCB_EVENT_MASK_BUTTON_RELEASE };
+    guint32 selmask =  XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_OVERRIDE_REDIRECT | XCB_CW_EVENT_MASK | XCB_CW_COLORMAP;
+    guint32 selval[] = { 0, 0, 1, XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_BUTTON_PRESS | XCB_EVENT_MASK_BUTTON_RELEASE, context->map };
     EventdNdSurface *self;
 
     self = g_new0(EventdNdSurface, 1);
@@ -604,7 +638,7 @@ _eventd_nd_xcb_surface_new(EventdNdBackendContext *context, EventdNdNotification
 
     self->window = xcb_generate_id(context->xcb_connection);
     xcb_create_window(context->xcb_connection,
-                                       context->screen->root_depth,   /* depth         */
+                                       context->depth->depth,         /* depth         */
                                        self->window,
                                        context->screen->root,         /* parent window */
                                        0, 0,                          /* x, y          */
