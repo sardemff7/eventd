@@ -451,13 +451,10 @@ eventd_nd_draw_image_and_icon_process(EventdNdStyle *style, EventdEvent *event, 
 
 
 void
-eventd_nd_draw_bubble_shape(cairo_t *cr, gboolean shaped, gint radius, gint width, gint height)
+eventd_nd_draw_bubble_shape(cairo_t *cr, gint radius, gint width, gint height)
 {
-    if ( ( ! shaped ) || ( radius < 1 ) )
-    {
-        cairo_rectangle(cr, 0, 0, width, height);
-        return;
-    }
+    if ( radius < 1 )
+        radius = 0;
 
     gint limit;
 
@@ -473,29 +470,29 @@ eventd_nd_draw_bubble_shape(cairo_t *cr, gboolean shaped, gint radius, gint widt
               radius, radius,
               radius,
               M_PI, 3.0 * M_PI / 2.0);
-    cairo_line_to(cr, width-radius, 0);
+    cairo_line_to(cr, width - radius, 0);
     cairo_arc(cr,
-              width-radius, radius,
+              width - radius, radius,
               radius,
               3.0 * M_PI / 2.0, 0.0);
-    cairo_line_to(cr, width, height-radius);
+    cairo_line_to(cr, width , height - radius);
     cairo_arc(cr,
-              width-radius, height-radius,
+              width - radius, height - radius,
               radius,
               0.0, M_PI / 2.0);
     cairo_line_to(cr, radius, height);
     cairo_arc(cr,
-              radius, height-radius,
+              radius, height - radius,
               radius,
               M_PI / 2.0, M_PI);
     cairo_close_path(cr);
 }
 
 void
-eventd_nd_draw_bubble_draw(cairo_t *cr, Colour colour, gboolean shaped, gint radius, gint width, gint height)
+eventd_nd_draw_bubble_draw(cairo_t *cr, Colour colour, gint radius, gint width, gint height)
 {
     cairo_set_source_rgba(cr, colour.r, colour.g, colour.b, colour.a);
-    eventd_nd_draw_bubble_shape(cr, shaped, radius, width, height);
+    eventd_nd_draw_bubble_shape(cr, radius, width, height);
     cairo_fill(cr);
 }
 
