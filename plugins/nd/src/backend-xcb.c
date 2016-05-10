@@ -274,13 +274,9 @@ _eventd_nd_xcb_randr_check_focused(EventdNdBackendContext *self, EventdNdXcbRand
         xcb_translate_coordinates_cookie_t cc;
         xcb_translate_coordinates_reply_t *cr;
         cc = xcb_translate_coordinates(self->xcb_connection, w, self->screen->root, 0, 0);
-        xcb_generic_error_t *e;
-        cr = xcb_translate_coordinates_reply(self->xcb_connection, cc, &e);
+        cr = xcb_translate_coordinates_reply(self->xcb_connection, cc, NULL);
         if ( cr == NULL )
-        {
-            g_debug("error %d", e->error_code);
             return FALSE;
-        }
 
         x = cr->dst_x;
         y = cr->dst_y;
