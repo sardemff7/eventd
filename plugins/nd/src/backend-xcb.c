@@ -39,6 +39,7 @@
 #include <xcb/xcb_aux.h>
 #include <libgwater-xcb.h>
 #include <xcb/randr.h>
+#include <xcb/xcb_ewmh.h>
 #include <xcb/shape.h>
 
 #include <libeventd-event.h>
@@ -78,6 +79,7 @@ struct _EventdNdBackendContext {
     gboolean randr;
     gboolean custom_map;
     gboolean shape;
+    xcb_ewmh_connection_t ewmh;
     gint randr_event_base;
     GHashTable *bubbles;
 };
@@ -279,20 +281,9 @@ _eventd_nd_xcb_randr_check_focused(EventdNdBackendContext *self, EventdNdXcbRand
     break;
     case EVENTD_ND_XCB_FOLLOW_FOCUS_KEYBOARD:
     {
-        xcb_intern_atom_cookie_t ac;
-        xcb_intern_atom_reply_t *ar;
-        ac = xcb_intern_atom(self->xcb_connection, FALSE, strlen("_NET_ACTIVE_WINDOW"), "_NET_ACTIVE_WINDOW");
-        ar = xcb_intern_atom_reply(self->xcb_connection, ac, NULL);
-        if ( ar == NULL )
-            return FALSE;
-
-        xcb_atom_t a;
-        a = ar->atom;
-        free(ar);
-
         xcb_get_property_cookie_t wc;
         xcb_get_property_reply_t *wr;
-        wc = xcb_get_property(self->xcb_connection, FALSE, self->screen->root, a, XCB_ATOM_WINDOW, 0, sizeof(xcb_window_t));
+        wc = xcb_get_property(self->xcb_connection, FALSE, self->screen->root, self->ewmh._NET_ACTIVE_WINDOW, XCB_ATOM_WINDOW, 0, sizeof(xcb_window_t));
         wr = xcb_get_property_reply(self->xcb_connection, wc, NULL);
         if ( wr == NULL )
             return FALSE;
@@ -475,7 +466,9 @@ _eventd_nd_xcb_events_callback(xcb_generic_event_t *event, gpointer user_data)
     case XCB_PROPERTY_NOTIFY:
     {
         xcb_property_notify_event_t *e = (xcb_property_notify_event_t *)event;
-        if ( e->window == self->screen->root )
+        if ( e->window != self->screen->root )
+            break;
+        if ( ( self->follow_focus != EVENTD_ND_XCB_FOLLOW_FOCUS_NONE ) && ( e->atom == self->ewmh._NET_ACTIVE_WINDOW ) )
             _eventd_nd_xcb_check_geometry(self);
     }
     break;
@@ -520,6 +513,10 @@ _eventd_nd_xcb_start(EventdNdBackendContext *self, const gchar *target)
         xcb_change_window_attributes(self->xcb_connection, self->screen->root, XCB_CW_EVENT_MASK, mask);
     }
 
+    xcb_intern_atom_cookie_t *ac;
+    ac = xcb_ewmh_init_atoms(self->xcb_connection, &self->ewmh);
+    xcb_ewmh_init_atoms_replies(&self->ewmh, ac, NULL);
+
     extension_query = xcb_get_extension_data(self->xcb_connection, &xcb_randr_id);
     if ( ! extension_query->present )
         g_warning("No RandR extension");
@@ -553,6 +550,8 @@ _eventd_nd_xcb_stop(EventdNdBackendContext *self)
 {
     if ( self->custom_map )
         xcb_free_colormap(self->xcb_connection, self->map);
+
+    xcb_ewmh_connection_wipe(&self->ewmh);
 
     g_hash_table_unref(self->bubbles);
     g_water_xcb_source_free(self->source);
