@@ -301,16 +301,16 @@ eventd_nd_notification_free(gpointer data)
 void
 eventd_nd_notification_shape(EventdNdNotification *self, cairo_t *cr)
 {
-    eventd_nd_draw_bubble_shape(cr, eventd_nd_style_get_bubble_radius(self->style), self->width, self->height);
+    eventd_nd_draw_bubble_shape(cr, TRUE, eventd_nd_style_get_bubble_radius(self->style), self->width, self->height);
 }
 
 void
-eventd_nd_notification_draw(EventdNdNotification *self, cairo_t *cr)
+eventd_nd_notification_draw(EventdNdNotification *self, cairo_t *cr, gboolean shaped)
 {
     gint padding;
     padding = eventd_nd_style_get_bubble_padding(self->style);
 
-    eventd_nd_draw_bubble_draw(cr, eventd_nd_style_get_bubble_colour(self->style), eventd_nd_style_get_bubble_radius(self->style), self->width, self->height);
+    eventd_nd_draw_bubble_draw(cr, eventd_nd_style_get_bubble_colour(self->style), shaped, eventd_nd_style_get_bubble_radius(self->style), self->width, self->height);
     eventd_nd_draw_image_and_icon_draw(cr, self->image, self->icon, self->style, self->width, self->height);
     eventd_nd_draw_text_draw(cr, self->style, self->text.text, padding + self->text.x, padding, self->height - ( 2 * padding ));
 }

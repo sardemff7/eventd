@@ -26,8 +26,8 @@
 PangoLayout *eventd_nd_draw_text_process(EventdNdStyle *style, EventdEvent *event, gint max_width, gint *text_height, gint *text_width);
 void eventd_nd_draw_image_and_icon_process(EventdNdStyle *style, EventdEvent *event, gint max_width, cairo_surface_t **image, cairo_surface_t **icon, gint *text_x, gint *width, gint *height);
 
-void eventd_nd_draw_bubble_shape(cairo_t *cr, gint radius, gint width, gint height);
-void eventd_nd_draw_bubble_draw(cairo_t *cr, Colour colour, gint radius, gint width, gint height);
+void eventd_nd_draw_bubble_shape(cairo_t *cr, gboolean shaped, gint radius, gint width, gint height);
+void eventd_nd_draw_bubble_draw(cairo_t *cr, Colour colour, gboolean shaped, gint radius, gint width, gint height);
 void eventd_nd_draw_text_draw(cairo_t *cr, EventdNdStyle *style, PangoLayout *text, gint offset_x, gint offset_y, gint max_height);
 void eventd_nd_draw_image_and_icon_draw(cairo_t *cr, cairo_surface_t *image, cairo_surface_t *icon, EventdNdStyle *style, gint width, gint height);
 

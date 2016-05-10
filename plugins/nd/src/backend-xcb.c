@@ -561,7 +561,7 @@ _eventd_nd_xcb_surface_draw(EventdNdSurface *self)
 
     cairo_t *cr;
     cr = cairo_create(self->bubble);
-    self->context->nd->notification_draw(self->notification, cr);
+    self->context->nd->notification_draw(self->notification, cr, FALSE);
     cairo_destroy(cr);
 
     if ( ! context->shape )

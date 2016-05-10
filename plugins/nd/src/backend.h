@@ -53,7 +53,7 @@ typedef struct {
     gboolean (*backend_stop)(EventdNdContext *context);
 
     void (*notification_shape)(EventdNdNotification *notification, cairo_t *cr);
-    void (*notification_draw)(EventdNdNotification *notification, cairo_t *cr);
+    void (*notification_draw)(EventdNdNotification *notification, cairo_t *cr, gboolean shaped);
     void (*notification_dismiss)(EventdNdNotification *notification);
 } EventdNdInterface;
 

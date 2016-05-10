@@ -171,7 +171,7 @@ _eventd_nd_win_surface_update(EventdNdSurface *self, gint width, gint height)
 
     cairo_t *cr;
     cr = cairo_create(surface);
-    self->display->nd->notification_draw(self->notification, cr);
+    self->display->nd->notification_draw(self->notification, cr, TRUE);
     cairo_destroy(cr);
     cairo_surface_flush(surface);
 
