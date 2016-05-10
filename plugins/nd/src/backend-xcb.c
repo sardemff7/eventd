@@ -64,6 +64,7 @@ struct _EventdNdBackendContext {
     gchar **outputs;
     GWaterXcbSource *source;
     xcb_connection_t *xcb_connection;
+    gint screen_number;
     xcb_screen_t *screen;
     xcb_visualtype_t *visual;
     struct {
@@ -482,7 +483,7 @@ _eventd_nd_xcb_start(EventdNdBackendContext *self, const gchar *target)
     }
 
     self->xcb_connection = g_water_xcb_source_get_connection(self->source);
-
+    self->screen_number = screen;
     self->screen = xcb_aux_get_screen(self->xcb_connection, screen);
     self->visual = get_root_visual_type(self->screen);
 
