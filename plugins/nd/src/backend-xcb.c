@@ -643,7 +643,7 @@ _eventd_nd_xcb_surface_update(EventdNdSurface *self, gint width, gint height)
 
     _eventd_nd_xcb_surface_draw(self);
 
-    xcb_clear_area(self->context->xcb_connection, TRUE, self->window, 0, 0, width, height);
+    xcb_clear_area(self->context->xcb_connection, TRUE, self->window, 0, 0, 0, 0);
 }
 
 static void
@@ -673,7 +673,7 @@ _eventd_nd_xcb_move_surface(EventdNdSurface *self, gint x, gint y, gpointer data
     guint16 mask = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y;
     guint32 vals[] = { x, y };
     xcb_configure_window(self->context->xcb_connection, self->window, mask, vals);
-    xcb_clear_area(self->context->xcb_connection, TRUE, self->window, 0, 0, self->width, self->height);
+    xcb_clear_area(self->context->xcb_connection, TRUE, self->window, 0, 0, 0, 0);
 
     if ( ! self->mapped )
     {
