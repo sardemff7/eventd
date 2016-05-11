@@ -146,8 +146,6 @@ _eventd_nd_init(EventdPluginCoreContext *core)
     }
 
     context->style = eventd_nd_style_new(NULL);
-    context->max_width = -1;
-    context->max_height = -1;
 
     EventdNdAnchor i;
     for ( i = EVENTD_ND_ANCHOR_TOP_LEFT ; i < _EVENTD_ND_ANCHOR_SIZE ; ++i )
@@ -349,7 +347,7 @@ _eventd_nd_control_command(EventdPluginContext *context, guint64 argc, const gch
 static void
 _eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
 {
-    eventd_nd_style_update(context->style, config_file, &context->max_width, &context->max_height);
+    eventd_nd_style_update(context->style, config_file);
 
     EventdNdBackends i;
     for ( i = EVENTD_ND_BACKEND_NONE + 1 ; i < _EVENTD_ND_BACKENDS_SIZE ; ++i )
@@ -403,7 +401,7 @@ _eventd_nd_action_parse(EventdPluginContext *context, GKeyFile *config_file)
 
     EventdNdStyle *style;
     style = eventd_nd_style_new(context->style);
-    eventd_nd_style_update(style, config_file, &context->max_width, &context->max_height);
+    eventd_nd_style_update(style, config_file);
 
     context->actions = g_slist_prepend(context->actions, style);
     return style;
@@ -424,8 +422,6 @@ _eventd_nd_config_reset(EventdPluginContext *context)
 
     eventd_nd_style_free(context->style);
     context->style = eventd_nd_style_new(NULL);
-    context->max_width = -1;
-    context->max_height = -1;
 }
 
 

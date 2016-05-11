@@ -206,7 +206,7 @@ eventd_nd_style_new(EventdNdStyle *parent)
 }
 
 void
-eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_max_width, gint *images_max_height)
+eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file)
 {
     if ( g_key_file_has_group(config_file, "Notification") )
     {
@@ -354,18 +354,12 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
             self->image.anchor = eventd_nd_style_get_image_anchor(self->parent);
 
         if ( evhelpers_config_key_file_get_int(config_file, "NotificationImage", "MaxWidth", &integer) == 0 )
-        {
             self->image.max_width = integer.value;
-            *images_max_width  = MAX(*images_max_width, integer.value);
-        }
         else if ( self->parent != NULL )
             self->image.max_width = eventd_nd_style_get_image_max_width(self->parent);
 
         if ( evhelpers_config_key_file_get_int(config_file, "NotificationImage", "MaxHeight", &integer) == 0 )
-        {
             self->image.max_height = integer.value;
-            *images_max_height  = MAX(*images_max_height, integer.value);
-        }
         else if ( self->parent != NULL )
             self->image.max_height = eventd_nd_style_get_image_max_height(self->parent);
 
@@ -394,18 +388,12 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file, gint *images_
             self->icon.anchor = eventd_nd_style_get_icon_anchor(self->parent);
 
         if ( evhelpers_config_key_file_get_int(config_file, "NotificationIcon", "MaxWidth", &integer) == 0 )
-        {
             self->icon.max_width = integer.value;
-            *images_max_width  = MAX(*images_max_width, integer.value);
-        }
         else if ( self->parent != NULL )
             self->icon.max_width = eventd_nd_style_get_icon_max_width(self->parent);
 
         if ( evhelpers_config_key_file_get_int(config_file, "NotificationIcon", "MaxHeight", &integer) == 0 )
-        {
             self->icon.max_height = integer.value;
-            *images_max_height  = MAX(*images_max_height, integer.value);
-        }
         else if ( self->parent != NULL )
             self->icon.max_height = eventd_nd_style_get_icon_max_height(self->parent);
 
@@ -605,6 +593,19 @@ eventd_nd_style_get_image_margin(EventdNdStyle *self)
     return eventd_nd_style_get_image_margin(self->parent);
 }
 
+void
+eventd_nd_style_get_image_load_size(EventdNdStyle *self, gint max_draw_width, gint *width, gint *height)
+{
+    gint max_width, max_height;
+    max_width = eventd_nd_style_get_image_max_width(self);
+    max_height = eventd_nd_style_get_image_max_height(self);
+
+    if ( max_width >= 0 )
+        *width = MIN(max_draw_width, max_width);
+    if ( max_height >= 0 )
+        *height = max_height;
+}
+
 EventdNdStyleIconPlacement
 eventd_nd_style_get_icon_placement(EventdNdStyle *self)
 {
@@ -651,4 +652,17 @@ eventd_nd_style_get_icon_fade_width(EventdNdStyle *self)
     if ( self->icon.set )
         return self->icon.fade_width;
     return eventd_nd_style_get_icon_fade_width(self->parent);
+}
+
+void
+eventd_nd_style_get_icon_load_size(EventdNdStyle *self, gint max_draw_width, gint *width, gint *height)
+{
+    gint max_width, max_height;
+    max_width = eventd_nd_style_get_icon_max_width(self);
+    max_height = eventd_nd_style_get_icon_max_height(self);
+
+    if ( max_width >= 0 )
+        *width = MIN(max_draw_width, max_width);
+    if ( max_height >= 0 )
+        *height = max_height;
 }

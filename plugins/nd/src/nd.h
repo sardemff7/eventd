@@ -45,8 +45,6 @@ struct _EventdPluginContext {
     EventdNdBackend *backend;
     EventdNdQueue queues[_EVENTD_ND_ANCHOR_SIZE];
     EventdNdStyle *style;
-    gint max_width;
-    gint max_height;
     struct {
         gint x;
         gint y;

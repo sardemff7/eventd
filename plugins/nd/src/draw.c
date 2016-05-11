@@ -384,6 +384,7 @@ _eventd_nd_draw_icon_process_background(GdkPixbuf *pixbuf, EventdNdStyle *style,
 void
 eventd_nd_draw_image_and_icon_process(EventdNdStyle *style, EventdEvent *event, gint max_width, cairo_surface_t **image, cairo_surface_t **icon, gint *text_x, gint *width, gint *height)
 {
+    gint load_width, load_height;
     GdkPixbuf *image_pixbuf = NULL;
     GdkPixbuf *icon_pixbuf = NULL;
     const Filename *image_filename = eventd_nd_style_get_template_image(style);
@@ -392,11 +393,17 @@ eventd_nd_draw_image_and_icon_process(EventdNdStyle *style, EventdEvent *event, 
 
     uri = evhelpers_filename_get_uri(image_filename, event, "images");
     if ( uri != NULL )
-       image_pixbuf = eventd_nd_pixbuf_from_uri(uri, *width, *height);
+    {
+        eventd_nd_style_get_image_load_size(style, max_width, &load_width, &load_height);
+        image_pixbuf = eventd_nd_pixbuf_from_uri(uri, load_width, load_height);
+    }
 
     uri = evhelpers_filename_get_uri(icon_filename, event, "icons");
     if ( uri != NULL )
-        icon_pixbuf = eventd_nd_pixbuf_from_uri(uri, *width, *height);
+    {
+        eventd_nd_style_get_icon_load_size(style, max_width, &load_width, &load_height);
+        icon_pixbuf = eventd_nd_pixbuf_from_uri(uri, load_width, load_height);
+    }
 
     *text_x = 0;
     *width = 0;
