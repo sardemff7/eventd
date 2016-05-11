@@ -63,7 +63,7 @@ _eventd_nd_pixbuf_free_data(guchar *pixels, gpointer data)
 }
 
 static GdkPixbuf *
-_eventd_nd_pixbuf_from_base64(gchar *uri)
+_eventd_nd_pixbuf_from_base64(gchar *uri, gint width, gint height)
 {
     GdkPixbuf *pixbuf = NULL;
     gchar *c;
@@ -107,6 +107,9 @@ _eventd_nd_pixbuf_from_base64(gchar *uri)
             g_warning("Couldn't create loader for MIME type '%s': %s", mime_type, error->message);
             goto end;
         }
+        GdkPixbufFormat *format;
+        if ( ( ( width > 0 ) || ( height > 0 ) ) && ( ( format = gdk_pixbuf_loader_get_format(loader) ) != NULL ) && gdk_pixbuf_format_is_scalable(format) )
+            gdk_pixbuf_loader_set_size(loader, width, height);
     }
     else
         loader = gdk_pixbuf_loader_new();
@@ -140,7 +143,7 @@ eventd_nd_pixbuf_from_uri(gchar *uri, gint width, gint height)
     if ( g_str_has_prefix(uri, "file://") )
         pixbuf = _eventd_nd_from_file(uri + strlen("file://"), width, height);
     else if ( g_str_has_prefix(uri, "data:") )
-        pixbuf = _eventd_nd_pixbuf_from_base64(uri + strlen("data:"));
+        pixbuf = _eventd_nd_pixbuf_from_base64(uri + strlen("data:"), width, height);
     g_free(uri);
 
     return pixbuf;
