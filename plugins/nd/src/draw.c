@@ -458,13 +458,10 @@ eventd_nd_draw_image_and_icon_process(EventdNdStyle *style, EventdEvent *event, 
 
 
 void
-eventd_nd_draw_bubble_shape(cairo_t *cr, gint radius, gint width, gint height, gint border)
+eventd_nd_draw_bubble_shape(cairo_t *cr, gint radius, gint width, gint height)
 {
     if ( radius < 1 )
         radius = 0;
-
-    width -= 2 * border;
-    height -= 2 * border;
 
     gint limit;
 
@@ -502,7 +499,7 @@ void
 eventd_nd_draw_bubble_draw(cairo_t *cr, Colour colour, gint radius, gint width, gint height, gint border, Colour border_colour)
 {
     cairo_set_source_rgba(cr, border_colour.r, border_colour.g, border_colour.b, border_colour.a);
-    eventd_nd_draw_bubble_shape(cr, radius, width, height, border);
+    eventd_nd_draw_bubble_shape(cr, radius, width, height);
     cairo_set_line_width(cr, border * 2);
     cairo_stroke_preserve(cr);
     cairo_set_source_rgba(cr, colour.r, colour.g, colour.b, colour.a);

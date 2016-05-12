@@ -61,6 +61,7 @@ struct _EventdNdNotification {
     cairo_surface_t *image;
     cairo_surface_t *icon;
     Size surface_size;
+    Size bubble_size;
     guint timeout;
     EventdNdSurface *surface;
 };
@@ -109,31 +110,34 @@ _eventd_nd_notification_process(EventdNdNotification *self, EventdEvent *event)
     min_width = eventd_nd_style_get_bubble_min_width(self->style);
     max_width = eventd_nd_style_get_bubble_max_width(self->style);
     if ( max_width < 0 )
-        max_width = self->context->geometry.w - 2 * margin;
+        max_width = self->context->geometry.w - 2 * ( margin + border );
     if ( min_width > max_width )
         min_width = max_width;
 
     /* proccess data and compute the bubble size */
-    self->text.text = eventd_nd_draw_text_process(self->style, self->event, max_width - 2 * ( border + padding ), &text_height, &text_width);
+    self->text.text = eventd_nd_draw_text_process(self->style, self->event, max_width - 2 * padding, &text_height, &text_width);
 
-    self->surface_size.width = 2 * ( border + padding ) + text_width;
+    self->bubble_size.width = 2 * padding + text_width;
 
-    if ( self->surface_size.width < max_width )
+    if ( self->bubble_size.width < max_width )
     {
-        eventd_nd_draw_image_and_icon_process(self->style, self->event, max_width - self->surface_size.width, &self->image, &self->icon, &self->text.x, &image_width, &image_height);
-        self->surface_size.width += image_width;
+        eventd_nd_draw_image_and_icon_process(self->style, self->event, max_width - self->bubble_size.width, &self->image, &self->icon, &self->text.x, &image_width, &image_height);
+        self->bubble_size.width += image_width;
     }
 
     /* We are sure that min_width <= max_width */
-    if ( min_width > self->surface_size.width )
+    if ( min_width > self->bubble_size.width )
     {
-        self->surface_size.width = min_width;
+        self->bubble_size.width = min_width;
         /* Let the text take the remaining space if needed (e.g. Right-to-Left) */
-        text_width = ( self->surface_size.width - ( 2 * padding + image_width ) );
+        text_width = ( self->bubble_size.width - ( 2 * padding + image_width ) );
     }
     pango_layout_set_width(self->text.text, text_width * PANGO_SCALE);
 
-    self->surface_size.height = 2 * ( border + padding ) + MAX(image_height, text_height);
+    self->bubble_size.height = 2 * padding + MAX(image_height, text_height);
+
+    self->surface_size.width = self->bubble_size.width + 2 * border;
+    self->surface_size.height = self->bubble_size.height + 2 * border;
 
     if ( self->timeout > 0 )
     {
@@ -308,7 +312,7 @@ eventd_nd_notification_shape(EventdNdNotification *self, cairo_t *cr)
     gint border;
     border = eventd_nd_style_get_bubble_border(self->style);
     cairo_translate(cr, border, border);
-    eventd_nd_draw_bubble_shape(cr, eventd_nd_style_get_bubble_radius(self->style), self->surface_size.width, self->surface_size.height, border);
+    eventd_nd_draw_bubble_shape(cr, eventd_nd_style_get_bubble_radius(self->style), self->bubble_size.width, self->bubble_size.height);
 }
 
 void
@@ -320,9 +324,9 @@ eventd_nd_notification_draw(EventdNdNotification *self, cairo_t *cr, gboolean sh
     padding = eventd_nd_style_get_bubble_padding(self->style);
 
     cairo_translate(cr, border, border);
-    eventd_nd_draw_bubble_draw(cr, eventd_nd_style_get_bubble_colour(self->style), shaped ? eventd_nd_style_get_bubble_radius(self->style) : 0, self->surface_size.width, self->surface_size.height, border, eventd_nd_style_get_bubble_border_colour(self->style));
-    eventd_nd_draw_image_and_icon_draw(cr, self->image, self->icon, self->style, self->surface_size.width, self->surface_size.height);
-    eventd_nd_draw_text_draw(cr, self->style, self->text.text, padding + self->text.x, padding, self->surface_size.height - ( 2 * ( border + padding) ));
+    eventd_nd_draw_bubble_draw(cr, eventd_nd_style_get_bubble_colour(self->style), shaped ? eventd_nd_style_get_bubble_radius(self->style) : 0, self->bubble_size.width, self->bubble_size.height, border, eventd_nd_style_get_bubble_border_colour(self->style));
+    eventd_nd_draw_image_and_icon_draw(cr, self->image, self->icon, self->style, self->bubble_size.width, self->bubble_size.height);
+    eventd_nd_draw_text_draw(cr, self->style, self->text.text, padding + self->text.x, padding, self->bubble_size.height - ( 2 * padding ));
 }
 
 void
