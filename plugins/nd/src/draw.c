@@ -25,9 +25,6 @@
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif /* HAVE_STRING_H */
-#ifdef HAVE_MATH_H
-#include <math.h>
-#endif /* HAVE_MATH_H */
 
 #include <glib.h>
 #include <glib-object.h>
@@ -476,22 +473,22 @@ eventd_nd_draw_bubble_shape(cairo_t *cr, gint radius, gint width, gint height)
     cairo_arc(cr,
               radius, radius,
               radius,
-              M_PI, 3.0 * M_PI / 2.0);
+              G_PI, 3.0 * G_PI_2);
     cairo_line_to(cr, width - radius, 0);
     cairo_arc(cr,
               width - radius, radius,
               radius,
-              3.0 * M_PI / 2.0, 0.0);
+              3.0 * G_PI_2, 0.0);
     cairo_line_to(cr, width , height - radius);
     cairo_arc(cr,
               width - radius, height - radius,
               radius,
-              0.0, M_PI / 2.0);
+              0.0, G_PI_2);
     cairo_line_to(cr, radius, height);
     cairo_arc(cr,
               radius, height - radius,
               radius,
-              M_PI / 2.0, M_PI);
+              G_PI_2, G_PI);
     cairo_close_path(cr);
 }
 
