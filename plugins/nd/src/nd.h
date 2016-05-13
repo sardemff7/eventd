@@ -45,6 +45,8 @@ struct _EventdPluginContext {
     EventdNdBackend *backend;
     EventdNdQueue queues[_EVENTD_ND_ANCHOR_SIZE];
     EventdNdStyle *style;
+    EventdNdBackends last_backend;
+    gchar *last_target;
     struct {
         gint x;
         gint y;

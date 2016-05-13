@@ -70,7 +70,7 @@ static const gchar * const _eventd_nd_dismiss_targets[] = {
 };
 
 static gboolean
-_eventd_nd_backend_switch(EventdNdContext *context, EventdNdBackends backend, const gchar *target)
+_eventd_nd_backend_switch(EventdNdContext *context, EventdNdBackends backend, const gchar *target, gboolean force)
 {
     if ( context->backend != NULL )
     {
@@ -83,7 +83,7 @@ _eventd_nd_backend_switch(EventdNdContext *context, EventdNdBackends backend, co
     }
 
     if ( backend == EVENTD_ND_BACKEND_NONE )
-        return TRUE;
+        goto cleanup;
 
     EventdNdBackend *backend_;
     backend_ = &context->backends[backend];
@@ -94,6 +94,14 @@ _eventd_nd_backend_switch(EventdNdContext *context, EventdNdBackends backend, co
         return FALSE;
 
     context->backend = backend_;
+
+cleanup:
+    if ( force )
+    {
+        context->last_backend = backend;
+        g_free(context->last_target);
+        context->last_target = g_strdup(target);
+    }
     return TRUE;
 }
 
@@ -116,7 +124,7 @@ _eventd_nd_geometry_update(EventdNdContext *context, gint w, gint h)
 static gboolean
 _eventd_nd_backend_stop(EventdNdContext *context)
 {
-    return _eventd_nd_backend_switch(context, EVENTD_ND_BACKEND_NONE, NULL);
+    return _eventd_nd_backend_switch(context, EVENTD_ND_BACKEND_NONE, NULL, TRUE);
 }
 
 /*
@@ -181,6 +189,7 @@ _eventd_nd_uninit(EventdPluginContext *context)
 
     eventd_nd_style_free(context->style);
 
+    g_free(context->last_target);
     eventd_nd_backends_unload(context->backends);
 
     g_free(context);
@@ -194,8 +203,8 @@ _eventd_nd_uninit(EventdPluginContext *context)
 static void
 _eventd_nd_start(EventdPluginContext *context)
 {
-    EventdNdBackends backend = EVENTD_ND_BACKEND_NONE;
-    const gchar *target = NULL;
+    EventdNdBackends backend = context->last_backend;
+    const gchar *target = context->last_target;
 
 #ifdef ENABLE_ND_WAYLAND
     if ( backend == EVENTD_ND_BACKEND_NONE )
@@ -237,13 +246,13 @@ _eventd_nd_start(EventdPluginContext *context)
 #endif /* G_OS_WIN32 */
 #endif /* ENABLE_ND_WIN */
 
-    _eventd_nd_backend_switch(context, backend, target);
+    _eventd_nd_backend_switch(context, backend, target, FALSE);
 }
 
 static void
 _eventd_nd_stop(EventdPluginContext *context)
 {
-    _eventd_nd_backend_stop(context);
+    _eventd_nd_backend_switch(context, EVENTD_ND_BACKEND_NONE, NULL, FALSE);
 }
 
 
@@ -280,7 +289,7 @@ _eventd_nd_control_command(EventdPluginContext *context, guint64 argc, const gch
             }
             else
             {
-                _eventd_nd_backend_switch(context, backend, argv[2]);
+                _eventd_nd_backend_switch(context, backend, argv[2], TRUE);
                 r = EVENTD_PLUGIN_COMMAND_STATUS_OK;
             }
         }
