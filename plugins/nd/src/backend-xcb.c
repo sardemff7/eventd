@@ -658,21 +658,13 @@ _eventd_nd_xcb_surface_draw(EventdNdSurface *self, gboolean reshape)
         xcb_shape_rectangles(self->context->xcb_connection, XCB_SHAPE_SO_UNION, XCB_SHAPE_SK_BOUNDING, 0, self->window, 0, 0, G_N_ELEMENTS(rectangles), rectangles);
     }
 
-    cairo_t *cr;
-    cr = cairo_create(self->bubble);
-    if ( reshape )
-    {
-        cairo_set_source_rgba(cr, 0, 0, 0, 0);
-        cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
-        cairo_paint(cr);
-    }
-    self->context->nd->notification_draw(self->notification, cr, context->compositing);
-    cairo_destroy(cr);
+    self->context->nd->notification_draw(self->notification, self->bubble, context->compositing);
 
     if ( context->compositing || ( ! context->shape ) )
         return;
 
     xcb_pixmap_t shape_id;
+    cairo_t *cr;
     cairo_surface_t *shape;
 
     shape_id = xcb_generate_id(context->xcb_connection);

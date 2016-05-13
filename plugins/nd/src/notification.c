@@ -328,18 +328,23 @@ eventd_nd_notification_shape(EventdNdNotification *self, cairo_t *cr)
 }
 
 void
-eventd_nd_notification_draw(EventdNdNotification *self, cairo_t *cr, gboolean shaped)
+eventd_nd_notification_draw(EventdNdNotification *self, cairo_surface_t *surface, gboolean shaped)
 {
     gint border;
     gint padding;
     border = eventd_nd_style_get_bubble_border(self->style);
     padding = eventd_nd_style_get_bubble_padding(self->style);
 
+    cairo_t *cr;
+    cr = cairo_create(surface);
+
     cairo_translate(cr, border, border);
     eventd_nd_draw_bubble_draw(cr, self->style, self->bubble_size.width, self->bubble_size.height, shaped);
     cairo_translate(cr, padding, padding);
     eventd_nd_draw_image_and_icon_draw(cr, self->image, self->icon, self->style, self->content_size.width, self->content_size.height);
     eventd_nd_draw_text_draw(cr, self->style, self->text.text, self->text.x, self->content_size.height);
+
+    cairo_destroy(cr);
 }
 
 void

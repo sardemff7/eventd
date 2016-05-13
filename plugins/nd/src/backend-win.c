@@ -169,10 +169,7 @@ _eventd_nd_win_surface_update(EventdNdSurface *self, gint width, gint height)
     surface = cairo_win32_surface_create_with_ddb(hdcScreen, CAIRO_FORMAT_ARGB32, width, height);
     dc = cairo_win32_surface_get_dc(surface);
 
-    cairo_t *cr;
-    cr = cairo_create(surface);
-    self->display->nd->notification_draw(self->notification, cr, TRUE);
-    cairo_destroy(cr);
+    self->display->nd->notification_draw(self->notification, surface, TRUE);
     cairo_surface_flush(surface);
 
     POINT ptZero = { 0 };
