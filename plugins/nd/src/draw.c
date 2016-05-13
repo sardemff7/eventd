@@ -259,7 +259,7 @@ _eventd_nd_draw_get_surface_from_pixbuf(GdkPixbuf *pixbuf)
 
     width = gdk_pixbuf_get_width(pixbuf);
     height = gdk_pixbuf_get_height(pixbuf);
-    pixels = gdk_pixbuf_get_pixels(pixbuf);
+    pixels = gdk_pixbuf_read_pixels(pixbuf);
     stride = gdk_pixbuf_get_rowstride(pixbuf);
     alpha = gdk_pixbuf_get_has_alpha(pixbuf);
 
