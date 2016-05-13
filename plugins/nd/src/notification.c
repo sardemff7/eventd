@@ -87,6 +87,13 @@ static void
 _eventd_nd_notification_clean(EventdNdNotification *self)
 {
     eventd_event_unref(self->event);
+
+    if ( self->icon != NULL )
+        cairo_surface_destroy(self->icon);
+    self->icon = NULL;
+    if ( self->image != NULL )
+        cairo_surface_destroy(self->image);
+    self->image = NULL;
     if ( self->text.text != NULL )
         g_object_unref(self->text.text);
     self->text.text = NULL;

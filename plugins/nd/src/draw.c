@@ -541,7 +541,6 @@ _eventd_nd_draw_surface_draw(cairo_t *cr, cairo_surface_t *surface, gint x, gint
     cairo_set_source_surface(cr, surface, x, y);
     cairo_rectangle(cr, x, y, cairo_image_surface_get_width(surface), cairo_image_surface_get_height(surface));
     cairo_fill(cr);
-    cairo_surface_destroy(surface);
 }
 
 static void
@@ -618,7 +617,6 @@ _eventd_nd_draw_image_and_icon_draw_background(cairo_t *cr, cairo_surface_t *ima
 
         cairo_set_source_surface(cr, icon, x1, y);
         cairo_mask(cr, mask);
-        cairo_surface_destroy(icon);
     }
 }
 
