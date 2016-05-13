@@ -237,12 +237,36 @@ _eventd_nd_wl_pointer_axis(void *data, struct wl_pointer *pointer, uint32_t time
 {
 }
 
+static void
+_eventd_nd_wl_pointer_frame(void *data, struct wl_pointer *pointer)
+{
+}
+
+static void
+_eventd_nd_wl_pointer_axis_source(void *data, struct wl_pointer *pointer, enum wl_pointer_axis_source axis_source)
+{
+}
+
+static void
+_eventd_nd_wl_pointer_axis_stop(void *data, struct wl_pointer *pointer, uint32_t time, enum wl_pointer_axis axis)
+{
+}
+
+static void
+_eventd_nd_wl_pointer_axis_discrete(void *data, struct wl_pointer *pointer, enum wl_pointer_axis axis, int32_t discrete)
+{
+}
+
 static const struct wl_pointer_listener _eventd_nd_wl_pointer_listener = {
     .enter = _eventd_nd_wl_pointer_enter,
     .leave = _eventd_nd_wl_pointer_leave,
     .motion = _eventd_nd_wl_pointer_motion,
     .button = _eventd_nd_wl_pointer_button,
     .axis = _eventd_nd_wl_pointer_axis,
+    .frame = _eventd_nd_wl_pointer_frame,
+    .axis_source = _eventd_nd_wl_pointer_axis_source,
+    .axis_stop = _eventd_nd_wl_pointer_axis_stop,
+    .axis_discrete = _eventd_nd_wl_pointer_axis_discrete,
 };
 
 static void
