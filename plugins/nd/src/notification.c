@@ -324,7 +324,7 @@ eventd_nd_notification_shape(EventdNdNotification *self, cairo_t *cr)
     gint border;
     border = eventd_nd_style_get_bubble_border(self->style);
     cairo_translate(cr, border, border);
-    eventd_nd_draw_bubble_shape(cr, eventd_nd_style_get_bubble_radius(self->style), self->bubble_size.width, self->bubble_size.height);
+    eventd_nd_draw_bubble_shape(cr, self->style, self->bubble_size.width, self->bubble_size.height);
 }
 
 void

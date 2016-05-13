@@ -454,8 +454,8 @@ eventd_nd_draw_image_and_icon_process(EventdNdStyle *style, EventdEvent *event, 
 }
 
 
-void
-eventd_nd_draw_bubble_shape(cairo_t *cr, gint radius, gint width, gint height)
+static void
+_eventd_nd_draw_bubble_shape(cairo_t *cr, gint radius, gint width, gint height)
 {
     if ( radius < 1 )
         radius = 0;
@@ -492,6 +492,20 @@ eventd_nd_draw_bubble_shape(cairo_t *cr, gint radius, gint width, gint height)
     cairo_close_path(cr);
 }
 
+
+void
+eventd_nd_draw_bubble_shape(cairo_t *cr, EventdNdStyle *style, gint width, gint height)
+{
+    gint border, radius;
+
+    border = eventd_nd_style_get_bubble_border(style);
+    radius = eventd_nd_style_get_bubble_radius(style);
+    _eventd_nd_draw_bubble_shape(cr, radius, width, height);
+    cairo_set_line_width(cr, border * 2);
+    cairo_stroke_preserve(cr);
+    cairo_fill(cr);
+}
+
 void
 eventd_nd_draw_bubble_draw(cairo_t *cr, EventdNdStyle *style, gint width, gint height, gboolean shaped)
 {
@@ -499,16 +513,21 @@ eventd_nd_draw_bubble_draw(cairo_t *cr, EventdNdStyle *style, gint width, gint h
     Colour colour, border_colour;
 
     border = eventd_nd_style_get_bubble_border(style);
-    if ( shaped )
+    if ( shaped || ( border > 0 ) )
         radius = eventd_nd_style_get_bubble_radius(style);
 
     colour = eventd_nd_style_get_bubble_colour(style);
     border_colour = eventd_nd_style_get_bubble_border_colour(style);
 
-    eventd_nd_draw_bubble_shape(cr, radius, width, height);
+    _eventd_nd_draw_bubble_shape(cr, radius, width, height);
     cairo_set_source_rgba(cr, border_colour.r, border_colour.g, border_colour.b, border_colour.a);
-    cairo_set_line_width(cr, border * 2);
-    cairo_stroke_preserve(cr);
+    if ( ( ! shaped ) && ( border > 0 ) )
+        cairo_paint(cr);
+    else
+    {
+        cairo_set_line_width(cr, border * 2);
+        cairo_stroke_preserve(cr);
+    }
     cairo_set_source_rgba(cr, colour.r, colour.g, colour.b, colour.a);
     cairo_fill(cr);
 }

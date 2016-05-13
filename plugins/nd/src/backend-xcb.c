@@ -685,7 +685,6 @@ _eventd_nd_xcb_surface_draw(EventdNdSurface *self, gboolean reshape)
 
     cairo_set_source_rgba(cr, 1, 1, 1, 1);
     self->context->nd->notification_shape(self->notification, cr);
-    cairo_fill(cr);
 
     cairo_destroy(cr);
     cairo_surface_destroy(shape);
@@ -761,10 +760,10 @@ _eventd_nd_xcb_surface_free(EventdNdSurface *self)
 
     g_hash_table_remove(context->bubbles, GUINT_TO_POINTER(self->window));
 
+    cairo_surface_destroy(self->bubble);
+
     if ( ! g_source_is_destroyed((GSource *)context->source) )
         xcb_unmap_window(context->xcb_connection, self->window);
-
-    cairo_surface_destroy(self->bubble);
 
     g_free(self);
 }
