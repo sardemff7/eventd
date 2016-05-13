@@ -88,12 +88,13 @@ struct _EventdPluginAction {
         gint   min_width;
         gint   max_width;
 
-        gint border;
-        Colour border_colour;
-
         gint   padding;
         gint   radius;
         Colour colour;
+
+        gint     border;
+        Colour   border_colour;
+        gboolean border_blur;
     } bubble;
 
     struct {
@@ -162,6 +163,7 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
     style->bubble.border_colour.g = 0.1;
     style->bubble.border_colour.b = 0.1;
     style->bubble.border_colour.a = 1.0;
+    style->bubble.border_blur     = TRUE;
 
     /* text */
     style->text.set = TRUE;
@@ -258,6 +260,7 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file)
         guint64 enum_value;
         Int integer;
         Colour colour;
+        gboolean boolean;
 
         if ( evhelpers_config_key_file_get_enum(config_file, "NotificationBubble", "Anchor", eventd_nd_anchors, G_N_ELEMENTS(eventd_nd_anchors), &enum_value) == 0 )
             self->bubble.anchor = enum_value;
@@ -303,6 +306,11 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file)
             self->bubble.border_colour = colour;
         else if ( self->parent != NULL )
             self->bubble.border_colour = eventd_nd_style_get_bubble_border_colour(self->parent);
+
+        if ( evhelpers_config_key_file_get_boolean(config_file, "NotificationBubble", "BorderBlur", &boolean) == 0 )
+            self->bubble.border_blur = boolean;
+        else if ( self->parent != NULL )
+            self->bubble.border_blur = eventd_nd_style_get_bubble_border_blur(self->parent);
     }
 
     if ( g_key_file_has_group(config_file, "NotificationText") )
@@ -527,6 +535,14 @@ eventd_nd_style_get_bubble_border_colour(EventdNdStyle *self)
     if ( self->bubble.set )
         return self->bubble.border_colour;
     return eventd_nd_style_get_bubble_border_colour(self->parent);
+}
+
+gboolean
+eventd_nd_style_get_bubble_border_blur(EventdNdStyle *self)
+{
+    if ( self->bubble.set )
+        return self->bubble.border_blur;
+    return eventd_nd_style_get_bubble_border_blur(self->parent);
 }
 
 const PangoFontDescription *

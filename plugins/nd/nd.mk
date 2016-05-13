@@ -35,6 +35,8 @@ nd_la_SOURCES = \
 	%D%/src/notification.c \
 	%D%/src/draw.c \
 	%D%/src/draw.h \
+	%D%/src/blur.c \
+	%D%/src/blur.h \
 	%D%/src/style.c \
 	%D%/src/style.h \
 	%D%/src/pixbuf.h \
@@ -71,6 +73,7 @@ nd_la_LIBADD = \
 	$(GMODULE_LIBS) \
 	$(NKUTILS_LIBS) \
 	$(GLIB_LIBS) \
+	$(MATH_LIBS) \
 	$(null)
 
 

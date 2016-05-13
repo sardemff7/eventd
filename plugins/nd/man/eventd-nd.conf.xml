@@ -320,6 +320,14 @@
                             <para>Colour of bubble's borders.</para>
                         </listitem>
                     </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>BorderBlur=</varname> (defaults to <literal>true</literal>)</term>
+                        <listitem>
+                            <para>A <type>boolean</type></para>
+                            <para>Whether to blur the border or not, to achieve a shadow effect.</para>
+                        </listitem>
+                    </varlistentry>
                 </variablelist>
             </refsect3>
 

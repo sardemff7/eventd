@@ -246,7 +246,7 @@ AM_CONDITIONAL([ENABLE_HTTP], [test x${enable_http} = xyes])
 cairo_min_version="1.14"
 AC_ARG_ENABLE([notification-daemon], AS_HELP_STRING([--disable-notification-daemon], [Disable notification-daemon plugin]), [], [enable_notification_daemon=yes])
 if test x${enable_notification_daemon} = xyes; then
-    AC_CHECK_HEADERS([math.h])
+    EV_CHECK_LIB([MATH], [math.h], [m], [sqrt], [], [AC_MSG_ERROR([*** notification daemon plugin requested but math library is missing])])
     PKG_CHECK_MODULES([CAIRO], [cairo >= ${cairo_min_version}])
     PKG_CHECK_MODULES([PANGO], [pango pangocairo])
     PKG_CHECK_MODULES([GDK_PIXBUF], [gdk-pixbuf-2.0])
