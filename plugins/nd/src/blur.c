@@ -44,7 +44,8 @@
 static void
 _eventd_nd_draw_blur_box_one_dimension(guint8 *src, guint8 *dst, gdouble r, gdouble iarr, gint channel, gint dim1, gint stride1, gint dim2, gint stride2)
 {
-    for ( int i = 0; i < dim1; i++ )
+    gint i;
+    for ( i = 0; i < dim1; ++i )
     {
         gint current = i * stride1 + channel;
         gint previous = current;
@@ -55,7 +56,7 @@ _eventd_nd_draw_blur_box_one_dimension(guint8 *src, guint8 *dst, gdouble r, gdou
         for ( j = 0 ; j < r ; ++j )
             val += src[current + j * stride2];
 
-        for ( j = 0 ; j <= r; ++j )
+        for ( j = 0 ; j <= r ; ++j )
         {
             val += src[next] - src[previous];
             dst[current] = (gint) ( val * iarr + 0.5 );
@@ -155,11 +156,11 @@ eventd_nd_draw_blur_surface(cairo_t *cr, gint border)
         goto fail;
     }
 
-    width  = cairo_image_surface_get_width ( surface );
-    height = cairo_image_surface_get_height ( surface );
+    width  = cairo_image_surface_get_width(surface);
+    height = cairo_image_surface_get_height(surface);
 
-    data = cairo_image_surface_get_data ( surface );
-    stride = cairo_image_surface_get_stride ( surface );
+    data = cairo_image_surface_get_data(surface);
+    stride = cairo_image_surface_get_stride(surface);
 
     tmp = g_alloca(stride * height * sizeof(guint8));
     _eventd_nd_draw_blur_gauss(data, tmp, border / 3, 3 /* number of passes */, width, height, stride, channels);
