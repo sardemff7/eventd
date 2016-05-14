@@ -42,7 +42,7 @@
  */
 
 static void
-_eventd_nd_draw_blur_box_one_dimension(guint8 *src, guint8 *dst, gdouble r, gdouble iarr, gint channel, gint dim1, gint stride1, gint dim2, gint stride2)
+_eventd_nd_draw_blur_box_one_dimension(guint8 *src, guint8 *dst, gint r, gint iarr, gint channel, gint dim1, gint stride1, gint dim2, gint stride2)
 {
     gint i;
     for ( i = 0; i < dim1; ++i )
@@ -52,14 +52,14 @@ _eventd_nd_draw_blur_box_one_dimension(guint8 *src, guint8 *dst, gdouble r, gdou
         gint next = current + r * stride2;
         gint j;
 
-        gdouble val = ( r + 1 ) * src[current];
+        guint64 val = ( r + 1 ) * src[current];
         for ( j = 0 ; j < r ; ++j )
             val += src[current + j * stride2];
 
         for ( j = 0 ; j <= r ; ++j )
         {
             val += src[next] - src[previous];
-            dst[current] = (gint) ( val * iarr + 0.5 );
+            dst[current] = (guint8) ( val / (gdouble) iarr + 0.5 );
             /* previous stays the first one */
             next += stride2;
             current += stride2;
@@ -67,7 +67,7 @@ _eventd_nd_draw_blur_box_one_dimension(guint8 *src, guint8 *dst, gdouble r, gdou
         for ( /* old value is good */ ; j < dim2 - r ; ++j )
         {
             val += src[next] - src[previous];
-            dst[current] = (gint) ( val * iarr + 0.5 );
+            dst[current] = (guint8) ( val / (gdouble) iarr + 0.5 );
             previous += stride2;
             next += stride2;
             current += stride2;
@@ -75,7 +75,7 @@ _eventd_nd_draw_blur_box_one_dimension(guint8 *src, guint8 *dst, gdouble r, gdou
         for ( /* old value is good */ ; j < dim2 ; ++j )
         {
             val += src[next] - src[previous];
-            dst[current] = (gint) ( val * iarr + 0.5 );
+            dst[current] = (guint8) ( val / (gdouble) iarr + 0.5 );
             previous += stride2;
             /* next stays the last one */
             current += stride2;
@@ -84,7 +84,7 @@ _eventd_nd_draw_blur_box_one_dimension(guint8 *src, guint8 *dst, gdouble r, gdou
 }
 
 static void
-_eventd_nd_draw_blur_box(guint8 *src, guint8 *dst, gdouble r, gdouble iarr, gint width, gint height, gint stride, gint channels)
+_eventd_nd_draw_blur_box(guint8 *src, guint8 *dst, gint r, gdouble iarr, gint width, gint height, gint stride, gint channels)
 {
     gint channel;
     for ( channel = 0 ; channel < channels ; ++channel )
@@ -109,8 +109,8 @@ _eventd_nd_draw_blur_gauss(guint8 *src, guint8 *dst, gint r, gint n, gint width,
     gint i;
     for ( i = 0 ; i < n ; ++i )
     {
-        gdouble rr = ( ( i < m ? wl : wu ) - 1 ) / 2.0;
-        gdouble iarr = 1.0 / ( rr + rr + 1 );
+        gint rr = ( ( i < m ? wl : wu ) - 1 ) / 2;
+        gint iarr = 2 * rr + 1;
         if ( (i % 2) == 0 )
             _eventd_nd_draw_blur_box(src, dst, rr, iarr, width, height, stride, channels);
         else
