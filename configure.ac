@@ -387,6 +387,7 @@ AC_SUBST([AM_DOCBOOK_CONDITIONS])
 
 AM_SUBST_NOTMAKE([LIBS])
 AC_SUBST([shrext_cmds])
+AC_SUBST([LT_OBJDIR], [$lt_cv_objdir])
 
 AC_CONFIG_FILES([
     server/libeventd/pkgconfig/libeventd.pc

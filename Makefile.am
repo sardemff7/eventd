@@ -121,10 +121,12 @@ include src/libnkutils/libnkutils.mk
 #
 
 install-data-hook: la-files-install-hook
-uninstall-hook: la-files-uninstall-hook
+uninstall-libLTLIBRARIES uninstall-hook: la-files-uninstall-hook
 
 ev_remove_la = $(if $(strip $($(1)_LTLIBRARIES)),( cd $(DESTDIR)$($(1)dir) && rm -f $($(1)_LTLIBRARIES) ))
-ev_remove_so_from_la = $(if $(strip $($(1)_LTLIBRARIES)),( cd $(DESTDIR)$($(1)dir) && rm -f `$(AWK) -F "'" '/^(library_names|old_library)=/ { print $$2 }' $(addprefix "$(abs_builddir)"/,$($(1)_LTLIBRARIES))` ))
+ev_remove_so_from_la = $(if $(strip $($(1)_LTLIBRARIES)),for la in $($(1)_LTLIBRARIES); do \
+		$(INSTALL) "$(abs_builddir)/$(LT_OBJDIR)"/$${la}i "$(DESTDIR)$($(1)dir)"/$${la}; \
+	done )
 
 # *.la files cleanup
 la-files-install-hook:
