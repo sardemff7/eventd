@@ -162,11 +162,9 @@ _eventd_nd_win_uninit(EventdNdBackendContext *self_)
 static void
 _eventd_nd_win_surface_update(EventdNdSurface *self, gint width, gint height)
 {
-    HDC hdcScreen = GetDC(NULL);
-
     cairo_surface_t *surface;
     HDC dc;
-    surface = cairo_win32_surface_create_with_ddb(hdcScreen, CAIRO_FORMAT_ARGB32, width, height);
+    surface = cairo_win32_surface_create_with_dib(CAIRO_FORMAT_ARGB32, width, height);
     dc = cairo_win32_surface_get_dc(surface);
 
     self->display->nd->notification_draw(self->notification, surface, TRUE);
@@ -179,10 +177,9 @@ _eventd_nd_win_surface_update(EventdNdSurface *self, gint width, gint height)
         .SourceConstantAlpha = 255,
         .AlphaFormat = AC_SRC_ALPHA,
     };
-    UpdateLayeredWindow(self->window, hdcScreen, NULL, &size, dc, &ptZero, 0, &blend, ULW_ALPHA);
+    UpdateLayeredWindow(self->window, NULL, NULL, &size, dc, &ptZero, 0, &blend, ULW_ALPHA);
 
     cairo_surface_destroy(surface);
-    ReleaseDC(NULL, hdcScreen);
 }
 
 static EventdNdSurface *
