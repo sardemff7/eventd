@@ -56,6 +56,11 @@ _eventd_nd_draw_blur_box_one_dimension(guint8 *src, guint8 *dst, gint r, gint ia
         for ( j = 0 ; j < r ; ++j )
             val += src[current + j * stride2];
 
+        /*
+         * We have <= r here because pixel r
+         * still has the first pixel in its neighborhood
+         * It starts to be outside at the beginning of the second loop
+         */
         for ( j = 0 ; j <= r ; ++j )
         {
             val += src[next] - src[previous];
@@ -64,7 +69,12 @@ _eventd_nd_draw_blur_box_one_dimension(guint8 *src, guint8 *dst, gint r, gint ia
             next += stride2;
             current += stride2;
         }
-        for ( /* old value is good */ ; j < dim2 - r ; ++j )
+        /*
+         * We have (dim2 - r - 1) here so the last pixel is "next"
+         * after this loop only, and not at the last iteration
+         * (which would make us overflow)
+         */
+        for ( /* old value is good */ ; j < dim2 - r - 1 ; ++j )
         {
             val += src[next] - src[previous];
             dst[current] = (guint8) ( val / (gdouble) iarr + 0.5 );
