@@ -144,10 +144,8 @@ eventd_nd_draw_blur_surface(cairo_t *cr, gint border)
     switch ( cairo_image_surface_get_format(surface) )
     {
     case CAIRO_FORMAT_ARGB32:
-        channels = 4;
-    break;
     case CAIRO_FORMAT_RGB24:
-        channels = 3;
+        channels = 4;
     break;
     case CAIRO_FORMAT_A8:
         channels = 1;
