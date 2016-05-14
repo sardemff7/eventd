@@ -23,6 +23,6 @@
 #ifndef __EVENTD_ND_DRAW_BLUR_H__
 #define __EVENTD_ND_DRAW_BLUR_H__
 
-gboolean eventd_nd_draw_blur_surface(cairo_t *cr, gint border);
+void eventd_nd_draw_blur_surface(cairo_t *cr, gint blur);
 
 #endif /* __EVENTD_ND_DRAW_BLUR_H__ */

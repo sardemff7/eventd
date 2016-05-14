@@ -94,7 +94,7 @@ struct _EventdPluginAction {
 
         gint     border;
         Colour   border_colour;
-        gboolean border_blur;
+        gint     border_blur;
     } bubble;
 
     struct {
@@ -163,7 +163,7 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
     style->bubble.border_colour.g = 0.1;
     style->bubble.border_colour.b = 0.1;
     style->bubble.border_colour.a = 1.0;
-    style->bubble.border_blur     = TRUE;
+    style->bubble.border_blur     = 5;
 
     /* text */
     style->text.set = TRUE;
@@ -260,7 +260,6 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file)
         guint64 enum_value;
         Int integer;
         Colour colour;
-        gboolean boolean;
 
         if ( evhelpers_config_key_file_get_enum(config_file, "NotificationBubble", "Anchor", eventd_nd_anchors, G_N_ELEMENTS(eventd_nd_anchors), &enum_value) == 0 )
             self->bubble.anchor = enum_value;
@@ -307,8 +306,8 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file)
         else if ( self->parent != NULL )
             self->bubble.border_colour = eventd_nd_style_get_bubble_border_colour(self->parent);
 
-        if ( evhelpers_config_key_file_get_boolean(config_file, "NotificationBubble", "BorderBlur", &boolean) == 0 )
-            self->bubble.border_blur = boolean;
+        if ( evhelpers_config_key_file_get_int(config_file, "NotificationBubble", "BorderBlur", &integer) == 0 )
+            self->bubble.border_blur = integer.value;
         else if ( self->parent != NULL )
             self->bubble.border_blur = eventd_nd_style_get_bubble_border_blur(self->parent);
     }
@@ -537,7 +536,7 @@ eventd_nd_style_get_bubble_border_colour(EventdNdStyle *self)
     return eventd_nd_style_get_bubble_border_colour(self->parent);
 }
 
-gboolean
+gint
 eventd_nd_style_get_bubble_border_blur(EventdNdStyle *self)
 {
     if ( self->bubble.set )

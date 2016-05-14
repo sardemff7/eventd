@@ -65,7 +65,7 @@ gint eventd_nd_style_get_bubble_radius(EventdNdStyle *style);
 Colour eventd_nd_style_get_bubble_colour(EventdNdStyle *style);
 gint eventd_nd_style_get_bubble_border(EventdNdStyle *style);
 Colour eventd_nd_style_get_bubble_border_colour(EventdNdStyle *style);
-gboolean eventd_nd_style_get_bubble_border_blur(EventdNdStyle *style);
+gint eventd_nd_style_get_bubble_border_blur(EventdNdStyle *style);
 
 const PangoFontDescription *eventd_nd_style_get_text_font(EventdNdStyle *style);
 PangoAlignment eventd_nd_style_get_text_align(EventdNdStyle *style);

@@ -322,10 +322,10 @@
                     </varlistentry>
 
                     <varlistentry>
-                        <term><varname>BorderBlur=</varname> (defaults to <literal>true</literal>)</term>
+                        <term><varname>BorderBlur=</varname> (defaults to <literal>5</literal>)</term>
                         <listitem>
-                            <para>A <type>boolean</type></para>
-                            <para>Whether to blur the border or not, to achieve a shadow effect.</para>
+                            <para>An <type>integer</type></para>
+                            <para>Blur size of the border, to achieve a shadow effect.</para>
                         </listitem>
                     </varlistentry>
                 </variablelist>

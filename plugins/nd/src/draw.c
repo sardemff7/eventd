@@ -510,13 +510,14 @@ eventd_nd_draw_bubble_shape(cairo_t *cr, EventdNdStyle *style, gint width, gint 
 void
 eventd_nd_draw_bubble_draw(cairo_t *cr, EventdNdStyle *style, gint width, gint height, gboolean shaped)
 {
-    gint border, radius = 0;
+    gint border, blur = 0, radius = 0;
     Colour colour, border_colour;
-    gboolean blur;
 
     border = eventd_nd_style_get_bubble_border(style);
     if ( shaped || ( border > 0 ) )
         radius = eventd_nd_style_get_bubble_radius(style);
+    if ( shaped )
+        blur = eventd_nd_style_get_bubble_border_blur(style);
 
     colour = eventd_nd_style_get_bubble_colour(style);
     border_colour = eventd_nd_style_get_bubble_border_colour(style);
@@ -524,24 +525,20 @@ eventd_nd_draw_bubble_draw(cairo_t *cr, EventdNdStyle *style, gint width, gint h
     _eventd_nd_draw_bubble_shape(cr, radius, width, height);
     cairo_set_source_rgba(cr, border_colour.r, border_colour.g, border_colour.b, border_colour.a);
 
-    blur = shaped && eventd_nd_style_get_bubble_border_blur(style);
-    if ( blur )
+    if ( ( ! shaped ) && ( border > 0 ) )
+        cairo_paint(cr);
+    else
     {
-        cairo_fill_preserve(cr);
-        blur = eventd_nd_draw_blur_surface(cr, border);
-        /* Fallback to plain border if blur failed */
+        cairo_set_line_width(cr, border * 2);
+        cairo_stroke_preserve(cr);
     }
 
-    if ( ! blur )
+    if ( blur > 0 )
     {
-        if ( ( ! shaped ) && ( border > 0 ) )
-            cairo_paint(cr);
-        else
-        {
-            cairo_set_line_width(cr, border * 2);
-            cairo_stroke_preserve(cr);
-        }
+        cairo_fill_preserve(cr);
+        eventd_nd_draw_blur_surface(cr, blur);
     }
+
     cairo_set_source_rgba(cr, colour.r, colour.g, colour.b, colour.a);
     cairo_fill(cr);
 }

@@ -136,10 +136,9 @@ _eventd_nd_draw_blur_gauss(guint8 *src, guint8 *dst, gint r, gint n, gint width,
  * For now, everything is CPU-rendered, so map_to_image
  * will give us the best possible backend for our blur
  */
-gboolean
-eventd_nd_draw_blur_surface(cairo_t *cr, gint border)
+void
+eventd_nd_draw_blur_surface(cairo_t *cr, gint blur)
 {
-    gboolean ret = FALSE;
     cairo_surface_t *target, *surface;
 
     target = cairo_get_target(cr);
@@ -171,13 +170,10 @@ eventd_nd_draw_blur_surface(cairo_t *cr, gint border)
     stride = cairo_image_surface_get_stride(surface);
 
     tmp = g_alloca(stride * height * sizeof(guint8));
-    _eventd_nd_draw_blur_gauss(data, tmp, border / 3, 3 /* number of passes */, width, height, stride, channels);
+    _eventd_nd_draw_blur_gauss(data, tmp, blur, 3 /* number of passes */, width, height, stride, channels);
 
     cairo_surface_mark_dirty(surface);
 
-    ret = TRUE;
 fail:
     cairo_surface_unmap_image(target, surface);
-
-    return ret;
 }

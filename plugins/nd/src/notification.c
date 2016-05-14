@@ -105,7 +105,7 @@ _eventd_nd_notification_process(EventdNdNotification *self, EventdEvent *event)
     _eventd_nd_notification_clean(self);
     self->event = eventd_event_ref(event);
 
-    gint margin, border, padding;
+    gint margin, blur, border, padding;
     gint min_width, max_width;
 
     gint text_width = 0, text_height = 0;
@@ -113,12 +113,14 @@ _eventd_nd_notification_process(EventdNdNotification *self, EventdEvent *event)
 
 
     margin = self->queue->margin;
+    blur = eventd_nd_style_get_bubble_border_blur(self->style) * 2; /* We must reserve enough space to avoid clipping*/
     border = eventd_nd_style_get_bubble_border(self->style);
     padding = eventd_nd_style_get_bubble_padding(self->style);
     min_width = eventd_nd_style_get_bubble_min_width(self->style);
     max_width = eventd_nd_style_get_bubble_max_width(self->style);
+
     if ( max_width < 0 )
-        max_width = self->context->geometry.w - 2 * ( margin + border );
+        max_width = self->context->geometry.w - 2 * ( margin + blur + border );
     max_width -= 2 * padding;
     min_width += 2 * padding;
     if ( min_width > max_width )
@@ -148,8 +150,8 @@ _eventd_nd_notification_process(EventdNdNotification *self, EventdEvent *event)
 
     self->bubble_size.width = self->content_size.width + 2 * padding;
     self->bubble_size.height = self->content_size.height + 2 * padding;
-    self->surface_size.width = self->bubble_size.width + 2 * border;
-    self->surface_size.height = self->bubble_size.height + 2 * border;
+    self->surface_size.width = self->bubble_size.width + 2 * ( blur + border );
+    self->surface_size.height = self->bubble_size.height + 2 * ( blur + border );
 
     if ( self->timeout > 0 )
     {
@@ -322,7 +324,7 @@ void
 eventd_nd_notification_shape(EventdNdNotification *self, cairo_t *cr)
 {
     gint border;
-    border = eventd_nd_style_get_bubble_border(self->style);
+    border = eventd_nd_style_get_bubble_border(self->style) + eventd_nd_style_get_bubble_border_blur(self->style) * 2;
     cairo_translate(cr, border, border);
     eventd_nd_draw_bubble_shape(cr, self->style, self->bubble_size.width, self->bubble_size.height);
 }
@@ -332,7 +334,7 @@ eventd_nd_notification_draw(EventdNdNotification *self, cairo_surface_t *surface
 {
     gint border;
     gint padding;
-    border = eventd_nd_style_get_bubble_border(self->style);
+    border = eventd_nd_style_get_bubble_border(self->style) + eventd_nd_style_get_bubble_border_blur(self->style) * 2;
     padding = eventd_nd_style_get_bubble_padding(self->style);
 
     cairo_t *cr;
