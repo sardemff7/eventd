@@ -111,7 +111,7 @@ _eventc_get_address(const gchar *host_and_port, GError **error)
         host_and_port = path = g_build_filename(runtime_dir, PACKAGE_NAME, EVP_UNIX_SOCKET, NULL);
     }
 
-    if ( g_path_is_absolute(host_and_port) )
+    if ( g_utf8_strchr(host_and_port, -1, G_DIR_SEPARATOR) != NULL )
     {
         if ( g_file_test(host_and_port, G_FILE_TEST_IS_REGULAR) )
         {
