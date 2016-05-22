@@ -331,10 +331,6 @@ main(int argc, char *argv[])
         { NULL }
     };
 
-    if ( g_getenv("EVENTD_NO_PLUGINS") == NULL )
-        eventd_plugins_load(context, context->system_mode);
-
-
     option_context = g_option_context_new("- small daemon to act on remote or local events");
 
     option_group = g_option_group_new(NULL, NULL, NULL, NULL, NULL);
@@ -385,6 +381,8 @@ main(int argc, char *argv[])
         g_warning("Couldn't create the run dir '%s': %s", context->runtime_dir, g_strerror(errno));
         goto end;
     }
+
+    eventd_plugins_load(context, context->system_mode);
 
     context->config = eventd_config_new(context->system_mode);
 
@@ -443,10 +441,10 @@ main(int argc, char *argv[])
 
     eventd_config_free(context->config);
 
+    eventd_plugins_unload();
+
 end:
     g_free(context->runtime_dir);
-
-    eventd_plugins_unload();
 
     eventd_control_free(context->control);
 
