@@ -30,7 +30,6 @@ struct _EventdPluginContext {
     EventdEvpAvahiContext *avahi;
     gboolean default_unix;
     gchar **binds;
-    gboolean no_avahi;
     gchar *avahi_name;
     GTlsCertificate *certificate;
     GSocketService *service;

@@ -35,12 +35,6 @@
 
 #include "evp.h"
 
-#ifdef ENABLE_AVAHI
-#define AVAHI_OPTION_FLAG 0
-#else /* ! ENABLE_AVAHI */
-#define AVAHI_OPTION_FLAG G_OPTION_FLAG_HIDDEN
-#endif /* ! ENABLE_AVAHI */
-
 /*
  * Initialization interface
  */
@@ -119,12 +113,8 @@ _eventd_evp_start(EventdPluginContext *self)
     g_signal_connect(self->service, "incoming", G_CALLBACK(eventd_evp_client_connection_handler), self);
 
 #ifdef ENABLE_AVAHI
-    if ( ! self->no_avahi )
-    {
-        if ( self->avahi_name == NULL )
-            self->avahi_name = g_strdup_printf(PACKAGE_NAME " %s", g_get_host_name());
+    if ( self->avahi_name != NULL )
         self->avahi = eventd_evp_avahi_start(self->avahi_name, sockets);
-    }
     else
 #endif /* ENABLE_AVAHI */
         g_list_free_full(sockets, g_object_unref);
@@ -167,7 +157,6 @@ _eventd_evp_get_option_group(EventdPluginContext *self)
 #ifdef G_OS_UNIX
         { "listen-default", 'u', 0,                 G_OPTION_ARG_NONE,         &self->default_unix, "Listen on default UNIX socket", NULL },
 #endif /* G_OS_UNIX */
-        { "no-avahi",       'A', AVAHI_OPTION_FLAG, G_OPTION_ARG_NONE,         &self->no_avahi,     "Disable avahi publishing",      NULL },
         { NULL }
     };
 

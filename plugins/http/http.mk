@@ -20,7 +20,6 @@ http_la_SOURCES = \
 
 http_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	$(AVAHI_CFLAGS) \
 	$(LIBSOUP_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS) \
@@ -36,7 +35,6 @@ http_la_LIBADD = \
 	libeventd-protocol-json.la \
 	libeventd-plugin.la \
 	libeventd-helpers.la \
-	$(AVAHI_LIBS) \
 	$(LIBSOUP_LIBS) \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS) \

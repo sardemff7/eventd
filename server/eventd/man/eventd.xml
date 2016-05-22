@@ -247,14 +247,6 @@
                     <para>May be specified multiple times.</para>
                 </listitem>
             </varlistentry>
-
-            <varlistentry condition="website;enable_avahi">
-                <term><option>-A</option></term>
-                <term><option>--no-avahi</option></term>
-                <listitem>
-                    <para>Disable Avahi publishing</para>
-                </listitem>
-            </varlistentry>
         </variablelist>
     </refsect1>
 

@@ -39,17 +39,11 @@
 #include "server.h"
 #include "avahi.h"
 
-#ifdef ENABLE_AVAHI
-#define AVAHI_OPTION_FLAG 0
-#else /* ! ENABLE_AVAHI */
-#define AVAHI_OPTION_FLAG G_OPTION_FLAG_HIDDEN
-#endif /* ! ENABLE_AVAHI */
 
 struct _EventdPluginContext {
     EventdPluginCoreContext *core;
     EventdRelayAvahi *avahi;
     GHashTable *servers;
-    gboolean no_avahi;
 };
 
 
@@ -85,26 +79,6 @@ _eventd_relay_uninit(EventdPluginContext *context)
 }
 
 
-/*
- * Command-line options interface
- */
-
-static GOptionGroup *
-_eventd_relay_get_option_group(EventdPluginContext *context)
-{
-    GOptionGroup *option_group;
-    GOptionEntry entries[] =
-    {
-        { "no-avahi-browsing", 0, AVAHI_OPTION_FLAG, G_OPTION_ARG_NONE,         &context->no_avahi,     "Disable avahi browsing",      NULL },
-        { NULL }
-    };
-
-    option_group = g_option_group_new("relay", "relay plugin options", "Show relay plugin help options", NULL, NULL);
-    g_option_group_set_translation_domain(option_group, GETTEXT_PACKAGE);
-    g_option_group_add_entries(option_group, entries);
-    return option_group;
-}
-
 
 /*
  * Start/Stop interface
@@ -124,8 +98,7 @@ _eventd_relay_start(EventdPluginContext *context)
 {
     g_hash_table_foreach(context->servers, _eventd_relay_start_each, NULL);
 #ifdef ENABLE_AVAHI
-    if ( ! context->no_avahi )
-        eventd_relay_avahi_start(context->avahi);
+    eventd_relay_avahi_start(context->avahi);
 #endif /* ENABLE_AVAHI */
 }
 
@@ -336,8 +309,6 @@ eventd_plugin_get_interface(EventdPluginInterface *interface)
 {
     eventd_plugin_interface_add_init_callback(interface, _eventd_relay_init);
     eventd_plugin_interface_add_uninit_callback(interface, _eventd_relay_uninit);
-
-    eventd_plugin_interface_add_get_option_group_callback(interface, _eventd_relay_get_option_group);
 
     eventd_plugin_interface_add_start_callback(interface, _eventd_relay_start);
     eventd_plugin_interface_add_stop_callback(interface, _eventd_relay_stop);
