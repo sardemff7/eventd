@@ -199,7 +199,7 @@ eventd_control_free(EventdControl *control)
 }
 
 gboolean
-eventd_control_start(EventdControl *control, gboolean take_over_socket)
+eventd_control_start(EventdControl *control)
 {
     gboolean ret = FALSE;
     GError *error = NULL;
