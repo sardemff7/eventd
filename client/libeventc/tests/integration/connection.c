@@ -28,14 +28,11 @@ main(int argc, char *argv[])
 {
     int r = 99;
     eventd_tests_env_setup(argv, "libeventc-connection");
-    gchar **args = g_new(char *, 2);
-    args[0] = g_strdup("--event-listen");
-    args[1] = g_strdup("tcp:localhost:19021");
-    EventdTestsEnv *env = eventd_tests_env_new("test-plugin,evp", args, 2);
+    EventdTestsEnv *env = eventd_tests_env_new("test-plugin,evp", NULL, 0);
     if ( ! eventd_tests_env_start_eventd(env) )
         goto end;
 
-    r = eventd_tests_run_libeventc("127.0.0.1:19021");
+    r = eventd_tests_run_libeventc();
 
     if ( ! eventd_tests_env_stop_eventd(env) )
         r = 99;
