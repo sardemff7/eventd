@@ -233,7 +233,7 @@ fail:
 }
 
 EventdConfig *
-eventd_config_new(void)
+eventd_config_new(gboolean system_mode)
 {
     EventdConfig *config;
 
@@ -243,6 +243,8 @@ eventd_config_new(void)
     config->events = eventd_events_new();
 
     config->gnutls_priorities_env = g_getenv("G_TLS_GNUTLS_PRIORITY");
+
+    eventd_config_parse(config, system_mode);
 
     return config;
 }

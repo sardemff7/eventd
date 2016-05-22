@@ -313,6 +313,8 @@ main(int argc, char *argv[])
     context->interface.get_sockets = eventd_core_get_sockets;
     context->interface.push_event = eventd_core_push_event;
 
+    context->control = eventd_control_new(context);
+
 #ifdef G_OS_UNIX
     context->system_mode = ( g_getenv("XDG_RUNTIME_DIR") == NULL );
     if ( context->system_mode )
@@ -329,12 +331,8 @@ main(int argc, char *argv[])
         { NULL }
     };
 
-    context->control = eventd_control_new(context);
-
     if ( g_getenv("EVENTD_NO_PLUGINS") == NULL )
         eventd_plugins_load(context, context->system_mode);
-
-    context->config = eventd_config_new();
 
 
     option_context = g_option_context_new("- small daemon to act on remote or local events");
@@ -388,7 +386,7 @@ main(int argc, char *argv[])
         goto end;
     }
 
-    eventd_config_parse(context->config, context->system_mode);
+    context->config = eventd_config_new(context->system_mode);
 
     context->sockets = eventd_sockets_new((const gchar * const *) binds, context->runtime_dir, context->take_over_socket);
 
@@ -443,9 +441,10 @@ main(int argc, char *argv[])
 
     eventd_sockets_free(context->sockets);
 
+    eventd_config_free(context->config);
+
 end:
     g_free(context->runtime_dir);
-    eventd_config_free(context->config);
 
     eventd_plugins_unload();
 
