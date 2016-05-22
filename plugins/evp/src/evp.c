@@ -109,7 +109,7 @@ _eventd_evp_start(EventdPluginContext *self)
         sockets = _eventd_evp_add_socket(sockets, self, (const gchar * const *)self->binds);
     else
     {
-        const gchar *binds[] = { DEFAULT_SOCKET_BIND_PREFIX "-runtime:" EVP_UNIX_SOCKET, "systemd", NULL };
+        const gchar *binds[] = { DEFAULT_SOCKET_BIND_PREFIX "-runtime:" EVP_UNIX_SOCKET, "all", NULL };
         sockets = _eventd_evp_add_socket(sockets, self, binds);
     }
 

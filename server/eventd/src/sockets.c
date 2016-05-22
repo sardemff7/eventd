@@ -50,7 +50,7 @@ struct _EventdSockets {
 };
 
 GList *
-eventd_sockets_get_systemd_sockets(EventdSockets *sockets)
+eventd_sockets_get_all_sockets(EventdSockets *sockets)
 {
     GList *list = sockets->list;
     sockets->list = NULL;

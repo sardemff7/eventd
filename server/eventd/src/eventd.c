@@ -129,8 +129,8 @@ eventd_core_get_sockets(EventdCoreContext *context, const gchar * const *binds)
 
         GList *new_sockets = NULL;
 
-        if ( g_strcmp0(bind, "systemd") == 0 )
-            new_sockets = eventd_sockets_get_systemd_sockets(context->sockets);
+        if ( g_strcmp0(bind, "all") == 0 )
+            new_sockets = eventd_sockets_get_all_sockets(context->sockets);
         else if ( g_str_has_prefix(bind, "tcp:") )
         {
             if ( bind[4] == 0 )

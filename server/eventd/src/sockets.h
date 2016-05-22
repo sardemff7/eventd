@@ -23,7 +23,7 @@
 #ifndef __EVENTD_SOCKETS_H__
 #define __EVENTD_SOCKETS_H__
 
-GList *eventd_sockets_get_systemd_sockets(EventdSockets *sockets);
+GList *eventd_sockets_get_all_sockets(EventdSockets *sockets);
 GList *eventd_sockets_get_inet_sockets(EventdSockets *sockets, const gchar *address, guint16 port);
 GList *eventd_sockets_get_inet_socket_file(EventdSockets *sockets, const gchar *file, gboolean take_over);
 GList *eventd_sockets_get_unix_sockets(EventdSockets *sockets, const gchar *path, gboolean take_over);
