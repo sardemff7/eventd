@@ -222,7 +222,7 @@ eventd_plugins_action_free(gpointer data)
     g_slice_free(EventdPluginsAction, data);
 }
 
-void
+gboolean
 eventd_plugins_load(EventdPluginCoreContext *core, gboolean system_mode)
 {
     const gchar *env_whitelist;
@@ -232,8 +232,8 @@ eventd_plugins_load(EventdPluginCoreContext *core, gboolean system_mode)
 
     if ( ! g_module_supported() )
     {
-        g_warning("Couldn't load plugins: %s", g_module_error());
-        return;
+        g_warning("No plugins support: %s", g_module_error());
+        return FALSE;
     }
 
     plugins = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, _eventd_plugins_plugin_free);
@@ -254,6 +254,15 @@ eventd_plugins_load(EventdPluginCoreContext *core, gboolean system_mode)
 
     g_strfreev(blacklist);
     g_strfreev(whitelist);
+
+    if ( g_hash_table_size(plugins) == 0 )
+    {
+        g_warning("No plugins loaded");
+        eventd_plugins_unload();
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 void

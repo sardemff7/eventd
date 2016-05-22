@@ -273,6 +273,13 @@
             </varlistentry>
 
             <varlistentry>
+                <term><literal>4</literal></term>
+                <listitem>
+                    <para>No plugin to load.</para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
                 <term><literal>10</literal></term>
                 <listitem>
                     <para>Failed to start the control interface.</para>

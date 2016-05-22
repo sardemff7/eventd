@@ -383,7 +383,11 @@ main(int argc, char *argv[])
         goto end;
     }
 
-    eventd_plugins_load(context, context->system_mode);
+    if ( ! eventd_plugins_load(context, context->system_mode) )
+    {
+        retval = EVENTD_RETURN_CODE_NO_PLUGIN_ERROR;
+        goto end;
+    }
 
     context->config = eventd_config_new(context->system_mode);
 
