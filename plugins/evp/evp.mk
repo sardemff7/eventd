@@ -18,7 +18,8 @@ evp_la_SOURCES = \
 	%D%/src/evp.c \
 	%D%/src/client.h \
 	%D%/src/client.c \
-	%D%/src/avahi.h \
+	%D%/src/dns-sd.h \
+	%D%/src/dns-sd.c \
 	$(null)
 
 evp_la_CFLAGS = \
@@ -62,12 +63,3 @@ evp_connection_test_LDADD = \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS) \
 	$(null)
-
-
-if ENABLE_AVAHI
-
-evp_la_SOURCES += \
-	%D%/src/avahi.c \
-	$(null)
-
-endif

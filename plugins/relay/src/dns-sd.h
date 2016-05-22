@@ -20,19 +20,18 @@
  *
  */
 
-#ifndef __EVENTD_PLUGINS_RELAY_AVAHI_H__
-#define __EVENTD_PLUGINS_RELAY_AVAHI_H__
+#ifndef __EVENTD_PLUGINS_RELAY_DNS_SD_H__
+#define __EVENTD_PLUGINS_RELAY_DNS_SD_H__
 
-typedef struct _EventdRelayAvahi EventdRelayAvahi;
-typedef struct _EventdRelayAvahiServer EventdRelayAvahiServer;
+typedef struct _EventdRelayDNSSD EventdRelayDNSSD;
 
-EventdRelayAvahi *eventd_relay_avahi_init(void);
-void eventd_relay_avahi_uninit(EventdRelayAvahi *context);
+EventdRelayDNSSD *eventd_relay_dns_sd_init(void);
+void eventd_relay_dns_sd_uninit(EventdRelayDNSSD *context);
 
-void eventd_relay_avahi_start(EventdRelayAvahi *context);
-void eventd_relay_avahi_stop(EventdRelayAvahi *context);
+void eventd_relay_dns_sd_start(EventdRelayDNSSD *context);
+void eventd_relay_dns_sd_stop(EventdRelayDNSSD *context);
 
-void eventd_relay_avahi_monitor_server(EventdRelayAvahi *context, gchar *name, EventdRelayServer *server);
+void eventd_relay_dns_sd_monitor_server(EventdRelayDNSSD *context, gchar *name, EventdRelayServer *relay_server);
 
-#endif /* __EVENTD_PLUGINS_RELAY_AVAHI_H__ */
+#endif /* __EVENTD_PLUGINS_RELAY_DNS_SD_H__ */
 

@@ -24,15 +24,17 @@
 
 #include <glib.h>
 #include <gio/gio.h>
+
+#include "dns-sd.h"
+
+#ifdef ENABLE_DNS_SD
 #include <avahi-common/error.h>
 #include <avahi-client/client.h>
 #include <avahi-client/publish.h>
 #include <avahi-glib/glib-watch.h>
 #include <avahi-glib/glib-malloc.h>
 
-#include "avahi.h"
-
-struct _EventdEvpAvahiContext {
+struct _EventdEvpDNSSDContext {
     const gchar *name;
     GList *sockets;
     AvahiGLibPoll *glib_poll;
@@ -41,17 +43,17 @@ struct _EventdEvpAvahiContext {
 };
 
 static void
-_eventd_evp_avahi_group_callback(AvahiEntryGroup *g, AvahiEntryGroupState state, void *user_data)
+_eventd_evp_dns_sd_group_callback(AvahiEntryGroup *g, AvahiEntryGroupState state, void *user_data)
 {
 }
 
 static void
-_eventd_evp_avahi_create_group(EventdEvpAvahiContext *context, AvahiClient *client)
+_eventd_evp_dns_sd_create_group(EventdEvpDNSSDContext *context, AvahiClient *client)
 {
     GList *socket;
     int error;
 
-    context->group = avahi_entry_group_new(client, _eventd_evp_avahi_group_callback, context);
+    context->group = avahi_entry_group_new(client, _eventd_evp_dns_sd_group_callback, context);
     if ( context->group == NULL )
     {
         g_warning("Couldn't create avahi entry group: %s", avahi_strerror(avahi_client_errno(client)));
@@ -103,14 +105,14 @@ _eventd_evp_avahi_create_group(EventdEvpAvahiContext *context, AvahiClient *clie
 }
 
 static void
-_eventd_evp_avahi_client_callback(AvahiClient *client, AvahiClientState state, void *user_data)
+_eventd_evp_dns_sd_client_callback(AvahiClient *client, AvahiClientState state, void *user_data)
 {
-    EventdEvpAvahiContext *context = user_data;
+    EventdEvpDNSSDContext *context = user_data;
 
     switch ( state )
     {
     case AVAHI_CLIENT_S_RUNNING:
-        _eventd_evp_avahi_create_group(context, client);
+        _eventd_evp_dns_sd_create_group(context, client);
     case AVAHI_CLIENT_S_REGISTERING:
     break;
     case AVAHI_CLIENT_FAILURE:
@@ -122,10 +124,10 @@ _eventd_evp_avahi_client_callback(AvahiClient *client, AvahiClientState state, v
     }
 }
 
-EventdEvpAvahiContext *
-eventd_evp_avahi_start(const gchar *name, GList *sockets)
+EventdEvpDNSSDContext *
+eventd_evp_dns_sd_start(const gchar *name, GList *sockets)
 {
-    EventdEvpAvahiContext *context;
+    EventdEvpDNSSDContext *context;
     int error;
 
     if ( sockets == NULL )
@@ -133,17 +135,17 @@ eventd_evp_avahi_start(const gchar *name, GList *sockets)
 
     avahi_set_allocator(avahi_glib_allocator());
 
-    context = g_new0(EventdEvpAvahiContext, 1);
+    context = g_new0(EventdEvpDNSSDContext, 1);
 
     context->name = name;
     context->sockets = sockets;
     context->glib_poll = avahi_glib_poll_new(NULL, G_PRIORITY_DEFAULT);
-    context->client = avahi_client_new(avahi_glib_poll_get(context->glib_poll), 0, _eventd_evp_avahi_client_callback, context, &error);
+    context->client = avahi_client_new(avahi_glib_poll_get(context->glib_poll), 0, _eventd_evp_dns_sd_client_callback, context, &error);
 
     if ( context->client == NULL )
     {
         g_warning("Couldn't initialize Avahi: %s", avahi_strerror(error));
-        eventd_evp_avahi_stop(context);
+        eventd_evp_dns_sd_stop(context);
         return NULL;
     }
 
@@ -151,7 +153,7 @@ eventd_evp_avahi_start(const gchar *name, GList *sockets)
 }
 
 void
-eventd_evp_avahi_stop(EventdEvpAvahiContext *context)
+eventd_evp_dns_sd_stop(EventdEvpDNSSDContext *context)
 {
     if ( context == NULL )
         return;
@@ -165,3 +167,8 @@ eventd_evp_avahi_stop(EventdEvpAvahiContext *context)
 
     g_free(context);
 }
+
+#else /* ! ENABLE_DNS_SD */
+EventdEvpDNSSDContext *eventd_evp_dns_sd_start(const gchar *name, GList *sockets) { return NULL; }
+void eventd_evp_dns_sd_stop(EventdEvpDNSSDContext *context) {}
+#endif /* ! ENABLE_DNS_SD */

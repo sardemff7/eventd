@@ -30,7 +30,7 @@
 #include <eventd-plugin.h>
 #include <libeventd-helpers-config.h>
 
-#include "avahi.h"
+#include "dns-sd.h"
 #include "client.h"
 
 #include "evp.h"
@@ -60,7 +60,7 @@ _eventd_evp_init(EventdPluginCoreContext *core)
 static void
 _eventd_evp_uninit(EventdPluginContext *self)
 {
-    g_free(self->avahi_name);
+    g_free(self->publish_name);
 
     if ( self->binds != NULL )
         g_strfreev(self->binds);
@@ -115,11 +115,9 @@ _eventd_evp_start(EventdPluginContext *self)
 
     g_signal_connect(self->service, "incoming", G_CALLBACK(eventd_evp_client_connection_handler), self);
 
-#ifdef ENABLE_AVAHI
-    if ( self->avahi_name != NULL )
-        self->avahi = eventd_evp_avahi_start(self->avahi_name, sockets);
+    if ( self->publish_name != NULL )
+        self->dns_sd = eventd_evp_dns_sd_start(self->publish_name, sockets);
     else
-#endif /* ENABLE_AVAHI */
         g_list_free_full(sockets, g_object_unref);
 
     self->subscribe_categories = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) g_list_free);
@@ -128,9 +126,7 @@ _eventd_evp_start(EventdPluginContext *self)
 static void
 _eventd_evp_stop(EventdPluginContext *self)
 {
-#ifdef ENABLE_AVAHI
-    eventd_evp_avahi_stop(self->avahi);
-#endif /* ENABLE_AVAHI */
+    eventd_evp_dns_sd_stop(self->dns_sd);
 
     g_hash_table_unref(self->subscribe_categories);
     self->subscribe_categories = NULL;
@@ -156,7 +152,7 @@ _eventd_evp_global_parse(EventdPluginContext *self, GKeyFile *config_file)
     gchar **binds = NULL;
     gchar *cert_file = NULL;
     gchar *key_file = NULL;
-    gchar *avahi_name;
+    gchar *publish_name;
 
     if ( ! g_key_file_has_group(config_file, "Server") )
         return;
@@ -167,7 +163,7 @@ _eventd_evp_global_parse(EventdPluginContext *self, GKeyFile *config_file)
         goto cleanup;
     if ( evhelpers_config_key_file_get_string(config_file, "Server", "TLSKey", &key_file) < 0 )
         goto cleanup;
-    if ( evhelpers_config_key_file_get_string(config_file, "Server", "AvahiName", &avahi_name) < 0 )
+    if ( evhelpers_config_key_file_get_string(config_file, "Server", "PublishName", &publish_name) < 0 )
         goto cleanup;
 
     GError *error = NULL;
@@ -210,10 +206,10 @@ _eventd_evp_global_parse(EventdPluginContext *self, GKeyFile *config_file)
     else if ( key_file != NULL )
         g_warning("You need to configure a certificate file to add TLS support");
 
-    if ( avahi_name != NULL )
+    if ( publish_name != NULL )
     {
-        g_free(self->avahi_name);
-        self->avahi_name = avahi_name;
+        g_free(self->publish_name);
+        self->publish_name = publish_name;
     }
 
 cleanup:
@@ -229,8 +225,8 @@ _eventd_evp_config_reset(EventdPluginContext *self)
         g_object_unref(self->certificate);
     self->certificate = NULL;
 
-    g_free(self->avahi_name);
-    self->avahi_name = NULL;
+    g_free(self->publish_name);
+    self->publish_name = NULL;
 }
 
 

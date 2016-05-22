@@ -14,7 +14,8 @@ check_PROGRAMS += \
 
 
 relay_la_SOURCES = \
-	%D%/src/avahi.h \
+	%D%/src/dns-sd.h \
+	%D%/src/dns-sd.c \
 	%D%/src/server.h \
 	%D%/src/server.c \
 	%D%/src/relay.c \
@@ -64,12 +65,3 @@ relay_connection_test_LDADD = \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS) \
 	$(null)
-
-
-if ENABLE_AVAHI
-
-relay_la_SOURCES += \
-	%D%/src/avahi.c \
-	$(null)
-
-endif

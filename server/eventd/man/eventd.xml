@@ -542,22 +542,22 @@ eventdctl relay disconnect your.distant.computer</programlisting>
     [Event baz]</programlisting>
         </example>
 
-        <example condition="website;enable_avahi">
-            <title>Relaying remote events: Avahi</title>
+        <example condition="website;enable_dns_sd">
+            <title>Relaying remote events: DNS-SD</title>
 
             <para>
-                With Avahi supports, the <command>evp</command> plugin will advertise itself on the network.
+                With DNS-SD supports, the <command>evp</command> plugin will advertise itself on the network.
             </para>
             <para>
                 The <command>relay</command> plugin will connect to configured servers when advertised.
             </para>
-            <para>From the above example, you simply need to configure the <command>relay</command> plugin to search through Avahi (using the default name of the server, see <citerefentry><refentrytitle>eventd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>):</para>
+            <para>From the above example, you simply need to configure the <command>relay</command> plugin to search through DNS-SD (using the default name of the server, see <citerefentry><refentrytitle>eventd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>):</para>
             <programlisting><literal>"<filename>eventd.conf</filename>"</literal>:
     [Relay]
     Relays=one;
 
     [Relay one]
-    Avahi=eventd your.distant.computer
+    DNS-SD=eventd your.distant.computer
     Forwards=foo;bar;baz;</programlisting>
         </example>
 

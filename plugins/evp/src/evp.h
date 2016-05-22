@@ -23,13 +23,13 @@
 #ifndef __EVENTD_EVP_EVP_H__
 #define __EVENTD_EVP_EVP_H__
 
-#include "avahi.h"
+#include "dns-sd.h"
 
 struct _EventdPluginContext {
     EventdPluginCoreContext *core;
-    EventdEvpAvahiContext *avahi;
+    EventdEvpDNSSDContext *dns_sd;
     gchar **binds;
-    gchar *avahi_name;
+    gchar *publish_name;
     GTlsCertificate *certificate;
     GSocketService *service;
     GList *clients;

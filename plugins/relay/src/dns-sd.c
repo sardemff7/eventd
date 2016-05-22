@@ -26,20 +26,21 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 
+#include <libeventd-event.h>
+#include <eventd-plugin.h>
+
+#include "server.h"
+
+#include "dns-sd.h"
+
+#ifdef ENABLE_DNS_SD
 #include <avahi-common/error.h>
 #include <avahi-client/client.h>
 #include <avahi-client/lookup.h>
 #include <avahi-glib/glib-watch.h>
 #include <avahi-glib/glib-malloc.h>
 
-#include <libeventd-event.h>
-#include <eventd-plugin.h>
-
-#include "server.h"
-
-#include "avahi.h"
-
-struct _EventdRelayAvahi {
+struct _EventdRelayDNSSD {
     AvahiGLibPoll *glib_poll;
     AvahiClient *client;
     AvahiServiceBrowser *browser;
@@ -47,7 +48,7 @@ struct _EventdRelayAvahi {
 };
 
 static void
-_eventd_relay_avahi_service_resolve_callback(AvahiServiceResolver *r, AvahiIfIndex interface, AvahiProtocol protocol, AvahiResolverEvent event, const gchar *name, const gchar *type, const gchar *domain, const gchar *host_name, const AvahiAddress *address, guint16 port, AvahiStringList *txt, AvahiLookupResultFlags flags, void *user_data)
+_eventd_relay_dns_sd_service_resolve_callback(AvahiServiceResolver *r, AvahiIfIndex interface, AvahiProtocol protocol, AvahiResolverEvent event, const gchar *name, const gchar *type, const gchar *domain, const gchar *host_name, const AvahiAddress *address, guint16 port, AvahiStringList *txt, AvahiLookupResultFlags flags, void *user_data)
 {
     EventdRelayServer *server = user_data;
 
@@ -73,9 +74,9 @@ _eventd_relay_avahi_service_resolve_callback(AvahiServiceResolver *r, AvahiIfInd
 }
 
 static void
-_eventd_relay_avahi_service_browser_callback(AvahiServiceBrowser *b, AvahiIfIndex interface, AvahiProtocol protocol, AvahiBrowserEvent event, const gchar *name, const gchar *type, const gchar *domain, AvahiLookupResultFlags flags, void *user_data)
+_eventd_relay_dns_sd_service_browser_callback(AvahiServiceBrowser *b, AvahiIfIndex interface, AvahiProtocol protocol, AvahiBrowserEvent event, const gchar *name, const gchar *type, const gchar *domain, AvahiLookupResultFlags flags, void *user_data)
 {
-    EventdRelayAvahi *context = user_data;
+    EventdRelayDNSSD *context = user_data;
     EventdRelayServer *server;
 
     switch ( event )
@@ -90,7 +91,7 @@ _eventd_relay_avahi_service_browser_callback(AvahiServiceBrowser *b, AvahiIfInde
         g_debug("Service found in '%s' domain: %s", domain, name);
 #endif /* EVENTD_DEBUG */
         if ( ( server = g_hash_table_lookup(context->servers, name) ) != NULL )
-            avahi_service_resolver_new(context->client, interface, protocol, name, type, domain, AVAHI_PROTO_UNSPEC, 0, _eventd_relay_avahi_service_resolve_callback, server);
+            avahi_service_resolver_new(context->client, interface, protocol, name, type, domain, AVAHI_PROTO_UNSPEC, 0, _eventd_relay_dns_sd_service_resolve_callback, server);
     break;
     case AVAHI_BROWSER_REMOVE:
 #ifdef EVENTD_DEBUG
@@ -110,14 +111,14 @@ _eventd_relay_avahi_service_browser_callback(AvahiServiceBrowser *b, AvahiIfInde
 
 
 static void
-_eventd_relay_avahi_client_callback(AvahiClient *client, AvahiClientState state, void *user_data)
+_eventd_relay_dns_sd_client_callback(AvahiClient *client, AvahiClientState state, void *user_data)
 {
-    EventdRelayAvahi *context = user_data;
+    EventdRelayDNSSD *context = user_data;
 
     switch ( state )
     {
     case AVAHI_CLIENT_S_RUNNING:
-        context->browser = avahi_service_browser_new(client, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, EVP_SERVICE_TYPE, NULL, 0, _eventd_relay_avahi_service_browser_callback, context);
+        context->browser = avahi_service_browser_new(client, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, EVP_SERVICE_TYPE, NULL, 0, _eventd_relay_dns_sd_service_browser_callback, context);
     case AVAHI_CLIENT_S_REGISTERING:
     break;
     case AVAHI_CLIENT_FAILURE:
@@ -130,14 +131,14 @@ _eventd_relay_avahi_client_callback(AvahiClient *client, AvahiClientState state,
 }
 
 
-EventdRelayAvahi *
-eventd_relay_avahi_init(void)
+EventdRelayDNSSD *
+eventd_relay_dns_sd_init(void)
 {
-    EventdRelayAvahi *context;
+    EventdRelayDNSSD *context;
 
     avahi_set_allocator(avahi_glib_allocator());
 
-    context = g_new0(EventdRelayAvahi, 1);
+    context = g_new0(EventdRelayDNSSD, 1);
 
     context->glib_poll = avahi_glib_poll_new(NULL, G_PRIORITY_DEFAULT);
 
@@ -147,7 +148,7 @@ eventd_relay_avahi_init(void)
 }
 
 void
-eventd_relay_avahi_uninit(EventdRelayAvahi *context)
+eventd_relay_dns_sd_uninit(EventdRelayDNSSD *context)
 {
     if ( context == NULL )
         return;
@@ -160,20 +161,20 @@ eventd_relay_avahi_uninit(EventdRelayAvahi *context)
 }
 
 void
-eventd_relay_avahi_start(EventdRelayAvahi *context)
+eventd_relay_dns_sd_start(EventdRelayDNSSD *context)
 {
     if ( context == NULL )
         return;
 
     int error;
 
-    context->client = avahi_client_new(avahi_glib_poll_get(context->glib_poll), 0, _eventd_relay_avahi_client_callback, context, &error);
+    context->client = avahi_client_new(avahi_glib_poll_get(context->glib_poll), 0, _eventd_relay_dns_sd_client_callback, context, &error);
     if ( context->client == NULL )
         g_warning("Couldn't initialize Avahi: %s", avahi_strerror(error));
 }
 
 void
-eventd_relay_avahi_stop(EventdRelayAvahi *context)
+eventd_relay_dns_sd_stop(EventdRelayDNSSD *context)
 {
     if ( ( context == NULL ) || ( context->client == NULL ) )
         return;
@@ -186,7 +187,17 @@ eventd_relay_avahi_stop(EventdRelayAvahi *context)
 
 
 void
-eventd_relay_avahi_monitor_server(EventdRelayAvahi *context, gchar *name, EventdRelayServer *server)
+eventd_relay_dns_sd_monitor_server(EventdRelayDNSSD *context, gchar *name, EventdRelayServer *server)
 {
     g_hash_table_insert(context->servers, name, server);
 }
+
+#else /* ! ENABLE_DNS_SD */
+EventdRelayDNSSD *eventd_relay_dns_sd_init(void) { return NULL; }
+void eventd_relay_dns_sd_uninit(EventdRelayDNSSD *context) {}
+
+void eventd_relay_dns_sd_start(EventdRelayDNSSD *context) {}
+void eventd_relay_dns_sd_stop(EventdRelayDNSSD *context) {}
+
+void eventd_relay_dns_sd_monitor_server(EventdRelayDNSSD *context, gchar *name, EventdRelayServer *relay_server) {}
+#endif /* ! ENABLE_DNS_SD */

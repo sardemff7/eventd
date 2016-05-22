@@ -249,10 +249,10 @@
                 </varlistentry>
 
                 <varlistentry>
-                    <term><varname>AvahiName=</varname></term>
+                    <term><varname>PublishName=</varname></term>
                     <listitem>
                         <para>A <type>string</type></para>
-                        <para>The name that the server will publish using Avahi.</para>
+                        <para>The name that the server will publish using DNS-SD.</para>
                     </listitem>
                 </varlistentry>
 
@@ -300,11 +300,11 @@
                 </varlistentry>
 
                 <varlistentry>
-                    <term><varname>Avahi=</varname></term>
+                    <term><varname>DiscoverName=</varname></term>
                     <listitem>
-                        <para>An <type>Avahi name</type></para>
-                        <para>Avahi name of servers the relay plugin will connect to.</para>
-                        <para>If you provide both <varname>Server=</varname> and <varname>Avahi=</varname>, the former is ignored.</para>
+                        <para>A <type>service name</type></para>
+                        <para>The relay plugin will monitor this name with discovery services and then connect to it.</para>
+                        <para>If you provide both <varname>Server=</varname> and <varname>DiscoverName=</varname>, the former is ignored.</para>
                     </listitem>
                 </varlistentry>
 

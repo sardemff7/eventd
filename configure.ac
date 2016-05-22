@@ -145,13 +145,13 @@ fi
 PKG_CHECK_MODULES([GIO], [gio-2.0 >= ${gio_min_version} ${gio_unix}])
 AC_SUBST([gio_unix])
 
-AC_ARG_ENABLE([avahi], AS_HELP_STRING([--disable-avahi], [Disable Avahi support]), [], [enable_avahi=${ev_os_unix}])
-if test x${enable_avahi} = xyes; then
+AC_ARG_ENABLE([dns-sd], AS_HELP_STRING([--disable-dns-sd], [Disable DNS-SD support]), [], [enable_dns_sd=${ev_os_unix}])
+if test x${enable_dns_sd} = xyes; then
     PKG_CHECK_MODULES([AVAHI], [avahi-client avahi-glib])
-    AC_DEFINE([ENABLE_AVAHI], [1], [Enable Avahi support])
-    AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_avahi"
+    AC_DEFINE([ENABLE_DNS_SD], [1], [Enable DNS_SD support])
+    AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_dns_sd"
 fi
-AM_CONDITIONAL([ENABLE_AVAHI], [test x${enable_avahi} = xyes])
+AM_CONDITIONAL([ENABLE_DNS_SD], [test x${enable_dns_sd} = xyes])
 
 m4_ifdef([GOBJECT_INTROSPECTION_CHECK], [
     GOBJECT_INTROSPECTION_CHECK([${gobject_introspection_min_version}])
@@ -408,7 +408,7 @@ AC_MSG_RESULT([
     ${PACKAGE_NAME} ${PACKAGE_VERSION}
 
     Core features:
-        Avahi support: ${enable_avahi}
+        DNS-SD support: ${enable_dns_sd}
         systemd support: ${enable_systemd}
         UNIX sockets support: ${ev_os_unix}
         GObject introspection: ${enable_introspection}

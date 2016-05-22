@@ -37,12 +37,12 @@
 
 
 #include "server.h"
-#include "avahi.h"
+#include "dns-sd.h"
 
 
 struct _EventdPluginContext {
     EventdPluginCoreContext *core;
-    EventdRelayAvahi *avahi;
+    EventdRelayDNSSD *dns_sd;
     GHashTable *servers;
 };
 
@@ -59,9 +59,7 @@ _eventd_relay_init(EventdPluginCoreContext *core)
     context = g_new0(EventdPluginContext, 1);
     context->core = core;
 
-#ifdef ENABLE_AVAHI
-    context->avahi = eventd_relay_avahi_init();
-#endif /* ENABLE_AVAHI */
+    context->dns_sd = eventd_relay_dns_sd_init();
     context->servers = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, eventd_relay_server_free);
 
     return context;
@@ -71,9 +69,7 @@ static void
 _eventd_relay_uninit(EventdPluginContext *context)
 {
     g_hash_table_unref(context->servers);
-#ifdef ENABLE_AVAHI
-    eventd_relay_avahi_uninit(context->avahi);
-#endif /* ENABLE_AVAHI */
+    eventd_relay_dns_sd_uninit(context->dns_sd);
 
     g_free(context);
 }
@@ -97,9 +93,7 @@ static void
 _eventd_relay_start(EventdPluginContext *context)
 {
     g_hash_table_foreach(context->servers, _eventd_relay_start_each, NULL);
-#ifdef ENABLE_AVAHI
-    eventd_relay_avahi_start(context->avahi);
-#endif /* ENABLE_AVAHI */
+    eventd_relay_dns_sd_start(context->dns_sd);
 }
 
 static void
@@ -114,9 +108,7 @@ _eventd_relay_stop_each(gpointer key, gpointer data, gpointer user_data)
 static void
 _eventd_relay_stop(EventdPluginContext *context)
 {
-#ifdef ENABLE_AVAHI
-    eventd_relay_avahi_stop(context->avahi);
-#endif /* ENABLE_AVAHI */
+    eventd_relay_dns_sd_stop(context->dns_sd);
     g_hash_table_foreach(context->servers, _eventd_relay_stop_each, NULL);
 }
 
@@ -211,25 +203,22 @@ _eventd_relay_server_parse(EventdPluginContext *context, GKeyFile *config_file, 
     if ( evhelpers_config_key_file_get_string_list(config_file, group, "Subscriptions", &subscriptions, NULL) < 0 )
         goto cleanup;
 
-#ifdef ENABLE_AVAHI
-    gchar *avahi_name;
-    if ( ( context->avahi != NULL ) && ( evhelpers_config_key_file_get_string(config_file, group, "Avahi", &avahi_name) == 0 ) )
+    gchar *discover_name;
+    if ( ( context->dns_sd != NULL ) && ( evhelpers_config_key_file_get_string(config_file, group, "DiscoverName", &discover_name) == 0 ) )
     {
         EventdRelayServer *server;
-        server = g_hash_table_lookup(context->servers, avahi_name);
+        server = g_hash_table_lookup(context->servers, discover_name);
         if ( server == NULL )
         {
             server = eventd_relay_server_new(context->core, server_identity, accept_unknown_ca, forwards, subscriptions);
-            eventd_relay_avahi_monitor_server(context->avahi, avahi_name, server);
-            g_hash_table_insert(context->servers, avahi_name, server);
+            eventd_relay_dns_sd_monitor_server(context->dns_sd, discover_name, server);
+            g_hash_table_insert(context->servers, discover_name, server);
             forwards = subscriptions = NULL;
         }
         else
-            g_free(avahi_name);
+            g_free(discover_name);
     }
-    else
-#endif /* ENABLE_AVAHI */
-    if ( evhelpers_config_key_file_get_string(config_file, group, "Server", &server_uri) == 0 )
+    else if ( evhelpers_config_key_file_get_string(config_file, group, "Server", &server_uri) == 0 )
     {
         EventdRelayServer *server;
         server = g_hash_table_lookup(context->servers, server_uri);

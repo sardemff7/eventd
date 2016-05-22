@@ -20,12 +20,12 @@
  *
  */
 
-#ifndef __EVENTD_EVP_AVAHI_H__
-#define __EVENTD_EVP_AVAHI_H__
+#ifndef __EVENTD_EVP_DNS_SD_H__
+#define __EVENTD_EVP_DNS_SD_H__
 
-typedef struct _EventdEvpAvahiContext EventdEvpAvahiContext;
+typedef struct _EventdEvpDNSSDContext EventdEvpDNSSDContext;
 
-EventdEvpAvahiContext *eventd_evp_avahi_start(const gchar *name, GList *sockets);
-void eventd_evp_avahi_stop(EventdEvpAvahiContext *context);
+EventdEvpDNSSDContext *eventd_evp_dns_sd_start(const gchar *name, GList *sockets);
+void eventd_evp_dns_sd_stop(EventdEvpDNSSDContext *context);
 
-#endif /* __EVENTD_EVP_AVAHI_H__ */
+#endif /* __EVENTD_EVP_DNS_SD_H__ */
