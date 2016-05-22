@@ -32,7 +32,7 @@ void eventd_relay_avahi_uninit(EventdRelayAvahi *context);
 void eventd_relay_avahi_start(EventdRelayAvahi *context);
 void eventd_relay_avahi_stop(EventdRelayAvahi *context);
 
-void eventd_relay_avahi_server_new(EventdRelayAvahi *context, const gchar *name, EventdRelayServer *relay_server);
+void eventd_relay_avahi_monitor_server(EventdRelayAvahi *context, gchar *name, EventdRelayServer *server);
 
 #endif /* __EVENTD_PLUGINS_RELAY_AVAHI_H__ */
 

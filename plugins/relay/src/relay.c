@@ -220,7 +220,7 @@ _eventd_relay_server_parse(EventdPluginContext *context, GKeyFile *config_file, 
         if ( server == NULL )
         {
             server = eventd_relay_server_new(context->core, server_identity, accept_unknown_ca, forwards, subscriptions);
-            eventd_relay_avahi_server_new(context->avahi, avahi_name, server);
+            eventd_relay_avahi_monitor_server(context->avahi, avahi_name, server);
             g_hash_table_insert(context->servers, avahi_name, server);
             forwards = subscriptions = NULL;
         }

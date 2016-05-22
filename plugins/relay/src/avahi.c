@@ -46,31 +46,24 @@ struct _EventdRelayAvahi {
     GHashTable *servers;
 };
 
-struct _EventdRelayAvahiServer {
-    EventdRelayAvahi *context;
-    gchar *name;
-    EventdRelayServer *server;
-};
-
-
 static void
 _eventd_relay_avahi_service_resolve_callback(AvahiServiceResolver *r, AvahiIfIndex interface, AvahiProtocol protocol, AvahiResolverEvent event, const gchar *name, const gchar *type, const gchar *domain, const gchar *host_name, const AvahiAddress *address, guint16 port, AvahiStringList *txt, AvahiLookupResultFlags flags, void *user_data)
 {
-    EventdRelayAvahiServer *server = user_data;
+    EventdRelayServer *server = user_data;
 
     switch ( event )
     {
     case AVAHI_RESOLVER_FAILURE:
-        g_warning("Service '%s', resolver failure: %s", name, avahi_strerror(avahi_client_errno(server->context->client)));
+        g_warning("Service '%s', resolver failure: %s", name, avahi_strerror(avahi_client_errno(avahi_service_resolver_get_client(r))));
     break;
     case AVAHI_RESOLVER_FOUND:
 #ifdef EVENTD_DEBUG
         g_debug("Service '%s' resolved: [%s]:%" G_GUINT16_FORMAT, name, host_name, port);
 #endif /* EVENTD_DEBUG */
-        if ( ! eventd_relay_server_has_address(server->server) )
+        if ( ! eventd_relay_server_has_address(server) )
         {
-            eventd_relay_server_set_address(server->server, g_network_address_new(host_name, port));
-            eventd_relay_server_start(server->server);
+            eventd_relay_server_set_address(server, g_network_address_new(host_name, port));
+            eventd_relay_server_start(server);
         }
     default:
     break;
@@ -83,7 +76,7 @@ static void
 _eventd_relay_avahi_service_browser_callback(AvahiServiceBrowser *b, AvahiIfIndex interface, AvahiProtocol protocol, AvahiBrowserEvent event, const gchar *name, const gchar *type, const gchar *domain, AvahiLookupResultFlags flags, void *user_data)
 {
     EventdRelayAvahi *context = user_data;
-    EventdRelayAvahiServer *server;
+    EventdRelayServer *server;
 
     switch ( event )
     {
@@ -103,10 +96,10 @@ _eventd_relay_avahi_service_browser_callback(AvahiServiceBrowser *b, AvahiIfInde
 #ifdef EVENTD_DEBUG
         g_debug("Service removed in '%s' domain: %s", domain, name);
 #endif /* EVENTD_DEBUG */
-        if ( ( ( server = g_hash_table_lookup(context->servers, name) ) != NULL ) && ( eventd_relay_server_has_address(server->server) ) )
+        if ( ( ( server = g_hash_table_lookup(context->servers, name) ) != NULL ) && ( eventd_relay_server_has_address(server) ) )
         {
-            eventd_relay_server_stop(server->server);
-            eventd_relay_server_set_address(server->server, NULL);
+            eventd_relay_server_stop(server);
+            eventd_relay_server_set_address(server, NULL);
         }
     break;
     case AVAHI_BROWSER_ALL_FOR_NOW:
@@ -148,7 +141,7 @@ eventd_relay_avahi_init(void)
 
     context->glib_poll = avahi_glib_poll_new(NULL, G_PRIORITY_DEFAULT);
 
-    context->servers = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+    context->servers = g_hash_table_new(g_str_hash, g_str_equal);
 
     return context;
 }
@@ -193,15 +186,7 @@ eventd_relay_avahi_stop(EventdRelayAvahi *context)
 
 
 void
-eventd_relay_avahi_server_new(EventdRelayAvahi *context, const gchar *name, EventdRelayServer *relay_server)
+eventd_relay_avahi_monitor_server(EventdRelayAvahi *context, gchar *name, EventdRelayServer *server)
 {
-    EventdRelayAvahiServer *server;
-
-    server = g_new0(EventdRelayAvahiServer, 1);
-
-    server->name = g_strdup(name);
-    server->context = context;
-    server->server = relay_server;
-
-    g_hash_table_insert(server->context->servers, server->name, server);
+    g_hash_table_insert(context->servers, name, server);
 }
