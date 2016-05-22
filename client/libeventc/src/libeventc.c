@@ -113,9 +113,6 @@ _eventc_get_address(const gchar *host_and_port, GError **error)
 
     if ( g_path_is_absolute(host_and_port) )
     {
-#ifdef G_OS_UNIX
-        address = G_SOCKET_CONNECTABLE(g_unix_socket_address_new(host_and_port));
-#else /* ! G_OS_UNIX */
         if ( g_file_test(host_and_port, G_FILE_TEST_IS_REGULAR) )
         {
             gchar *str;
@@ -136,9 +133,12 @@ _eventc_get_address(const gchar *host_and_port, GError **error)
                     address = g_network_address_new_loopback(port);
             }
         }
+#ifdef G_OS_UNIX
+        else if ( g_file_test(host_and_port, G_FILE_TEST_EXISTS) && ( ! g_file_test(host_and_port, G_FILE_TEST_IS_DIR) ) )
+            address = G_SOCKET_CONNECTABLE(g_unix_socket_address_new(host_and_port));
+#endif /* G_OS_UNIX */
         else
             g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_HOSTNAME, "File '%s' does not exist", path);
-#endif /* ! G_OS_UNIX */
         host_and_port = NULL;
     }
 
