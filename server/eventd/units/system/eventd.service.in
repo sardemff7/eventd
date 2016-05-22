@@ -9,7 +9,7 @@ Type=notify
 User=eventd
 RuntimeDirectory=@PACKAGE_NAME@
 Sockets=eventd-control.socket eventd.socket
-ExecStart=@bindir@/eventd --listen systemd
+ExecStart=@bindir@/eventd
 ExecReload=@bindir@/eventdctl reload
 
 [Install]

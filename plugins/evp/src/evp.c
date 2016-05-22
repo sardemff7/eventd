@@ -35,6 +35,12 @@
 
 #include "evp.h"
 
+#ifdef G_OS_UNIX
+#define DEFAULT_SOCKET_BIND_PREFIX "unix"
+#else /* ! G_OS_UNIX */
+#define DEFAULT_SOCKET_BIND_PREFIX "tcp-file"
+#endif /* ! G_OS_UNIX */
+
 /*
  * Initialization interface
  */
@@ -101,14 +107,11 @@ _eventd_evp_start(EventdPluginContext *self)
 
     if ( self->binds != NULL )
         sockets = _eventd_evp_add_socket(sockets, self, (const gchar * const *)self->binds);
-
-#ifdef G_OS_UNIX
-    if ( self->default_unix )
+    else
     {
-        const gchar *binds[] = { "unix-runtime:" EVP_UNIX_SOCKET, NULL };
+        const gchar *binds[] = { DEFAULT_SOCKET_BIND_PREFIX "-runtime:" EVP_UNIX_SOCKET, "systemd", NULL };
         sockets = _eventd_evp_add_socket(sockets, self, binds);
     }
-#endif /* G_OS_UNIX */
 
     g_signal_connect(self->service, "incoming", G_CALLBACK(eventd_evp_client_connection_handler), self);
 
@@ -154,9 +157,6 @@ _eventd_evp_get_option_group(EventdPluginContext *self)
     GOptionEntry entries[] =
     {
         { "listen",         'l', 0,                 G_OPTION_ARG_STRING_ARRAY, &self->binds,        "Add a socket to listen to",     "<socket>" },
-#ifdef G_OS_UNIX
-        { "listen-default", 'u', 0,                 G_OPTION_ARG_NONE,         &self->default_unix, "Listen on default UNIX socket", NULL },
-#endif /* G_OS_UNIX */
         { NULL }
     };
 

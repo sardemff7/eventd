@@ -231,14 +231,6 @@
 
         <para>These options are for the <command>evp</command> plugin, listed here as it is considered a core plugin.</para>
         <variablelist>
-            <varlistentry condition="website;have_gio_unix">
-                <term><option>-u</option></term>
-                <term><option>--listen-default-unix</option></term>
-                <listitem>
-                    <para>Listen on default UNIX socket</para>
-                </listitem>
-            </varlistentry>
-
             <varlistentry>
                 <term><option>-l</option></term>
                 <term><option>--listen=<replaceable class="parameter">socket</replaceable></option></term>

@@ -28,7 +28,6 @@
 struct _EventdPluginContext {
     EventdPluginCoreContext *core;
     EventdEvpAvahiContext *avahi;
-    gboolean default_unix;
     gchar **binds;
     gchar *avahi_name;
     GTlsCertificate *certificate;
