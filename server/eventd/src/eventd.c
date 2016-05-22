@@ -379,6 +379,7 @@ main(int argc, char *argv[])
     if ( ( ! g_file_test(context->runtime_dir, G_FILE_TEST_IS_DIR) ) && ( g_mkdir_with_parents(context->runtime_dir, 0755) < 0 ) )
     {
         g_warning("Couldn't create the run dir '%s': %s", context->runtime_dir, g_strerror(errno));
+        retval = EVENTD_RETURN_CODE_NO_RUNTIME_DIR_ERROR;
         goto end;
     }
 

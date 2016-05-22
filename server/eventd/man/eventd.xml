@@ -266,6 +266,13 @@
             </varlistentry>
 
             <varlistentry>
+                <term><literal>3</literal></term>
+                <listitem>
+                    <para>The (required) runtime directory could not be created.</para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
                 <term><literal>10</literal></term>
                 <listitem>
                     <para>Failed to start the control interface.</para>
