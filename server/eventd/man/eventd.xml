@@ -192,6 +192,7 @@
                 <listitem>
                     <para>Add a socket to listen to</para>
                     <para>May be specified multiple times.</para>
+                    <para>This list will be used by the <command>evp</command> plugin if none are specified in the configuration file.</para>
                 </listitem>
             </varlistentry>
 

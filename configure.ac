@@ -215,6 +215,7 @@ if test x${enable_systemd} = xyes; then
     AC_CHECK_HEADERS([sys/socket.h])
     PKG_CHECK_MODULES([SYSTEMD], [libsystemd >= 209],, [PKG_CHECK_MODULES([SYSTEMD], [libsystemd-daemon])])
     AC_DEFINE([ENABLE_SYSTEMD], [1], [Enable systemd activation support])
+    AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_systemd"
     AC_SUBST([systemduserunitdir])
     AC_SUBST([systemdsystemunitdir])
 fi

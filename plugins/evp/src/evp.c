@@ -153,6 +153,7 @@ _eventd_evp_stop(EventdPluginContext *self)
 static void
 _eventd_evp_global_parse(EventdPluginContext *self, GKeyFile *config_file)
 {
+    gchar **binds = NULL;
     gchar *cert_file = NULL;
     gchar *key_file = NULL;
     gchar *avahi_name;
@@ -160,6 +161,8 @@ _eventd_evp_global_parse(EventdPluginContext *self, GKeyFile *config_file)
     if ( ! g_key_file_has_group(config_file, "Server") )
         return;
 
+    if ( evhelpers_config_key_file_get_string_list(config_file, "Server", "Listen", &binds, NULL) < 0 )
+        goto cleanup;
     if ( evhelpers_config_key_file_get_string(config_file, "Server", "TLSCertificate", &cert_file) < 0 )
         goto cleanup;
     if ( evhelpers_config_key_file_get_string(config_file, "Server", "TLSKey", &key_file) < 0 )
@@ -168,6 +171,13 @@ _eventd_evp_global_parse(EventdPluginContext *self, GKeyFile *config_file)
         goto cleanup;
 
     GError *error = NULL;
+
+    if ( binds != NULL )
+    {
+        gchar **tmp = self->binds;
+        self->binds = binds;
+        binds = tmp;
+    }
 
     if ( cert_file != NULL )
     {
@@ -209,6 +219,7 @@ _eventd_evp_global_parse(EventdPluginContext *self, GKeyFile *config_file)
 cleanup:
     g_free(key_file);
     g_free(cert_file);
+    g_strfreev(binds);
 }
 
 static void
