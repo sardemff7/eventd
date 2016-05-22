@@ -26,8 +26,6 @@
 void eventd_plugins_load(EventdPluginCoreContext *core, gboolean system_mode);
 void eventd_plugins_unload(void);
 
-void eventd_plugins_add_option_group_all(GOptionContext *option_context);
-
 void eventd_plugins_start_all(void);
 void eventd_plugins_stop_all(void);
 

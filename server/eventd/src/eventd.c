@@ -345,8 +345,6 @@ main(int argc, char *argv[])
     eventd_control_add_option_entry(context->control, option_group);
     g_option_context_set_main_group(option_context, option_group);
 
-    eventd_plugins_add_option_group_all(option_context);
-
     if ( ! g_option_context_parse(option_context, &argc, &argv, &error) )
     {
         g_warning("Option parsing failed: %s\n", error->message);

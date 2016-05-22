@@ -37,8 +37,6 @@ struct EventdPluginInterface {
     EventdPluginInitFunc init;
     EventdPluginSimpleFunc uninit;
 
-    EventdPluginGetOptionGroupFunc get_option_group;
-
     EventdPluginSimpleFunc start;
     EventdPluginSimpleFunc stop;
 

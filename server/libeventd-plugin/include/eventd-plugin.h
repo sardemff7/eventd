@@ -46,7 +46,6 @@ GType eventd_plugin_command_status_get_type(void) G_GNUC_CONST;
 
 typedef EventdPluginContext *(*EventdPluginInitFunc)(EventdPluginCoreContext *core);
 typedef void (*EventdPluginSimpleFunc)(EventdPluginContext *context);
-typedef GOptionGroup *(*EventdPluginGetOptionGroupFunc)(EventdPluginContext *context);
 typedef EventdPluginCommandStatus (*EventdPluginControlCommandFunc)(EventdPluginContext *context, guint64 argc, const gchar * const *argv, gchar **status);
 typedef void (*EventdPluginGlobalParseFunc)(EventdPluginContext *context, GKeyFile *key_file);
 typedef EventdPluginAction *(*EventdPluginActionParseFunc)(EventdPluginContext *context, GKeyFile *key_file);
@@ -57,8 +56,6 @@ typedef void (*EventdPluginGetInterfaceFunc)(EventdPluginInterface *interface);
 
 void eventd_plugin_interface_add_init_callback(EventdPluginInterface *interface, EventdPluginInitFunc callback);
 void eventd_plugin_interface_add_uninit_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback);
-
-void eventd_plugin_interface_add_get_option_group_callback(EventdPluginInterface *interface, EventdPluginGetOptionGroupFunc callback);
 
 void eventd_plugin_interface_add_start_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback);
 void eventd_plugin_interface_add_stop_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback);

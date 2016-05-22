@@ -267,26 +267,6 @@ eventd_plugins_unload(void)
 }
 
 void
-eventd_plugins_add_option_group_all(GOptionContext *option_context)
-{
-    GHashTableIter iter;
-    const gchar *id;
-    EventdPlugin *plugin;
-    g_hash_table_iter_init(&iter, plugins);
-    while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&plugin) )
-    {
-        if ( plugin->interface.get_option_group != NULL )
-        {
-            GOptionGroup *option_group;
-
-            option_group = plugin->interface.get_option_group(plugin->context);
-            if ( option_group != NULL )
-                g_option_context_add_group(option_context, option_group);
-        }
-    }
-}
-
-void
 eventd_plugins_start_all(void)
 {
     GHashTableIter iter;

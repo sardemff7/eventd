@@ -119,25 +119,6 @@ EVENTD_EXPORT void eventd_plugin_interface_add_init_callback(EventdPluginInterfa
 EVENTD_EXPORT void eventd_plugin_interface_add_uninit_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback) { interface->uninit = callback; }
 
 /**
- * EventdPluginGetOptionGroupFunc:
- * @context: the plugin-specific context
- *
- * Creates a #GOptionGroup for argument parsing. The name of the group should
- * match the plugin name.
- *
- * Returns: (transfer full): the #GOptionGroup for the plugin's subcommand
- */
-
-/**
- * eventd_plugin_interface_add_get_option_group_callback:
- * @interface: an #EventdPluginInterface
- * @callback: (scope async): a function to call before parsing arguments
- *
- * The callback may add #GOptionGroup items for argument parsing.
- */
-EVENTD_EXPORT void eventd_plugin_interface_add_get_option_group_callback(EventdPluginInterface *interface, EventdPluginGetOptionGroupFunc callback) { interface->get_option_group = callback; }
-
-/**
  * eventd_plugin_interface_add_start_callback:
  * @interface: an #EventdPluginInterface
  * @callback: (scope async): a function to call after configuration is parsed
