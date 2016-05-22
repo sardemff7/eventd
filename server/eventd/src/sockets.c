@@ -45,7 +45,6 @@
 #include "sockets.h"
 
 struct _EventdSockets {
-    gint systemd_fds;
     GList *list;
     GSList *created;
 };
@@ -324,16 +323,14 @@ eventd_sockets_new(void)
     sockets = g_new0(EventdSockets, 1);
 
 #ifdef ENABLE_SYSTEMD
-    if ( sockets->systemd_fds < 1 )
-    {
-        sockets->systemd_fds = sd_listen_fds(TRUE);
-        if ( sockets->systemd_fds < 0 )
-            g_warning("Failed to acquire systemd sockets: %s", g_strerror(-sockets->systemd_fds));
-    }
+    gint systemd_fds;
+    systemd_fds = sd_listen_fds(TRUE);
+    if ( systemd_fds < 0 )
+        g_warning("Failed to acquire systemd sockets: %s", g_strerror(-systemd_fds));
 
     GError *error = NULL;
     gint fd;
-    for ( fd = SD_LISTEN_FDS_START ; fd < SD_LISTEN_FDS_START + sockets->systemd_fds ; ++fd )
+    for ( fd = SD_LISTEN_FDS_START ; fd < SD_LISTEN_FDS_START + systemd_fds ; ++fd )
     {
         gint r;
         r = sd_is_socket(fd, AF_UNSPEC, SOCK_STREAM, 1);
