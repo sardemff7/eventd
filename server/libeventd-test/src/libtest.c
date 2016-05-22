@@ -58,6 +58,7 @@ eventd_tests_env_setup(gchar **argv)
 
     if ( tmp_dir == NULL )
         g_setenv("EVENTD_TESTS_TMP_DIR", tmp_dir = tmp, TRUE);
+    g_setenv("HOME", tmp_dir, TRUE);
     g_setenv("XDG_RUNTIME_DIR", tmp_dir, TRUE);
 
     if ( ( ! g_file_test(tmp_dir, G_FILE_TEST_IS_DIR) ) && ( g_mkdir_with_parents(tmp_dir, 0755) < 0 ) )
