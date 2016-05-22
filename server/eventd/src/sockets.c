@@ -49,14 +49,6 @@ struct _EventdSockets {
     GSList *created;
 };
 
-GList *
-eventd_sockets_get_all_sockets(EventdSockets *sockets)
-{
-    GList *list = sockets->list;
-    sockets->list = NULL;
-    return list;
-}
-
 static gboolean
 _eventd_sockets_inet_address_equal(GInetSocketAddress *socket_address1, GInetAddress *address2, guint16 port)
 {
@@ -138,8 +130,8 @@ fail:
     return ret;
 }
 
-GList *
-eventd_sockets_get_inet_sockets(EventdSockets *sockets, const gchar *address, guint16 port)
+static GList *
+_eventd_sockets_get_inet_sockets(EventdSockets *sockets, const gchar *address, guint16 port)
 {
     gboolean ret = FALSE;
     GList *list = NULL;
@@ -187,8 +179,8 @@ eventd_sockets_get_inet_sockets(EventdSockets *sockets, const gchar *address, gu
     return NULL;
 }
 
-GList *
-eventd_sockets_get_inet_socket_file(EventdSockets *sockets, const gchar *file, gboolean take_over_socket)
+static GList *
+_eventd_sockets_get_inet_socket_file(EventdSockets *sockets, const gchar *file, gboolean take_over_socket)
 {
     if ( g_file_test(file, G_FILE_TEST_EXISTS) && ( ! take_over_socket ) )
     {
@@ -237,8 +229,8 @@ fail:
 }
 
 #ifdef G_OS_UNIX
-GList *
-eventd_sockets_get_unix_sockets(EventdSockets *sockets, const gchar *path, gboolean take_over_socket)
+static GList *
+_eventd_sockets_get_unix_sockets(EventdSockets *sockets, const gchar *path, gboolean take_over_socket)
 {
     GSocket *socket = NULL;
     GError *error = NULL;
@@ -314,6 +306,119 @@ fail:
     return NULL;
 }
 #endif /* G_OS_UNIX */
+
+static gboolean
+_eventd_sockets_get_inet_address(const gchar *bind, gchar **address, guint16 *port)
+{
+    const gchar *address_port;
+
+    address_port = g_strrstr(bind, ":");
+    if ( address_port != NULL )
+        ++address_port;
+    else
+        address_port = bind;
+
+    gint64 parsed_value;
+
+    parsed_value = g_ascii_strtoll(address_port, NULL, 10);
+    *port = CLAMP(parsed_value, 0, 65535);
+
+    if ( bind[0] == '[' )
+    {
+        /*
+         * This is an IPv6 address
+         * we remove the enclosing square bracets
+         */
+        ++bind;
+        --address_port;
+    }
+    if ( --address_port > bind )
+        *address = g_strndup(bind, address_port - bind);
+    else
+        *address = NULL;
+
+    return TRUE;
+}
+
+GList *
+eventd_sockets_get_sockets(EventdSockets *self, const gchar * const *binds, const gchar *runtime_dir, gboolean take_over_socket)
+{
+    GList *sockets = NULL;
+    const gchar * const * bind_;
+
+    if ( binds == NULL )
+        return NULL;
+
+    for ( bind_ = binds ; *bind_ != NULL ; ++bind_ )
+    {
+        const gchar *bind = *bind_;
+
+        if ( *bind == 0 )
+            continue;
+
+        GList *new_sockets = NULL;
+
+        if ( g_strcmp0(bind, "all") == 0 )
+        {
+            new_sockets = self->list;
+            self->list = NULL;
+        }
+        else if ( g_str_has_prefix(bind, "tcp:") )
+        {
+            if ( bind[4] == 0 )
+                continue;
+            gchar *address;
+            guint16 port;
+
+            if ( ! _eventd_sockets_get_inet_address(bind+4, &address, &port) )
+                continue;
+
+            new_sockets = _eventd_sockets_get_inet_sockets(self, address, port);
+            g_free(address);
+        }
+        else if ( g_str_has_prefix(bind, "tcp-file:") )
+        {
+            if ( bind[9] == 0 )
+                continue;
+
+            new_sockets = _eventd_sockets_get_inet_socket_file(self, bind+9, take_over_socket);
+        }
+        else if ( g_str_has_prefix(bind, "tcp-file-runtime:") )
+        {
+            if ( bind[17] == 0 )
+                continue;
+
+            gchar *path;
+
+            path = g_build_filename(runtime_dir, bind+17, NULL);
+            new_sockets = _eventd_sockets_get_inet_socket_file(self, path, take_over_socket);
+            g_free(path);
+        }
+#ifdef G_OS_UNIX
+        else if ( g_str_has_prefix(bind, "unix:") )
+        {
+            if ( bind[5] == 0 )
+                continue;
+
+            new_sockets = _eventd_sockets_get_unix_sockets(self, bind+5, take_over_socket);
+        }
+        else if ( g_str_has_prefix(bind, "unix-runtime:") )
+        {
+            if ( bind[13] == 0 )
+                continue;
+
+            gchar *path;
+
+            path = g_build_filename(runtime_dir, bind+13, NULL);
+            new_sockets = _eventd_sockets_get_unix_sockets(self, path, take_over_socket);
+            g_free(path);
+        }
+#endif /* G_OS_UNIX */
+        sockets = g_list_concat(sockets, new_sockets);
+    }
+
+    return sockets;
+}
 
 EventdSockets *
 eventd_sockets_new(void)
