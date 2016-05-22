@@ -89,7 +89,7 @@ _eventd_im_account_connect(EventdImAccount *account)
     if ( ! account->started )
         return;
 
-    if ( purple_account_is_connected(account->account) || purple_account_is_connecting(account->account) )
+    if ( ! purple_account_is_disconnected(account->account) )
         return;
 
     purple_account_connect(account->account);
@@ -436,7 +436,8 @@ _eventd_im_stop(EventdPluginContext *context)
     {
         account->started = FALSE;
         evhelpers_reconnect_reset(account->reconnect);
-        purple_account_disconnect(account->account);
+        if ( ! purple_account_is_disconnected(account->account) )
+            purple_account_disconnect(account->account);
     }
 }
 
