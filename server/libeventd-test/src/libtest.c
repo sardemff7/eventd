@@ -39,7 +39,7 @@ struct _EventdTestsEnv {
 };
 
 void
-eventd_tests_env_setup(gchar **argv)
+eventd_tests_env_setup(gchar **argv, const gchar *test)
 {
 #ifdef EVENTD_DEBUG
     g_setenv("G_MESSAGES_DEBUG", "all", FALSE);
@@ -51,13 +51,16 @@ eventd_tests_env_setup(gchar **argv)
     g_free(tmp);
 
     pwd = g_get_current_dir();
-    tmp = g_build_filename(pwd, ".test-run", NULL);
 
     const gchar *tmp_dir;
     tmp_dir = g_getenv("EVENTD_TESTS_TMP_DIR");
 
     if ( tmp_dir == NULL )
-        g_setenv("EVENTD_TESTS_TMP_DIR", tmp_dir = tmp, TRUE);
+        tmp = g_build_filename(pwd, ".test-run", test, NULL);
+    else
+        tmp = g_build_filename(tmp_dir, test, NULL);
+    tmp_dir = tmp;
+
     g_setenv("HOME", tmp_dir, TRUE);
     g_setenv("XDG_RUNTIME_DIR", tmp_dir, TRUE);
 
@@ -89,7 +92,7 @@ eventd_tests_env_new(const gchar *plugins, gchar **argv, gint argc)
 
     self = g_new0(EventdTestsEnv, 1);
 
-    self->dir = g_getenv("EVENTD_TESTS_TMP_DIR");
+    self->dir = g_getenv("XDG_RUNTIME_DIR");
 
     guint length;
 

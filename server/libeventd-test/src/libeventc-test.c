@@ -109,7 +109,7 @@ _create_event(EventcConnection *client)
     case 2:
     {
         gchar *tmp = g_strconcat(g_get_prgname(), "-file", NULL );
-        eventd_event_add_data(event, g_strdup("file"), g_build_filename(g_getenv("EVENTD_TESTS_TMP_DIR"), tmp, NULL));
+        eventd_event_add_data(event, g_strdup("file"), g_build_filename(g_getenv("XDG_RUNTIME_DIR"), tmp, NULL));
         g_free(tmp);
         eventd_event_add_data(event, g_strdup("test"), g_strdup_printf("Some message\nfrom %s", g_get_prgname()));
     }

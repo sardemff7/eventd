@@ -31,7 +31,7 @@ int
 main(int argc, char *argv[])
 {
     int r = 99;
-    eventd_tests_env_setup(argv);
+    eventd_tests_env_setup(argv, "relay-connection");
     gchar **args = g_new(char *, 2);
     args[0] = g_strdup("--event-listen");
     args[1] = g_strdup("tcp:localhost:19031");

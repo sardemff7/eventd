@@ -27,7 +27,7 @@
 
 typedef struct _EventdTestsEnv EventdTestsEnv;
 
-void eventd_tests_env_setup(gchar **argv);
+void eventd_tests_env_setup(gchar **argv, const gchar *test);
 EventdTestsEnv *eventd_tests_env_new(const gchar *plugins, gchar **argv, gint argc);
 void eventd_tests_env_free(EventdTestsEnv *env);
 gboolean eventd_tests_env_start_eventd(EventdTestsEnv *env);

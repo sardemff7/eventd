@@ -135,7 +135,7 @@ fail:
 int
 main(int argc, char *argv[])
 {
-    eventd_tests_env_setup(argv);
+    eventd_tests_env_setup(argv, "evp-connection");
 
     gchar **args = g_new(char *, 2);
     args[0] = g_strdup("--event-listen");
@@ -156,7 +156,7 @@ main(int argc, char *argv[])
     GDataInputStream *input;
     GDataOutputStream *output;
 
-    gchar *filename = g_build_filename(g_getenv("EVENTD_TESTS_TMP_DIR"), "evp-connection-file", NULL);
+    gchar *filename = g_build_filename(g_getenv("XDG_RUNTIME_DIR"), "evp-connection-file", NULL);
     const gchar *message = "Some message";
 
     GError *error = NULL;
