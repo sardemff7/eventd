@@ -33,7 +33,7 @@ main(int argc, char *argv[])
     int r = 99;
     eventd_tests_env_setup(argv, "relay-connection");
     gchar **args = g_new(char *, 2);
-    args[0] = g_strdup("--event-listen");
+    args[0] = g_strdup("--listen");
     args[1] = g_strdup("tcp-file:relay");
     EventdTestsEnv *env = eventd_tests_env_new("test-plugin,evp", args, 2);
     EventdTestsEnv *relay = eventd_tests_env_new("relay,evp", NULL, 0);

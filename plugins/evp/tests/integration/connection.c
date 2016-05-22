@@ -138,7 +138,7 @@ main(int argc, char *argv[])
     eventd_tests_env_setup(argv, "evp-connection");
 
     gchar **args = g_new(gchar *, 2);
-    args[0] = g_strdup("--event-listen");
+    args[0] = g_strdup("--listen");
     args[1] = g_strdup("tcp:localhost:19011");
     EventdTestsEnv *env = eventd_tests_env_new("test-plugin,evp", args, 2);
 

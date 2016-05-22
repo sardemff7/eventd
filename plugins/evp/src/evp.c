@@ -147,27 +147,6 @@ _eventd_evp_stop(EventdPluginContext *self)
 
 
 /*
- * Command-line options interface
- */
-
-static GOptionGroup *
-_eventd_evp_get_option_group(EventdPluginContext *self)
-{
-    GOptionGroup *option_group;
-    GOptionEntry entries[] =
-    {
-        { "listen",         'l', 0,                 G_OPTION_ARG_STRING_ARRAY, &self->binds,        "Add a socket to listen to",     "<socket>" },
-        { NULL }
-    };
-
-    option_group = g_option_group_new("event", "EVENT protocol plugin options", "Show EVENT plugin help options", NULL, NULL);
-    g_option_group_set_translation_domain(option_group, GETTEXT_PACKAGE);
-    g_option_group_add_entries(option_group, entries);
-    return option_group;
-}
-
-
-/*
  * Configuration interface
  */
 
@@ -285,8 +264,6 @@ eventd_plugin_get_interface(EventdPluginInterface *interface)
 {
     eventd_plugin_interface_add_init_callback(interface, _eventd_evp_init);
     eventd_plugin_interface_add_uninit_callback(interface, _eventd_evp_uninit);
-
-    eventd_plugin_interface_add_get_option_group_callback(interface, _eventd_evp_get_option_group);
 
     eventd_plugin_interface_add_start_callback(interface, _eventd_evp_start);
     eventd_plugin_interface_add_stop_callback(interface, _eventd_evp_stop);

@@ -23,7 +23,7 @@
 #ifndef __EVENTD_SOCKETS_H__
 #define __EVENTD_SOCKETS_H__
 
-EventdSockets *eventd_sockets_new(void);
+EventdSockets *eventd_sockets_new(const gchar * const *binds, const gchar *runtime_dir, gboolean take_over_socket);
 void eventd_sockets_free(EventdSockets *sockets);
 
 GList *eventd_sockets_get_sockets(EventdSockets *sockets, const gchar * const *binds, const gchar *runtime_dir, gboolean take_over_socket);

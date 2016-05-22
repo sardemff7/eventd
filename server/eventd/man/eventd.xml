@@ -187,6 +187,15 @@
 
         <variablelist>
             <varlistentry>
+                <term><option>-l</option></term>
+                <term><option>--listen=<replaceable class="parameter">socket</replaceable></option></term>
+                <listitem>
+                    <para>Add a socket to listen to</para>
+                    <para>May be specified multiple times.</para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
                 <term><option>-t</option></term>
                 <term><option>--take-over</option></term>
                 <listitem>
@@ -225,18 +234,6 @@
                 <term><option>--help</option></term>
                 <listitem>
                     <para>Show help options</para>
-                </listitem>
-            </varlistentry>
-        </variablelist>
-
-        <para>These options are for the <command>evp</command> plugin, listed here as it is considered a core plugin.</para>
-        <variablelist>
-            <varlistentry>
-                <term><option>-l</option></term>
-                <term><option>--listen=<replaceable class="parameter">socket</replaceable></option></term>
-                <listitem>
-                    <para>Add a socket to listen to</para>
-                    <para>May be specified multiple times.</para>
                 </listitem>
             </varlistentry>
         </variablelist>
