@@ -127,43 +127,32 @@ _eventd_http_stop(EventdPluginContext *self)
 
 
 /*
- * Command-line options interface
- */
-
-static GOptionGroup *
-_eventd_http_get_option_group(EventdPluginContext *self)
-{
-    GOptionGroup *option_group;
-    GOptionEntry entries[] =
-    {
-        { "listen-http", 0, 0, G_OPTION_ARG_STRING_ARRAY, &self->binds, "Add a socket to listen to", "<socket>" },
-        { NULL }
-    };
-
-    option_group = g_option_group_new("http", "HTTP plugin options", "Show HTTP plugin help options", NULL, NULL);
-    g_option_group_set_translation_domain(option_group, GETTEXT_PACKAGE);
-    g_option_group_add_entries(option_group, entries);
-    return option_group;
-}
-
-
-/*
  * Configuration interface
  */
 
 static void
 _eventd_http_global_parse(EventdPluginContext *self, GKeyFile *config_file)
 {
+    gchar **binds = NULL;
     gchar *tls_certificate = NULL;
     gchar *tls_key = NULL;
 
     if ( ! g_key_file_has_group(config_file, "Server") )
         return;
 
+    if ( evhelpers_config_key_file_get_string_list(config_file, "Server", "ListenHTTP", &binds, NULL) != 0 )
+        goto error;
     if ( evhelpers_config_key_file_get_string(config_file, "Server", "TLSCertificate", &tls_certificate) != 0 )
         goto error;
     if ( evhelpers_config_key_file_get_string(config_file, "Server", "TLSKey", &tls_key) < 0 )
         goto error;
+
+    if ( binds != NULL )
+    {
+        gchar **tmp = self->binds;
+        self->binds = binds;
+        binds = tmp;
+    }
 
     if ( tls_certificate != NULL )
     {
@@ -189,6 +178,7 @@ _eventd_http_global_parse(EventdPluginContext *self, GKeyFile *config_file)
 error:
     g_free(tls_key);
     g_free(tls_certificate);
+    g_strfreev(binds);
 }
 
 static void
@@ -244,8 +234,6 @@ eventd_plugin_get_interface(EventdPluginInterface *interface)
 {
     eventd_plugin_interface_add_init_callback(interface, _eventd_http_init);
     eventd_plugin_interface_add_uninit_callback(interface, _eventd_http_uninit);
-
-    eventd_plugin_interface_add_get_option_group_callback(interface, _eventd_http_get_option_group);
 
     eventd_plugin_interface_add_start_callback(interface, _eventd_http_start);
     eventd_plugin_interface_add_stop_callback(interface, _eventd_http_stop);

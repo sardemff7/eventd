@@ -60,6 +60,7 @@
             <title>Section <varname>[Server]</varname></title>
 
             <para>The <command>http</command> plugin is using the same TLS certificate/key files as the <command>evp</command> plugin.</para>
+            <para>The <command>http</command> plugin uses the <varname>ListenHTTP=</varname> key, which is similar to the <command>evp</command> plugin <varname>Listen=</varname> key.</para>
             <para>See <citerefentry><refentrytitle>eventd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>.</para>
         </refsect2>
     </refsect1>
