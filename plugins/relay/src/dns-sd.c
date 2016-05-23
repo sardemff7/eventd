@@ -189,6 +189,9 @@ eventd_relay_dns_sd_stop(EventdRelayDNSSD *context)
 void
 eventd_relay_dns_sd_monitor_server(EventdRelayDNSSD *context, gchar *name, EventdRelayServer *server)
 {
+    if ( context == NULL )
+        return;
+
     g_hash_table_insert(context->servers, name, server);
 }
 

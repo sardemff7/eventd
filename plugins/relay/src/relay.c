@@ -38,11 +38,13 @@
 
 #include "server.h"
 #include "dns-sd.h"
+#include "ssdp.h"
 
 
 struct _EventdPluginContext {
     EventdPluginCoreContext *core;
     EventdRelayDNSSD *dns_sd;
+    EventdRelaySSDP *ssdp;
     GHashTable *servers;
 };
 
@@ -60,6 +62,7 @@ _eventd_relay_init(EventdPluginCoreContext *core)
     context->core = core;
 
     context->dns_sd = eventd_relay_dns_sd_init();
+    context->ssdp = eventd_relay_ssdp_init();
     context->servers = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, eventd_relay_server_free);
 
     return context;
@@ -69,6 +72,7 @@ static void
 _eventd_relay_uninit(EventdPluginContext *context)
 {
     g_hash_table_unref(context->servers);
+    eventd_relay_ssdp_uninit(context->ssdp);
     eventd_relay_dns_sd_uninit(context->dns_sd);
 
     g_free(context);
@@ -94,6 +98,7 @@ _eventd_relay_start(EventdPluginContext *context)
 {
     g_hash_table_foreach(context->servers, _eventd_relay_start_each, NULL);
     eventd_relay_dns_sd_start(context->dns_sd);
+    eventd_relay_ssdp_start(context->ssdp);
 }
 
 static void
@@ -108,6 +113,7 @@ _eventd_relay_stop_each(gpointer key, gpointer data, gpointer user_data)
 static void
 _eventd_relay_stop(EventdPluginContext *context)
 {
+    eventd_relay_ssdp_stop(context->ssdp);
     eventd_relay_dns_sd_stop(context->dns_sd);
     g_hash_table_foreach(context->servers, _eventd_relay_stop_each, NULL);
 }
@@ -204,7 +210,7 @@ _eventd_relay_server_parse(EventdPluginContext *context, GKeyFile *config_file, 
         goto cleanup;
 
     gchar *discover_name;
-    if ( ( context->dns_sd != NULL ) && ( evhelpers_config_key_file_get_string(config_file, group, "DiscoverName", &discover_name) == 0 ) )
+    if ( ( ( context->dns_sd != NULL ) || ( context->ssdp != NULL ) ) && ( evhelpers_config_key_file_get_string(config_file, group, "DiscoverName", &discover_name) == 0 ) )
     {
         EventdRelayServer *server;
         server = g_hash_table_lookup(context->servers, discover_name);
@@ -212,6 +218,7 @@ _eventd_relay_server_parse(EventdPluginContext *context, GKeyFile *config_file, 
         {
             server = eventd_relay_server_new(context->core, server_identity, accept_unknown_ca, forwards, subscriptions);
             eventd_relay_dns_sd_monitor_server(context->dns_sd, discover_name, server);
+            eventd_relay_ssdp_monitor_server(context->ssdp, discover_name, server);
             g_hash_table_insert(context->servers, discover_name, server);
             forwards = subscriptions = NULL;
         }
