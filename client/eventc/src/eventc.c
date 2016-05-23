@@ -25,7 +25,14 @@
 
 #include <config.h>
 
+#ifdef HAVE_LOCALE_H
+#include <locale.h>
+#endif /* HAVE_LOCALE_H */
+
 #include <glib.h>
+#ifdef ENABLE_NLS
+#include <glib/gi18n.h>
+#endif /* ENABLE_NLS */
 #include <glib-object.h>
 #include <gio/gio.h>
 
@@ -108,6 +115,12 @@ main(int argc, char *argv[])
 
     gboolean insecure = FALSE;
     gboolean print_version = FALSE;
+
+    setlocale(LC_ALL, "");
+#ifdef ENABLE_NLS
+    bindtextdomain(GETTEXT_PACKAGE, EVENTD_LOCALEDIR);
+    bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
+#endif /* ENABLE_NLS */
 
     GOptionEntry entries[] =
     {
