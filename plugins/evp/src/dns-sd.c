@@ -36,7 +36,7 @@
 
 struct _EventdEvpDNSSDContext {
     const gchar *name;
-    GList *sockets;
+    GList *addresses;
     AvahiGLibPoll *glib_poll;
     AvahiClient *client;
     AvahiEntryGroup *group;
@@ -50,7 +50,7 @@ _eventd_evp_dns_sd_group_callback(AvahiEntryGroup *g, AvahiEntryGroupState state
 static void
 _eventd_evp_dns_sd_create_group(EventdEvpDNSSDContext *context, AvahiClient *client)
 {
-    GList *socket;
+    GList *address_;
     int error;
 
     context->group = avahi_entry_group_new(client, _eventd_evp_dns_sd_group_callback, context);
@@ -60,18 +60,11 @@ _eventd_evp_dns_sd_create_group(EventdEvpDNSSDContext *context, AvahiClient *cli
         return;
     }
 
-    for ( socket = context->sockets ; socket != NULL ; socket = g_list_next(socket) )
+    for ( address_ = context->addresses ; address_ != NULL ; address_ = g_list_next(address_) )
     {
+        GSocketAddress *address = address_->data;
         AvahiProtocol proto;
-        GError *g_error = NULL;
-        GSocketAddress *address;
 
-        address = g_socket_get_local_address(socket->data, &g_error);
-        if ( address == NULL )
-        {
-            g_warning("Couldn't get the socket address: %s", g_error->message);
-            continue;
-        }
         switch ( g_socket_address_get_family(address) )
         {
         case G_SOCKET_FAMILY_IPV4:
@@ -83,17 +76,16 @@ _eventd_evp_dns_sd_create_group(EventdEvpDNSSDContext *context, AvahiClient *cli
                 proto = AVAHI_PROTO_UNSPEC;
         break;
         default:
-            goto next;
+            g_return_if_reached();
         }
 
         if ( ( error = avahi_entry_group_add_service(context->group, AVAHI_IF_UNSPEC, proto, 0, context->name, EVP_SERVICE_TYPE, NULL, NULL, g_inet_socket_address_get_port(G_INET_SOCKET_ADDRESS(address)), NULL) ) < 0 )
             g_warning("Couldn't add " EVP_SERVICE_TYPE " service: %s", avahi_strerror(error));
 
-    next:
         g_object_unref(address);
     }
-    g_list_free_full(context->sockets, g_object_unref);
-    context->sockets = NULL;
+    g_list_free(context->addresses);
+    context->addresses = NULL;
 
     if ( ! avahi_entry_group_is_empty(context->group) )
     {
@@ -124,6 +116,39 @@ _eventd_evp_dns_sd_client_callback(AvahiClient *client, AvahiClientState state, 
     }
 }
 
+static GList *
+_eventd_evp_dns_sd_sockets_to_addresses(GList *sockets)
+{
+    GList *addresses = NULL;
+    GError *error = NULL;
+    GSocketAddress *address;
+
+    GList *socket;
+    for ( socket = sockets ; socket != NULL ; socket = g_list_next(socket) )
+    {
+        address = g_socket_get_local_address(socket->data, &error);
+        if ( address == NULL )
+        {
+            g_warning("Couldn't get the socket address: %s", error->message);
+            continue;
+        }
+        switch ( g_socket_address_get_family(address) )
+        {
+        case G_SOCKET_FAMILY_IPV4:
+        case G_SOCKET_FAMILY_IPV6:
+            if ( ! g_inet_address_get_is_loopback(g_inet_socket_address_get_address(G_INET_SOCKET_ADDRESS(address))) )
+            {
+                addresses = g_list_prepend(addresses, address);
+                break;
+            }
+        default:
+            g_object_unref(address);
+        }
+    }
+
+    return addresses;
+}
+
 EventdEvpDNSSDContext *
 eventd_evp_dns_sd_start(const gchar *name, GList *sockets)
 {
@@ -138,7 +163,7 @@ eventd_evp_dns_sd_start(const gchar *name, GList *sockets)
     context = g_new0(EventdEvpDNSSDContext, 1);
 
     context->name = name;
-    context->sockets = sockets;
+    context->addresses = _eventd_evp_dns_sd_sockets_to_addresses(sockets);
     context->glib_poll = avahi_glib_poll_new(NULL, G_PRIORITY_DEFAULT);
     context->client = avahi_client_new(avahi_glib_poll_get(context->glib_poll), 0, _eventd_evp_dns_sd_client_callback, context, &error);
 
@@ -163,7 +188,7 @@ eventd_evp_dns_sd_stop(EventdEvpDNSSDContext *context)
 
     avahi_glib_poll_free(context->glib_poll);
 
-    g_list_free_full(context->sockets, g_object_unref);
+    g_list_free_full(context->addresses, g_object_unref);
 
     g_free(context);
 }

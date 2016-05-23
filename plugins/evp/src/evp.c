@@ -117,8 +117,7 @@ _eventd_evp_start(EventdPluginContext *self)
 
     if ( self->publish_name != NULL )
         self->dns_sd = eventd_evp_dns_sd_start(self->publish_name, sockets);
-    else
-        g_list_free_full(sockets, g_object_unref);
+    g_list_free_full(sockets, g_object_unref);
 
     self->subscribe_categories = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) g_list_free);
 }
