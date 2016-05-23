@@ -116,7 +116,10 @@ _eventd_evp_start(EventdPluginContext *self)
     g_signal_connect(self->service, "incoming", G_CALLBACK(eventd_evp_client_connection_handler), self);
 
     if ( self->publish_name != NULL )
+    {
         self->dns_sd = eventd_evp_dns_sd_start(self->publish_name, sockets);
+        self->ssdp = eventd_evp_ssdp_start(self->publish_name, sockets);
+    }
     g_list_free_full(sockets, g_object_unref);
 
     self->subscribe_categories = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) g_list_free);

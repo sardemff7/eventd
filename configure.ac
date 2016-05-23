@@ -44,14 +44,20 @@ dnl AM_GLIB_GNU_GETTEXT
 EVP_SERVICE_NAME="evp"
 EVP_TRANSPORT_NAME="tcp"
 EVP_SERVICE_TYPE="_${EVP_SERVICE_NAME}._${EVP_TRANSPORT_NAME}"
+EVP_SSDP_NS_UUID="884987d8-ebb8-4e68-aa38-45a428eb86fa"
+EVP_SSDP_URN="urn:eventd-org:service:${EVP_SERVICE_NAME}:1"
 EVP_UNIX_SOCKET="${EVP_SERVICE_NAME}"
 AC_DEFINE_UNQUOTED([EVP_SERVICE_NAME],   ["${EVP_SERVICE_NAME}"],   [EvP service name])
 AC_DEFINE_UNQUOTED([EVP_TRANSPORT_NAME], ["${EVP_TRANSPORT_NAME}"], [EvP transport name])
 AC_DEFINE_UNQUOTED([EVP_SERVICE_TYPE],   ["${EVP_SERVICE_TYPE}"],   [EvP service type (for SRV DNS records)])
+AC_DEFINE_UNQUOTED([EVP_SSDP_NS_UUID],   ["${EVP_SSDP_NS_UUID}"],   [EvP SSDP namespace UUID])
+AC_DEFINE_UNQUOTED([EVP_SSDP_URN],       ["${EVP_SSDP_URN}"],       [EvP SSDP service URN])
 AC_DEFINE_UNQUOTED([EVP_UNIX_SOCKET],    ["${EVP_UNIX_SOCKET}"],   [EvP UNIX socket name])
 AC_SUBST([EVP_SERVICE_NAME])
 AC_SUBST([EVP_TRANSPORT_NAME])
 AC_SUBST([EVP_SERVICE_TYPE])
+AC_SUBST([EVP_SSDP_NS_UUID])
+AC_SUBST([EVP_SSDP_URN])
 AC_SUBST([EVP_UNIX_SOCKET])
 
 AC_DEFINE([EVENTD_EXPORT], [__attribute__((visibility("default")))], [Export symbol])
@@ -152,6 +158,14 @@ if test x${enable_dns_sd} = xyes; then
     AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_dns_sd"
 fi
 AM_CONDITIONAL([ENABLE_DNS_SD], [test x${enable_dns_sd} = xyes])
+
+AC_ARG_ENABLE([ssdp], AS_HELP_STRING([--disable-ssdp], [Disable SSDP support]), [], [enable_ssdp=yes])
+if test x${enable_ssdp} = xyes; then
+    PKG_CHECK_MODULES([GSSDP], [gssdp-1.0])
+    AC_DEFINE([ENABLE_SSDP], [1], [Enable SSDP support])
+    AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_ssdp"
+fi
+AM_CONDITIONAL([ENABLE_SSDP], [test x${enable_ssdp} = xyes])
 
 m4_ifdef([GOBJECT_INTROSPECTION_CHECK], [
     GOBJECT_INTROSPECTION_CHECK([${gobject_introspection_min_version}])
@@ -409,6 +423,7 @@ AC_MSG_RESULT([
 
     Core features:
         DNS-SD support: ${enable_dns_sd}
+        SSDP support: ${enable_ssdp}
         systemd support: ${enable_systemd}
         UNIX sockets support: ${ev_os_unix}
         GObject introspection: ${enable_introspection}

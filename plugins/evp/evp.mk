@@ -20,13 +20,17 @@ evp_la_SOURCES = \
 	%D%/src/client.c \
 	%D%/src/dns-sd.h \
 	%D%/src/dns-sd.c \
+	%D%/src/ssdp.h \
+	%D%/src/ssdp.c \
 	$(null)
 
 evp_la_CFLAGS = \
 	$(AM_CFLAGS) \
 	$(AVAHI_CFLAGS) \
+	$(GSSDP_CFLAGS) \
 	$(GIO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
+	$(NKUTILS_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(null)
 
@@ -40,8 +44,10 @@ evp_la_LIBADD = \
 	libeventd-plugin.la \
 	libeventd-helpers.la \
 	$(AVAHI_LIBS) \
+	$(GSSDP_LIBS) \
 	$(GIO_LIBS) \
 	$(GOBJECT_LIBS) \
+	$(NKUTILS_LIBS) \
 	$(GLIB_LIBS) \
 	$(null)
 

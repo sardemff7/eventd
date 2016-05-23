@@ -20,23 +20,12 @@
  *
  */
 
-#ifndef __EVENTD_EVP_EVP_H__
-#define __EVENTD_EVP_EVP_H__
+#ifndef __EVENTD_EVP_SSDP_H__
+#define __EVENTD_EVP_SSDP_H__
 
-#include "dns-sd.h"
-#include "ssdp.h"
+typedef struct _EventdEvpSSDPContext EventdEvpSSDPContext;
 
-struct _EventdPluginContext {
-    EventdPluginCoreContext *core;
-    EventdEvpDNSSDContext *dns_sd;
-    EventdEvpSSDPContext *ssdp;
-    gchar **binds;
-    gchar *publish_name;
-    GTlsCertificate *certificate;
-    GSocketService *service;
-    GList *clients;
-    GList *subscribe_all;
-    GHashTable *subscribe_categories;
-};
+EventdEvpSSDPContext *eventd_evp_ssdp_start(const gchar *name, GList *sockets);
+void eventd_evp_ssdp_stop(EventdEvpSSDPContext *context);
 
-#endif /* __EVENTD_EVP_EVP_H__ */
+#endif /* __EVENTD_EVP_SSDP_H__ */
