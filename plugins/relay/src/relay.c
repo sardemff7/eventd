@@ -204,37 +204,35 @@ _eventd_relay_server_parse(EventdPluginContext *context, GKeyFile *config_file, 
     if ( evhelpers_config_key_file_get_string_list(config_file, group, "Subscriptions", &subscriptions, NULL) < 0 )
         goto cleanup;
 
+    EventdRelayServer *server;
     if ( ( ( context->dns_sd != NULL ) || ( context->ssdp != NULL ) ) && ( evhelpers_config_key_file_get_string(config_file, group, "DiscoverName", &discover_name) == 0 ) )
     {
-        EventdRelayServer *server;
         server = g_hash_table_lookup(context->servers, server_name);
-        if ( server == NULL )
-        {
-            server = eventd_relay_server_new(context->core, server_identity, accept_unknown_ca, forwards, subscriptions);
-            eventd_relay_dns_sd_monitor_server(context->dns_sd, discover_name, server);
-            eventd_relay_ssdp_monitor_server(context->ssdp, discover_name, server);
-            g_hash_table_insert(context->servers, server_name, server);
-            forwards = subscriptions = NULL;
-            server_name = NULL;
-        }
+        if ( server != NULL )
+            goto cleanup;
+
+        server = eventd_relay_server_new(context->core, server_identity, accept_unknown_ca, forwards, subscriptions);
+        eventd_relay_dns_sd_monitor_server(context->dns_sd, discover_name, server);
+        eventd_relay_ssdp_monitor_server(context->ssdp, discover_name, server);
     }
     else if ( evhelpers_config_key_file_get_string(config_file, group, "Server", &server_uri) == 0 )
     {
-        EventdRelayServer *server;
         server = g_hash_table_lookup(context->servers, server_name);
+        if ( server != NULL )
+            goto cleanup;
+        server = eventd_relay_server_new_for_domain(context->core, server_identity, accept_unknown_ca, forwards, subscriptions, server_uri);
         if ( server == NULL )
         {
-            server = eventd_relay_server_new_for_domain(context->core, server_identity, accept_unknown_ca, forwards, subscriptions, server_uri);
-            if ( server == NULL )
-                g_warning("Couldn't create the connection to server '%s'", server_uri);
-            else
-            {
-                g_hash_table_insert(context->servers, server_name, server);
-                forwards = subscriptions = NULL;
-                server_name = NULL;
-            }
+            g_warning("Couldn't create the connection to server '%s' using '%s'", server_name, server_uri);
+            goto cleanup;
         }
     }
+    else
+        goto cleanup;
+
+    g_hash_table_insert(context->servers, server_name, server);
+    server_name = NULL;
+    forwards = subscriptions = NULL;
 
 cleanup:
     g_strfreev(subscriptions);
