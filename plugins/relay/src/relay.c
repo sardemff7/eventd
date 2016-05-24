@@ -182,6 +182,8 @@ _eventd_relay_control_command(EventdPluginContext *context, guint64 argc, const 
 static void
 _eventd_relay_server_parse(EventdPluginContext *context, GKeyFile *config_file, gchar *server_name)
 {
+    g_hash_table_remove(context->servers, server_name);
+
     gsize size = strlen("Relay ") + strlen(server_name) + 1;
     gchar group[size];
     g_snprintf(group, size, "Relay %s", server_name);
@@ -220,19 +222,12 @@ _eventd_relay_server_parse(EventdPluginContext *context, GKeyFile *config_file, 
     EventdRelayServer *server;
     if ( discover_name != NULL )
     {
-        server = g_hash_table_lookup(context->servers, server_name);
-        if ( server != NULL )
-            goto cleanup;
-
         server = eventd_relay_server_new(context->core, server_identity, accept_unknown_ca, forwards, subscriptions);
         eventd_relay_dns_sd_monitor_server(context->dns_sd, discover_name, server);
         eventd_relay_ssdp_monitor_server(context->ssdp, discover_name, server);
     }
     else
     {
-        server = g_hash_table_lookup(context->servers, server_name);
-        if ( server != NULL )
-            goto cleanup;
         server = eventd_relay_server_new_for_domain(context->core, server_identity, accept_unknown_ca, forwards, subscriptions, server_uri);
         if ( server == NULL )
         {
