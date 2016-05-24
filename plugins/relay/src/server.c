@@ -104,7 +104,7 @@ _eventd_relay_server_setup_connection(EventdRelayServer *server)
 }
 
 EventdRelayServer *
-eventd_relay_server_new(EventdPluginCoreContext *core, GSocketConnectable *server_identity, gboolean accept_unknown_ca, gchar **forwards, gchar **subscriptions)
+eventd_relay_server_new(EventdPluginCoreContext *core, const gchar *server_identity, gboolean accept_unknown_ca, gchar **forwards, gchar **subscriptions)
 {
     EventdRelayServer *server;
 
@@ -112,7 +112,7 @@ eventd_relay_server_new(EventdPluginCoreContext *core, GSocketConnectable *serve
     server->core = core;
 
     if ( server_identity != NULL )
-        server->server_identity = g_object_ref(server_identity);
+        server->server_identity = g_network_address_new(server_identity, 0);
     server->accept_unknown_ca = accept_unknown_ca;
 
     if ( forwards != NULL )
@@ -140,7 +140,7 @@ eventd_relay_server_new(EventdPluginCoreContext *core, GSocketConnectable *serve
 }
 
 EventdRelayServer *
-eventd_relay_server_new_for_domain(EventdPluginCoreContext *core, GSocketConnectable *server_identity, gboolean accept_unknown_ca, gchar **forwards, gchar **subscriptions, const gchar *domain)
+eventd_relay_server_new_for_domain(EventdPluginCoreContext *core, const gchar *server_identity, gboolean accept_unknown_ca, gchar **forwards, gchar **subscriptions, const gchar *domain)
 {
     EventcConnection *connection;
     GError *error = NULL;

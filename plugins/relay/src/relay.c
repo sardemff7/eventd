@@ -189,19 +189,13 @@ _eventd_relay_server_parse(EventdPluginContext *context, GKeyFile *config_file, 
         return;
 
     gboolean accept_unknown_ca = FALSE;
-    gchar *server_identity_ = NULL;
-    GSocketConnectable *server_identity = NULL;
+    gchar *server_identity = NULL;
     gchar **forwards = NULL;
     gchar **subscriptions = NULL;
     gchar *server_uri = NULL;
 
-    if ( evhelpers_config_key_file_get_string(config_file, group, "ServerIdentity", &server_identity_) < 0 )
+    if ( evhelpers_config_key_file_get_string(config_file, group, "ServerIdentity", &server_identity) < 0 )
         goto cleanup;
-    else if ( server_identity_ != NULL )
-    {
-        server_identity = g_network_address_new(server_identity_, 0);
-        g_free(server_identity_);
-    }
     if ( evhelpers_config_key_file_get_boolean(config_file, group, "AcceptUnknownCA", &accept_unknown_ca) < 0 )
         goto cleanup;
     if ( evhelpers_config_key_file_get_string_list(config_file, group, "Forwards", &forwards, NULL) < 0 )
@@ -247,8 +241,7 @@ _eventd_relay_server_parse(EventdPluginContext *context, GKeyFile *config_file, 
 cleanup:
     g_strfreev(subscriptions);
     g_strfreev(forwards);
-    if ( server_identity != NULL )
-        g_object_unref(server_identity);
+    g_free(server_identity);
 }
 
 static void
