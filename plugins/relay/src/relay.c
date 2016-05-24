@@ -180,11 +180,11 @@ _eventd_relay_control_command(EventdPluginContext *context, guint64 argc, const 
  */
 
 static void
-_eventd_relay_server_parse(EventdPluginContext *context, GKeyFile *config_file, const gchar *server)
+_eventd_relay_server_parse(EventdPluginContext *context, GKeyFile *config_file, const gchar *server_name)
 {
-    gsize size = strlen("Relay ") + strlen(server) + 1;
+    gsize size = strlen("Relay ") + strlen(server_name) + 1;
     gchar group[size];
-    g_snprintf(group, size, "Relay %s", server);
+    g_snprintf(group, size, "Relay %s", server_name);
     if ( ! g_key_file_has_group(config_file, group) )
         return;
 
