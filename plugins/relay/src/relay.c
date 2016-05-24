@@ -180,7 +180,7 @@ _eventd_relay_control_command(EventdPluginContext *context, guint64 argc, const 
  */
 
 static void
-_eventd_relay_server_parse(EventdPluginContext *context, GKeyFile *config_file, const gchar *server_name)
+_eventd_relay_server_parse(EventdPluginContext *context, GKeyFile *config_file, gchar *server_name)
 {
     gsize size = strlen("Relay ") + strlen(server_name) + 1;
     gchar group[size];
@@ -188,11 +188,12 @@ _eventd_relay_server_parse(EventdPluginContext *context, GKeyFile *config_file, 
     if ( ! g_key_file_has_group(config_file, group) )
         return;
 
+    gchar *server_uri = NULL;
+    gchar *discover_name = NULL;
     gboolean accept_unknown_ca = FALSE;
     gchar *server_identity = NULL;
     gchar **forwards = NULL;
     gchar **subscriptions = NULL;
-    gchar *server_uri = NULL;
 
     if ( evhelpers_config_key_file_get_string(config_file, group, "ServerIdentity", &server_identity) < 0 )
         goto cleanup;
@@ -203,26 +204,24 @@ _eventd_relay_server_parse(EventdPluginContext *context, GKeyFile *config_file, 
     if ( evhelpers_config_key_file_get_string_list(config_file, group, "Subscriptions", &subscriptions, NULL) < 0 )
         goto cleanup;
 
-    gchar *discover_name;
     if ( ( ( context->dns_sd != NULL ) || ( context->ssdp != NULL ) ) && ( evhelpers_config_key_file_get_string(config_file, group, "DiscoverName", &discover_name) == 0 ) )
     {
         EventdRelayServer *server;
-        server = g_hash_table_lookup(context->servers, discover_name);
+        server = g_hash_table_lookup(context->servers, server_name);
         if ( server == NULL )
         {
             server = eventd_relay_server_new(context->core, server_identity, accept_unknown_ca, forwards, subscriptions);
             eventd_relay_dns_sd_monitor_server(context->dns_sd, discover_name, server);
             eventd_relay_ssdp_monitor_server(context->ssdp, discover_name, server);
-            g_hash_table_insert(context->servers, discover_name, server);
+            g_hash_table_insert(context->servers, server_name, server);
             forwards = subscriptions = NULL;
+            server_name = NULL;
         }
-        else
-            g_free(discover_name);
     }
     else if ( evhelpers_config_key_file_get_string(config_file, group, "Server", &server_uri) == 0 )
     {
         EventdRelayServer *server;
-        server = g_hash_table_lookup(context->servers, server_uri);
+        server = g_hash_table_lookup(context->servers, server_name);
         if ( server == NULL )
         {
             server = eventd_relay_server_new_for_domain(context->core, server_identity, accept_unknown_ca, forwards, subscriptions, server_uri);
@@ -230,18 +229,20 @@ _eventd_relay_server_parse(EventdPluginContext *context, GKeyFile *config_file, 
                 g_warning("Couldn't create the connection to server '%s'", server_uri);
             else
             {
-                g_hash_table_insert(context->servers, server_uri, server);
+                g_hash_table_insert(context->servers, server_name, server);
                 forwards = subscriptions = NULL;
+                server_name = NULL;
             }
         }
-        else
-            g_free(server_uri);
     }
 
 cleanup:
     g_strfreev(subscriptions);
     g_strfreev(forwards);
     g_free(server_identity);
+    g_free(discover_name);
+    g_free(server_uri);
+    g_free(server_name);
 }
 
 static void
@@ -260,7 +261,7 @@ _eventd_relay_global_parse(EventdPluginContext *context, GKeyFile *config_file)
     gchar **server;
     for ( server = servers ; *server != NULL ; ++server )
         _eventd_relay_server_parse(context, config_file, *server);
-    g_strfreev(servers);
+    g_free(servers);
 }
 
 static void
