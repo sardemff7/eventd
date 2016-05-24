@@ -190,6 +190,19 @@ _eventd_relay_server_parse(EventdPluginContext *context, GKeyFile *config_file, 
 
     gchar *server_uri = NULL;
     gchar *discover_name = NULL;
+
+    /* Ensure we have at least one way to connect to the server */
+    if ( ( context->dns_sd != NULL ) || ( context->ssdp != NULL ) )
+    {
+        if ( evhelpers_config_key_file_get_string(config_file, group, "DiscoverName", &discover_name) < 0 )
+            return;
+    }
+    if ( discover_name == NULL )
+    {
+        if ( evhelpers_config_key_file_get_string(config_file, group, "Server", &server_uri) != 0 )
+            return;
+    }
+
     gboolean accept_unknown_ca = FALSE;
     gchar *server_identity = NULL;
     gchar **forwards = NULL;
@@ -205,7 +218,7 @@ _eventd_relay_server_parse(EventdPluginContext *context, GKeyFile *config_file, 
         goto cleanup;
 
     EventdRelayServer *server;
-    if ( ( ( context->dns_sd != NULL ) || ( context->ssdp != NULL ) ) && ( evhelpers_config_key_file_get_string(config_file, group, "DiscoverName", &discover_name) == 0 ) )
+    if ( discover_name != NULL )
     {
         server = g_hash_table_lookup(context->servers, server_name);
         if ( server != NULL )
@@ -215,7 +228,7 @@ _eventd_relay_server_parse(EventdPluginContext *context, GKeyFile *config_file, 
         eventd_relay_dns_sd_monitor_server(context->dns_sd, discover_name, server);
         eventd_relay_ssdp_monitor_server(context->ssdp, discover_name, server);
     }
-    else if ( evhelpers_config_key_file_get_string(config_file, group, "Server", &server_uri) == 0 )
+    else
     {
         server = g_hash_table_lookup(context->servers, server_name);
         if ( server != NULL )
@@ -227,8 +240,6 @@ _eventd_relay_server_parse(EventdPluginContext *context, GKeyFile *config_file, 
             goto cleanup;
         }
     }
-    else
-        goto cleanup;
 
     g_hash_table_insert(context->servers, server_name, server);
     server_name = NULL;
