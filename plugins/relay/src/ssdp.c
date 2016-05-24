@@ -167,7 +167,7 @@ eventd_relay_ssdp_stop(EventdRelaySSDP *self)
 
 
 void
-eventd_relay_ssdp_monitor_server(EventdRelaySSDP *self, gchar *name, EventdRelayServer *server)
+eventd_relay_ssdp_monitor_server(EventdRelaySSDP *self, const gchar *name, EventdRelayServer *server)
 {
     if ( self == NULL )
         return;
@@ -188,5 +188,5 @@ void eventd_relay_ssdp_uninit(EventdRelaySSDP *self) {}
 void eventd_relay_ssdp_start(EventdRelaySSDP *self) {}
 void eventd_relay_ssdp_stop(EventdRelaySSDP *self) {}
 
-void eventd_relay_ssdp_monitor_server(EventdRelaySSDP *self, gchar *name, EventdRelayServer *relay_server) {}
+void eventd_relay_ssdp_monitor_server(EventdRelaySSDP *self, const gchar *name, EventdRelayServer *server) {}
 #endif /* ! ENABLE_DNS_SD */

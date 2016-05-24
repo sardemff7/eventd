@@ -31,7 +31,7 @@ void eventd_relay_ssdp_uninit(EventdRelaySSDP *context);
 void eventd_relay_ssdp_start(EventdRelaySSDP *context);
 void eventd_relay_ssdp_stop(EventdRelaySSDP *context);
 
-void eventd_relay_ssdp_monitor_server(EventdRelaySSDP *context, gchar *name, EventdRelayServer *relay_server);
+void eventd_relay_ssdp_monitor_server(EventdRelaySSDP *context, const gchar *name, EventdRelayServer *server);
 
 #endif /* __EVENTD_PLUGINS_RELAY_SSDP_H__ */
 

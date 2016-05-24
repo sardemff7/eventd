@@ -31,7 +31,7 @@ void eventd_relay_dns_sd_uninit(EventdRelayDNSSD *context);
 void eventd_relay_dns_sd_start(EventdRelayDNSSD *context);
 void eventd_relay_dns_sd_stop(EventdRelayDNSSD *context);
 
-void eventd_relay_dns_sd_monitor_server(EventdRelayDNSSD *context, gchar *name, EventdRelayServer *relay_server);
+void eventd_relay_dns_sd_monitor_server(EventdRelayDNSSD *context, const gchar *name, EventdRelayServer *server);
 
 #endif /* __EVENTD_PLUGINS_RELAY_DNS_SD_H__ */
 

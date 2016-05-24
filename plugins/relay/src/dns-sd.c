@@ -142,7 +142,7 @@ eventd_relay_dns_sd_init(void)
 
     context->glib_poll = avahi_glib_poll_new(NULL, G_PRIORITY_DEFAULT);
 
-    context->servers = g_hash_table_new(g_str_hash, g_str_equal);
+    context->servers = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 
     return context;
 }
@@ -187,12 +187,12 @@ eventd_relay_dns_sd_stop(EventdRelayDNSSD *context)
 
 
 void
-eventd_relay_dns_sd_monitor_server(EventdRelayDNSSD *context, gchar *name, EventdRelayServer *server)
+eventd_relay_dns_sd_monitor_server(EventdRelayDNSSD *context, const gchar *name, EventdRelayServer *server)
 {
     if ( context == NULL )
         return;
 
-    g_hash_table_insert(context->servers, name, server);
+    g_hash_table_insert(context->servers, g_strdup(name), server);
 }
 
 #else /* ! ENABLE_DNS_SD */
@@ -202,5 +202,5 @@ void eventd_relay_dns_sd_uninit(EventdRelayDNSSD *context) {}
 void eventd_relay_dns_sd_start(EventdRelayDNSSD *context) {}
 void eventd_relay_dns_sd_stop(EventdRelayDNSSD *context) {}
 
-void eventd_relay_dns_sd_monitor_server(EventdRelayDNSSD *context, gchar *name, EventdRelayServer *relay_server) {}
+void eventd_relay_dns_sd_monitor_server(EventdRelayDNSSD *context, const gchar *name, EventdRelayServer *relay_server) {}
 #endif /* ! ENABLE_DNS_SD */
