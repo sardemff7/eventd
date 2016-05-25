@@ -84,11 +84,10 @@ eventd_tests_env_setup(gchar **argv, const gchar *test)
 }
 
 EventdTestsEnv *
-eventd_tests_env_new(const gchar *plugins, gchar **argv, gint argc)
+eventd_tests_env_new(const gchar *plugins, const gchar *evp_socket)
 {
     static guint instance = 0;
     EventdTestsEnv *self;
-    gint i;
 
     self = g_new0(EventdTestsEnv, 1);
 
@@ -108,10 +107,13 @@ eventd_tests_env_new(const gchar *plugins, gchar **argv, gint argc)
     g_unlink(socket_path);
     g_free(socket_path);
 
+    if ( evp_socket == NULL )
+        evp_socket = "tcp-file-runtime:" EVP_UNIX_SOCKET;
+
     gchar *pwd;
     pwd = g_get_current_dir();
 
-    self->start_args = g_new(char *, 10+argc);
+    self->start_args = g_new(char *, 12);
     self->start_args[0] = g_build_filename(pwd, "eventdctl" EXEEXT, NULL);
     self->start_args[1] = g_strdup("--socket");
     self->start_args[2] = socket;
@@ -121,10 +123,9 @@ eventd_tests_env_new(const gchar *plugins, gchar **argv, gint argc)
     self->start_args[6] = g_strdup("--take-over");
     self->start_args[7] = g_strdup("--private-socket");
     self->start_args[8] = g_strdup(socket);
-    for ( i = 0 ; i < argc ; ++i )
-        self->start_args[9+i] = argv[i];
-    self->start_args[9+i] = NULL;
-    g_free(argv);
+    self->start_args[9] = g_strdup("--listen");
+    self->start_args[10] = g_strdup(evp_socket);
+    self->start_args[11] = NULL;
 
     g_free(pwd);
 
