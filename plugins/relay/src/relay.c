@@ -107,7 +107,8 @@ _eventd_relay_stop_each(gpointer key, gpointer data, gpointer user_data)
     if ( data == NULL )
         return;
 
-    eventd_relay_server_stop(data);
+    if ( eventd_relay_server_has_address(data) )
+        eventd_relay_server_stop(data);
 }
 
 static void
