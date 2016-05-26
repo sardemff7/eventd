@@ -37,7 +37,7 @@ install:
 
 before_script:
     - autoreconf -fiv
-    - ./configure --disable-silent-rules --enable-debug --enable-json --disable-http --disable-nd-wayland --enable-nd-fbdev --enable-tts --enable-canberra
+    - ./configure --disable-silent-rules --enable-debug --enable-json --enable-http --disable-nd-wayland --enable-nd-fbdev --enable-tts --enable-canberra
 script:
     - make -j2
     # For now we cannot run tests as Travis Trusty env lacks IPv6 support
