@@ -165,6 +165,61 @@ _eventd_relay_control_command(EventdPluginContext *context, guint64 argc, const 
             *status = g_strdup_printf("Disconnected from server '%s'", argv[1]);
         }
     }
+    else if ( g_strcmp0(argv[0], "status") == 0 )
+    {
+        if ( argc < 2 )
+        {
+            *status = g_strdup("No server specified");
+            r = EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR;
+        }
+        else if ( ( server = g_hash_table_lookup(context->servers, argv[1]) ) == NULL )
+        {
+            *status = g_strdup_printf("No such server '%s'", argv[1]);
+            r = EVENTD_PLUGIN_COMMAND_STATUS_EXEC_ERROR;
+        }
+        else
+        {
+            gboolean has_address, connected;
+            has_address = eventd_relay_server_has_address(server);
+            connected = eventd_relay_server_is_connected(server);
+
+            const gchar *s = "is connected";
+            if ( ! has_address )
+            {
+                r = EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_1;
+                s = "has no address";
+            }
+            else if ( ! connected )
+            {
+                r = EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_2;
+                s = "is disconnected";
+            }
+            *status = g_strdup_printf("Server '%s' %s", argv[1], s);
+        }
+        GHashTableIter iter;
+        g_hash_table_iter_init(&iter, context->servers);
+    }
+    else if ( g_strcmp0(argv[0], "list") == 0 )
+    {
+        if ( g_hash_table_size(context->servers) == 0 )
+        {
+            r = EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_1;
+            *status = g_strdup("No server");
+        }
+        else
+        {
+            GString *list;
+            list = g_string_sized_new(strlen("Server list:") + strlen("\n    a quit long name") * g_hash_table_size(context->servers));
+            g_string_append(list, "Server list:");
+            GHashTableIter iter;
+            const gchar *name;
+            g_hash_table_iter_init(&iter, context->servers);
+            while ( g_hash_table_iter_next(&iter, (gpointer *) &name, NULL) )
+                g_string_append(g_string_append(list, "\n    "), name);
+
+            *status = g_string_free(list, FALSE);
+        }
+    }
     else
     {
         *status = g_strdup_printf("Unknown command '%s'", argv[0]);

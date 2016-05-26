@@ -32,6 +32,8 @@ void eventd_relay_server_free(gpointer data);
 void eventd_relay_server_set_address(EventdRelayServer *server, GSocketConnectable *address);
 gboolean eventd_relay_server_has_address(EventdRelayServer *server);
 
+gboolean eventd_relay_server_is_connected(EventdRelayServer *server);
+
 void eventd_relay_server_start(EventdRelayServer *server);
 void eventd_relay_server_stop(EventdRelayServer *server);
 

@@ -181,6 +181,25 @@ eventd_relay_server_has_address(EventdRelayServer *server)
     return ( server->connection != NULL );
 }
 
+gboolean
+eventd_relay_server_is_connected(EventdRelayServer *server)
+{
+    if ( server->connection == NULL )
+        return FALSE;
+
+    GError *error = NULL;
+    if ( eventc_connection_is_connected(server->connection, &error) )
+        return TRUE;
+
+    if ( error != NULL )
+    {
+        g_warning("Pending error: %s", error->message);
+        g_clear_error(&error);
+    }
+
+    return FALSE;
+}
+
 void
 eventd_relay_server_start(EventdRelayServer *server)
 {

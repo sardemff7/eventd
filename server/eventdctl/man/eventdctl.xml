@@ -192,6 +192,20 @@
                     <para><replaceable>server</replaceable> may be any server configured as a relay (see <citerefentry><refentrytitle>eventd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>).</para>
                 </listitem>
             </varlistentry>
+
+            <varlistentry>
+                <term><command>relay <command>status <parameter><replaceable>server</replaceable></parameter></command></command></term>
+                <listitem>
+                    <para>Ask the plugin for the server status.</para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><command>relay <command>list</command></command></term>
+                <listitem>
+                    <para>Ask the plugin for the list of servers.</para>
+                </listitem>
+            </varlistentry>
         </variablelist>
     </refsect1>
 
@@ -260,6 +274,31 @@
                 <term><literal>50</literal> to <literal>59</literal></term>
                 <listitem>
                     <para>This range is reserved for plugin-specific statuses.</para>
+                </listitem>
+            </varlistentry>
+        </variablelist>
+
+        <para>These exit statuses are for the <command>relay</command> plugin, listed here as it is considered a core plugin.</para>
+
+        <variablelist>
+            <varlistentry>
+                <term><command>status</command>: <literal>50</literal></term>
+                <listitem>
+                    <para>The server has no address to connect to. Can only happen for a server using <varname>DiscoverName=</varname> (see <citerefentry><refentrytitle>eventd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>).</para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><command>status</command>: <literal>51</literal></term>
+                <listitem>
+                    <para>The server is not connected</para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><command>list</command>: <literal>50</literal></term>
+                <listitem>
+                    <para>The plugin has no servers in its list.</para>
                 </listitem>
             </varlistentry>
         </variablelist>
