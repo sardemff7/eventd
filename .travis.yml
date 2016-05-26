@@ -8,6 +8,8 @@ compiler:
 
 addons:
     apt:
+        sources:
+            - debian-sid
         packages:
             - autoconf
             - automake
@@ -26,7 +28,8 @@ addons:
             - libxcb-util0-dev
             - libxcb-randr0-dev
             - libxcb-shape0-dev
-            - libpurple-dev
+              # Currently not working in Sid
+            #- libpurple-dev
             - libpulse-dev
             - libsndfile1-dev
             - libespeak-dev
@@ -37,7 +40,7 @@ install:
 
 before_script:
     - autoreconf -fiv
-    - ./configure --disable-silent-rules --enable-debug --enable-json --enable-http --disable-nd-wayland --enable-nd-fbdev --enable-tts --enable-canberra
+    - ./configure --disable-silent-rules --enable-debug --enable-json --enable-http --disable-nd-wayland --enable-nd-fbdev --enable-tts --enable-canberra --disable-im
 script:
     - make -j2
     # For now we cannot run tests as Travis Trusty env lacks IPv6 support
