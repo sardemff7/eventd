@@ -77,6 +77,16 @@
  * @EVENTD_PLUGIN_COMMAND_STATUS_OK: The command was successful.
  * @EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR: Plugin command error. The plugin command is unknown, or miss an argument.
  * @EVENTD_PLUGIN_COMMAND_STATUS_EXEC_ERROR: Plugin command execution error. The command could not succeed, see <command>eventdctl</command> output for details.
+ * @EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_1: Plugin custom status.
+ * @EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_2: Plugin custom status.
+ * @EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_3: Plugin custom status.
+ * @EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_4: Plugin custom status.
+ * @EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_5: Plugin custom status.
+ * @EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_6: Plugin custom status.
+ * @EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_7: Plugin custom status.
+ * @EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_8: Plugin custom status.
+ * @EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_9: Plugin custom status.
+ * @EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_10: Plugin custom status.
  */
 
 EVENTD_EXPORT
@@ -85,12 +95,22 @@ eventd_plugin_command_status_get_type(void)
 {
     static volatile gsize g_define_type_id__volatile = 0;
 
-    if ( g_once_init_enter(&g_define_type_id__volatile))
+    if ( g_once_init_enter(&g_define_type_id__volatile) )
     {
         static const GEnumValue values[] = {
             { EVENTD_PLUGIN_COMMAND_STATUS_OK,            "EVENTD_PLUGIN_COMMAND_STATUS_OK",            "ok" },
             { EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR, "EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR", "command-error" },
             { EVENTD_PLUGIN_COMMAND_STATUS_EXEC_ERROR,    "EVENTD_PLUGIN_COMMAND_STATUS_EXEC_ERROR",    "exec-error" },
+            { EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_1,      "EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_1",      "custom-1" },
+            { EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_2,      "EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_2",      "custom-2" },
+            { EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_3,      "EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_3",      "custom-3" },
+            { EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_4,      "EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_4",      "custom-4" },
+            { EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_5,      "EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_5",      "custom-5" },
+            { EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_6,      "EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_6",      "custom-6" },
+            { EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_7,      "EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_7",      "custom-7" },
+            { EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_8,      "EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_8",      "custom-8" },
+            { EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_9,      "EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_9",      "custom-9" },
+            { EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_10,     "EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_10",     "custom-10" },
             { 0, NULL, NULL }
         };
         GType g_define_type_id = g_enum_register_static(g_intern_static_string("EventdPluginCommandStatus"), values);

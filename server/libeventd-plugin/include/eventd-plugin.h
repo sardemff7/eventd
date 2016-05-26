@@ -32,9 +32,23 @@ typedef struct EventdPluginInterface EventdPluginInterface;
 typedef struct _EventdPluginAction EventdPluginAction;
 
 typedef enum {
-	EVENTD_PLUGIN_COMMAND_STATUS_OK            = 0,
-	EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR = 30,
-	EVENTD_PLUGIN_COMMAND_STATUS_EXEC_ERROR    = 31,
+    EVENTD_PLUGIN_COMMAND_STATUS_OK            = 0,
+    EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR = 30,
+    EVENTD_PLUGIN_COMMAND_STATUS_EXEC_ERROR    = 31,
+    /*
+     * Code from 50 to 59 are reserved for the plugins
+     * to report a specific status
+     */
+    EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_1      = 50,
+    EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_2      = 51,
+    EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_3      = 52,
+    EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_4      = 53,
+    EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_5      = 54,
+    EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_6      = 55,
+    EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_7      = 56,
+    EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_8      = 57,
+    EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_9      = 58,
+    EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_10     = 59,
 } EventdPluginCommandStatus;
 
 GType eventd_plugin_command_status_get_type(void) G_GNUC_CONST;
