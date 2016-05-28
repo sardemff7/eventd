@@ -38,7 +38,7 @@
 
 #include "ssdp.h"
 
-#ifdef ENABLE_DNS_SD
+#ifdef ENABLE_SSDP
 #include <libgssdp/gssdp.h>
 
 struct _EventdRelaySSDP {
@@ -181,7 +181,7 @@ eventd_relay_ssdp_monitor_server(EventdRelaySSDP *self, const gchar *name, Event
     g_hash_table_insert(self->servers, usn, server);
 }
 
-#else /* ! ENABLE_DNS_SD */
+#else /* ! ENABLE_SSDP */
 EventdRelaySSDP *eventd_relay_ssdp_init(void) { return NULL; }
 void eventd_relay_ssdp_uninit(EventdRelaySSDP *self) {}
 
@@ -189,4 +189,4 @@ void eventd_relay_ssdp_start(EventdRelaySSDP *self) {}
 void eventd_relay_ssdp_stop(EventdRelaySSDP *self) {}
 
 void eventd_relay_ssdp_monitor_server(EventdRelaySSDP *self, const gchar *name, EventdRelayServer *server) {}
-#endif /* ! ENABLE_DNS_SD */
+#endif /* ! ENABLE_SSDP */
