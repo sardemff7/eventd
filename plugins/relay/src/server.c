@@ -240,6 +240,9 @@ eventd_relay_server_event(EventdRelayServer *server, EventdEvent *event)
     if ( ( category[0] != '.' ) && ( ! server->forward_all ) && ( ( server->forwards == NULL ) || ( ! g_hash_table_contains(server->forwards, category) ) ) )
         return;
 
+    if( ! eventd_relay_server_has_address(server) )
+        return;
+
     GError *error = NULL;
     if ( ! eventc_connection_is_connected(server->connection, &error) )
     {
