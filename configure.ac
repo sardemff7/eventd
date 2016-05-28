@@ -1,10 +1,10 @@
 m4_define([eventd_version_major], [0])
 m4_define([eventd_version_minor], [18])
-m4_define([eventd_version_patch], [.1])
+m4_define([eventd_version_patch], [90])
 m4_define([eventd_homepage], [https://www.eventd.org])
 m4_define([eventd_bug_report_page], [https://github.com/sardemff7/eventd/issues])
 AC_PREREQ([2.65])
-AC_INIT([eventd],eventd_version_major.eventd_version_minor[]eventd_version_patch,eventd_bug_report_page,[],eventd_homepage)
+AC_INIT([eventd],eventd_version_major.eventd_version_minor.eventd_version_patch,eventd_bug_report_page,[],eventd_homepage)
 
 AC_CONFIG_HEADERS([src/config.h])
 AC_CONFIG_SRCDIR([server/eventd/src/eventd.c])
