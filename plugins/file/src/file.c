@@ -213,7 +213,6 @@ _eventd_file_event_action(EventdPluginContext *context, EventdPluginAction *acti
 
     string = evhelpers_format_string_get_string(action->string, event, NULL, NULL);
 
-    g_debug("Will write '%s' to %s", string, uri);
     g_file_append_to_async(file, G_FILE_CREATE_NONE, G_PRIORITY_DEFAULT, NULL, action->truncate ? _eventd_file_truncate_callback : _eventd_file_append_callback, string);
 }
 
