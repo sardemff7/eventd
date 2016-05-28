@@ -49,6 +49,13 @@ static const gchar * const _eventd_nd_style_pango_alignments[] = {
     [PANGO_ALIGN_CENTER] = "center",
 };
 
+static const gchar * const _eventd_nd_style_pango_ellipsize_modes[] = {
+    [PANGO_ELLIPSIZE_NONE]   = "none",
+    [PANGO_ELLIPSIZE_START]  = "start",
+    [PANGO_ELLIPSIZE_MIDDLE] = "middle",
+    [PANGO_ELLIPSIZE_END]    = "end",
+};
+
 static const gchar * const _eventd_nd_style_anchors_vertical[] = {
     [EVENTD_ND_VANCHOR_TOP]     = "top",
     [EVENTD_ND_VANCHOR_BOTTOM]  = "bottom",
@@ -100,6 +107,16 @@ struct _EventdPluginAction {
     struct {
         gboolean set;
 
+        PangoFontDescription *font;
+        PangoAlignment align;
+        PangoEllipsizeMode ellipsize;
+        guint8 max_lines;
+        Colour colour;
+    } text;
+
+    struct {
+        gboolean set;
+
         EventdNdAnchorVertical anchor;
         gint                   max_width;
         gint                   max_height;
@@ -116,15 +133,6 @@ struct _EventdPluginAction {
         gint                       margin;
         gdouble                    fade_width;
     } icon;
-
-    struct {
-        gboolean set;
-
-        PangoFontDescription *font;
-        PangoAlignment align;
-        guint8 max_lines;
-        Colour colour;
-    } text;
 };
 
 static void
@@ -169,6 +177,7 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
     style->text.set = TRUE;
     style->text.font        = pango_font_description_from_string("Linux Libertine O 9");
     style->text.align       = PANGO_ALIGN_LEFT;
+    style->text.ellipsize   = PANGO_ELLIPSIZE_NONE;
     style->text.max_lines   = 10;
     style->text.colour.r    = 0.9;
     style->text.colour.g    = 0.9;
@@ -336,6 +345,11 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file)
             self->text.align = enum_value;
         else if ( self->parent != NULL )
             self->text.align = eventd_nd_style_get_text_align(self->parent);
+
+        if ( evhelpers_config_key_file_get_enum(config_file, "NotificationText", "Ellipsize", _eventd_nd_style_pango_ellipsize_modes, G_N_ELEMENTS(_eventd_nd_style_pango_ellipsize_modes), &enum_value) == 0 )
+            self->text.ellipsize = enum_value;
+        else if ( self->parent != NULL )
+            self->text.ellipsize = eventd_nd_style_get_text_ellipsize(self->parent);
 
         if ( evhelpers_config_key_file_get_int(config_file, "NotificationText", "MaxLines", &integer) == 0 )
             self->text.max_lines = ( integer.value < 0 ) ? 0 : MAX(integer.value, 3);
@@ -566,6 +580,14 @@ eventd_nd_style_get_text_colour(EventdNdStyle *self)
     if ( self->text.set )
         return self->text.colour;
     return eventd_nd_style_get_text_colour(self->parent);
+}
+
+PangoEllipsizeMode
+eventd_nd_style_get_text_ellipsize(EventdNdStyle *self)
+{
+    if ( self->text.set )
+        return self->text.ellipsize;
+    return eventd_nd_style_get_text_ellipsize(self->parent);
 }
 
 guint8

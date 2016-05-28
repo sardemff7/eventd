@@ -152,7 +152,7 @@ eventd_nd_draw_text_process(EventdNdStyle *style, EventdEvent *event, gint max_w
     pango_layout_set_font_description(text, eventd_nd_style_get_text_font(style));
     pango_layout_set_alignment(text, eventd_nd_style_get_text_align(style));
     pango_layout_set_wrap(text, PANGO_WRAP_WORD_CHAR);
-    pango_layout_set_ellipsize(text, PANGO_ELLIPSIZE_MIDDLE);
+    pango_layout_set_ellipsize(text, eventd_nd_style_get_text_ellipsize(style));
     pango_layout_set_width(text, max_width * PANGO_SCALE);
     if ( max_lines < 1 )
         pango_layout_set_height(text, -max_lines);

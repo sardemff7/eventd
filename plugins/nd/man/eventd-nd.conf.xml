@@ -361,6 +361,22 @@
                     </varlistentry>
 
                     <varlistentry>
+                        <term><varname>Ellipsize=</varname> (defaults to <literal>None</literal>)</term>
+                        <listitem>
+                            <para>
+                                An <type>enumeration</type>:
+                                <simplelist type='inline'>
+                                    <member><literal>None</literal></member>
+                                    <member><literal>Start</literal></member>
+                                    <member><literal>Middle</literal></member>
+                                    <member><literal>End</literal></member>
+                                </simplelist>
+                            </para>
+                            <para>What kind of ellipsization to apply to text.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
                         <term><varname>MaxLines=</varname> (defaults to <literal>10</literal>)</term>
                         <listitem>
                             <para>An <type>integer</type>, <literal>3</literal> minimum, <literal>-1</literal> is unlimited</para>
