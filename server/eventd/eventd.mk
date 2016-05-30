@@ -51,6 +51,8 @@ eventd_SOURCES = \
 	%D%/src/actions.c \
 	%D%/src/plugins.h \
 	%D%/src/plugins.c \
+	%D%/src/sd-modules.h \
+	%D%/src/sd-modules.c \
 	%D%/src/control.h \
 	%D%/src/control.c \
 	%D%/src/sockets.h \
@@ -61,29 +63,18 @@ eventd_SOURCES = \
 	%D%/src/evp/evp.c \
 	%D%/src/evp/client.h \
 	%D%/src/evp/client.c \
-	%D%/src/evp/dns-sd.h \
-	%D%/src/evp/dns-sd.c \
-	%D%/src/evp/ssdp.h \
-	%D%/src/evp/ssdp.c \
 	%D%/src/relay/relay.c \
 	%D%/src/relay/server.h \
 	%D%/src/relay/server.c \
-	%D%/src/relay/dns-sd.h \
-	%D%/src/relay/dns-sd.c \
-	%D%/src/relay/ssdp.h \
-	%D%/src/relay/ssdp.c \
 	$(null)
 
 eventd_CFLAGS = \
 	$(AM_CFLAGS) \
 	$(SYSTEMD_CFLAGS) \
-	$(AVAHI_CFLAGS) \
-	$(GSSDP_CFLAGS) \
 	$(GTHREAD_CFLAGS) \
 	$(GIO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
 	$(GMODULE_CFLAGS) \
-	$(NKUTILS_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(null)
 
@@ -92,13 +83,10 @@ eventd_LDADD = \
 	libeventd-helpers.la \
 	libeventc.la \
 	$(SYSTEMD_LIBS) \
-	$(AVAHI_LIBS) \
-	$(GSSDP_LIBS) \
 	$(GTHREAD_LIBS) \
 	$(GIO_LIBS) \
 	$(GOBJECT_LIBS) \
 	$(GMODULE_LIBS) \
-	$(NKUTILS_LIBS) \
 	$(GLIB_LIBS) \
 	$(null)
 

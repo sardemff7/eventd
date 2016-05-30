@@ -24,14 +24,10 @@
 #define __EVENTD_EVP_EVP_INTERAL_H__
 
 #include "../types.h"
-#include "dns-sd.h"
-#include "ssdp.h"
 #include "evp.h"
 
 struct _EventdEvpContext {
     EventdCoreContext *core;
-    EventdEvpDNSSDContext *dns_sd;
-    EventdEvpSSDPContext *ssdp;
     gchar *publish_name;
     GTlsCertificate *certificate;
     GSocketService *service;

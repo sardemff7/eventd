@@ -121,8 +121,10 @@ AC_SUBST([vapidir])
 
 # eventd specific dirs
 pluginsdir='${pkglibdir}/plugins'
+modulesdir='${pkglibdir}/modules/${PACKAGE_VERSION}'
 eventdir='${pkgdatadir}'
 AC_SUBST([pluginsdir])
+AC_SUBST([modulesdir])
 AC_SUBST([eventdir])
 
 dnl GLIB_DEFINE_LOCALEDIR([EVENTD_LOCALEDIR])

@@ -40,7 +40,8 @@
 #include "types.h"
 #include "evp/evp.h"
 #include "relay/relay.h"
-#include "plugins.h"
+#include "relay/server.h"
+#include "sd-modules.h"
 
 typedef struct {
     GModule *module;
@@ -230,8 +231,15 @@ eventd_plugins_action_free(gpointer data)
     g_slice_free(EventdPluginsAction, data);
 }
 
+static const EventdSdModuleControlInterface _eventd_plugins_sd_modules_control_interface = {
+    .server_has_address = eventd_relay_server_has_address,
+    .server_set_address = eventd_relay_server_set_address,
+    .server_start = eventd_relay_server_start,
+    .server_stop = eventd_relay_server_stop,
+};
+
 gboolean
-eventd_plugins_load(EventdPluginCoreContext *core, gboolean enable_relay, gboolean system_mode)
+eventd_plugins_load(EventdPluginCoreContext *core, gboolean enable_relay, gboolean enable_sd_modules, gboolean system_mode)
 {
     const gchar *env_whitelist;
     const gchar *env_blacklist;
@@ -247,6 +255,9 @@ eventd_plugins_load(EventdPluginCoreContext *core, gboolean enable_relay, gboole
         g_warning("No plugins support: %s", g_module_error());
         return FALSE;
     }
+
+    if ( enable_sd_modules )
+        eventd_sd_modules_load(&_eventd_plugins_sd_modules_control_interface);
 
     plugins = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, _eventd_plugins_plugin_free);
 
@@ -279,6 +290,8 @@ eventd_plugins_unload(void)
     g_hash_table_unref(plugins);
     plugins = NULL;
 
+    eventd_sd_modules_unload();
+
     eventd_relay_uninit(relay);
     relay = NULL;
 
@@ -299,13 +312,19 @@ eventd_plugins_start_all(const gchar * const *binds)
             plugin->interface.start(plugin->context);
     }
 
-    eventd_evp_start(evp, binds);
+    GList *sockets;
+
+    sockets = eventd_evp_start(evp, binds);
     eventd_relay_start(relay);
+
+    eventd_sd_modules_start(sockets);
+    g_list_free_full(sockets, g_object_unref);
 }
 
 void
 eventd_plugins_stop_all(void)
 {
+    eventd_sd_modules_stop();
     eventd_relay_stop(relay);
     eventd_evp_stop(evp);
 

@@ -37,17 +37,14 @@
 
 #include "../types.h"
 #include "../eventd.h"
+#include "../sd-modules.h"
 #include "server.h"
-#include "dns-sd.h"
-#include "ssdp.h"
 
 #include "relay.h"
 
 
 struct _EventdRelayContext {
     EventdCoreContext *core;
-    EventdRelayDNSSD *dns_sd;
-    EventdRelaySSDP *ssdp;
     GHashTable *servers;
 };
 
@@ -64,8 +61,6 @@ eventd_relay_init(EventdPluginCoreContext *core)
     context = g_new0(EventdRelayContext, 1);
     context->core = core;
 
-    context->dns_sd = eventd_relay_dns_sd_init();
-    context->ssdp = eventd_relay_ssdp_init();
     context->servers = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, eventd_relay_server_free);
 
     return context;
@@ -74,9 +69,10 @@ eventd_relay_init(EventdPluginCoreContext *core)
 void
 eventd_relay_uninit(EventdRelayContext *context)
 {
+    if ( context == NULL )
+        return;
+
     g_hash_table_unref(context->servers);
-    eventd_relay_ssdp_uninit(context->ssdp);
-    eventd_relay_dns_sd_uninit(context->dns_sd);
 
     g_free(context);
 }
@@ -103,8 +99,6 @@ eventd_relay_start(EventdRelayContext *context)
         return;
 
     g_hash_table_foreach(context->servers, _eventd_relay_start_each, NULL);
-    eventd_relay_dns_sd_start(context->dns_sd);
-    eventd_relay_ssdp_start(context->ssdp);
 }
 
 static void
@@ -123,8 +117,6 @@ eventd_relay_stop(EventdRelayContext *context)
     if ( context == NULL )
         return;
 
-    eventd_relay_ssdp_stop(context->ssdp);
-    eventd_relay_dns_sd_stop(context->dns_sd);
     g_hash_table_foreach(context->servers, _eventd_relay_stop_each, NULL);
 }
 
@@ -269,7 +261,7 @@ _eventd_relay_server_parse(EventdRelayContext *context, GKeyFile *config_file, g
     gchar *discover_name = NULL;
 
     /* Ensure we have at least one way to connect to the server */
-    if ( ( context->dns_sd != NULL ) || ( context->ssdp != NULL ) )
+    if ( eventd_sd_modules_can_discover() )
     {
         if ( evhelpers_config_key_file_get_string(config_file, group, "DiscoverName", &discover_name) < 0 )
             return;
@@ -298,8 +290,7 @@ _eventd_relay_server_parse(EventdRelayContext *context, GKeyFile *config_file, g
     if ( discover_name != NULL )
     {
         server = eventd_relay_server_new(context->core, server_identity, accept_unknown_ca, forwards, subscriptions);
-        eventd_relay_dns_sd_monitor_server(context->dns_sd, discover_name, server);
-        eventd_relay_ssdp_monitor_server(context->ssdp, discover_name, server);
+        eventd_sd_modules_monitor_server(discover_name, server);
     }
     else
     {

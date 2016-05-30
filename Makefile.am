@@ -25,6 +25,7 @@ bin_PROGRAMS =
 noinst_LTLIBRARIES =
 lib_LTLIBRARIES =
 pkglib_LTLIBRARIES =
+modules_LTLIBRARIES =
 plugins_LTLIBRARIES =
 pkginclude_HEADERS =
 
@@ -87,6 +88,7 @@ PLUGIN_LDFLAGS = \
 include server/libeventd/libeventd.mk
 include server/libeventd-helpers/libeventd-helpers.mk
 include server/eventd/eventd.mk
+include server/modules/modules.mk
 include server/libeventd-plugin/libeventd-plugin.mk
 include server/eventdctl/eventdctl.mk
 include plugins/fdo-notifications/fdo-notifications.mk

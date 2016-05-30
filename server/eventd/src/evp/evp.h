@@ -28,7 +28,7 @@ typedef struct _EventdEvpContext EventdEvpContext;
 EventdEvpContext *eventd_evp_init(EventdCoreContext *core);
 void eventd_evp_uninit(EventdEvpContext *evp);
 
-void eventd_evp_start(EventdEvpContext *evp, const gchar * const *binds);
+GList *eventd_evp_start(EventdEvpContext *evp, const gchar * const *binds);
 void eventd_evp_stop(EventdEvpContext *evp);
 
 void eventd_evp_global_parse(EventdEvpContext *evp, GKeyFile *config_file);

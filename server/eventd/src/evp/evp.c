@@ -31,7 +31,7 @@
 #include <libeventd-helpers-config.h>
 
 #include "../eventd.h"
-#include "dns-sd.h"
+#include "../sd-modules.h"
 #include "client.h"
 
 #include "evp.h"
@@ -97,7 +97,7 @@ _eventd_evp_add_socket(GList *used_sockets, EventdEvpContext *self, const gchar 
     return used_sockets;
 }
 
-void
+GList *
 eventd_evp_start(EventdEvpContext *self, const gchar * const *binds)
 {
     GList *sockets = NULL;
@@ -114,21 +114,14 @@ eventd_evp_start(EventdEvpContext *self, const gchar * const *binds)
 
     g_signal_connect(self->service, "incoming", G_CALLBACK(eventd_evp_client_connection_handler), self);
 
-    if ( self->publish_name != NULL )
-    {
-        self->dns_sd = eventd_evp_dns_sd_start(self->publish_name, sockets);
-        self->ssdp = eventd_evp_ssdp_start(self->publish_name, sockets);
-    }
-    g_list_free_full(sockets, g_object_unref);
-
     self->subscribe_categories = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) g_list_free);
+
+    return sockets;
 }
 
 void
 eventd_evp_stop(EventdEvpContext *self)
 {
-    eventd_evp_dns_sd_stop(self->dns_sd);
-
     g_hash_table_unref(self->subscribe_categories);
     self->subscribe_categories = NULL;
     g_list_free(self->subscribe_all);
@@ -198,12 +191,10 @@ eventd_evp_global_parse(EventdEvpContext *self, GKeyFile *config_file)
         g_warning("You need to configure a certificate file to add TLS support");
 
     if ( publish_name != NULL )
-    {
-        g_free(self->publish_name);
-        self->publish_name = publish_name;
-    }
+        eventd_sd_modules_set_publish_name(publish_name);
 
 cleanup:
+    g_free(publish_name);
     g_free(key_file);
     g_free(cert_file);
 }

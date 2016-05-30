@@ -23,7 +23,7 @@
 #ifndef __EVENTD_PLUGINS_H__
 #define __EVENTD_PLUGINS_H__
 
-gboolean eventd_plugins_load(EventdPluginCoreContext *core, gboolean enable_relay, gboolean system_mode);
+gboolean eventd_plugins_load(EventdPluginCoreContext *core, gboolean enable_relay, gboolean enable_sd_modules, gboolean system_mode);
 void eventd_plugins_unload(void);
 
 void eventd_plugins_start_all(const gchar * const *evp_binds);

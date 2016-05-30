@@ -20,12 +20,20 @@
  *
  */
 
-#ifndef __EVENTD_EVP_DNS_SD_H__
-#define __EVENTD_EVP_DNS_SD_H__
+#ifndef __EVENTD_SD_MODULES_H__
+#define __EVENTD_SD_MODULES_H__
 
-typedef struct _EventdEvpDNSSDContext EventdEvpDNSSDContext;
+#include <eventd-sd-module.h>
 
-EventdEvpDNSSDContext *eventd_evp_dns_sd_start(const gchar *name, GList *sockets);
-void eventd_evp_dns_sd_stop(EventdEvpDNSSDContext *context);
+void eventd_sd_modules_load(const EventdSdModuleControlInterface *control);
+void eventd_sd_modules_unload(void);
 
-#endif /* __EVENTD_EVP_DNS_SD_H__ */
+void eventd_sd_modules_set_publish_name(const gchar *name);
+void eventd_sd_modules_monitor_server(const gchar *name, EventdRelayServer *server);
+
+void eventd_sd_modules_start(GList *sockets);
+void eventd_sd_modules_stop(void);
+
+gboolean eventd_sd_modules_can_discover(void);
+
+#endif /* __EVENTD_SD_MODULES_H__ */

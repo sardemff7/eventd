@@ -75,6 +75,7 @@ eventd_tests_env_setup(gchar **argv, const gchar *test)
 
     tmp = g_build_filename(pwd, LT_OBJDIR, NULL);
     g_setenv("EVENTD_PLUGINS_DIR", tmp, TRUE);
+    g_setenv("EVENTD_MODULES_DIR", tmp, TRUE);
     g_free(tmp);
 
     g_unsetenv("EVENTD_PLUGINS_WHITELIST");
@@ -116,7 +117,7 @@ eventd_tests_env_new(const gchar *evp_socket, const gchar *plugins, gboolean ena
     gchar *pwd;
     pwd = g_get_current_dir();
 
-    self->start_args = g_new0(char *, 13);
+    self->start_args = g_new0(char *, 14);
     self->start_args[0] = g_build_filename(pwd, "eventdctl" EXEEXT, NULL);
     self->start_args[1] = g_strdup("--socket");
     self->start_args[2] = socket;
@@ -128,8 +129,9 @@ eventd_tests_env_new(const gchar *evp_socket, const gchar *plugins, gboolean ena
     self->start_args[8] = g_strdup(socket);
     self->start_args[9] = g_strdup("--listen");
     self->start_args[10] = g_strdup(evp_socket);
+    self->start_args[11] = g_strdup("--no-service-discovery");
     if ( ! enable_relay )
-        self->start_args[11] = g_strdup("--no-relay");
+        self->start_args[12] = g_strdup("--no-relay");
 
     g_free(pwd);
 
