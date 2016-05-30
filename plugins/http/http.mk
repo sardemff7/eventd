@@ -32,7 +32,6 @@ http_la_LDFLAGS = \
 
 http_la_LIBADD = \
 	libeventd.la \
-	libeventd-protocol-json.la \
 	libeventd-plugin.la \
 	libeventd-helpers.la \
 	$(LIBSOUP_LIBS) \

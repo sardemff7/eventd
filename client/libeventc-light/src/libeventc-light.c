@@ -168,7 +168,7 @@ eventc_light_connection_new(const gchar *name)
 
     self->name = g_strdup(name);
 
-    self->protocol = eventd_protocol_evp_new(&_eventc_light_connection_protocol_callbacks, self, NULL);
+    self->protocol = eventd_protocol_new(&_eventc_light_connection_protocol_callbacks, self, NULL);
 
     return self;
 }

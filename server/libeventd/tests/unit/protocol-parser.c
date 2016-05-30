@@ -54,7 +54,7 @@ _init_data_evp(gpointer fixture, gconstpointer user_data)
 {
     EvpData *data = fixture;
 
-    data->protocol = eventd_protocol_evp_new(&_callbacks, data, NULL);
+    data->protocol = eventd_protocol_new(&_callbacks, data, NULL);
 }
 
 static void

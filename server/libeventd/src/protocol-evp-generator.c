@@ -60,8 +60,18 @@ _eventd_protocol_generate_data(GString *str, GHashTable *data)
     g_hash_table_unref(data);
 }
 
+/**
+ * eventd_protocol_generate_event:
+ * @protocol: an #EventdProtocol
+ * @event: the #EventdEVent to generate a message for
+ *
+ * Generates an EVENT message.
+ *
+ * Returns: (transfer full): the message
+ */
+EVENTD_EXPORT
 gchar *
-eventd_protocol_evp_generate_event(EventdProtocol *protocol, EventdEvent *event)
+eventd_protocol_generate_event(EventdProtocol *protocol, EventdEvent *event)
 {
     GHashTable *data;
     data = eventd_event_get_all_data(event);
@@ -84,8 +94,18 @@ eventd_protocol_evp_generate_event(EventdProtocol *protocol, EventdEvent *event)
     return g_string_free(str, FALSE);
 }
 
+/**
+ * eventd_protocol_generate_subscribe:
+ * @protocol: an #EventdProtocol
+ * @categories: (element-type utf8 utf8) (nullable): the categories of events you want to subscribe to as a set (key == value)
+ *
+ * Generates a SUBSCRIBE message.
+ *
+ * Returns: (transfer full): the message
+ */
+EVENTD_EXPORT
 gchar *
-eventd_protocol_evp_generate_subscribe(EventdProtocol *protocol, GHashTable *categories)
+eventd_protocol_generate_subscribe(EventdProtocol *protocol, GHashTable *categories)
 {
     if ( categories == NULL )
         return g_strdup("SUBSCRIBE\n");
@@ -119,8 +139,18 @@ eventd_protocol_evp_generate_subscribe(EventdProtocol *protocol, GHashTable *cat
     return message;
 }
 
+/**
+ * eventd_protocol_generate_bye:
+ * @protocol: an #EventdProtocol
+ * @message: (nullable): an optional message to send
+ *
+ * Generates a BYE message.
+ *
+ * Returns: (transfer full): the message
+ */
+EVENTD_EXPORT
 gchar *
-eventd_protocol_evp_generate_bye(EventdProtocol *protocol, const gchar *message)
+eventd_protocol_generate_bye(EventdProtocol *protocol, const gchar *message)
 {
     if ( message == NULL )
         return g_strdup("BYE\n");

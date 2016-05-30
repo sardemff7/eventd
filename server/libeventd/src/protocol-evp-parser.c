@@ -33,7 +33,6 @@
 #include <libeventd-event-private.h>
 #include <libeventd-protocol.h>
 
-#include "protocol-private.h"
 #include "protocol-evp-private.h"
 
 static const gchar *_eventd_protocol_evp_states[_EVENTD_PROTOCOL_EVP_STATE_SIZE] = {
@@ -46,23 +45,44 @@ static const gchar *_eventd_protocol_evp_states[_EVENTD_PROTOCOL_EVP_STATE_SIZE]
     [EVENTD_PROTOCOL_EVP_STATE_IGNORING]      = "ignoring",
 };
 
-typedef void (*EventdProtocolEvpTokenParseStartFunc)(EventdProtocolEvp *self, const gchar * const *argv, GError **error);
-typedef gboolean (*EventdProtocolEvpTokenParseContinueFunc)(EventdProtocolEvp *self, const gchar *line, GError **error);
-typedef void (*EventdProtocolEvpTokenParseStopFunc)(EventdProtocolEvp *self, GError **error);
+typedef void (*EventdProtocolTokenParseStartFunc)(EventdProtocol *self, const gchar * const *argv, GError **error);
+typedef gboolean (*EventdProtocolTokenParseContinueFunc)(EventdProtocol *self, const gchar *line, GError **error);
+typedef void (*EventdProtocolTokenParseStopFunc)(EventdProtocol *self, GError **error);
 typedef struct {
     const gchar *message;
     gsize min_args;
     gsize max_args;
-    EventdProtocolEvpState start_states[_EVENTD_PROTOCOL_EVP_STATE_SIZE];
-    EventdProtocolEvpTokenParseStartFunc start_func;
-    EventdProtocolEvpState continue_state;
-    EventdProtocolEvpTokenParseContinueFunc continue_func;
-    EventdProtocolEvpTokenParseStopFunc stop_func;
-} EventdProtocolEvpTokens;
+    EventdProtocolState start_states[_EVENTD_PROTOCOL_EVP_STATE_SIZE];
+    EventdProtocolTokenParseStartFunc start_func;
+    EventdProtocolState continue_state;
+    EventdProtocolTokenParseContinueFunc continue_func;
+    EventdProtocolTokenParseStopFunc stop_func;
+} EventdProtocolTokens;
 
+
+static inline void
+eventd_protocol_call_event(EventdProtocol *self, EventdEvent *event)
+{
+    if ( self->callbacks->event != NULL )
+        self->callbacks->event(self, event, self->user_data);
+}
+
+static inline void
+eventd_protocol_call_subscribe(EventdProtocol *self, GHashTable *subscriptions)
+{
+    if ( self->callbacks->subscribe != NULL )
+        self->callbacks->subscribe(self, subscriptions, self->user_data);
+}
+
+static inline void
+eventd_protocol_call_bye(EventdProtocol *self, const gchar *message)
+{
+    if ( self->callbacks->bye != NULL )
+        self->callbacks->bye(self, message, self->user_data);
+}
 
 static void
-_eventd_protocol_evp_add_data(EventdProtocolEvp *self, gchar *name, gchar *value)
+_eventd_protocol_evp_add_data(EventdProtocol *self, gchar *name, gchar *value)
 {
     if ( self->data.hash == NULL )
         self->data.hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
@@ -70,21 +90,21 @@ _eventd_protocol_evp_add_data(EventdProtocolEvp *self, gchar *name, gchar *value
 }
 
 static gboolean
-_eventd_protocol_evp_parse_dot__continue_noeat(EventdProtocolEvp *self, const gchar *line, GError **error)
+_eventd_protocol_evp_parse_dot__continue_noeat(EventdProtocol *self, const gchar *line, GError **error)
 {
     return FALSE;
 }
 
 /* dot messages catch-all */
 static void
-_eventd_protocol_evp_parse_dot_catchall_start(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
+_eventd_protocol_evp_parse_dot_catchall_start(EventdProtocol *self, const gchar * const *argv, GError **error)
 {
     ++self->catchall.level;
     self->state = EVENTD_PROTOCOL_EVP_STATE_IGNORING;
 }
 
 static gboolean
-_eventd_protocol_evp_parse_dot_catchall_continue(EventdProtocolEvp *self, const gchar *line, GError **error)
+_eventd_protocol_evp_parse_dot_catchall_continue(EventdProtocol *self, const gchar *line, GError **error)
 {
     if ( g_str_has_prefix(line, ".") && ( ! g_str_has_prefix(line, "..") ) )
         ++self->catchall.level;
@@ -92,7 +112,7 @@ _eventd_protocol_evp_parse_dot_catchall_continue(EventdProtocolEvp *self, const 
 }
 
 static void
-_eventd_protocol_evp_parse_dot_catchall_end(EventdProtocolEvp *self, GError **error)
+_eventd_protocol_evp_parse_dot_catchall_end(EventdProtocol *self, GError **error)
 {
     if ( --self->catchall.level < 1 )
         self->state = self->base_state;
@@ -100,7 +120,7 @@ _eventd_protocol_evp_parse_dot_catchall_end(EventdProtocolEvp *self, GError **er
 
 /* .DATA */
 static void
-_eventd_protocol_evp_parse_dot_data_start(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
+_eventd_protocol_evp_parse_dot_data_start(EventdProtocol *self, const gchar * const *argv, GError **error)
 {
     self->data.name = g_strdup(argv[0]);
     self->data.value = g_string_new("");
@@ -110,7 +130,7 @@ _eventd_protocol_evp_parse_dot_data_start(EventdProtocolEvp *self, const gchar *
 }
 
 static gboolean
-_eventd_protocol_evp_parse_dot_data_continue(EventdProtocolEvp *self, const gchar *line, GError **error)
+_eventd_protocol_evp_parse_dot_data_continue(EventdProtocol *self, const gchar *line, GError **error)
 {
     if ( g_str_has_prefix(line, "..") )
         ++line; /* Skip the first dot */
@@ -121,7 +141,7 @@ _eventd_protocol_evp_parse_dot_data_continue(EventdProtocolEvp *self, const gcha
 }
 
 static void
-_eventd_protocol_evp_parse_dot_data_end(EventdProtocolEvp *self, GError **error)
+_eventd_protocol_evp_parse_dot_data_end(EventdProtocol *self, GError **error)
 {
     /* Strip the last added newline */
     g_string_truncate(self->data.value, self->data.value->len - 1);
@@ -134,7 +154,7 @@ _eventd_protocol_evp_parse_dot_data_end(EventdProtocolEvp *self, GError **error)
 }
 
 static EventdEvent *
-_eventd_protocol_evp_parser_get_event(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
+_eventd_protocol_evp_parser_get_event(EventdProtocol *self, const gchar * const *argv, GError **error)
 {
     EventdEvent *event;
     event = eventd_event_new_for_uuid_string(argv[0], argv[1], argv[2]);
@@ -147,7 +167,7 @@ _eventd_protocol_evp_parser_get_event(EventdProtocolEvp *self, const gchar * con
 
 /* .EVENT */
 static void
-_eventd_protocol_evp_parse_dot_event_start(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
+_eventd_protocol_evp_parse_dot_event_start(EventdProtocol *self, const gchar * const *argv, GError **error)
 {
     self->event = _eventd_protocol_evp_parser_get_event(self, argv, error);
 
@@ -159,7 +179,7 @@ _eventd_protocol_evp_parse_dot_event_start(EventdProtocolEvp *self, const gchar 
 }
 
 static void
-_eventd_protocol_evp_parse_dot_event_end(EventdProtocolEvp *self, GError **error)
+_eventd_protocol_evp_parse_dot_event_end(EventdProtocol *self, GError **error)
 {
     if ( self->data.hash != NULL )
     {
@@ -177,7 +197,7 @@ _eventd_protocol_evp_parse_dot_event_end(EventdProtocolEvp *self, GError **error
 
 /* .SUBSCRIBE */
 static void
-_eventd_protocol_evp_parse_dot_subscribe_start(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
+_eventd_protocol_evp_parse_dot_subscribe_start(EventdProtocol *self, const gchar * const *argv, GError **error)
 {
     self->subscriptions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 
@@ -186,14 +206,14 @@ _eventd_protocol_evp_parse_dot_subscribe_start(EventdProtocolEvp *self, const gc
 }
 
 static gboolean
-_eventd_protocol_evp_parse_dot_subscribe_continue(EventdProtocolEvp *self, const gchar *line, GError **error)
+_eventd_protocol_evp_parse_dot_subscribe_continue(EventdProtocol *self, const gchar *line, GError **error)
 {
     g_hash_table_add(self->subscriptions, g_strdup(line));
     return TRUE;
 }
 
 static void
-_eventd_protocol_evp_parse_dot_subscribe_end(EventdProtocolEvp *self, GError **error)
+_eventd_protocol_evp_parse_dot_subscribe_end(EventdProtocol *self, GError **error)
 {
     if ( g_hash_table_size(self->subscriptions) < 2 )
         return g_set_error(error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_MALFORMED, "SUBSCRIBE dot message requires at least two categories");
@@ -208,14 +228,14 @@ _eventd_protocol_evp_parse_dot_subscribe_end(EventdProtocolEvp *self, GError **e
 
 /* DATA */
 static void
-_eventd_protocol_evp_parse_data(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
+_eventd_protocol_evp_parse_data(EventdProtocol *self, const gchar * const *argv, GError **error)
 {
     _eventd_protocol_evp_add_data(self, g_strdup(argv[0]), g_strdup(argv[1]));
 }
 
 /* EVENT */
 static void
-_eventd_protocol_evp_parse_event(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
+_eventd_protocol_evp_parse_event(EventdProtocol *self, const gchar * const *argv, GError **error)
 {
     EventdEvent *event;
 
@@ -228,7 +248,7 @@ _eventd_protocol_evp_parse_event(EventdProtocolEvp *self, const gchar * const *a
 
 /* SUBSCRIBE */
 static void
-_eventd_protocol_evp_parse_subscribe(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
+_eventd_protocol_evp_parse_subscribe(EventdProtocol *self, const gchar * const *argv, GError **error)
 {
     if ( argv == NULL )
         eventd_protocol_call_subscribe((EventdProtocol *) self, NULL);
@@ -247,7 +267,7 @@ _eventd_protocol_evp_parse_subscribe(EventdProtocolEvp *self, const gchar * cons
 
 /* BYE */
 static void
-_eventd_protocol_evp_parse_bye(EventdProtocolEvp *self, const gchar * const *argv, GError **error)
+_eventd_protocol_evp_parse_bye(EventdProtocol *self, const gchar * const *argv, GError **error)
 {
     eventd_protocol_call_bye((EventdProtocol *) self, ( argv == NULL ) ? NULL : argv[0]);
 
@@ -255,7 +275,7 @@ _eventd_protocol_evp_parse_bye(EventdProtocolEvp *self, const gchar * const *arg
     self->state = self->base_state;
 }
 
-static const EventdProtocolEvpTokens _eventd_protocol_evp_dot_messages[] = {
+static const EventdProtocolTokens _eventd_protocol_evp_dot_messages[] = {
     {"DATA", 1, 1,
             { EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT, _EVENTD_PROTOCOL_EVP_STATE_SIZE },
             _eventd_protocol_evp_parse_dot_data_start,
@@ -288,7 +308,7 @@ static const EventdProtocolEvpTokens _eventd_protocol_evp_dot_messages[] = {
     { NULL }
 };
 
-static const EventdProtocolEvpTokens _eventd_protocol_evp_messages[] = {
+static const EventdProtocolTokens _eventd_protocol_evp_messages[] = {
     {"DATA", 2, 2,
             { EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT, _EVENTD_PROTOCOL_EVP_STATE_SIZE },
             _eventd_protocol_evp_parse_data,
@@ -313,13 +333,13 @@ static const EventdProtocolEvpTokens _eventd_protocol_evp_messages[] = {
 };
 
 static void
-_eventd_protocol_evp_parse_line(EventdProtocolEvp *self, const gchar *line, GError **error)
+_eventd_protocol_evp_parse_line(EventdProtocol *self, const gchar *line, GError **error)
 {
 #ifdef EVENTD_DEBUG
     g_debug("[%s] Parse line: %s", _eventd_protocol_evp_states[self->state], line);
 #endif /* EVENTD_DEBUG */
 
-    const EventdProtocolEvpTokens *message;
+    const EventdProtocolTokens *message;
 
     /*
      * Handle the end of a dot message
@@ -351,7 +371,7 @@ _eventd_protocol_evp_parse_line(EventdProtocolEvp *self, const gchar *line, GErr
      * or the dot message did not eat the line
      */
 
-    const EventdProtocolEvpState *state;
+    const EventdProtocolState *state;
     if ( g_str_has_prefix(line, ".") )
     {
         message = _eventd_protocol_evp_dot_messages;
@@ -398,10 +418,21 @@ _eventd_protocol_evp_parse_line(EventdProtocolEvp *self, const gchar *line, GErr
     }
 }
 
+/**
+ * eventd_protocol_parse:
+ * @protocol: an #EventdProtocol
+ * @buffer: the buffer to parse (NUL-terminated)
+ * @error: (out) (optional): return location for error or %NULL to ignore
+ *
+ * Parses @buffer for messages.
+ *
+ * Returns: %FALSE if there was an error, %TRUE otherwise
+ */
+EVENTD_EXPORT
 gboolean
-eventd_protocol_evp_parse(EventdProtocol *protocol, const gchar *buffer, GError **error)
+eventd_protocol_parse(EventdProtocol *protocol, const gchar *buffer, GError **error)
 {
-    EventdProtocolEvp *self = (EventdProtocolEvp *) protocol;
+    EventdProtocol *self = (EventdProtocol *) protocol;
     g_return_val_if_fail(self->state != _EVENTD_PROTOCOL_EVP_STATE_SIZE, FALSE);
 
     GError *_inner_error_ = NULL;
@@ -423,7 +454,7 @@ eventd_protocol_evp_parse(EventdProtocol *protocol, const gchar *buffer, GError 
 }
 
 void
-eventd_protocol_evp_parse_free(EventdProtocolEvp *self)
+eventd_protocol_evp_parse_free(EventdProtocol *self)
 {
 recheck:
     switch ( self->state )

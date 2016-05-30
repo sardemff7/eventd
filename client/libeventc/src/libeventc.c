@@ -300,7 +300,7 @@ eventc_connection_init(EventcConnection *self)
 {
     self->priv = EVENTC_CONNECTION_GET_PRIVATE(self);
 
-    self->priv->protocol = eventd_protocol_evp_new(&_eventc_connection_protocol_callbacks, self, NULL);
+    self->priv->protocol = eventd_protocol_new(&_eventc_connection_protocol_callbacks, self, NULL);
     self->priv->cancellable = g_cancellable_new();
 }
 

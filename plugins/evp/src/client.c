@@ -239,7 +239,7 @@ eventd_evp_client_connection_handler(GSocketService *service, GSocketConnection 
     self = g_new0(EventdEvpClient, 1);
     self->context = context;
 
-    self->protocol = eventd_protocol_evp_new(&_eventd_evp_client_protocol_callbacks, self, NULL);
+    self->protocol = eventd_protocol_new(&_eventd_evp_client_protocol_callbacks, self, NULL);
     self->subscriptions = g_hash_table_new(g_str_hash, g_str_equal);
 
     self->cancellable = g_cancellable_new();

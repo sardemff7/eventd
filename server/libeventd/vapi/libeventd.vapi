@@ -67,11 +67,4 @@ namespace Eventd
         [CCode (has_construct_function = false, type = "EventdProtocol*")]
         public ProtocolEvp();
     }
-
-    [CCode (cheader_filename = "libeventd-protocol-json.h")]
-    public class ProtocolJson : GLib.Object, Eventd.Protocol
-    {
-        [CCode (has_construct_function = false, type = "EventdProtocol*")]
-        public ProtocolJson();
-    }
 }

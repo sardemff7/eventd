@@ -195,15 +195,6 @@ else
     AC_CHECK_HEADERS([winsock2.h windows.h])
 fi
 
-# JSON protocol support
-AC_ARG_ENABLE([json], AS_HELP_STRING([--enable-json], [Enable JSON protocol support]), [], [enable_json=no])
-if test x${enable_json} = xyes; then
-    PKG_CHECK_MODULES([YAJL], [yajl >= 2])
-    AC_DEFINE([ENABLE_JSON], [1], [Enable JSON protocol support])
-    AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_json"
-fi
-AM_CONDITIONAL([ENABLE_JSON], [test x${enable_json} = xyes])
-
 #
 # Server and plugins
 #
@@ -392,7 +383,6 @@ AC_SUBST([LT_OBJDIR], [${lt_cv_objdir}])
 
 AC_CONFIG_FILES([
     server/libeventd/pkgconfig/libeventd.pc
-    server/libeventd/pkgconfig/libeventd-protocol-json.pc
     server/libeventd/vapi/libeventd.deps
     server/eventd/pkgconfig/eventd.pc
     server/libeventd-plugin/pkgconfig/libeventd-plugin.pc
@@ -410,7 +400,6 @@ AC_MSG_RESULT([
         systemd support: ${enable_systemd}
         UNIX sockets support: ${ev_os_unix}
         GObject introspection: ${enable_introspection}
-        EVENT JSON protocol library: ${enable_json}
 
     Event collection plugins:
         EVENT protocol: yes

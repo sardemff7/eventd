@@ -35,10 +35,13 @@
 
 #include "protocol-evp-private.h"
 
+EVENTD_EXPORT GType eventd_protocol_get_type(void);
+G_DEFINE_BOXED_TYPE(EventdProtocol, eventd_protocol, eventd_protocol_ref, eventd_protocol_unref);
+
 static void
 _eventd_protocol_evp_free(EventdProtocol *protocol)
 {
-    EventdProtocolEvp *self = (EventdProtocolEvp *) protocol;
+    EventdProtocol *self = (EventdProtocol *) protocol;
 
     eventd_protocol_evp_parse_free(self);
 
@@ -46,24 +49,75 @@ _eventd_protocol_evp_free(EventdProtocol *protocol)
 }
 
 /**
- * eventd_protocol_evp_new:
+ * eventd_protocol_ref:
+ * @protocol: an #EventdProtocol
  *
- * Returns: (transfer full): An #EventdProtocol for EvP
+ * Increments the reference counter of @protocol.
+ *
+ * Returns: (transfer full): the #EventdProtocol
  */
 EVENTD_EXPORT
 EventdProtocol *
-eventd_protocol_evp_new(const EventdProtocolCallbacks *callbacks, gpointer user_data, GDestroyNotify notify)
+eventd_protocol_ref(EventdProtocol *self)
 {
-    EventdProtocol *protocol;
+    g_return_val_if_fail(self != NULL, NULL);
 
-    protocol = eventd_protocol_new(sizeof(EventdProtocolEvp), callbacks, user_data, notify);
-    protocol->free = _eventd_protocol_evp_free;
+    ++self->refcount;
 
-    protocol->parse = eventd_protocol_evp_parse;
+    return self;
+}
 
-    protocol->generate_event = eventd_protocol_evp_generate_event;
-    protocol->generate_subscribe = eventd_protocol_evp_generate_subscribe;
-    protocol->generate_bye = eventd_protocol_evp_generate_bye;
+/**
+ * eventd_protocol_unref:
+ * @protocol: an #EventdProtocol
+ *
+ * Decrements the reference counter of @protocol.
+ * If it reaches 0, free @protocol.
+ */
+EVENTD_EXPORT
+void
+eventd_protocol_unref(EventdProtocol *self)
+{
+    g_return_if_fail(self != NULL);
 
-    return protocol;
+    if ( --self->refcount > 0 )
+        return;
+
+    if ( self->notify != NULL )
+        self->notify(self->user_data);
+
+    _eventd_protocol_evp_free(self);
+}
+
+/**
+ * eventd_protocol_new:
+ *
+ * Returns: (transfer full): An #EventdProtocol
+ */
+EVENTD_EXPORT
+EventdProtocol *
+eventd_protocol_new(const EventdProtocolCallbacks *callbacks, gpointer user_data, GDestroyNotify notify)
+{
+    EventdProtocol *self;
+
+    self = g_new0(EventdProtocol, 1);
+    self->refcount = 1;
+
+    self->callbacks = callbacks;
+    self->user_data = user_data;
+    self->notify = notify;
+
+    return self;
+}
+
+
+/*
+ * EventdProtocolParseError
+ */
+
+EVENTD_EXPORT
+GQuark
+eventd_protocol_parse_error_quark(void)
+{
+    return g_quark_from_static_string("eventd_protocol_parse_error-quark");
 }

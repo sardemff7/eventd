@@ -21,8 +21,6 @@
 #ifndef __EVENTD_PROTOCOL_EVP_PRIVATE_H__
 #define __EVENTD_PROTOCOL_EVP_PRIVATE_H__
 
-#include "protocol-private.h"
-
 typedef enum {
     EVENTD_PROTOCOL_EVP_STATE_BASE = 0,
     EVENTD_PROTOCOL_EVP_STATE_PASSIVE,
@@ -33,13 +31,17 @@ typedef enum {
     EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT,
     EVENTD_PROTOCOL_EVP_STATE_IGNORING,
     _EVENTD_PROTOCOL_EVP_STATE_SIZE
-} EventdProtocolEvpState;
+} EventdProtocolState;
 
-typedef struct {
-    EventdProtocol protocol;
+struct _EventdProtocol {
+    guint64 refcount;
 
-    EventdProtocolEvpState state;
-    EventdProtocolEvpState base_state;
+    const EventdProtocolCallbacks *callbacks;
+    gpointer user_data;
+    GDestroyNotify notify;
+
+    EventdProtocolState state;
+    EventdProtocolState base_state;
     union {
         struct {
             guint64 level;
@@ -49,14 +51,14 @@ typedef struct {
     };
     struct {
         GHashTable *hash;
-        EventdProtocolEvpState return_state;
+        EventdProtocolState return_state;
         gchar *name;
         GString *value;
     } data;
-} EventdProtocolEvp;
+};
 
 gboolean eventd_protocol_evp_parse(EventdProtocol *protocol, const gchar *buffer, GError **error);
-void eventd_protocol_evp_parse_free(EventdProtocolEvp *self);
+void eventd_protocol_evp_parse_free(EventdProtocol *self);
 
 gchar *eventd_protocol_evp_generate_event(EventdProtocol *protocol, EventdEvent *event);
 gchar *eventd_protocol_evp_generate_subscribe(EventdProtocol *protocol, GHashTable *categories);

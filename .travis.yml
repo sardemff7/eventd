@@ -19,7 +19,6 @@ addons:
             - docbook-xml
             - uuid-dev
             - libglib2.0-dev
-            - libyajl-dev
             - libsoup2.4-dev
             - libcairo2-dev
             - libpango1.0-dev
@@ -40,7 +39,7 @@ install:
 
 before_script:
     - autoreconf -fiv
-    - ./configure --disable-silent-rules --enable-debug --enable-json --enable-http --disable-nd-wayland --enable-nd-fbdev --enable-tts --enable-canberra --disable-im
+    - ./configure --disable-silent-rules --enable-debug --enable-http --disable-nd-wayland --enable-nd-fbdev --enable-tts --enable-canberra --disable-im
 script:
     - make -j2
     # For now we cannot run tests as Travis Trusty env lacks IPv6 support

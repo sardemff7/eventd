@@ -49,7 +49,7 @@
         <title>Description</title>
 
         <para>
-            The <command>http</command> plugin implements the JSON variant of the EVENT protocol over WebSocket.
+            The <command>http</command> plugin implements the EVENT protocol over WebSocket.
         </para>
     </refsect1>
 

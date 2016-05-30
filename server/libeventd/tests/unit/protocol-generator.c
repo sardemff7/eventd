@@ -35,7 +35,7 @@ _init_data(gpointer fixture, gconstpointer user_data)
 {
     GeneratorData *data = fixture;
 
-    data->protocol = eventd_protocol_evp_new(&_callbacks, NULL, NULL);
+    data->protocol = eventd_protocol_new(&_callbacks, NULL, NULL);
     data->event = eventd_event_new_for_uuid_string(EVENTD_EVENT_TEST_UUID, EVENTD_EVENT_TEST_NAME, EVENTD_EVENT_TEST_NAME);
 }
 

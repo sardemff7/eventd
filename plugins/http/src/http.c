@@ -90,7 +90,7 @@ _eventd_http_start(EventdPluginContext *self)
 {
     GList *sockets = NULL;
     gchar *aliases[] = { "*", NULL };
-    gchar *protocols[] = { EVP_SERVICE_NAME, EVP_SERVICE_NAME "-json", NULL };
+    gchar *protocols[] = { EVP_SERVICE_NAME, NULL };
 
     if ( self->certificate == NULL )
         return;

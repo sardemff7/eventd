@@ -45,29 +45,12 @@ vapi_DATA += \
 	%D%/vapi/libeventd.deps \
 	$(null)
 
-# JSON protocol support
-if ENABLE_JSON
-lib_LTLIBRARIES += \
-	libeventd-protocol-json.la \
-	$(null)
-
-pkginclude_HEADERS += \
-	%D%/include/libeventd-protocol-json.h \
-	$(null)
-
-pkgconfig_DATA += \
-	%D%/pkgconfig/libeventd-protocol-json.pc \
-	$(null)
-endif
-
 
 libeventd_la_SOURCES = \
 	%D%/include/libeventd-event-private.h \
 	%D%/src/event-private.h \
 	%D%/src/event-private.c \
 	%D%/src/event.c \
-	%D%/src/protocol-private.h \
-	%D%/src/protocol.c \
 	%D%/src/protocol-evp-private.h \
 	%D%/src/protocol-evp.c \
 	%D%/src/protocol-evp-parser.c \
@@ -92,35 +75,6 @@ libeventd_la_LIBADD = \
 	$(GLIB_LIBS) \
 	$(null)
 
-
-libeventd_protocol_json_la_SOURCES = \
-	%D%/src/event-private.c \
-	%D%/src/protocol-json-private.h \
-	%D%/src/protocol-json.c \
-	%D%/src/protocol-json-parser.c \
-	%D%/src/protocol-json-generator.c \
-	$(null)
-
-libeventd_protocol_json_la_CFLAGS = \
-	$(AM_CFLAGS) \
-	$(YAJL_CFLAGS) \
-	$(NKUTILS_CFLAGS) \
-	$(GOBJECT_CFLAGS) \
-	$(GLIB_CFLAGS) \
-	$(null)
-
-libeventd_protocol_json_la_LDFLAGS = \
-	$(AM_LDFLAGS) \
-	-version-info $(LIBEVENTD_CURRENT):$(LIBEVENTD_REVISION):$(LIBEVENTD_AGE) \
-	$(null)
-
-libeventd_protocol_json_la_LIBADD = \
-	libeventd.la \
-	$(YAJL_LIBS) \
-	$(NKUTILS_LIBS) \
-	$(GOBJECT_LIBS) \
-	$(GLIB_LIBS) \
-	$(null)
 
 
 libeventd_event_test_SOURCES = \
@@ -171,12 +125,6 @@ libeventd_protocol_test_LDADD = \
 	$(GLIB_LIBS) \
 	$(null)
 
-if ENABLE_JSON
-libeventd_protocol_test_LDADD += \
-	libeventd-protocol-json.la \
-	$(null)
-endif
-
 
 Eventd-0.gir: libeventd.la
 Eventd_0_gir_INCLUDES = GObject-2.0
@@ -184,9 +132,3 @@ Eventd_0_gir_CFLAGS = $(AM_CFLAGS) $(libeventd_la_CFLAGS) $(CFLAGS)
 Eventd_0_gir_LIBS = libeventd.la
 Eventd_0_gir_FILES = $(filter-out %.h,$(libeventd_la_SOURCES)) $(filter %D%/include/%.h,$(pkginclude_HEADERS))
 INTROSPECTION_GIRS += Eventd-0.gir
-
-if ENABLE_JSON
-Eventd_0_gir_CFLAGS += $(libeventd_protocol_json_la_CFLAGS) $(CFLAGS)
-Eventd_0_gir_LIBS += libeventd-protocol-json.la
-Eventd_0_gir_FILES += $(filter-out %.h,$(libeventd_protocol_json_la_SOURCES))
-endif

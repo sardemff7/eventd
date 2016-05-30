@@ -32,22 +32,15 @@
 
 #include <libeventd-event.h>
 #include <libeventd-protocol.h>
-#include <libeventd-protocol-json.h>
 #include <eventd-plugin.h>
 #include <libeventd-helpers-config.h>
 
 #include "http.h"
 #include "websocket.h"
 
-typedef enum {
-    EVENTD_HTTP_WEBSOCKET_CLIENT_TYPE_EVP,
-    EVENTD_HTTP_WEBSOCKET_CLIENT_TYPE_JSON,
-} EventdHttpWebsocketClientType;
-
 struct _EventdHttpWebsocketClient {
     EventdPluginContext *context;
     GList *link;
-    EventdHttpWebsocketClientType type;
     EventdProtocol *protocol;
     SoupWebsocketConnection *connection;
     GList *subscribe_all;
@@ -58,24 +51,14 @@ struct _EventdHttpWebsocketClient {
 static void
 _eventd_http_websocket_client_send_message(EventdHttpWebsocketClient *self, gchar *message)
 {
-    switch ( self->type )
+    gsize s;
+    gchar *c = message, *oc;
+    s = strlen(message);
+    while ( ( c = g_utf8_strchr(oc = c, s, '\n') ) != NULL )
     {
-    case EVENTD_HTTP_WEBSOCKET_CLIENT_TYPE_EVP:
-    {
-        gsize s;
-        gchar *c = message, *oc;
-        s = strlen(message);
-        while ( ( c = g_utf8_strchr(oc = c, s, '\n') ) != NULL )
-        {
-            s -= ( c - oc );
-            *c++ = '\0';
-            soup_websocket_connection_send_text(self->connection, oc);
-        }
-    }
-    break;
-    case EVENTD_HTTP_WEBSOCKET_CLIENT_TYPE_JSON:
-        soup_websocket_connection_send_text(self->connection, message);
-    break;
+        s -= ( c - oc );
+        *c++ = '\0';
+        soup_websocket_connection_send_text(self->connection, oc);
     }
     g_free(message);
 }
@@ -202,28 +185,13 @@ void
 eventd_http_websocket_client_handler(SoupServer *server, SoupWebsocketConnection *connection, const char *path, SoupClientContext *client, gpointer user_data)
 {
     EventdPluginContext *context = user_data;
-    const gchar *protocol;
-    EventdHttpWebsocketClientType type = EVENTD_HTTP_WEBSOCKET_CLIENT_TYPE_EVP;
-
-    protocol = soup_websocket_connection_get_protocol(connection);
-    if ( g_strcmp0(protocol, "evp-json") == 0 )
-        type = EVENTD_HTTP_WEBSOCKET_CLIENT_TYPE_JSON;
 
     EventdHttpWebsocketClient *self;
 
     self = g_new0(EventdHttpWebsocketClient, 1);
     self->context = context;
-    self->type = type;
 
-    switch ( self->type )
-    {
-    case EVENTD_HTTP_WEBSOCKET_CLIENT_TYPE_EVP:
-        self->protocol = eventd_protocol_evp_new(&_eventd_http_websocket_client_protocol_callbacks, self, NULL);
-    break;
-    case EVENTD_HTTP_WEBSOCKET_CLIENT_TYPE_JSON:
-        self->protocol = eventd_protocol_json_new(&_eventd_http_websocket_client_protocol_callbacks, self, NULL);
-    break;
-    }
+    self->protocol = eventd_protocol_evp_new(&_eventd_http_websocket_client_protocol_callbacks, self, NULL);
     self->subscriptions = g_hash_table_new(g_str_hash, g_str_equal);
 
     self->connection = g_object_ref(connection);
