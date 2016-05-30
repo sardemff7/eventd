@@ -585,13 +585,6 @@ eventdctl relay disconnect your.distant.computer</programlisting>
 
         <variablelist>
             <varlistentry>
-                <term><varname>$EVENTD_NO_PLUGINS</varname></term>
-                <listitem>
-                    <para>If this variable is set, eventd will not load any plugin.</para>
-                </listitem>
-            </varlistentry>
-
-            <varlistentry>
                 <term><varname>$EVENTD_PLUGINS_DIR</varname></term>
                 <listitem>
                     <para>Additional directory to browse for plugins.</para>
