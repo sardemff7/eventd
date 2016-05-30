@@ -244,18 +244,6 @@ if test x${ev_os_unix} = xyes; then
     AC_SUBST([dbussessionservicedir])
 fi
 
-# http plugin
-libsoup_min_version="2.50"
-AC_ARG_ENABLE([http], AS_HELP_STRING([--enable-http], [Enable HTTP plugin]), [], [enable_http=no])
-if test x${enable_http} = xyes; then
-    if test x${enable_json} = xno; then
-        AC_MSG_ERROR([*** JSON protocol support is required for HTTP plugin])
-    fi
-    PKG_CHECK_MODULES([LIBSOUP], [libsoup-2.4 >= ${libsoup_min_version}])
-    AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_http"
-fi
-AM_CONDITIONAL([ENABLE_HTTP], [test x${enable_http} = xyes])
-
 # notification-daemon plugin
 cairo_min_version="1.14"
 AC_ARG_ENABLE([notification-daemon], AS_HELP_STRING([--disable-notification-daemon], [Disable notification-daemon plugin]), [], [enable_notification_daemon=yes])
@@ -427,7 +415,6 @@ AC_MSG_RESULT([
     Event collection plugins:
         EVENT protocol: yes
         org.freedesktop.Notifications interface: yes
-        EVENT JSON protocol over WebSocket: ${enable_http}
 
     Action plugins:
         EVENT protocol relay: yes

@@ -90,7 +90,6 @@ include server/eventd/eventd.mk
 include server/libeventd-plugin/libeventd-plugin.mk
 include server/eventdctl/eventdctl.mk
 include plugins/evp/evp.mk
-include plugins/http/http.mk
 include plugins/fdo-notifications/fdo-notifications.mk
 include plugins/relay/relay.mk
 include plugins/exec/exec.mk

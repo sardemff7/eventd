@@ -87,9 +87,6 @@
                         <listitem>
                             <para><command>file</command> plugin: <citerefentry><refentrytitle>eventd-file.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry></para>
                         </listitem>
-                        <listitem condition="website;enable_http">
-                            <para><command>http</command> plugin: <citerefentry><refentrytitle>eventd-http.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry></para>
-                        </listitem>
                         <listitem condition="website;enable_notification_daemon">
                             <para><command>nd</command> plugin: <citerefentry><refentrytitle>eventdctl-nd</refentrytitle><manvolnum>1</manvolnum></citerefentry> <citerefentry><refentrytitle>eventd-nd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry></para>
                         </listitem>
