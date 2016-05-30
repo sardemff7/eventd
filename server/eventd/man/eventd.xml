@@ -552,7 +552,7 @@ eventdctl relay disconnect your.distant.computer</programlisting>
     Relays=one;
 
     [Relay one]
-    DNS-SD=eventd your.distant.computer
+    DiscoverName=eventd your.distant.computer
     Forwards=foo;bar;baz;</programlisting>
         </example>
 
