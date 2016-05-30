@@ -421,7 +421,7 @@ eventd_sockets_get_sockets(EventdSockets *self, const gchar * const *binds, cons
 }
 
 EventdSockets *
-eventd_sockets_new(const gchar * const *binds, const gchar *runtime_dir, gboolean take_over_socket)
+eventd_sockets_new(const gchar *runtime_dir, gboolean take_over_socket)
 {
     EventdSockets *sockets;
 
@@ -459,8 +459,6 @@ eventd_sockets_new(const gchar * const *binds, const gchar *runtime_dir, gboolea
             sockets->list = g_list_prepend(sockets->list, socket);
     }
 #endif /* ENABLE_SYSTEMD */
-
-    sockets->list = g_list_concat(sockets->list, eventd_sockets_get_sockets(sockets, binds, runtime_dir, take_over_socket));
 
     return sockets;
 }

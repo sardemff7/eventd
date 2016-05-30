@@ -32,8 +32,8 @@ main(int argc, char *argv[])
 {
     int r = 99;
     eventd_tests_env_setup(argv, "relay-connection");
-    EventdTestsEnv *env = eventd_tests_env_new("test-plugin,evp", "tcp-file:relay");
-    EventdTestsEnv *relay = eventd_tests_env_new("relay,evp", NULL);
+    EventdTestsEnv *env = eventd_tests_env_new("test-plugin", "tcp-file:relay");
+    EventdTestsEnv *relay = eventd_tests_env_new("relay", NULL);
     if ( ! eventd_tests_env_start_eventd(env) )
         goto end;
     if ( ! eventd_tests_env_start_eventd(relay) )

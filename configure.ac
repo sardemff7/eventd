@@ -402,7 +402,6 @@ AC_MSG_RESULT([
         GObject introspection: ${enable_introspection}
 
     Event collection plugins:
-        EVENT protocol: yes
         org.freedesktop.Notifications interface: yes
 
     Action plugins:

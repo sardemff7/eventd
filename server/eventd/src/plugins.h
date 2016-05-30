@@ -26,7 +26,7 @@
 gboolean eventd_plugins_load(EventdPluginCoreContext *core, gboolean system_mode);
 void eventd_plugins_unload(void);
 
-void eventd_plugins_start_all(void);
+void eventd_plugins_start_all(const gchar * const *evp_binds);
 void eventd_plugins_stop_all(void);
 
 EventdctlReturnCode eventd_plugins_control_command(const gchar *id, guint64 argc, const gchar * const *argv, gchar **status);

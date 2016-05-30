@@ -30,10 +30,12 @@
 #include <eventd-plugin.h>
 #include <libeventd-helpers-config.h>
 
+#include "../eventd.h"
 #include "dns-sd.h"
 #include "client.h"
 
 #include "evp.h"
+#include "evp-internal.h"
 
 #ifdef G_OS_UNIX
 #define DEFAULT_SOCKET_BIND_PREFIX "unix"
@@ -45,25 +47,22 @@
  * Initialization interface
  */
 
-static EventdPluginContext *
-_eventd_evp_init(EventdPluginCoreContext *core)
+EventdEvpContext *
+eventd_evp_init(EventdCoreContext *core)
 {
-    EventdPluginContext *self;
+    EventdEvpContext *self;
 
-    self = g_new0(EventdPluginContext, 1);
+    self = g_new0(EventdEvpContext, 1);
 
     self->core = core;
 
     return self;
 }
 
-static void
-_eventd_evp_uninit(EventdPluginContext *self)
+void
+eventd_evp_uninit(EventdEvpContext *self)
 {
     g_free(self->publish_name);
-
-    if ( self->binds != NULL )
-        g_strfreev(self->binds);
 
     g_free(self);
 }
@@ -74,10 +73,10 @@ _eventd_evp_uninit(EventdPluginContext *self)
  */
 
 static GList *
-_eventd_evp_add_socket(GList *used_sockets, EventdPluginContext *self, const gchar * const *binds)
+_eventd_evp_add_socket(GList *used_sockets, EventdEvpContext *self, const gchar * const *binds)
 {
     GList *sockets;
-    sockets = eventd_plugin_core_get_sockets(self->core, binds);
+    sockets = eventd_core_get_sockets(self->core, binds);
 
     GList *socket_;
     for ( socket_ = sockets ; socket_ != NULL ; socket_ = g_list_next(socket_) )
@@ -98,15 +97,15 @@ _eventd_evp_add_socket(GList *used_sockets, EventdPluginContext *self, const gch
     return used_sockets;
 }
 
-static void
-_eventd_evp_start(EventdPluginContext *self)
+void
+eventd_evp_start(EventdEvpContext *self, const gchar * const *binds)
 {
     GList *sockets = NULL;
 
     self->service = g_socket_service_new();
 
-    if ( self->binds != NULL )
-        sockets = _eventd_evp_add_socket(sockets, self, (const gchar * const *)self->binds);
+    if ( binds != NULL )
+        sockets = _eventd_evp_add_socket(sockets, self, binds);
     else
     {
         const gchar *binds[] = { DEFAULT_SOCKET_BIND_PREFIX "-runtime:" EVP_UNIX_SOCKET, "all", NULL };
@@ -125,8 +124,8 @@ _eventd_evp_start(EventdPluginContext *self)
     self->subscribe_categories = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) g_list_free);
 }
 
-static void
-_eventd_evp_stop(EventdPluginContext *self)
+void
+eventd_evp_stop(EventdEvpContext *self)
 {
     eventd_evp_dns_sd_stop(self->dns_sd);
 
@@ -148,10 +147,9 @@ _eventd_evp_stop(EventdPluginContext *self)
  * Configuration interface
  */
 
-static void
-_eventd_evp_global_parse(EventdPluginContext *self, GKeyFile *config_file)
+void
+eventd_evp_global_parse(EventdEvpContext *self, GKeyFile *config_file)
 {
-    gchar **binds = NULL;
     gchar *cert_file = NULL;
     gchar *key_file = NULL;
     gchar *publish_name;
@@ -159,8 +157,6 @@ _eventd_evp_global_parse(EventdPluginContext *self, GKeyFile *config_file)
     if ( ! g_key_file_has_group(config_file, "Server") )
         return;
 
-    if ( evhelpers_config_key_file_get_string_list(config_file, "Server", "Listen", &binds, NULL) < 0 )
-        goto cleanup;
     if ( evhelpers_config_key_file_get_string(config_file, "Server", "TLSCertificate", &cert_file) < 0 )
         goto cleanup;
     if ( evhelpers_config_key_file_get_string(config_file, "Server", "TLSKey", &key_file) < 0 )
@@ -169,13 +165,6 @@ _eventd_evp_global_parse(EventdPluginContext *self, GKeyFile *config_file)
         goto cleanup;
 
     GError *error = NULL;
-
-    if ( binds != NULL )
-    {
-        gchar **tmp = self->binds;
-        self->binds = binds;
-        binds = tmp;
-    }
 
     if ( cert_file != NULL )
     {
@@ -217,11 +206,10 @@ _eventd_evp_global_parse(EventdPluginContext *self, GKeyFile *config_file)
 cleanup:
     g_free(key_file);
     g_free(cert_file);
-    g_strfreev(binds);
 }
 
-static void
-_eventd_evp_config_reset(EventdPluginContext *self)
+void
+eventd_evp_config_reset(EventdEvpContext *self)
 {
     if ( self->certificate != NULL )
         g_object_unref(self->certificate);
@@ -236,8 +224,8 @@ _eventd_evp_config_reset(EventdPluginContext *self)
  * Event dispatching interface
  */
 
-static void
-_eventd_evp_event_dispatch(EventdPluginContext *self, EventdEvent *event)
+void
+eventd_evp_event_dispatch(EventdEvpContext *self, EventdEvent *event)
 {
     const gchar *category;
     GList *subscribers;
@@ -258,27 +246,4 @@ _eventd_evp_event_dispatch(EventdPluginContext *self, EventdEvent *event)
     subscribers = g_hash_table_lookup(self->subscribe_categories, category);
     for ( client = subscribers ; client != NULL ; client = g_list_next(client) )
         eventd_evp_client_event_dispatch(client->data, event);
-}
-
-
-/*
- * Plugin interface
- */
-
-EVENTD_EXPORT const gchar *eventd_plugin_id = "evp";
-EVENTD_EXPORT const gboolean eventd_plugin_system_mode_support = TRUE;
-EVENTD_EXPORT
-void
-eventd_plugin_get_interface(EventdPluginInterface *interface)
-{
-    eventd_plugin_interface_add_init_callback(interface, _eventd_evp_init);
-    eventd_plugin_interface_add_uninit_callback(interface, _eventd_evp_uninit);
-
-    eventd_plugin_interface_add_start_callback(interface, _eventd_evp_start);
-    eventd_plugin_interface_add_stop_callback(interface, _eventd_evp_stop);
-
-    eventd_plugin_interface_add_global_parse_callback(interface, _eventd_evp_global_parse);
-    eventd_plugin_interface_add_config_reset_callback(interface, _eventd_evp_config_reset);
-
-    eventd_plugin_interface_add_event_dispatch_callback(interface, _eventd_evp_event_dispatch);
 }

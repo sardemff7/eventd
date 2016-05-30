@@ -37,6 +37,8 @@
 
 #include <eventdctl.h>
 
+#include "types.h"
+#include "evp/evp.h"
 #include "plugins.h"
 
 typedef struct {
@@ -50,6 +52,7 @@ typedef struct {
     EventdPluginAction *action;
 } EventdPluginsAction;
 
+static EventdEvpContext *evp = NULL;
 static GHashTable *plugins = NULL;
 
 
@@ -109,6 +112,9 @@ _eventd_plugins_load_dir(EventdPluginCoreContext *core, gchar *plugins_dir_name,
             g_warning("Plugin '%s' must define eventd_plugin_id", file);
             goto next;
         }
+
+        if ( g_strcmp0(*id, "evp") == 0 )
+            goto next;
 
         if ( whitelist != NULL )
         {
@@ -230,6 +236,8 @@ eventd_plugins_load(EventdPluginCoreContext *core, gboolean system_mode)
     gchar **whitelist = NULL;
     gchar **blacklist = NULL;
 
+    evp = eventd_evp_init(core);
+
     if ( ! g_module_supported() )
     {
         g_warning("No plugins support: %s", g_module_error());
@@ -273,10 +281,13 @@ eventd_plugins_unload(void)
 
     g_hash_table_unref(plugins);
     plugins = NULL;
+
+    eventd_evp_uninit(evp);
+    evp = NULL;
 }
 
 void
-eventd_plugins_start_all(void)
+eventd_plugins_start_all(const gchar * const *binds)
 {
     GHashTableIter iter;
     const gchar *id;
@@ -287,11 +298,15 @@ eventd_plugins_start_all(void)
         if ( plugin->interface.start != NULL )
             plugin->interface.start(plugin->context);
     }
+
+    eventd_evp_start(evp, binds);
 }
 
 void
 eventd_plugins_stop_all(void)
 {
+    eventd_evp_stop(evp);
+
     GHashTableIter iter;
     const gchar *id;
     EventdPlugin *plugin;
@@ -338,6 +353,8 @@ eventd_plugins_config_reset_all(void)
         if ( plugin->interface.config_reset != NULL )
             plugin->interface.config_reset(plugin->context);
     }
+
+    eventd_evp_config_reset(evp);
 }
 
 void
@@ -352,6 +369,8 @@ eventd_plugins_global_parse_all(GKeyFile *config_file)
         if ( plugin->interface.global_parse != NULL )
             plugin->interface.global_parse(plugin->context, config_file);
     }
+
+    eventd_evp_global_parse(evp, config_file);
 }
 
 GList *
@@ -385,10 +404,13 @@ eventd_plugins_event_parse_all(GKeyFile *config_file)
 void
 eventd_plugins_event_dispatch_all(EventdEvent *event)
 {
+    eventd_evp_event_dispatch(evp, event);
+
     GHashTableIter iter;
     const gchar *id;
     EventdPlugin *plugin;
     g_hash_table_iter_init(&iter, plugins);
+
     while ( g_hash_table_iter_next(&iter, (gpointer *)&id, (gpointer *)&plugin) )
     {
         if ( plugin->interface.event_dispatch != NULL )

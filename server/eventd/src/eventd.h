@@ -23,6 +23,8 @@
 #ifndef __EVENTD_CORE_H__
 #define __EVENTD_CORE_H__
 
+#include "types.h"
+
 typedef enum {
     EVENTD_RETURN_CODE_OK = 0,
     EVENTD_RETURN_CODE_ARGV_ERROR                 = 1,

@@ -191,46 +191,7 @@
         <refsect2>
             <title>Section <varname>[Server]</varname></title>
 
-            <para>This section controls the <command>evp</command> plugin, listed here as it is considered a core plugin.</para>
-
             <variablelist>
-                <varlistentry>
-                    <term><varname>Listen=</varname></term>
-                    <listitem>
-                        <para>A <type>list of socket bindings</type></para>
-                        <para>The list of socket the <command>evp</command> plugin will listen on.</para>
-                        <para>If empty, it will listen on the default socket<phrase condition="website;enable_systemd"> and all systemd sockets</phrase>.</para>
-                        <para>The format is <userinput><replaceable>type</replaceable>:<replaceable>socket</replaceable></userinput>:</para>
-                        <variablelist>
-                            <varlistentry condition="website;have_gio_unix">
-                                <term><literal>unix</literal></term>
-                                <term><literal>unix-runtime</literal></term>
-                                <listitem>
-                                    <para><replaceable>socket</replaceable> is the file name of the UNIX socket.</para>
-                                    <para>The <literal>-runtime</literal> version takes a file name relative to <varname>$XDG_RUNTIME_DIR</varname>.</para>
-                                </listitem>
-                            </varlistentry>
-
-                            <varlistentry>
-                                <term><literal>tcp</literal></term>
-                                <listitem>
-                                    <para><replaceable>socket</replaceable> is a classic <userinput><optional><replaceable>address</replaceable>:</optional><replaceable>port</replaceable></userinput>.</para>
-                                </listitem>
-                            </varlistentry>
-
-                            <varlistentry>
-                                <term><literal>tcp-file</literal></term>
-                                <term><literal>tcp-file-runtime</literal></term>
-                                <listitem>
-                                    <para>The <command>evp</command> plugin will listen to a random port on the loopback interface only.</para>
-                                    <para><replaceable>socket</replaceable> is a file name the plugin will write the port to.</para>
-                                    <para>The <literal>-runtime</literal> version takes a file name relative to <varname>$XDG_RUNTIME_DIR</varname>.</para>
-                                </listitem>
-                            </varlistentry>
-                        </variablelist>
-                    </listitem>
-                </varlistentry>
-
                 <varlistentry>
                     <term><varname>TLSCertificate=</varname></term>
                     <listitem>

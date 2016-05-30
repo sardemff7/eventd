@@ -31,12 +31,13 @@
 #include <eventd-plugin.h>
 #include <libeventd-helpers-config.h>
 
-#include "evp.h"
+#include "../eventd.h"
+#include "evp-internal.h"
 
 #include "client.h"
 
 struct _EventdEvpClient {
-    EventdPluginContext *context;
+    EventdEvpContext *context;
     GList *link;
     EventdProtocol *protocol;
     GCancellable *cancellable;
@@ -82,7 +83,7 @@ _eventd_evp_client_protocol_event(EventdProtocol *protocol, EventdEvent *event, 
 #endif /* EVENTD_DEBUG */
 
     self->current = event;
-    eventd_plugin_core_push_event(self->context->core, event);
+    eventd_core_push_event(self->context->core, event);
     self->current = NULL;
 }
 
@@ -198,7 +199,7 @@ _eventd_evp_client_tls_handshake_callback(GObject *obj, GAsyncResult *res, gpoin
 gboolean
 eventd_evp_client_connection_handler(GSocketService *service, GSocketConnection *connection, GObject *obj, gpointer user_data)
 {
-    EventdPluginContext *context = user_data;
+    EventdEvpContext *context = user_data;
 
     GIOStream *tls = NULL;
     if ( G_IS_TCP_CONNECTION(connection) )

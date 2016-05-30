@@ -57,6 +57,9 @@
             Plugins may be event collecting plugins or action plugins.
         </para>
         <para>
+            eventd core implements plugins loading and our own EVENT protocol to carry events on network.
+        </para>
+        <para>
             The default operation mode is user mode.
             This means the user configuration will be read, and all plugins will be loaded.
             If <varname>$XDG_RUNTIME_DIR</varname> is not set, eventd will then operate in system mode.
@@ -101,14 +104,6 @@
 
             <para>The following event collection plugins are <phrase condition="website">distributed</phrase><phrase condition="installation">installed</phrase> with eventd:</para>
             <variablelist>
-                <varlistentry>
-                    <term><command>evp</command></term>
-                    <listitem>
-                        <para>which implements our own EVENT protocol</para>
-                        <para>It is considered as a core plugin and all its relevant configuration will reside in the main eventd man pages.</para>
-                    </listitem>
-                </varlistentry>
-
                 <varlistentry>
                     <term><command>fdo-notifications</command></term>
                     <listitem>
@@ -185,9 +180,36 @@
                 <term><option>-l</option></term>
                 <term><option>--listen=<replaceable class="parameter">socket</replaceable></option></term>
                 <listitem>
-                    <para>Add a socket to listen to</para>
+                    <para>Add a socket to listen to for EVENT protocol clients.</para>
                     <para>May be specified multiple times.</para>
-                    <para>This list will be used by the <command>evp</command> plugin if none are specified in the configuration file.</para>
+                    <para>The format is <userinput><replaceable>type</replaceable>:<replaceable>socket</replaceable></userinput>:</para>
+                    <variablelist>
+                        <varlistentry condition="website;have_gio_unix">
+                            <term><literal>unix</literal></term>
+                            <term><literal>unix-runtime</literal></term>
+                            <listitem>
+                                <para><replaceable>socket</replaceable> is the file name of the UNIX socket.</para>
+                                <para>The <literal>-runtime</literal> version takes a file name relative to <varname>$XDG_RUNTIME_DIR</varname>.</para>
+                            </listitem>
+                        </varlistentry>
+
+                        <varlistentry>
+                            <term><literal>tcp</literal></term>
+                            <listitem>
+                                <para><replaceable>socket</replaceable> is a classic <userinput><optional><replaceable>address</replaceable>:</optional><replaceable>port</replaceable></userinput>.</para>
+                            </listitem>
+                        </varlistentry>
+
+                        <varlistentry>
+                            <term><literal>tcp-file</literal></term>
+                            <term><literal>tcp-file-runtime</literal></term>
+                            <listitem>
+                                <para>The <command>evp</command> plugin will listen to a random port on the loopback interface only.</para>
+                                <para><replaceable>socket</replaceable> is a file name the plugin will write the port to.</para>
+                                <para>The <literal>-runtime</literal> version takes a file name relative to <varname>$XDG_RUNTIME_DIR</varname>.</para>
+                            </listitem>
+                        </varlistentry>
+                    </variablelist>
                 </listitem>
             </varlistentry>
 
@@ -504,10 +526,7 @@ Fish config:
             <title>Relaying remote events: static relay</title>
 
             <para>
-                Using <command>evp</command> and <command>relay</command> plugins, eventd can relay events from a remote computer to your local one.
-            </para>
-            <para>
-                The <command>evp</command> plugin does not require any special configuration in a static setup.
+                Using the <command>relay</command> plugin, eventd can relay events to a remote computer from your local one.
             </para>
             <para>
                 The <command>relay</command> plugin will connect to configured servers at startup.
@@ -541,7 +560,7 @@ eventdctl relay disconnect your.distant.computer</programlisting>
             <title>Relaying remote events: DNS-SD</title>
 
             <para>
-                With DNS-SD supports, the <command>evp</command> plugin will advertise itself on the network.
+                With DNS-SD supports, eventd will advertise itself on the network.
             </para>
             <para>
                 The <command>relay</command> plugin will connect to configured servers when advertised.
@@ -560,10 +579,10 @@ eventdctl relay disconnect your.distant.computer</programlisting>
             <title>Relaying remote D-Bus notifications</title>
 
             <para>
-                Combining <command>fdo-notifications</command>, <command>evp</command>, <command>relay</command> and <command>notify</command> plugins, you can easily relay remote D-Bus notifications to your local computer.
+                Combining <command>fdo-notifications</command>, <command>relay</command> and <command>notify</command> plugins, you can easily relay remote D-Bus notifications to your local computer.
             </para>
             <para>
-                You need to configure <command>relay</command> and <command>fdo-notifications</command> plugins on the remote computer and <command>evp</command> and <command>notify</command> plugins on the local one.
+                You need to configure <command>relay</command> and <command>fdo-notifications</command> plugins on the remote computer and the <command>notify</command> plugin on the local one.
             </para>
             <para>
                 The default provided configurations for the <command>notify</command> plugin is enough on your local computer.

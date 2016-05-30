@@ -20,24 +20,20 @@
  *
  */
 
-#include <glib.h>
-#include <libeventd-test.h>
+#ifndef __EVENTD_EVP_EVP_H__
+#define __EVENTD_EVP_EVP_H__
 
-int
-main(int argc, char *argv[])
-{
-    int r = 99;
-    eventd_tests_env_setup(argv, "libeventc-connection");
-    EventdTestsEnv *env = eventd_tests_env_new("test-plugin", NULL);
-    if ( ! eventd_tests_env_start_eventd(env) )
-        goto end;
+typedef struct _EventdEvpContext EventdEvpContext;
 
-    r = eventd_tests_run_libeventc();
+EventdEvpContext *eventd_evp_init(EventdCoreContext *core);
+void eventd_evp_uninit(EventdEvpContext *evp);
 
-    if ( ! eventd_tests_env_stop_eventd(env) )
-        r = 99;
+void eventd_evp_start(EventdEvpContext *evp, const gchar * const *binds);
+void eventd_evp_stop(EventdEvpContext *evp);
 
-end:
-    eventd_tests_env_free(env);
-    return r;
-}
+void eventd_evp_global_parse(EventdEvpContext *evp, GKeyFile *config_file);
+void eventd_evp_config_reset(EventdEvpContext *evp);
+
+void eventd_evp_event_dispatch(EventdEvpContext *evp, EventdEvent *event);
+
+#endif /* __EVENTD_EVP_EVP_H__ */

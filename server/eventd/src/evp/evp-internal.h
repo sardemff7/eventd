@@ -20,17 +20,18 @@
  *
  */
 
-#ifndef __EVENTD_EVP_EVP_H__
-#define __EVENTD_EVP_EVP_H__
+#ifndef __EVENTD_EVP_EVP_INTERAL_H__
+#define __EVENTD_EVP_EVP_INTERAL_H__
 
+#include "../types.h"
 #include "dns-sd.h"
 #include "ssdp.h"
+#include "evp.h"
 
-struct _EventdPluginContext {
-    EventdPluginCoreContext *core;
+struct _EventdEvpContext {
+    EventdCoreContext *core;
     EventdEvpDNSSDContext *dns_sd;
     EventdEvpSSDPContext *ssdp;
-    gchar **binds;
     gchar *publish_name;
     GTlsCertificate *certificate;
     GSocketService *service;
@@ -39,4 +40,4 @@ struct _EventdPluginContext {
     GHashTable *subscribe_categories;
 };
 
-#endif /* __EVENTD_EVP_EVP_H__ */
+#endif /* __EVENTD_EVP_EVP_INTERAL_H__ */

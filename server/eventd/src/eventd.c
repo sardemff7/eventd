@@ -71,6 +71,7 @@ struct _EventdCoreContext {
     EventdControl *control;
     EventdSockets *sockets;
     gchar *runtime_dir;
+    gchar **binds;
     gboolean system_mode;
     gboolean take_over_socket;
     GMainLoop *loop;
@@ -161,7 +162,7 @@ eventd_core_config_reload(EventdCoreContext *context)
 {
     eventd_plugins_stop_all();
     eventd_config_parse(context->config, context->system_mode);
-    eventd_plugins_start_all();
+    eventd_plugins_start_all((const gchar * const *) context->binds);
 }
 
 void
@@ -252,7 +253,6 @@ main(int argc, char *argv[])
 {
     EventdCoreContext *context;
 
-    gchar **binds = NULL;
     gboolean daemonize = FALSE;
     gboolean print_paths = FALSE;
     gboolean print_version = FALSE;
@@ -323,7 +323,7 @@ main(int argc, char *argv[])
 
     GOptionEntry entries[] =
     {
-        { "listen",    'l', 0,                    G_OPTION_ARG_STRING_ARRAY, &binds,                     "Add a socket to listen to", "<socket>" },
+        { "listen",    'l', 0,                    G_OPTION_ARG_STRING_ARRAY, &context->binds,            "Add a socket to listen to", "<socket>" },
         { "take-over", 't', GIO_UNIX_OPTION_FLAG, G_OPTION_ARG_NONE,         &context->take_over_socket, "Take over socket",          NULL },
         { "daemonize", 0,   G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE,         &daemonize,                 NULL,                        NULL },
         { "paths",     'P', 0,                    G_OPTION_ARG_NONE,         &print_paths,               "Print search paths",        NULL },
@@ -391,11 +391,11 @@ main(int argc, char *argv[])
 
     context->config = eventd_config_new(context->system_mode);
 
-    context->sockets = eventd_sockets_new((const gchar * const *) binds, context->runtime_dir, context->take_over_socket);
+    context->sockets = eventd_sockets_new(context->runtime_dir, context->take_over_socket);
 
     if ( eventd_control_start(context->control) )
     {
-        eventd_plugins_start_all();
+        eventd_plugins_start_all((const gchar * const *) context->binds);
 
 #ifdef G_OS_UNIX
         g_unix_signal_add(SIGTERM, _eventd_core_stop, context);
@@ -449,6 +449,7 @@ main(int argc, char *argv[])
     eventd_plugins_unload();
 
 end:
+    g_strfreev(context->binds);
     g_free(context->runtime_dir);
 
     eventd_control_free(context->control);
@@ -460,7 +461,6 @@ end:
         g_object_unref(debug_stream);
 #endif /* EVENTD_DEBUG */
 
-    g_strfreev(binds);
 
     return retval;
 }
