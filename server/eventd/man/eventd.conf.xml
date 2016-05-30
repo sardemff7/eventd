@@ -231,8 +231,6 @@
         <refsect2>
             <title>Section <varname>[Relay]</varname></title>
 
-            <para>This section controls the <command>relay</command> plugin, listed here as it is considered a core plugin.</para>
-
             <variablelist>
                 <varlistentry>
                     <term><varname>Servers=</varname></term>
@@ -247,8 +245,6 @@
         <refsect2>
             <title>Section <varname>[Relay <replaceable>name</replaceable>]</varname></title>
 
-            <para>This section controls the <command>relay</command> plugin, listed here as it is considered a core plugin.</para>
-
             <variablelist>
                 <varlistentry>
                     <term><varname>Server=</varname></term>
@@ -256,7 +252,7 @@
                         <para>A <type>server string</type></para>
                         <para>The form is <replaceable>name</replaceable><optional>:<replaceable>port</replaceable></optional>.</para>
                         <para>If you omit <replaceable>port</replaceable> or use <literal>0</literal>, the SRV DNS record <literal>&EVP_SERVICE_TYPE;.<replaceable>host</replaceable></literal> will be used to find the real host and port to connect to.</para>
-                        <para>Static servers the relay plugin will connect to.</para>
+                        <para>Static servers eventd will connect to.</para>
                     </listitem>
                 </varlistentry>
 
@@ -264,7 +260,7 @@
                     <term><varname>DiscoverName=</varname></term>
                     <listitem>
                         <para>A <type>service name</type></para>
-                        <para>The relay plugin will monitor this name with discovery services and then connect to it.</para>
+                        <para>eventd will monitor this name with discovery services and then connect to it.</para>
                         <para>If you provide both <varname>Server=</varname> and <varname>DiscoverName=</varname>, the former is ignored.</para>
                     </listitem>
                 </varlistentry>

@@ -31,15 +31,16 @@
 #include <gio/gio.h>
 
 #include <libeventd-event.h>
-#include <eventd-plugin.h>
 #include <libeventc.h>
 
 #include <libeventd-helpers-reconnect.h>
 
+#include "../eventd.h"
+
 #include "server.h"
 
 struct _EventdRelayServer {
-    EventdPluginCoreContext *core;
+    EventdCoreContext *core;
     GSocketConnectable *server_identity;
     gboolean accept_unknown_ca;
     gboolean subscribe;
@@ -55,7 +56,7 @@ static void
 _eventd_relay_server_event(EventdRelayServer *self, EventdEvent *event, EventcConnection *connection)
 {
     self->current = event;
-    eventd_plugin_core_push_event(self->core, event);
+    eventd_core_push_event(self->core, event);
     self->current = NULL;
 }
 
@@ -104,7 +105,7 @@ _eventd_relay_server_setup_connection(EventdRelayServer *server)
 }
 
 EventdRelayServer *
-eventd_relay_server_new(EventdPluginCoreContext *core, const gchar *server_identity, gboolean accept_unknown_ca, gchar **forwards, gchar **subscriptions)
+eventd_relay_server_new(EventdCoreContext *core, const gchar *server_identity, gboolean accept_unknown_ca, gchar **forwards, gchar **subscriptions)
 {
     EventdRelayServer *server;
 
@@ -140,7 +141,7 @@ eventd_relay_server_new(EventdPluginCoreContext *core, const gchar *server_ident
 }
 
 EventdRelayServer *
-eventd_relay_server_new_for_domain(EventdPluginCoreContext *core, const gchar *server_identity, gboolean accept_unknown_ca, gchar **forwards, gchar **subscriptions, const gchar *domain)
+eventd_relay_server_new_for_domain(EventdCoreContext *core, const gchar *server_identity, gboolean accept_unknown_ca, gchar **forwards, gchar **subscriptions, const gchar *domain)
 {
     EventcConnection *connection;
     GError *error = NULL;

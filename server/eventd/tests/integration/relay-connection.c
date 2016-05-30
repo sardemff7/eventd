@@ -20,19 +20,33 @@
  *
  */
 
-#ifndef __EVENTD_LIBEVENTD_TEST_H__
-#define __EVENTD_LIBEVENTD_TEST_H__
+#include <config.h>
 
 #include <glib.h>
 
-typedef struct _EventdTestsEnv EventdTestsEnv;
+#include <libeventc.h>
+#include <libeventd-test.h>
 
-void eventd_tests_env_setup(gchar **argv, const gchar *test);
-EventdTestsEnv *eventd_tests_env_new(const gchar *evp_socket, const gchar *plugins, gboolean enable_relay);
-void eventd_tests_env_free(EventdTestsEnv *env);
-gboolean eventd_tests_env_start_eventd(EventdTestsEnv *env);
-gboolean eventd_tests_env_stop_eventd(EventdTestsEnv *env);
+int
+main(int argc, char *argv[])
+{
+    int r = 99;
+    eventd_tests_env_setup(argv, "relay-connection");
+    EventdTestsEnv *env = eventd_tests_env_new("tcp-file:relay", NULL, FALSE);
+    EventdTestsEnv *relay = eventd_tests_env_new(NULL, "", TRUE);
+    if ( ! eventd_tests_env_start_eventd(env) )
+        goto end;
+    if ( ! eventd_tests_env_start_eventd(relay) )
+        goto end;
 
-int eventd_tests_run_libeventc(void);
+    r = eventd_tests_run_libeventc();
 
-#endif /* __EVENTD_LIBEVENTD_TEST_H__ */
+    if ( ! eventd_tests_env_stop_eventd(relay) )
+        r = 99;
+    if ( ! eventd_tests_env_stop_eventd(env) )
+        r = 99;
+
+end:
+    eventd_tests_env_free(env);
+    return r;
+}

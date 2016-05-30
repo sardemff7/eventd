@@ -6,10 +6,12 @@ bin_PROGRAMS += \
 
 TESTS += \
 	evp-connection.test \
+	relay-connection.test \
 	$(null)
 
 check_PROGRAMS += \
 	evp-connection.test \
+	relay-connection.test \
 	$(null)
 
 man1_MANS += \
@@ -63,6 +65,13 @@ eventd_SOURCES = \
 	%D%/src/evp/dns-sd.c \
 	%D%/src/evp/ssdp.h \
 	%D%/src/evp/ssdp.c \
+	%D%/src/relay/relay.c \
+	%D%/src/relay/server.h \
+	%D%/src/relay/server.c \
+	%D%/src/relay/dns-sd.h \
+	%D%/src/relay/dns-sd.c \
+	%D%/src/relay/ssdp.h \
+	%D%/src/relay/ssdp.c \
 	$(null)
 
 eventd_CFLAGS = \
@@ -81,6 +90,7 @@ eventd_CFLAGS = \
 eventd_LDADD = \
 	libeventd.la \
 	libeventd-helpers.la \
+	libeventc.la \
 	$(SYSTEMD_LIBS) \
 	$(AVAHI_LIBS) \
 	$(GSSDP_LIBS) \
@@ -106,6 +116,27 @@ evp_connection_test_CFLAGS = \
 
 evp_connection_test_LDADD = \
 	libeventd-test.la \
+	$(GIO_LIBS) \
+	$(GOBJECT_LIBS) \
+	$(GLIB_LIBS) \
+	$(null)
+
+
+relay_connection_test_SOURCES = \
+	%D%/tests/integration/relay-connection.c \
+	$(null)
+
+relay_connection_test_CFLAGS = \
+	$(AM_CFLAGS) \
+	$(GIO_CFLAGS) \
+	$(GOBJECT_CFLAGS) \
+	$(GLIB_CFLAGS) \
+	$(null)
+
+relay_connection_test_LDADD = \
+	libeventd-test.la \
+	libeventd.la \
+	libeventc.la \
 	$(GIO_LIBS) \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS) \

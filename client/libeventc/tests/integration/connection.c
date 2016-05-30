@@ -28,7 +28,7 @@ main(int argc, char *argv[])
 {
     int r = 99;
     eventd_tests_env_setup(argv, "libeventc-connection");
-    EventdTestsEnv *env = eventd_tests_env_new("test-plugin", NULL);
+    EventdTestsEnv *env = eventd_tests_env_new(NULL, NULL, FALSE);
     if ( ! eventd_tests_env_start_eventd(env) )
         goto end;
 

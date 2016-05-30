@@ -20,33 +20,22 @@
  *
  */
 
-#include <config.h>
+#ifndef __EVENTD_RELAY_RELAY_H__
+#define __EVENTD_RELAY_RELAY_H__
 
-#include <glib.h>
+typedef struct _EventdRelayContext EventdRelayContext;
 
-#include <libeventc.h>
-#include <libeventd-test.h>
+EventdRelayContext *eventd_relay_init(EventdCoreContext *core);
+void eventd_relay_uninit(EventdRelayContext *evp);
 
-int
-main(int argc, char *argv[])
-{
-    int r = 99;
-    eventd_tests_env_setup(argv, "relay-connection");
-    EventdTestsEnv *env = eventd_tests_env_new("test-plugin", "tcp-file:relay");
-    EventdTestsEnv *relay = eventd_tests_env_new("relay", NULL);
-    if ( ! eventd_tests_env_start_eventd(env) )
-        goto end;
-    if ( ! eventd_tests_env_start_eventd(relay) )
-        goto end;
+void eventd_relay_start(EventdRelayContext *evp);
+void eventd_relay_stop(EventdRelayContext *evp);
 
-    r = eventd_tests_run_libeventc();
+EventdPluginCommandStatus eventd_relay_control_command(EventdRelayContext *context, guint64 argc, const gchar * const *argv, gchar **status);
 
-    if ( ! eventd_tests_env_stop_eventd(relay) )
-        r = 99;
-    if ( ! eventd_tests_env_stop_eventd(env) )
-        r = 99;
+void eventd_relay_global_parse(EventdRelayContext *evp, GKeyFile *config_file);
+void eventd_relay_config_reset(EventdRelayContext *evp);
 
-end:
-    eventd_tests_env_free(env);
-    return r;
-}
+void eventd_relay_event_dispatch(EventdRelayContext *evp, EventdEvent *event);
+
+#endif /* __EVENTD_RELAY_RELAY_H__ */

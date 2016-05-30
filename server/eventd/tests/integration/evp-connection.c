@@ -137,7 +137,7 @@ main(int argc, char *argv[])
 {
     eventd_tests_env_setup(argv, "evp-connection");
 
-    EventdTestsEnv *env = eventd_tests_env_new("test-plugin", "tcp:localhost:19011");
+    EventdTestsEnv *env = eventd_tests_env_new("tcp:localhost:19011", NULL, FALSE);
 
     int r = 99;
     if ( ! eventd_tests_env_start_eventd(env) )

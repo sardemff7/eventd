@@ -32,17 +32,20 @@
 #include <gio/gio.h>
 
 #include <libeventd-event.h>
-#include <eventd-plugin.h>
 #include <libeventd-helpers-config.h>
 
 
+#include "../types.h"
+#include "../eventd.h"
 #include "server.h"
 #include "dns-sd.h"
 #include "ssdp.h"
 
+#include "relay.h"
 
-struct _EventdPluginContext {
-    EventdPluginCoreContext *core;
+
+struct _EventdRelayContext {
+    EventdCoreContext *core;
     EventdRelayDNSSD *dns_sd;
     EventdRelaySSDP *ssdp;
     GHashTable *servers;
@@ -53,12 +56,12 @@ struct _EventdPluginContext {
  * Initialization interface
  */
 
-static EventdPluginContext *
-_eventd_relay_init(EventdPluginCoreContext *core)
+EventdRelayContext *
+eventd_relay_init(EventdPluginCoreContext *core)
 {
-    EventdPluginContext *context;
+    EventdRelayContext *context;
 
-    context = g_new0(EventdPluginContext, 1);
+    context = g_new0(EventdRelayContext, 1);
     context->core = core;
 
     context->dns_sd = eventd_relay_dns_sd_init();
@@ -68,8 +71,8 @@ _eventd_relay_init(EventdPluginCoreContext *core)
     return context;
 }
 
-static void
-_eventd_relay_uninit(EventdPluginContext *context)
+void
+eventd_relay_uninit(EventdRelayContext *context)
 {
     g_hash_table_unref(context->servers);
     eventd_relay_ssdp_uninit(context->ssdp);
@@ -93,9 +96,12 @@ _eventd_relay_start_each(gpointer key, gpointer data, gpointer user_data)
     eventd_relay_server_start(data);
 }
 
-static void
-_eventd_relay_start(EventdPluginContext *context)
+void
+eventd_relay_start(EventdRelayContext *context)
 {
+    if ( context == NULL )
+        return;
+
     g_hash_table_foreach(context->servers, _eventd_relay_start_each, NULL);
     eventd_relay_dns_sd_start(context->dns_sd);
     eventd_relay_ssdp_start(context->ssdp);
@@ -111,9 +117,12 @@ _eventd_relay_stop_each(gpointer key, gpointer data, gpointer user_data)
         eventd_relay_server_stop(data);
 }
 
-static void
-_eventd_relay_stop(EventdPluginContext *context)
+void
+eventd_relay_stop(EventdRelayContext *context)
 {
+    if ( context == NULL )
+        return;
+
     eventd_relay_ssdp_stop(context->ssdp);
     eventd_relay_dns_sd_stop(context->dns_sd);
     g_hash_table_foreach(context->servers, _eventd_relay_stop_each, NULL);
@@ -124,9 +133,16 @@ _eventd_relay_stop(EventdPluginContext *context)
  * Control command interface
  */
 
-static EventdPluginCommandStatus
-_eventd_relay_control_command(EventdPluginContext *context, guint64 argc, const gchar * const *argv, gchar **status)
+EventdPluginCommandStatus
+eventd_relay_control_command(EventdRelayContext *context, guint64 argc, const gchar * const *argv, gchar **status)
 {
+    if ( context == NULL )
+    {
+        *status = g_strdup("Relay disabled");
+        return EVENTD_PLUGIN_COMMAND_STATUS_EXEC_ERROR;
+    }
+
+
     EventdRelayServer *server;
     EventdPluginCommandStatus r = EVENTD_PLUGIN_COMMAND_STATUS_OK;
 
@@ -236,8 +252,11 @@ _eventd_relay_control_command(EventdPluginContext *context, guint64 argc, const 
  */
 
 static void
-_eventd_relay_server_parse(EventdPluginContext *context, GKeyFile *config_file, gchar *server_name)
+_eventd_relay_server_parse(EventdRelayContext *context, GKeyFile *config_file, gchar *server_name)
 {
+    if ( context == NULL )
+        return;
+
     g_hash_table_remove(context->servers, server_name);
 
     gsize size = strlen("Relay ") + strlen(server_name) + 1;
@@ -305,9 +324,12 @@ cleanup:
     g_free(server_name);
 }
 
-static void
-_eventd_relay_global_parse(EventdPluginContext *context, GKeyFile *config_file)
+void
+eventd_relay_global_parse(EventdRelayContext *context, GKeyFile *config_file)
 {
+    if ( context == NULL )
+        return;
+
     if ( ! g_key_file_has_group(config_file, "Relay") )
         return;
 
@@ -324,9 +346,12 @@ _eventd_relay_global_parse(EventdPluginContext *context, GKeyFile *config_file)
     g_free(servers);
 }
 
-static void
-_eventd_relay_config_reset(EventdPluginContext *context)
+void
+eventd_relay_config_reset(EventdRelayContext *context)
 {
+    if ( context == NULL )
+        return;
+
     g_hash_table_remove_all(context->servers);
 }
 
@@ -335,9 +360,12 @@ _eventd_relay_config_reset(EventdPluginContext *context)
  * Event action interface
  */
 
-static void
-_eventd_relay_event_dispatch(EventdPluginContext *context, EventdEvent *event)
+void
+eventd_relay_event_dispatch(EventdRelayContext *context, EventdEvent *event)
 {
+    if ( context == NULL )
+        return;
+
     GHashTableIter iter;
     gchar *name;
     EventdRelayServer *server;
@@ -345,29 +373,3 @@ _eventd_relay_event_dispatch(EventdPluginContext *context, EventdEvent *event)
     while ( g_hash_table_iter_next(&iter, (gpointer *) &name, (gpointer *) &server) )
         eventd_relay_server_event(server, event);
 }
-
-
-/*
- * Plugin interface
- */
-
-EVENTD_EXPORT const gchar *eventd_plugin_id = "relay";
-EVENTD_EXPORT const gboolean eventd_plugin_system_mode_support = TRUE;
-EVENTD_EXPORT
-void
-eventd_plugin_get_interface(EventdPluginInterface *interface)
-{
-    eventd_plugin_interface_add_init_callback(interface, _eventd_relay_init);
-    eventd_plugin_interface_add_uninit_callback(interface, _eventd_relay_uninit);
-
-    eventd_plugin_interface_add_start_callback(interface, _eventd_relay_start);
-    eventd_plugin_interface_add_stop_callback(interface, _eventd_relay_stop);
-
-    eventd_plugin_interface_add_control_command_callback(interface, _eventd_relay_control_command);
-
-    eventd_plugin_interface_add_global_parse_callback(interface, _eventd_relay_global_parse);
-    eventd_plugin_interface_add_config_reset_callback(interface, _eventd_relay_config_reset);
-
-    eventd_plugin_interface_add_event_dispatch_callback(interface, _eventd_relay_event_dispatch);
-}
-

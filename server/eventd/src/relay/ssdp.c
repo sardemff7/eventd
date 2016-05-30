@@ -31,9 +31,6 @@
 #include <gio/gio.h>
 #include <nkutils-uuid.h>
 
-#include <libeventd-event.h>
-#include <eventd-plugin.h>
-
 #include "server.h"
 
 #include "ssdp.h"

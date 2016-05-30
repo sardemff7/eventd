@@ -26,9 +26,6 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 
-#include <libeventd-event.h>
-#include <eventd-plugin.h>
-
 #include "server.h"
 
 #include "dns-sd.h"

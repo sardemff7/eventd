@@ -39,6 +39,7 @@
 
 #include "types.h"
 #include "evp/evp.h"
+#include "relay/relay.h"
 #include "plugins.h"
 
 typedef struct {
@@ -53,6 +54,7 @@ typedef struct {
 } EventdPluginsAction;
 
 static EventdEvpContext *evp = NULL;
+static EventdRelayContext *relay = NULL;
 static GHashTable *plugins = NULL;
 
 
@@ -113,7 +115,7 @@ _eventd_plugins_load_dir(EventdPluginCoreContext *core, gchar *plugins_dir_name,
             goto next;
         }
 
-        if ( g_strcmp0(*id, "evp") == 0 )
+        if ( ( g_strcmp0(*id, "evp") == 0 ) || ( g_strcmp0(*id, "relay") == 0 ) )
             goto next;
 
         if ( whitelist != NULL )
@@ -229,7 +231,7 @@ eventd_plugins_action_free(gpointer data)
 }
 
 gboolean
-eventd_plugins_load(EventdPluginCoreContext *core, gboolean system_mode)
+eventd_plugins_load(EventdPluginCoreContext *core, gboolean enable_relay, gboolean system_mode)
 {
     const gchar *env_whitelist;
     const gchar *env_blacklist;
@@ -237,6 +239,8 @@ eventd_plugins_load(EventdPluginCoreContext *core, gboolean system_mode)
     gchar **blacklist = NULL;
 
     evp = eventd_evp_init(core);
+    if ( enable_relay )
+        relay = eventd_relay_init(core);
 
     if ( ! g_module_supported() )
     {
@@ -263,13 +267,6 @@ eventd_plugins_load(EventdPluginCoreContext *core, gboolean system_mode)
     g_strfreev(blacklist);
     g_strfreev(whitelist);
 
-    if ( g_hash_table_size(plugins) == 0 )
-    {
-        g_warning("No plugins loaded");
-        eventd_plugins_unload();
-        return FALSE;
-    }
-
     return TRUE;
 }
 
@@ -281,6 +278,9 @@ eventd_plugins_unload(void)
 
     g_hash_table_unref(plugins);
     plugins = NULL;
+
+    eventd_relay_uninit(relay);
+    relay = NULL;
 
     eventd_evp_uninit(evp);
     evp = NULL;
@@ -300,11 +300,13 @@ eventd_plugins_start_all(const gchar * const *binds)
     }
 
     eventd_evp_start(evp, binds);
+    eventd_relay_start(relay);
 }
 
 void
 eventd_plugins_stop_all(void)
 {
+    eventd_relay_stop(relay);
     eventd_evp_stop(evp);
 
     GHashTableIter iter;
@@ -322,7 +324,10 @@ EventdctlReturnCode
 eventd_plugins_control_command(const gchar *id, guint64 argc, const gchar * const *argv, gchar **status)
 {
     EventdPlugin *plugin;
-    EventdctlReturnCode r;;
+    EventdctlReturnCode r;
+
+    if ( g_strcmp0(id, "relay") == 0 )
+        return eventd_relay_control_command(relay, argc, argv, status);
 
     plugin = g_hash_table_lookup(plugins, id);
     if ( plugin == NULL )
@@ -355,6 +360,7 @@ eventd_plugins_config_reset_all(void)
     }
 
     eventd_evp_config_reset(evp);
+    eventd_relay_config_reset(relay);
 }
 
 void
@@ -371,6 +377,7 @@ eventd_plugins_global_parse_all(GKeyFile *config_file)
     }
 
     eventd_evp_global_parse(evp, config_file);
+    eventd_relay_global_parse(relay, config_file);
 }
 
 GList *
@@ -405,6 +412,7 @@ void
 eventd_plugins_event_dispatch_all(EventdEvent *event)
 {
     eventd_evp_event_dispatch(evp, event);
+    eventd_relay_event_dispatch(relay, event);
 
     GHashTableIter iter;
     const gchar *id;

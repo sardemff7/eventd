@@ -58,6 +58,7 @@
         </para>
         <para>
             eventd core implements plugins loading and our own EVENT protocol to carry events on network.
+            It also implements a relay, using the EVENT protocol to act as a client to another eventd.
         </para>
         <para>
             The default operation mode is user mode.
@@ -121,14 +122,6 @@
 
             <para>The following action plugins are <phrase condition="website">distributed</phrase><phrase condition="installation">installed</phrase> with eventd:</para>
             <variablelist>
-                <varlistentry>
-                    <term><command>relay</command></term>
-                    <listitem>
-                        <para>a relay plugin, to relay events to remote eventd</para>
-                        <para>It is considered as a core plugin and all its relevant configuration will reside in the main eventd man pages.</para>
-                    </listitem>
-                </varlistentry>
-
                 <varlistentry>
                     <term><command>exec</command> (see <citerefentry><refentrytitle>eventd-exec.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</term>
                     <listitem><para>a simple exec plugin, to exec arbitrary commands</para></listitem>
@@ -526,16 +519,16 @@ Fish config:
             <title>Relaying remote events: static relay</title>
 
             <para>
-                Using the <command>relay</command> plugin, eventd can relay events to a remote computer from your local one.
+                eventd can relay events to a remote computer from your local one.
             </para>
             <para>
-                The <command>relay</command> plugin will connect to configured servers at startup.
+                eventd will connect to configured servers at startup.
                 You can control connections using <command>eventdctl</command> with the following commands:
             </para>
             <programlisting>eventdctl relay connect your.distant.computer
 eventdctl relay disconnect your.distant.computer</programlisting>
             <para>
-                See <citerefentry><refentrytitle>eventd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry> for the <command>relay</command> plugin configuration.
+                See <citerefentry><refentrytitle>eventd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry> for configuration.
             </para>
             <para>
                 See <citerefentry><refentrytitle>eventdctl</refentrytitle><manvolnum>1</manvolnum></citerefentry> for <command>eventdctl</command> call precisions.
@@ -563,9 +556,9 @@ eventdctl relay disconnect your.distant.computer</programlisting>
                 With DNS-SD supports, eventd will advertise itself on the network.
             </para>
             <para>
-                The <command>relay</command> plugin will connect to configured servers when advertised.
+                eventd will connect to configured servers when advertised.
             </para>
-            <para>From the above example, you simply need to configure the <command>relay</command> plugin to search through DNS-SD (using the default name of the server, see <citerefentry><refentrytitle>eventd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>):</para>
+            <para>From the above example, you simply need to configure eventd to search through DNS-SD (using the default name of the server, see <citerefentry><refentrytitle>eventd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>):</para>
             <programlisting><literal>"<filename>eventd.conf</filename>"</literal>:
     [Relay]
     Relays=one;
@@ -579,10 +572,10 @@ eventdctl relay disconnect your.distant.computer</programlisting>
             <title>Relaying remote D-Bus notifications</title>
 
             <para>
-                Combining <command>fdo-notifications</command>, <command>relay</command> and <command>notify</command> plugins, you can easily relay remote D-Bus notifications to your local computer.
+                Combining <command>fdo-notifications</command> and <command>notify</command> plugins, you can easily relay remote D-Bus notifications to your local computer.
             </para>
             <para>
-                You need to configure <command>relay</command> and <command>fdo-notifications</command> plugins on the remote computer and the <command>notify</command> plugin on the local one.
+                You need the <command>fdo-notifications</command> plugin on the remote computer and the <command>notify</command> plugin on the local one.
             </para>
             <para>
                 The default provided configurations for the <command>notify</command> plugin is enough on your local computer.

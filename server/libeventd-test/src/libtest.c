@@ -84,7 +84,7 @@ eventd_tests_env_setup(gchar **argv, const gchar *test)
 }
 
 EventdTestsEnv *
-eventd_tests_env_new(const gchar *plugins, const gchar *evp_socket)
+eventd_tests_env_new(const gchar *evp_socket, const gchar *plugins, gboolean enable_relay)
 {
     static guint instance = 0;
     EventdTestsEnv *self;
@@ -94,6 +94,9 @@ eventd_tests_env_new(const gchar *plugins, const gchar *evp_socket)
     self->dir = g_getenv("XDG_RUNTIME_DIR");
 
     guint length;
+
+    if ( plugins == NULL )
+        plugins = "test-plugin";
 
     self->env = g_get_environ();
     length = g_strv_length(self->env);
@@ -113,7 +116,7 @@ eventd_tests_env_new(const gchar *plugins, const gchar *evp_socket)
     gchar *pwd;
     pwd = g_get_current_dir();
 
-    self->start_args = g_new(char *, 12);
+    self->start_args = g_new0(char *, 13);
     self->start_args[0] = g_build_filename(pwd, "eventdctl" EXEEXT, NULL);
     self->start_args[1] = g_strdup("--socket");
     self->start_args[2] = socket;
@@ -125,16 +128,16 @@ eventd_tests_env_new(const gchar *plugins, const gchar *evp_socket)
     self->start_args[8] = g_strdup(socket);
     self->start_args[9] = g_strdup("--listen");
     self->start_args[10] = g_strdup(evp_socket);
-    self->start_args[11] = NULL;
+    if ( ! enable_relay )
+        self->start_args[11] = g_strdup("--no-relay");
 
     g_free(pwd);
 
-    self->stop_args = g_new(char *, 5);
+    self->stop_args = g_new0(char *, 5);
     self->stop_args[0] = g_strdup(self->start_args[0]);
     self->stop_args[1] = g_strdup("--socket");
     self->stop_args[2] = g_strdup(socket);
     self->stop_args[3] = g_strdup("stop");
-    self->stop_args[4] = NULL;
 
 
     return self;

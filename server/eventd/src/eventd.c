@@ -253,6 +253,7 @@ main(int argc, char *argv[])
 {
     EventdCoreContext *context;
 
+    gboolean enable_relay = TRUE;
     gboolean daemonize = FALSE;
     gboolean print_paths = FALSE;
     gboolean print_version = FALSE;
@@ -323,11 +324,12 @@ main(int argc, char *argv[])
 
     GOptionEntry entries[] =
     {
-        { "listen",    'l', 0,                    G_OPTION_ARG_STRING_ARRAY, &context->binds,            "Add a socket to listen to", "<socket>" },
-        { "take-over", 't', GIO_UNIX_OPTION_FLAG, G_OPTION_ARG_NONE,         &context->take_over_socket, "Take over socket",          NULL },
-        { "daemonize", 0,   G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE,         &daemonize,                 NULL,                        NULL },
-        { "paths",     'P', 0,                    G_OPTION_ARG_NONE,         &print_paths,               "Print search paths",        NULL },
-        { "version",   'V', 0,                    G_OPTION_ARG_NONE,         &print_version,             "Print version",             NULL },
+        { "listen",    'l', 0,                     G_OPTION_ARG_STRING_ARRAY, &context->binds,            "Add a socket to listen to", "<socket>" },
+        { "take-over", 't', GIO_UNIX_OPTION_FLAG,  G_OPTION_ARG_NONE,         &context->take_over_socket, "Take over socket",          NULL },
+        { "no-relay",  0,   G_OPTION_FLAG_REVERSE, G_OPTION_ARG_NONE,         &enable_relay,              "Disable the relay feature", NULL },
+        { "daemonize", 0,   G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,         &daemonize,                 NULL,                        NULL },
+        { "paths",     'P', 0,                     G_OPTION_ARG_NONE,         &print_paths,               "Print search paths",        NULL },
+        { "version",   'V', 0,                     G_OPTION_ARG_NONE,         &print_version,             "Print version",             NULL },
         { NULL }
     };
 
@@ -383,7 +385,7 @@ main(int argc, char *argv[])
         goto end;
     }
 
-    if ( ! eventd_plugins_load(context, context->system_mode) )
+    if ( ! eventd_plugins_load(context, enable_relay, context->system_mode) )
     {
         retval = EVENTD_RETURN_CODE_NO_PLUGIN_ERROR;
         goto end;
