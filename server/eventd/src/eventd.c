@@ -80,9 +80,15 @@ struct _EventdCoreContext {
 };
 
 GList *
-eventd_core_get_sockets(EventdCoreContext *context, const gchar * const *binds)
+eventd_core_get_binds(EventdCoreContext *context, const gchar * const *binds)
 {
-    return eventd_sockets_get_sockets(context->sockets, binds, context->runtime_dir, context->take_over_socket);
+    return eventd_sockets_get_binds(context->sockets, binds, context->runtime_dir, context->take_over_socket);
+}
+
+GList *
+eventd_core_get_sockets(EventdCoreContext *context, GSocketAddress **binds)
+{
+    return eventd_sockets_get_sockets(context->sockets, binds);
 }
 
 gboolean

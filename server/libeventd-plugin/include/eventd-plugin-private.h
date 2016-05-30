@@ -23,7 +23,7 @@
 
 #include <eventd-plugin.h>
 
-typedef GList *(*EventdPluginCoreGetSocketsFunc)(EventdPluginCoreContext *context, const gchar * const *binds);
+typedef GList *(*EventdPluginCoreGetSocketsFunc)(EventdPluginCoreContext *context, GSocketAddress **binds);
 
 typedef gboolean (*EventdPluginCorePushEventFunc)(EventdPluginCoreContext *context, EventdEvent *event);
 

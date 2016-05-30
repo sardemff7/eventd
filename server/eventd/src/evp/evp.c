@@ -76,7 +76,7 @@ static GList *
 _eventd_evp_add_socket(GList *used_sockets, EventdEvpContext *self, const gchar * const *binds)
 {
     GList *sockets;
-    sockets = eventd_core_get_sockets(self->core, binds);
+    sockets = eventd_core_get_binds(self->core, binds);
 
     GList *socket_;
     for ( socket_ = sockets ; socket_ != NULL ; socket_ = g_list_next(socket_) )

@@ -218,7 +218,7 @@ eventd_control_start(EventdControl *control)
     else
         binds[0] = PRIVATE_SOCKET_BIND_PREFIX "-runtime:private";
 
-    sockets = eventd_core_get_sockets(control->core, binds);
+    sockets = eventd_core_get_binds(control->core, binds);
 
     g_free(bind);
 

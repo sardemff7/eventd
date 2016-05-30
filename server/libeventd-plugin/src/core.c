@@ -34,7 +34,7 @@
  */
 EVENTD_EXPORT
 GList *
-eventd_plugin_core_get_sockets(EventdPluginCoreContext *context, const gchar * const *binds)
+eventd_plugin_core_get_sockets(EventdPluginCoreContext *context, GSocketAddress **binds)
 {
     return ((EventdCoreInterface *) context)->get_sockets(context, binds);
 }

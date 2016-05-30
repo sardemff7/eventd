@@ -34,7 +34,8 @@ typedef enum {
     EVENTD_RETURN_CODE_CONTROL_INTERFACE_ERROR    = 10,
 } EventdReturnCode;
 
-GList *eventd_core_get_sockets(EventdCoreContext *context, const gchar * const *binds);
+GList *eventd_core_get_binds(EventdCoreContext *context, const gchar * const *binds);
+GList *eventd_core_get_sockets(EventdCoreContext *context, GSocketAddress **binds);
 
 gboolean eventd_core_push_event(EventdCoreContext *context, EventdEvent *event);
 

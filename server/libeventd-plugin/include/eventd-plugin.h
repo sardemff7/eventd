@@ -22,6 +22,7 @@
 #define __EVENTD_EVENTD_PLUGIN_H__
 
 #include <libeventd-event.h>
+#include <gio/gio.h>
 
 G_BEGIN_DECLS
 
@@ -88,7 +89,7 @@ void eventd_plugin_interface_add_event_action_callback(EventdPluginInterface *in
  * eventd core interface
  */
 
-GList *eventd_plugin_core_get_sockets(EventdPluginCoreContext *context, const gchar * const *binds);
+GList *eventd_plugin_core_get_sockets(EventdPluginCoreContext *context, GSocketAddress **binds);
 
 gboolean eventd_plugin_core_push_event(EventdPluginCoreContext *context, EventdEvent *event);
 

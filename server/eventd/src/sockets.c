@@ -341,7 +341,7 @@ _eventd_sockets_get_inet_address(const gchar *bind, gchar **address, guint16 *po
 }
 
 GList *
-eventd_sockets_get_sockets(EventdSockets *self, const gchar * const *binds, const gchar *runtime_dir, gboolean take_over_socket)
+eventd_sockets_get_binds(EventdSockets *self, const gchar * const *binds, const gchar *runtime_dir, gboolean take_over_socket)
 {
     GList *sockets = NULL;
     const gchar * const * bind_;
@@ -418,6 +418,68 @@ eventd_sockets_get_sockets(EventdSockets *self, const gchar * const *binds, cons
     }
 
     return sockets;
+}
+
+GList *
+eventd_sockets_get_sockets(EventdSockets *self, GSocketAddress **binds)
+{
+    GError *error = NULL;
+    GList *list = NULL;
+
+    GSocketAddress **bind_;
+    for ( bind_ = binds ; bind_ != NULL ; ++bind_ )
+    {
+        GSocketAddress *bind = *bind_;
+        gssize l;
+
+        l = g_socket_address_get_native_size(bind);
+        guchar native_bind[l];
+        guchar native_address[l];
+
+        if ( ! g_socket_address_to_native(bind, native_bind, l, &error) )
+        {
+            g_warning("Couldn't get native sockes address: %s", error->message);
+            g_clear_error(&error);
+            continue;
+        }
+
+        GList *socket_ = self->list, *next_;
+        while ( socket_ != NULL )
+        {
+            next_ = g_list_next(socket_);
+            if ( g_socket_get_family(socket_->data) != g_socket_address_get_family(bind) )
+                goto next;
+
+            GSocketAddress *address;
+            address = g_socket_get_local_address(socket_->data, &error);
+            if ( address == NULL )
+            {
+                g_warning("Couldn't get socket local address: %s", error->message);
+                g_clear_error(&error);
+                goto next;
+            }
+
+            if ( g_socket_address_get_native_size(address) != l )
+                goto next;
+
+            if ( ! g_socket_address_to_native(address, native_address, l, &error) )
+            {
+                g_warning("Couldn't get native sockes address: %s", error->message);
+                g_clear_error(&error);
+                goto next;
+            }
+
+            if ( memcmp(native_bind, native_address, l) == 0 )
+            {
+                list = g_list_concat(socket_, list);
+                self->list = g_list_remove_link(self->list, socket_);
+            }
+        next:
+            socket_ = next_;
+        }
+    }
+
+    return list;
 }
 
 EventdSockets *
