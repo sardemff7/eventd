@@ -56,6 +56,8 @@ eventd_evp_init(EventdCoreContext *core)
 
     self->core = core;
 
+    self->ws = eventd_ws_init();
+
     return self;
 }
 
@@ -63,6 +65,8 @@ void
 eventd_evp_uninit(EventdEvpContext *self)
 {
     g_free(self->publish_name);
+
+    eventd_ws_uninit(self->ws);
 
     g_free(self);
 }

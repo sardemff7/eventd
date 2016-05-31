@@ -18,6 +18,11 @@ must match any dot message with its corresponding ending line (".\n") and
 ignore it. Nesting is possible and must be handled. Data messages can appear
 at any level of nesting.
 
+If the first received message is a valid HTTP request (so "GET / HTTP/1.1\r"),
+the implementation should either handle it as EvP over WebSocket or send
+an 501 status (so "HTTP/1.1 501 Not Implemented\r\n\r\n") and close the
+connection.
+
 
 
 Data

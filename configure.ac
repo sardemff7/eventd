@@ -83,6 +83,7 @@ glib_min_minor="40"
 glib_min_version="${glib_min_major}.${glib_min_minor}"
 gio_min_version="${glib_min_version}"
 gobject_introspection_min_version="1.42.0"
+soup_min_version="2.50"
 
 # Server dependencies
 gmodule_min_version="${glib_min_version}"
@@ -151,6 +152,14 @@ fi
 
 PKG_CHECK_MODULES([GIO], [gio-2.0 >= ${gio_min_version} ${gio_unix}])
 AC_SUBST([gio_unix])
+
+AC_ARG_ENABLE([websocket], AS_HELP_STRING([--disable-websocket], [Disable WebSocket support]), [], [enable_websocket=yes])
+if test x${enable_websocket} = xyes; then
+    PKG_CHECK_MODULES([SOUP], [libsoup-2.4 >= ${soup_min_version}])
+    AC_DEFINE([ENABLE_WEBSOCKET], [1], [Enable WebSocket support])
+    AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_websocket"
+fi
+AM_CONDITIONAL([ENABLE_WEBSOCKET], [test x${enable_websocket} = xyes])
 
 AC_ARG_ENABLE([dns-sd], AS_HELP_STRING([--disable-dns-sd], [Disable DNS-SD support]), [], [enable_dns_sd=${ev_os_unix}])
 if test x${enable_dns_sd} = xyes; then
@@ -401,6 +410,7 @@ AC_MSG_RESULT([
         SSDP support: ${enable_ssdp}
         systemd support: ${enable_systemd}
         UNIX sockets support: ${ev_os_unix}
+        WebSocket support: ${enable_websocket}
         GObject introspection: ${enable_introspection}
 
     Event collection plugins:

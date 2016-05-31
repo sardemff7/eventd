@@ -59,6 +59,8 @@
         <para>
             eventd core implements plugins loading and our own EVENT protocol to carry events on network.
             It also implements a relay, using the EVENT protocol to act as a client to another eventd.
+            <phrase condition="website;enable_websocket">eventd can server the EVENT protocol over WebSocket.
+            The detection is automatic at the client connection.</phrase>
         </para>
         <para>
             The default operation mode is user mode.

@@ -20,22 +20,12 @@
  *
  */
 
-#ifndef __EVENTD_EVP_EVP_INTERAL_H__
-#define __EVENTD_EVP_EVP_INTERAL_H__
+#ifndef __EVENTD_WS_HELPERS_H__
+#define __EVENTD_WS_HELPERS_H__
 
-#include "../types.h"
-#include "evp.h"
-#include <eventd-ws-module.h>
+#include <gio/gio.h>
+#include <libsoup/soup.h>
 
-struct _EventdEvpContext {
-    EventdCoreContext *core;
-    EventdWsModule *ws;
-    gchar *publish_name;
-    GTlsCertificate *certificate;
-    GSocketService *service;
-    GList *clients;
-    GList *subscribe_all;
-    GHashTable *subscribe_categories;
-};
+gboolean eventd_ws_send_message(GOutputStream *out, SoupMessage *msg, gboolean request, GError **error);
 
-#endif /* __EVENTD_EVP_EVP_INTERAL_H__ */
+#endif /* __EVENTD_WS_HELPERS_H__ */

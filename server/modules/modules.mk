@@ -1,5 +1,3 @@
-# Service discovery modules
-
 AM_CFLAGS += \
 	-I $(srcdir)/%D%/include \
 	$(null)
@@ -14,6 +12,12 @@ endif
 if ENABLE_SSDP
 modules_LTLIBRARIES += \
 	ssdp.la \
+	$(null)
+endif
+
+if ENABLE_WEBSOCKET
+modules_LTLIBRARIES += \
+	ws.la \
 	$(null)
 endif
 
@@ -68,5 +72,32 @@ ssdp_la_LIBADD = \
 	$(GIO_LIBS) \
 	$(GOBJECT_LIBS) \
 	$(NKUTILS_LIBS) \
+	$(GLIB_LIBS) \
+	$(null)
+
+
+ws_la_SOURCES = \
+	%D%/include/eventd-ws-module.h \
+	%D%/src/ws.c \
+	$(null)
+
+ws_la_CFLAGS = \
+	$(AM_CFLAGS) \
+	$(SOUP_CFLAGS) \
+	$(GIO_CFLAGS) \
+	$(GOBJECT_CFLAGS) \
+	$(GLIB_CFLAGS) \
+	$(null)
+
+ws_la_LDFLAGS = \
+	$(AM_LDFLAGS) \
+	$(PLUGIN_LDFLAGS) \
+	$(null)
+
+ws_la_LIBADD = \
+	libeventd.la \
+	$(SOUP_LIBS) \
+	$(GIO_LIBS) \
+	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS) \
 	$(null)
