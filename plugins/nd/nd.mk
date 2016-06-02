@@ -81,7 +81,7 @@ nd_la_LIBADD = \
 # Backends
 #
 
-ndbackendsdir = $(pluginsdir)/nd
+ndbackendsdir = $(modulesdir)/nd
 ndbackends_LTLIBRARIES =
 
 ND_BACKENDS_CFLAGS = \
