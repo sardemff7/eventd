@@ -48,18 +48,10 @@
 
 const gchar *eventd_nd_backends_names[_EVENTD_ND_BACKENDS_SIZE] = {
     [EVENTD_ND_BACKEND_NONE] = "none",
-#ifdef ENABLE_ND_WAYLAND
     [EVENTD_ND_BACKEND_WAYLAND] = "wayland",
-#endif /* ENABLE_ND_WAYLAND */
-#ifdef ENABLE_ND_XCB
     [EVENTD_ND_BACKEND_XCB] = "xcb",
-#endif /* ENABLE_ND_XCB */
-#ifdef ENABLE_ND_FBDEV
     [EVENTD_ND_BACKEND_FBDEV] = "fbdev",
-#endif /* ENABLE_ND_FBDEV */
-#ifdef ENABLE_ND_WIN
     [EVENTD_ND_BACKEND_WIN] = "win",
-#endif /* ENABLE_ND_WIN */
 };
 
 static const gchar * const _eventd_nd_dismiss_targets[] = {
@@ -206,26 +198,21 @@ _eventd_nd_start(EventdPluginContext *context)
     EventdNdBackends backend = context->last_backend;
     const gchar *target = context->last_target;
 
-#ifdef ENABLE_ND_WAYLAND
-    if ( backend == EVENTD_ND_BACKEND_NONE )
+    if ( ( backend == EVENTD_ND_BACKEND_NONE ) && ( context->backends[EVENTD_ND_BACKEND_WAYLAND].context != NULL ) )
     {
         target = g_getenv("WAYLAND_DISPLAY");
         if ( target != NULL )
             backend = EVENTD_ND_BACKEND_WAYLAND;
     }
-#endif /* ENABLE_ND_WAYLAND */
 
-#ifdef ENABLE_ND_XCB
-    if ( backend == EVENTD_ND_BACKEND_NONE )
+    if ( ( backend == EVENTD_ND_BACKEND_NONE ) && ( context->backends[EVENTD_ND_BACKEND_XCB].context != NULL ) )
     {
         target = g_getenv("DISPLAY");
         if ( target != NULL )
             backend = EVENTD_ND_BACKEND_XCB;
     }
-#endif /* ENABLE_ND_XCB */
 
-#ifdef ENABLE_ND_FBDEV
-    if ( backend == EVENTD_ND_BACKEND_NONE )
+    if ( ( backend == EVENTD_ND_BACKEND_NONE ) && ( context->backends[EVENTD_ND_BACKEND_FBDEV].context != NULL ) )
     {
         target = g_getenv("TTY");
         if ( ( target != NULL ) && g_str_has_prefix(target, "/dev/tty") )
@@ -234,17 +221,12 @@ _eventd_nd_start(EventdPluginContext *context)
             target = "/dev/fb0";
         }
     }
-#endif /* ENABLE_ND_FBDEV */
 
-#ifdef ENABLE_ND_WIN
-#ifdef G_OS_WIN32
-    if ( backend == EVENTD_ND_BACKEND_NONE )
+    if ( ( backend == EVENTD_ND_BACKEND_NONE ) && ( context->backends[EVENTD_ND_BACKEND_WIN].context != NULL ) )
     {
         backend = EVENTD_ND_BACKEND_WIN;
         target = "dummy";
     }
-#endif /* G_OS_WIN32 */
-#endif /* ENABLE_ND_WIN */
 
     _eventd_nd_backend_switch(context, backend, target, FALSE);
 }
