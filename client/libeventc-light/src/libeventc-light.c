@@ -92,7 +92,7 @@ EVENTD_EXPORT
 const gchar *
 eventc_light_get_version(void)
 {
-    return PACKAGE_VERSION;
+    return EVENTD_VERSION;
 }
 
 static gint

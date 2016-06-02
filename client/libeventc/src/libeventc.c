@@ -173,7 +173,7 @@ EVENTD_EXPORT
 const gchar *
 eventc_get_version(void)
 {
-    return PACKAGE_VERSION;
+    return EVENTD_VERSION;
 }
 
 EVENTD_EXPORT

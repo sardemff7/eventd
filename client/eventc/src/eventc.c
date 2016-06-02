@@ -157,7 +157,7 @@ main(int argc, char *argv[])
     if ( print_version )
     {
         g_print("eventc %s (using libeventc %s)\n",
-            PACKAGE_VERSION,
+            EVENTD_VERSION,
             eventc_get_version());
         goto end;
     }

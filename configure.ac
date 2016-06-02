@@ -14,7 +14,6 @@ AC_CONFIG_AUX_DIR([.aux])
 AM_INIT_AUTOMAKE([1.14 foreign subdir-objects parallel-tests dist-xz no-dist-gzip tar-ustar])
 AM_SILENT_RULES([yes])
 
-AH_BOTTOM([#include <src/config-version.h>])
 AM_CONDITIONAL([EVENTD_USE_GIT_VERSION], [test -d "${srcdir}"/.git])
 
 
@@ -412,14 +411,11 @@ AC_CONFIG_FILES([
     client/libeventc/pkgconfig/libeventc.pc
     client/libeventc/vapi/libeventc.deps
     client/libeventc-light/pkgconfig/libeventc-light.pc
-    src/config.ent
     Makefile
 ])
 AC_OUTPUT
 
 AC_MSG_RESULT([
-    ${PACKAGE_NAME} ${PACKAGE_VERSION}
-
     Core features:
         DNS-SD support: ${enable_dns_sd}
         SSDP support: ${enable_ssdp}

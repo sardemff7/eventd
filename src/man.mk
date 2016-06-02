@@ -1,10 +1,12 @@
 EXTRA_DIST += \
+	%D%/config.ent.in \
 	%D%/common-man.xml \
 	$(man1_MANS:.1=.xml) \
 	$(man5_MANS:.5=.xml) \
 	$(null)
 
 CLEANFILES += \
+	%D%/config.ent \
 	$(man1_MANS) \
 	$(man5_MANS) \
 	$(null)
@@ -48,3 +50,14 @@ $(man1_MANS): %.1: %.xml $(MAN_GEN_DEPS)
 
 $(man5_MANS): %.5: %.xml $(MAN_GEN_DEPS)
 	$(MAN_GEN_RULE)
+
+%D%/config.ent: %D%/config.ent.in $(MAN_STAMP) $(CONFIG_HEADER) %D%/man.mk
+	$(AM_V_GEN)$(MKDIR_P) $(dir $@) && \
+		$(SED) \
+		-e 's:[@]PACKAGE_NAME[@]:$(PACKAGE_NAME):g' \
+		-e 's:[@]EVENTD_VERSION[@]:$(EVENTD_VERSION):g' \
+		-e 's:[@]EVP_SERVICE_NAME[@]:$(EVP_SERVICE_NAME):g' \
+		-e 's:[@]EVP_TRANSPORT_NAME[@]:$(EVP_TRANSPORT_NAME):g' \
+		-e 's:[@]EVP_SERVICE_TYPE[@]:$(EVP_SERVICE_TYPE):g' \
+		-e 's:[@]EVP_UNIX_SOCKET[@]:$(EVP_UNIX_SOCKET):g' \
+		< $< > $@ || rm $@

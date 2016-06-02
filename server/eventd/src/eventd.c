@@ -370,7 +370,7 @@ main(int argc, char *argv[])
 
     if ( print_version )
     {
-        g_printf(PACKAGE_NAME " " PACKAGE_VERSION "\n");
+        g_printf(PACKAGE_NAME " " EVENTD_VERSION "\n");
         goto end;
     }
 
