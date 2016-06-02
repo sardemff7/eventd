@@ -30,7 +30,12 @@ typedef struct _EventdWsConnection EventdWsConnection;
 
 typedef struct {
     EventdWsConnection *(*connection_server_new)(gpointer data, GDestroyNotify disconnect_callback, GCancellable *cancellable, GIOStream *stream, GDataInputStream *input, EventdProtocol *protocol, const gchar *line);
+    EventdWsConnection *(*connection_client_new)(gpointer data, GDestroyNotify disconnect_callback, GCancellable *cancellable, GIOStream *stream, EventdProtocol *protocol);
     void (*connection_free)(EventdWsConnection *connection);
+
+    void (*connection_client_connect)(EventdWsConnection *connection, GSocketConnectable *server_identity, GAsyncReadyCallback callback, gpointer user_data);
+    gboolean (*connection_client_connect_finish)(EventdWsConnection *connection, GAsyncResult *result, GError **error);
+    gboolean (*connection_client_connect_sync)(EventdWsConnection *connection, GSocketConnectable *server_identity, GError **error);
 
     void (*connection_send_message)(EventdWsConnection *client, const gchar *message);
     void (*connection_close)(EventdWsConnection *connection);
@@ -49,6 +54,30 @@ static inline EventdWsConnection *
 eventd_ws_connection_server_new(EventdWsModule *ws, gpointer client, GDestroyNotify disconnect_callback, GCancellable *cancellable, GIOStream *stream, GDataInputStream *input, EventdProtocol *protocol, const gchar *line)
 {
     return ws->connection_server_new(client, disconnect_callback, cancellable, stream, input, protocol, line);
+}
+
+static inline EventdWsConnection *
+eventd_ws_connection_client_new(EventdWsModule *ws, gpointer client, GDestroyNotify disconnect_callback, GCancellable *cancellable, GIOStream *stream, EventdProtocol *protocol)
+{
+    return ws->connection_client_new(client, disconnect_callback, cancellable, stream, protocol);
+}
+
+static inline void
+eventd_ws_connection_client_connect(EventdWsModule *ws, EventdWsConnection *connection, GSocketConnectable *server_identity, GAsyncReadyCallback callback, gpointer user_data)
+{
+    ws->connection_client_connect(connection, server_identity, callback, user_data);
+}
+
+static inline gboolean
+eventd_ws_connection_client_connect_finish(EventdWsModule *ws, EventdWsConnection *connection, GAsyncResult *result, GError **error)
+{
+    return ws->connection_client_connect_finish(connection, result, error);
+}
+
+static inline gboolean
+eventd_ws_connection_client_connect_sync(EventdWsModule *ws, EventdWsConnection *connection, GSocketConnectable *server_identity, GError **error)
+{
+    return ws->connection_client_connect_sync(connection, server_identity, error);
 }
 
 static inline void

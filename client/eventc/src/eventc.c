@@ -45,6 +45,7 @@ static EventcConnection *client = NULL;
 static EventdEvent *event = NULL;
 static GMainLoop *loop = NULL;
 
+static gboolean use_websocket = FALSE;
 static gint tries = 0;
 static gint max_tries = 3;
 
@@ -86,7 +87,10 @@ _eventc_send_event(void)
     GError *error = NULL;
     if ( ! eventc_connection_event(client, event, &error) )
         g_warning("Couldn't send event '%s', '%s': %s", eventd_event_get_category(event), eventd_event_get_name(event), error->message);
-   _eventc_disconnect(NULL);
+    if ( use_websocket )
+        g_idle_add(_eventc_disconnect, NULL);
+    else
+        _eventc_disconnect(NULL);
 }
 
 static gboolean
@@ -129,6 +133,7 @@ main(int argc, char *argv[])
         { "identity",  'i', 0, G_OPTION_ARG_STRING,       &identity,       "Server identity to check for in TLS certificate",          "<host>" },
         { "max-tries", 'm', 0, G_OPTION_ARG_INT,          &max_tries,      "Maximum connection attempts (0 for infinite)",             "<times>" },
         { "subscribe", 's', 0, G_OPTION_ARG_NONE,         &subscribe,      "Subscribe mode",                                           NULL },
+        { "websocket", 'w', 0, G_OPTION_ARG_NONE,         &use_websocket,  "Use WebSocket",                                            NULL },
         { "insecure",  0,   0, G_OPTION_ARG_NONE,         &insecure,       "Accept insecure certificates (unknown CA)",                NULL },
         { "version",   'V', 0, G_OPTION_ARG_NONE,         &print_version,  "Print version",                                            NULL },
         { NULL }
@@ -217,6 +222,7 @@ post_args:
 
     r = 0; /* Host is fine */
 
+    eventc_connection_set_use_websocket(client, use_websocket, NULL);
     if ( server_identity != NULL )
         eventc_connection_set_server_identity(client, server_identity);
     eventc_connection_set_accept_unknown_ca(client, insecure);

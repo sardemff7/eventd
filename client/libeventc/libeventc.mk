@@ -41,11 +41,13 @@ vapi_DATA += \
 
 libeventc_la_SOURCES = \
 	%D%/src/libeventc.c \
+	server/modules/src/ws-load.c \
 	$(null)
 
 libeventc_la_CFLAGS = \
 	$(AM_CFLAGS) \
 	$(GIO_CFLAGS) \
+	$(GMODULE_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(null)
@@ -58,7 +60,9 @@ libeventc_la_LDFLAGS = \
 
 libeventc_la_LIBADD = \
 	libeventd.la \
+	libeventd-helpers.la \
 	$(GIO_LIBS) \
+	$(GMODULE_LIBS) \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS) \
 	$(null)

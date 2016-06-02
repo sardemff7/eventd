@@ -96,6 +96,7 @@ ws_la_LDFLAGS = \
 
 ws_la_LIBADD = \
 	libeventd.la \
+	libeventc.la \
 	$(SOUP_LIBS) \
 	$(GIO_LIBS) \
 	$(GOBJECT_LIBS) \
