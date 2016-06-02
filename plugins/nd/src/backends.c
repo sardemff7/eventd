@@ -48,13 +48,13 @@ _eventd_nd_backends_load_dir(EventdNdBackend *backends, EventdNdInterface *conte
         if ( backends[i].context != NULL )
             continue;
 
+        gchar name[12]; /* wayland.dll + \0 */
         gchar *file;
-        file = g_build_filename(backends_dir_name, eventd_nd_backends_names[i], NULL);
+        g_snprintf(name, sizeof(name), "%s." G_MODULE_SUFFIX, eventd_nd_backends_names[i]);
+        file = g_build_filename(backends_dir_name, name, NULL);
 
-        if ( g_file_test(file, G_FILE_TEST_IS_DIR) )
-        {
+        if ( ( ! g_file_test(file, G_FILE_TEST_EXISTS) ) || g_file_test(file, G_FILE_TEST_IS_DIR) )
             goto next;
-        }
 
         GModule *module;
         module = g_module_open(file, G_MODULE_BIND_LAZY|G_MODULE_BIND_LOCAL);
