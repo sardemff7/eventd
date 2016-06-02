@@ -560,41 +560,41 @@ _eventc_connection_connect_check(EventcConnection *self, GError *_inner_error_, 
 {
     if ( self->priv->connection != NULL )
     {
-        self->priv->out = g_data_output_stream_new(g_io_stream_get_output_stream(G_IO_STREAM(self->priv->connection)));
-        self->priv->in = g_data_input_stream_new(g_io_stream_get_input_stream(G_IO_STREAM(self->priv->connection)));
+            self->priv->out = g_data_output_stream_new(g_io_stream_get_output_stream(G_IO_STREAM(self->priv->connection)));
+            self->priv->in = g_data_input_stream_new(g_io_stream_get_input_stream(G_IO_STREAM(self->priv->connection)));
 
-        g_data_input_stream_read_line_async(self->priv->in, G_PRIORITY_DEFAULT, self->priv->cancellable, _eventc_connection_read_callback, self);
+            g_data_input_stream_read_line_async(self->priv->in, G_PRIORITY_DEFAULT, self->priv->cancellable, _eventc_connection_read_callback, self);
         return TRUE;
     }
 
-        if ( _inner_error_->code == G_IO_ERROR_CANCELLED )
+    if ( _inner_error_->code == G_IO_ERROR_CANCELLED )
+    {
+        g_propagate_error(error, self->priv->error);
+        self->priv->error = NULL;
+    }
+    else
+    {
+        const gchar *extra = "";
+        if ( _inner_error_->domain == G_TLS_ERROR )
         {
-            g_propagate_error(error, self->priv->error);
-            self->priv->error = NULL;
+            switch ( _inner_error_->code )
+            {
+            case G_TLS_ERROR_BAD_CERTIFICATE:
+                extra = self->priv->tls_certificate_errors;
+            break;
+            default:
+                g_assert_null(self->priv->tls_certificate_errors);
+            break;
+            }
         }
         else
-        {
-            const gchar *extra = "";
-            if ( _inner_error_->domain == G_TLS_ERROR )
-            {
-                switch ( _inner_error_->code )
-                {
-                case G_TLS_ERROR_BAD_CERTIFICATE:
-                    extra = self->priv->tls_certificate_errors;
-                break;
-                default:
-                    g_assert_null(self->priv->tls_certificate_errors);
-                break;
-                }
-            }
-            else
-                g_assert_null(self->priv->tls_certificate_errors);
-            g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_CONNECTION, "Failed to connect: %s%s", _inner_error_->message, extra);
-            g_free(self->priv->tls_certificate_errors);
-            self->priv->tls_certificate_errors = NULL;
-        }
-        g_error_free(_inner_error_);
-        return FALSE;
+            g_assert_null(self->priv->tls_certificate_errors);
+        g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_CONNECTION, "Failed to connect: %s%s", _inner_error_->message, extra);
+        g_free(self->priv->tls_certificate_errors);
+        self->priv->tls_certificate_errors = NULL;
+    }
+    g_error_free(_inner_error_);
+    return FALSE;
 }
 
 static gboolean
