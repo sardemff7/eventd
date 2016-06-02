@@ -153,29 +153,9 @@ fi
 PKG_CHECK_MODULES([GIO], [gio-2.0 >= ${gio_min_version} ${gio_unix}])
 AC_SUBST([gio_unix])
 
-AC_ARG_ENABLE([websocket], AS_HELP_STRING([--disable-websocket], [Disable WebSocket support]), [], [enable_websocket=yes])
-if test x${enable_websocket} = xyes; then
-    PKG_CHECK_MODULES([SOUP], [libsoup-2.4 >= ${soup_min_version}])
-    AC_DEFINE([ENABLE_WEBSOCKET], [1], [Enable WebSocket support])
-    AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_websocket"
-fi
-AM_CONDITIONAL([ENABLE_WEBSOCKET], [test x${enable_websocket} = xyes])
-
-AC_ARG_ENABLE([dns-sd], AS_HELP_STRING([--disable-dns-sd], [Disable DNS-SD support]), [], [enable_dns_sd=${ev_os_unix}])
-if test x${enable_dns_sd} = xyes; then
-    PKG_CHECK_MODULES([AVAHI], [avahi-client avahi-glib])
-    AC_DEFINE([ENABLE_DNS_SD], [1], [Enable DNS_SD support])
-    AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_dns_sd"
-fi
-AM_CONDITIONAL([ENABLE_DNS_SD], [test x${enable_dns_sd} = xyes])
-
-AC_ARG_ENABLE([ssdp], AS_HELP_STRING([--disable-ssdp], [Disable SSDP support]), [], [enable_ssdp=yes])
-if test x${enable_ssdp} = xyes; then
-    PKG_CHECK_MODULES([GSSDP], [gssdp-1.0])
-    AC_DEFINE([ENABLE_SSDP], [1], [Enable SSDP support])
-    AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_ssdp"
-fi
-AM_CONDITIONAL([ENABLE_SSDP], [test x${enable_ssdp} = xyes])
+EV_CHECK_FEATURE([websocket], [WebSocket support], [SOUP], [libsoup-2.4 >= ${soup_min_version}])
+EV_CHECK_FEATURE([dns-sd], [DNS-SD support], [AVAHI], [avahi-client avahi-glib])
+EV_CHECK_FEATURE([ssdp], [SSDP support], [GSSDP], [gssdp-1.0])
 
 m4_ifdef([GOBJECT_INTROSPECTION_CHECK], [
     GOBJECT_INTROSPECTION_CHECK([${gobject_introspection_min_version}])
