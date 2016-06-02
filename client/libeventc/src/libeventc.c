@@ -556,10 +556,17 @@ _eventc_connection_get_socket_client(EventcConnection *self)
 }
 
 static gboolean
-_eventc_connection_connect_after(EventcConnection *self, GError *_inner_error_, GError **error)
+_eventc_connection_connect_check(EventcConnection *self, GError *_inner_error_, GError **error)
 {
-    if ( self->priv->connection == NULL )
+    if ( self->priv->connection != NULL )
     {
+        self->priv->out = g_data_output_stream_new(g_io_stream_get_output_stream(G_IO_STREAM(self->priv->connection)));
+        self->priv->in = g_data_input_stream_new(g_io_stream_get_input_stream(G_IO_STREAM(self->priv->connection)));
+
+        g_data_input_stream_read_line_async(self->priv->in, G_PRIORITY_DEFAULT, self->priv->cancellable, _eventc_connection_read_callback, self);
+        return TRUE;
+    }
+
         if ( _inner_error_->code == G_IO_ERROR_CANCELLED )
         {
             g_propagate_error(error, self->priv->error);
@@ -588,13 +595,11 @@ _eventc_connection_connect_after(EventcConnection *self, GError *_inner_error_, 
         }
         g_error_free(_inner_error_);
         return FALSE;
-    }
+}
 
-    self->priv->out = g_data_output_stream_new(g_io_stream_get_output_stream(G_IO_STREAM(self->priv->connection)));
-    self->priv->in = g_data_input_stream_new(g_io_stream_get_input_stream(G_IO_STREAM(self->priv->connection)));
-
-    g_data_input_stream_read_line_async(self->priv->in, G_PRIORITY_DEFAULT, self->priv->cancellable, _eventc_connection_read_callback, self);
-
+static gboolean
+_eventc_connection_connect_after(EventcConnection *self, GError **error)
+{
     if ( self->priv->subscribe )
         return _eventc_connection_send_message(self, eventd_protocol_generate_subscribe(self->priv->protocol, self->priv->subscriptions), error);
 
@@ -610,12 +615,12 @@ _eventc_connection_connect_callback(GObject *obj, GAsyncResult *res, gpointer us
     GError *_inner_error_ = NULL;
     GError *error = NULL;
     self->priv->connection = g_socket_client_connect_finish(G_SOCKET_CLIENT(obj), res, &_inner_error_);
-    if ( ! _eventc_connection_connect_after(self, _inner_error_, &error) )
+    if ( ! _eventc_connection_connect_check(self, _inner_error_, &error) )
+        g_task_return_error(task, error);
+    else if ( ! _eventc_connection_connect_after(self, &error) )
         g_task_return_error(task, error);
     else
         g_task_return_boolean(task, TRUE);
-
-    g_object_unref(task);
 }
 
 /**
@@ -640,14 +645,12 @@ eventc_connection_connect(EventcConnection *self, GAsyncReadyCallback callback, 
     if ( ! _eventc_connection_expect_disconnected(self, &error) )
     {
         g_task_return_error(task, error);
-        g_object_unref(task);
         return;
     }
 
     GSocketClient *client;
 
     client = _eventc_connection_get_socket_client(self);
-
 
     g_socket_client_connect_async(client, self->priv->address, self->priv->cancellable, _eventc_connection_connect_callback, task);
     g_object_unref(client);
@@ -671,6 +674,7 @@ eventc_connection_connect_finish(EventcConnection *self, GAsyncResult *result, G
     g_return_val_if_fail(g_task_is_valid(result, self), FALSE);
     g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
+    g_object_unref(result);
     return g_task_propagate_boolean(G_TASK(result), error);
 }
 
@@ -700,7 +704,10 @@ eventc_connection_connect_sync(EventcConnection *self, GError **error)
     self->priv->connection = g_socket_client_connect(client, self->priv->address, self->priv->cancellable, &_inner_error_);
     g_object_unref(client);
 
-    return _eventc_connection_connect_after(self, _inner_error_, error);
+    if ( ! _eventc_connection_connect_check(self, _inner_error_, error) )
+        return FALSE;
+
+    return _eventc_connection_connect_after(self, error);
 }
 
 /**
