@@ -7,7 +7,7 @@ Documentation=https://www.eventd.org/
 [Service]
 Type=notify
 Sockets=eventd-control.socket eventd.socket
-ExecStart=@bindir@/eventd --listen systemd
+ExecStart=@bindir@/eventd
 ExecReload=@bindir@/eventdctl reload
 
 [Install]
