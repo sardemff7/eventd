@@ -11,6 +11,5 @@ ExecStart=@bindir@/eventd
 ExecReload=@bindir@/eventdctl reload
 
 [Install]
-WantedBy=default.target
 Also=eventd-control.socket
 Also=eventd.socket
