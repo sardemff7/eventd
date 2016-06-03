@@ -235,6 +235,8 @@ if test x${enable_notification_daemon} = xyes; then
     PKG_CHECK_MODULES([PANGO], [pango pangocairo])
     PKG_CHECK_MODULES([GDK_PIXBUF], [gdk-pixbuf-2.0])
     AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_notification_daemon"
+else
+    enabled_nd_backends=" no"
 fi
 AM_CONDITIONAL([ENABLE_NOTIFICATION_DAEMON], [test x${enable_notification_daemon} = xyes])
 
@@ -274,6 +276,7 @@ if test x${enable_nd_wayland} = xyes; then
     AC_SUBST([wnadir])
     AC_DEFINE([ENABLE_ND_WAYLAND], [1], [nd Wayland backend])
     DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_nd_wayland"
+    enabled_nd_backends="${enabled_nd_backends}, Wayland"
 fi
 AM_CONDITIONAL([ENABLE_ND_WAYLAND], [test x${enable_nd_wayland} = xyes])
 
@@ -282,6 +285,7 @@ if test x${enable_nd_xcb} = xyes; then
     GW_CHECK_XCB([cairo-xcb xcb xcb-aux xcb-randr xcb-ewmh xcb-xfixes xcb-shape])
     AC_DEFINE([ENABLE_ND_XCB], [1], [nd XCB backend])
     AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_nd_xcb"
+    enabled_nd_backends="${enabled_nd_backends}, XCB"
 fi
 AM_CONDITIONAL([ENABLE_ND_XCB], [test x${enable_nd_xcb} = xyes])
 
@@ -290,6 +294,7 @@ if test x${enable_nd_fbdev} = xyes; then
     AC_CHECK_HEADER([linux/fb.h])
     AC_DEFINE([ENABLE_ND_FBDEV], [1], [nd fbdev backend])
     AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_nd_fbdev"
+    enabled_nd_backends="${enabled_nd_backends}, fbdev"
 fi
 AM_CONDITIONAL([ENABLE_ND_FBDEV], [test x${enable_nd_fbdev} = xyes])
 
@@ -301,6 +306,7 @@ if test x${enable_nd_windows} = xyes; then
     GW_CHECK_WIN([cairo-win32])
     AC_DEFINE([ENABLE_ND_WIN], [1], [nd Windows backend])
     AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_nd_windows"
+    enabled_nd_backends="${enabled_nd_backends}, Windows"
 fi
 AM_CONDITIONAL([ENABLE_ND_WINDOWS], [test x${enable_nd_windows} = xyes])
 
@@ -351,13 +357,7 @@ AM_CONDITIONAL([ENABLE_CANBERRA], [test x${enable_libcanberra} = xyes])
 
 
 
-#
-# Tests
-#
-dnl No additional dependencies for tests
-dnl AC_ARG_ENABLE([tests], AS_HELP_STRING([--enable-tests], [Build tests]), [], [enable_tests=yes])
-
-# Debug flags
+# Debug
 AC_ARG_ENABLE([debug], AS_HELP_STRING([--disable-debug], [Disable debug output]), [], [enable_debug=yes])
 if test x${enable_debug} = xyes; then
     AC_DEFINE([EVENTD_DEBUG], [1], [Activate debug mode])
@@ -397,20 +397,14 @@ AC_MSG_RESULT([
         org.freedesktop.Notifications interface: yes
 
     Action plugins:
-        EVENT protocol relay: yes
         exec plugin: yes
-        notification-daemon: ${enable_notification_daemon}
-            Backends:
-                Wayland: ${enable_nd_wayland}
-                XCB: ${enable_nd_xcb}
-                fbdev: ${enable_nd_fbdev}
-                Windows: ${enable_nd_windows}
+        file writing plugin: yes
+        notification-daemon:${enabled_nd_backends#,}
         IM support through libpurple: ${enable_im}
         Sound files playing through libsndfile: ${enable_sound}
         Text-to-speech through eSpeak: ${enable_tts}
         libnotify proxy: ${enable_libnotify}
         libcanberra: ${enable_libcanberra}
 
-dnl     Tests: ${enable_tests}
     Debug output: ${enable_debug}
 ])
