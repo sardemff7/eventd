@@ -64,8 +64,8 @@ AC_DEFINE([EVENTD_EXPORT], [__attribute__((visibility("default")))], [Export sym
 AC_CANONICAL_HOST
 ev_os_unix=no
 ev_os_win=no
-case "${host}" in
-    *-*-mingw*)
+case "${host_os}" in
+    mingw*)
         ev_os_win=yes
         pkg_config_extra_args="--dont-define-prefix"
     ;;
