@@ -458,6 +458,8 @@ evhelpers_config_key_file_get_colour(GKeyFile *config_file, const gchar *section
 
 typedef struct {
     EventdEvent *event;
+    gchar number[255];
+    gchar *to_free;
     FormatStringReplaceCallback callback;
     gpointer user_data;
 } FormatStringReplaceData;
@@ -470,7 +472,60 @@ _evhelpers_token_list_callback(const gchar *token, guint64 value, gpointer user_
     if ( data->callback != NULL )
         return data->callback(token, data->event, data->user_data);
 
-    return eventd_event_get_data_string(data->event, token);
+    g_free(data->to_free);
+    data->to_free = NULL;
+
+    GVariant *content;
+    content = eventd_event_get_data(data->event, token);
+    if ( content == NULL )
+        return NULL;
+
+    if ( g_variant_is_of_type(content, G_VARIANT_TYPE_STRING) )
+        return g_variant_get_string(content, NULL);
+
+    if ( g_variant_is_of_type(content, G_VARIANT_TYPE_BOOLEAN) )
+        return g_variant_get_boolean(content) ? "true" : NULL;
+
+#define _evhelpers_check_type_with_format(l, U, GFormat) G_STMT_START { \
+        if ( g_variant_is_of_type(content, G_VARIANT_TYPE_##U) ) \
+        { \
+            g_snprintf(data->number, sizeof(data->number), "%" GFormat, g_variant_get_##l(content)); \
+            return data->number; \
+        } \
+    } G_STMT_END
+#define _evhelpers_check_type(l, U) _evhelpers_check_type_with_format(l, U, G_G##U##_FORMAT)
+
+    _evhelpers_check_type(int16, INT16);
+    _evhelpers_check_type(int32, INT32);
+    _evhelpers_check_type(int64, INT64);
+    _evhelpers_check_type_with_format(byte, BYTE, "hhu");
+    _evhelpers_check_type(uint16, UINT16);
+    _evhelpers_check_type(uint32, UINT32);
+    _evhelpers_check_type(uint64, UINT64);
+    _evhelpers_check_type_with_format(double, DOUBLE, "lf");
+
+#undef _evhelpers_check_type
+#undef _evhelpers_check_type_with_format
+
+    if ( g_variant_is_of_type(content, G_VARIANT_TYPE_STRING_ARRAY) )
+    {
+        const gchar **strv;
+        gsize length;
+        GString *ret;
+        strv = g_variant_get_strv(content, &length);
+        if ( length > 0 )
+        {
+            ret = g_string_sized_new(length * strlen(strv[0]));
+            for ( ; *strv != NULL ; ++strv )
+                g_string_append_c(g_string_append(ret, *strv), ' ');
+            g_string_truncate(ret, ret->len - 1);
+            data->to_free = g_string_free(ret, FALSE);
+        }
+    }
+    else
+        data->to_free = g_variant_print(content, FALSE);
+
+    return data->to_free;
 }
 
 EVENTD_EXPORT
@@ -486,7 +541,11 @@ evhelpers_format_string_get_string(const FormatString *format_string, EventdEven
         .user_data = user_data,
     };
 
-    return nk_token_list_replace(format_string, _evhelpers_token_list_callback, &data);
+    gchar *ret;
+    ret = nk_token_list_replace(format_string, _evhelpers_token_list_callback, &data);
+    g_free(data.to_free);
+
+    return ret;
 }
 
 EVENTD_EXPORT
