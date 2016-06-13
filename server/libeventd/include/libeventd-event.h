@@ -42,13 +42,13 @@ EventdEvent *eventd_event_new(const gchar *category, const gchar *name);
 EventdEvent *eventd_event_ref(EventdEvent *event);
 void eventd_event_unref(EventdEvent *event);
 
-void eventd_event_add_data(EventdEvent *event, gchar *name, gchar *content);
+void eventd_event_add_data_string(EventdEvent *event, gchar *name, gchar *content);
 
 const gchar *eventd_event_get_uuid(EventdEvent *event);
 const gchar *eventd_event_get_category(const EventdEvent *event);
 const gchar *eventd_event_get_name(const EventdEvent *event);
 gboolean eventd_event_has_data(const EventdEvent *event, const gchar *name);
-const gchar *eventd_event_get_data(const EventdEvent *event, const gchar *name);
+const gchar *eventd_event_get_data_string(const EventdEvent *event, const gchar *name);
 GHashTable *eventd_event_get_all_data(const EventdEvent *event);
 
 G_END_DECLS

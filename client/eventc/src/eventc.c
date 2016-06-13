@@ -246,7 +246,7 @@ post_args:
         for ( d = data ; *d != NULL ; ++d )
         {
             c = g_utf8_strchr(*d, -1, '=');
-            eventd_event_add_data(event, g_strndup(*d, c - *d), g_strdup(c+1));
+            eventd_event_add_data_string(event, g_strndup(*d, c - *d), g_strdup(c+1));
         }
         g_strfreev(data);
     }

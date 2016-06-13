@@ -92,7 +92,7 @@ _test_add_data_notnull_good_good(gpointer fixture, gconstpointer user_data)
 
     if ( g_test_subprocess() )
     {
-        eventd_event_add_data(data->event, EVENTD_EVENT_TEST_DATA_NAME, EVENTD_EVENT_TEST_DATA_CONTENT);
+        eventd_event_add_data_string(data->event, EVENTD_EVENT_TEST_DATA_NAME, EVENTD_EVENT_TEST_DATA_CONTENT);
         exit(0);
     }
     g_test_trap_subprocess(NULL, 0, 0);
@@ -106,7 +106,7 @@ _test_add_data_null_good_good(gpointer fixture, gconstpointer user_data)
             return;
     if ( g_test_subprocess() )
     {
-        eventd_event_add_data(NULL, EVENTD_EVENT_TEST_DATA_NAME, EVENTD_EVENT_TEST_DATA_CONTENT);
+        eventd_event_add_data_string(NULL, EVENTD_EVENT_TEST_DATA_NAME, EVENTD_EVENT_TEST_DATA_CONTENT);
         exit(0);
     }
     g_test_trap_subprocess(NULL, 0, 0);
@@ -122,7 +122,7 @@ _test_add_data_notnull_bad_good(gpointer fixture, gconstpointer user_data)
             return;
     if ( g_test_subprocess() )
     {
-        eventd_event_add_data(data->event, NULL, EVENTD_EVENT_TEST_DATA_CONTENT);
+        eventd_event_add_data_string(data->event, NULL, EVENTD_EVENT_TEST_DATA_CONTENT);
         exit(0);
     }
     g_test_trap_subprocess(NULL, 0, 0);
@@ -138,7 +138,7 @@ _test_add_data_notnull_good_bad(gpointer fixture, gconstpointer user_data)
             return;
     if ( g_test_subprocess() )
     {
-        eventd_event_add_data(data->event, EVENTD_EVENT_TEST_DATA_NAME, NULL);
+        eventd_event_add_data_string(data->event, EVENTD_EVENT_TEST_DATA_NAME, NULL);
         exit(0);
     }
     g_test_trap_subprocess(NULL, 0, 0);

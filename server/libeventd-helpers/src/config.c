@@ -470,7 +470,7 @@ _evhelpers_token_list_callback(const gchar *token, guint64 value, gconstpointer 
     if ( data->callback != NULL )
         return data->callback(token, data->event, data->user_data);
 
-    return eventd_event_get_data(data->event, token);
+    return eventd_event_get_data_string(data->event, token);
 }
 
 EVENTD_EXPORT
@@ -500,7 +500,7 @@ evhelpers_filename_get_uri(const Filename *filename, EventdEvent *event, const g
     gchar *uri = NULL;
 
     if ( filename->data_name != NULL )
-        uri = g_strdup(eventd_event_get_data(event, filename->data_name));
+        uri = g_strdup(eventd_event_get_data_string(event, filename->data_name));
     else if ( filename->file_uri != NULL )
         uri = evhelpers_format_string_get_string(filename->file_uri, event, NULL, NULL);
     else

@@ -76,7 +76,7 @@ _eventd_nd_event_timedout(gpointer user_data)
 
     self->timeout = 0;
     event = eventd_event_new(".notification", "timeout");
-    eventd_event_add_data(event, g_strdup("source-event"), g_strdup(eventd_event_get_uuid(self->event)));
+    eventd_event_add_data_string(event, g_strdup("source-event"), g_strdup(eventd_event_get_uuid(self->event)));
     eventd_plugin_core_push_event(self->context->core, event);
     eventd_event_unref(event);
 
@@ -209,7 +209,7 @@ _eventd_nd_notification_refresh_list(EventdPluginContext *context, EventdNdQueue
             }
             else
             {
-                eventd_event_add_data(queue->more_event, g_strdup("size"), g_strdup_printf("%u", g_queue_get_length(queue->wait_queue)));
+                eventd_event_add_data_string(queue->more_event, g_strdup("size"), g_strdup_printf("%u", g_queue_get_length(queue->wait_queue)));
                 _eventd_nd_notification_update(queue->more_notification, queue->more_event);
                 g_queue_push_tail_link(queue->queue, queue->more_notification->link);
                 queue->more_notification->visible = TRUE;
@@ -364,7 +364,7 @@ eventd_nd_notification_dismiss(EventdNdNotification *self)
 
     EventdEvent *event;
     event = eventd_event_new(".notification", "dismiss");
-    eventd_event_add_data(event, g_strdup("source-event"), g_strdup(eventd_event_get_uuid(self->event)));
+    eventd_event_add_data_string(event, g_strdup("source-event"), g_strdup(eventd_event_get_uuid(self->event)));
     eventd_plugin_core_push_event(self->context->core, event);
     eventd_event_unref(event);
 }

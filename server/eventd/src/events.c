@@ -113,7 +113,7 @@ _eventd_events_event_matches(EventdEventsEvent *self, EventdEvent *event, GQuark
         const gchar *data;
         for ( match = self->if_data_matches ; match->data != NULL ; ++match )
         {
-            if ( ( data = eventd_event_get_data(event, match->data) ) == NULL )
+            if ( ( data = eventd_event_get_data_string(event, match->data) ) == NULL )
                 continue;
             if ( ! g_regex_match(match->regex, data, 0, NULL) )
                 return FALSE;

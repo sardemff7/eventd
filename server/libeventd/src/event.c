@@ -104,7 +104,7 @@ eventd_event_unref(EventdEvent *self)
 }
 
 /**
- * eventd_event_add_data:
+ * eventd_event_add_data_string:
  * @event: an #EventdEvent
  * @name: (transfer full): a name for the data
  * @content: (transfer full): the data to add
@@ -113,7 +113,7 @@ eventd_event_unref(EventdEvent *self)
  */
 EVENTD_EXPORT
 void
-eventd_event_add_data(EventdEvent *self, gchar *name, gchar *content)
+eventd_event_add_data_string(EventdEvent *self, gchar *name, gchar *content)
 {
     g_return_if_fail(self != NULL);
     g_return_if_fail(name != NULL);
@@ -199,7 +199,7 @@ eventd_event_has_data(const EventdEvent *self, const gchar *name)
 }
 
 /**
- * eventd_event_get_data:
+ * eventd_event_get_data_string:
  * @event: an #EventdEvent
  * @name: a name of the data
  *
@@ -209,7 +209,7 @@ eventd_event_has_data(const EventdEvent *self, const gchar *name)
  */
 EVENTD_EXPORT
 const gchar *
-eventd_event_get_data(const EventdEvent *self, const gchar *name)
+eventd_event_get_data_string(const EventdEvent *self, const gchar *name)
 {
     g_return_val_if_fail(self != NULL, NULL);
     g_return_val_if_fail(name != NULL, NULL);

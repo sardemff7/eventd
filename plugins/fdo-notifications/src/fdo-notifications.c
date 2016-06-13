@@ -117,7 +117,7 @@ _eventd_fdo_notifications_notification_new(EventdPluginContext *context, const g
     notification->sender = g_strdup(sender);
     notification->event = event;
 
-    eventd_event_add_data(event, g_strdup("libnotify-id"), g_strdup_printf("%u", notification->id));
+    eventd_event_add_data_string(event, g_strdup("libnotify-id"), g_strdup_printf("%u", notification->id));
 
     g_hash_table_insert(context->notifications, (gpointer) eventd_event_get_uuid(event), notification);
     g_hash_table_insert(context->ids, GUINT_TO_POINTER(notification->id), notification);
@@ -277,12 +277,12 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
     else
         event = eventd_event_new("notification", event_name);
 
-    eventd_event_add_data(event, g_strdup("client-name"), g_strdup(app_name));
+    eventd_event_add_data_string(event, g_strdup("client-name"), g_strdup(app_name));
 
-    eventd_event_add_data(event, g_strdup("title"), g_markup_escape_text(summary, -1));
+    eventd_event_add_data_string(event, g_strdup("title"), g_markup_escape_text(summary, -1));
 
     if ( body != NULL )
-        eventd_event_add_data(event, g_strdup("message"), _eventd_fdo_notifications_body_escape(context, body));
+        eventd_event_add_data_string(event, g_strdup("message"), _eventd_fdo_notifications_body_escape(context, body));
 
     if ( ( icon != NULL ) && ( *icon != 0 ) )
     {
@@ -291,7 +291,7 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
 #endif /* EVENTD_DEBUG */
 
         if ( g_str_has_prefix(icon, "file://") )
-            eventd_event_add_data(event, g_strdup("icon"), g_strdup(icon));
+            eventd_event_add_data_string(event, g_strdup("icon"), g_strdup(icon));
         else
         {
             /*
@@ -328,26 +328,26 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
             out += g_base64_encode_close(FALSE, out, &state, &save);
             *out = '\0';
 
-            eventd_event_add_data(event, g_strdup("image"), value);
+            eventd_event_add_data_string(event, g_strdup("image"), value);
         }
         g_variant_unref(data);
     }
     else if ( image_path != NULL )
     {
         if ( g_str_has_prefix(image_path, "file://") )
-            eventd_event_add_data(event, g_strdup("image"), g_strdup(image_path));
+            eventd_event_add_data_string(event, g_strdup("image"), g_strdup(image_path));
     }
 
     if ( urgency != NULL )
-            eventd_event_add_data(event, g_strdup("urgency"), g_strdup(urgency));
+            eventd_event_add_data_string(event, g_strdup("urgency"), g_strdup(urgency));
 
     if ( ! no_sound )
     {
         if ( sound_name != NULL )
-            eventd_event_add_data(event, g_strdup("sound-name"), g_strdup(sound_name));
+            eventd_event_add_data_string(event, g_strdup("sound-name"), g_strdup(sound_name));
 
         if ( sound_file != NULL )
-            eventd_event_add_data(event, g_strdup("sound-file"), g_strdup_printf("file://%s", sound_file));
+            eventd_event_add_data_string(event, g_strdup("sound-file"), g_strdup_printf("file://%s", sound_file));
     }
 
     if ( id > 0 )
@@ -397,7 +397,7 @@ _eventd_fdo_notifications_close_notification(EventdPluginContext *context, GVari
     {
         EventdEvent *event;
         event = eventd_event_new(".notification", "close");
-        eventd_event_add_data(event, g_strdup("source-event"), g_strdup(eventd_event_get_uuid(notification->event)));
+        eventd_event_add_data_string(event, g_strdup("source-event"), g_strdup(eventd_event_get_uuid(notification->event)));
         eventd_plugin_core_push_event(context->core, event);
         eventd_event_unref(event);
     }
@@ -660,7 +660,7 @@ _eventd_fdo_notifications_event_dispatch(EventdPluginContext *context, EventdEve
         return;
 
     const gchar *uuid;
-    uuid = eventd_event_get_data(event, "source-event");
+    uuid = eventd_event_get_data_string(event, "source-event");
     if ( ( uuid == NULL ) || ( ! g_hash_table_contains(context->notifications, uuid) ) )
         return;
 

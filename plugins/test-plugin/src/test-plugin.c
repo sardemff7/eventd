@@ -62,8 +62,8 @@ _eventd_test_event_action(EventdPluginContext *context, EventdPluginAction *acti
     const gchar *filename;
     const gchar *contents;
 
-    filename = eventd_event_get_data(event, "file");
-    contents = eventd_event_get_data(event, "test");
+    filename = eventd_event_get_data_string(event, "file");
+    contents = eventd_event_get_data_string(event, "test");
 
     if ( ( filename == NULL ) || ( contents == NULL ) )
         return;

@@ -429,7 +429,7 @@ _eventd_nd_event_dispatch(EventdPluginContext *context, EventdEvent *event)
         return;
 
     const gchar *uuid;
-    uuid = eventd_event_get_data(event, "source-event");
+    uuid = eventd_event_get_data_string(event, "source-event");
     if ( ( uuid == NULL ) || ( ! g_hash_table_contains(context->notifications, uuid) ) )
         return;
 

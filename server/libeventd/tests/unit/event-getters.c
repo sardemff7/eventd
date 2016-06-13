@@ -41,7 +41,7 @@ _init_data_with_data(gpointer fixture, gconstpointer user_data)
     GettersData *data = fixture;
     _init_data(fixture, user_data);
 
-    eventd_event_add_data(data->event, g_strdup(EVENTD_EVENT_TEST_DATA_NAME), g_strdup(EVENTD_EVENT_TEST_DATA_CONTENT));
+    eventd_event_add_data_string(data->event, g_strdup(EVENTD_EVENT_TEST_DATA_NAME), g_strdup(EVENTD_EVENT_TEST_DATA_CONTENT));
 }
 
 static void
@@ -123,7 +123,7 @@ _test_get_data_notnull_good__null(gpointer fixture, gconstpointer user_data)
 {
     GettersData *data = fixture;
 
-    g_assert(eventd_event_get_data(data->event, EVENTD_EVENT_TEST_DATA_NAME) == NULL);
+    g_assert(eventd_event_get_data_string(data->event, EVENTD_EVENT_TEST_DATA_NAME) == NULL);
 }
 
 static void
@@ -131,7 +131,7 @@ _test_get_data_notnull_good2__null(gpointer fixture, gconstpointer user_data)
 {
     GettersData *data = fixture;
 
-    g_assert(eventd_event_get_data(data->event, EVENTD_EVENT_TEST_DATA_NAME"-bad") == NULL);
+    g_assert(eventd_event_get_data_string(data->event, EVENTD_EVENT_TEST_DATA_NAME"-bad") == NULL);
 }
 
 static void
@@ -139,7 +139,7 @@ _test_get_data_notnull_good__notnull(gpointer fixture, gconstpointer user_data)
 {
     GettersData *data = fixture;
 
-    g_assert_cmpstr(eventd_event_get_data(data->event, EVENTD_EVENT_TEST_DATA_NAME), ==, EVENTD_EVENT_TEST_DATA_CONTENT);
+    g_assert_cmpstr(eventd_event_get_data_string(data->event, EVENTD_EVENT_TEST_DATA_NAME), ==, EVENTD_EVENT_TEST_DATA_CONTENT);
 }
 
 static void
@@ -149,7 +149,7 @@ _test_get_data_null_good__null(gpointer fixture, gconstpointer user_data)
             return;
     if ( g_test_subprocess() )
     {
-        eventd_event_get_data(NULL, EVENTD_EVENT_TEST_DATA_NAME);
+        eventd_event_get_data_string(NULL, EVENTD_EVENT_TEST_DATA_NAME);
         exit(0);
     }
     g_test_trap_subprocess(NULL, 0, 0);
@@ -165,7 +165,7 @@ _test_get_data_notnull_bad__null(gpointer fixture, gconstpointer user_data)
             return;
     if ( g_test_subprocess() )
     {
-        eventd_event_get_data(data->event, NULL);
+        eventd_event_get_data_string(data->event, NULL);
         exit(0);
     }
     g_test_trap_subprocess(NULL, 0, 0);

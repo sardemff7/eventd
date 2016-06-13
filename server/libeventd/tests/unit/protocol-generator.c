@@ -45,8 +45,8 @@ _init_data_with_data(gpointer fixture, gconstpointer user_data)
     GeneratorData *data = fixture;
     _init_data(fixture, user_data);
 
-    eventd_event_add_data(data->event, g_strdup(EVENTD_EVENT_TEST_DATA_NAME), g_strdup(EVENTD_EVENT_TEST_DATA_CONTENT));
-    eventd_event_add_data(data->event, g_strdup(EVENTD_EVENT_TEST_DATA_NEWLINE_NAME ), g_strdup(EVENTD_EVENT_TEST_DATA_NEWLINE_CONTENT));
+    eventd_event_add_data_string(data->event, g_strdup(EVENTD_EVENT_TEST_DATA_NAME), g_strdup(EVENTD_EVENT_TEST_DATA_CONTENT));
+    eventd_event_add_data_string(data->event, g_strdup(EVENTD_EVENT_TEST_DATA_NEWLINE_NAME ), g_strdup(EVENTD_EVENT_TEST_DATA_NEWLINE_CONTENT));
 }
 
 static void
