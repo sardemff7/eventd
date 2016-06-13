@@ -37,5 +37,6 @@
 #define EVENTD_EVENT_TEST_DATA_CONTENT "test-content"
 #define EVENTD_EVENT_TEST_DATA_NEWLINE_NAME "test-name-newline"
 #define EVENTD_EVENT_TEST_DATA_NEWLINE_CONTENT "test-content\ntest-newline-content"
+#define EVENTD_EVENT_TEST_DATA_NEWLINE_CONTENT_ESCAPED "test-content\\ntest-newline-content"
 
 #endif /* __EVENTD_TESTS_UNIT_EVENTD_EVENT_COMMON_H__ */

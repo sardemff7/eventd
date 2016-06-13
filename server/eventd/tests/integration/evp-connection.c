@@ -43,10 +43,10 @@ connection_test(GDataInputStream *input, GDataOutputStream *output, const gchar 
     if ( ! g_data_output_stream_put_string(output, "SUBSCRIBE test\n", NULL, error) ) goto fail;
 
     if ( ! g_data_output_stream_put_string(output, ".EVENT 2e6894bb-cf96-462e-a435-766c9b1b4f8a test test\n", NULL, error) ) goto fail;
-    m = g_strdup_printf("DATA file %s\n", filename);
+    m = g_strdup_printf("DATA file '%s'\n", filename);
     if ( ! g_data_output_stream_put_string(output, m, NULL, error) ) goto fail;
     g_free(m);
-    m = g_strdup_printf(".DATA test\n%s\n.\n", message);
+    m = g_strdup_printf("DATA test '%s'\n", message);
     if ( ! g_data_output_stream_put_string(output, m, NULL, error) ) goto fail;
     m = (g_free(m), NULL);
     if ( ! g_data_output_stream_put_string(output, ".\n", NULL, error) ) goto fail;

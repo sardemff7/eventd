@@ -104,6 +104,30 @@ eventd_event_unref(EventdEvent *self)
 }
 
 /**
+ * eventd_event_add_data:
+ * @event: an #EventdEvent
+ * @name: (transfer full): a name for the data
+ * @content: the data as a #GVariant
+ *
+ * Attaches named data to the event.
+ *
+ * If @content is a floating reference (see g_variant_ref_sink()),
+ * the @event takes ownership of @content.
+ */
+EVENTD_EXPORT
+void
+eventd_event_add_data(EventdEvent *self, gchar *name, GVariant *content)
+{
+    g_return_if_fail(self != NULL);
+    g_return_if_fail(name != NULL);
+    g_return_if_fail(content != NULL);
+
+    if ( self->data == NULL )
+        self->data = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) g_variant_unref);
+    g_hash_table_insert(self->data, name, g_variant_ref_sink(content));
+}
+
+/**
  * eventd_event_add_data_string:
  * @event: an #EventdEvent
  * @name: (transfer full): a name for the data
@@ -119,9 +143,7 @@ eventd_event_add_data_string(EventdEvent *self, gchar *name, gchar *content)
     g_return_if_fail(name != NULL);
     g_return_if_fail(content != NULL);
 
-    if ( self->data == NULL )
-        self->data = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-    g_hash_table_insert(self->data, name, content);
+    eventd_event_add_data(self, name, g_variant_new_take_string(content));
 }
 
 
@@ -199,17 +221,17 @@ eventd_event_has_data(const EventdEvent *self, const gchar *name)
 }
 
 /**
- * eventd_event_get_data_string:
+ * eventd_event_get_data:
  * @event: an #EventdEvent
  * @name: a name of the data
  *
  * Retrieves the event data with a given name.
  *
- * Returns: (transfer none): the data in the event
+ * Returns: (transfer none): the data in the event, as a #GVariant
  */
 EVENTD_EXPORT
-const gchar *
-eventd_event_get_data_string(const EventdEvent *self, const gchar *name)
+GVariant *
+eventd_event_get_data(const EventdEvent *self, const gchar *name)
 {
     g_return_val_if_fail(self != NULL, NULL);
     g_return_val_if_fail(name != NULL, NULL);
@@ -221,12 +243,36 @@ eventd_event_get_data_string(const EventdEvent *self, const gchar *name)
 }
 
 /**
+ * eventd_event_get_data_string:
+ * @event: an #EventdEvent
+ * @name: a name of the data
+ *
+ * Retrieves the event data with a given name as a string.
+ *
+ * Returns: (transfer none): the data in the event
+ */
+EVENTD_EXPORT
+const gchar *
+eventd_event_get_data_string(const EventdEvent *self, const gchar *name)
+{
+    g_return_val_if_fail(self != NULL, NULL);
+    g_return_val_if_fail(name != NULL, NULL);
+
+    GVariant *data;
+    data = eventd_event_get_data(self, name);
+    if ( ( data == NULL ) || ( ! g_variant_is_of_type(data, G_VARIANT_TYPE_STRING) ) )
+        return NULL;
+
+    return g_variant_get_string(data, NULL);
+}
+
+/**
  * eventd_event_get_all_data:
  * @event: an #EventdEvent
  *
  * Retrieves the data table from the event.
  *
- * Returns: (nullable) (transfer container) (element-type utf8 utf8): the data table
+ * Returns: (nullable) (transfer container) (element-type utf8 GVariant): the data table
  */
 EVENTD_EXPORT
 GHashTable *

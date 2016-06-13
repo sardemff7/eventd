@@ -42,18 +42,13 @@ _eventd_protocol_generate_data(GString *str, GHashTable *data)
         return;
 
     GHashTableIter iter;
-    gchar *name, *value, *n;
+    gchar *name;
+    GVariant *value;
     g_hash_table_iter_init(&iter, data);
     while ( g_hash_table_iter_next(&iter, (gpointer *) &name, (gpointer *) &value) )
     {
-        n = g_utf8_strchr(value, -1, '\n');
-        if ( n == NULL )
-            g_string_append_printf(str, "DATA %s ", name);
-        else
-            g_string_append_printf(str, ".DATA %s\n", name);
-        g_string_append(str, value);
-        if ( n != NULL )
-            g_string_append(str, "\n.");
+        g_string_append_printf(str, "DATA %s ", name);
+        g_variant_print_string(value, str, g_variant_is_of_type(value, G_VARIANT_TYPE_MAYBE) || g_variant_is_container(value));
         g_string_append_c(str, '\n');
     }
 
