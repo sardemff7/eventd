@@ -459,13 +459,13 @@ evhelpers_config_key_file_get_colour(GKeyFile *config_file, const gchar *section
 typedef struct {
     EventdEvent *event;
     FormatStringReplaceCallback callback;
-    gconstpointer user_data;
+    gpointer user_data;
 } FormatStringReplaceData;
 
 static const gchar *
-_evhelpers_token_list_callback(const gchar *token, guint64 value, gconstpointer user_data)
+_evhelpers_token_list_callback(const gchar *token, guint64 value, gpointer user_data)
 {
-    const FormatStringReplaceData *data = user_data;
+    FormatStringReplaceData *data = user_data;
 
     if ( data->callback != NULL )
         return data->callback(token, data->event, data->user_data);
@@ -475,16 +475,16 @@ _evhelpers_token_list_callback(const gchar *token, guint64 value, gconstpointer 
 
 EVENTD_EXPORT
 gchar *
-evhelpers_format_string_get_string(const FormatString *format_string, EventdEvent *event, FormatStringReplaceCallback callback, gconstpointer user_data)
+evhelpers_format_string_get_string(const FormatString *format_string, EventdEvent *event, FormatStringReplaceCallback callback, gpointer user_data)
 {
     if ( format_string == NULL )
         return NULL;
 
-    FormatStringReplaceData data;
-
-    data.event = event;
-    data.callback = callback;
-    data.user_data = user_data;
+    FormatStringReplaceData data = {
+        .event = event,
+        .callback = callback,
+        .user_data = user_data,
+    };
 
     return nk_token_list_replace(format_string, _evhelpers_token_list_callback, &data);
 }

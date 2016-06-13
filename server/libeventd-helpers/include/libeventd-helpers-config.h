@@ -26,7 +26,7 @@
 #include <libeventd-event.h>
 
 typedef struct _NkTokenList FormatString;
-typedef const gchar *(*FormatStringReplaceCallback)(const gchar *name, const EventdEvent *event, gconstpointer user_data);
+typedef const gchar *(*FormatStringReplaceCallback)(const gchar *name, const EventdEvent *event, gpointer user_data);
 
 typedef struct {
     gint64 value;
@@ -68,7 +68,7 @@ gint8 evhelpers_config_key_file_get_locale_filename(GKeyFile *config_file, const
 gint8 evhelpers_config_key_file_get_locale_filename_with_default(GKeyFile *config_file, const gchar *group, const gchar *key, const gchar *locale, const gchar *default_value, Filename **value);
 gint8 evhelpers_config_key_file_get_colour(GKeyFile *config_file, const gchar *group, const gchar *key, Colour *value);
 
-gchar *evhelpers_format_string_get_string(const FormatString *format_string, EventdEvent *event, FormatStringReplaceCallback callback, gconstpointer user_data);
+gchar *evhelpers_format_string_get_string(const FormatString *format_string, EventdEvent *event, FormatStringReplaceCallback callback, gpointer user_data);
 gchar *evhelpers_filename_get_uri(const Filename *filename, EventdEvent *event, const gchar *subdir);
 
 FormatString *evhelpers_format_string_new(gchar *string);
