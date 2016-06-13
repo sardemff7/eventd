@@ -40,6 +40,10 @@
 
 #include <libeventc.h>
 
+typedef struct {
+    gchar *name;
+    GVariant *content;
+} EventcData;
 
 static EventcConnection *client = NULL;
 static EventdEvent *event = NULL;
@@ -114,7 +118,8 @@ main(int argc, char *argv[])
     GSocketConnectable *server_identity = NULL;
     const gchar *category = NULL;
     const gchar *name = NULL;
-    gchar **data = NULL;
+    gchar **data_strv = NULL;
+    EventcData *data = NULL;
     gboolean subscribe = FALSE;
 
     gboolean insecure = FALSE;
@@ -128,7 +133,7 @@ main(int argc, char *argv[])
 
     GOptionEntry entries[] =
     {
-        { "data",      'd', 0, G_OPTION_ARG_STRING_ARRAY, &data,           "Event data to send",                                       "<name>=<content>" },
+        { "data",      'd', 0, G_OPTION_ARG_STRING_ARRAY, &data_strv,      "Event data to send",                                       "<name>=<content>" },
         { "host",      'h', 0, G_OPTION_ARG_STRING,       &host,           "Host to connect to (defaults to $EVENTC_HOST if defined)", "<host>" },
         { "identity",  'i', 0, G_OPTION_ARG_STRING,       &identity,       "Server identity to check for in TLS certificate",          "<host>" },
         { "max-tries", 'm', 0, G_OPTION_ARG_INT,          &max_tries,      "Maximum connection attempts (0 for infinite)",             "<times>" },
@@ -183,17 +188,34 @@ main(int argc, char *argv[])
         goto end;
     }
 
-    if ( data != NULL )
+    if ( data_strv != NULL )
     {
-        gchar **d;
-        for ( d = data ; *d != NULL ; ++d )
+        gsize l, i;
+        gchar *c;
+        l = g_strv_length(data_strv);
+        data = g_new0(EventcData, l + 1);
+        for ( i = 0 ; i < l ; ++i )
         {
-            if ( g_utf8_strchr(*d, -1, '=') == NULL )
+            EventcData *d = data + i;
+
+            c = g_utf8_strchr(data_strv[i], -1, '=');
+            if ( c == NULL )
             {
-                g_print("Data format is '<name>=<conntent>': %s", *d);
+                g_print("Malformed data '%s': Data format is '<name>=<content>'\n", data_strv[i]);
                 goto end;
             }
+            *c++ = '\0';
+
+            d->content = g_variant_parse(NULL, c, NULL, NULL, &error);
+            if ( d->content == NULL )
+            {
+                g_print("Malformed data content '%s': %s\n", data_strv[i], error->message);
+                goto end;
+            }
+            d->name = g_strdup(data_strv[i]);
         }
+        g_strfreev(data_strv);
+        data_strv = NULL;
     }
 
     if ( identity != NULL )
@@ -242,13 +264,11 @@ post_args:
 
     if ( data != NULL )
     {
-        gchar **d, *c;
-        for ( d = data ; *d != NULL ; ++d )
-        {
-            c = g_utf8_strchr(*d, -1, '=');
-            eventd_event_add_data_string(event, g_strndup(*d, c - *d), g_strdup(c+1));
-        }
-        g_strfreev(data);
+        gsize i;
+        for ( i = 0 ; data[i].name != NULL ; ++i )
+            eventd_event_add_data(event, data[i].name, data[i].content);
+        g_free(data);
+        data = NULL;
     }
 
 post_event:
@@ -263,6 +283,17 @@ post_event:
     g_object_unref(client);
 
 end:
+    if ( data != NULL )
+    {
+        gsize i;
+        for ( i = 0 ; data[i].name != NULL ; ++i )
+        {
+            g_free(data[i].name);
+            g_variant_unref(data[i].content);
+        }
+        g_free(data);
+    }
+    g_strfreev(data_strv);
     if ( server_identity != NULL )
         g_object_unref(server_identity);
     g_free(identity);
