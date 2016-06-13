@@ -573,7 +573,7 @@ _eventd_fdo_notifications_init(EventdPluginCoreContext *core)
         goto error;
     }
 
-    regex_markup = g_regex_new("<(?!/?[biu]>)", G_REGEX_OPTIMIZE, 0, &error);
+    regex_markup = g_regex_new("<(?!(/?[biua]>|a href=\"|img src=\"))", G_REGEX_OPTIMIZE, 0, &error);
     if ( regex_markup == NULL )
     {
         g_warning("Couldn't create markup regex: %s", error->message);
