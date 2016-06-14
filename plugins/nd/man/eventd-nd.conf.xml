@@ -277,7 +277,7 @@
                             <para>Two <type>integers</type>, <literal>-1</literal> is unlimited</para>
                             <para>These two keys control the bubble width.</para>
                             <para>The maximum width overrides the minimum.</para>
-                            <para>These include borders and padding.</para>
+                            <para>These include padding.</para>
                         </listitem>
                     </varlistentry>
 
