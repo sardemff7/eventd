@@ -367,18 +367,11 @@ _eventd_nd_draw_icon_process_foreground(GdkPixbuf *pixbuf, EventdNdStyle *style,
 static cairo_surface_t *
 _eventd_nd_draw_icon_process_background(GdkPixbuf *pixbuf, EventdNdStyle *style, gint max_width, gint *width, gint *height)
 {
-    gint fade_width;
-
-    fade_width = gdk_pixbuf_get_width(pixbuf) * eventd_nd_style_get_icon_fade_width(style) / 4;
-
-    if ( ( max_width > -1 ) && ( fade_width > max_width ) )
-        return NULL;
-
     cairo_surface_t *icon;
 
     icon = _eventd_nd_draw_icon_process_foreground(pixbuf, style, width, height);
 
-    *width -= fade_width;
+    *width -= cairo_image_surface_get_width(icon) * eventd_nd_style_get_icon_fade_width(style) / 4;
 
     return icon;
 }
@@ -438,15 +431,13 @@ eventd_nd_draw_image_and_icon_process(EventdNdStyle *style, EventdEvent *event, 
     switch ( eventd_nd_style_get_icon_placement(style) )
     {
     case EVENTD_ND_STYLE_ICON_PLACEMENT_BACKGROUND:
-        if ( ( image_pixbuf != NULL )
-             && ( ( max_width < 0 ) || ( gdk_pixbuf_get_width(image_pixbuf) < max_width ) ) )
+        if ( image_pixbuf != NULL )
         {
             *image = _eventd_nd_draw_image_process(image_pixbuf, style, width, height);
             *text_x = *width;
             max_width -= *width;
         }
-        if ( ( icon_pixbuf != NULL )
-             && ( ( max_width < 0 ) || ( gdk_pixbuf_get_width(icon_pixbuf) < max_width ) ) )
+        if ( ( icon_pixbuf != NULL ) && ( max_width > 0 ) )
             *icon = _eventd_nd_draw_icon_process_background(icon_pixbuf, style, max_width, width, height);
     break;
     case EVENTD_ND_STYLE_ICON_PLACEMENT_OVERLAY:
@@ -457,27 +448,21 @@ eventd_nd_draw_image_and_icon_process(EventdNdStyle *style, EventdEvent *event, 
         }
         if ( image_pixbuf != NULL )
         {
-            if ( ( max_width < 0 ) || ( gdk_pixbuf_get_width(image_pixbuf) < max_width ) )
-            {
-                *image = _eventd_nd_draw_image_process(image_pixbuf, style, width, height);
-                max_width -= *width;
-            }
-            if ( ( icon_pixbuf != NULL )
-                 && ( ( max_width < 0 ) || ( gdk_pixbuf_get_width(icon_pixbuf) < max_width ) ) )
+            *image = _eventd_nd_draw_image_process(image_pixbuf, style, width, height);
+            max_width -= *width;
+            if ( ( icon_pixbuf != NULL ) && ( max_width > 0 ) )
                 *icon = _eventd_nd_draw_icon_process_overlay(icon_pixbuf, style, width, height);
             *text_x = *width;
         }
     break;
     case EVENTD_ND_STYLE_ICON_PLACEMENT_FOREGROUND:
-        if ( ( image_pixbuf != NULL )
-             && ( ( max_width < 0 ) || ( gdk_pixbuf_get_width(image_pixbuf) < max_width ) ) )
+        if ( image_pixbuf != NULL )
         {
             *image = _eventd_nd_draw_image_process(image_pixbuf, style, width, height);
             *text_x = *width;
             max_width -= *width;
         }
-        if ( ( icon_pixbuf != NULL )
-             && ( ( max_width < 0 ) || ( gdk_pixbuf_get_width(icon_pixbuf) < max_width ) ) )
+        if ( ( icon_pixbuf != NULL ) && ( max_width > 0 ) )
             *icon = _eventd_nd_draw_icon_process_foreground(icon_pixbuf, style, width, height);
     break;
     }
