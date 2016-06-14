@@ -22,6 +22,10 @@
 
 #include <config.h>
 
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif /* HAVE_STRING_H */
+
 #include <glib.h>
 #include <glib-object.h>
 
@@ -209,39 +213,45 @@ _eventd_libcanberra_config_reset(EventdPluginContext *context)
  */
 
 static void
-_eventd_libcanberra_event_action(EventdPluginContext *context, EventdPluginAction *action, EventdEvent *event)
+_eventd_libcanberra_play(EventdPluginContext *context, const gchar *prop, const gchar *uri)
 {
     int error;
+    error = ca_context_play(context->context, 1,
+        prop, uri,
+        CA_PROP_MEDIA_ROLE, "event",
+        NULL);
+    if ( error < 0 )
+        g_warning("Couldn't play sound '%s': %s", uri, ca_strerror(error));
+}
 
+static void
+_eventd_libcanberra_event_action(EventdPluginContext *context, EventdPluginAction *action, EventdEvent *event)
+{
     gchar *sound_name;
     sound_name = evhelpers_format_string_get_string(action->sound_name, event, NULL, NULL);
     if ( *sound_name != '\0' )
     {
-        error = ca_context_play(context->context, 1,
-            CA_PROP_EVENT_ID, sound_name,
-            CA_PROP_MEDIA_ROLE, "event",
-            NULL);
-        if ( error < 0 )
-            g_warning("Couldn't play named sound '%s': %s", sound_name, ca_strerror(error));
+        _eventd_libcanberra_play(context, CA_PROP_EVENT_ID, sound_name);
     }
     g_free(sound_name);
 
-#ifndef ENABLE_SOUND
-    gchar *sound_file;
-    if ( evhelpers_filename_get_path(action->sound_file, event, "sounds", NULL, &sound_file) )
+    gchar *uri;
+    GVariant *data;
+    switch ( evhelpers_filename_process(action->sound_file, event, "sounds", &uri, &data) )
     {
-        if ( sound_file != NULL )
-        {
-            error = ca_context_play(context->context, 1,
-                CA_PROP_MEDIA_FILENAME, sound_file,
-                CA_PROP_MEDIA_ROLE, "event",
-                NULL);
-            if ( error < 0 )
-                g_warning("Couldn't play sound file '%s': %s", sound_file, ca_strerror(error));
-        }
-        g_free(sound_file);
+    case FILENAME_PROCESS_RESULT_URI:
+        if ( g_str_has_prefix(uri, "file://") )
+            _eventd_libcanberra_play(context, CA_PROP_MEDIA_FILENAME, uri + strlen("file://"));
+        g_free(uri);
+    case FILENAME_PROCESS_RESULT_DATA:
+        /*
+         * TODO: pass the data
+         */
+        g_variant_unref(data);
+    break;
+    case FILENAME_PROCESS_RESULT_NONE:
+    break;
     }
-#endif /* ! ENABLE_SOUND */
 }
 
 
