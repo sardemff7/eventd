@@ -313,35 +313,8 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
 
     if ( image_data != NULL )
     {
-        gboolean a;
-        gint b, w, h, s, n;
-        GVariant *data;
-
-        g_variant_get(image_data, "(iiibii@ay)", &w, &h, &s, &a, &b, &n, &data);
-
-        /* This is the only format gdk-pixbuf can read */
-        if ( ( b == 8 ) && ( n == ( a ? 4 : 3 ) ) )
-        {
-            gchar *value;
-            gsize format_length;
-            gsize length;
-
-            format_length = strlen("data:image/x.eventd.gdkpixbuf;format=ffffffffffffffff:ffffffffffffffff:ffffffffffffffff:f;base64,");
-            length = ( g_variant_get_size(data) / 3 + 1 ) * 4 + 1;
-            value = g_malloc(format_length + length);
-
-            gchar *out = value;
-            out += g_snprintf(out, format_length, "data:image/x.eventd.gdkpixbuf;format=%x:%x:%x:%x;base64,", w, h, s, a);
-
-            gint state = 0;
-            gint save = 0;
-            out += g_base64_encode_step(g_variant_get_data(data), g_variant_get_size(data), FALSE, out, &state, &save);
-            out += g_base64_encode_close(FALSE, out, &state, &save);
-            *out = '\0';
-
-            eventd_event_add_data_string(event, g_strdup("image"), value);
-        }
-        g_variant_unref(data);
+        eventd_event_add_data(event, g_strdup("image"), g_variant_new("(msmsv)", "image/x.eventd.gdkpixbuf", NULL, image_data));
+        g_variant_unref(image_data);
     }
     else if ( image_path != NULL )
     {

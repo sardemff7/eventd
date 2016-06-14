@@ -130,8 +130,9 @@ _eventd_libnotify_get_image(EventdPluginContext *context, EventdPluginAction *ac
 {
     GdkPixbuf *image = NULL;
     GdkPixbuf *icon = NULL;
+    GVariant *data;
 
-    switch ( evhelpers_filename_process(action->image, event, "icons", image_uri) )
+    switch ( evhelpers_filename_process(action->image, event, "icons", image_uri, &data) )
     {
     case FILENAME_PROCESS_RESULT_URI:
         if ( g_str_has_prefix(*image_uri, "file://")
@@ -144,11 +145,14 @@ _eventd_libnotify_get_image(EventdPluginContext *context, EventdPluginAction *ac
         image = eventd_nd_pixbuf_from_uri(*image_uri, 0, 0);
         *image_uri = NULL;
     break;
+    case FILENAME_PROCESS_RESULT_DATA:
+        image = eventd_nd_pixbuf_from_data(data, 0, 0);
+    break;
     case FILENAME_PROCESS_RESULT_NONE:
     break;
     }
 
-    switch ( evhelpers_filename_process(action->icon, event, "icons", icon_uri) )
+    switch ( evhelpers_filename_process(action->icon, event, "icons", icon_uri, &data) )
     {
     case FILENAME_PROCESS_RESULT_URI:
         if ( g_str_has_prefix(*icon_uri, "file://")
@@ -158,6 +162,9 @@ _eventd_libnotify_get_image(EventdPluginContext *context, EventdPluginAction *ac
             break;
         icon = eventd_nd_pixbuf_from_uri(*icon_uri, 0, 0);
         *icon_uri = NULL;
+    break;
+    case FILENAME_PROCESS_RESULT_DATA:
+        icon = eventd_nd_pixbuf_from_data(data, 0, 0);
     break;
     case FILENAME_PROCESS_RESULT_NONE:
     break;

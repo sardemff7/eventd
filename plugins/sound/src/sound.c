@@ -215,19 +215,23 @@ static void
 _eventd_sound_event_action(EventdPluginContext *context, EventdPluginAction *action, EventdEvent *event)
 {
     gchar *uri;
+    GVariant *var;
     gpointer data = NULL;
     gsize length = 0;
     gint format = 0;
     guint32 rate = 0;
     guint8 channels = 0;
 
-    switch ( evhelpers_filename_process(action->sound, event, "sounds", &uri) )
+    switch ( evhelpers_filename_process(action->sound, event, "sounds", &uri, &var) )
     {
     case FILENAME_PROCESS_RESULT_URI:
         if ( g_str_has_prefix(uri, "file://"))
             _eventd_sound_read_file(uri + strlen("file://"), &data, &length, &format, &rate, &channels);
-        // TODO: using event data
         g_free(uri);
+    break;
+    case FILENAME_PROCESS_RESULT_DATA:
+        /* TODO: using event data */
+        g_variant_unref(var);
     break;
     case FILENAME_PROCESS_RESULT_NONE:
     break;

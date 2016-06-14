@@ -550,12 +550,13 @@ evhelpers_format_string_get_string(const FormatString *format_string, EventdEven
 
 EVENTD_EXPORT
 FilenameProcessResult
-evhelpers_filename_process(const Filename *filename, EventdEvent *event, const gchar *subdir, gchar **ret_uri)
+evhelpers_filename_process(const Filename *filename, EventdEvent *event, const gchar *subdir, gchar **ret_uri, GVariant **ret_data)
 {
     g_return_val_if_fail(filename != NULL, FILENAME_PROCESS_RESULT_NONE);
     g_return_val_if_fail(event != NULL, FILENAME_PROCESS_RESULT_NONE);
     g_return_val_if_fail(subdir != NULL, FILENAME_PROCESS_RESULT_NONE);
     g_return_val_if_fail(ret_uri != NULL, FILENAME_PROCESS_RESULT_NONE);
+    g_return_val_if_fail(ret_data != NULL, FILENAME_PROCESS_RESULT_NONE);
 
     gchar *uri = NULL;
 
@@ -567,6 +568,11 @@ evhelpers_filename_process(const Filename *filename, EventdEvent *event, const g
             return FILENAME_PROCESS_RESULT_NONE;
         if ( g_variant_is_of_type(data, G_VARIANT_TYPE_STRING) )
             uri = g_variant_dup_string(data, NULL);
+        else if ( g_variant_is_of_type(data, G_VARIANT_TYPE("(msmsv)")) )
+        {
+            *ret_data = g_variant_ref(data);
+            return FILENAME_PROCESS_RESULT_DATA;
+        }
         else
             return FILENAME_PROCESS_RESULT_NONE;
     }

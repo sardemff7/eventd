@@ -388,22 +388,29 @@ eventd_nd_draw_image_and_icon_process(EventdNdStyle *style, EventdEvent *event, 
     const Filename *image_filename = eventd_nd_style_get_template_image(style);
     const Filename *icon_filename = eventd_nd_style_get_template_icon(style);
     gchar *uri;
+    GVariant *data;
 
-    switch ( evhelpers_filename_process(image_filename, event, "images", &uri) )
+    eventd_nd_style_get_image_load_size(style, max_width, &load_width, &load_height);
+    switch ( evhelpers_filename_process(image_filename, event, "images", &uri, &data) )
     {
     case FILENAME_PROCESS_RESULT_URI:
-        eventd_nd_style_get_image_load_size(style, max_width, &load_width, &load_height);
         image_pixbuf = eventd_nd_pixbuf_from_uri(uri, load_width, load_height);
+    break;
+    case FILENAME_PROCESS_RESULT_DATA:
+        image_pixbuf = eventd_nd_pixbuf_from_data(data, load_width, load_height);
     break;
     case FILENAME_PROCESS_RESULT_NONE:
     break;
     }
 
-    switch ( evhelpers_filename_process(icon_filename, event, "icons", &uri) )
+    eventd_nd_style_get_icon_load_size(style, max_width, &load_width, &load_height);
+    switch ( evhelpers_filename_process(icon_filename, event, "icons", &uri, &data) )
     {
     case FILENAME_PROCESS_RESULT_URI:
-        eventd_nd_style_get_icon_load_size(style, max_width, &load_width, &load_height);
         icon_pixbuf = eventd_nd_pixbuf_from_uri(uri, load_width, load_height);
+    break;
+    case FILENAME_PROCESS_RESULT_DATA:
+        icon_pixbuf = eventd_nd_pixbuf_from_data(data, load_width, load_height);
     break;
     case FILENAME_PROCESS_RESULT_NONE:
     break;

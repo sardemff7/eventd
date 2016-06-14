@@ -57,7 +57,7 @@ _eventd_nd_from_file(const gchar *path, gint width, gint height)
 }
 
 static void
-_eventd_nd_pixbuf_free_data(guchar *pixels, gpointer data)
+_eventd_nd_pixbuf_free_data_old(guchar *pixels, gpointer data)
 {
     g_free(pixels);
 }
@@ -93,7 +93,7 @@ _eventd_nd_pixbuf_from_base64(gchar *uri, gint width, gint height)
         stride = g_ascii_strtoll(f+1, &f, 16);
         alpha = g_ascii_strtoll(f+1, &f, 16);
 
-        return gdk_pixbuf_new_from_data(data, GDK_COLORSPACE_RGB, alpha, 8, width, height, stride, _eventd_nd_pixbuf_free_data, NULL);
+        return gdk_pixbuf_new_from_data(data, GDK_COLORSPACE_RGB, alpha, 8, width, height, stride, _eventd_nd_pixbuf_free_data_old, NULL);
     }
 
     GError *error = NULL;
@@ -146,5 +146,82 @@ eventd_nd_pixbuf_from_uri(gchar *uri, gint width, gint height)
         pixbuf = _eventd_nd_pixbuf_from_base64(uri + strlen("data:"), width, height);
     g_free(uri);
 
+    return pixbuf;
+}
+
+static void
+_eventd_nd_pixbuf_free_data(guchar *pixels, gpointer data)
+{
+    g_variant_unref(data);
+}
+
+GdkPixbuf *
+eventd_nd_pixbuf_from_data(GVariant *var, gint width, gint height)
+{
+    GdkPixbuf *pixbuf = NULL;
+    GError *error = NULL;
+    const gchar *mime_type;
+    GVariant *invar;
+
+    g_variant_get(var, "(m&sm&sv)", &mime_type, NULL, &invar);
+
+    if ( g_strcmp0(mime_type, "image/x.eventd.pixbuf") == 0 )
+    {
+        gboolean a;
+        gint b, w, h, s, n;
+        GVariant *data;
+        g_variant_get(invar, "(iiibii@ay)", &w, &h, &s, &a, &b, &n, &data);
+         /* This is the only format gdk-pixbuf can read */
+        if ( ( b == 8 ) && ( n == ( a ? 4 : 3 ) ) && ( h * s == (gint) g_variant_get_size(data) ) )
+            return gdk_pixbuf_new_from_data(g_variant_get_data(data), GDK_COLORSPACE_RGB, a, b, w, h, s, _eventd_nd_pixbuf_free_data, data);
+        g_variant_unref(data);
+        goto end;
+    }
+
+    if ( ! g_variant_is_of_type(invar, G_VARIANT_TYPE_BYTESTRING) )
+        goto end;
+
+    GdkPixbufLoader *loader;
+    const guchar *data;
+    gsize length;
+
+    data = g_variant_get_data(invar);
+    length = g_variant_get_size(invar);
+
+    if ( mime_type != NULL )
+    {
+        loader = gdk_pixbuf_loader_new_with_mime_type(mime_type, &error);
+        if ( loader == NULL )
+        {
+            g_warning("Couldn't create loader for MIME type '%s': %s", mime_type, error->message);
+            goto end;
+        }
+        GdkPixbufFormat *format;
+        if ( ( ( width > 0 ) || ( height > 0 ) ) && ( ( format = gdk_pixbuf_loader_get_format(loader) ) != NULL ) && gdk_pixbuf_format_is_scalable(format) )
+            gdk_pixbuf_loader_set_size(loader, width, height);
+    }
+    else
+        loader = gdk_pixbuf_loader_new();
+
+    if ( ! gdk_pixbuf_loader_write(loader, data, length, &error) )
+    {
+        g_warning("Couldn't write image data: %s", error->message);
+        goto error;
+    }
+
+    if ( ! gdk_pixbuf_loader_close(loader, &error) )
+    {
+        g_warning("Couldn't load image data: %s", error->message);
+        goto error;
+    }
+
+    pixbuf = g_object_ref(gdk_pixbuf_loader_get_pixbuf(loader));
+
+error:
+    g_object_unref(loader);
+end:
+    g_variant_unref(invar);
+    g_variant_unref(var);
+    g_clear_error(&error);
     return pixbuf;
 }
