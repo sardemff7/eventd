@@ -336,7 +336,7 @@ static void
 _eventd_protocol_evp_parse_line(EventdProtocol *self, const gchar *line, GError **error)
 {
 #ifdef EVENTD_DEBUG
-    g_debug("[%s] Parse line: %s", _eventd_protocol_evp_states[self->state], line);
+    g_debug("[%s] Parse line: %.255s%s", _eventd_protocol_evp_states[self->state], line, ( strlen(line) > 255 ) ? " […]" : "");
 #endif /* EVENTD_DEBUG */
 
     const EventdProtocolTokens *message;
