@@ -637,6 +637,11 @@ evhelpers_filename_process(const Filename *filename, EventdEvent *event, const g
             return FILENAME_PROCESS_RESULT_URI;
         }
     }
+    else if ( g_str_has_prefix(uri, "theme:") )
+    {
+        *ret_uri = uri;
+        return FILENAME_PROCESS_RESULT_THEME;
+    }
 
     g_free(uri);
 

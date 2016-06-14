@@ -233,6 +233,12 @@ _eventd_sound_event_action(EventdPluginContext *context, EventdPluginAction *act
         /* TODO: using event data */
         g_variant_unref(var);
     break;
+    case FILENAME_PROCESS_RESULT_THEME:
+        /*
+         * TODO: implement Freedesktop.org sound themes
+         */
+        g_free(uri);
+    break;
     case FILENAME_PROCESS_RESULT_NONE:
     break;
     }

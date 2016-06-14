@@ -148,6 +148,13 @@ _eventd_libnotify_get_image(EventdPluginContext *context, EventdPluginAction *ac
     case FILENAME_PROCESS_RESULT_DATA:
         image = eventd_nd_pixbuf_from_data(data, 0, 0);
     break;
+    case FILENAME_PROCESS_RESULT_THEME:
+        /*
+         * TODO: implement Freedesktop.org icon themes
+         */
+         g_free(image_uri);
+        *image_uri = NULL;
+    break;
     case FILENAME_PROCESS_RESULT_NONE:
     break;
     }
@@ -165,6 +172,13 @@ _eventd_libnotify_get_image(EventdPluginContext *context, EventdPluginAction *ac
     break;
     case FILENAME_PROCESS_RESULT_DATA:
         icon = eventd_nd_pixbuf_from_data(data, 0, 0);
+    break;
+    case FILENAME_PROCESS_RESULT_THEME:
+        /*
+         * TODO: implement Freedesktop.org icon themes
+         */
+         g_free(*icon_uri);
+        *icon_uri = NULL;
     break;
     case FILENAME_PROCESS_RESULT_NONE:
     break;

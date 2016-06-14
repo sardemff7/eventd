@@ -399,6 +399,12 @@ eventd_nd_draw_image_and_icon_process(EventdNdStyle *style, EventdEvent *event, 
     case FILENAME_PROCESS_RESULT_DATA:
         image_pixbuf = eventd_nd_pixbuf_from_data(data, load_width, load_height);
     break;
+    case FILENAME_PROCESS_RESULT_THEME:
+        /*
+         * TODO: implement Freedesktop.org icon themes
+         */
+         g_free(uri);
+    break;
     case FILENAME_PROCESS_RESULT_NONE:
     break;
     }
@@ -411,6 +417,12 @@ eventd_nd_draw_image_and_icon_process(EventdNdStyle *style, EventdEvent *event, 
     break;
     case FILENAME_PROCESS_RESULT_DATA:
         icon_pixbuf = eventd_nd_pixbuf_from_data(data, load_width, load_height);
+    break;
+    case FILENAME_PROCESS_RESULT_THEME:
+        /*
+         * TODO: implement Freedesktop.org icon themes
+         */
+         g_free(uri);
     break;
     case FILENAME_PROCESS_RESULT_NONE:
     break;

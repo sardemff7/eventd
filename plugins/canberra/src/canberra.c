@@ -42,7 +42,6 @@ struct _EventdPluginContext {
 };
 
 struct _EventdPluginAction {
-    FormatString *sound_name;
     Filename *sound_file;
 };
 
@@ -52,13 +51,12 @@ struct _EventdPluginAction {
  */
 
 static EventdPluginAction *
-_eventd_canberra_event_new(FormatString *sound_name, Filename *sound_file)
+_eventd_canberra_event_new(Filename *sound_file)
 {
     EventdPluginAction *event;
 
     event = g_slice_new(EventdPluginAction);
 
-    event->sound_name = sound_name;
     event->sound_file = sound_file;
 
     return event;
@@ -70,7 +68,6 @@ _eventd_libcanberra_action_free(gpointer data)
     EventdPluginAction *event = data;
 
     evhelpers_filename_unref(event->sound_file);
-    evhelpers_format_string_unref(event->sound_name);
 
     g_slice_free(EventdPluginAction, event);
 }
@@ -166,7 +163,6 @@ static EventdPluginAction *
 _eventd_libcanberra_action_parse(EventdPluginContext *context, GKeyFile *config_file)
 {
     gboolean disable;
-    FormatString *sound_name = NULL;
     Filename *sound_file = NULL;
 
     if ( ! g_key_file_has_group(config_file, "Libcanberra") )
@@ -178,15 +174,12 @@ _eventd_libcanberra_action_parse(EventdPluginContext *context, GKeyFile *config_
     if ( disable )
         return NULL;
 
-    if ( evhelpers_config_key_file_get_format_string_with_default(config_file, "Libcanberra", "Name", "${sound-name}", &sound_name) < 0 )
-        goto fail;
     if ( evhelpers_config_key_file_get_filename_with_default(config_file, "Libcanberra", "Sound", "sound", &sound_file) < 0 )
         goto fail;
 
     EventdPluginAction *action;
-    action = _eventd_canberra_event_new(sound_name, sound_file);
+    action = _eventd_canberra_event_new(sound_file);
     sound_file = NULL;
-    sound_name = NULL;
 
     context->actions = g_slist_prepend(context->actions, action);
 
@@ -194,7 +187,6 @@ _eventd_libcanberra_action_parse(EventdPluginContext *context, GKeyFile *config_
 
 fail:
     evhelpers_filename_unref(sound_file);
-    evhelpers_format_string_unref(sound_name);
     return NULL;
 }
 
@@ -225,14 +217,6 @@ _eventd_libcanberra_play(EventdPluginContext *context, const gchar *prop, const 
 static void
 _eventd_libcanberra_event_action(EventdPluginContext *context, EventdPluginAction *action, EventdEvent *event)
 {
-    gchar *sound_name;
-    sound_name = evhelpers_format_string_get_string(action->sound_name, event, NULL, NULL);
-    if ( *sound_name != '\0' )
-    {
-        _eventd_libcanberra_play(context, CA_PROP_EVENT_ID, sound_name);
-    }
-    g_free(sound_name);
-
     gchar *uri;
     GVariant *data;
     switch ( evhelpers_filename_process(action->sound_file, event, "sounds", &uri, &data) )
@@ -247,6 +231,9 @@ _eventd_libcanberra_event_action(EventdPluginContext *context, EventdPluginActio
          */
         g_variant_unref(data);
     break;
+    case FILENAME_PROCESS_RESULT_THEME:
+        _eventd_libcanberra_play(context, CA_PROP_EVENT_ID, uri + strlen("theme:"));
+        g_free(uri);
     case FILENAME_PROCESS_RESULT_NONE:
     break;
     }

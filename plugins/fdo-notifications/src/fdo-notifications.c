@@ -300,11 +300,7 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
         if ( g_str_has_prefix(icon, "file://") )
             eventd_event_add_data_string(event, g_strdup("icon"), g_strdup(icon));
         else
-        {
-            /*
-             * TODO: Support freedesktop themes
-             */
-        }
+            eventd_event_add_data_string(event, g_strdup("icon"), g_strdup_printf("theme:%s", icon));
     }
 
     if ( desktop_entry != NULL )
@@ -328,7 +324,7 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
     if ( ! no_sound )
     {
         if ( sound_name != NULL )
-            eventd_event_add_data_string(event, g_strdup("sound-name"), g_strdup(sound_name));
+            eventd_event_add_data_string(event, g_strdup("sound"), g_strdup_printf("theme:%s", sound_name));
         else if ( sound_file != NULL )
             eventd_event_add_data_string(event, g_strdup("sound"), g_strdup_printf("file://%s", sound_file));
     }
