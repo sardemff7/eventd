@@ -41,6 +41,10 @@ typedef struct {
 } Colour;
 
 typedef struct _Filename Filename;
+typedef enum {
+    FILENAME_PROCESS_RESULT_NONE = 0,
+    FILENAME_PROCESS_RESULT_URI,
+} FilenameProcessResult;
 
 /*
  * These functions will return:
@@ -69,7 +73,7 @@ gint8 evhelpers_config_key_file_get_locale_filename_with_default(GKeyFile *confi
 gint8 evhelpers_config_key_file_get_colour(GKeyFile *config_file, const gchar *group, const gchar *key, Colour *value);
 
 gchar *evhelpers_format_string_get_string(const FormatString *format_string, EventdEvent *event, FormatStringReplaceCallback callback, gpointer user_data);
-gchar *evhelpers_filename_get_uri(const Filename *filename, EventdEvent *event, const gchar *subdir);
+FilenameProcessResult evhelpers_filename_process(const Filename *filename, EventdEvent *event, const gchar *subdir, gchar **uri);
 
 FormatString *evhelpers_format_string_new(gchar *string);
 FormatString *evhelpers_format_string_ref(FormatString *format_string);

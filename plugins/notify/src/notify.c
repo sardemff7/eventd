@@ -128,34 +128,39 @@ const gchar * const _eventd_libnotify_urgency[_EVENTD_LIBNOTIFY_URGENCY_SIZE] = 
 static GdkPixbuf *
 _eventd_libnotify_get_image(EventdPluginContext *context, EventdPluginAction *action, EventdEvent *event, gchar **icon_uri, gchar **image_uri)
 {
-    gchar *uri;
     GdkPixbuf *image = NULL;
     GdkPixbuf *icon = NULL;
 
-    uri = evhelpers_filename_get_uri(action->image, event, "icons");
-    if ( uri != NULL )
+    switch ( evhelpers_filename_process(action->image, event, "icons", image_uri) )
     {
-        if ( g_str_has_prefix(uri, "file://")
+    case FILENAME_PROCESS_RESULT_URI:
+        if ( g_str_has_prefix(*image_uri, "file://")
                 /* Check that the server supports at least image_path hint */
                 && ( context->information.spec_version >= EVENTD_LIBNOTIFY_SPEC_VERSION_1_1 )
                 /* Check for SVG support */
-                && ( context->capabilities.svg_support || ( ! g_str_has_suffix(uri, ".svg") ) )
+                && ( context->capabilities.svg_support || ( ! g_str_has_suffix(*image_uri, ".svg") ) )
             )
-            *image_uri = uri;
-        else
-            image = eventd_nd_pixbuf_from_uri(uri, 0, 0);
+            break;
+        image = eventd_nd_pixbuf_from_uri(*image_uri, 0, 0);
+        *image_uri = NULL;
+    break;
+    case FILENAME_PROCESS_RESULT_NONE:
+    break;
     }
 
-    uri = evhelpers_filename_get_uri(action->icon, event, "icons");
-    if ( uri != NULL )
+    switch ( evhelpers_filename_process(action->icon, event, "icons", icon_uri) )
     {
-        if ( g_str_has_prefix(uri, "file://")
+    case FILENAME_PROCESS_RESULT_URI:
+        if ( g_str_has_prefix(*icon_uri, "file://")
                 /* Check for SVG support */
-                && ( context->capabilities.svg_support || ( ! g_str_has_suffix(uri, ".svg") ) )
+                && ( context->capabilities.svg_support || ( ! g_str_has_suffix(*icon_uri, ".svg") ) )
             )
-            *icon_uri = uri;
-        else
-            icon = eventd_nd_pixbuf_from_uri(uri, 0, 0);
+            break;
+        icon = eventd_nd_pixbuf_from_uri(*icon_uri, 0, 0);
+        *icon_uri = NULL;
+    break;
+    case FILENAME_PROCESS_RESULT_NONE:
+    break;
     }
 
     if ( ( *image_uri == NULL ) && ( image == NULL ) )

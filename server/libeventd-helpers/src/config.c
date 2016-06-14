@@ -549,36 +549,47 @@ evhelpers_format_string_get_string(const FormatString *format_string, EventdEven
 }
 
 EVENTD_EXPORT
-gchar *
-evhelpers_filename_get_uri(const Filename *filename, EventdEvent *event, const gchar *subdir)
+FilenameProcessResult
+evhelpers_filename_process(const Filename *filename, EventdEvent *event, const gchar *subdir, gchar **ret_uri)
 {
-    g_return_val_if_fail(filename != NULL, NULL);
-    g_return_val_if_fail(event != NULL, NULL);
-    g_return_val_if_fail(subdir != NULL, NULL);
+    g_return_val_if_fail(filename != NULL, FILENAME_PROCESS_RESULT_NONE);
+    g_return_val_if_fail(event != NULL, FILENAME_PROCESS_RESULT_NONE);
+    g_return_val_if_fail(subdir != NULL, FILENAME_PROCESS_RESULT_NONE);
+    g_return_val_if_fail(ret_uri != NULL, FILENAME_PROCESS_RESULT_NONE);
 
     gchar *uri = NULL;
 
     if ( filename->data_name != NULL )
-        uri = g_strdup(eventd_event_get_data_string(event, filename->data_name));
+    {
+        GVariant *data;
+        data = eventd_event_get_data(event, filename->data_name);
+        if ( data == NULL )
+            return FILENAME_PROCESS_RESULT_NONE;
+        if ( g_variant_is_of_type(data, G_VARIANT_TYPE_STRING) )
+            uri = g_variant_dup_string(data, NULL);
+        else
+            return FILENAME_PROCESS_RESULT_NONE;
+    }
     else if ( filename->file_uri != NULL )
         uri = evhelpers_format_string_get_string(filename->file_uri, event, NULL, NULL);
     else
-    {
-        g_assert_not_reached();
-        return NULL;
-    }
+        g_return_val_if_reached(FILENAME_PROCESS_RESULT_NONE);
+
     if ( uri == NULL )
-        return NULL;
+        return FILENAME_PROCESS_RESULT_NONE;
     if ( *uri == '\0' )
     {
         g_free(uri);
-        return NULL;
+        return FILENAME_PROCESS_RESULT_NONE;
     }
 
     if ( g_str_has_prefix(uri, "data:") )
     {
         if ( _evhelpers_filename_check_data_base64_prefix(uri + strlen("data:")) )
-            return uri;
+        {
+            *ret_uri = uri;
+            return FILENAME_PROCESS_RESULT_URI;
+        }
     }
     else if ( g_str_has_prefix(uri, "file://") )
     {
@@ -594,10 +605,13 @@ evhelpers_filename_get_uri(const Filename *filename, EventdEvent *event, const g
             p = uri + strlen("file://");
         }
         if ( g_file_test(p, G_FILE_TEST_IS_REGULAR) )
-            return uri;
+        {
+            *ret_uri = uri;
+            return FILENAME_PROCESS_RESULT_URI;
+        }
     }
 
     g_free(uri);
 
-    return NULL;
+    return FILENAME_PROCESS_RESULT_NONE;
 }

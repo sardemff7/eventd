@@ -389,18 +389,24 @@ eventd_nd_draw_image_and_icon_process(EventdNdStyle *style, EventdEvent *event, 
     const Filename *icon_filename = eventd_nd_style_get_template_icon(style);
     gchar *uri;
 
-    uri = evhelpers_filename_get_uri(image_filename, event, "images");
-    if ( uri != NULL )
+    switch ( evhelpers_filename_process(image_filename, event, "images", &uri) )
     {
+    case FILENAME_PROCESS_RESULT_URI:
         eventd_nd_style_get_image_load_size(style, max_width, &load_width, &load_height);
         image_pixbuf = eventd_nd_pixbuf_from_uri(uri, load_width, load_height);
+    break;
+    case FILENAME_PROCESS_RESULT_NONE:
+    break;
     }
 
-    uri = evhelpers_filename_get_uri(icon_filename, event, "icons");
-    if ( uri != NULL )
+    switch ( evhelpers_filename_process(icon_filename, event, "icons", &uri) )
     {
+    case FILENAME_PROCESS_RESULT_URI:
         eventd_nd_style_get_icon_load_size(style, max_width, &load_width, &load_height);
         icon_pixbuf = eventd_nd_pixbuf_from_uri(uri, load_width, load_height);
+    break;
+    case FILENAME_PROCESS_RESULT_NONE:
+    break;
     }
 
     *text_x = 0;
