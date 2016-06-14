@@ -119,6 +119,7 @@ main(int argc, char *argv[])
     const gchar *category = NULL;
     const gchar *name = NULL;
     gchar **data_strv = NULL;
+    gchar **file_strv = NULL;
     EventcData *data = NULL;
     gboolean subscribe = FALSE;
 
@@ -134,6 +135,7 @@ main(int argc, char *argv[])
     GOptionEntry entries[] =
     {
         { "data",      'd', 0, G_OPTION_ARG_STRING_ARRAY, &data_strv,      "Event data to send",                                       "<name>=<content>" },
+        { "data-file", 'f', 0, G_OPTION_ARG_STRING_ARRAY, &file_strv,      "Event data to send from a file",                           "<name>=[<mime-type>@]<filename>" },
         { "host",      'h', 0, G_OPTION_ARG_STRING,       &host,           "Host to connect to (defaults to $EVENTC_HOST if defined)", "<host>" },
         { "identity",  'i', 0, G_OPTION_ARG_STRING,       &identity,       "Server identity to check for in TLS certificate",          "<host>" },
         { "max-tries", 'm', 0, G_OPTION_ARG_INT,          &max_tries,      "Maximum connection attempts (0 for infinite)",             "<times>" },
@@ -188,15 +190,22 @@ main(int argc, char *argv[])
         goto end;
     }
 
+    gsize l = 0;
+    gsize data_offset = 0;
+    if ( data_strv != NULL )
+        l += g_strv_length(data_strv);
+    if ( file_strv != NULL )
+        l += g_strv_length(file_strv);
+    if ( l > 0 )
+        data = g_new0(EventcData, l + 1);
     if ( data_strv != NULL )
     {
-        gsize l, i;
+        gsize i;
         gchar *c;
         l = g_strv_length(data_strv);
-        data = g_new0(EventcData, l + 1);
         for ( i = 0 ; i < l ; ++i )
         {
-            EventcData *d = data + i;
+            EventcData *d = data + data_offset + i;
 
             c = g_utf8_strchr(data_strv[i], -1, '=');
             if ( c == NULL )
@@ -214,8 +223,65 @@ main(int argc, char *argv[])
             }
             d->name = g_strdup(data_strv[i]);
         }
+        data_offset += l;
         g_strfreev(data_strv);
         data_strv = NULL;
+    }
+
+    if ( file_strv != NULL )
+    {
+        gsize i;
+        gchar *m, *f;
+        l = g_strv_length(file_strv);
+        for ( i = 0 ; i < l ; ++i )
+        {
+            EventcData *d = data + data_offset + i;
+
+            gchar *mime_type = NULL;
+            m = g_utf8_strchr(file_strv[i], -1, '=');
+            if ( m == NULL )
+            {
+                g_print("Malformed data '%s': Data format is '<name>=<mime-type>@<filename>'\n", file_strv[i]);
+                goto end;
+            }
+            *m++ = '\0';
+
+            f = g_utf8_strchr(m, -1, '@');
+            if ( f != NULL )
+                *f++ = '\0';
+            else
+                f = m;
+
+            if ( ( f - m ) < 2 )
+            {
+                gchar *type;
+                gboolean uncertain;
+                type = g_content_type_guess(f, NULL, 0, &uncertain);
+                if ( ( type == NULL ) || uncertain || ( ( mime_type = g_content_type_get_mime_type(type) ) == NULL ) )
+                {
+                    g_print("Could not guess MIME type for file '%s'\n", f);
+                    g_free(type);
+                    goto end;
+                }
+                m = mime_type;
+            }
+
+            gchar *filedata;
+            gsize length;
+            if ( ! g_file_get_contents(f, &filedata, &length, &error) )
+            {
+                g_print("Could not get file contents '%s': %s\n", f, error->message);
+                g_free(mime_type);
+                goto end;
+            }
+
+            d->name = g_strdup(file_strv[i]);
+            d->content = g_variant_new("(msmsv)", m, NULL, g_variant_new_from_data(G_VARIANT_TYPE_BYTESTRING, filedata, length, FALSE, g_free, filedata));
+            g_free(mime_type);
+        }
+        data_offset += l;
+        g_strfreev(file_strv);
+        file_strv = NULL;
     }
 
     if ( identity != NULL )
@@ -293,6 +359,7 @@ end:
         }
         g_free(data);
     }
+    g_strfreev(file_strv);
     g_strfreev(data_strv);
     if ( server_identity != NULL )
         g_object_unref(server_identity);
