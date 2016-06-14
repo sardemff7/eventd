@@ -264,7 +264,6 @@ static cairo_surface_t *
 _eventd_nd_draw_limit_size(GdkPixbuf *pixbuf, EventdNdStyle *style, gboolean image, gint max_draw_width)
 {
     cairo_surface_t *source;
-    gdouble s = 1.0;
     gint width, height;
     gint max_width, max_height;
 
@@ -278,19 +277,16 @@ _eventd_nd_draw_limit_size(GdkPixbuf *pixbuf, EventdNdStyle *style, gboolean ima
     else
         eventd_nd_style_get_icon_max_size(style, max_draw_width, &max_width, &max_height);
 
-    if ( ( width > max_width ) && ( height > max_height ) )
-    {
-        if ( width > height )
-            s = (gdouble) max_width / (gdouble) width;
-        else
-            s = (gdouble) max_height / (gdouble) height;
-    }
-    else if ( width > max_width )
-        s = (gdouble) max_width / (gdouble) width;
-    else if ( height > max_height )
-        s = (gdouble) max_height / (gdouble) height;
-    else
+    if ( ( width < max_width ) && ( height < max_height ) )
         return source;
+
+    gdouble hs = 1.0, vs = 1.0, s;
+    if ( width > max_width )
+        hs = (gdouble) max_width / (gdouble) width;
+    if ( height > max_height )
+        vs = (gdouble) max_height / (gdouble) height;
+
+    s = MIN(hs, vs);
 
     width *= s;
     height *= s;
