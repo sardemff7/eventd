@@ -165,54 +165,6 @@ eventd_nd_draw_text_process(EventdNdStyle *style, EventdEvent *event, gint max_w
     return text;
 }
 
-static cairo_surface_t *
-_eventd_nd_draw_limit_size(cairo_surface_t *source, gint max_width, gint max_height)
-{
-    gdouble s = 1.0;
-    gint width, height;
-    cairo_surface_t *surface;
-    cairo_t *cr;
-    cairo_pattern_t *pattern;
-    cairo_matrix_t matrix;
-
-    width = cairo_image_surface_get_width(source);
-    height = cairo_image_surface_get_height(source);
-
-    if ( ( width > max_width ) && ( height > max_height ) )
-    {
-        if ( width > height )
-            s = (gdouble) max_width / (gdouble) width;
-        else
-            s = (gdouble) max_height / (gdouble) height;
-    }
-    else if ( width > max_width )
-        s = (gdouble) max_width / (gdouble) width;
-    else if ( height > max_height )
-        s = (gdouble) max_height / (gdouble) height;
-    else
-        return source;
-
-    width *= s;
-    height *= s;
-
-    surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
-    cr = cairo_create(surface);
-
-    cairo_matrix_init_scale(&matrix, 1. / s, 1. / s);
-
-    pattern = cairo_pattern_create_for_surface(source);
-    cairo_pattern_set_matrix(pattern, &matrix);
-
-    cairo_set_source(cr, pattern);
-    cairo_paint(cr);
-
-    cairo_pattern_destroy(pattern);
-    cairo_destroy(cr);
-    cairo_surface_destroy(source);
-
-    return surface;
-}
-
 /*
  * _eventd_nd_draw_get_icon_surface and alpha_mult
  * are inspired by gdk_cairo_set_source_pixbuf
@@ -304,6 +256,54 @@ _eventd_nd_draw_get_surface_from_pixbuf(GdkPixbuf *pixbuf)
         cpixels += cstride;
     }
     cairo_surface_mark_dirty(surface);
+
+    return surface;
+}
+
+static cairo_surface_t *
+_eventd_nd_draw_limit_size(cairo_surface_t *source, gint max_width, gint max_height)
+{
+    gdouble s = 1.0;
+    gint width, height;
+    cairo_surface_t *surface;
+    cairo_t *cr;
+    cairo_pattern_t *pattern;
+    cairo_matrix_t matrix;
+
+    width = cairo_image_surface_get_width(source);
+    height = cairo_image_surface_get_height(source);
+
+    if ( ( width > max_width ) && ( height > max_height ) )
+    {
+        if ( width > height )
+            s = (gdouble) max_width / (gdouble) width;
+        else
+            s = (gdouble) max_height / (gdouble) height;
+    }
+    else if ( width > max_width )
+        s = (gdouble) max_width / (gdouble) width;
+    else if ( height > max_height )
+        s = (gdouble) max_height / (gdouble) height;
+    else
+        return source;
+
+    width *= s;
+    height *= s;
+
+    surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
+    cr = cairo_create(surface);
+
+    cairo_matrix_init_scale(&matrix, 1. / s, 1. / s);
+
+    pattern = cairo_pattern_create_for_surface(source);
+    cairo_pattern_set_matrix(pattern, &matrix);
+
+    cairo_set_source(cr, pattern);
+    cairo_paint(cr);
+
+    cairo_pattern_destroy(pattern);
+    cairo_destroy(cr);
+    cairo_surface_destroy(source);
 
     return surface;
 }
