@@ -261,14 +261,13 @@ _eventd_nd_draw_get_surface_from_pixbuf(GdkPixbuf *pixbuf)
 }
 
 static cairo_surface_t *
-_eventd_nd_draw_limit_size(cairo_surface_t *source, gint max_width, gint max_height)
+_eventd_nd_draw_limit_size(GdkPixbuf *pixbuf, gint max_width, gint max_height)
 {
+    cairo_surface_t *source;
     gdouble s = 1.0;
     gint width, height;
-    cairo_surface_t *surface;
-    cairo_t *cr;
-    cairo_pattern_t *pattern;
-    cairo_matrix_t matrix;
+
+    source = _eventd_nd_draw_get_surface_from_pixbuf(pixbuf);
 
     width = cairo_image_surface_get_width(source);
     height = cairo_image_surface_get_height(source);
@@ -289,6 +288,11 @@ _eventd_nd_draw_limit_size(cairo_surface_t *source, gint max_width, gint max_hei
 
     width *= s;
     height *= s;
+
+    cairo_surface_t *surface;
+    cairo_t *cr;
+    cairo_pattern_t *pattern;
+    cairo_matrix_t matrix;
 
     surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
     cr = cairo_create(surface);
@@ -313,7 +317,7 @@ _eventd_nd_draw_image_process(GdkPixbuf *pixbuf, EventdNdStyle *style, gint *wid
 {
     cairo_surface_t *image;
 
-    image = _eventd_nd_draw_limit_size(_eventd_nd_draw_get_surface_from_pixbuf(pixbuf),
+    image = _eventd_nd_draw_limit_size(pixbuf,
                                         eventd_nd_style_get_image_max_width(style),
                                         eventd_nd_style_get_image_max_height(style));
 
@@ -329,7 +333,7 @@ _eventd_nd_draw_icon_process_overlay(GdkPixbuf *pixbuf, EventdNdStyle *style, gi
     cairo_surface_t *icon;
     gint w, h;
 
-    icon = _eventd_nd_draw_limit_size(_eventd_nd_draw_get_surface_from_pixbuf(pixbuf),
+    icon = _eventd_nd_draw_limit_size(pixbuf,
                                         eventd_nd_style_get_icon_max_width(style),
                                         eventd_nd_style_get_icon_max_height(style));
 
@@ -347,7 +351,7 @@ _eventd_nd_draw_icon_process_foreground(GdkPixbuf *pixbuf, EventdNdStyle *style,
 {
     cairo_surface_t *icon;
 
-    icon = _eventd_nd_draw_limit_size(_eventd_nd_draw_get_surface_from_pixbuf(pixbuf),
+    icon = _eventd_nd_draw_limit_size(pixbuf,
                                         eventd_nd_style_get_icon_max_width(style),
                                         eventd_nd_style_get_icon_max_height(style));
 
