@@ -477,6 +477,10 @@ eventd_nd_draw_image_and_icon_process(EventdNdStyle *style, EventdEvent *event, 
             *icon = _eventd_nd_draw_icon_process_foreground(icon_pixbuf, style, width, height);
     break;
     }
+    if ( image_pixbuf != NULL )
+        g_object_unref(image_pixbuf);
+    if ( icon_pixbuf != NULL )
+        g_object_unref(icon_pixbuf);
 }
 
 
