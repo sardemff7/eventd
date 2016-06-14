@@ -591,10 +591,31 @@ evhelpers_filename_process(const Filename *filename, EventdEvent *event, const g
 
     if ( g_str_has_prefix(uri, "data:") )
     {
-        if ( _evhelpers_filename_check_data_base64_prefix(uri + strlen("data:")) )
+        gchar *mime_type = uri + strlen("data:");
+        if ( _evhelpers_filename_check_data_base64_prefix(mime_type) )
         {
-            *ret_uri = uri;
-            return FILENAME_PROCESS_RESULT_URI;
+            gchar *c;
+            guchar *data;
+            gsize length;
+
+            /* We checked for ";base64," already */
+            c = g_utf8_strchr(mime_type, -1, ',');
+            *c = '\0';
+
+            data = g_base64_decode(c + 1, &length);
+
+            c = g_utf8_strchr(mime_type, c - mime_type, ';');
+            *c++ = '\0';
+
+            if ( *mime_type == '\0' )
+                mime_type = NULL;
+
+            if ( *c == '\0' )
+                c = NULL;
+
+            *ret_data = g_variant_new("(msmsv)", mime_type, c, g_variant_new_from_data(G_VARIANT_TYPE_BYTESTRING, data, length, FALSE, g_free, data));
+            g_free(uri);
+            return FILENAME_PROCESS_RESULT_DATA;
         }
     }
     else if ( g_str_has_prefix(uri, "file://") )
