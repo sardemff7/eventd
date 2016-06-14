@@ -390,7 +390,7 @@ eventd_nd_draw_image_and_icon_process(EventdNdStyle *style, EventdEvent *event, 
     gchar *uri;
     GVariant *data;
 
-    eventd_nd_style_get_image_load_size(style, max_width, &load_width, &load_height);
+    eventd_nd_style_get_image_max_size(style, max_width, &load_width, &load_height);
     switch ( evhelpers_filename_process(image_filename, event, "images", &uri, &data) )
     {
     case FILENAME_PROCESS_RESULT_URI:
@@ -409,7 +409,7 @@ eventd_nd_draw_image_and_icon_process(EventdNdStyle *style, EventdEvent *event, 
     break;
     }
 
-    eventd_nd_style_get_icon_load_size(style, max_width, &load_width, &load_height);
+    eventd_nd_style_get_icon_max_size(style, max_width, &load_width, &load_height);
     switch ( evhelpers_filename_process(icon_filename, event, "icons", &uri, &data) )
     {
     case FILENAME_PROCESS_RESULT_URI:

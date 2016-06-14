@@ -76,15 +76,15 @@ Colour eventd_nd_style_get_text_colour(EventdNdStyle *style);
 EventdNdAnchorVertical eventd_nd_style_get_image_anchor(EventdNdStyle *style);
 gint eventd_nd_style_get_image_max_width(EventdNdStyle *style);
 gint eventd_nd_style_get_image_max_height(EventdNdStyle *style);
+void eventd_nd_style_get_image_max_size(EventdNdStyle *style, gint max_draw_width, gint *width, gint *height);
 gint eventd_nd_style_get_image_margin(EventdNdStyle *style);
-void eventd_nd_style_get_image_load_size(EventdNdStyle *style, gint max_draw_width, gint *width, gint *height);
 
 EventdNdStyleIconPlacement eventd_nd_style_get_icon_placement(EventdNdStyle *style);
 EventdNdAnchorVertical eventd_nd_style_get_icon_anchor(EventdNdStyle *style);
 gint eventd_nd_style_get_icon_max_width(EventdNdStyle *style);
 gint eventd_nd_style_get_icon_max_height(EventdNdStyle *style);
+void eventd_nd_style_get_icon_max_size(EventdNdStyle *style, gint max_draw_width, gint *width, gint *height);
 gint eventd_nd_style_get_icon_margin(EventdNdStyle *style);
 gdouble eventd_nd_style_get_icon_fade_width(EventdNdStyle *style);
-void eventd_nd_style_get_icon_load_size(EventdNdStyle *style, gint max_draw_width, gint *width, gint *height);
 
 #endif /* __EVENTD_ND_STYLE_H__ */

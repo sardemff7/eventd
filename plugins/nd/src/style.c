@@ -622,25 +622,22 @@ eventd_nd_style_get_image_max_height(EventdNdStyle *self)
     return eventd_nd_style_get_image_max_height(self->parent);
 }
 
+void
+eventd_nd_style_get_image_max_size(EventdNdStyle *self, gint max_draw_width, gint *width, gint *height)
+{
+    *width = eventd_nd_style_get_image_max_width(self);
+    *height = eventd_nd_style_get_image_max_height(self);
+
+    if ( ( *width < 0 ) || ( *width > max_draw_width ) )
+        *width = max_draw_width;
+}
+
 gint
 eventd_nd_style_get_image_margin(EventdNdStyle *self)
 {
     if ( self->image.set )
         return self->image.margin;
     return eventd_nd_style_get_image_margin(self->parent);
-}
-
-void
-eventd_nd_style_get_image_load_size(EventdNdStyle *self, gint max_draw_width, gint *width, gint *height)
-{
-    gint max_width, max_height;
-    max_width = eventd_nd_style_get_image_max_width(self);
-    max_height = eventd_nd_style_get_image_max_height(self);
-
-    if ( max_width >= 0 )
-        *width = MIN(max_draw_width, max_width);
-    if ( max_height >= 0 )
-        *height = max_height;
 }
 
 EventdNdStyleIconPlacement
@@ -675,6 +672,16 @@ eventd_nd_style_get_icon_max_height(EventdNdStyle *self)
     return eventd_nd_style_get_icon_max_height(self->parent);
 }
 
+void
+eventd_nd_style_get_icon_max_size(EventdNdStyle *self, gint max_draw_width, gint *width, gint *height)
+{
+    *width = eventd_nd_style_get_icon_max_width(self);
+    *height = eventd_nd_style_get_icon_max_height(self);
+
+    if ( ( *width < 0 ) || ( *width > max_draw_width ) )
+        *width = max_draw_width;
+}
+
 gint
 eventd_nd_style_get_icon_margin(EventdNdStyle *self)
 {
@@ -689,17 +696,4 @@ eventd_nd_style_get_icon_fade_width(EventdNdStyle *self)
     if ( self->icon.set )
         return self->icon.fade_width;
     return eventd_nd_style_get_icon_fade_width(self->parent);
-}
-
-void
-eventd_nd_style_get_icon_load_size(EventdNdStyle *self, gint max_draw_width, gint *width, gint *height)
-{
-    gint max_width, max_height;
-    max_width = eventd_nd_style_get_icon_max_width(self);
-    max_height = eventd_nd_style_get_icon_max_height(self);
-
-    if ( max_width >= 0 )
-        *width = MIN(max_draw_width, max_width);
-    if ( max_height >= 0 )
-        *height = max_height;
 }
