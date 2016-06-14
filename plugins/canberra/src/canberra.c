@@ -180,10 +180,8 @@ _eventd_libcanberra_action_parse(EventdPluginContext *context, GKeyFile *config_
 
     if ( evhelpers_config_key_file_get_format_string_with_default(config_file, "Libcanberra", "Name", "${sound-name}", &sound_name) < 0 )
         goto fail;
-#ifndef ENABLE_SOUND
-    if ( evhelpers_config_key_file_get_filename_with_default(config_file, "Libcanberra", "File", "sound-file", &sound_file) < 0 )
+    if ( evhelpers_config_key_file_get_filename_with_default(config_file, "Libcanberra", "Sound", "sound", &sound_file) < 0 )
         goto fail;
-#endif /* ! ENABLE_SOUND */
 
     EventdPluginAction *action;
     action = _eventd_canberra_event_new(sound_name, sound_file);

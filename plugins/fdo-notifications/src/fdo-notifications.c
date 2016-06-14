@@ -329,9 +329,8 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
     {
         if ( sound_name != NULL )
             eventd_event_add_data_string(event, g_strdup("sound-name"), g_strdup(sound_name));
-
-        if ( sound_file != NULL )
-            eventd_event_add_data_string(event, g_strdup("sound-file"), g_strdup_printf("file://%s", sound_file));
+        else if ( sound_file != NULL )
+            eventd_event_add_data_string(event, g_strdup("sound"), g_strdup_printf("file://%s", sound_file));
     }
     else
         eventd_event_add_data(event, g_strdup("no-sound"), g_variant_new_boolean(TRUE));

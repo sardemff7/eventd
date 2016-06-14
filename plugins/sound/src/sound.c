@@ -188,7 +188,7 @@ _eventd_sound_action_parse(EventdPluginContext *context, GKeyFile *config_file)
 
     if ( disable )
         return NULL;
-    if ( evhelpers_config_key_file_get_filename_with_default(config_file, "Sound", "File", "sound-file", &sound) < 0 )
+    if ( evhelpers_config_key_file_get_filename_with_default(config_file, "Sound", "Sound", "sound", &sound) < 0 )
         return NULL;
 
     EventdPluginAction *action;

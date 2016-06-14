@@ -77,7 +77,7 @@
                 </varlistentry>
 
                 <varlistentry>
-                    <term><varname>File=</varname> (defaults to <literal>"sound-file"</literal>)</term>
+                    <term><varname>Sound=</varname> (defaults to <literal>"sound"</literal>)</term>
                     <listitem>
                         <para>A <type>file URI</type></para>
                         <para>The sound file to play.</para>
