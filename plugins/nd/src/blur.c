@@ -145,7 +145,7 @@ eventd_nd_draw_blur_surface(cairo_t *cr, gint blur)
     surface = cairo_surface_map_to_image(target, NULL);
 
     if ( cairo_surface_status(surface) != CAIRO_STATUS_SUCCESS )
-        goto fail;
+        return;
 
     gint width, height, stride, channels;
     guint8 *data, *tmp;
