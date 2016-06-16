@@ -26,12 +26,14 @@ namespace Eventd
         [CCode (has_construct_function = false)]
         public Event(string category, string name);
 
-        public void add_data(owned string name, owned string content);
+        public void add_data(owned string name, owned GLib.Variant content);
+        public void add_data_string(owned string name, owned string content);
 
         public unowned string get_category();
         public unowned string get_name();
         public bool has_data(string name);
-        public unowned string get_data(string name);
+        public unowned GLib.Variant? get_data(string name);
+        public unowned string? get_data_string(string name);
         public GLib.HashTable<weak string,weak string>? get_all_data();
     }
 
