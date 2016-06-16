@@ -60,10 +60,12 @@ eventd_SOURCES = \
 	%D%/src/eventd.h \
 	%D%/src/eventd.c \
 	%D%/src/evp/evp.h \
+	%D%/src/evp/evp-internal.h \
 	%D%/src/evp/evp.c \
 	%D%/src/evp/client.h \
 	%D%/src/evp/client.c \
 	%D%/../modules/src/ws-load.c \
+	%D%/src/relay/relay.h \
 	%D%/src/relay/relay.c \
 	%D%/src/relay/server.h \
 	%D%/src/relay/server.c \

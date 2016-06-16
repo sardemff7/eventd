@@ -56,8 +56,6 @@ EXTRA_DIST = \
 	README.md \
 	PROTOCOL \
 	COPYING.LGPLv3 \
-	src/config-version.h \
-	po/POTFILES.in \
 	$(null)
 CLEANFILES =
 
