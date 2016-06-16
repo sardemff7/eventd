@@ -129,6 +129,7 @@ ev_remove_so_from_la = $(if $(strip $($(1)_LTLIBRARIES)),for la in $($(1)_LTLIBR
 la-files-install-hook:
 	$(call ev_remove_la,lib)
 	$(call ev_remove_la,pkglib)
+	$(call ev_remove_la,modules)
 	$(call ev_remove_la,plugins)
 
 # Remove shared object files at uninstall since
@@ -136,4 +137,5 @@ la-files-install-hook:
 la-files-uninstall-hook:
 	$(call ev_remove_so_from_la,lib)
 	$(call ev_remove_so_from_la,pkglib)
+	$(call ev_remove_so_from_la,modules)
 	$(call ev_remove_so_from_la,plugins)
