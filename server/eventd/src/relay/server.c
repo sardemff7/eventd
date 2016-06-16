@@ -168,8 +168,17 @@ void
 eventd_relay_server_set_address(EventdRelayServer *server, GSocketConnectable *address)
 {
     if ( server->connection != NULL )
-        eventc_connection_set_connectable(server->connection, address);
-    else
+    {
+        if ( address == NULL )
+        {
+            eventc_connection_close(server->connection, NULL);
+            g_object_unref(server->connection);
+            server->connection = NULL;
+        }
+        else
+            eventc_connection_set_connectable(server->connection, address);
+    }
+    else if ( address != NULL )
     {
         server->connection = eventc_connection_new_for_connectable(address);
         _eventd_relay_server_setup_connection(server);
