@@ -225,6 +225,7 @@ _eventd_libcanberra_event_action(EventdPluginContext *context, EventdPluginActio
         if ( g_str_has_prefix(uri, "file://") )
             _eventd_libcanberra_play(context, CA_PROP_MEDIA_FILENAME, uri + strlen("file://"));
         g_free(uri);
+    break;
     case FILENAME_PROCESS_RESULT_DATA:
         /*
          * TODO: pass the data
@@ -234,6 +235,7 @@ _eventd_libcanberra_event_action(EventdPluginContext *context, EventdPluginActio
     case FILENAME_PROCESS_RESULT_THEME:
         _eventd_libcanberra_play(context, CA_PROP_EVENT_ID, uri + strlen("theme:"));
         g_free(uri);
+    break;
     case FILENAME_PROCESS_RESULT_NONE:
     break;
     }
