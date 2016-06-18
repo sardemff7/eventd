@@ -24,6 +24,7 @@
 #define __EVENTD_ND_ND_H__
 
 #include "types.h"
+#include <nkutils-xdg-theme.h>
 
 struct _EventdNdQueue {
     EventdNdAnchor anchor;
@@ -46,6 +47,7 @@ struct _EventdPluginContext {
     EventdNdQueue queues[_EVENTD_ND_ANCHOR_SIZE];
     EventdNdStyle *style;
     EventdNdBackends last_backend;
+    NkXdgThemeContext *theme_context;
     gchar *last_target;
     struct {
         gint x;

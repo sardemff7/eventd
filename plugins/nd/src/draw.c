@@ -374,7 +374,7 @@ _eventd_nd_draw_icon_process_background(GdkPixbuf *pixbuf, EventdNdStyle *style,
 }
 
 void
-eventd_nd_draw_image_and_icon_process(EventdNdStyle *style, EventdEvent *event, gint max_width, cairo_surface_t **image, cairo_surface_t **icon, gint *text_x, gint *width, gint *height)
+eventd_nd_draw_image_and_icon_process(NkXdgThemeContext *theme_context, EventdNdStyle *style, EventdEvent *event, gint max_width, cairo_surface_t **image, cairo_surface_t **icon, gint *text_x, gint *width, gint *height)
 {
     gint load_width, load_height;
     GdkPixbuf *image_pixbuf = NULL;
@@ -394,10 +394,7 @@ eventd_nd_draw_image_and_icon_process(EventdNdStyle *style, EventdEvent *event, 
         image_pixbuf = eventd_nd_pixbuf_from_data(data, load_width, load_height);
     break;
     case FILENAME_PROCESS_RESULT_THEME:
-        /*
-         * TODO: implement Freedesktop.org icon themes
-         */
-         g_free(uri);
+        image_pixbuf = eventd_nd_pixbuf_from_theme(theme_context, uri, MIN(load_width, load_height));
     break;
     case FILENAME_PROCESS_RESULT_NONE:
     break;
@@ -413,10 +410,7 @@ eventd_nd_draw_image_and_icon_process(EventdNdStyle *style, EventdEvent *event, 
         icon_pixbuf = eventd_nd_pixbuf_from_data(data, load_width, load_height);
     break;
     case FILENAME_PROCESS_RESULT_THEME:
-        /*
-         * TODO: implement Freedesktop.org icon themes
-         */
-         g_free(uri);
+        icon_pixbuf = eventd_nd_pixbuf_from_theme(theme_context, uri, MIN(load_width, load_height));
     break;
     case FILENAME_PROCESS_RESULT_NONE:
     break;

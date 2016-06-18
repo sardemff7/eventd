@@ -229,11 +229,13 @@ _eventd_nd_start(EventdPluginContext *context)
     }
 
     _eventd_nd_backend_switch(context, backend, target, FALSE);
+    context->theme_context = nk_xdg_theme_context_new();
 }
 
 static void
 _eventd_nd_stop(EventdPluginContext *context)
 {
+    nk_xdg_theme_context_free(context->theme_context);
     _eventd_nd_backend_switch(context, EVENTD_ND_BACKEND_NONE, NULL, FALSE);
 }
 

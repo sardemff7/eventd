@@ -133,7 +133,7 @@ _eventd_nd_notification_process(EventdNdNotification *self, EventdEvent *event)
 
     if ( self->content_size.width < max_width )
     {
-        eventd_nd_draw_image_and_icon_process(self->style, self->event, max_width - self->content_size.width, &self->image, &self->icon, &self->text.x, &image_width, &image_height);
+        eventd_nd_draw_image_and_icon_process(self->context->theme_context, self->style, self->event, max_width - self->content_size.width, &self->image, &self->icon, &self->text.x, &image_width, &image_height);
         self->content_size.width += image_width;
     }
 
