@@ -145,6 +145,7 @@
             <para>A <type>file URI</type> is a string that can be either a <type>data name</type> or a <type>format string</type> of an URI scheme.</para>
             <para>In the former case, the data is searched in the event, and then either parsed as an URI or used directly if it is a GVariant of type <type>"(msmsay)"</type> containing the MIME type, the charset, and the data.</para>
             <para>Three URI schemes are supported: <literal>file://</literal> <literal>theme:</literal> and <literal>data:</literal> (<ulink url="https://en.wikipedia.org/wiki/Base64">Base64</ulink> extension only, charset and mime type may be ignored).</para>
+            <para>A <literal>theme:</literal> URI is has the form <userinput>theme:<optional><replaceable>theme-name</replaceable>/</optional><replaceable>item-name</replaceable></userinput>.</para>
         </refsect2>
 
         <xi:include href="libnkutils-man.xml" xpointer="nk-colour-type-description" />

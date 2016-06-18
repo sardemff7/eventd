@@ -130,7 +130,7 @@ AC_SUBST([eventdir])
 
 dnl GLIB_DEFINE_LOCALEDIR([EVENTD_LOCALEDIR])
 GW_INIT
-NK_INIT([uuid enum token colour/alpha colour/double])
+NK_INIT([uuid enum token colour/alpha colour/double xdg-theme])
 
 #
 # Common dependencies
