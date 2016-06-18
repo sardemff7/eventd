@@ -102,6 +102,7 @@ struct _EventdPluginContext
         gboolean overlay_icon;
         gboolean svg_support;
     } capabilities;
+    NkXdgThemeContext *theme_context;
 };
 
 struct _EventdPluginAction {
@@ -150,10 +151,8 @@ _eventd_libnotify_get_image(EventdPluginContext *context, EventdPluginAction *ac
         image = eventd_nd_pixbuf_from_data(data, 0, 0);
     break;
     case FILENAME_PROCESS_RESULT_THEME:
-        /*
-         * TODO: implement Freedesktop.org icon themes
-         */
-         g_free(image_uri);
+        /* Theme icon as image is not supported by the spec */
+        image = eventd_nd_pixbuf_from_theme(context->theme_context, *image_uri, 48);
         *image_uri = NULL;
     break;
     case FILENAME_PROCESS_RESULT_NONE:
@@ -175,11 +174,11 @@ _eventd_libnotify_get_image(EventdPluginContext *context, EventdPluginAction *ac
         icon = eventd_nd_pixbuf_from_data(data, 0, 0);
     break;
     case FILENAME_PROCESS_RESULT_THEME:
-        /*
-         * TODO: implement Freedesktop.org icon themes
-         */
-         g_free(*icon_uri);
-        *icon_uri = NULL;
+    {
+        gchar *tmp = *icon_uri;
+        *icon_uri = g_strdup(tmp + strlen("theme:"));
+        g_free(tmp);
+    }
     break;
     case FILENAME_PROCESS_RESULT_NONE:
     break;
@@ -455,11 +454,13 @@ static void
 _eventd_libnotify_start(EventdPluginContext *context)
 {
     context->id = g_bus_watch_name(G_BUS_TYPE_SESSION, NOTIFICATION_BUS_NAME, G_BUS_NAME_WATCHER_FLAGS_NONE, _eventd_libnotify_bus_name_appeared, _eventd_libnotify_bus_name_vanished, context, NULL);
+    context->theme_context = nk_xdg_theme_context_new();
 }
 
 static void
 _eventd_libnotify_stop(EventdPluginContext *context)
 {
+    nk_xdg_theme_context_free(context->theme_context);
     g_bus_unwatch_name(context->id);
 }
 
