@@ -29,6 +29,7 @@
 #include <glib.h>
 #include <glib-object.h>
 
+#include <nkutils-xdg-theme.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
 #include <libeventd-event.h>
@@ -141,5 +142,30 @@ end:
     g_variant_unref(invar);
     g_variant_unref(var);
     g_clear_error(&error);
+    return pixbuf;
+}
+
+GdkPixbuf *
+eventd_nd_pixbuf_from_theme(NkXdgThemeContext *context, gchar *uri, gint size)
+{
+    GdkPixbuf *pixbuf = NULL;
+    const gchar *theme = NULL;
+    const gchar *name = uri + strlen("theme:");
+    gchar *file;
+
+    gchar *c;
+    if ( ( c = g_utf8_strchr(name, -1, '/') ) != NULL )
+    {
+        *c = '\0';
+        theme = name;
+        name = ++c;
+    }
+
+    file = nk_xdg_theme_get_icon(context, theme, name, size, TRUE);
+    if ( file != NULL )
+        pixbuf = _eventd_nd_pixbuf_from_file(file, size, size);
+    g_free(file);
+    g_free(uri);
+
     return pixbuf;
 }

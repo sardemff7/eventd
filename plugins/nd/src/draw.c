@@ -29,6 +29,7 @@
 #include <glib.h>
 #include <glib-object.h>
 
+#include <nkutils-xdg-theme.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <cairo.h>
 #include <pango/pango.h>

@@ -21,6 +21,7 @@ notify_la_CFLAGS = \
 	$(GDK_PIXBUF_CFLAGS) \
 	$(GIO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
+	$(NKUTILS_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(null)
 
@@ -36,5 +37,6 @@ notify_la_LIBADD = \
 	$(GDK_PIXBUF_LIBS) \
 	$(GIO_LIBS) \
 	$(GOBJECT_LIBS) \
+	$(NKUTILS_LIBS) \
 	$(GLIB_LIBS) \
 	$(null)
