@@ -41,7 +41,7 @@
 #include "pixbuf.h"
 #include "blur.h"
 
-#include "cairo.h"
+#include "draw.h"
 
 
 static gssize
