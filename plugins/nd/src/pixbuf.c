@@ -35,7 +35,7 @@
 
 
 static GdkPixbuf *
-_eventd_nd_from_file(const gchar *path, gint width, gint height)
+_eventd_nd_pixbuf_from_file(const gchar *path, gint width, gint height)
 {
     GError *error = NULL;
     GdkPixbufFormat *format;
@@ -61,7 +61,7 @@ eventd_nd_pixbuf_from_uri(gchar *uri, gint width, gint height)
 {
     GdkPixbuf *pixbuf = NULL;
     if ( g_str_has_prefix(uri, "file://") )
-        pixbuf = _eventd_nd_from_file(uri + strlen("file://"), width, height);
+        pixbuf = _eventd_nd_pixbuf_from_file(uri + strlen("file://"), width, height);
     g_free(uri);
 
     return pixbuf;
