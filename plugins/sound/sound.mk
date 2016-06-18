@@ -22,6 +22,7 @@ sound_la_CFLAGS = \
 	$(SNDFILE_CFLAGS) \
 	$(PULSEAUDIO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
+	$(NKUTILS_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(null)
 
@@ -37,5 +38,6 @@ sound_la_LIBADD = \
 	$(SNDFILE_LIBS) \
 	$(PULSEAUDIO_LIBS) \
 	$(GOBJECT_LIBS) \
+	$(NKUTILS_LIBS) \
 	$(GLIB_LIBS) \
 	$(null)

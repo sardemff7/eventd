@@ -29,6 +29,7 @@
 #include <glib.h>
 #include <glib-object.h>
 
+#include <nkutils-xdg-theme.h>
 #include <sndfile.h>
 
 #include <eventd-plugin.h>
@@ -41,6 +42,7 @@
 struct _EventdPluginContext {
     GSList *actions;
     EventdSoundPulseaudioContext *pulseaudio;
+    NkXdgThemeContext *theme_context;
 };
 
 struct _EventdPluginAction {
@@ -162,11 +164,13 @@ static void
 _eventd_sound_start(EventdPluginContext *context)
 {
     eventd_sound_pulseaudio_start(context->pulseaudio);
+    context->theme_context = nk_xdg_theme_context_new();
 }
 
 static void
 _eventd_sound_stop(EventdPluginContext *context)
 {
+    nk_xdg_theme_context_free(context->theme_context);
     eventd_sound_pulseaudio_stop(context->pulseaudio);
 }
 
@@ -234,10 +238,25 @@ _eventd_sound_event_action(EventdPluginContext *context, EventdPluginAction *act
         g_variant_unref(var);
     break;
     case FILENAME_PROCESS_RESULT_THEME:
-        /*
-         * TODO: implement Freedesktop.org sound themes
-         */
+    {
+        gchar *theme = NULL;
+        gchar *name = uri + strlen("theme:");
+
+        gchar *c;
+        if ( ( c = g_utf8_strchr(name, -1, '/') ) != NULL )
+        {
+            *c = '\0';
+            theme = name;
+            name = ++c;
+        }
+
+        gchar *file;
+        file = nk_xdg_theme_get_sound(context->theme_context, theme, name, NULL, NULL);
+        if ( file != NULL )
+            _eventd_sound_read_file(file, &data, &length, &format, &rate, &channels);
+        g_free(file);
         g_free(uri);
+    }
     break;
     case FILENAME_PROCESS_RESULT_NONE:
     break;
