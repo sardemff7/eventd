@@ -94,8 +94,7 @@ struct _EventdNdSurface {
     xcb_window_t window;
     gint width;
     gint height;
-    cairo_surface_t *bubble;
-    cairo_surface_t *window_surface;
+    cairo_surface_t *surface;
     gboolean mapped;
 };
 
@@ -417,7 +416,7 @@ _eventd_nd_xcb_check_geometry(EventdNdBackendContext *self)
 }
 
 static void _eventd_nd_xcb_surface_button_release_event(EventdNdSurface *self);
-static void _eventd_nd_xcb_surface_draw(EventdNdSurface *self, gboolean reshape);
+static void _eventd_nd_xcb_surface_draw(EventdNdSurface *self);
 
 
 static gboolean
@@ -459,13 +458,19 @@ _eventd_nd_xcb_events_callback(xcb_generic_event_t *event, gpointer user_data)
             gboolean compositing = ( e->owner != XCB_WINDOW_NONE );
             if ( self->compositing != compositing )
             {
+                xcb_rectangle_t rectangles[] = { { 0, 0, 0, 0 } };
                 self->compositing = compositing;
                 GHashTableIter iter;
                 g_hash_table_iter_init(&iter, self->bubbles);
                 while ( g_hash_table_iter_next(&iter, NULL, (gpointer *) &surface) )
                 {
-                    _eventd_nd_xcb_surface_draw(surface, compositing);
-                    xcb_clear_area(self->xcb_connection, TRUE, surface->window, 0, 0, 0, 0);
+                    if ( compositing && self->shape )
+                    {
+                        rectangles[0].width = surface->width;
+                        rectangles[0].height = surface->height;
+                        xcb_shape_rectangles(self->xcb_connection, XCB_SHAPE_SO_UNION, XCB_SHAPE_SK_BOUNDING, 0, surface->window, 0, 0, 1, rectangles);
+                    }
+                    _eventd_nd_xcb_surface_draw(surface);
                 }
             }
         }
@@ -616,15 +621,9 @@ _eventd_nd_xcb_stop(EventdNdBackendContext *self)
 }
 
 static void
-_eventd_nd_xcb_surface_push_to_screen(EventdNdSurface *self)
+_eventd_nd_xcb_surface_draw(EventdNdSurface *self)
 {
-    cairo_t *cr;
-
-    cr = cairo_create(self->window_surface);
-    cairo_set_source_surface(cr, self->bubble, 0, 0);
-    cairo_paint(cr);
-    cairo_destroy(cr);
-
+    self->context->nd->notification_draw(self->notification, self->surface, self->context->compositing);
     xcb_flush(self->context->xcb_connection);
 }
 
@@ -635,17 +634,9 @@ _eventd_nd_xcb_surface_button_release_event(EventdNdSurface *self)
 }
 
 static void
-_eventd_nd_xcb_surface_draw(EventdNdSurface *self, gboolean reshape)
+_eventd_nd_xcb_surface_shape(EventdNdSurface *self)
 {
     EventdNdBackendContext *context = self->context;
-
-    if ( reshape )
-    {
-        xcb_rectangle_t rectangles[] = { { 0, 0, self->width, self->height } };
-        xcb_shape_rectangles(self->context->xcb_connection, XCB_SHAPE_SO_UNION, XCB_SHAPE_SK_BOUNDING, 0, self->window, 0, 0, G_N_ELEMENTS(rectangles), rectangles);
-    }
-
-    self->context->nd->notification_draw(self->notification, self->bubble, context->compositing);
 
     if ( context->compositing || ( ! context->shape ) )
         return;
@@ -702,12 +693,11 @@ _eventd_nd_xcb_surface_new(EventdNdBackendContext *context, EventdNdNotification
                                        context->visual->visual_id,    /* visual        */
                                        selmask, selval);              /* masks         */
 
-    self->bubble = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
-    self->window_surface = cairo_xcb_surface_create(self->context->xcb_connection, self->window, self->context->visual, self->width, self->height);
-
-    _eventd_nd_xcb_surface_draw(self, FALSE);
+    self->surface = cairo_xcb_surface_create(self->context->xcb_connection, self->window, self->context->visual, self->width, self->height);
 
     g_hash_table_insert(context->bubbles, GUINT_TO_POINTER(self->window), self);
+
+    _eventd_nd_xcb_surface_shape(self);
 
     return self;
 }
@@ -717,16 +707,14 @@ _eventd_nd_xcb_surface_update(EventdNdSurface *self, gint width, gint height)
 {
     self->width = width;
     self->height = height;
-    cairo_surface_destroy(self->bubble);
-    self->bubble = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
 
     guint16 mask = XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT;
     guint32 vals[] = { width, height };
 
     xcb_configure_window(self->context->xcb_connection, self->window, mask, vals);
-    cairo_xcb_surface_set_size(self->window_surface, width, height);
+    cairo_xcb_surface_set_size(self->surface, width, height);
 
-    _eventd_nd_xcb_surface_draw(self, FALSE);
+    _eventd_nd_xcb_surface_shape(self);
 }
 
 static void
@@ -739,11 +727,10 @@ _eventd_nd_xcb_surface_free(EventdNdSurface *self)
 
     g_hash_table_remove(context->bubbles, GUINT_TO_POINTER(self->window));
 
-    cairo_surface_destroy(self->window_surface);
-    cairo_surface_destroy(self->bubble);
-
-    if ( ! g_source_is_destroyed((GSource *)context->source) )
+    if ( self->mapped )
         xcb_unmap_window(context->xcb_connection, self->window);
+    cairo_surface_destroy(self->surface);
+    xcb_destroy_window(context->xcb_connection, self->window);
 
     g_free(self);
 }
@@ -757,14 +744,13 @@ _eventd_nd_xcb_move_surface(EventdNdSurface *self, gint x, gint y, gpointer data
     guint16 mask = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y;
     guint32 vals[] = { x, y };
     xcb_configure_window(self->context->xcb_connection, self->window, mask, vals);
-    xcb_clear_area(self->context->xcb_connection, TRUE, self->window, 0, 0, 0, 0);
 
     if ( ! self->mapped )
     {
         xcb_map_window(self->context->xcb_connection, self->window);
         self->mapped = TRUE;
     }
-    _eventd_nd_xcb_surface_push_to_screen(self);
+    _eventd_nd_xcb_surface_draw(self);
 }
 
 static void
