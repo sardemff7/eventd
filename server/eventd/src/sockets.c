@@ -45,6 +45,8 @@
 #include "sockets.h"
 
 struct _EventdSockets {
+    const gchar *runtime_dir;
+    gboolean take_over_socket;
     GList *list;
     GSList *created;
 };
@@ -180,9 +182,9 @@ _eventd_sockets_get_inet_sockets(EventdSockets *sockets, const gchar *address, g
 }
 
 static GList *
-_eventd_sockets_get_inet_socket_file(EventdSockets *sockets, const gchar *file, gboolean take_over_socket)
+_eventd_sockets_get_inet_socket_file(EventdSockets *sockets, const gchar *file)
 {
-    if ( g_file_test(file, G_FILE_TEST_EXISTS) && ( ! take_over_socket ) )
+    if ( g_file_test(file, G_FILE_TEST_EXISTS) && ( ! sockets->take_over_socket ) )
     {
         g_warning("File to write port exists already");
         return NULL;
@@ -230,7 +232,7 @@ fail:
 
 #ifdef G_OS_UNIX
 static GList *
-_eventd_sockets_get_unix_sockets(EventdSockets *sockets, const gchar *path, gboolean take_over_socket)
+_eventd_sockets_get_unix_sockets(EventdSockets *sockets, const gchar *path)
 {
     GSocket *socket = NULL;
     GError *error = NULL;
@@ -262,7 +264,7 @@ _eventd_sockets_get_unix_sockets(EventdSockets *sockets, const gchar *path, gboo
 
     if ( g_file_test(path, G_FILE_TEST_EXISTS) && ( ! g_file_test(path, G_FILE_TEST_IS_DIR|G_FILE_TEST_IS_REGULAR) ) )
     {
-        if ( take_over_socket )
+        if ( sockets->take_over_socket )
             g_unlink(path);
         else
         {
@@ -341,7 +343,7 @@ _eventd_sockets_get_inet_address(const gchar *bind, gchar **address, guint16 *po
 }
 
 GList *
-eventd_sockets_get_binds(EventdSockets *self, const gchar * const *binds, const gchar *runtime_dir, gboolean take_over_socket)
+eventd_sockets_get_binds(EventdSockets *self, const gchar * const *binds)
 {
     GList *sockets = NULL;
     const gchar * const * bind_;
@@ -381,7 +383,7 @@ eventd_sockets_get_binds(EventdSockets *self, const gchar * const *binds, const 
             if ( bind[9] == 0 )
                 continue;
 
-            new_sockets = _eventd_sockets_get_inet_socket_file(self, bind+9, take_over_socket);
+            new_sockets = _eventd_sockets_get_inet_socket_file(self, bind+9);
         }
         else if ( g_str_has_prefix(bind, "tcp-file-runtime:") )
         {
@@ -390,8 +392,8 @@ eventd_sockets_get_binds(EventdSockets *self, const gchar * const *binds, const 
 
             gchar *path;
 
-            path = g_build_filename(runtime_dir, bind+17, NULL);
-            new_sockets = _eventd_sockets_get_inet_socket_file(self, path, take_over_socket);
+            path = g_build_filename(self->runtime_dir, bind+17, NULL);
+            new_sockets = _eventd_sockets_get_inet_socket_file(self, path);
             g_free(path);
         }
 #ifdef G_OS_UNIX
@@ -400,7 +402,7 @@ eventd_sockets_get_binds(EventdSockets *self, const gchar * const *binds, const 
             if ( bind[5] == 0 )
                 continue;
 
-            new_sockets = _eventd_sockets_get_unix_sockets(self, bind+5, take_over_socket);
+            new_sockets = _eventd_sockets_get_unix_sockets(self, bind+5);
         }
         else if ( g_str_has_prefix(bind, "unix-runtime:") )
         {
@@ -409,8 +411,8 @@ eventd_sockets_get_binds(EventdSockets *self, const gchar * const *binds, const 
 
             gchar *path;
 
-            path = g_build_filename(runtime_dir, bind+13, NULL);
-            new_sockets = _eventd_sockets_get_unix_sockets(self, path, take_over_socket);
+            path = g_build_filename(self->runtime_dir, bind+13, NULL);
+            new_sockets = _eventd_sockets_get_unix_sockets(self, path);
             g_free(path);
         }
 #endif /* G_OS_UNIX */
@@ -488,6 +490,8 @@ eventd_sockets_new(const gchar *runtime_dir, gboolean take_over_socket)
     EventdSockets *sockets;
 
     sockets = g_new0(EventdSockets, 1);
+    sockets->runtime_dir = runtime_dir;
+    sockets->take_over_socket = take_over_socket;
 
 #ifdef ENABLE_SYSTEMD
     gint systemd_fds;

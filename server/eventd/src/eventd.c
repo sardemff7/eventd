@@ -70,10 +70,8 @@ struct _EventdCoreContext {
     EventdConfig *config;
     EventdControl *control;
     EventdSockets *sockets;
-    gchar *runtime_dir;
     gchar **binds;
     gboolean system_mode;
-    gboolean take_over_socket;
     GMainLoop *loop;
     guint flags_count;
     GQuark *flags;
@@ -82,7 +80,7 @@ struct _EventdCoreContext {
 GList *
 eventd_core_get_binds(EventdCoreContext *context, const gchar * const *binds)
 {
-    return eventd_sockets_get_binds(context->sockets, binds, context->runtime_dir, context->take_over_socket);
+    return eventd_sockets_get_binds(context->sockets, binds);
 }
 
 GList *
@@ -259,6 +257,8 @@ main(int argc, char *argv[])
 {
     EventdCoreContext *context;
 
+    gchar *runtime_dir = NULL;
+    gboolean take_over_socket = FALSE;
     gboolean enable_relay = TRUE;
     gboolean enable_sd_modules = TRUE;
     gboolean daemonize = FALSE;
@@ -331,13 +331,13 @@ main(int argc, char *argv[])
 
     GOptionEntry entries[] =
     {
-        { "listen",               'l', 0,                     G_OPTION_ARG_STRING_ARRAY, &context->binds,            "Add a socket to listen to",             "<socket>" },
-        { "take-over",            't', GIO_UNIX_OPTION_FLAG,  G_OPTION_ARG_NONE,         &context->take_over_socket, "Take over socket",                      NULL },
-        { "no-relay",             0,   G_OPTION_FLAG_REVERSE, G_OPTION_ARG_NONE,         &enable_relay,              "Disable the relay feature",             NULL },
-        { "no-service-discovery", 0,   G_OPTION_FLAG_REVERSE, G_OPTION_ARG_NONE,         &enable_sd_modules,         "Disable the service discovery feature", NULL },
-        { "daemonize",            0,   G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,         &daemonize,                 NULL,                                    NULL },
-        { "paths",                'P', 0,                     G_OPTION_ARG_NONE,         &print_paths,               "Print search paths",                    NULL },
-        { "version",              'V', 0,                     G_OPTION_ARG_NONE,         &print_version,             "Print version",                         NULL },
+        { "listen",               'l', 0,                     G_OPTION_ARG_STRING_ARRAY, &context->binds,    "Add a socket to listen to",             "<socket>" },
+        { "take-over",            't', GIO_UNIX_OPTION_FLAG,  G_OPTION_ARG_NONE,         &take_over_socket,  "Take over socket",                      NULL },
+        { "no-relay",             0,   G_OPTION_FLAG_REVERSE, G_OPTION_ARG_NONE,         &enable_relay,      "Disable the relay feature",             NULL },
+        { "no-service-discovery", 0,   G_OPTION_FLAG_REVERSE, G_OPTION_ARG_NONE,         &enable_sd_modules, "Disable the service discovery feature", NULL },
+        { "daemonize",            0,   G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,         &daemonize,         NULL,                                    NULL },
+        { "paths",                'P', 0,                     G_OPTION_ARG_NONE,         &print_paths,       "Print search paths",                    NULL },
+        { "version",              'V', 0,                     G_OPTION_ARG_NONE,         &print_version,     "Print version",                         NULL },
         { NULL }
     };
 
@@ -384,11 +384,10 @@ main(int argc, char *argv[])
         goto end;
     }
 
-
-    context->runtime_dir = g_build_filename(g_get_user_runtime_dir(), PACKAGE_NAME, NULL);
-    if ( ( ! g_file_test(context->runtime_dir, G_FILE_TEST_IS_DIR) ) && ( g_mkdir_with_parents(context->runtime_dir, 0755) < 0 ) )
+    runtime_dir = g_build_filename(g_get_user_runtime_dir(), PACKAGE_NAME, NULL);
+    if ( ( ! g_file_test(runtime_dir, G_FILE_TEST_IS_DIR) ) && ( g_mkdir_with_parents(runtime_dir, 0755) < 0 ) )
     {
-        g_warning("Couldn't create the run dir '%s': %s", context->runtime_dir, g_strerror(errno));
+        g_warning("Couldn't create the run dir '%s': %s", runtime_dir, g_strerror(errno));
         retval = EVENTD_RETURN_CODE_NO_RUNTIME_DIR_ERROR;
         goto end;
     }
@@ -401,7 +400,7 @@ main(int argc, char *argv[])
 
     context->config = eventd_config_new(context->system_mode);
 
-    context->sockets = eventd_sockets_new(context->runtime_dir, context->take_over_socket);
+    context->sockets = eventd_sockets_new(runtime_dir, take_over_socket);
 
     if ( eventd_control_start(context->control) )
     {
@@ -460,7 +459,7 @@ main(int argc, char *argv[])
 
 end:
     g_strfreev(context->binds);
-    g_free(context->runtime_dir);
+    g_free(runtime_dir);
 
     eventd_control_free(context->control);
 

@@ -26,7 +26,7 @@
 EventdSockets *eventd_sockets_new(const gchar *runtime_dir, gboolean take_over_socket);
 void eventd_sockets_free(EventdSockets *sockets);
 
-GList *eventd_sockets_get_binds(EventdSockets *sockets, const gchar * const *binds, const gchar *runtime_dir, gboolean take_over_socket);
+GList *eventd_sockets_get_binds(EventdSockets *sockets, const gchar * const *binds);
 GList *eventd_sockets_get_sockets(EventdSockets *sockets, GSocketAddress **binds);
 
 #endif /* __EVENTD_SOCKETS_H__ */
