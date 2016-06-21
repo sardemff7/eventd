@@ -96,6 +96,16 @@ _eventd_im_account_connect(EventdImAccount *account)
 }
 
 static void
+_eventd_im_account_disconnect(EventdImAccount *account)
+{
+    evhelpers_reconnect_reset(account->reconnect);
+    if ( purple_account_is_disconnected(account->account) )
+        return;
+
+    purple_account_disconnect(account->account);
+}
+
+static void
 _eventd_im_conv_free(gpointer data)
 {
     if ( data == NULL )
@@ -278,11 +288,7 @@ _eventd_im_stop(EventdPluginContext *context)
     EventdImAccount *account;
     g_hash_table_iter_init(&iter, context->accounts);
     while ( g_hash_table_iter_next(&iter, (gpointer *) &name, (gpointer *) &account) )
-    {
-        evhelpers_reconnect_reset(account->reconnect);
-        if ( ! purple_account_is_disconnected(account->account) )
-            purple_account_disconnect(account->account);
-    }
+        _eventd_im_account_disconnect(account);
 }
 
 
