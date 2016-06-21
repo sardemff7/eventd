@@ -70,8 +70,6 @@ eventd_evp_init(EventdCoreContext *core)
 void
 eventd_evp_uninit(EventdEvpContext *self)
 {
-    g_free(self->publish_name);
-
     eventd_ws_uninit(self->ws);
 
     g_free(self);
@@ -211,9 +209,6 @@ eventd_evp_config_reset(EventdEvpContext *self)
     if ( self->certificate != NULL )
         g_object_unref(self->certificate);
     self->certificate = NULL;
-
-    g_free(self->publish_name);
-    self->publish_name = NULL;
 }
 
 
