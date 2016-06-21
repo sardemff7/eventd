@@ -540,6 +540,9 @@ _eventd_sockets_created_socket_free(gpointer data)
 void
 eventd_sockets_free(EventdSockets *sockets)
 {
+    if ( sockets == NULL )
+        return;
+
     g_list_free_full(sockets->list, g_object_unref);
 
     g_slist_free_full(sockets->created, _eventd_sockets_created_socket_free);

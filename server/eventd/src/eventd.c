@@ -450,13 +450,13 @@ main(int argc, char *argv[])
 
     eventd_control_free(context->control);
 
-    eventd_sockets_free(context->sockets);
-
     eventd_config_free(context->config);
 
     eventd_plugins_unload();
 
 end:
+    eventd_sockets_free(context->sockets);
+
     g_strfreev(context->binds);
     g_free(control_socket);
     g_free(runtime_dir);
