@@ -6,8 +6,8 @@ pkgdatadir=@pkgdatadir@
 
 eventdir=@eventdir@
 
-ssdp_ns_uuid="@EVP_SSDP_NS_UUID@
-ssdp_urn="@EVP_SSDP_URN@
+ssdp_ns_uuid=@EVP_SSDP_NS_UUID@
+ssdp_urn=@EVP_SSDP_URN@
 
 Name: eventd
 Description: eventd daemon
