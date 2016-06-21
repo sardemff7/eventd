@@ -41,7 +41,7 @@ static const gchar *_eventd_sd_modules_names[_EVENTD_SD_MODULES_SIZE] = {
 static EventdSdModule modules[_EVENTD_SD_MODULES_SIZE];
 
 static void
-_eventd_sd_modules_load_dir(const EventdSdModuleControlInterface *control, gchar *modules_dir_name)
+_eventd_sd_modules_load_dir(const EventdSdModuleControlInterface *control, GList *sockets, gchar *modules_dir_name)
 {
 #ifdef EVENTD_DEBUG
     g_debug("Scanning service discovery modules dir: %s", modules_dir_name);
@@ -78,7 +78,7 @@ _eventd_sd_modules_load_dir(const EventdSdModuleControlInterface *control, gchar
         EventdSdModule sd_module = { 0 };
         get_info(&sd_module);
         sd_module.module = module;
-        sd_module.context = sd_module.init(control);
+        sd_module.context = sd_module.init(control, sockets);
 
         if ( sd_module.context != NULL )
             modules[i] = sd_module;
@@ -92,12 +92,12 @@ _eventd_sd_modules_load_dir(const EventdSdModuleControlInterface *control, gchar
 }
 
 void
-eventd_sd_modules_load(const EventdSdModuleControlInterface *control)
+eventd_sd_modules_load(const EventdSdModuleControlInterface *control, GList *sockets)
 {
     gchar **dirs, **dir;
     dirs = evhelpers_dirs_get_lib("EVENTD_MODULES_DIR", "modules" G_DIR_SEPARATOR_S PACKAGE_VERSION);
     for ( dir = dirs ; *dir != NULL ; ++dir )
-        _eventd_sd_modules_load_dir(control, *dir);
+        _eventd_sd_modules_load_dir(control, sockets, *dir);
     g_free(dirs);
 }
 
@@ -141,9 +141,9 @@ eventd_sd_modules_monitor_server(const gchar *name, EventdRelayServer *server)
 }
 
 void
-eventd_sd_modules_start(GList *sockets)
+eventd_sd_modules_start(void)
 {
-    _eventd_sd_modules_foreach_call(start, sockets);
+    _eventd_sd_modules_foreach_call(start);
 }
 
 void

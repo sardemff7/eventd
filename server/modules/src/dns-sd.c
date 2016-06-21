@@ -228,8 +228,17 @@ _eventd_sd_dns_sd_sockets_to_addresses(GList *sockets)
 }
 
 static EventdSdModuleContext *
-_eventd_sd_dns_sd_init(const EventdSdModuleControlInterface *control)
+_eventd_sd_dns_sd_init(const EventdSdModuleControlInterface *control, GList *sockets)
 {
+    GList *addresses;
+
+    addresses = _eventd_sd_dns_sd_sockets_to_addresses(sockets);
+    if ( addresses == NULL )
+    {
+        g_warning("Couldn't get addresses from sockets");
+        return NULL;
+    }
+
     EventdSdModuleContext *self;
 
     avahi_set_allocator(avahi_glib_allocator());
@@ -239,6 +248,7 @@ _eventd_sd_dns_sd_init(const EventdSdModuleControlInterface *control)
     self->glib_poll = avahi_glib_poll_new(NULL, G_PRIORITY_DEFAULT);
 
     self->servers = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+    self->addresses = addresses;
 
     return self;
 }
@@ -246,6 +256,7 @@ _eventd_sd_dns_sd_init(const EventdSdModuleControlInterface *control)
 static void
 _eventd_sd_dns_sd_uninit(EventdSdModuleContext *self)
 {
+    g_list_free_full(self->addresses, g_object_unref);
     g_hash_table_unref(self->servers);
 
     avahi_glib_poll_free(self->glib_poll);
@@ -271,11 +282,10 @@ _eventd_sd_dns_sd_monitor_server(EventdSdModuleContext *self, const gchar *name,
 
 static void _eventd_sd_dns_sd_stop(EventdSdModuleContext *self);
 static void
-_eventd_sd_dns_sd_start(EventdSdModuleContext *self, GList *sockets)
+_eventd_sd_dns_sd_start(EventdSdModuleContext *self)
 {
     int error;
 
-    self->addresses = _eventd_sd_dns_sd_sockets_to_addresses(sockets);
     self->client = avahi_client_new(avahi_glib_poll_get(self->glib_poll), 0, _eventd_sd_dns_sd_client_callback, self, &error);
 
     if ( self->client == NULL )
@@ -291,9 +301,6 @@ _eventd_sd_dns_sd_stop(EventdSdModuleContext *self)
     if ( self->client != NULL )
         avahi_client_free(self->client);
     self->client = NULL;
-
-    g_list_free_full(self->addresses, g_object_unref);
-    self->addresses = NULL;
 
     g_hash_table_remove_all(self->servers);
 }

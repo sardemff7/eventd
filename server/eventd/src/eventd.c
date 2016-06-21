@@ -70,7 +70,6 @@ struct _EventdCoreContext {
     EventdConfig *config;
     EventdControl *control;
     EventdSockets *sockets;
-    gchar **binds;
     gboolean system_mode;
     GMainLoop *loop;
     guint flags_count;
@@ -166,7 +165,7 @@ eventd_core_config_reload(EventdCoreContext *context)
 {
     eventd_plugins_stop_all();
     eventd_config_parse(context->config, context->system_mode);
-    eventd_plugins_start_all((const gchar * const *) context->binds);
+    eventd_plugins_start_all();
 }
 
 void
@@ -257,6 +256,7 @@ main(int argc, char *argv[])
 
     gchar *runtime_dir = NULL;
     gchar *control_socket = NULL;
+    gchar **binds = NULL;
     gboolean take_over_socket = FALSE;
     gboolean enable_relay = TRUE;
     gboolean enable_sd_modules = TRUE;
@@ -334,7 +334,7 @@ main(int argc, char *argv[])
     GOptionEntry entries[] =
     {
         { "private-socket",       'i', 0,                     G_OPTION_ARG_FILENAME,     &control_socket,    "Socket to listen for internal control", "<socket>" },
-        { "listen",               'l', 0,                     G_OPTION_ARG_STRING_ARRAY, &context->binds,    "Add a socket to listen to",             "<socket>" },
+        { "listen",               'l', 0,                     G_OPTION_ARG_STRING_ARRAY, &binds,             "Add a socket to listen to",             "<socket>" },
         { "take-over",            't', GIO_UNIX_OPTION_FLAG,  G_OPTION_ARG_NONE,         &take_over_socket,  "Take over socket",                      NULL },
         { "no-relay",             0,   G_OPTION_FLAG_REVERSE, G_OPTION_ARG_NONE,         &enable_relay,      "Disable the relay feature",             NULL },
         { "no-service-discovery", 0,   G_OPTION_FLAG_REVERSE, G_OPTION_ARG_NONE,         &enable_sd_modules, "Disable the service discovery feature", NULL },
@@ -403,11 +403,11 @@ main(int argc, char *argv[])
         goto end;
     }
 
-    eventd_plugins_load(context, enable_relay, enable_sd_modules, context->system_mode);
+    eventd_plugins_load(context, (const gchar * const *) binds, enable_relay, enable_sd_modules, context->system_mode);
 
     context->config = eventd_config_new(context->system_mode);
 
-    eventd_plugins_start_all((const gchar * const *) context->binds);
+    eventd_plugins_start_all();
 
 #ifdef G_OS_UNIX
     g_unix_signal_add(SIGTERM, _eventd_core_stop, context);
@@ -453,7 +453,7 @@ main(int argc, char *argv[])
 end:
     eventd_sockets_free(context->sockets);
 
-    g_strfreev(context->binds);
+    g_strfreev(binds);
     g_free(control_socket);
     g_free(runtime_dir);
 

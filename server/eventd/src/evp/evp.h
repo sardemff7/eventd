@@ -25,10 +25,10 @@
 
 typedef struct _EventdEvpContext EventdEvpContext;
 
-EventdEvpContext *eventd_evp_init(EventdCoreContext *core);
+EventdEvpContext *eventd_evp_init(EventdCoreContext *core, const gchar * const *binds, GList **user_sockets);
 void eventd_evp_uninit(EventdEvpContext *evp);
 
-GList *eventd_evp_start(EventdEvpContext *evp, const gchar * const *binds);
+void eventd_evp_start(EventdEvpContext *evp);
 void eventd_evp_stop(EventdEvpContext *evp);
 
 void eventd_evp_global_parse(EventdEvpContext *evp, GKeyFile *config_file);

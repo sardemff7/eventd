@@ -40,6 +40,7 @@ struct _EventdSdModuleContext {
     NkUuid ns_uuid;
     GSSDPClient *client;
     gchar *usn;
+    GList *locations;
     GSSDPResourceGroup *group;
     GSSDPResourceBrowser *browser;
     GHashTable *servers;
@@ -103,7 +104,7 @@ _eventd_sd_ssdp_resource_unavailable(EventdSdModuleContext *self, gchar *usn, GS
 }
 
 static GList *
-_eventd_sd_ssdp_sockets_to_locations(EventdSdModuleContext *self, GList *sockets)
+_eventd_sd_ssdp_get_locations(GSSDPClient *client, GList *sockets)
 {
     GList *locations = NULL;
 
@@ -130,7 +131,7 @@ _eventd_sd_ssdp_sockets_to_locations(EventdSdModuleContext *self, GList *sockets
 
             inet_address = g_inet_socket_address_get_address(G_INET_SOCKET_ADDRESS(address));
             if ( g_inet_address_get_is_any(inet_address) )
-                ip = gssdp_client_get_host_ip(self->client);
+                ip = gssdp_client_get_host_ip(client);
             else  if ( ! g_inet_address_get_is_loopback(inet_address) )
                 ip = ip_ = g_inet_address_to_string(inet_address);
             if ( ip != NULL )
@@ -148,25 +149,8 @@ _eventd_sd_ssdp_sockets_to_locations(EventdSdModuleContext *self, GList *sockets
     return locations;
 }
 
-static gboolean
-_eventd_sd_ssdp_add_sockets(EventdSdModuleContext *self, GList *sockets)
-{
-    gboolean ret = FALSE;
-
-    GList *locations;
-    locations = _eventd_sd_ssdp_sockets_to_locations(self, sockets);
-
-    if ( locations != NULL )
-    {
-        gssdp_resource_group_add_resource(self->group, EVP_SSDP_URN, self->usn, locations);
-        ret = TRUE;
-    }
-
-    return ret;
-}
-
 static EventdSdModuleContext *
-_eventd_sd_ssdp_init(const EventdSdModuleControlInterface *control)
+_eventd_sd_ssdp_init(const EventdSdModuleControlInterface *control, GList *sockets)
 {
     EventdSdModuleContext *self;
 
@@ -185,6 +169,16 @@ _eventd_sd_ssdp_init(const EventdSdModuleControlInterface *control)
         return NULL;
     }
 
+    GList *locations;
+
+    locations = _eventd_sd_ssdp_get_locations(client, sockets);
+    if ( locations == NULL )
+    {
+        g_warning("Couldn't generate SSDP locations from sockets");
+        g_object_unref(client);
+        return NULL;
+    }
+
     self = g_new0(EventdSdModuleContext, 1);
     self->control = control;
     self->ns_uuid = uuid;
@@ -195,6 +189,7 @@ _eventd_sd_ssdp_init(const EventdSdModuleControlInterface *control)
     g_signal_connect_swapped(self->browser, "resource-unavailable", G_CALLBACK(_eventd_sd_ssdp_resource_unavailable), self);
 
     self->servers = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+    self->locations = locations;
 
     return self;
 }
@@ -202,6 +197,7 @@ _eventd_sd_ssdp_init(const EventdSdModuleControlInterface *control)
 static void
 _eventd_sd_ssdp_uninit(EventdSdModuleContext *self)
 {
+    g_list_free_full(self->locations, g_free);
     g_hash_table_unref(self->servers);
 
     g_object_unref(self->browser);
@@ -232,7 +228,7 @@ _eventd_sd_ssdp_monitor_server(EventdSdModuleContext *self, const gchar *name, E
 }
 
 static void
-_eventd_sd_ssdp_start(EventdSdModuleContext *self, GList *sockets)
+_eventd_sd_ssdp_start(EventdSdModuleContext *self)
 {
     gssdp_resource_browser_set_active(self->browser, TRUE);
 
@@ -240,14 +236,8 @@ _eventd_sd_ssdp_start(EventdSdModuleContext *self, GList *sockets)
         return;
 
     self->group = gssdp_resource_group_new(self->client);
-    if ( ! _eventd_sd_ssdp_add_sockets(self, sockets) )
-    {
-        g_warning("Couldn't add sockets to SSDP resource group");
-        g_object_unref(self->group);
-        self->group = NULL;
-    }
-    else
-        gssdp_resource_group_set_available(self->group, TRUE);
+    gssdp_resource_group_add_resource(self->group, EVP_SSDP_URN, self->usn, self->locations);
+    gssdp_resource_group_set_available(self->group, TRUE);
 }
 
 static void

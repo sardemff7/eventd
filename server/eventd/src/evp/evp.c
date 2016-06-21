@@ -54,7 +54,7 @@ static const gchar * const _eventd_evp_default_binds[] = {
  */
 
 EventdEvpContext *
-eventd_evp_init(EventdCoreContext *core)
+eventd_evp_init(EventdCoreContext *core, const gchar * const *binds, GList **used_sockets)
 {
     EventdEvpContext *self;
 
@@ -64,25 +64,13 @@ eventd_evp_init(EventdCoreContext *core)
 
     self->ws = eventd_ws_init();
 
-    return self;
-}
+    self->service = g_socket_service_new();
+    g_socket_service_stop(self->service);
+    g_signal_connect(self->service, "incoming", G_CALLBACK(eventd_evp_client_connection_handler), self);
 
-void
-eventd_evp_uninit(EventdEvpContext *self)
-{
-    eventd_ws_uninit(self->ws);
+    if ( binds == NULL )
+        binds = _eventd_evp_default_binds;
 
-    g_free(self);
-}
-
-
-/*
- * Start/Stop interface
- */
-
-static GList *
-_eventd_evp_add_socket(EventdEvpContext *self, const gchar * const *binds)
-{
     GList *sockets;
     sockets = eventd_core_get_binds(self->core, binds);
 
@@ -101,26 +89,32 @@ _eventd_evp_add_socket(EventdEvpContext *self, const gchar * const *binds)
             g_object_unref(socket);
         }
     }
+    *used_sockets = sockets;
 
-    return sockets;
+    return self;
 }
 
-GList *
-eventd_evp_start(EventdEvpContext *self, const gchar * const *binds)
+void
+eventd_evp_uninit(EventdEvpContext *self)
 {
-    GList *sockets = NULL;
+    g_socket_listener_close(G_SOCKET_LISTENER(self->service));
+    g_object_unref(self->service);
 
-    self->service = g_socket_service_new();
+    eventd_ws_uninit(self->ws);
 
-    if ( binds == NULL )
-        binds = _eventd_evp_default_binds;
-    sockets = _eventd_evp_add_socket(self, binds);
+    g_free(self);
+}
 
-    g_signal_connect(self->service, "incoming", G_CALLBACK(eventd_evp_client_connection_handler), self);
 
+/*
+ * Start/Stop interface
+ */
+
+void
+eventd_evp_start(EventdEvpContext *self)
+{
     self->subscribe_categories = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, (GDestroyNotify) g_list_free);
-
-    return sockets;
+    g_socket_service_start(self->service);
 }
 
 void
@@ -135,8 +129,6 @@ eventd_evp_stop(EventdEvpContext *self)
     self->clients = NULL;
 
     g_socket_service_stop(self->service);
-    g_socket_listener_close(G_SOCKET_LISTENER(self->service));
-    g_object_unref(self->service);
 }
 
 

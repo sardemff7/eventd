@@ -239,19 +239,21 @@ static const EventdSdModuleControlInterface _eventd_plugins_sd_modules_control_i
 };
 
 void
-eventd_plugins_load(EventdPluginCoreContext *core, gboolean enable_relay, gboolean enable_sd_modules, gboolean system_mode)
+eventd_plugins_load(EventdPluginCoreContext *core, const gchar * const *binds, gboolean enable_relay, gboolean enable_sd_modules, gboolean system_mode)
 {
+    GList *sockets;
     const gchar *env_whitelist;
     const gchar *env_blacklist;
     gchar **whitelist = NULL;
     gchar **blacklist = NULL;
 
-    evp = eventd_evp_init(core);
+    evp = eventd_evp_init(core, binds, &sockets);
     if ( enable_relay )
         relay = eventd_relay_init(core);
 
     if ( enable_sd_modules )
-        eventd_sd_modules_load(&_eventd_plugins_sd_modules_control_interface);
+        eventd_sd_modules_load(&_eventd_plugins_sd_modules_control_interface, sockets);
+    g_list_free_full(sockets, g_object_unref);
 
     plugins = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, _eventd_plugins_plugin_free);
 
@@ -292,7 +294,7 @@ eventd_plugins_unload(void)
 }
 
 void
-eventd_plugins_start_all(const gchar * const *binds)
+eventd_plugins_start_all(void)
 {
     GHashTableIter iter;
     const gchar *id;
@@ -304,13 +306,10 @@ eventd_plugins_start_all(const gchar * const *binds)
             plugin->interface.start(plugin->context);
     }
 
-    GList *sockets;
-
-    sockets = eventd_evp_start(evp, binds);
+    eventd_evp_start(evp);
     eventd_relay_start(relay);
 
-    eventd_sd_modules_start(sockets);
-    g_list_free_full(sockets, g_object_unref);
+    eventd_sd_modules_start();
 }
 
 void

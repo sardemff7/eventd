@@ -44,13 +44,13 @@ typedef struct {
 typedef struct _EventdSdModuleContext EventdSdModuleContext;
 
 typedef struct {
-    EventdSdModuleContext *(*init)(const EventdSdModuleControlInterface *control);
+    EventdSdModuleContext *(*init)(const EventdSdModuleControlInterface *control, GList *sockets);
     void (*uninit)(EventdSdModuleContext *context);
 
     void (*set_publish_name)(EventdSdModuleContext *context, const gchar *publish_name);
     void (*monitor_server)(EventdSdModuleContext *context, const gchar *discover_name, EventdRelayServer *server);
 
-    void (*start)(EventdSdModuleContext *context, GList *sockets);
+    void (*start)(EventdSdModuleContext *context);
     void (*stop)(EventdSdModuleContext *context);
 
     gpointer module;

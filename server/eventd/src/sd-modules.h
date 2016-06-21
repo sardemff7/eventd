@@ -25,13 +25,13 @@
 
 #include <eventd-sd-module.h>
 
-void eventd_sd_modules_load(const EventdSdModuleControlInterface *control);
+void eventd_sd_modules_load(const EventdSdModuleControlInterface *control, GList *sockets);
 void eventd_sd_modules_unload(void);
 
 void eventd_sd_modules_set_publish_name(const gchar *name);
 void eventd_sd_modules_monitor_server(const gchar *name, EventdRelayServer *server);
 
-void eventd_sd_modules_start(GList *sockets);
+void eventd_sd_modules_start(void);
 void eventd_sd_modules_stop(void);
 
 gboolean eventd_sd_modules_can_discover(void);
