@@ -96,12 +96,6 @@ _eventd_nd_backends_load_dir(EventdNdBackend *backends, EventdNdInterface *conte
 gboolean
 eventd_nd_backends_load(EventdNdBackend *backends, EventdNdInterface *context)
 {
-    if ( ! g_module_supported() )
-    {
-        g_warning("Couldn't load plugins: %s", g_module_error());
-        return FALSE;
-    }
-
     gboolean ret = FALSE;
 
     gchar **dirs, **dir;

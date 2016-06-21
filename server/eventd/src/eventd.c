@@ -286,6 +286,12 @@ main(int argc, char *argv[])
         return EVENTD_RETURN_CODE_FILESYSTEM_ENCODING_ERROR;
     }
 
+    if ( G_UNLIKELY(! g_module_supported()) )
+    {
+        g_warning("No loadable module support");
+        return EVENTD_RETURN_CODE_NO_MODULE_SUPPORT_ERROR;
+    }
+
 #ifdef EVENTD_DEBUG
     const gchar *debug_log_filename =  g_getenv("EVENTD_DEBUG_LOG_FILENAME");
     GDataOutputStream *debug_stream = NULL;
@@ -385,11 +391,7 @@ main(int argc, char *argv[])
         goto end;
     }
 
-    if ( ! eventd_plugins_load(context, enable_relay, enable_sd_modules, context->system_mode) )
-    {
-        retval = EVENTD_RETURN_CODE_NO_PLUGIN_ERROR;
-        goto end;
-    }
+    eventd_plugins_load(context, enable_relay, enable_sd_modules, context->system_mode);
 
     context->config = eventd_config_new(context->system_mode);
 

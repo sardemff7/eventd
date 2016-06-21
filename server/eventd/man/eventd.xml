@@ -266,28 +266,28 @@
             <varlistentry>
                 <term><literal>1</literal></term>
                 <listitem>
-                    <para>Failed to parse command line paramaters.</para>
+                    <para>Filesystem is not UTF-8 encoded.</para>
                 </listitem>
             </varlistentry>
 
             <varlistentry>
                 <term><literal>2</literal></term>
                 <listitem>
-                    <para>Filesystem is not UTF-8 encoded.</para>
+                    <para>No support to load modules.</para>
                 </listitem>
             </varlistentry>
 
             <varlistentry>
                 <term><literal>3</literal></term>
                 <listitem>
-                    <para>The (required) runtime directory could not be created.</para>
+                    <para>Failed to parse command line paramaters.</para>
                 </listitem>
             </varlistentry>
 
             <varlistentry>
                 <term><literal>4</literal></term>
                 <listitem>
-                    <para>No plugin to load.</para>
+                    <para>The (required) runtime directory could not be created.</para>
                 </listitem>
             </varlistentry>
 

@@ -238,7 +238,7 @@ static const EventdSdModuleControlInterface _eventd_plugins_sd_modules_control_i
     .server_stop = eventd_relay_server_stop,
 };
 
-gboolean
+void
 eventd_plugins_load(EventdPluginCoreContext *core, gboolean enable_relay, gboolean enable_sd_modules, gboolean system_mode)
 {
     const gchar *env_whitelist;
@@ -249,12 +249,6 @@ eventd_plugins_load(EventdPluginCoreContext *core, gboolean enable_relay, gboole
     evp = eventd_evp_init(core);
     if ( enable_relay )
         relay = eventd_relay_init(core);
-
-    if ( ! g_module_supported() )
-    {
-        g_warning("No plugins support: %s", g_module_error());
-        return FALSE;
-    }
 
     if ( enable_sd_modules )
         eventd_sd_modules_load(&_eventd_plugins_sd_modules_control_interface);
@@ -277,8 +271,6 @@ eventd_plugins_load(EventdPluginCoreContext *core, gboolean enable_relay, gboole
 
     g_strfreev(blacklist);
     g_strfreev(whitelist);
-
-    return TRUE;
 }
 
 void

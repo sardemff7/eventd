@@ -76,9 +76,6 @@ _eventd_ws_module_load_dir(gchar *modules_dir_name)
 EventdWsModule *
 eventd_ws_init(void)
 {
-    if ( ! g_module_supported() )
-        return NULL;
-
     EventdWsModule *ws = NULL;
     gchar **dirs, **dir;
     dirs = evhelpers_dirs_get_lib("EVENTD_MODULES_DIR", "modules" G_DIR_SEPARATOR_S PACKAGE_VERSION);
