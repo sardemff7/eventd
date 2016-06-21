@@ -407,42 +407,42 @@ main(int argc, char *argv[])
 
     context->config = eventd_config_new(context->system_mode);
 
-        eventd_plugins_start_all((const gchar * const *) context->binds);
+    eventd_plugins_start_all((const gchar * const *) context->binds);
 
 #ifdef G_OS_UNIX
-        g_unix_signal_add(SIGTERM, _eventd_core_stop, context);
-        g_unix_signal_add(SIGINT, _eventd_core_stop, context);
+    g_unix_signal_add(SIGTERM, _eventd_core_stop, context);
+    g_unix_signal_add(SIGINT, _eventd_core_stop, context);
 
-        /* Ignore SIGPIPE as it is useless */
-        signal(SIGPIPE, SIG_IGN);
+    /* Ignore SIGPIPE as it is useless */
+    signal(SIGPIPE, SIG_IGN);
 #endif /* G_OS_UNIX */
 
-        if ( daemonize )
-        {
-            g_print("READY=1\n");
-            g_setenv("G_MESSAGES_DEBUG", "", TRUE);
-            close(0);
-            close(1);
-            close(2);
+    if ( daemonize )
+    {
+        g_print("READY=1\n");
+        g_setenv("G_MESSAGES_DEBUG", "", TRUE);
+        close(0);
+        close(1);
+        close(2);
 #ifdef G_OS_UNIX
-            open("/dev/null", O_RDWR);
-            dup2(0,1);
-            dup2(0,2);
+        open("/dev/null", O_RDWR);
+        dup2(0,1);
+        dup2(0,2);
 #else /* ! G_OS_UNIX */
-            FreeConsole();
+        FreeConsole();
 #endif /* ! G_OS_UNIX */
-        }
+    }
 
 #ifdef ENABLE_SYSTEMD
-        sd_notify(1,
-            "READY=1\n"
-            "STATUS=Waiting for events\n"
-        );
+    sd_notify(1,
+        "READY=1\n"
+        "STATUS=Waiting for events\n"
+    );
 #endif /* ENABLE_SYSTEMD */
 
-        context->loop = g_main_loop_new(NULL, FALSE);
-        g_main_loop_run(context->loop);
-        g_main_loop_unref(context->loop);
+    context->loop = g_main_loop_new(NULL, FALSE);
+    g_main_loop_run(context->loop);
+    g_main_loop_unref(context->loop);
 
     eventd_control_free(context->control);
 
