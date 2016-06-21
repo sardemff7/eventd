@@ -83,28 +83,28 @@ eventd_evp_uninit(EventdEvpContext *self)
  */
 
 static GList *
-_eventd_evp_add_socket(GList *used_sockets, EventdEvpContext *self, const gchar * const *binds)
+_eventd_evp_add_socket(EventdEvpContext *self, const gchar * const *binds)
 {
     GList *sockets;
     sockets = eventd_core_get_binds(self->core, binds);
 
-    GList *socket_;
-    for ( socket_ = sockets ; socket_ != NULL ; socket_ = g_list_next(socket_) )
+    GList *socket_ = sockets, *next_;
+    for ( socket_ = sockets ; socket_ != NULL ; socket_ = next_ )
     {
         GSocket *socket = socket_->data;
         GError *error = NULL;
+        next_ = g_list_next(socket_);
 
         if ( ! g_socket_listener_add_socket(G_SOCKET_LISTENER(self->service), socket, NULL, &error) )
         {
             g_warning("Unable to add socket: %s", error->message);
             g_clear_error(&error);
+            sockets = g_list_delete_link(sockets, socket_);
+            g_object_unref(socket);
         }
-        else
-            used_sockets = g_list_prepend(used_sockets, g_object_ref(socket));
     }
-    g_list_free_full(sockets, g_object_unref);
 
-    return used_sockets;
+    return sockets;
 }
 
 GList *
@@ -116,7 +116,7 @@ eventd_evp_start(EventdEvpContext *self, const gchar * const *binds)
 
     if ( binds == NULL )
         binds = _eventd_evp_default_binds;
-    sockets = _eventd_evp_add_socket(sockets, self, binds);
+    sockets = _eventd_evp_add_socket(self, binds);
 
     g_signal_connect(self->service, "incoming", G_CALLBACK(eventd_evp_client_connection_handler), self);
 
