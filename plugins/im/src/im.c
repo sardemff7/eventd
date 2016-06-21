@@ -217,7 +217,10 @@ _eventd_im_init(EventdPluginCoreContext *core)
     static GModule *libpurple_module = NULL;
     if ( libpurple_module == NULL )
     {
-        libpurple_module = g_module_open("libpurple", G_MODULE_BIND_LAZY);
+        static const gchar *_eventd_im_libpurple_so_names[] = { "libpurple.so.0", "libpurple" };
+        gsize i;
+        for ( i = 0 ; ( libpurple_module == NULL ) && ( i < G_N_ELEMENTS(_eventd_im_libpurple_so_names) ) ; ++i )
+            libpurple_module = g_module_open(_eventd_im_libpurple_so_names[i], G_MODULE_BIND_LAZY);
         if ( libpurple_module == NULL )
         {
             g_warning("Couldn't load libpurple");
