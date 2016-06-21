@@ -84,13 +84,16 @@ _eventd_im_account_free(gpointer data)
 }
 
 static void
-_eventd_im_account_connect(EventdImAccount *account)
+_eventd_im_account_connect(EventdImAccount *account, gboolean force)
 {
     if ( ! account->context->started )
         return;
 
     if ( ! purple_account_is_disconnected(account->account) )
         return;
+
+    if ( force )
+        evhelpers_reconnect_reset(account->reconnect);
 
     purple_account_connect(account->account);
 }
@@ -142,7 +145,7 @@ _eventd_im_account_reconnect_callback(LibeventdReconnectHandler *handler, gpoint
 {
     EventdImAccount *account = user_data;
 
-    _eventd_im_account_connect(account);
+    _eventd_im_account_connect(account, FALSE);
 }
 
 static void
@@ -276,7 +279,7 @@ _eventd_im_start(EventdPluginContext *context)
     EventdImAccount *account;
     g_hash_table_iter_init(&iter, context->accounts);
     while ( g_hash_table_iter_next(&iter, (gpointer *) &name, (gpointer *) &account) )
-        _eventd_im_account_connect(account);
+        _eventd_im_account_connect(account, TRUE);
 }
 
 static void
@@ -462,7 +465,7 @@ _eventd_im_event_action(EventdPluginContext *context, EventdPluginAction *action
     EventdImAccount *account = conv->account;
 
     if ( ! purple_account_is_connected(account->account) )
-        return _eventd_im_account_connect(account);
+        return _eventd_im_account_connect(account, FALSE);
 
     PurpleConnection *gc;
     gchar *message;
