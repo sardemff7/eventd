@@ -254,6 +254,41 @@ _eventd_im_uninit(EventdPluginContext *context)
 
 
 /*
+ * Start/stop interface
+ */
+
+static void
+_eventd_im_start(EventdPluginContext *context)
+{
+    GHashTableIter iter;
+    gchar *name;
+    EventdImAccount *account;
+    g_hash_table_iter_init(&iter, context->accounts);
+    while ( g_hash_table_iter_next(&iter, (gpointer *) &name, (gpointer *) &account) )
+    {
+        account->started = TRUE;
+        _eventd_im_account_connect(account);
+    }
+}
+
+static void
+_eventd_im_stop(EventdPluginContext *context)
+{
+    GHashTableIter iter;
+    gchar *name;
+    EventdImAccount *account;
+    g_hash_table_iter_init(&iter, context->accounts);
+    while ( g_hash_table_iter_next(&iter, (gpointer *) &name, (gpointer *) &account) )
+    {
+        account->started = FALSE;
+        evhelpers_reconnect_reset(account->reconnect);
+        if ( ! purple_account_is_disconnected(account->account) )
+            purple_account_disconnect(account->account);
+    }
+}
+
+
+/*
  * Configuration interface
  */
 static void
@@ -411,36 +446,6 @@ _eventd_im_config_reset(EventdPluginContext *context)
     g_hash_table_remove_all(context->accounts);
 }
 
-static void
-_eventd_im_start(EventdPluginContext *context)
-{
-    GHashTableIter iter;
-    gchar *name;
-    EventdImAccount *account;
-    g_hash_table_iter_init(&iter, context->accounts);
-    while ( g_hash_table_iter_next(&iter, (gpointer *) &name, (gpointer *) &account) )
-    {
-        account->started = TRUE;
-        _eventd_im_account_connect(account);
-    }
-}
-
-static void
-_eventd_im_stop(EventdPluginContext *context)
-{
-    GHashTableIter iter;
-    gchar *name;
-    EventdImAccount *account;
-    g_hash_table_iter_init(&iter, context->accounts);
-    while ( g_hash_table_iter_next(&iter, (gpointer *) &name, (gpointer *) &account) )
-    {
-        account->started = FALSE;
-        evhelpers_reconnect_reset(account->reconnect);
-        if ( ! purple_account_is_disconnected(account->account) )
-            purple_account_disconnect(account->account);
-    }
-}
-
 
 /*
  * Event action interface
@@ -501,12 +506,12 @@ eventd_plugin_get_interface(EventdPluginInterface *interface)
     eventd_plugin_interface_add_init_callback(interface, _eventd_im_init);
     eventd_plugin_interface_add_uninit_callback(interface, _eventd_im_uninit);
 
+    eventd_plugin_interface_add_start_callback(interface, _eventd_im_start);
+    eventd_plugin_interface_add_stop_callback(interface, _eventd_im_stop);
+
     eventd_plugin_interface_add_global_parse_callback(interface, _eventd_im_global_parse);
     eventd_plugin_interface_add_action_parse_callback(interface, _eventd_im_action_parse);
     eventd_plugin_interface_add_config_reset_callback(interface, _eventd_im_config_reset);
-
-    eventd_plugin_interface_add_start_callback(interface, _eventd_im_start);
-    eventd_plugin_interface_add_stop_callback(interface, _eventd_im_stop);
 
     eventd_plugin_interface_add_event_action_callback(interface, _eventd_im_event_action);
 }
