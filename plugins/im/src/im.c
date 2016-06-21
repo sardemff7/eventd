@@ -35,6 +35,7 @@
 struct _EventdPluginContext {
     GHashTable *accounts;
     GSList *actions;
+    gboolean started;
 };
 
 typedef struct {
@@ -45,7 +46,6 @@ typedef struct {
     GHashTable *convs;
     LibeventdReconnectHandler *reconnect;
     gint64 leave_timeout;
-    gboolean started;
 } EventdImAccount;
 
 typedef struct {
@@ -86,7 +86,7 @@ _eventd_im_account_free(gpointer data)
 static void
 _eventd_im_account_connect(EventdImAccount *account)
 {
-    if ( ! account->started )
+    if ( ! account->context->started )
         return;
 
     if ( ! purple_account_is_disconnected(account->account) )
@@ -148,7 +148,7 @@ _eventd_im_error_callback(PurpleAccount *ac, const PurpleConnectionErrorInfo *ol
 {
     EventdImAccount *account = ac->ui_data;
     g_debug("Error on account %s: %s", account->name, current_error->description);
-    if ( account->started && ( ! purple_account_is_connecting(account->account) ) )
+    if ( account->context->started && ( ! purple_account_is_connecting(account->account) ) )
     {
         if ( ! evhelpers_reconnect_try(account->reconnect) )
             g_warning("Too many reconnect tries for account %s", account->name);
@@ -260,27 +260,25 @@ _eventd_im_uninit(EventdPluginContext *context)
 static void
 _eventd_im_start(EventdPluginContext *context)
 {
+    context->started = TRUE;
     GHashTableIter iter;
     gchar *name;
     EventdImAccount *account;
     g_hash_table_iter_init(&iter, context->accounts);
     while ( g_hash_table_iter_next(&iter, (gpointer *) &name, (gpointer *) &account) )
-    {
-        account->started = TRUE;
         _eventd_im_account_connect(account);
-    }
 }
 
 static void
 _eventd_im_stop(EventdPluginContext *context)
 {
+    context->started = FALSE;
     GHashTableIter iter;
     gchar *name;
     EventdImAccount *account;
     g_hash_table_iter_init(&iter, context->accounts);
     while ( g_hash_table_iter_next(&iter, (gpointer *) &name, (gpointer *) &account) )
     {
-        account->started = FALSE;
         evhelpers_reconnect_reset(account->reconnect);
         if ( ! purple_account_is_disconnected(account->account) )
             purple_account_disconnect(account->account);
