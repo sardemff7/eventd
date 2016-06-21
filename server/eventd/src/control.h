@@ -23,10 +23,7 @@
 #ifndef __EVENTD_CONTROL_H__
 #define __EVENTD_CONTROL_H__
 
-EventdControl *eventd_control_new(EventdCoreContext *core);
+EventdControl *eventd_control_new(EventdCoreContext *core, const gchar *control_socket);
 void eventd_control_free(EventdControl *control);
-
-gboolean eventd_control_start(EventdControl *control, const gchar *control_socket);
-void eventd_control_stop(EventdControl *control);
 
 #endif /* __EVENTD_CONTROL_H__ */

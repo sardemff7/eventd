@@ -174,8 +174,6 @@ eventd_core_stop(EventdCoreContext *context)
 {
     eventd_plugins_stop_all();
 
-    eventd_control_stop(context->control);
-
     if ( context->loop != NULL )
         g_main_loop_quit(context->loop);
 }
@@ -391,16 +389,24 @@ main(int argc, char *argv[])
         goto end;
     }
 
+    context->sockets = eventd_sockets_new(runtime_dir, take_over_socket);
+
+    context->control = eventd_control_new(context, control_socket);
+    if ( context->control == NULL )
+    {
+        retval = EVENTD_RETURN_CODE_CONTROL_INTERFACE_ERROR;
+#ifdef ENABLE_SYSTEMD
+        sd_notify(1,
+            "STATUS=Failed to start the control interface\n"
+        );
+#endif /* ENABLE_SYSTEMD */
+        goto end;
+    }
+
     eventd_plugins_load(context, enable_relay, enable_sd_modules, context->system_mode);
 
     context->config = eventd_config_new(context->system_mode);
 
-    context->sockets = eventd_sockets_new(runtime_dir, take_over_socket);
-
-    context->control = eventd_control_new(context);
-
-    if ( eventd_control_start(context->control, control_socket) )
-    {
         eventd_plugins_start_all((const gchar * const *) context->binds);
 
 #ifdef G_OS_UNIX
@@ -437,16 +443,6 @@ main(int argc, char *argv[])
         context->loop = g_main_loop_new(NULL, FALSE);
         g_main_loop_run(context->loop);
         g_main_loop_unref(context->loop);
-    }
-    else
-    {
-        retval = EVENTD_RETURN_CODE_CONTROL_INTERFACE_ERROR;
-#ifdef ENABLE_SYSTEMD
-        sd_notify(1,
-            "STATUS=Failed to start the control interface\n"
-        );
-#endif /* ENABLE_SYSTEMD */
-    }
 
     eventd_control_free(context->control);
 

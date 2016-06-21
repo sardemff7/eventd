@@ -178,31 +178,15 @@ fail:
 }
 
 EventdControl *
-eventd_control_new(EventdCoreContext *core)
-{
-    EventdControl *control;
-
-    control = g_new0(EventdControl, 1);
-
-    control->core = core;
-
-    return control;
-}
-
-void
-eventd_control_free(EventdControl *control)
-{
-    g_free(control);
-}
-
-gboolean
-eventd_control_start(EventdControl *control, const gchar *control_socket)
+eventd_control_new(EventdCoreContext *core, const gchar *control_socket)
 {
     gboolean ret = FALSE;
+    GSocketService *socket_service;
     GError *error = NULL;
     GList *sockets = NULL;
 
-    control->socket_service = g_socket_service_new();
+    socket_service = g_socket_service_new();
+    g_socket_service_stop(socket_service);
 
     const gchar *binds[] = { NULL, NULL };
     gchar *bind = NULL;
@@ -215,14 +199,14 @@ eventd_control_start(EventdControl *control, const gchar *control_socket)
     else
         binds[0] = PRIVATE_SOCKET_BIND_PREFIX "-runtime:private";
 
-    sockets = eventd_core_get_binds(control->core, binds);
+    sockets = eventd_core_get_binds(core, binds);
 
     g_free(bind);
 
     if ( sockets == NULL )
     {
         g_warning("No control socket available, stopping");
-        return ret;
+        return NULL;
     }
 
     ret = TRUE;
@@ -231,7 +215,7 @@ eventd_control_start(EventdControl *control, const gchar *control_socket)
     for ( socket_ = sockets ; ( socket_ != NULL ) && ret; socket_ = g_list_next(socket_) )
     {
         GSocket *socket = socket_->data;
-        if ( ! g_socket_listener_add_socket(G_SOCKET_LISTENER(control->socket_service), socket, NULL, &error) )
+        if ( ! g_socket_listener_add_socket(G_SOCKET_LISTENER(socket_service), socket, NULL, &error) )
         {
             g_warning("Unable to add private socket: %s", error->message);
             ret = FALSE;
@@ -241,18 +225,30 @@ eventd_control_start(EventdControl *control, const gchar *control_socket)
 
     g_list_free_full(sockets, g_object_unref);
 
-    if ( ret )
-        g_signal_connect(control->socket_service, "incoming", G_CALLBACK(_eventd_service_private_connection_handler), control);
-    else
-        eventd_control_stop(control);
+    if ( ! ret )
+    {
+        g_object_unref(socket_service);
+        return NULL;
+    }
 
-    return ret;
+    EventdControl *control;
+
+    control = g_new0(EventdControl, 1);
+
+    control->core = core;
+    control->socket_service = socket_service;
+
+    g_signal_connect(control->socket_service, "incoming", G_CALLBACK(_eventd_service_private_connection_handler), control);
+    g_socket_service_start(control->socket_service);
+
+    return control;
 }
 
 void
-eventd_control_stop(EventdControl *control)
+eventd_control_free(EventdControl *control)
 {
     g_socket_service_stop(control->socket_service);
     g_socket_listener_close(G_SOCKET_LISTENER(control->socket_service));
     g_object_unref(control->socket_service);
+    g_free(control);
 }
