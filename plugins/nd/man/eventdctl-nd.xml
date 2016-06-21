@@ -108,7 +108,7 @@
             </varlistentry>
 
             <varlistentry>
-                <term><parameter class="command">backends</parameter></term>
+                <term><command>backends</command></term>
                 <listitem>
                     <para>List the available backends.</para>
                 </listitem>
