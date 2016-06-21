@@ -28,7 +28,6 @@
 
 typedef struct _EventdCoreContext EventdCoreContext;
 
-typedef struct _EventdQueue EventdQueue;
 typedef struct _EventdControl EventdControl;
 typedef struct _EventdConfig EventdConfig;
 typedef struct _EventdEvents EventdEvents;
