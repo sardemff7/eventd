@@ -43,6 +43,12 @@
 #define DEFAULT_SOCKET_BIND_PREFIX "tcp-file"
 #endif /* ! G_OS_UNIX */
 
+static const gchar * const _eventd_evp_default_binds[] = {
+    DEFAULT_SOCKET_BIND_PREFIX "-runtime:" EVP_UNIX_SOCKET,
+    "all",
+    NULL
+};
+
 /*
  * Initialization interface
  */
@@ -108,13 +114,9 @@ eventd_evp_start(EventdEvpContext *self, const gchar * const *binds)
 
     self->service = g_socket_service_new();
 
-    if ( binds != NULL )
-        sockets = _eventd_evp_add_socket(sockets, self, binds);
-    else
-    {
-        const gchar *binds[] = { DEFAULT_SOCKET_BIND_PREFIX "-runtime:" EVP_UNIX_SOCKET, "all", NULL };
-        sockets = _eventd_evp_add_socket(sockets, self, binds);
-    }
+    if ( binds == NULL )
+        binds = _eventd_evp_default_binds;
+    sockets = _eventd_evp_add_socket(sockets, self, binds);
 
     g_signal_connect(self->service, "incoming", G_CALLBACK(eventd_evp_client_connection_handler), self);
 
