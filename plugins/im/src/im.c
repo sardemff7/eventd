@@ -212,7 +212,7 @@ _eventd_im_conv_joined(PurpleConversation *_conv, EventdPluginContext *context)
 static EventdPluginContext *
 _eventd_im_init(EventdPluginCoreContext *core)
 {
-#ifdef PURPLE_NEEDS_GLOBAL_LOADING
+#ifdef G_OS_UNIX
     /* Some ugly workaround for libpurple plugins that do not link to it */
     static GModule *libpurple_module = NULL;
     if ( libpurple_module == NULL )
@@ -225,7 +225,7 @@ _eventd_im_init(EventdPluginCoreContext *core)
         }
         g_module_make_resident(libpurple_module);
     }
-#endif
+#endif /* G_OS_UNIX */
 
     purple_util_set_user_dir("/dev/null");
 

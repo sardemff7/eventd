@@ -314,8 +314,6 @@ AM_CONDITIONAL([ENABLE_ND_WINDOWS], [test x${enable_nd_windows} = xyes])
 AC_ARG_ENABLE([im], AS_HELP_STRING([--disable-im], [Disable IM support through libpurple]), [], [enable_im=${ev_os_unix}])
 if test x${enable_im} = xyes; then
     PKG_CHECK_MODULES([PURPLE], [purple])
-    # No existing libpurple allows us to avoid that for now
-    AC_DEFINE([PURPLE_NEEDS_GLOBAL_LOADING], [1], [Needs to load libpurple symbols in the global namespace])
     AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_im"
 fi
 AM_CONDITIONAL([ENABLE_IM], [test x${enable_im} = xyes])
