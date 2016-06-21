@@ -258,6 +258,7 @@ main(int argc, char *argv[])
     EventdCoreContext *context;
 
     gchar *runtime_dir = NULL;
+    gchar *control_socket = NULL;
     gboolean take_over_socket = FALSE;
     gboolean enable_relay = TRUE;
     gboolean enable_sd_modules = TRUE;
@@ -268,7 +269,6 @@ main(int argc, char *argv[])
     EventdReturnCode retval = EVENTD_RETURN_CODE_OK;
     GError *error = NULL;
     GOptionContext *option_context = NULL;
-    GOptionGroup *option_group;
 
 #ifdef EVENTD_DEBUG
     g_setenv("G_MESSAGES_DEBUG", "all", FALSE);
@@ -321,8 +321,6 @@ main(int argc, char *argv[])
     context->interface.get_sockets = eventd_core_get_sockets;
     context->interface.push_event = eventd_core_push_event;
 
-    context->control = eventd_control_new(context);
-
 #ifdef G_OS_UNIX
     context->system_mode = ( g_getenv("XDG_RUNTIME_DIR") == NULL );
     if ( context->system_mode )
@@ -331,6 +329,7 @@ main(int argc, char *argv[])
 
     GOptionEntry entries[] =
     {
+        { "private-socket",       'i', 0,                     G_OPTION_ARG_FILENAME,     &control_socket,    "Socket to listen for internal control", "<socket>" },
         { "listen",               'l', 0,                     G_OPTION_ARG_STRING_ARRAY, &context->binds,    "Add a socket to listen to",             "<socket>" },
         { "take-over",            't', GIO_UNIX_OPTION_FLAG,  G_OPTION_ARG_NONE,         &take_over_socket,  "Take over socket",                      NULL },
         { "no-relay",             0,   G_OPTION_FLAG_REVERSE, G_OPTION_ARG_NONE,         &enable_relay,      "Disable the relay feature",             NULL },
@@ -342,13 +341,7 @@ main(int argc, char *argv[])
     };
 
     option_context = g_option_context_new("- small daemon to act on remote or local events");
-
-    option_group = g_option_group_new(NULL, NULL, NULL, NULL, NULL);
-    g_option_group_set_translation_domain(option_group, GETTEXT_PACKAGE);
-    g_option_group_add_entries(option_group, entries);
-    eventd_control_add_option_entry(context->control, option_group);
-    g_option_context_set_main_group(option_context, option_group);
-
+    g_option_context_add_main_entries(option_context, entries, GETTEXT_PACKAGE);
     if ( ! g_option_context_parse(option_context, &argc, &argv, &error) )
     {
         g_warning("Option parsing failed: %s\n", error->message);
@@ -402,7 +395,9 @@ main(int argc, char *argv[])
 
     context->sockets = eventd_sockets_new(runtime_dir, take_over_socket);
 
-    if ( eventd_control_start(context->control) )
+    context->control = eventd_control_new(context);
+
+    if ( eventd_control_start(context->control, control_socket) )
     {
         eventd_plugins_start_all((const gchar * const *) context->binds);
 
@@ -451,6 +446,8 @@ main(int argc, char *argv[])
 #endif /* ENABLE_SYSTEMD */
     }
 
+    eventd_control_free(context->control);
+
     eventd_sockets_free(context->sockets);
 
     eventd_config_free(context->config);
@@ -459,9 +456,8 @@ main(int argc, char *argv[])
 
 end:
     g_strfreev(context->binds);
+    g_free(control_socket);
     g_free(runtime_dir);
-
-    eventd_control_free(context->control);
 
     g_free(context);
 

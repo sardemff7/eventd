@@ -51,7 +51,6 @@
 
 struct _EventdControl {
     EventdCoreContext *core;
-    gchar *socket;
     GSocketService *socket_service;
 };
 
@@ -193,13 +192,11 @@ eventd_control_new(EventdCoreContext *core)
 void
 eventd_control_free(EventdControl *control)
 {
-    g_free(control->socket);
-
     g_free(control);
 }
 
 gboolean
-eventd_control_start(EventdControl *control)
+eventd_control_start(EventdControl *control, const gchar *control_socket)
 {
     gboolean ret = FALSE;
     GError *error = NULL;
@@ -210,9 +207,9 @@ eventd_control_start(EventdControl *control)
     const gchar *binds[] = { NULL, NULL };
     gchar *bind = NULL;
 
-    if ( control->socket != NULL )
+    if ( control_socket != NULL )
     {
-        bind = g_strconcat(PRIVATE_SOCKET_BIND_PREFIX ":", control->socket, NULL);
+        bind = g_strconcat(PRIVATE_SOCKET_BIND_PREFIX ":", control_socket, NULL);
         binds[0] = bind;
     }
     else
@@ -258,15 +255,4 @@ eventd_control_stop(EventdControl *control)
     g_socket_service_stop(control->socket_service);
     g_socket_listener_close(G_SOCKET_LISTENER(control->socket_service));
     g_object_unref(control->socket_service);
-}
-
-void
-eventd_control_add_option_entry(EventdControl *control, GOptionGroup *option_group)
-{
-    GOptionEntry entries[] =
-    {
-        { "private-socket", 'i', 0, G_OPTION_ARG_FILENAME, &control->socket, "socket to listen for internal control", "<socket>" },
-        { NULL }
-    };
-    g_option_group_add_entries(option_group, entries);
 }

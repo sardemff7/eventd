@@ -26,9 +26,7 @@
 EventdControl *eventd_control_new(EventdCoreContext *core);
 void eventd_control_free(EventdControl *control);
 
-gboolean eventd_control_start(EventdControl *control);
+gboolean eventd_control_start(EventdControl *control, const gchar *control_socket);
 void eventd_control_stop(EventdControl *control);
-
-void eventd_control_add_option_entry(EventdControl *control, GOptionGroup *option_group);
 
 #endif /* __EVENTD_CONTROL_H__ */
