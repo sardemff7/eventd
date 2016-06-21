@@ -91,7 +91,7 @@
                             <para><command>nd</command> plugin: <citerefentry><refentrytitle>eventdctl-nd</refentrytitle><manvolnum>1</manvolnum></citerefentry> <citerefentry><refentrytitle>eventd-nd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry></para>
                         </listitem>
                         <listitem condition="website;enable_im">
-                            <para><command>im</command> plugin: <citerefentry><refentrytitle>eventd-im.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry></para>
+                            <para><command>im</command> plugin: <citerefentry><refentrytitle>eventdctl-im</refentrytitle><manvolnum>1</manvolnum></citerefentry> <citerefentry><refentrytitle>eventd-im.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry></para>
                         </listitem>
                         <listitem condition="website;enable_sound">
                             <para><command>sound</command> plugin: <citerefentry><refentrytitle>eventd-sound.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry></para>

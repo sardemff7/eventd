@@ -296,6 +296,121 @@ _eventd_im_stop(EventdPluginContext *context)
 
 
 /*
+ * Control command interface
+ */
+
+static EventdPluginCommandStatus
+_eventd_im_control_command(EventdPluginContext *context, guint64 argc, const gchar * const *argv, gchar **status)
+{
+    EventdImAccount *account;
+    EventdPluginCommandStatus r = EVENTD_PLUGIN_COMMAND_STATUS_OK;
+
+    if ( g_strcmp0(argv[0], "connect") == 0 )
+    {
+        if ( argc < 2 )
+        {
+            *status = g_strdup("No account specified");
+            r = EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR;
+        }
+        else if ( ( account = g_hash_table_lookup(context->accounts, argv[1]) ) == NULL )
+        {
+            *status = g_strdup_printf("No such account '%s'", argv[1]);
+            r = EVENTD_PLUGIN_COMMAND_STATUS_EXEC_ERROR;
+        }
+        else
+        {
+            _eventd_im_account_connect(account, TRUE);
+            *status = g_strdup_printf("Connected to account '%s'", argv[1]);
+        }
+    }
+    else if ( g_strcmp0(argv[0], "disconnect") == 0 )
+    {
+        if ( argc < 2 )
+        {
+            *status = g_strdup("No account specified");
+            r = EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR;
+        }
+        else if ( ( account = g_hash_table_lookup(context->accounts, argv[1]) ) == NULL )
+        {
+            *status = g_strdup_printf("No such account '%s'", argv[1]);
+            r = EVENTD_PLUGIN_COMMAND_STATUS_EXEC_ERROR;
+        }
+        else
+        {
+            _eventd_im_account_disconnect(account);
+            *status = g_strdup_printf("Disconnected from account '%s'", argv[1]);
+        }
+    }
+    else if ( g_strcmp0(argv[0], "status") == 0 )
+    {
+        if ( argc < 2 )
+        {
+            *status = g_strdup("No account specified");
+            r = EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR;
+        }
+        else if ( ( account = g_hash_table_lookup(context->accounts, argv[1]) ) == NULL )
+        {
+            *status = g_strdup_printf("No such account '%s'", argv[1]);
+            r = EVENTD_PLUGIN_COMMAND_STATUS_EXEC_ERROR;
+        }
+        else
+        {
+            const gchar *s = "is connected";
+            if ( purple_account_is_connecting(account->account) )
+            {
+                r = EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_1;
+                s = "is connecting";
+            }
+            else if ( purple_account_is_disconnected(account->account) )
+            {
+                if ( evhelpers_reconnect_too_much(account->reconnect) )
+                {
+                    r = EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_3;
+                    s = "is disconnected, too much reconnection attempts";
+                }
+                else
+                {
+                    r = EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_2;
+                    s = "is disconnected";
+                }
+            }
+            *status = g_strdup_printf("Account '%s' %s", argv[1], s);
+        }
+        GHashTableIter iter;
+        g_hash_table_iter_init(&iter, context->accounts);
+    }
+    else if ( g_strcmp0(argv[0], "list") == 0 )
+    {
+        if ( g_hash_table_size(context->accounts) == 0 )
+        {
+            r = EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_1;
+            *status = g_strdup("No account");
+        }
+        else
+        {
+            GString *list;
+            list = g_string_sized_new(strlen("Accounts list:") + strlen("\n    a quit long name") * g_hash_table_size(context->accounts));
+            g_string_append(list, "Accounts list:");
+            GHashTableIter iter;
+            const gchar *name;
+            g_hash_table_iter_init(&iter, context->accounts);
+            while ( g_hash_table_iter_next(&iter, (gpointer *) &name, NULL) )
+                g_string_append(g_string_append(list, "\n    "), name);
+
+            *status = g_string_free(list, FALSE);
+        }
+    }
+    else
+    {
+        *status = g_strdup_printf("Unknown command '%s'", argv[0]);
+        r = EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR;
+    }
+
+    return r;
+}
+
+
+/*
  * Configuration interface
  */
 static void
@@ -515,6 +630,8 @@ eventd_plugin_get_interface(EventdPluginInterface *interface)
 
     eventd_plugin_interface_add_start_callback(interface, _eventd_im_start);
     eventd_plugin_interface_add_stop_callback(interface, _eventd_im_stop);
+
+    eventd_plugin_interface_add_control_command_callback(interface, _eventd_im_control_command);
 
     eventd_plugin_interface_add_global_parse_callback(interface, _eventd_im_global_parse);
     eventd_plugin_interface_add_action_parse_callback(interface, _eventd_im_action_parse);
