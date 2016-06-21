@@ -30,6 +30,7 @@ typedef void (*LibeventdReconnectTryCallback)(LibeventdReconnectHandler *handler
 LibeventdReconnectHandler *evhelpers_reconnect_new(gint64 timeout, gint64 max_tries, LibeventdReconnectTryCallback callback, gpointer user_data);
 void evhelpers_reconnect_free(LibeventdReconnectHandler *handler);
 
+gboolean evhelpers_reconnect_too_much(LibeventdReconnectHandler *self);
 gboolean evhelpers_reconnect_try(LibeventdReconnectHandler *handler);
 void evhelpers_reconnect_reset(LibeventdReconnectHandler *handler);
 

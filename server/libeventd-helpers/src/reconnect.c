@@ -75,9 +75,16 @@ _evhelpers_reconnect_timeout(gpointer user_data)
 
 EVENTD_EXPORT
 gboolean
+evhelpers_reconnect_too_much(LibeventdReconnectHandler *self)
+{
+    return ( ( self->max_tries > 0 ) && ( self->try >= (guint64) self->max_tries ) );
+}
+
+EVENTD_EXPORT
+gboolean
 evhelpers_reconnect_try(LibeventdReconnectHandler *self)
 {
-    if ( ( self->max_tries > 0 ) && ( self->try >= (guint64) self->max_tries ) )
+    if ( evhelpers_reconnect_too_much(self) )
         return FALSE;
 
     self->timeout_tag = g_timeout_add_seconds(self->timeout << self->try, _evhelpers_reconnect_timeout, self);
