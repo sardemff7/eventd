@@ -29,21 +29,20 @@
 #include <glib.h>
 #include <glib-object.h>
 
-#include <espeak/speak_lib.h>
+#include <libspeechd.h>
 
 #include <eventd-plugin.h>
 #include <libeventd-event.h>
 #include <libeventd-helpers-config.h>
 
 struct _EventdPluginContext {
+    SPDConnection *spd;
     GSList *actions;
 };
 
 struct _EventdPluginAction {
     FormatString *message;
 };
-
-#define BUFFER_SIZE 2000
 
 
 static void
@@ -63,18 +62,19 @@ _eventd_tts_action_free(gpointer data)
 static EventdPluginContext *
 _eventd_tts_init(EventdPluginCoreContext *core)
 {
-    gint sample_rate;
+    SPDConnection *spd;
     EventdPluginContext *context;
 
-    sample_rate = espeak_Initialize(AUDIO_OUTPUT_PLAYBACK, BUFFER_SIZE, NULL, 0);
+    spd = spd_open(PACKAGE_NAME, NULL, NULL, SPD_MODE_THREADED);
 
-    if ( sample_rate == EE_INTERNAL_ERROR )
+    if ( spd == NULL )
     {
-        g_warning("Couldn't initialize eSpeak system");
+        g_warning("Couldn't initialize Speech Dispatcher connection");
         return NULL;
     }
 
     context = g_new0(EventdPluginContext, 1);
+    context->spd = spd;
 
     return context;
 }
@@ -82,7 +82,7 @@ _eventd_tts_init(EventdPluginCoreContext *core)
 static void
 _eventd_tts_uninit(EventdPluginContext *context)
 {
-    espeak_Terminate();
+    spd_close(context->spd);
 
     g_free(context);
 }
@@ -95,7 +95,7 @@ _eventd_tts_uninit(EventdPluginContext *context)
 static void
 _eventd_tts_stop(EventdPluginContext *context)
 {
-    espeak_Synchronize();
+    spd_cancel(context->spd);
 }
 
 
@@ -118,7 +118,7 @@ _eventd_tts_action_parse(EventdPluginContext *context, GKeyFile *config_file)
     if ( disable )
         return NULL;
 
-    if ( evhelpers_config_key_file_get_locale_format_string_with_default(config_file, "TTS", "Message", NULL, "<voice name=\"${message-lang}\">${message}</voice>", &message) < 0 )
+    if ( evhelpers_config_key_file_get_locale_format_string_with_default(config_file, "TTS", "Message", NULL, "${message}", &message) < 0 )
         return NULL;
 
     EventdPluginAction *action;
@@ -146,22 +146,14 @@ static void
 _eventd_tts_event_action(EventdPluginContext *context, EventdPluginAction *action, EventdEvent *event)
 {
     gchar *msg;
-    espeak_ERROR error;
+    gint id;
 
     msg = evhelpers_format_string_get_string(action->message, event, NULL, NULL);
 
-    error = espeak_Synth(msg, strlen(msg)+1, 0, POS_CHARACTER, 0, espeakCHARS_UTF8|espeakSSML, NULL, NULL);
+    id = spd_say(context->spd, SPD_NOTIFICATION, msg);
 
-    switch ( error )
-    {
-    case EE_INTERNAL_ERROR:
-    case EE_BUFFER_FULL:
+    if ( id == -1 )
         g_warning("Couldn't synthetise text");
-    case EE_OK:
-    break;
-    case EE_NOT_FOUND:
-        g_assert_not_reached();
-    }
 
     g_free(msg);
 }

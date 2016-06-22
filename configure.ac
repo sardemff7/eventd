@@ -330,9 +330,9 @@ fi
 AM_CONDITIONAL([ENABLE_SOUND], [test x${enable_sound} = xyes])
 
 # TTS plugin
-AC_ARG_ENABLE([tts], AS_HELP_STRING([--enable-tts], [Enable Text-to-speech support through eSpeak]), [], [enable_tts=no])
+AC_ARG_ENABLE([tts], AS_HELP_STRING([--enable-tts], [Enable Text-to-speech support through Speech Dispatcher]), [], [enable_tts=no])
 if test x${enable_tts} = xyes; then
-    EV_CHECK_LIB([ESPEAK], [espeak/speak_lib.h], [espeak], [espeak_Synth], [], [AC_MSG_ERROR([*** TTS support requested but eSpeak library is missing])])
+    PKG_CHECK_MODULES([SPEECHD], [speech-dispatcher])
     AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_tts"
 fi
 AM_CONDITIONAL([ENABLE_TTS], [test x${enable_tts} = xyes])

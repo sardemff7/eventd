@@ -17,6 +17,7 @@ tts_la_SOURCES = \
 
 tts_la_CFLAGS = \
 	$(AM_CFLAGS) \
+	$(SPEECHD_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS) \
 	$(null)
@@ -30,7 +31,7 @@ tts_la_LIBADD = \
 	libeventd.la \
 	libeventd-plugin.la \
 	libeventd-helpers.la \
-	$(ESPEAK_LIBS) \
+	$(SPEECHD_LIBS) \
 	$(GOBJECT_LIBS) \
 	$(GLIB_LIBS) \
 	$(null)
