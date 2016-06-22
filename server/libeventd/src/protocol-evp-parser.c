@@ -267,7 +267,7 @@ static const EventdProtocolTokens _eventd_protocol_evp_dot_messages[] = {
             _eventd_protocol_evp_parse_dot_catchall_continue,
             _eventd_protocol_evp_parse_dot_catchall_end
     },
-    { NULL }
+    { .message = NULL }
 };
 
 static const EventdProtocolTokens _eventd_protocol_evp_messages[] = {
@@ -291,7 +291,7 @@ static const EventdProtocolTokens _eventd_protocol_evp_messages[] = {
             _eventd_protocol_evp_parse_bye,
             _EVENTD_PROTOCOL_EVP_STATE_SIZE, NULL, NULL
     },
-    { NULL }
+    { .message = NULL }
 };
 
 static void

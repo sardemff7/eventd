@@ -143,7 +143,7 @@ main(int argc, char *argv[])
         { "websocket", 'w', 0, G_OPTION_ARG_NONE,         &use_websocket,  "Use WebSocket",                                            NULL },
         { "insecure",  0,   0, G_OPTION_ARG_NONE,         &insecure,       "Accept insecure certificates (unknown CA)",                NULL },
         { "version",   'V', 0, G_OPTION_ARG_NONE,         &print_version,  "Print version",                                            NULL },
-        { NULL }
+        { .long_name = NULL }
     };
     GOptionContext *opt_context = g_option_context_new("- Basic CLI client for eventd");
 

@@ -72,7 +72,7 @@ _eventd_nd_backends_load_dir(EventdNdBackend *backends, EventdNdInterface *conte
         g_debug("Loading backend '%s'", file);
 #endif /* ! EVENTD_DEBUG */
 
-        EventdNdBackend backend = { 0 };
+        EventdNdBackend backend = { .module = NULL, .context = NULL };
         get_info(&backend);
         backend.module = module;
         backend.context = backend.init(context);

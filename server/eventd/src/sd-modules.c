@@ -75,7 +75,7 @@ _eventd_sd_modules_load_dir(const EventdSdModuleControlInterface *control, GList
         g_debug("Loading service discovery module '%s'", file);
 #endif /* ! EVENTD_DEBUG */
 
-        EventdSdModule sd_module = { 0 };
+        EventdSdModule sd_module = { .module = NULL, .context = NULL };
         get_info(&sd_module);
         sd_module.module = module;
         sd_module.context = sd_module.init(control, sockets);

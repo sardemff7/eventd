@@ -341,7 +341,7 @@ main(int argc, char *argv[])
         { "daemonize",            0,   G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,         &daemonize,         NULL,                                    NULL },
         { "paths",                'P', 0,                     G_OPTION_ARG_NONE,         &print_paths,       "Print search paths",                    NULL },
         { "version",              'V', 0,                     G_OPTION_ARG_NONE,         &print_version,     "Print version",                         NULL },
-        { NULL }
+        { .long_name = NULL }
     };
 
     option_context = g_option_context_new("- small daemon to act on remote or local events");

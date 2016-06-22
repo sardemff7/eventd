@@ -154,7 +154,7 @@ _eventd_sd_ssdp_init(const EventdSdModuleControlInterface *control, GList *socke
 {
     EventdSdModuleContext *self;
 
-    NkUuid uuid = {{ 0 }};
+    NkUuid uuid;
     if ( ! nk_uuid_parse(&uuid, EVP_SSDP_NS_UUID) )
         g_return_val_if_reached(NULL);
 

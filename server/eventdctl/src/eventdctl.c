@@ -299,7 +299,7 @@ main(int argc, char *argv[])
         { "system",     'S', 0, G_OPTION_ARG_NONE,     &system_mode,    "Talk to system eventd", NULL },
 #endif /* G_OS_UNIX */
         { "version",    'V', 0, G_OPTION_ARG_NONE,     &print_version,  "Print version",          NULL },
-        { NULL }
+        { .long_name = NULL }
     };
 
     setlocale(LC_ALL, "");

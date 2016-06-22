@@ -135,7 +135,7 @@ _eventd_fdo_notifications_notification_free(gpointer user_data)
 static gboolean
 _eventd_fdo_notifications_body_try_parse(const gchar *body)
 {
-    GMarkupParser parser = { NULL };
+    static GMarkupParser parser;
     GMarkupParseContext *context;
     gboolean ret;
     context = g_markup_parse_context_new(&parser, 0, NULL, NULL);
