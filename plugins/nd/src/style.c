@@ -62,11 +62,13 @@ static const gchar * const _eventd_nd_style_anchors_vertical[] = {
     [EVENTD_ND_VANCHOR_CENTER] = "center",
 };
 
+/* Not used
 static const gchar * const _eventd_nd_style_anchors_horizontal[] = {
     [EVENTD_ND_HANCHOR_LEFT]    = "left",
     [EVENTD_ND_HANCHOR_RIGHT]   = "right",
     [EVENTD_ND_HANCHOR_CENTER] = "center",
 };
+*/
 
 static const gchar * const _eventd_nd_style_icon_placements[] = {
     [EVENTD_ND_STYLE_ICON_PLACEMENT_BACKGROUND] = "background",
