@@ -40,7 +40,7 @@ MAN_GEN_DEPS += \
 $(MAN_STAMP):
 	@echo '$(EVENTD_VERSION)' > $@
 
- ifneq ($(shell cat $(MAN_STAMP)),$(EVENTD_VERSION))
+ ifneq ($(shell cat $(MAN_STAMP) 2>/dev/null),$(EVENTD_VERSION))
 .PHONY: $(MAN_STAMP)
  endif
 endif
