@@ -109,7 +109,7 @@ _eventd_nd_notification_process(EventdNdNotification *self, EventdEvent *event)
     gint min_width, max_width;
 
     gint text_width = 0, text_height = 0;
-    gint image_width, image_height;
+    gint image_width = 0, image_height = 0;
 
 
     margin = self->queue->margin;
