@@ -337,7 +337,7 @@ eventd_plugins_control_command(const gchar *id, guint64 argc, const gchar * cons
     EventdctlReturnCode r;
 
     if ( g_strcmp0(id, "relay") == 0 )
-        return eventd_relay_control_command(relay, argc, argv, status);
+        return (EventdctlReturnCode) eventd_relay_control_command(relay, argc, argv, status);
 
     plugin = g_hash_table_lookup(plugins, id);
     if ( plugin == NULL )
@@ -351,7 +351,7 @@ eventd_plugins_control_command(const gchar *id, guint64 argc, const gchar * cons
         r = EVENTDCTL_RETURN_CODE_PLUGIN_ERROR;
     }
     else
-        r = plugin->interface.control_command(plugin->context, argc, argv, status);
+        r = (EventdctlReturnCode) plugin->interface.control_command(plugin->context, argc, argv, status);
 
     return r;
 }
