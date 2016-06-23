@@ -321,7 +321,7 @@ static const struct wl_seat_listener _eventd_nd_wl_seat_listener = {
     .name = _eventd_nd_wl_seat_name,
 };
 
-static const char const *_eventd_nd_cursor_names[] = {
+static const gchar * const _eventd_nd_cursor_names[] = {
     "left_ptr",
     "default",
     "top_left_arrow",
