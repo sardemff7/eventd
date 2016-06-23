@@ -33,6 +33,11 @@ addons:
             - libsndfile1-dev
             - libespeak-dev
             - libcanberra-dev
+            # For libnkutils tests
+            - gnome-icon-theme-extras
+            - gnome-icon-theme-symbolic
+            - sound-theme-freedesktop
+            - pidgin-data
 install:
     # Could be worked around with: libgnomevfs2-dev libdbus-glib-1-dev <nothing> <nothing>
     - sudo apt-get install -y libavahi-glib-dev libdbus-1-dev libxcb-ewmh-dev libgssdp-1.0-dev
