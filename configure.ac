@@ -400,7 +400,7 @@ AC_MSG_RESULT([
         notification-daemon:${enabled_nd_backends#,}
         IM support through libpurple: ${enable_im}
         Sound files playing through libsndfile: ${enable_sound}
-        Text-to-speech through eSpeak: ${enable_tts}
+        Text-to-speech through Speech Dispatcher: ${enable_tts}
         libnotify proxy: ${enable_libnotify}
         libcanberra: ${enable_libcanberra}
 

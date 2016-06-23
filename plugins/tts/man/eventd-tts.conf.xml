@@ -49,7 +49,7 @@
         <title>Description</title>
 
         <para>
-            The <command>tts</command> plugin provides Text-to-Speech support through eSpeak.
+            The <command>tts</command> plugin provides Text-to-Speech support through Speech Dispatcher.
         </para>
     </refsect1>
 
