@@ -141,7 +141,7 @@ eventd_evp_global_parse(EventdEvpContext *self, GKeyFile *config_file)
 {
     gchar *cert_file = NULL;
     gchar *key_file = NULL;
-    gchar *publish_name;
+    gchar *publish_name = NULL;
 
     if ( ! g_key_file_has_group(config_file, "Server") )
         return;
