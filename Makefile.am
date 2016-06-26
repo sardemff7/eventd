@@ -25,6 +25,7 @@ bin_PROGRAMS =
 noinst_LTLIBRARIES =
 lib_LTLIBRARIES =
 pkglib_LTLIBRARIES =
+helperlib_LTLIBRARIES =
 modules_LTLIBRARIES =
 plugins_LTLIBRARIES =
 pkginclude_HEADERS =

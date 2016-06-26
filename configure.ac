@@ -121,9 +121,15 @@ vapidir='${datadir}/vala/vapi'
 AC_SUBST([vapidir])
 
 # eventd specific dirs
+if test x${ev_os_unix} = xyes; then
+    helperlibdir='${pkglibdir}'
+else
+    helperlibdir='${libdir}'
+fi
 pluginsdir='${pkglibdir}/plugins'
 modulesdir='${pkglibdir}/modules/${PACKAGE_VERSION}'
 eventdir='${pkgdatadir}'
+AC_SUBST([helperlibdir])
 AC_SUBST([pluginsdir])
 AC_SUBST([modulesdir])
 AC_SUBST([eventdir])
