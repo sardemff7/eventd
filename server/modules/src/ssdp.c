@@ -169,16 +169,6 @@ _eventd_sd_ssdp_init(const EventdSdModuleControlInterface *control, GList *socke
         return NULL;
     }
 
-    GList *locations;
-
-    locations = _eventd_sd_ssdp_get_locations(client, sockets);
-    if ( locations == NULL )
-    {
-        g_warning("Couldn't generate SSDP locations from sockets");
-        g_object_unref(client);
-        return NULL;
-    }
-
     self = g_new0(EventdSdModuleContext, 1);
     self->control = control;
     self->ns_uuid = uuid;
@@ -189,7 +179,7 @@ _eventd_sd_ssdp_init(const EventdSdModuleControlInterface *control, GList *socke
     g_signal_connect_swapped(self->browser, "resource-unavailable", G_CALLBACK(_eventd_sd_ssdp_resource_unavailable), self);
 
     self->servers = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
-    self->locations = locations;
+    self->locations = _eventd_sd_ssdp_get_locations(client, sockets);
 
     return self;
 }
@@ -232,7 +222,7 @@ _eventd_sd_ssdp_start(EventdSdModuleContext *self)
 {
     gssdp_resource_browser_set_active(self->browser, TRUE);
 
-    if ( self->usn == NULL )
+    if ( ( self->usn == NULL ) || ( self->locations == NULL ) )
         return;
 
     self->group = gssdp_resource_group_new(self->client);
