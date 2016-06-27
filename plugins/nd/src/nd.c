@@ -317,7 +317,7 @@ _eventd_nd_control_command(EventdPluginContext *context, guint64 argc, const gch
         for ( i = EVENTD_ND_BACKEND_NONE + 1 ; i < _EVENTD_ND_BACKENDS_SIZE ; ++i )
         {
             if ( context->backends[i].context != NULL )
-                g_string_append_printf(list, "\n    %s", eventd_nd_backends_names[i]);
+                g_string_append_printf(list, "\n    %s%s", eventd_nd_backends_names[i], ( context->backend == &context->backends[i] ) ? " (*)" : "");
         }
 
         *status = g_string_free(list, FALSE);
