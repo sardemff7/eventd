@@ -241,19 +241,10 @@ static const EventdSdModuleControlInterface _eventd_plugins_sd_modules_control_i
 void
 eventd_plugins_load(EventdPluginCoreContext *core, const gchar * const *binds, gboolean enable_relay, gboolean enable_sd_modules, gboolean system_mode)
 {
-    GList *sockets;
     const gchar *env_whitelist;
     const gchar *env_blacklist;
     gchar **whitelist = NULL;
     gchar **blacklist = NULL;
-
-    evp = eventd_evp_init(core, binds, &sockets);
-    if ( enable_relay )
-        relay = eventd_relay_init(core);
-
-    if ( enable_sd_modules )
-        eventd_sd_modules_load(&_eventd_plugins_sd_modules_control_interface, sockets);
-    g_list_free_full(sockets, g_object_unref);
 
     plugins = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, _eventd_plugins_plugin_free);
 
@@ -273,6 +264,16 @@ eventd_plugins_load(EventdPluginCoreContext *core, const gchar * const *binds, g
 
     g_strfreev(blacklist);
     g_strfreev(whitelist);
+
+    GList *sockets;
+
+    evp = eventd_evp_init(core, binds, &sockets);
+    if ( enable_relay )
+        relay = eventd_relay_init(core);
+
+    if ( enable_sd_modules )
+        eventd_sd_modules_load(&_eventd_plugins_sd_modules_control_interface, sockets);
+    g_list_free_full(sockets, g_object_unref);
 }
 
 void
@@ -281,9 +282,6 @@ eventd_plugins_unload(void)
     if ( plugins == NULL )
         return;
 
-    g_hash_table_unref(plugins);
-    plugins = NULL;
-
     eventd_sd_modules_unload();
 
     eventd_relay_uninit(relay);
@@ -291,11 +289,19 @@ eventd_plugins_unload(void)
 
     eventd_evp_uninit(evp);
     evp = NULL;
+
+    g_hash_table_unref(plugins);
+    plugins = NULL;
 }
 
 void
 eventd_plugins_start_all(void)
 {
+    eventd_evp_start(evp);
+    eventd_relay_start(relay);
+
+    eventd_sd_modules_start();
+
     GHashTableIter iter;
     const gchar *id;
     EventdPlugin *plugin;
@@ -305,20 +311,11 @@ eventd_plugins_start_all(void)
         if ( plugin->interface.start != NULL )
             plugin->interface.start(plugin->context);
     }
-
-    eventd_evp_start(evp);
-    eventd_relay_start(relay);
-
-    eventd_sd_modules_start();
 }
 
 void
 eventd_plugins_stop_all(void)
 {
-    eventd_sd_modules_stop();
-    eventd_relay_stop(relay);
-    eventd_evp_stop(evp);
-
     GHashTableIter iter;
     const gchar *id;
     EventdPlugin *plugin;
@@ -328,6 +325,10 @@ eventd_plugins_stop_all(void)
         if ( plugin->interface.stop != NULL )
             plugin->interface.stop(plugin->context);
     }
+
+    eventd_sd_modules_stop();
+    eventd_relay_stop(relay);
+    eventd_evp_stop(evp);
 }
 
 EventdctlReturnCode
