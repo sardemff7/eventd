@@ -237,7 +237,6 @@ _eventd_core_debug_log_handler(const gchar *log_domain, GLogLevelFlags log_level
     g_data_output_stream_put_string(stream, message, NULL, NULL);
     g_data_output_stream_put_byte(stream, '\n', NULL, NULL);
 }
-
 #endif /* ! EVENTD_DEBUG */
 
 #ifdef G_OS_UNIX
@@ -291,6 +290,7 @@ main(int argc, char *argv[])
     }
 
 #ifdef EVENTD_DEBUG
+    setvbuf(stdout, NULL, _IOLBF, 0);
     const gchar *debug_log_filename =  g_getenv("EVENTD_DEBUG_LOG_FILENAME");
     GDataOutputStream *debug_stream = NULL;
 
