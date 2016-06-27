@@ -54,11 +54,6 @@ _eventd_sd_dns_sd_group_callback(AvahiEntryGroup *g, AvahiEntryGroupState state,
 static void
 _eventd_sd_dns_sd_create_group(EventdSdModuleContext *self, AvahiClient *client)
 {
-    if ( self->name == NULL )
-        return;
-    if ( self->addresses == NULL )
-        return;
-
     GList *address_;
     int error;
 
@@ -181,7 +176,8 @@ _eventd_sd_dns_sd_client_callback(AvahiClient *client, AvahiClientState state, v
     switch ( state )
     {
     case AVAHI_CLIENT_S_RUNNING:
-        _eventd_sd_dns_sd_create_group(self, client);
+        if ( ( self->name != NULL ) && ( self->addresses != NULL ) )
+            _eventd_sd_dns_sd_create_group(self, client);
         self->browser = avahi_service_browser_new(client, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, EVP_SERVICE_TYPE, NULL, 0, _eventd_sd_dns_sd_service_browser_callback, self);
     case AVAHI_CLIENT_S_REGISTERING:
     break;
@@ -230,15 +226,6 @@ _eventd_sd_dns_sd_sockets_to_addresses(GList *sockets)
 static EventdSdModuleContext *
 _eventd_sd_dns_sd_init(const EventdSdModuleControlInterface *control, GList *sockets)
 {
-    GList *addresses;
-
-    addresses = _eventd_sd_dns_sd_sockets_to_addresses(sockets);
-    if ( addresses == NULL )
-    {
-        g_warning("Couldn't get addresses from sockets");
-        return NULL;
-    }
-
     EventdSdModuleContext *self;
 
     avahi_set_allocator(avahi_glib_allocator());
@@ -248,7 +235,7 @@ _eventd_sd_dns_sd_init(const EventdSdModuleControlInterface *control, GList *soc
     self->glib_poll = avahi_glib_poll_new(NULL, G_PRIORITY_DEFAULT);
 
     self->servers = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
-    self->addresses = addresses;
+    self->addresses = _eventd_sd_dns_sd_sockets_to_addresses(sockets);;
 
     return self;
 }
