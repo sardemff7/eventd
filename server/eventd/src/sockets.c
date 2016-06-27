@@ -346,11 +346,8 @@ GList *
 eventd_sockets_get_binds(EventdSockets *self, const gchar * const *binds)
 {
     GList *sockets = NULL;
+
     const gchar * const * bind_;
-
-    if ( binds == NULL )
-        return NULL;
-
     for ( bind_ = binds ; *bind_ != NULL ; ++bind_ )
     {
         const gchar *bind = *bind_;
@@ -360,7 +357,7 @@ eventd_sockets_get_binds(EventdSockets *self, const gchar * const *binds)
 
         GList *new_sockets = NULL;
 
-        if ( g_strcmp0(bind, "all") == 0 )
+        if ( g_strcmp0(bind, "systemd") == 0 )
         {
             new_sockets = self->list;
             self->list = NULL;

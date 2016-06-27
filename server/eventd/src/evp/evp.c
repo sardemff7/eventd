@@ -37,15 +37,13 @@
 #include "evp.h"
 #include "evp-internal.h"
 
-#ifdef G_OS_UNIX
-#define DEFAULT_SOCKET_BIND_PREFIX "unix"
-#else /* ! G_OS_UNIX */
-#define DEFAULT_SOCKET_BIND_PREFIX "tcp-file"
-#endif /* ! G_OS_UNIX */
 
 static const gchar * const _eventd_evp_default_binds[] = {
-    DEFAULT_SOCKET_BIND_PREFIX "-runtime:" EVP_UNIX_SOCKET,
-    "all",
+#ifdef G_OS_UNIX
+    "unix-runtime:" EVP_UNIX_SOCKET,
+#else /* ! G_OS_UNIX */
+    "tcp-file-runtime:" EVP_UNIX_SOCKET,
+#endif /* ! G_OS_UNIX */
     NULL
 };
 
