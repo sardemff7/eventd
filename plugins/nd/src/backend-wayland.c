@@ -46,7 +46,7 @@
 
 #include <wayland-client.h>
 #include <wayland-cursor.h>
-#include "notification-area-unstable-v2-client-protocol.h"
+#include "unstable/notification-area/notification-area-unstable-v1-client-protocol.h"
 #include <libgwater-wayland.h>
 
 #include <libeventd-event.h>
@@ -56,7 +56,7 @@
 
 /* Supported interface versions */
 #define WL_COMPOSITOR_INTERFACE_VERSION 3
-#define WP_NOTIFICATION_AREA_INTERFACE_VERSION 1
+#define WW_NOTIFICATION_AREA_INTERFACE_VERSION 1
 #define WL_SHM_INTERFACE_VERSION 1
 #define WL_SEAT_INTERFACE_VERSION 5
 
@@ -88,7 +88,7 @@ struct _EventdNdBackendContext {
     struct wl_registry *registry;
     uint32_t global_names[_EVENTD_ND_WL_GLOBAL_SIZE];
     struct wl_compositor *compositor;
-    struct zwna_notification_area_v2 *notification_area;
+    struct zww_notification_area_v1 *notification_area;
     struct wl_shm *shm;
     struct {
         gchar *theme_name;
@@ -119,7 +119,7 @@ struct _EventdNdSurface {
     gint width;
     gint height;
     struct wl_surface *surface;
-    struct zwna_notification_v2 *wp_notification;
+    struct zww_notification_v1 *ww_notification;
 };
 
 static EventdNdBackendContext *
@@ -158,7 +158,7 @@ _eventd_nd_wl_config_reset(EventdNdBackendContext *self)
 }
 
 static void
-_eventd_nd_wl_notification_area_geometry(void *data, struct zwna_notification_area_v2 *notification_area, int32_t width, int32_t height, int32_t scale)
+_eventd_nd_wl_notification_area_geometry(void *data, struct zww_notification_area_v1 *notification_area, int32_t width, int32_t height, int32_t scale)
 {
     EventdNdBackendContext *self = data;
 
@@ -168,7 +168,7 @@ _eventd_nd_wl_notification_area_geometry(void *data, struct zwna_notification_ar
     self->nd->geometry_update(self->nd->context, width, height);
 }
 
-static const struct zwna_notification_area_v2_listener _eventd_nd_wl_notification_area_listener = {
+static const struct zww_notification_area_v1_listener _eventd_nd_wl_notification_area_listener = {
     .geometry = _eventd_nd_wl_notification_area_geometry
 };
 
@@ -374,11 +374,11 @@ _eventd_nd_wl_registry_handle_global(void *data, struct wl_registry *registry, u
         self->global_names[EVENTD_ND_WL_GLOBAL_COMPOSITOR] = name;
         self->compositor = wl_registry_bind(registry, name, &wl_compositor_interface, MIN(version, WL_COMPOSITOR_INTERFACE_VERSION));
     }
-    else if ( g_strcmp0(interface, "zwna_notification_area_v2") == 0 )
+    else if ( g_strcmp0(interface, "zww_notification_area_v1") == 0 )
     {
         self->global_names[EVENTD_ND_WL_GLOBAL_NOTIFICATION_DAEMON] = name;
-        self->notification_area = wl_registry_bind(registry, name, &zwna_notification_area_v2_interface, WP_NOTIFICATION_AREA_INTERFACE_VERSION);
-        zwna_notification_area_v2_add_listener(self->notification_area, &_eventd_nd_wl_notification_area_listener, self);
+        self->notification_area = wl_registry_bind(registry, name, &zww_notification_area_v1_interface, WW_NOTIFICATION_AREA_INTERFACE_VERSION);
+        zww_notification_area_v1_add_listener(self->notification_area, &_eventd_nd_wl_notification_area_listener, self);
     }
     else if ( g_strcmp0(interface, "wl_shm") == 0 )
     {
@@ -442,7 +442,7 @@ _eventd_nd_wl_registry_handle_global_remove(void *data, struct wl_registry *regi
             self->compositor = NULL;
         break;
         case EVENTD_ND_WL_GLOBAL_NOTIFICATION_DAEMON:
-            zwna_notification_area_v2_destroy(self->notification_area);
+            zww_notification_area_v1_destroy(self->notification_area);
             self->notification_area = NULL;
         break;
         case EVENTD_ND_WL_GLOBAL_SHM:
@@ -517,7 +517,7 @@ _eventd_nd_wl_start(EventdNdBackendContext *self, const gchar *target)
     if ( self->notification_area == NULL )
     {
         _eventd_nd_wl_stop(self);
-        g_warning("No wp_notification_daemon interface provided by the compositor");
+        g_warning("No ww_notification_daemon interface provided by the compositor");
         return FALSE;
     }
 
@@ -662,7 +662,7 @@ _eventd_nd_wl_surface_new(EventdNdBackendContext *context, EventdNdNotification 
         return NULL;
     }
 
-    self->wp_notification = zwna_notification_area_v2_create_notification(context->notification_area, self->surface);
+    self->ww_notification = zww_notification_area_v1_create_notification(context->notification_area, self->surface);
 
     return self;
 }
@@ -683,7 +683,7 @@ _eventd_nd_wl_surface_free(EventdNdSurface *self)
 
     _eventd_nd_wl_buffer_release(self->buffer, self->buffer->buffer);
 
-    zwna_notification_v2_destroy(self->wp_notification);
+    zww_notification_v1_destroy(self->ww_notification);
     wl_surface_destroy(self->surface);
 
     g_free(self);
@@ -692,7 +692,7 @@ _eventd_nd_wl_surface_free(EventdNdSurface *self)
 static void
 _eventd_nd_wl_move_surface(EventdNdSurface *self, gint x, gint y, gpointer data)
 {
-    zwna_notification_v2_move(self->wp_notification, x, y);
+    zww_notification_v1_move(self->ww_notification, x, y);
     if ( self->context->need_redraw )
         _eventd_nd_wl_create_buffer(self);
 }

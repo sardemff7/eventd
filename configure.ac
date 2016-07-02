@@ -266,20 +266,20 @@ fi
 
 # Wayland backend
 wayland_min_version=1.9.91
-wna_min_version=3
+ww_min_version=1
 if test x${enable_nd_wayland} = xyes; then
     AC_CHECK_HEADER([sys/mman.h])
     if test x${ac_cv_func_mmap_fixed_mapped} = xno; then
         AC_MSG_ERROR([*** mmap() function is required for the Wayland backend of the notification-daemon plugin])
     fi
-    GW_CHECK_WAYLAND([wayland-client >= ${wayland_min_version} wayland-cursor wayland-notification-area >= ${wna_min_version}])
+    GW_CHECK_WAYLAND([wayland-client >= ${wayland_min_version} wayland-cursor wayland-wall >= ${ww_min_version}])
     AC_ARG_VAR([WAYLAND_SCANNER], [Wayland XML scanner executable])
     AC_PATH_PROG([WAYLAND_SCANNER], [wayland-scanner])
     if test -z "${WAYLAND_SCANNER}"; then
         AC_MSG_ERROR([wayland-scanner not found])
     fi
-    wnadir=`${PKG_CONFIG} --variable=pkgdatadir wayland-notification-area`
-    AC_SUBST([wnadir])
+    wwprotocoldir=`${PKG_CONFIG} --variable=pkgdatadir wayland-wall`
+    AC_SUBST([wwprotocoldir])
     AC_DEFINE([ENABLE_ND_WAYLAND], [1], [nd Wayland backend])
     DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_nd_wayland"
     enabled_nd_backends="${enabled_nd_backends}, Wayland"

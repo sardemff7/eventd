@@ -110,8 +110,8 @@ wayland_la_SOURCES = \
 	$(null)
 
 nodist_wayland_la_SOURCES = \
-	%D%/src/notification-area-unstable-v2-protocol.c \
-	%D%/src/notification-area-unstable-v2-client-protocol.h \
+	%D%/src/unstable/notification-area/notification-area-unstable-v1-protocol.c \
+	%D%/src/unstable/notification-area/notification-area-unstable-v1-client-protocol.h \
 	$(null)
 
 wayland_la_CFLAGS = \
@@ -131,11 +131,10 @@ wayland_la_LIBADD = \
 	$(null)
 
 CLEANFILES += \
-	%D%/src/notification-area-unstable-v2-protocol.c \
-	%D%/src/notification-area-unstable-v2-client-protocol.h \
+	$(nodist_wayland_la_SOURCES)
 	$(null)
 
-wayland.la %D%/src/wayland_la-backend-wayland.lo: %D%/src/notification-area-unstable-v2-client-protocol.h
+wayland.la %D%/src/wayland_la-backend-wayland.lo: %D%/src/unstable/notification-area/notification-area-unstable-v1-client-protocol.h
 endif
 
 if ENABLE_ND_XCB
@@ -224,14 +223,17 @@ endif
 #
 
 # Wayland protocol code generation rules
-%D%/src/%-protocol.c : $(wnadir)/%.xml
-	$(AM_V_GEN)$(WAYLAND_SCANNER) code < $< > $@
+%D%/src/%-protocol.c : $(wwprotocoldir)/%.xml
+	$(AM_V_GEN)$(MKDIR_P) $(dir $@) && \
+	$(WAYLAND_SCANNER) code < $< > $@
 
-%D%/src/%-server-protocol.h : $(wnadir)/%.xml
-	$(AM_V_GEN)$(WAYLAND_SCANNER) server-header < $< > $@
+%D%/src/%-server-protocol.h : $(wwprotocoldir)/%.xml
+	$(AM_V_GEN)$(MKDIR_P) $(dir $@) && \
+	$(WAYLAND_SCANNER) server-header < $< > $@
 
-%D%/src/%-client-protocol.h : $(wnadir)/%.xml
-	$(AM_V_GEN)$(WAYLAND_SCANNER) client-header < $< > $@
+%D%/src/%-client-protocol.h : $(wwprotocoldir)/%.xml
+	$(AM_V_GEN)$(MKDIR_P) $(dir $@) && \
+	$(WAYLAND_SCANNER) client-header < $< > $@
 
 
 
