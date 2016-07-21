@@ -135,11 +135,32 @@ _eventd_fdo_notifications_notification_free(gpointer user_data)
 static gboolean
 _eventd_fdo_notifications_body_try_parse(const gchar *body)
 {
+    GError *error = NULL;
     static GMarkupParser parser;
     GMarkupParseContext *context;
-    gboolean ret;
+    gboolean ret = TRUE;
     context = g_markup_parse_context_new(&parser, 0, NULL, NULL);
-    ret = g_markup_parse_context_parse(context, body, -1, NULL) && g_markup_parse_context_end_parse(context, NULL);
+    if ( ! g_markup_parse_context_parse(context, "<root>", -1, &error) )
+    {
+        ret = FALSE;
+        g_warning("Could not parse <root>: %s", error->message);
+    }
+    else if ( ! g_markup_parse_context_parse(context, body, -1, &error) )
+    {
+        ret = FALSE;
+        g_warning("Could not parse escaped body: %s", error->message);
+    }
+    else if ( ! g_markup_parse_context_parse(context, "</root>", -1, &error) )
+    {
+        ret = FALSE;
+        g_warning("Could not parse </root>: %s", error->message);
+    }
+    else if ( ! g_markup_parse_context_end_parse(context, &error) )
+    {
+        ret = FALSE;
+        g_warning("Could not end parsing escaped body: %s", error->message);
+    }
+    g_clear_error(&error);
     g_markup_parse_context_free(context);
     return ret;
 }
