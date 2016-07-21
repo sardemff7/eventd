@@ -614,8 +614,8 @@ error:
 static void
 _eventd_fdo_notifications_uninit(EventdPluginContext *context)
 {
-    g_hash_table_unref(context->ids);
     g_hash_table_unref(context->notifications);
+    g_hash_table_unref(context->ids);
 
     g_regex_unref(context->regex_markup);
     g_regex_unref(context->regex_amp);
