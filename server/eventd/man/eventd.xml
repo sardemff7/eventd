@@ -362,11 +362,11 @@
 
 <literal>"<filename>notification-urgencies.event</filename>"</literal>:
     [Event notification  low]
-    IfDataMatches=urgency,low;
+    IfDataMatches=urgency,==,byte 0;
     Actions=notification-low;
 
     [Event notification  critical]
-    IfDataMatches=urgency,critical;
+    IfDataMatches=urgency,==,byte 2;
     Actions=notification-critical;
 
 <literal>"<filename>notification-low.action</filename>"</literal>:

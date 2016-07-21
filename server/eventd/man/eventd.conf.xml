@@ -359,6 +359,16 @@
                     <varlistentry>
                         <term><varname>IfDataMatches=</varname></term>
                         <listitem>
+                            <para>A <type>list of <type>(data name,operator,value)</type> tuples</type></para>
+                            <para>If the named data is present, it must compare as expected with the provided value. All present data must match for this event id to match.</para>
+                            <para>Supported operators are <literal>==</literal>, <literal>!=</literal>, <literal>&lt;</literal>, <literal>&lt;=</literal>, <literal>&gt;</literal> and <literal>&gt;=</literal>.</para>
+                            <para><replaceable>value</replaceable> is parsed as a GVariant (e.g. strings must be quoted), and the type must match exactly, so be sure to include it if necessary.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>IfDataRegex=</varname></term>
+                        <listitem>
                             <para>A <type>list of <type>(data name,regex)</type> tuples</type></para>
                             <para>If the named data is present, it must match the provided regex. All present data must match for this event id to match.</para>
                         </listitem>

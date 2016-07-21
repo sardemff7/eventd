@@ -45,8 +45,14 @@ struct _EventdEvents {
 
 typedef struct {
     gchar *data;
-    GRegex *regex;
+    gint accepted[2];
+    GVariant *value;
 } EventdEventsEventDataMatch;
+
+typedef struct {
+    gchar *data;
+    GRegex *regex;
+} EventdEventsEventDataRegex;
 
 typedef struct {
     gint64 importance;
@@ -55,6 +61,7 @@ typedef struct {
     /* Conditions */
     gchar **if_data;
     EventdEventsEventDataMatch *if_data_matches;
+    EventdEventsEventDataRegex *if_data_regexes;
     GQuark *flags_whitelist;
     GQuark *flags_blacklist;
 } EventdEventsEvent;
@@ -67,12 +74,23 @@ _eventd_events_event_free(gpointer data)
 
     EventdEventsEvent *self = data;
 
+    if ( self->if_data_regexes != NULL )
+    {
+        EventdEventsEventDataRegex *match;
+        for ( match = self->if_data_regexes ; match->data != NULL ; ++match )
+        {
+            g_regex_unref(match->regex);
+            g_free(match->data);
+        }
+    }
+    g_free(self->if_data_regexes);
+
     if ( self->if_data_matches != NULL )
     {
         EventdEventsEventDataMatch *match;
         for ( match = self->if_data_matches ; match->data != NULL ; ++match )
         {
-            g_regex_unref(match->regex);
+            g_variant_unref(match->value);
             g_free(match->data);
         }
     }
@@ -110,11 +128,34 @@ _eventd_events_event_matches(EventdEventsEvent *self, EventdEvent *event, GQuark
     if ( self->if_data_matches != NULL )
     {
         EventdEventsEventDataMatch *match;
-        const gchar *data;
+        GVariant *data;
         for ( match = self->if_data_matches ; match->data != NULL ; ++match )
         {
-            if ( ( data = eventd_event_get_data_string(event, match->data) ) == NULL )
+            if ( ! eventd_event_has_data(event, match->data) )
                 continue;
+            if ( ( data = eventd_event_get_data(event, match->data) ) == NULL )
+                return FALSE;
+
+            if ( ! g_variant_type_equal(g_variant_get_type(data), g_variant_get_type(match->value)) )
+                return FALSE;
+            gint ret;
+            ret = g_variant_compare(data, match->value);
+            ret = CLAMP(ret, -1, 1);
+            if ( ( ret != match->accepted[0] ) && ( ret != match->accepted[1] ) )
+                return FALSE;
+        }
+    }
+
+    if ( self->if_data_regexes != NULL )
+    {
+        EventdEventsEventDataRegex *match;
+        const gchar *data;
+        for ( match = self->if_data_regexes ; match->data != NULL ; ++match )
+        {
+            if ( ! eventd_event_has_data(event, match->data) )
+                continue;
+            if ( ( data = eventd_event_get_data_string(event, match->data) ) == NULL )
+                return FALSE;
             if ( ! g_regex_match(match->regex, data, 0, NULL) )
                 return FALSE;
         }
@@ -289,6 +330,7 @@ _eventd_events_parse_group(EventdEvents *self, const gchar *group, GKeyFile *con
 
 
     gchar **if_data_matches;
+    gchar **if_data_regexes;
     gchar **flags;
     gsize length;
 
@@ -298,9 +340,10 @@ _eventd_events_parse_group(EventdEvents *self, const gchar *group, GKeyFile *con
     {
         gchar **if_data_match;
         EventdEventsEventDataMatch *match;
-        gchar *data, *regex_;
+        gchar *data, *operator, *value_;
+        gint accepted[2];
+        GVariant *value;
         GError *error = NULL;
-        GRegex *regex;
 
         event->if_data_matches = g_new0(EventdEventsEventDataMatch, length + 1);
         match = event->if_data_matches;
@@ -308,10 +351,110 @@ _eventd_events_parse_group(EventdEvents *self, const gchar *group, GKeyFile *con
         for ( if_data_match = if_data_matches ; *if_data_match != NULL ; ++if_data_match )
         {
             data = *if_data_match;
+            operator = g_utf8_strchr(data, -1, ',');
+            if ( operator == NULL )
+            {
+                g_warning("Data matches must be of the form 'data-name,operator,value'");
+                g_free(data);
+                continue;
+            }
+            *operator = '\0';
+            ++operator;
+
+            value_ = g_utf8_strchr(operator, -1, ',');
+            if ( value_ == NULL )
+            {
+                g_warning("Data matches must be of the form 'data-name,operator,value'");
+                g_free(data);
+                continue;
+            }
+            *value_ = '\0';
+            ++value_;
+
+            if ( ( ( value_ - operator ) > 3 ) || ( ( value_ - operator ) < 2 ) )
+            {
+                g_warning("Unsupported operator: %s", operator);
+                g_free(data);
+                continue;
+            }
+            accepted[0] = -2;
+            switch ( operator[1] )
+            {
+            case '=':
+                accepted[1] = 0;
+                switch ( operator[0] )
+                {
+                case '<':
+                    accepted[0] = -1;
+                break;
+                case '>':
+                    accepted[0] = 1;
+                break;
+                case '=':
+                    accepted[0] = 0;
+                break;
+                case '!':
+                    accepted[0] = -1;
+                    accepted[1] = 1;
+                break;
+                }
+            break;
+            case '\0':
+                switch ( operator[0] )
+                {
+                case '<':
+                    accepted[0] = accepted[1] = -1;
+                break;
+                case '>':
+                    accepted[0] = accepted[1] = 1;
+                break;
+                }
+            }
+            if ( accepted[0] == -2 )
+            {
+                g_warning("Unsupported operator: %s", operator);
+                g_free(data);
+                continue;
+            }
+
+            value = g_variant_parse(NULL, value_, NULL, NULL, &error);
+            if ( value == NULL )
+            {
+                g_warning("Could not parse variant '%s': %s", value_, error->message);
+                g_clear_error(&error);
+                g_free(data);
+                continue;
+            }
+
+            match->data = data;
+            match->accepted[0] = accepted[0];
+            match->accepted[1] = accepted[1];
+            match->value = value;
+            ++match;
+        }
+        match->data = NULL;
+        g_free(if_data_matches);
+    }
+
+    if ( evhelpers_config_key_file_get_string_list(config_file, group, "IfDataRegex", &if_data_regexes, &length) == 0 )
+    {
+        gchar **if_data_regex;
+        EventdEventsEventDataRegex *match;
+        gchar *data, *regex_;
+        GError *error = NULL;
+        GRegex *regex;
+
+        event->if_data_regexes = g_new0(EventdEventsEventDataRegex, length + 1);
+        match = event->if_data_regexes;
+
+        for ( if_data_regex = if_data_regexes ; *if_data_regex != NULL ; ++if_data_regex )
+        {
+            data = *if_data_regex;
             regex_ = g_utf8_strchr(data, -1, ',');
             if ( regex_ == NULL )
             {
                 g_warning("Data matches must be of the form 'data-name,regex'");
+                g_free(data);
                 continue;
             }
             *regex_ = '\0';
@@ -322,15 +465,16 @@ _eventd_events_parse_group(EventdEvents *self, const gchar *group, GKeyFile *con
             {
                 g_warning("Could not compile regex '%s': %s", regex_, error->message);
                 g_clear_error(&error);
+                g_free(data);
                 continue;
             }
 
-            match->data = g_strdup(data);
+            match->data = data;
             match->regex = regex;
             ++match;
         }
         match->data = NULL;
-        g_strfreev(if_data_matches);
+        g_free(if_data_regexes);
     }
 
     if ( evhelpers_config_key_file_get_string_list(config_file, group, "OnlyIfFlags", &flags, &length) == 0 )
