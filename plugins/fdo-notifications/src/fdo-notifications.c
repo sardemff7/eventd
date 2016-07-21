@@ -299,6 +299,8 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
 
         if ( g_str_has_prefix(icon, "file://") )
             eventd_event_add_data_string(event, g_strdup("icon"), g_strdup(icon));
+        else if ( g_path_is_absolute(icon) )
+            eventd_event_add_data_string(event, g_strdup("icon"), g_strdup_printf("file://%s", icon));
         else
             eventd_event_add_data_string(event, g_strdup("icon"), g_strdup_printf("theme:%s", icon));
     }
@@ -316,6 +318,8 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
     {
         if ( g_str_has_prefix(image_path, "file://") )
             eventd_event_add_data_string(event, g_strdup("image"), g_strdup(image_path));
+        else if ( g_path_is_absolute(image_path) )
+            eventd_event_add_data_string(event, g_strdup("image"), g_strdup_printf("file://%s", image_path));
     }
 
     if ( urgency > -1 )
