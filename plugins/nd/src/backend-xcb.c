@@ -623,6 +623,7 @@ _eventd_nd_xcb_stop(EventdNdBackendContext *self)
 static void
 _eventd_nd_xcb_surface_draw(EventdNdSurface *self)
 {
+    xcb_clear_area(self->context->xcb_connection, TRUE, self->window, 0, 0, 0, 0);
     self->context->nd->notification_draw(self->notification, self->surface, self->context->compositing);
     xcb_flush(self->context->xcb_connection);
 }
