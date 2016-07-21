@@ -114,6 +114,14 @@ include src/libnkutils/libnkutils.mk
 
 -include local-rules.mk
 
+# Libtool install order
+# Single-target ordering workaround from:
+# http://debbugs.gnu.org/cgi/bugreport.cgi?bug=7328
+
+install-pkglibLTLIBRARIES install-modulesLTLIBRARIES install-pluginsLTLIBRARIES: install-libLTLIBRARIES
+installpluginsLTLIBRARIES = install-pluginsLTLIBRARIES
+$(installpluginsLTLIBRARIES): install-pkglibLTLIBRARIES
+
 #
 # Hooks
 #
