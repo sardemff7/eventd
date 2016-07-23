@@ -193,22 +193,68 @@ static const struct wl_shm_listener _eventd_nd_wl_shm_listener = {
 };
 
 static void
+_eventd_nd_cursor_set_image(EventdNdBackendContext *self, int i)
+{
+    struct wl_buffer *buffer;
+    struct wl_cursor_image *image;
+    image = self->cursor.cursor->images[i];
+
+    self->cursor.image = image;
+    buffer = wl_cursor_image_get_buffer(self->cursor.image);
+    wl_surface_attach(self->cursor.surface, buffer, 0, 0);
+    wl_surface_damage(self->cursor.surface, 0, 0, self->cursor.image->width, self->cursor.image->height);
+    wl_surface_commit(self->cursor.surface);
+}
+
+static void _eventd_nd_cursor_frame_callback(void *data, struct wl_callback *callback, uint32_t time);
+
+static const struct wl_callback_listener _eventd_nd_cursor_frame_wl_callback_listener = {
+    .done = _eventd_nd_cursor_frame_callback,
+};
+
+static void
+_eventd_nd_cursor_frame_callback(void *data, struct wl_callback *callback, uint32_t time)
+{
+    EventdNdBackendContext *self = data;
+    int i;
+
+    if ( self->cursor.frame_cb != NULL )
+        wl_callback_destroy(self->cursor.frame_cb);
+    self->cursor.frame_cb = wl_surface_frame(self->cursor.surface);
+    wl_callback_add_listener(self->cursor.frame_cb, &_eventd_nd_cursor_frame_wl_callback_listener, self);
+
+    i = wl_cursor_frame(self->cursor.cursor, time);
+    _eventd_nd_cursor_set_image(self, i);
+}
+
+static void
 _eventd_nd_wl_pointer_enter(void *data, struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface, wl_fixed_t x, wl_fixed_t y)
 {
     EventdNdWlSeat *self = data;
     EventdNdBackendContext *context = self->context;
 
     self->surface = wl_surface_get_user_data(surface);
-    if ( self->context->cursor.surface != NULL )
-        wl_pointer_set_cursor(self->pointer, serial, context->cursor.surface, context->cursor.image->hotspot_x, context->cursor.image->hotspot_y);
+
+    if ( context->cursor.surface == NULL )
+        return;
+
+    if ( context->cursor.cursor->image_count < 2 )
+        _eventd_nd_cursor_set_image(context, 0);
+    else
+        _eventd_nd_cursor_frame_callback(context, context->cursor.frame_cb, 0);
+
+    wl_pointer_set_cursor(self->pointer, serial, context->cursor.surface, context->cursor.image->hotspot_x, context->cursor.image->hotspot_y);
 }
 
 static void
 _eventd_nd_wl_pointer_leave(void *data, struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface)
 {
     EventdNdWlSeat *self = data;
+    EventdNdBackendContext *context = self->context;
 
     self->surface = NULL;
+    if ( context->cursor.frame_cb != NULL )
+        wl_callback_destroy(context->cursor.frame_cb);
 }
 
 static void
@@ -330,41 +376,6 @@ static const gchar * const _eventd_nd_cursor_names[] = {
 };
 
 static void
-_eventd_nd_cursor_set_image(EventdNdBackendContext *self, int i)
-{
-    struct wl_buffer *buffer;
-    struct wl_cursor_image *image;
-    image = self->cursor.cursor->images[i];
-
-    self->cursor.image = image;
-    buffer = wl_cursor_image_get_buffer(self->cursor.image);
-    wl_surface_attach(self->cursor.surface, buffer, 0, 0);
-    wl_surface_damage(self->cursor.surface, 0, 0, self->cursor.image->width, self->cursor.image->height);
-    wl_surface_commit(self->cursor.surface);
-}
-
-static void _eventd_nd_cursor_frame_callback(void *data, struct wl_callback *callback, uint32_t time);
-
-static const struct wl_callback_listener _eventd_nd_cursor_frame_wl_callback_listener = {
-    .done = _eventd_nd_cursor_frame_callback,
-};
-
-static void
-_eventd_nd_cursor_frame_callback(void *data, struct wl_callback *callback, uint32_t time)
-{
-    EventdNdBackendContext *self = data;
-    int i;
-
-    if ( self->cursor.frame_cb != NULL )
-        wl_callback_destroy(self->cursor.frame_cb);
-    self->cursor.frame_cb = wl_surface_frame(self->cursor.surface);
-    wl_callback_add_listener(self->cursor.frame_cb, &_eventd_nd_cursor_frame_wl_callback_listener, self);
-
-    i = wl_cursor_frame(self->cursor.cursor, time);
-    _eventd_nd_cursor_set_image(self, i);
-}
-
-static void
 _eventd_nd_wl_registry_handle_global(void *data, struct wl_registry *registry, uint32_t name, const char *interface, uint32_t version)
 {
     EventdNdBackendContext *self = data;
@@ -412,13 +423,7 @@ _eventd_nd_wl_registry_handle_global(void *data, struct wl_registry *registry, u
                 self->cursor.theme = NULL;
             }
             else
-            {
                 self->cursor.surface = wl_compositor_create_surface(self->compositor);
-                if ( self->cursor.cursor->image_count < 2 )
-                    _eventd_nd_cursor_set_image(self, 0);
-                else
-                    _eventd_nd_cursor_frame_callback(self, self->cursor.frame_cb, 0);
-            }
         }
     }
 }
