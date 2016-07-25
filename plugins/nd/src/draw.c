@@ -562,8 +562,7 @@ eventd_nd_draw_text_draw(cairo_t *cr, EventdNdStyle *style, PangoLayout *text, g
     cairo_new_path(cr);
     cairo_move_to(cr, offset_x, 0);
     pango_cairo_update_layout(cr, text);
-    pango_cairo_layout_path(cr, text);
-    cairo_fill(cr);
+    pango_cairo_show_layout(cr, text);
 }
 
 static gint
