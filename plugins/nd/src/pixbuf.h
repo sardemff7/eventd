@@ -23,7 +23,7 @@
 #ifndef __EVENTD_ND_PIXBUF_H__
 #define __EVENTD_ND_PIXBUF_H__
 
-#if ( ( GDK_PIXBUF_MAJOR < 2 ) || ( ( GDK_PIXBUF_MAJOR == 2 ) && ( GDK_PIXBUF_MINOR < 32 ) ) )
+#if ( ( GDK_PIXBUF_MAJOR < 2 ) || ( ( GDK_PIXBUF_MAJOR == 2 ) && ( GDK_PIXBUF_MINOR < 31 ) ) )
 static inline const guchar *gdk_pixbuf_read_pixels(GdkPixbuf *pixbuf) { return gdk_pixbuf_get_pixels(pixbuf); }
 #endif /* gdk-pixbux < 2.32 */
 
