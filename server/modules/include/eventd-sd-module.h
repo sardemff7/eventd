@@ -37,7 +37,7 @@ typedef enum {
 typedef struct {
     gboolean (*server_has_address)(EventdRelayServer *server);
     void (*server_set_address)(EventdRelayServer *server, GSocketConnectable *address);
-    void (*server_start)(EventdRelayServer *server);
+    void (*server_start)(EventdRelayServer *server, gboolean force);
     void (*server_stop)(EventdRelayServer *server);
 } EventdSdModuleControlInterface;
 

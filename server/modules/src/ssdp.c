@@ -80,7 +80,7 @@ _eventd_sd_ssdp_resource_available(EventdSdModuleContext *self, gchar *usn, GLis
     }
 
     self->control->server_set_address(server, address);
-    self->control->server_start(server);
+    self->control->server_start(server, TRUE);
 }
 
 static void

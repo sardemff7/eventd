@@ -65,7 +65,7 @@ _eventd_relay_reconnect_callback(LibeventdReconnectHandler *handler, gpointer us
 {
     EventdRelayServer *server = user_data;
 
-    eventd_relay_server_start(server);
+    eventd_relay_server_start(server, FALSE);
 }
 
 static void
@@ -211,7 +211,7 @@ eventd_relay_server_is_connected(EventdRelayServer *server)
 }
 
 void
-eventd_relay_server_start(EventdRelayServer *server)
+eventd_relay_server_start(EventdRelayServer *server, gboolean force)
 {
     if ( server->connection == NULL )
         return;
@@ -226,6 +226,8 @@ eventd_relay_server_start(EventdRelayServer *server)
         g_clear_error(&error);
     }
 
+    if ( force )
+        evhelpers_reconnect_reset(server->reconnect);
     eventc_connection_set_accept_unknown_ca(server->connection, server->accept_unknown_ca);
     eventc_connection_connect(server->connection, _eventd_relay_connection_handler, server);
 }

@@ -119,7 +119,7 @@ _eventd_sd_dns_sd_service_resolve_callback(AvahiServiceResolver *r, AvahiIfIndex
         if ( ! self->control->server_has_address(server) )
         {
             self->control->server_set_address(server, g_network_address_new(host_name, port));
-            self->control->server_start(server);
+            self->control->server_start(server, TRUE);
         }
     default:
     break;

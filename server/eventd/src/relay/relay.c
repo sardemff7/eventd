@@ -89,7 +89,7 @@ _eventd_relay_start_each(gpointer key, gpointer data, gpointer user_data)
     if ( data == NULL )
         return;
 
-    eventd_relay_server_start(data);
+    eventd_relay_server_start(data, FALSE);
 }
 
 void
@@ -152,7 +152,7 @@ eventd_relay_control_command(EventdRelayContext *context, guint64 argc, const gc
         }
         else
         {
-            eventd_relay_server_start(server);
+            eventd_relay_server_start(server, TRUE);
             *status = g_strdup_printf("Connected to server '%s'", argv[1]);
         }
     }
