@@ -374,8 +374,28 @@ _eventd_im_control_command(EventdPluginContext *context, guint64 argc, const gch
         const gchar *s;
         if ( argc < 2 )
         {
-            *status = g_strdup("No account specified");
-            r = EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR;
+            if ( g_hash_table_size(context->accounts) == 0 )
+            {
+                r = EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_1;
+                *status = g_strdup("No account");
+            }
+            else
+            {
+                GString *list;
+                list = g_string_sized_new(strlen("Accounts list:") + strlen("\n    a quit long name") * g_hash_table_size(context->accounts));
+                g_string_append(list, "Accounts list:");
+
+                GHashTableIter iter;
+                const gchar *name;
+                g_hash_table_iter_init(&iter, context->accounts);
+                while ( g_hash_table_iter_next(&iter, (gpointer *) &name, (gpointer *) &account) )
+                {
+                    _eventd_im_account_check_status(account, &s);
+                    g_string_append_printf(list, "\n    %s: %s", name, s);
+                }
+
+                *status = g_string_free(list, FALSE);
+            }
         }
         else if ( ( account = g_hash_table_lookup(context->accounts, argv[1]) ) == NULL )
         {

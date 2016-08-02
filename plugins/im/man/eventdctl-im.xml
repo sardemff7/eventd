@@ -103,19 +103,26 @@
             <varlistentry>
                 <term><command>status</command>: <literal>50</literal></term>
                 <listitem>
+                    <para>The plugin has no accounts in its list.</para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><command>status <parameter><replaceable>account</replaceable></parameter></command>: <literal>50</literal></term>
+                <listitem>
                     <para>The account is connecting.</para>
                 </listitem>
             </varlistentry>
 
             <varlistentry>
-                <term><command>status</command>: <literal>51</literal></term>
+                <term><command>status <parameter><replaceable>account</replaceable></parameter></command>: <literal>51</literal></term>
                 <listitem>
                     <para>The account is not connected</para>
                 </listitem>
             </varlistentry>
 
             <varlistentry>
-                <term><command>status</command>: <literal>52</literal></term>
+                <term><command>status <parameter><replaceable>account</replaceable></parameter></command>: <literal>52</literal></term>
                 <listitem>
                     <para>The account is not connected and already attempted to reconnect the maximum number of times configured</para>
                 </listitem>
