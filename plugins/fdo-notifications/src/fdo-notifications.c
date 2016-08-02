@@ -31,7 +31,6 @@
 
 #include <libeventd-event.h>
 #include <eventd-plugin.h>
-#include <libeventd-helpers-dirs.h>
 
 #define NOTIFICATION_BUS_NAME      "org.freedesktop.Notifications"
 #define NOTIFICATION_BUS_PATH      "/org/freedesktop/Notifications"
