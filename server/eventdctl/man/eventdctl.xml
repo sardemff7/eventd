@@ -284,12 +284,19 @@
             <varlistentry>
                 <term><command>status</command>: <literal>50</literal></term>
                 <listitem>
+                    <para>The plugin has no servers in its list.</para>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
+                <term><command>status <parameter><replaceable>server</replaceable></parameter></command>: <literal>50</literal></term>
+                <listitem>
                     <para>The server has no address to connect to. Can only happen for a server using <varname>DiscoverName=</varname> (see <citerefentry><refentrytitle>eventd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>).</para>
                 </listitem>
             </varlistentry>
 
             <varlistentry>
-                <term><command>status</command>: <literal>51</literal></term>
+                <term><command>status <parameter><replaceable>server</replaceable></parameter></command>: <literal>51</literal></term>
                 <listitem>
                     <para>The server is not connected</para>
                 </listitem>

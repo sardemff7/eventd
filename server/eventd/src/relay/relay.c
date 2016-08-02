@@ -198,8 +198,27 @@ eventd_relay_control_command(EventdRelayContext *context, guint64 argc, const gc
         const gchar *s;
         if ( argc < 2 )
         {
-            *status = g_strdup("No server specified");
-            r = EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR;
+            if ( g_hash_table_size(context->servers) == 0 )
+            {
+                r = EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_1;
+                *status = g_strdup("No server");
+            }
+            else
+            {
+                GString *list;
+                list = g_string_sized_new(strlen("Server list:") + strlen("\n    a quit long name") * g_hash_table_size(context->servers));
+                g_string_append(list, "Server list:");
+                GHashTableIter iter;
+                const gchar *name;
+                g_hash_table_iter_init(&iter, context->servers);
+                while ( g_hash_table_iter_next(&iter, (gpointer *) &name, (gpointer *) &server) )
+                {
+                    _eventd_relay_server_check_status(server, &s);
+                    g_string_append_printf(list, "\n    %s: %s", name, s);
+                }
+
+                *status = g_string_free(list, FALSE);
+            }
         }
         else if ( ( server = g_hash_table_lookup(context->servers, argv[1]) ) == NULL )
         {
