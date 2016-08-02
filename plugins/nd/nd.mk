@@ -237,6 +237,14 @@ endif
 
 
 
+# Libtool install order
+# Single-target ordering workaround from:
+# http://debbugs.gnu.org/cgi/bugreport.cgi?bug=7328
+
+installndbackendsLTLIBRARIES = install-ndbackendsLTLIBRARIES
+$(installndbackendsLTLIBRARIES): install-pkglibLTLIBRARIES install-libLTLIBRARIES
+
+
 #
 # Hooks
 #
