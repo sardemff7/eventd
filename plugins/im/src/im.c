@@ -303,6 +303,31 @@ _eventd_im_stop(EventdPluginContext *context)
  */
 
 static EventdPluginCommandStatus
+_eventd_im_account_check_status(EventdImAccount *self, const gchar **s)
+{
+    *s = "connected";
+    if ( purple_account_is_connecting(self->account) )
+    {
+        *s = "connecting";
+        return EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_1;
+    }
+    else if ( purple_account_is_disconnected(self->account) )
+    {
+        if ( evhelpers_reconnect_too_much(self->reconnect) )
+        {
+            *s = "disconnected, too much reconnection attempts";
+            return EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_3;
+        }
+        else
+        {
+            *s = "disconnected";
+            return EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_2;
+        }
+    }
+    return EVENTD_PLUGIN_COMMAND_STATUS_OK;
+}
+
+static EventdPluginCommandStatus
 _eventd_im_control_command(EventdPluginContext *context, guint64 argc, const gchar * const *argv, gchar **status)
 {
     EventdImAccount *account;
@@ -346,6 +371,7 @@ _eventd_im_control_command(EventdPluginContext *context, guint64 argc, const gch
     }
     else if ( g_strcmp0(argv[0], "status") == 0 )
     {
+        const gchar *s;
         if ( argc < 2 )
         {
             *status = g_strdup("No account specified");
@@ -358,26 +384,8 @@ _eventd_im_control_command(EventdPluginContext *context, guint64 argc, const gch
         }
         else
         {
-            const gchar *s = "is connected";
-            if ( purple_account_is_connecting(account->account) )
-            {
-                r = EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_1;
-                s = "is connecting";
-            }
-            else if ( purple_account_is_disconnected(account->account) )
-            {
-                if ( evhelpers_reconnect_too_much(account->reconnect) )
-                {
-                    r = EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_3;
-                    s = "is disconnected, too much reconnection attempts";
-                }
-                else
-                {
-                    r = EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_2;
-                    s = "is disconnected";
-                }
-            }
-            *status = g_strdup_printf("Account '%s' %s", argv[1], s);
+            r = _eventd_im_account_check_status(account, &s);
+            *status = g_strdup_printf("Account '%s' is %s", argv[1], s);
         }
         GHashTableIter iter;
         g_hash_table_iter_init(&iter, context->accounts);
