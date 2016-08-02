@@ -125,6 +125,25 @@ eventd_relay_stop(EventdRelayContext *context)
  * Control command interface
  */
 
+static EventdPluginCommandStatus
+_eventd_relay_server_check_status(EventdRelayServer *self, const gchar **s)
+{
+    if ( ! eventd_relay_server_has_address(self) )
+    {
+        *s = "without address";
+        return EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_1;
+    }
+
+    if ( ! eventd_relay_server_is_connected(self) )
+    {
+        *s = "disconnected";
+        return EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_2;
+    }
+
+    *s = "connected";
+    return EVENTD_PLUGIN_COMMAND_STATUS_OK;
+}
+
 EventdPluginCommandStatus
 eventd_relay_control_command(EventdRelayContext *context, guint64 argc, const gchar * const *argv, gchar **status)
 {
@@ -176,6 +195,7 @@ eventd_relay_control_command(EventdRelayContext *context, guint64 argc, const gc
     }
     else if ( g_strcmp0(argv[0], "status") == 0 )
     {
+        const gchar *s;
         if ( argc < 2 )
         {
             *status = g_strdup("No server specified");
@@ -188,22 +208,8 @@ eventd_relay_control_command(EventdRelayContext *context, guint64 argc, const gc
         }
         else
         {
-            gboolean has_address, connected;
-            has_address = eventd_relay_server_has_address(server);
-            connected = eventd_relay_server_is_connected(server);
-
-            const gchar *s = "is connected";
-            if ( ! has_address )
-            {
-                r = EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_1;
-                s = "has no address";
-            }
-            else if ( ! connected )
-            {
-                r = EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_2;
-                s = "is disconnected";
-            }
-            *status = g_strdup_printf("Server '%s' %s", argv[1], s);
+            r = _eventd_relay_server_check_status(server, &s);
+            *status = g_strdup_printf("Server '%s' is %s", argv[1], s);
         }
         GHashTableIter iter;
         g_hash_table_iter_init(&iter, context->servers);
