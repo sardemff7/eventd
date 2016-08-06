@@ -68,8 +68,8 @@ _evhelpers_dirs_get(const gchar **list, gsize size, const gchar *env, const gcha
 static inline gchar **
 evhelpers_dirs_get_config(const gchar *env, gboolean system_mode, const gchar *subdir)
 {
-    const gchar *datadir = DATADIR;
-    const gchar *confdir = SYSCONFDIR;
+    const gchar *datadir = EVENTD_DATADIR;
+    const gchar *confdir = EVENTD_SYSCONFDIR;
 
 #ifdef G_OS_WIN32
     gchar *datadir_, *sysconfdir_, *installdir;
@@ -102,7 +102,7 @@ evhelpers_dirs_get_config(const gchar *env, gboolean system_mode, const gchar *s
 static inline gchar **
 evhelpers_dirs_get_lib(const gchar *env, const gchar *subdir)
 {
-    const gchar *libdir = LIBDIR;
+    const gchar *libdir = EVENTD_LIBDIR;
 
 #ifdef G_OS_WIN32
     gchar *libdir_, *installdir;
