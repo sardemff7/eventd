@@ -134,6 +134,122 @@ eventd_evp_stop(EventdEvpContext *self)
  * Configuration interface
  */
 
+static gboolean
+_eventd_evp_load_certificate(EventdEvpContext *self, const gchar *cert_file, const gchar *key_file)
+{
+    GError *error = NULL;
+    GTlsCertificate *cert;
+    if ( key_file != NULL )
+        cert = g_tls_certificate_new_from_files(cert_file, key_file, &error);
+    else
+        cert = g_tls_certificate_new_from_file(cert_file, &error);
+
+    if ( cert != NULL )
+    {
+        if ( self->certificate != NULL )
+            g_object_unref(self->certificate);
+        self->certificate = cert;
+        return TRUE;
+    }
+
+    if ( key_file != NULL )
+        g_warning("Could not read certificate (%s) or key (%s) file: %s", cert_file, key_file, error->message);
+    else
+        g_warning("Could not read certificate file (%s): %s", cert_file, error->message);
+    g_clear_error(&error);
+    return FALSE;
+}
+
+static void
+_eventd_evp_cert_key_file_changed(EventdEvpContext *self, GFile *file, GFile *other_file, GFileMonitorEvent event_type, GFileMonitor *monitor)
+{
+    switch ( event_type )
+    {
+    case G_FILE_MONITOR_EVENT_CHANGED:
+    break;
+    case G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT:
+        g_debug("Reload certificate file");
+        _eventd_evp_load_certificate(self, self->cert_file, self->key_file);
+    break;
+    case G_FILE_MONITOR_EVENT_DELETED:
+    case G_FILE_MONITOR_EVENT_CREATED:
+    case G_FILE_MONITOR_EVENT_ATTRIBUTE_CHANGED:
+    case G_FILE_MONITOR_EVENT_PRE_UNMOUNT:
+    case G_FILE_MONITOR_EVENT_UNMOUNTED:
+    case G_FILE_MONITOR_EVENT_MOVED:
+    case G_FILE_MONITOR_EVENT_RENAMED:
+    case G_FILE_MONITOR_EVENT_MOVED_IN:
+    case G_FILE_MONITOR_EVENT_MOVED_OUT:
+    break;
+    }
+}
+
+static void
+_eventd_evp_cleanup_monitors(EventdEvpContext *self)
+{
+    if ( self->cert_monitor != NULL )
+    {
+        g_file_monitor_cancel(self->cert_monitor);
+        g_object_unref(self->cert_monitor);
+    }
+    g_free(self->cert_file);
+    if ( self->key_monitor != NULL )
+    {
+        g_file_monitor_cancel(self->key_monitor);
+        g_object_unref(self->key_monitor);
+    }
+    g_free(self->key_file);
+
+    self->cert_monitor = NULL;
+    self->cert_file = NULL;
+    self->key_monitor = NULL;
+    self->key_file = NULL;
+}
+
+static gboolean
+_eventd_evp_monitor_files(EventdEvpContext *self, gchar *cert_file, gchar *key_file)
+{
+    GError *error = NULL;
+    GFile *file;
+    GFileMonitor *cert_monitor;
+    GFileMonitor *key_monitor = NULL;
+
+    file = g_file_new_for_path(cert_file);
+    cert_monitor = g_file_monitor_file(file, G_FILE_MONITOR_NONE, NULL, &error);
+    g_object_unref(file);
+    if ( cert_monitor == NULL )
+    {
+        g_warning("Could not monitor certificate file %s: %s", cert_file, error->message);
+        g_clear_error(&error);
+        return FALSE;
+    }
+
+    if ( key_file != NULL )
+    {
+        file = g_file_new_for_path(key_file);
+        key_monitor = g_file_monitor_file(file, G_FILE_MONITOR_NONE, NULL, &error);
+        g_object_unref(file);
+        if ( key_monitor == NULL )
+        {
+            g_warning("Could not monitor key file %s: %s", cert_file, error->message);
+            g_clear_error(&error);
+            g_object_unref(cert_monitor);
+            return FALSE;
+        }
+    }
+
+    _eventd_evp_cleanup_monitors(self);
+
+    self->cert_monitor = cert_monitor;
+    self->key_monitor = key_monitor;
+    self->cert_file = cert_file;
+    self->key_file = key_file;
+    g_signal_connect_swapped(self->cert_monitor, "changed", G_CALLBACK(_eventd_evp_cert_key_file_changed), self);
+    g_signal_connect_swapped(self->key_monitor, "changed", G_CALLBACK(_eventd_evp_cert_key_file_changed), self);
+
+    return TRUE;
+}
+
 void
 eventd_evp_global_parse(EventdEvpContext *self, GKeyFile *config_file)
 {
@@ -151,34 +267,14 @@ eventd_evp_global_parse(EventdEvpContext *self, GKeyFile *config_file)
     if ( evhelpers_config_key_file_get_string(config_file, "Server", "PublishName", &publish_name) < 0 )
         goto cleanup;
 
-    GError *error = NULL;
-
     if ( cert_file != NULL )
     {
         if ( ! g_tls_backend_supports_tls(g_tls_backend_get_default()) )
             g_warning("TLS not suported");
-        else
+        else if ( _eventd_evp_load_certificate(self, cert_file, key_file) )
         {
-            GTlsCertificate *cert;
-            if ( key_file != NULL )
-                cert = g_tls_certificate_new_from_files(cert_file, key_file, &error);
-            else
-                cert = g_tls_certificate_new_from_file(cert_file, &error);
-
-            if ( cert != NULL )
-            {
-                if ( self->certificate != NULL )
-                    g_object_unref(self->certificate);
-                self->certificate = cert;
-            }
-            else
-            {
-                if ( key_file != NULL )
-                    g_warning("Could not read certificate (%s) or key (%s) file: %s", cert_file, key_file, error->message);
-                else
-                    g_warning("Could not read certificate file (%s): %s", cert_file, error->message);
-                g_clear_error(&error);
-            }
+            if ( _eventd_evp_monitor_files(self, cert_file, key_file) )
+                cert_file = key_file = NULL;
         }
     }
     else if ( key_file != NULL )
@@ -199,6 +295,7 @@ eventd_evp_config_reset(EventdEvpContext *self)
     if ( self->certificate != NULL )
         g_object_unref(self->certificate);
     self->certificate = NULL;
+    _eventd_evp_cleanup_monitors(self);
 }
 
 

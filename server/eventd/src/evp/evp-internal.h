@@ -31,6 +31,10 @@ struct _EventdEvpContext {
     EventdCoreContext *core;
     EventdWsModule *ws;
     GTlsCertificate *certificate;
+    gchar *cert_file;
+    gchar *key_file;
+    GFileMonitor *cert_monitor;
+    GFileMonitor *key_monitor;
     GSocketService *service;
     GList *clients;
     GList *subscribe_all;
