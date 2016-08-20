@@ -445,13 +445,31 @@ _eventd_nd_event_action(EventdPluginContext *context, EventdNdStyle *style, Even
         /* No backend connected for now */
         return;
 
+    const gchar *uuid;
     EventdNdNotification *notification;
-    notification = g_hash_table_lookup(context->notifications, eventd_event_get_uuid(event));
+    GVariant *end;
+
+    uuid = eventd_event_get_uuid(event);
+
+    end = eventd_event_get_data(event, ".event-end");
+    if ( ( end != NULL ) && g_variant_is_of_type(end, G_VARIANT_TYPE_BOOLEAN) && g_variant_get_boolean(end) )
+    {
+        /*
+         * This is an update event, so it take the same way as the
+         * original event, and it is safe to just drop our bubble
+         * without propagating a ".notification" event.
+         */
+        if ( g_hash_table_contains(context->notifications, uuid) )
+            g_hash_table_remove(context->notifications, uuid);
+        return;
+    }
+
+    notification = g_hash_table_lookup(context->notifications, uuid);
 
     if ( notification == NULL )
     {
         notification = eventd_nd_notification_new(context, event, style);
-        g_hash_table_insert(context->notifications, (gpointer) eventd_event_get_uuid(event), notification);
+        g_hash_table_insert(context->notifications, (gpointer) uuid, notification);
     }
     else
         eventd_nd_notification_update(notification, event);
