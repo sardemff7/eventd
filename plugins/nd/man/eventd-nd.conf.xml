@@ -174,8 +174,9 @@
                     <varlistentry>
                         <term><varname>Margin=</varname> (defaults to <literal>13</literal>)</term>
                         <listitem>
-                            <para>An <type>integer</type></para>
+                            <para>A <type>list of integers</type> (one or two)</para>
                             <para>Margin between bubble and screen's edge.</para>
+                            <para>If two values are provided, the first is used as horizontal margin, and the second as vertical margin.</para>
                         </listitem>
                     </varlistentry>
 

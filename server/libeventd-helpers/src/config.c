@@ -206,6 +206,41 @@ evhelpers_config_key_file_get_int_with_default(GKeyFile *config_file, const gcha
 
 EVENTD_EXPORT
 gint8
+evhelpers_config_key_file_get_int_list(GKeyFile *config_file, const gchar *group, const gchar *key, Int *values, gsize *length)
+{
+    gint *value;
+    gsize value_length;
+    GError *error = NULL;
+    gint8 ret;
+
+    value = g_key_file_get_integer_list(config_file, group, key, &value_length, &error);
+    ret = _evhelpers_config_key_file_error(&error, group, key);
+
+    if ( ret != 0 )
+        return ret;
+
+    if ( value_length > *length )
+    {
+        g_warning("Couldn't read the key [%s] '%s': Too many values", group, key);
+        g_free(value);
+        return -1;
+    }
+
+    gsize i;
+    for ( i = 0 ; i < value_length ; ++i )
+    {
+        values[i].set = TRUE;
+        values[i].value = value[i];
+    }
+    for ( ; i < *length ; ++i )
+        values[i].set = FALSE;
+
+    g_free(value);
+    return 0;
+}
+
+EVENTD_EXPORT
+gint8
 evhelpers_config_key_file_get_string(GKeyFile *config_file, const gchar *group, const gchar *key, gchar **value)
 {
     GError *error = NULL;

@@ -105,14 +105,13 @@ _eventd_nd_notification_process(EventdNdNotification *self, EventdEvent *event)
     _eventd_nd_notification_clean(self);
     self->event = eventd_event_ref(event);
 
-    gint margin, blur, border, padding;
+    gint blur, border, padding;
     gint min_width, max_width;
 
     gint text_width = 0, text_height = 0;
     gint image_width = 0, image_height = 0;
 
 
-    margin = self->queue->margin;
     blur = eventd_nd_style_get_bubble_border_blur(self->style) * 2; /* We must reserve enough space to avoid clipping*/
     border = eventd_nd_style_get_bubble_border(self->style);
     padding = eventd_nd_style_get_bubble_padding(self->style);
@@ -120,7 +119,7 @@ _eventd_nd_notification_process(EventdNdNotification *self, EventdEvent *event)
     max_width = eventd_nd_style_get_bubble_max_width(self->style);
 
     if ( max_width < 0 )
-        max_width = self->context->geometry.w - 2 * ( margin + blur + border );
+        max_width = self->context->geometry.w - 2 * ( self->queue->margin_x + blur + border );
     max_width -= 2 * padding;
     min_width += 2 * padding;
     if ( min_width > max_width )
@@ -229,8 +228,8 @@ _eventd_nd_notification_refresh_list(EventdPluginContext *context, EventdNdQueue
     bottom = ( queue->anchor == EVENTD_ND_ANCHOR_BOTTOM_LEFT ) || ( queue->anchor == EVENTD_ND_ANCHOR_BOTTOM ) || ( queue->anchor == EVENTD_ND_ANCHOR_BOTTOM_RIGHT );
 
     gint bx, by;
-    bx = queue->margin;
-    by = queue->margin;
+    bx = queue->margin_x;
+    by = queue->margin_y;
     if ( center )
         bx = context->geometry.w;
     else if ( right )

@@ -29,7 +29,8 @@
 struct _EventdNdQueue {
     EventdNdAnchor anchor;
     guint64 limit;
-    gint margin;
+    gint margin_x;
+    gint margin_y;
     gint spacing;
     gboolean reverse;
     gboolean more_indicator;

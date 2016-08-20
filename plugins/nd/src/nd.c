@@ -155,7 +155,8 @@ _eventd_nd_init(EventdPluginCoreContext *core)
         /* Defaults placement values */
         context->queues[i].limit = 1;
 
-        context->queues[i].margin = 13;
+        context->queues[i].margin_x = 13;
+        context->queues[i].margin_y = 13;
         context->queues[i].spacing = 13;
 
         context->queues[i].wait_queue = g_queue_new();
@@ -359,6 +360,8 @@ _eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
             continue;
 
         Int integer;
+        Int integer_list[2];
+        gsize length = 2;
         gboolean boolean;
 
         if ( evhelpers_config_key_file_get_int(config_file, anchor_name, "Limit", &integer) == 0 )
@@ -367,8 +370,18 @@ _eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
         if ( evhelpers_config_key_file_get_boolean(config_file, anchor_name, "MoreIndicator", &boolean) == 0 )
             context->queues[j].more_indicator = boolean;
 
-        if ( evhelpers_config_key_file_get_int(config_file, anchor_name, "Margin", &integer) == 0 )
-            context->queues[j].margin = ( integer.value > 0 ) ? integer.value : 0;
+        if ( evhelpers_config_key_file_get_int_list(config_file, anchor_name, "Margin", integer_list, &length) == 0 )
+        {
+            switch ( length )
+            {
+            case 1:
+                integer_list[1] = integer_list[0];
+            case 2:
+                context->queues[j].margin_x = MAX(0, integer_list[0].value);
+                context->queues[j].margin_y = MAX(0, integer_list[1].value);
+            break;
+            }
+        }
 
         if ( evhelpers_config_key_file_get_int(config_file, anchor_name, "Spacing", &integer) == 0 )
             context->queues[j].spacing = ( integer.value > 0 ) ? integer.value : 0;
