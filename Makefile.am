@@ -24,7 +24,6 @@ AM_MAKEFLAGS = --no-print-directory
 bin_PROGRAMS =
 noinst_LTLIBRARIES =
 lib_LTLIBRARIES =
-pkglib_LTLIBRARIES =
 helperlib_LTLIBRARIES =
 modules_LTLIBRARIES =
 plugins_LTLIBRARIES =
@@ -130,7 +129,7 @@ $(installpluginsLTLIBRARIES): install-pkglibLTLIBRARIES
 #
 
 install-data-hook: la-files-install-hook
-uninstall-libLTLIBRARIES uninstall-pkglibLTLIBRARIES uninstall-modulesLTLIBRARIES uninstall-pluginsLTLIBRARIES uninstall-hook: la-files-uninstall-hook
+uninstall-libLTLIBRARIES uninstall-helperlibLTLIBRARIES uninstall-pkglibLTLIBRARIES uninstall-modulesLTLIBRARIES uninstall-pluginsLTLIBRARIES uninstall-hook: la-files-uninstall-hook
 
 ev_remove_la = $(if $(strip $($(1)_LTLIBRARIES)),( cd $(DESTDIR)$($(1)dir) && rm -f $($(1)_LTLIBRARIES) ))
 ev_remove_so_from_la = $(if $(strip $($(1)_LTLIBRARIES)),for la in $($(1)_LTLIBRARIES); do \
