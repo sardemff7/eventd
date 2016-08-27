@@ -69,6 +69,7 @@ gint eventd_nd_style_get_bubble_border_blur(EventdNdStyle *style);
 
 const PangoFontDescription *eventd_nd_style_get_text_font(EventdNdStyle *style);
 PangoAlignment eventd_nd_style_get_text_align(EventdNdStyle *style);
+EventdNdAnchorVertical eventd_nd_style_get_text_valign(EventdNdStyle *style);
 PangoEllipsizeMode eventd_nd_style_get_text_ellipsize(EventdNdStyle *style);
 guint8 eventd_nd_style_get_text_max_lines(EventdNdStyle *style);
 Colour eventd_nd_style_get_text_colour(EventdNdStyle *style);

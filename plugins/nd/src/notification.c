@@ -57,6 +57,7 @@ struct _EventdNdNotification {
     struct {
         PangoLayout *text;
         gint x;
+        gint height;
     } text;
     cairo_surface_t *image;
     cairo_surface_t *icon;
@@ -108,7 +109,7 @@ _eventd_nd_notification_process(EventdNdNotification *self, EventdEvent *event)
     gint blur, border, padding;
     gint min_width, max_width;
 
-    gint text_width = 0, text_height = 0;
+    gint text_width = 0;
     gint image_width = 0, image_height = 0;
 
 
@@ -126,7 +127,7 @@ _eventd_nd_notification_process(EventdNdNotification *self, EventdEvent *event)
         min_width = max_width;
 
     /* proccess data and compute the bubble size */
-    self->text.text = eventd_nd_draw_text_process(self->style, self->event, max_width, &text_height, &text_width);
+    self->text.text = eventd_nd_draw_text_process(self->style, self->event, max_width, &self->text.height, &text_width);
 
     self->content_size.width = text_width;
 
@@ -145,7 +146,7 @@ _eventd_nd_notification_process(EventdNdNotification *self, EventdEvent *event)
     }
     pango_layout_set_width(self->text.text, text_width * PANGO_SCALE);
 
-    self->content_size.height = MAX(image_height, text_height);
+    self->content_size.height = MAX(image_height, self->text.height);
 
     self->bubble_size.width = self->content_size.width + 2 * padding;
     self->bubble_size.height = self->content_size.height + 2 * padding;
@@ -333,8 +334,22 @@ eventd_nd_notification_draw(EventdNdNotification *self, cairo_surface_t *surface
 {
     gint border;
     gint padding;
+    gint offset_y = 0;
+
     border = eventd_nd_style_get_bubble_border(self->style) + eventd_nd_style_get_bubble_border_blur(self->style) * 2;
     padding = eventd_nd_style_get_bubble_padding(self->style);
+
+    switch ( eventd_nd_style_get_text_valign(self->style) )
+    {
+    case EVENTD_ND_VANCHOR_BOTTOM:
+        offset_y = self->content_size.height - self->text.height;
+    break;
+    case EVENTD_ND_VANCHOR_CENTER:
+        offset_y = self->content_size.height / 2 - self->text.height / 2;
+    break;
+    case EVENTD_ND_VANCHOR_TOP:
+    break;
+    }
 
     cairo_t *cr;
     cr = cairo_create(surface);
@@ -343,7 +358,7 @@ eventd_nd_notification_draw(EventdNdNotification *self, cairo_surface_t *surface
     eventd_nd_draw_bubble_draw(cr, self->style, self->bubble_size.width, self->bubble_size.height, shaped);
     cairo_translate(cr, padding, padding);
     eventd_nd_draw_image_and_icon_draw(cr, self->image, self->icon, self->style, self->content_size.width, self->content_size.height);
-    eventd_nd_draw_text_draw(cr, self->style, self->text.text, self->text.x, self->content_size.height);
+    eventd_nd_draw_text_draw(cr, self->style, self->text.text, self->text.x, offset_y);
 
     cairo_destroy(cr);
 }

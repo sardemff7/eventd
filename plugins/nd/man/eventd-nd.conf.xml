@@ -362,6 +362,21 @@
                     </varlistentry>
 
                     <varlistentry>
+                        <term><varname>VerticalAlignment=</varname> (defaults to <literal>Top</literal>)</term>
+                        <listitem>
+                            <para>
+                                An <type>enumeration</type>:
+                                <simplelist type='inline'>
+                                    <member><literal>Top</literal></member>
+                                    <member><literal>Bottom</literal></member>
+                                    <member><literal>Center</literal></member>
+                                </simplelist>
+                            </para>
+                            <para>Text vertical aligment.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
                         <term><varname>Ellipsize=</varname> (defaults to <literal>None</literal>)</term>
                         <listitem>
                             <para>

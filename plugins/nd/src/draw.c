@@ -553,14 +553,14 @@ eventd_nd_draw_bubble_draw(cairo_t *cr, EventdNdStyle *style, gint width, gint h
 }
 
 void
-eventd_nd_draw_text_draw(cairo_t *cr, EventdNdStyle *style, PangoLayout *text, gint offset_x, gint max_height)
+eventd_nd_draw_text_draw(cairo_t *cr, EventdNdStyle *style, PangoLayout *text, gint offset_x, gint offset_y)
 {
     Colour colour;
 
     colour = eventd_nd_style_get_text_colour(style);
     cairo_set_source_rgba(cr, colour.r, colour.g, colour.b, colour.a);
     cairo_new_path(cr);
-    cairo_move_to(cr, offset_x, 0);
+    cairo_move_to(cr, offset_x, offset_y);
     pango_cairo_update_layout(cr, text);
     pango_cairo_show_layout(cr, text);
 }

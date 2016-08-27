@@ -111,6 +111,7 @@ struct _EventdPluginAction {
 
         PangoFontDescription *font;
         PangoAlignment align;
+        EventdNdAnchorVertical valign;
         PangoEllipsizeMode ellipsize;
         guint8 max_lines;
         Colour colour;
@@ -179,6 +180,7 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
     style->text.set = TRUE;
     style->text.font        = pango_font_description_from_string("Linux Libertine O 9");
     style->text.align       = PANGO_ALIGN_LEFT;
+    style->text.valign      = EVENTD_ND_VANCHOR_TOP;
     style->text.ellipsize   = PANGO_ELLIPSIZE_NONE;
     style->text.max_lines   = 10;
     style->text.colour.r    = 0.9;
@@ -347,6 +349,11 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file)
             self->text.align = enum_value;
         else if ( self->parent != NULL )
             self->text.align = eventd_nd_style_get_text_align(self->parent);
+
+        if ( evhelpers_config_key_file_get_enum(config_file, "NotificationText", "VerticalAlignment", _eventd_nd_style_anchors_vertical, G_N_ELEMENTS(_eventd_nd_style_anchors_vertical), &enum_value) == 0 )
+            self->text.valign = enum_value;
+        else if ( self->parent != NULL )
+            self->text.valign = eventd_nd_style_get_text_valign(self->parent);
 
         if ( evhelpers_config_key_file_get_enum(config_file, "NotificationText", "Ellipsize", _eventd_nd_style_pango_ellipsize_modes, G_N_ELEMENTS(_eventd_nd_style_pango_ellipsize_modes), &enum_value) == 0 )
             self->text.ellipsize = enum_value;
@@ -574,6 +581,14 @@ eventd_nd_style_get_text_align(EventdNdStyle *self)
     if ( self->text.set )
         return self->text.align;
     return eventd_nd_style_get_text_align(self->parent);
+}
+
+EventdNdAnchorVertical
+eventd_nd_style_get_text_valign(EventdNdStyle *self)
+{
+    if ( self->text.set )
+        return self->text.valign;
+    return eventd_nd_style_get_text_valign(self->parent);
 }
 
 Colour
