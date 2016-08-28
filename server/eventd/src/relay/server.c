@@ -171,7 +171,6 @@ eventd_relay_server_set_address(EventdRelayServer *server, GSocketConnectable *a
     {
         if ( address == NULL )
         {
-            eventc_connection_close(server->connection, NULL);
             g_object_unref(server->connection);
             server->connection = NULL;
         }
