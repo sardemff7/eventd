@@ -399,7 +399,7 @@ static void
 _eventd_ws_connection_client_connect(EventdWsConnection *self, GSocketConnectable *server_identity, GAsyncReadyCallback callback, gpointer user_data)
 {
     GError *error = NULL;
-    self->task = g_task_new(self, self->cancellable, callback, user_data);
+    self->task = g_task_new(NULL, self->cancellable, callback, user_data);
     if ( ! _eventd_ws_connection_client_send_handshake(self, server_identity, &error) )
         g_task_return_error(self->task, error);
     else
