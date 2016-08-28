@@ -349,6 +349,8 @@ eventd_relay_global_parse(EventdRelayContext *context, GKeyFile *config_file)
     if ( ! g_key_file_has_group(config_file, "Relay") )
         return;
 
+    g_hash_table_remove_all(context->servers);
+
     gchar **servers = NULL;
     if ( evhelpers_config_key_file_get_string_list(config_file, "Relay", "Servers", &servers, NULL) < 0 )
         return;
