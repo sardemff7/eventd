@@ -219,6 +219,7 @@ _eventc_connection_send_message(EventcConnection *self, gchar *message, GError *
         g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_CONNECTION, "Failed to send message: %s", _inner_error_->message);
         g_error_free(_inner_error_);
         g_cancellable_cancel(self->priv->cancellable);
+        _eventc_connection_close_internal(self);
     }
 
 end:
@@ -242,7 +243,7 @@ _eventc_connection_protocol_bye(EventdProtocol *protocol, const gchar *message, 
     if ( self->priv->ws != NULL )
         eventd_ws_connection_close(self->priv->ws_module, self->priv->ws);
     else
-        g_cancellable_cancel(self->priv->cancellable);
+        _eventc_connection_close_internal(self);
 }
 
 static const EventdProtocolCallbacks _eventc_connection_protocol_callbacks = {
@@ -260,24 +261,20 @@ _eventc_connection_read_callback(GObject *obj, GAsyncResult *res, gpointer user_
     line = g_data_input_stream_read_line_finish(G_DATA_INPUT_STREAM(obj), res, NULL, &error);
     if ( line == NULL )
     {
-        if ( error != NULL )
+        if ( ! g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED) )
         {
-            if ( error->code != G_IO_ERROR_CANCELLED )
+            if ( error != NULL )
                 g_set_error(&self->priv->error, EVENTC_ERROR, EVENTC_ERROR_CONNECTION, "Could not read line: %s", error->message);
-            g_clear_error(&error);
+            _eventc_connection_close_internal(self);
         }
-        _eventc_connection_close_internal(self);
-        return;
+        g_clear_error(&error);
     }
-
-    if ( ! eventd_protocol_parse(self->priv->protocol, line, &self->priv->error) )
+    else if ( eventd_protocol_parse(self->priv->protocol, line, &self->priv->error) )
     {
-        g_free(line);
-        return;
+        if ( self->priv->in != NULL )
+            g_data_input_stream_read_line_async(self->priv->in, G_PRIORITY_DEFAULT, self->priv->cancellable, _eventc_connection_read_callback, self);
     }
     g_free(line);
-
-    g_data_input_stream_read_line_async(self->priv->in, G_PRIORITY_DEFAULT, self->priv->cancellable, _eventc_connection_read_callback, self);
 }
 
 static void _eventc_connection_finalize(GObject *object);
