@@ -805,6 +805,7 @@ eventc_connection_close(EventcConnection *self, GError **error)
         return FALSE;
     }
 
+
     if ( self->priv->ws != NULL )
         eventd_ws_connection_close(self->priv->ws_module, self->priv->ws);
     else

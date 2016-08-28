@@ -105,7 +105,7 @@ _eventd_sockets_add_inet_socket(EventdSockets *sockets, GList **list, GInetAddre
     address = g_inet_socket_address_new(inet_address, port);
     if ( ! g_socket_bind(socket, address, TRUE, &error) )
     {
-        if ( ( error->code == G_IO_ERROR_ADDRESS_IN_USE ) && ipv6_bound )
+        if ( g_error_matches(error, G_IO_ERROR, G_IO_ERROR_ADDRESS_IN_USE) && ipv6_bound )
             ret = TRUE;
         else
             g_warning("Unable to bind the IP socket: %s", error->message);

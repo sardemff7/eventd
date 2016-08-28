@@ -158,7 +158,7 @@ _eventd_evp_client_read_callback(GObject *obj, GAsyncResult *res, gpointer user_
     line = g_data_input_stream_read_line_finish_utf8(G_DATA_INPUT_STREAM(obj), res, NULL, &error);
     if ( line == NULL )
     {
-        if ( ( error == NULL ) || ( error->code == G_IO_ERROR_CANCELLED ) )
+        if ( ( error == NULL ) || g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED) )
             goto end;
         goto error;
     }
