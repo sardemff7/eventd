@@ -43,6 +43,7 @@ struct _EventdRelayServer {
     EventdCoreContext *core;
     GSocketConnectable *server_identity;
     gboolean accept_unknown_ca;
+    gboolean use_websocket;
     gboolean subscribe;
     gchar **subscriptions;
     gboolean forward_all;
@@ -90,6 +91,7 @@ _eventd_relay_server_setup_connection(EventdRelayServer *server)
     g_signal_connect_swapped(server->connection, "event", G_CALLBACK(_eventd_relay_server_event), server);
     if ( server->server_identity != NULL )
         eventc_connection_set_server_identity(server->connection, server->server_identity);
+    eventc_connection_set_use_websocket(server->connection, server->use_websocket, NULL);
     if ( server->subscribe )
     {
         gchar **category;
@@ -105,7 +107,7 @@ _eventd_relay_server_setup_connection(EventdRelayServer *server)
 }
 
 EventdRelayServer *
-eventd_relay_server_new(EventdCoreContext *core, const gchar *server_identity, gboolean accept_unknown_ca, gchar **forwards, gchar **subscriptions)
+eventd_relay_server_new(EventdCoreContext *core, const gchar *server_identity, gboolean accept_unknown_ca, gboolean use_websocket, gchar **forwards, gchar **subscriptions)
 {
     EventdRelayServer *server;
 
@@ -115,6 +117,7 @@ eventd_relay_server_new(EventdCoreContext *core, const gchar *server_identity, g
     if ( server_identity != NULL )
         server->server_identity = g_network_address_new(server_identity, 0);
     server->accept_unknown_ca = accept_unknown_ca;
+    server->use_websocket = use_websocket;
 
     if ( forwards != NULL )
     {
@@ -141,7 +144,7 @@ eventd_relay_server_new(EventdCoreContext *core, const gchar *server_identity, g
 }
 
 EventdRelayServer *
-eventd_relay_server_new_for_domain(EventdCoreContext *core, const gchar *server_identity, gboolean accept_unknown_ca, gchar **forwards, gchar **subscriptions, const gchar *domain)
+eventd_relay_server_new_for_domain(EventdCoreContext *core, const gchar *server_identity, gboolean accept_unknown_ca, gboolean use_websocket, gchar **forwards, gchar **subscriptions, const gchar *domain)
 {
     EventcConnection *connection;
     GError *error = NULL;
@@ -156,7 +159,7 @@ eventd_relay_server_new_for_domain(EventdCoreContext *core, const gchar *server_
 
     EventdRelayServer *server;
 
-    server = eventd_relay_server_new(core, server_identity, accept_unknown_ca, forwards, subscriptions);
+    server = eventd_relay_server_new(core, server_identity, accept_unknown_ca, use_websocket, forwards, subscriptions);
     server->connection = connection;
 
     _eventd_relay_server_setup_connection(server);

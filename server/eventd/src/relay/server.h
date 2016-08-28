@@ -27,8 +27,8 @@
 
 typedef struct _EventdRelayServer EventdRelayServer;
 
-EventdRelayServer *eventd_relay_server_new(EventdCoreContext *core, const gchar *server_identity, gboolean accept_unknown_ca, gchar **forwards, gchar **subscriptions);
-EventdRelayServer *eventd_relay_server_new_for_domain(EventdCoreContext *core, const gchar *server_identity, gboolean accept_unknown_ca, gchar **forwards, gchar **subscriptions, const gchar *domain);
+EventdRelayServer *eventd_relay_server_new(EventdCoreContext *core, const gchar *server_identity, gboolean accept_unknown_ca, gboolean use_websocket, gchar **forwards, gchar **subscriptions);
+EventdRelayServer *eventd_relay_server_new_for_domain(EventdCoreContext *core, const gchar *server_identity, gboolean accept_unknown_ca, gboolean use_websocket, gchar **forwards, gchar **subscriptions, const gchar *domain);
 void eventd_relay_server_free(gpointer data);
 
 void eventd_relay_server_set_address(EventdRelayServer *server, GSocketConnectable *address);

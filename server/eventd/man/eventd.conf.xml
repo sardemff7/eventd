@@ -284,6 +284,14 @@
                 </varlistentry>
 
                 <varlistentry>
+                    <term><varname>UseWebSocket=</varname></term>
+                    <listitem>
+                        <para>A <type>boolean</type></para>
+                        <para>Whether to use EvP over WebSocket.</para>
+                    </listitem>
+                </varlistentry>
+
+                <varlistentry>
                     <term><varname>Forwards=</varname></term>
                     <listitem>
                         <para>A <type>list of event categories</type></para>
