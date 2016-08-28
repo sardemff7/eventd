@@ -226,6 +226,15 @@
                 </listitem>
             </varlistentry>
 
+            <varlistentry>
+                <term><option>-c</option></term>
+                <term><option>--config-dir=<replaceable class="parameter">directory</replaceable></option></term>
+                <listitem>
+                    <para>Additionnal configuration directory</para>
+                    <para>See <citerefentry><refentrytitle>eventd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry></para>
+                </listitem>
+            </varlistentry>
+
             <varlistentry id="paths-option" xreflabel="">
                 <term><option>-P</option></term>
                 <term><option>--paths</option></term>

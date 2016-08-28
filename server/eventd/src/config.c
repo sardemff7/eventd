@@ -41,6 +41,7 @@
 
 struct _EventdConfig {
     gboolean loaded;
+    const gchar *arg_dir;
     const gchar *gnutls_priorities_env;
     gchar *gnutls_priorities;
     EventdEvents *events;
@@ -133,7 +134,7 @@ _eventd_config_read_dir(EventdConfig *config, GHashTable *action_files, GHashTab
 }
 
 static void
-_eventd_config_load_dir(EventdConfig *config, GHashTable *action_files, GHashTable *event_files, gchar *config_dir_name)
+_eventd_config_load_dir(EventdConfig *config, GHashTable *action_files, GHashTable *event_files, const gchar *config_dir_name)
 {
     GError *error = NULL;
     gchar *config_file_name = NULL;
@@ -160,7 +161,6 @@ _eventd_config_load_dir(EventdConfig *config, GHashTable *action_files, GHashTab
     g_free(config_file_name);
 
     _eventd_config_read_dir(config, action_files, event_files, config_dir_name);
-    g_free(config_dir_name);
 }
 
 static GKeyFile *
@@ -233,11 +233,13 @@ fail:
 }
 
 EventdConfig *
-eventd_config_new(gboolean system_mode)
+eventd_config_new(const gchar *arg_dir, gboolean system_mode)
 {
     EventdConfig *config;
 
     config = g_new0(EventdConfig, 1);
+
+    config->arg_dir = arg_dir;
 
     config->actions = eventd_actions_new();
     config->events = eventd_events_new();
@@ -279,8 +281,13 @@ eventd_config_parse(EventdConfig *config, gboolean system_mode)
     gchar **dirs, **dir;
     dirs = evhelpers_dirs_get_config("EVENTD_CONFIG_DIR", system_mode, NULL);
     for ( dir = dirs ; *dir != NULL ; ++dir )
+    {
         _eventd_config_load_dir(config, action_files, event_files, *dir);
+        g_free(*dir);
+    }
     g_free(dirs);
+    if ( g_file_test(config->arg_dir, G_FILE_TEST_IS_DIR) )
+        _eventd_config_load_dir(config, action_files, event_files, config->arg_dir);
 
     /*
      * We check the env early, and skip the configuration if found

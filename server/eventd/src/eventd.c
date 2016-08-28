@@ -259,6 +259,7 @@ main(int argc, char *argv[])
     gboolean take_over_socket = FALSE;
     gboolean enable_relay = TRUE;
     gboolean enable_sd_modules = TRUE;
+    gchar *config_dir = NULL;
     gboolean daemonize = FALSE;
     gboolean print_paths = FALSE;
     gboolean print_version = FALSE;
@@ -338,6 +339,7 @@ main(int argc, char *argv[])
         { "take-over",            't', GIO_UNIX_OPTION_FLAG,  G_OPTION_ARG_NONE,         &take_over_socket,  "Take over socket",                      NULL },
         { "no-relay",             0,   G_OPTION_FLAG_REVERSE, G_OPTION_ARG_NONE,         &enable_relay,      "Disable the relay feature",             NULL },
         { "no-service-discovery", 0,   G_OPTION_FLAG_REVERSE, G_OPTION_ARG_NONE,         &enable_sd_modules, "Disable the service discovery feature", NULL },
+        { "config-dir",           'c', 0,                     G_OPTION_ARG_FILENAME,     &config_dir,        "Additionnal configuration directory",   "<directory>" },
         { "daemonize",            0,   G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,         &daemonize,         NULL,                                    NULL },
         { "paths",                'P', 0,                     G_OPTION_ARG_NONE,         &print_paths,       "Print search paths",                    NULL },
         { "version",              'V', 0,                     G_OPTION_ARG_NONE,         &print_version,     "Print version",                         NULL },
@@ -369,6 +371,8 @@ main(int argc, char *argv[])
         g_print("Configuration and events search paths:");
         for ( dir = dirs ; *dir != NULL ; ++dir )
             g_print("\n    %s", *dir);
+        if ( ( config_dir != NULL ) && g_file_test(config_dir, G_FILE_TEST_IS_DIR) )
+            g_print("\n    %s", config_dir);
         g_print("\n");
         g_strfreev(dirs);
 
@@ -405,7 +409,7 @@ main(int argc, char *argv[])
 
     eventd_plugins_load(context, (const gchar * const *) binds, enable_relay, enable_sd_modules, context->system_mode);
 
-    context->config = eventd_config_new(context->system_mode);
+    context->config = eventd_config_new(config_dir, context->system_mode);
 
     eventd_plugins_start_all();
 
@@ -453,6 +457,7 @@ main(int argc, char *argv[])
 end:
     eventd_sockets_free(context->sockets);
 
+    g_free(config_dir);
     g_strfreev(binds);
     g_free(control_socket);
     g_free(runtime_dir);

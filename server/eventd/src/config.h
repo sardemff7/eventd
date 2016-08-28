@@ -23,7 +23,7 @@
 #ifndef __EVENTD_CONFIG_H__
 #define __EVENTD_CONFIG_H__
 
-EventdConfig *eventd_config_new(gboolean system_mode);
+EventdConfig *eventd_config_new(const gchar *arg_dir, gboolean system_mode);
 void eventd_config_parse(EventdConfig *config, gboolean system_mode);
 void eventd_config_free(EventdConfig *config);
 
