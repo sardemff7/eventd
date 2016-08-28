@@ -392,19 +392,24 @@ _eventd_protocol_evp_parse_line(EventdProtocol *self, const gchar *line, GError 
  */
 EVENTD_EXPORT
 gboolean
-eventd_protocol_parse(EventdProtocol *protocol, const gchar *buffer, GError **error)
+eventd_protocol_parse(EventdProtocol *protocol, gchar *buffer, GError **error)
 {
     EventdProtocol *self = (EventdProtocol *) protocol;
     g_return_val_if_fail(self->state != _EVENTD_PROTOCOL_EVP_STATE_SIZE, FALSE);
 
     GError *_inner_error_ = NULL;
 
-    gchar *l;
-    l = g_utf8_strchr(buffer, -1, '\n');
-    if ( l == NULL )
-        _eventd_protocol_evp_parse_line(self, buffer, &_inner_error_);
-    else
-        g_set_error_literal(&_inner_error_, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_GARBAGE, "EvP parser only takes lines");
+    gsize l;
+    gchar *sl, *el;
+    l = strlen(buffer);
+    for ( sl = buffer, el = g_utf8_strchr(sl, l, '\n'); ( el != NULL ) && ( _inner_error_ == NULL ) ; sl = el + 1, el = g_utf8_strchr(sl, l - ( sl - buffer ), '\n') )
+    {
+        *el = '\0';
+        _eventd_protocol_evp_parse_line(self, sl, &_inner_error_);
+    }
+
+    if ( ( _inner_error_ == NULL ) && ( sl < ( buffer + l ) ) )
+        _eventd_protocol_evp_parse_line(self, sl, &_inner_error_);
 
     if ( _inner_error_ == NULL )
         return TRUE;

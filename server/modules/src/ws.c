@@ -120,27 +120,20 @@ _eventd_ws_connection_message(EventdWsConnection *self, gint type, GBytes *messa
     }
 
     GError *error = NULL;
-    gchar *data, *c, *e;
+    gchar *data;
     gsize length;
     /* We take over the data */
     data = (gchar *) g_bytes_get_data(message, &length);
-    e = data + length;
-    while ( data < e )
+    if ( data[length - 1] != '\n' )
     {
-        c = g_utf8_strchr(data, e - data, '\n');
-        if ( c == NULL )
-        {
-            soup_websocket_connection_close(self->connection, SOUP_WEBSOCKET_CLOSE_PROTOCOL_ERROR, "Malformed message: missing ending new line");
-            break;
-        }
-        *c = '\0';
-        if ( ! eventd_protocol_parse(self->protocol, data, &error) )
-        {
-            g_warning("Parse error: %s", error->message);
-            soup_websocket_connection_close(self->connection, SOUP_WEBSOCKET_CLOSE_PROTOCOL_ERROR, error->message);
-            break;
-        }
-        data = c + 1;
+        soup_websocket_connection_close(self->connection, SOUP_WEBSOCKET_CLOSE_PROTOCOL_ERROR, "Malformed message: missing ending new line");
+        return;
+    }
+
+    if ( ! eventd_protocol_parse(self->protocol, data, &error) )
+    {
+        g_warning("Parse error: %s", error->message);
+        soup_websocket_connection_close(self->connection, SOUP_WEBSOCKET_CLOSE_PROTOCOL_ERROR, error->message);
     }
     g_clear_error(&error);
 }
