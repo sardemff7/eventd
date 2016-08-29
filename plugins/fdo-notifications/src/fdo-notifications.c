@@ -417,11 +417,8 @@ _eventd_fdo_notifications_close_notification(EventdPluginContext *context, GVari
     notification = g_hash_table_lookup(context->ids, GUINT_TO_POINTER(id));
     if ( notification != NULL )
     {
-        EventdEvent *event;
-        event = eventd_event_new(".notification", "close");
-        eventd_event_add_data_string(event, g_strdup("source-event"), g_strdup(eventd_event_get_uuid(notification->event)));
-        eventd_plugin_core_push_event(context->core, event);
-        eventd_event_unref(event);
+        eventd_event_add_data(notification->event, g_strdup(".event-end"), g_variant_new_boolean(TRUE));
+        eventd_plugin_core_push_event(context->core, notification->event);
     }
 
     g_dbus_method_invocation_return_value(invocation, NULL);
@@ -677,7 +674,23 @@ static void
 _eventd_fdo_notifications_event_dispatch(EventdPluginContext *context, EventdEvent *event)
 {
     const gchar *category;
+    EventdDbusNotification *notification;
     category = eventd_event_get_category(event);
+
+    if ( g_strcmp0(category, "notification") == 0 )
+    {
+        GVariant *end;
+
+        end = eventd_event_get_data(event, ".event-end");
+        if ( ( end == NULL ) || ( ! g_variant_get_boolean(end) ) )
+            return;
+
+        notification = g_hash_table_lookup(context->notifications, eventd_event_get_uuid(event));
+        if ( notification != NULL )
+            _eventd_fdo_notifications_notification_closed(notification, EVENTD_FDO_NOTIFICATIONS_CLOSE_REASON_CALL);
+        return;
+    }
+
     if ( g_strcmp0(category, ".notification") != 0 )
         return;
 
@@ -686,7 +699,6 @@ _eventd_fdo_notifications_event_dispatch(EventdPluginContext *context, EventdEve
     if ( ( uuid == NULL ) || ( ! g_hash_table_contains(context->notifications, uuid) ) )
         return;
 
-    EventdDbusNotification *notification;
     notification = g_hash_table_lookup(context->notifications, uuid);
 
     const gchar *name;
@@ -696,8 +708,6 @@ _eventd_fdo_notifications_event_dispatch(EventdPluginContext *context, EventdEve
         _eventd_fdo_notifications_notification_closed(notification, EVENTD_FDO_NOTIFICATIONS_CLOSE_REASON_EXPIRED);
     else if ( g_strcmp0(name, "dismiss") == 0 )
         _eventd_fdo_notifications_notification_closed(notification, EVENTD_FDO_NOTIFICATIONS_CLOSE_REASON_DISMISS);
-    else if ( g_strcmp0(name, "close") == 0 )
-        _eventd_fdo_notifications_notification_closed(notification, EVENTD_FDO_NOTIFICATIONS_CLOSE_REASON_CALL);
     else
         _eventd_fdo_notifications_notification_closed(notification, EVENTD_FDO_NOTIFICATIONS_CLOSE_REASON_RESERVED);
 }
