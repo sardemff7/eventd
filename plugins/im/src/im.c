@@ -149,23 +149,29 @@ _eventd_im_account_reconnect_callback(LibeventdReconnectHandler *handler, gpoint
 }
 
 static void
-_eventd_im_signed_on_callback(PurpleConnection *gc, EventdPluginContext *context)
+_eventd_im_signed_on_callback(PurpleAccount *ac, EventdPluginContext *context)
 {
-    EventdImAccount *account = purple_connection_get_account(gc)->ui_data;
+    EventdImAccount *account = ac->ui_data;
 
     evhelpers_reconnect_reset(account->reconnect);
 }
 
 static void
-_eventd_im_error_callback(PurpleAccount *ac, const PurpleConnectionErrorInfo *old_error, const PurpleConnectionErrorInfo *current_error, EventdPluginContext *context)
+_eventd_im_signed_off_callback(PurpleAccount *ac, EventdPluginContext *context)
 {
     EventdImAccount *account = ac->ui_data;
-    g_debug("Error on account %s: %s", account->name, current_error->description);
-    if ( account->context->started && ( ! purple_account_is_connecting(account->account) ) )
-    {
-        if ( ! evhelpers_reconnect_try(account->reconnect) )
-            g_warning("Too many reconnect tries for account %s", account->name);
-    }
+
+    if ( purple_account_get_current_error(account->account) == NULL )
+        evhelpers_reconnect_reset(account->reconnect);
+    else if ( ! evhelpers_reconnect_try(account->reconnect) )
+        g_warning("Too many reconnect tries for account %s", account->name);
+}
+
+static void
+_eventd_im_error_callback(PurpleAccount *ac, PurpleConnectionError err, const gchar *desc, EventdPluginContext *context)
+{
+    EventdImAccount *account = ac->ui_data;
+    g_debug("Error on account %s: %s", account->name, desc);
 }
 
 static gboolean
@@ -253,8 +259,9 @@ _eventd_im_init(EventdPluginCoreContext *core)
 
     context->accounts = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_im_account_free);
 
-    purple_signal_connect(purple_connections_get_handle(), "signed-on", context, PURPLE_CALLBACK(_eventd_im_signed_on_callback), context);
-    purple_signal_connect(purple_connections_get_handle(), "error-changed", context, PURPLE_CALLBACK(_eventd_im_error_callback), context);
+    purple_signal_connect(purple_accounts_get_handle(), "account-signed-on", context, PURPLE_CALLBACK(_eventd_im_signed_on_callback), context);
+    purple_signal_connect(purple_accounts_get_handle(), "account-signed-off", context, PURPLE_CALLBACK(_eventd_im_signed_off_callback), context);
+    purple_signal_connect(purple_accounts_get_handle(), "account-connection-error", context, PURPLE_CALLBACK(_eventd_im_error_callback), context);
     purple_signal_connect(purple_conversations_get_handle(), "chat-joined", context, PURPLE_CALLBACK(_eventd_im_conv_joined), context);
 
     return context;
