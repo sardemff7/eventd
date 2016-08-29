@@ -25,8 +25,6 @@
 
 #include "types.h"
 
-const gchar * const eventd_nd_anchors[_EVENTD_ND_ANCHOR_SIZE];
-
 typedef enum {
     EVENTD_ND_VANCHOR_TOP,
     EVENTD_ND_VANCHOR_BOTTOM,
@@ -54,7 +52,7 @@ FormatString *eventd_nd_style_get_template_text(EventdNdStyle *style);
 Filename *eventd_nd_style_get_template_image(EventdNdStyle *style);
 Filename *eventd_nd_style_get_template_icon(EventdNdStyle *style);
 
-EventdNdAnchor eventd_nd_style_get_bubble_anchor(EventdNdStyle *style);
+const gchar *eventd_nd_style_get_bubble_queue(EventdNdStyle *style);
 gint eventd_nd_style_get_bubble_timeout(EventdNdStyle *style);
 
 gint eventd_nd_style_get_bubble_min_width(EventdNdStyle *style);

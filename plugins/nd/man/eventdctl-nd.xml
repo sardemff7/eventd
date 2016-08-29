@@ -79,7 +79,7 @@
             </varlistentry>
 
             <varlistentry>
-                <term><command>dismiss <parameter><replaceable>target</replaceable></parameter> <parameter><replaceable>anchor</replaceable></parameter></command></term>
+                <term><command>dismiss <parameter><replaceable>target</replaceable></parameter> <parameter><replaceable>queue</replaceable></parameter></command></term>
                 <listitem>
                     <para>Allow to dismiss notifications.</para>
                     <para>
@@ -91,15 +91,8 @@
                         </simplelist>.
                     </para>
                     <para>
-                        <replaceable>anchor</replaceable> is optional and can be:
-                        <simplelist type='inline'>
-                            <member><literal>top-left</literal></member>
-                            <member><literal>top</literal></member>
-                            <member><literal>top-right</literal></member>
-                            <member><literal>bottom-left</literal></member>
-                            <member><literal>bottom</literal></member>
-                            <member><literal>bottom-right</literal></member>
-                        </simplelist>.
+                        <replaceable>queue</replaceable> is optional and can be any name configured.
+                        The queue <literal>"default"</literal> is always available, but note that it can be left unused.
                     </para>
                     <para>
                         If you do not specify an anchor, it will dismiss notifications from <emphasis>all anchors</emphasis> even if target is <literal>oldest</literal>/<literal>newest</literal>.

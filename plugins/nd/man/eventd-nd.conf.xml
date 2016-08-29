@@ -140,23 +140,13 @@
 
         <para>These sections are valid in both global and action configurations.</para>
 
-        <refsect2 id="anchor-sections">
-            <title>Section <varname>[Anchor <replaceable>position</replaceable>]</varname></title>
+        <refsect2 id="queue-sections">
+            <title>Section <varname>[Queue <replaceable>name</replaceable>]</varname></title>
 
             <para>
-                These sections control the behaviour of the available anchors.
-                They are not required for the anchor to exist and be used in style configuration.
-            </para>
-            <para>
-                There are six available anchors:
-                <simplelist type='inline'>
-                    <member><literal>top-left</literal></member>
-                    <member><literal>top</literal></member>
-                    <member><literal>top-right</literal></member>
-                    <member><literal>bottom-left</literal></member>
-                    <member><literal>bottom</literal></member>
-                    <member><literal>bottom-right</literal></member>
-                </simplelist>
+                These sections control the possible bubble queues.
+                There is always at least the <literal>"default</literal> queue available.
+                The z-ordering is entirely undefined and it is left to the user to achieve a usable configuration.
             </para>
 
             <refsect3>
@@ -164,10 +154,27 @@
 
                 <variablelist>
                     <varlistentry>
+                        <term><varname>Anchor=</varname> (defaults to <literal>top-right</literal>)</term>
+                        <listitem>
+                            <para>An <type>enumaration</type>:
+                                <simplelist type='inline'>
+                                    <member><literal>top-left</literal></member>
+                                    <member><literal>top</literal></member>
+                                    <member><literal>top-right</literal></member>
+                                    <member><literal>bottom-left</literal></member>
+                                    <member><literal>bottom</literal></member>
+                                    <member><literal>bottom-right</literal></member>
+                                </simplelist>
+                            </para>
+                            <para>The anchor of this queue.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
                         <term><varname>Limit=</varname> (defaults to <literal>1</literal>)</term>
                         <listitem>
                             <para>An <type>integer</type></para>
-                            <para>Maximum number of bubbles at this anchor at the same time.</para>
+                            <para>Maximum number of bubbles in this queue at the same time.</para>
                         </listitem>
                     </varlistentry>
 
@@ -175,7 +182,7 @@
                         <term><varname>Margin=</varname> (defaults to <literal>13</literal>)</term>
                         <listitem>
                             <para>A <type>list of integers</type> (one or two)</para>
-                            <para>Margin between bubble and screen's edge.</para>
+                            <para>Margin between bubble and anchor.</para>
                             <para>If two values are provided, the first is used as horizontal margin, and the second as vertical margin.</para>
                         </listitem>
                     </varlistentry>
@@ -202,7 +209,6 @@
                         <listitem>
                             <para>A <type>boolean</type></para>
                             <para>If <literal>true</literal>, an extra bubble will be displayed if there are notifications waiting for display and the limit is reached.</para>
-                            <para>If you need extra tweaking, you should copy and edit the file <filename>eventd-nd-more.action</filename> in <filename class="directory">/usr/share/&PACKAGE_NAME;/nd</filename>.</para>
                         </listitem>
                     </varlistentry>
                 </variablelist>
@@ -256,10 +262,10 @@
 
                 <variablelist>
                     <varlistentry>
-                        <term><varname>Anchor=</varname> (defaults to <literal>top right</literal>)</term>
+                        <term><varname>Anchor=</varname> (defaults to <literal>"default"</literal>)</term>
                         <listitem>
-                            <para>An <type>anchor name</type></para>
-                            <para>See <xref linkend="anchor-sections" /> for the list of available anchors.</para>
+                            <para>A <type>queue name</type></para>
+                            <para>See <xref linkend="queue-sections" /> for more details.</para>
                         </listitem>
                     </varlistentry>
 

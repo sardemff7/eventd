@@ -34,15 +34,6 @@
 
 #include "style.h"
 
-const gchar * const eventd_nd_anchors[_EVENTD_ND_ANCHOR_SIZE] = {
-    [EVENTD_ND_ANCHOR_TOP_LEFT]     = "top-left",
-    [EVENTD_ND_ANCHOR_TOP]          = "top",
-    [EVENTD_ND_ANCHOR_TOP_RIGHT]    = "top-right",
-    [EVENTD_ND_ANCHOR_BOTTOM_LEFT]  = "bottom-left",
-    [EVENTD_ND_ANCHOR_BOTTOM]       = "bottom",
-    [EVENTD_ND_ANCHOR_BOTTOM_RIGHT] = "bottom-right",
-};
-
 static const gchar * const _eventd_nd_style_pango_alignments[] = {
     [PANGO_ALIGN_LEFT]   = "left",
     [PANGO_ALIGN_RIGHT]  = "right",
@@ -90,7 +81,7 @@ struct _EventdPluginAction {
     struct {
         gboolean set;
 
-        EventdNdAnchor anchor;
+        gchar *queue;
 
         gint timeout;
 
@@ -150,8 +141,8 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
     /* bubble */
     style->bubble.set = TRUE;
 
-    /* bubble anchor */
-    style->bubble.anchor  = EVENTD_ND_ANCHOR_TOP_RIGHT;
+    /* bubble queue */
+    style->bubble.queue  = g_strdup("default");
 
     /* bubble timing */
     style->bubble.timeout = 3000;
@@ -270,14 +261,20 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file)
     {
         self->bubble.set = TRUE;
 
-        guint64 enum_value;
+        gchar *string;
         Int integer;
         Colour colour;
 
-        if ( evhelpers_config_key_file_get_enum(config_file, "NotificationBubble", "Anchor", eventd_nd_anchors, G_N_ELEMENTS(eventd_nd_anchors), &enum_value) == 0 )
-            self->bubble.anchor = enum_value;
+        if ( evhelpers_config_key_file_get_string(config_file, "NotificationBubble", "Queue", &string) == 0 )
+        {
+            g_free(self->bubble.queue);
+            self->bubble.queue = string;
+        }
         else if ( self->parent != NULL )
-            self->bubble.anchor = eventd_nd_style_get_bubble_anchor(self->parent);
+        {
+            g_free(self->bubble.queue);
+            self->bubble.queue = g_strdup(eventd_nd_style_get_bubble_queue(self->parent));
+        }
 
         if ( evhelpers_config_key_file_get_int(config_file, "NotificationBubble", "Timeout", &integer) == 0 )
             self->bubble.timeout = ( integer.value > 0 ) ? integer.value : 0;
@@ -487,12 +484,12 @@ eventd_nd_style_get_template_icon(EventdNdStyle *self)
     return eventd_nd_style_get_template_icon(self->parent);
 }
 
-EventdNdAnchor
-eventd_nd_style_get_bubble_anchor(EventdNdStyle *self)
+const gchar *
+eventd_nd_style_get_bubble_queue(EventdNdStyle *self)
 {
     if ( self->bubble.set )
-        return self->bubble.anchor;
-    return eventd_nd_style_get_bubble_anchor(self->parent);
+        return self->bubble.queue;
+    return eventd_nd_style_get_bubble_queue(self->parent);
 }
 
 gint

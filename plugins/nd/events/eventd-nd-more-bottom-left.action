@@ -1,8 +1,0 @@
-[File]
-Extends = eventd-nd-more.action
-
-[Action]
-Name = eventd-nd-more-bottom-left
-
-[NotificationBubble]
-Anchor = bottom-left

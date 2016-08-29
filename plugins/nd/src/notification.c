@@ -104,7 +104,8 @@ static void
 _eventd_nd_notification_process(EventdNdNotification *self, EventdEvent *event)
 {
     _eventd_nd_notification_clean(self);
-    self->event = eventd_event_ref(event);
+    if ( event != NULL )
+        self->event = eventd_event_ref(event);
 
     gint blur, border, padding;
     gint min_width, max_width;
@@ -127,13 +128,14 @@ _eventd_nd_notification_process(EventdNdNotification *self, EventdEvent *event)
         min_width = max_width;
 
     /* proccess data and compute the bubble size */
-    self->text.text = eventd_nd_draw_text_process(self->style, self->event, max_width, &self->text.height, &text_width);
+    self->text.text = eventd_nd_draw_text_process(self->style, self->event, max_width, g_queue_get_length(self->queue->wait_queue), &self->text.height, &text_width);
 
     self->content_size.width = text_width;
 
     if ( self->content_size.width < max_width )
     {
-        eventd_nd_draw_image_and_icon_process(self->context->theme_context, self->style, self->event, max_width - self->content_size.width, &self->image, &self->icon, &self->text.x, &image_width, &image_height);
+        if ( self->event != NULL )
+            eventd_nd_draw_image_and_icon_process(self->context->theme_context, self->style, self->event, max_width - self->content_size.width, &self->image, &self->icon, &self->text.x, &image_width, &image_height);
         self->content_size.width += image_width;
     }
 
@@ -198,25 +200,16 @@ _eventd_nd_notification_refresh_list(EventdPluginContext *context, EventdNdQueue
         if ( ! g_queue_is_empty(queue->wait_queue) )
         {
             if ( queue->more_notification == NULL )
-            {
-                queue->more_event = eventd_event_new("eventd-nd-more", eventd_nd_anchors[queue->anchor]);
-                if ( eventd_plugin_core_push_event(context->core, queue->more_event) )
-                    return;
-                g_warning("“More” indicator configured, but missing event configuration: disabling indicator");
-                queue->more_indicator = FALSE;
-                eventd_event_unref(queue->more_event);
-                queue->more_event = NULL;
-            }
+                queue->more_notification = eventd_nd_notification_new(context, NULL, context->style);
             else
             {
-                eventd_event_add_data(queue->more_event, g_strdup("size"), g_variant_new_uint64(g_queue_get_length(queue->wait_queue)));
-                _eventd_nd_notification_update(queue->more_notification, queue->more_event);
+                _eventd_nd_notification_update(queue->more_notification, NULL);
                 g_queue_push_tail_link(queue->queue, queue->more_notification->link);
-                queue->more_notification->visible = TRUE;
             }
+            queue->more_notification->visible = TRUE;
         }
         else if ( queue->more_notification != NULL )
-            g_hash_table_remove(context->notifications, eventd_event_get_uuid(queue->more_event));
+            eventd_nd_notification_free(queue->more_notification);
     }
 
     gpointer data = NULL;
@@ -267,10 +260,12 @@ eventd_nd_notification_new(EventdPluginContext *context, EventdEvent *event, Eve
 
     self = g_new0(EventdNdNotification, 1);
     self->context = context;
-    self->queue = &context->queues[eventd_nd_style_get_bubble_anchor(style)];
+    self->queue = g_hash_table_lookup(context->queues, eventd_nd_style_get_bubble_queue(style));
+    if ( self->queue == NULL )
+        self->queue = g_hash_table_lookup(context->queues, "default");
     self->style = style;
 
-    if ( self->queue->more_event != event )
+    if ( event != NULL )
     {
         g_queue_push_tail(self->queue->wait_queue, self);
         self->link = g_queue_peek_tail_link(self->queue->wait_queue);
@@ -299,17 +294,13 @@ eventd_nd_notification_free(gpointer data)
 
     if ( self->visible )
         g_queue_delete_link(self->queue->queue, self->link);
-    else if ( self->event == self->queue->more_event )
+    else if ( self->event == NULL )
         g_list_free_1(self->link);
     else
         g_queue_delete_link(self->queue->wait_queue, self->link);
 
-    if ( self->event == self->queue->more_event )
-    {
-        eventd_event_unref(self->queue->more_event);
-        self->queue->more_event = NULL;
+    if ( self->event == NULL )
         self->queue->more_notification = NULL;
-    }
 
     self->context->backend->surface_free(self->surface);
     _eventd_nd_notification_clean(self);
@@ -373,7 +364,7 @@ eventd_nd_notification_update(EventdNdNotification *self, EventdEvent *event)
 void
 eventd_nd_notification_dismiss(EventdNdNotification *self)
 {
-    if ( self->queue->more_event == self->event )
+    if ( self->event == NULL )
         return;
 
     EventdEvent *event;
@@ -387,9 +378,9 @@ eventd_nd_notification_dismiss(EventdNdNotification *self)
 void
 eventd_nd_notification_geometry_changed(EventdPluginContext *context, gboolean resize)
 {
+    GHashTableIter iter;
     if ( resize )
     {
-        GHashTableIter iter;
         EventdNdNotification *notification;
         g_hash_table_iter_init(&iter, context->notifications);
         while ( g_hash_table_iter_next(&iter, NULL, (gpointer *) &notification) )
@@ -400,22 +391,25 @@ eventd_nd_notification_geometry_changed(EventdPluginContext *context, gboolean r
         }
     }
 
-    EventdNdAnchor i;
-    for ( i = EVENTD_ND_ANCHOR_TOP_LEFT ; i < _EVENTD_ND_ANCHOR_SIZE ; ++i )
-        _eventd_nd_notification_refresh_list(context, &context->queues[i]);
+    EventdNdQueue *queue;
+    g_hash_table_iter_init(&iter, context->queues);
+    while ( g_hash_table_iter_next(&iter, NULL, (gpointer *) &queue) )
+        _eventd_nd_notification_refresh_list(context, queue);
 }
 
 void
-eventd_nd_notification_dismiss_target(EventdPluginContext *context, EventdNdDismissTarget target, EventdNdAnchor anchor)
+eventd_nd_notification_dismiss_target(EventdPluginContext *context, EventdNdDismissTarget target, EventdNdQueue *queue)
 {
-    if ( anchor == _EVENTD_ND_ANCHOR_SIZE )
+    if ( queue == NULL )
     {
-        for ( anchor = EVENTD_ND_ANCHOR_TOP_LEFT ; anchor < _EVENTD_ND_ANCHOR_SIZE ; ++anchor )
-            eventd_nd_notification_dismiss_target(context, target, anchor);
+        GHashTableIter iter;
+        EventdNdQueue *queue;
+        g_hash_table_iter_init(&iter, context->queues);
+        while ( g_hash_table_iter_next(&iter, NULL, (gpointer *) &queue) )
+            eventd_nd_notification_dismiss_target(context, target, queue);
         return;
     }
 
-    EventdNdQueue *queue = &context->queues[anchor];
     GList *notification = NULL;
 
     switch ( target )

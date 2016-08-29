@@ -45,7 +45,7 @@ struct _EventdPluginContext {
     EventdNdInterface interface;
     EventdNdBackend backends[_EVENTD_ND_BACKENDS_SIZE];
     EventdNdBackend *backend;
-    EventdNdQueue queues[_EVENTD_ND_ANCHOR_SIZE];
+    GHashTable *queues;
     EventdNdStyle *style;
     EventdNdBackends last_backend;
     NkXdgThemeContext *theme_context;

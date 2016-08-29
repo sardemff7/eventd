@@ -54,6 +54,15 @@ const gchar *eventd_nd_backends_names[_EVENTD_ND_BACKENDS_SIZE] = {
     [EVENTD_ND_BACKEND_WIN] = "win",
 };
 
+static const gchar * const _eventd_nd_anchors[_EVENTD_ND_ANCHOR_SIZE] = {
+    [EVENTD_ND_ANCHOR_TOP_LEFT]     = "top-left",
+    [EVENTD_ND_ANCHOR_TOP]          = "top",
+    [EVENTD_ND_ANCHOR_TOP_RIGHT]    = "top-right",
+    [EVENTD_ND_ANCHOR_BOTTOM_LEFT]  = "bottom-left",
+    [EVENTD_ND_ANCHOR_BOTTOM]       = "bottom",
+    [EVENTD_ND_ANCHOR_BOTTOM_RIGHT] = "bottom-right",
+};
+
 static const gchar * const _eventd_nd_dismiss_targets[] = {
     [EVENTD_ND_DISMISS_NONE]   = "none",
     [EVENTD_ND_DISMISS_ALL]    = "all",
@@ -119,6 +128,39 @@ _eventd_nd_backend_stop(EventdNdContext *context)
     return _eventd_nd_backend_switch(context, EVENTD_ND_BACKEND_NONE, NULL, TRUE);
 }
 
+static EventdNdQueue *
+_eventd_nd_queue_new(void)
+{
+    EventdNdQueue *self;
+
+    self = g_new0(EventdNdQueue, 1);
+
+    self->anchor = EVENTD_ND_ANCHOR_TOP_RIGHT;
+
+    /* Defaults placement values */
+    self->limit = 1;
+
+    self->margin_x = 13;
+    self->margin_y = 13;
+    self->spacing = 13;
+
+    self->wait_queue = g_queue_new();
+    self->queue = g_queue_new();
+
+    return self;
+}
+
+static void
+_eventd_nd_queue_free(gpointer data)
+{
+    EventdNdQueue *self = data;
+
+    g_queue_free(self->queue);
+    g_queue_free(self->wait_queue);
+
+    g_free(self);
+}
+
 /*
  * Initialization interface
  */
@@ -147,21 +189,9 @@ _eventd_nd_init(EventdPluginCoreContext *core)
 
     context->style = eventd_nd_style_new(NULL);
 
-    EventdNdAnchor i;
-    for ( i = EVENTD_ND_ANCHOR_TOP_LEFT ; i < _EVENTD_ND_ANCHOR_SIZE ; ++i )
-    {
-        context->queues[i].anchor = i;
+    context->queues = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_nd_queue_free);
 
-        /* Defaults placement values */
-        context->queues[i].limit = 1;
-
-        context->queues[i].margin_x = 13;
-        context->queues[i].margin_y = 13;
-        context->queues[i].spacing = 13;
-
-        context->queues[i].wait_queue = g_queue_new();
-        context->queues[i].queue = g_queue_new();
-    }
+    g_hash_table_insert(context->queues, g_strdup("default"), _eventd_nd_queue_new());
 
     context->notifications = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, eventd_nd_notification_free);
 
@@ -173,12 +203,7 @@ _eventd_nd_uninit(EventdPluginContext *context)
 {
     g_hash_table_unref(context->notifications);
 
-    EventdNdAnchor i;
-    for ( i = EVENTD_ND_ANCHOR_TOP_LEFT ; i < _EVENTD_ND_ANCHOR_SIZE ; ++i )
-    {
-        g_queue_free(context->queues[i].queue);
-        g_queue_free(context->queues[i].wait_queue);
-    }
+    g_hash_table_unref(context->queues);
 
     eventd_nd_style_free(context->style);
 
@@ -295,13 +320,25 @@ _eventd_nd_control_command(EventdPluginContext *context, guint64 argc, const gch
         else
         {
             guint64 target = EVENTD_ND_DISMISS_NONE;
-            guint64 anchor = _EVENTD_ND_ANCHOR_SIZE;
             nk_enum_parse(argv[1], _eventd_nd_dismiss_targets, G_N_ELEMENTS(_eventd_nd_dismiss_targets), TRUE, &target);
-            if ( argc > 2 )
-                nk_enum_parse(argv[2], eventd_nd_anchors, _EVENTD_ND_ANCHOR_SIZE, TRUE, &anchor);
 
             if ( target != EVENTD_ND_DISMISS_NONE )
-                eventd_nd_notification_dismiss_target(context, target, anchor);
+            {
+                if ( argc > 2 )
+                {
+                    EventdNdQueue *queue;
+                    queue = g_hash_table_lookup(context->queues, argv[2]);
+                    if ( queue != NULL )
+                        eventd_nd_notification_dismiss_target(context, target, queue);
+                    else
+                    {
+                        *status = g_strdup_printf("Unknown queue '%s'", argv[2]);
+                        r = EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR;
+                    }
+                }
+                else
+                    eventd_nd_notification_dismiss_target(context, target, NULL);
+            }
             else
             {
                 *status = g_strdup_printf("Unknown dismiss target '%s'", argv[1]);
@@ -350,45 +387,61 @@ _eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
             context->backends[i].global_parse(context->backends[i].context, config_file);
     }
 
-    gsize anchor_name_length = strlen("Anchor bottom-right") + 1;
-    gchar anchor_name[anchor_name_length];
-    EventdNdAnchor j;
-    for ( j = EVENTD_ND_ANCHOR_TOP_LEFT ; j < _EVENTD_ND_ANCHOR_SIZE ; ++j )
+    gchar **groups, **group;
+    groups = g_key_file_get_groups(config_file, NULL);
+    if ( groups == NULL )
+        return;
+
+    for ( group = groups ; *group != NULL ; ++group )
     {
-        g_snprintf(anchor_name, anchor_name_length, "Anchor %s", eventd_nd_anchors[j]);
-        if ( ! g_key_file_has_group(config_file, anchor_name) )
+        if ( ! g_str_has_prefix(*group, "Queue ") )
             continue;
 
+        const gchar *name = *group + strlen("Queue ");
+        EventdNdQueue *self;
+
+        self = g_hash_table_lookup(context->queues, name);
+        if ( self == NULL )
+        {
+            self = _eventd_nd_queue_new();
+            g_hash_table_insert(context->queues, g_strdup(name), self);
+        }
+
+        guint64 anchor;
         Int integer;
         Int integer_list[2];
         gsize length = 2;
         gboolean boolean;
 
-        if ( evhelpers_config_key_file_get_int(config_file, anchor_name, "Limit", &integer) == 0 )
-            context->queues[j].limit = ( integer.value > 0 ) ? integer.value : 0;
+        if ( evhelpers_config_key_file_get_enum(config_file, *group, "Anchor", _eventd_nd_anchors, G_N_ELEMENTS(_eventd_nd_anchors), &anchor) == 0 )
+            self->anchor = anchor;
 
-        if ( evhelpers_config_key_file_get_boolean(config_file, anchor_name, "MoreIndicator", &boolean) == 0 )
-            context->queues[j].more_indicator = boolean;
+        if ( evhelpers_config_key_file_get_int(config_file, *group, "Limit", &integer) == 0 )
+            self->limit = ( integer.value > 0 ) ? integer.value : 0;
 
-        if ( evhelpers_config_key_file_get_int_list(config_file, anchor_name, "Margin", integer_list, &length) == 0 )
+        if ( evhelpers_config_key_file_get_boolean(config_file, *group, "MoreIndicator", &boolean) == 0 )
+            self->more_indicator = boolean;
+
+        if ( evhelpers_config_key_file_get_int_list(config_file, *group, "Margin", integer_list, &length) == 0 )
         {
             switch ( length )
             {
             case 1:
                 integer_list[1] = integer_list[0];
             case 2:
-                context->queues[j].margin_x = MAX(0, integer_list[0].value);
-                context->queues[j].margin_y = MAX(0, integer_list[1].value);
+                self->margin_x = MAX(0, integer_list[0].value);
+                self->margin_y = MAX(0, integer_list[1].value);
             break;
             }
         }
 
-        if ( evhelpers_config_key_file_get_int(config_file, anchor_name, "Spacing", &integer) == 0 )
-            context->queues[j].spacing = ( integer.value > 0 ) ? integer.value : 0;
+        if ( evhelpers_config_key_file_get_int(config_file, *group, "Spacing", &integer) == 0 )
+            self->spacing = ( integer.value > 0 ) ? integer.value : 0;
 
-        if ( evhelpers_config_key_file_get_boolean(config_file, anchor_name, "OldestAtAnchor", &boolean) == 0 )
-            context->queues[j].reverse = boolean;
+        if ( evhelpers_config_key_file_get_boolean(config_file, *group, "OldestAtAnchor", &boolean) == 0 )
+            self->reverse = boolean;
     }
+    g_strfreev(groups);
 }
 
 static EventdPluginAction *
