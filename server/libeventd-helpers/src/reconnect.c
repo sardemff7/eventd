@@ -86,6 +86,8 @@ evhelpers_reconnect_try(LibeventdReconnectHandler *self)
 {
     if ( evhelpers_reconnect_too_much(self) )
         return FALSE;
+    if ( self->timeout_tag > 0 )
+        return TRUE;
 
     guint seconds = self->timeout << self->try;
 
