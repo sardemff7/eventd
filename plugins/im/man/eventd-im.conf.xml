@@ -111,6 +111,15 @@
                 </varlistentry>
 
                 <varlistentry>
+                    <term><varname>UseTLS=</varname></term>
+                    <listitem>
+                        <para>A <type>boolean</type></para>
+                        <para>Whether to use TLS or not.</para>
+                        <para>For IRC, simply uses TLS. For XMPP and Oscar, forces TLS.</para>
+                    </listitem>
+                </varlistentry>
+
+                <varlistentry>
                     <term><varname>ChatLeaveTimeout=</varname></term>
                     <listitem>
                         <para>A time in <type>seconds</type> (<literal>-1</literal> for infinity)</para>

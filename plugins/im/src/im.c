@@ -450,6 +450,7 @@ _eventd_im_global_parse(EventdPluginContext *context, GKeyFile *config_file)
         gchar *username = NULL;
         gchar *password = NULL;
         Int port;
+        gboolean use_tls = FALSE;
         gint64 reconnect_timeout;
         gint64 reconnect_max_tries;
         gint64 leave_timeout;
@@ -466,6 +467,8 @@ _eventd_im_global_parse(EventdPluginContext *context, GKeyFile *config_file)
         if ( evhelpers_config_key_file_get_string(config_file, section, "Password", &password) < 0 )
             goto next;
         if ( evhelpers_config_key_file_get_int(config_file, section, "Port", &port) < 0 )
+            goto next;
+        if ( evhelpers_config_key_file_get_boolean(config_file, section, "UseTLS", &use_tls) < 0 )
             goto next;
         if ( evhelpers_config_key_file_get_int_with_default(config_file, section, "ReconnectTimeout", 5, &reconnect_timeout) < 0 )
             goto next;
@@ -496,6 +499,12 @@ _eventd_im_global_parse(EventdPluginContext *context, GKeyFile *config_file)
 
         if ( port.set )
             purple_account_set_int(account->account, "port", CLAMP(port.value, 1, G_MAXUINT16));
+        if ( use_tls )
+        {
+            purple_account_set_bool(account->account, "ssl", TRUE);
+            purple_account_set_string(account->account, "connection_security", "require_tls");
+            purple_account_set_string(account->account, "encryption", "require_encryption");
+        }
 
         account->convs = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_im_conv_free);
 
