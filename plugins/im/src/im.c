@@ -135,11 +135,16 @@ static void
 _eventd_im_signed_off_callback(PurpleAccount *ac, EventdPluginContext *context)
 {
     EventdImAccount *account = ac->ui_data;
+    const PurpleConnectionErrorInfo *err;
 
-    if ( purple_account_get_current_error(account->account) == NULL )
+    err = purple_account_get_current_error(account->account);
+    if ( err == NULL )
         evhelpers_reconnect_reset(account->reconnect);
-    else if ( ! evhelpers_reconnect_try(account->reconnect) )
-        g_warning("Too many reconnect tries for account %s", account->name);
+    else if ( ! purple_connection_error_is_fatal(err->type) )
+    {
+        if ( ! evhelpers_reconnect_try(account->reconnect) )
+            g_warning("Too many reconnect tries for account %s", account->name);
+    }
 }
 
 static void
