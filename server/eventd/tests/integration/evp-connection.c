@@ -30,7 +30,7 @@
 #include <glib/gstdio.h>
 #include <gio/gio.h>
 
-#include <libeventd-test.h>
+#include "libeventd-test.h"
 
 gchar *
 connection_test(GDataInputStream *input, GDataOutputStream *output, const gchar *filename, const gchar *message, GError **error)

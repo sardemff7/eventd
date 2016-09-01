@@ -37,10 +37,10 @@
 
 #include <libsoup/soup.h>
 
-#include <libeventd-protocol.h>
+#include "libeventd-protocol.h"
 #include <libeventc.h>
 
-#include <eventd-ws-module.h>
+#include "eventd-ws-module.h"
 
 struct _EventdWsConnection {
     gpointer data;

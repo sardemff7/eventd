@@ -29,10 +29,10 @@
 #define G_IS_UNIX_SOCKET_ADDRESS(a) (FALSE)
 #endif /* ! G_OS_UNIX */
 
-#include <libeventd-event.h>
-#include <libeventd-protocol.h>
+#include "libeventd-event.h"
+#include "libeventd-protocol.h"
 
-#include <eventd-ws-module.h>
+#include "eventd-ws-module.h"
 
 #include <libeventc.h>
 #define EVENTC_CONNECTION_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), EVENTC_TYPE_CONNECTION, EventcConnectionPrivate))

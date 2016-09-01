@@ -26,9 +26,9 @@
 #include <stdlib.h>
 #include <glib.h>
 #include <glib-object.h>
-#include <libeventd-event.h>
-#include <libeventd-event-private.h>
-#include <libeventd-protocol.h>
+#include "libeventd-event.h"
+#include "libeventd-event-private.h"
+#include "libeventd-protocol.h"
 
 #define EVENTD_EVENT_TEST_UUID "1b4e28ba-2fa1-11d2-883f-b9a761bde3fb"
 #define EVENTD_EVENT_TEST_NAME "test-name"

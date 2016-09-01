@@ -29,8 +29,8 @@
 #include <glib.h>
 #include <pango/pango.h>
 
-#include <libeventd-event.h>
-#include <libeventd-helpers-config.h>
+#include "libeventd-event.h"
+#include "libeventd-helpers-config.h"
 
 #include "style.h"
 

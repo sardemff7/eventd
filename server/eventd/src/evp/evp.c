@@ -26,9 +26,9 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 
-#include <libeventd-event.h>
-#include <eventd-plugin.h>
-#include <libeventd-helpers-config.h>
+#include "libeventd-event.h"
+#include "eventd-plugin.h"
+#include "libeventd-helpers-config.h"
 
 #include "../eventd.h"
 #include "../sd-modules.h"

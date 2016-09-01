@@ -29,8 +29,8 @@
 #include <glib.h>
 #include <gio/gio.h>
 
-#include <libeventd-event.h>
-#include <eventd-plugin.h>
+#include "libeventd-event.h"
+#include "eventd-plugin.h"
 
 #define NOTIFICATION_BUS_NAME      "org.freedesktop.Notifications"
 #define NOTIFICATION_BUS_PATH      "/org/freedesktop/Notifications"

@@ -24,7 +24,7 @@
 
 #include <glib.h>
 
-#include <libeventd-helpers-reconnect.h>
+#include "libeventd-helpers-reconnect.h"
 
 struct _LibeventdReconnectHandler {
     gint64 timeout;

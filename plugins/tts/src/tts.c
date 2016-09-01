@@ -31,9 +31,9 @@
 
 #include <libspeechd.h>
 
-#include <eventd-plugin.h>
-#include <libeventd-event.h>
-#include <libeventd-helpers-config.h>
+#include "eventd-plugin.h"
+#include "libeventd-event.h"
+#include "libeventd-helpers-config.h"
 
 struct _EventdPluginContext {
     SPDConnection *spd;

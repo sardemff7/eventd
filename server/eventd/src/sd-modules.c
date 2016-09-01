@@ -28,9 +28,9 @@
 #include <gio/gio.h>
 
 
-#include <libeventd-helpers-dirs.h>
+#include "libeventd-helpers-dirs.h"
 
-#include <eventd-sd-module.h>
+#include "eventd-sd-module.h"
 #include "sd-modules.h"
 
 static const gchar *_eventd_sd_modules_names[_EVENTD_SD_MODULES_SIZE] = {

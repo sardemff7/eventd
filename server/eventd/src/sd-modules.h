@@ -23,7 +23,7 @@
 #ifndef __EVENTD_SD_MODULES_H__
 #define __EVENTD_SD_MODULES_H__
 
-#include <eventd-sd-module.h>
+#include "eventd-sd-module.h"
 
 void eventd_sd_modules_load(const EventdSdModuleControlInterface *control, GList *sockets);
 void eventd_sd_modules_unload(void);

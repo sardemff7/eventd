@@ -23,7 +23,7 @@
 #ifndef __EVENTD_ND_BACKEND_H__
 #define __EVENTD_ND_BACKEND_H__
 
-#include <libeventd-event.h>
+#include "libeventd-event.h"
 
 #include "types.h"
 

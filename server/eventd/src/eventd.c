@@ -45,9 +45,9 @@ void FreeConsole(void);
 #include <systemd/sd-daemon.h>
 #endif /* ENABLE_SYSTEMD */
 
-#include <eventd-plugin-private.h>
+#include "eventd-plugin-private.h"
 #include <eventdctl.h>
-#include <libeventd-helpers-dirs.h>
+#include "libeventd-helpers-dirs.h"
 
 #include "types.h"
 

@@ -22,8 +22,8 @@
 
 #include <glib.h>
 
-#include <eventd-plugin.h>
-#include <eventd-plugin-private.h>
+#include "eventd-plugin.h"
+#include "eventd-plugin-private.h"
 
 /**
  * SECTION: Plugins

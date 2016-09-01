@@ -24,8 +24,8 @@
 
 #include <glib.h>
 
-#include <eventd-plugin.h>
-#include <libeventd-helpers-config.h>
+#include "eventd-plugin.h"
+#include "libeventd-helpers-config.h"
 
 struct _EventdPluginContext {
     GSList *actions;

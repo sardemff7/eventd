@@ -23,7 +23,7 @@
 #ifndef __EVENTCTL_H__
 #define __EVENTCTL_H__
 
-#include <eventd-plugin.h>
+#include "eventd-plugin.h"
 
 typedef enum {
     EVENTDCTL_RETURN_CODE_OK = 0,

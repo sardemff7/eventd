@@ -21,7 +21,7 @@
 #ifndef __EVENTD_PROTOCOL_H__
 #define __EVENTD_PROTOCOL_H__
 
-#include <libeventd-event.h>
+#include "libeventd-event.h"
 
 G_BEGIN_DECLS
 

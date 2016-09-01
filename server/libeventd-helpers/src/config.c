@@ -30,13 +30,13 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 
-#include <libeventd-event.h>
+#include "libeventd-event.h"
 
 #include <nkutils-enum.h>
 #include <nkutils-token.h>
 #include <nkutils-colour.h>
 
-#include <libeventd-helpers-config.h>
+#include "libeventd-helpers-config.h"
 
 struct _Filename {
     guint64 ref_count;

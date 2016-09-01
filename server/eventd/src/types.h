@@ -23,8 +23,8 @@
 #ifndef __EVENTD_TYPES_H__
 #define __EVENTD_TYPES_H__
 
-#include <libeventd-event.h>
-#include <eventd-plugin.h>
+#include "libeventd-event.h"
+#include "eventd-plugin.h"
 
 typedef struct _EventdCoreContext EventdCoreContext;
 

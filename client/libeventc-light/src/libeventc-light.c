@@ -56,8 +56,8 @@
 
 #include <glib.h>
 
-#include <libeventd-event.h>
-#include <libeventd-protocol.h>
+#include "libeventd-event.h"
+#include "libeventd-protocol.h"
 
 #include <libeventc-light.h>
 

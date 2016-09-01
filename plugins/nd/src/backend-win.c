@@ -30,7 +30,7 @@
 #include <cairo.h>
 #include <cairo-win32.h>
 
-#include <libeventd-helpers-config.h>
+#include "libeventd-helpers-config.h"
 
 #include "backend.h"
 

@@ -30,10 +30,10 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 
-#include <libeventd-event.h>
+#include "libeventd-event.h"
 #include <libeventc.h>
 
-#include <libeventd-helpers-reconnect.h>
+#include "libeventd-helpers-reconnect.h"
 
 #include "../eventd.h"
 

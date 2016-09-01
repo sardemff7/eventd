@@ -33,7 +33,7 @@
 
 #include <libgssdp/gssdp.h>
 
-#include <eventd-sd-module.h>
+#include "eventd-sd-module.h"
 
 struct _EventdSdModuleContext {
     const EventdSdModuleControlInterface *control;

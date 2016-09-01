@@ -31,9 +31,9 @@
 
 #include <canberra.h>
 
-#include <libeventd-event.h>
-#include <eventd-plugin.h>
-#include <libeventd-helpers-config.h>
+#include "libeventd-event.h"
+#include "eventd-plugin.h"
+#include "libeventd-helpers-config.h"
 
 struct _EventdPluginContext {
     ca_context *context;

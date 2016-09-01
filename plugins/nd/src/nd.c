@@ -32,9 +32,9 @@
 #include <pango/pango.h>
 #include <cairo.h>
 
-#include <eventd-plugin.h>
-#include <libeventd-event.h>
-#include <libeventd-helpers-config.h>
+#include "eventd-plugin.h"
+#include "libeventd-event.h"
+#include "libeventd-helpers-config.h"
 
 #include <nkutils-enum.h>
 

@@ -33,7 +33,7 @@
 #include <avahi-glib/glib-watch.h>
 #include <avahi-glib/glib-malloc.h>
 
-#include <eventd-sd-module.h>
+#include "eventd-sd-module.h"
 
 struct _EventdSdModuleContext {
     const EventdSdModuleControlInterface *control;

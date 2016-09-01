@@ -47,8 +47,8 @@
 #include "unstable/notification-area/notification-area-unstable-v1-client-protocol.h"
 #include <libgwater-wayland.h>
 
-#include <libeventd-event.h>
-#include <libeventd-helpers-config.h>
+#include "libeventd-event.h"
+#include "libeventd-helpers-config.h"
 
 #include "backend.h"
 

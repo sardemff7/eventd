@@ -23,8 +23,8 @@
 #ifndef __EVENTD_WS_MODULE_H__
 #define __EVENTD_WS_MODULE_H__
 
-#include <libeventd-event.h>
-#include <libeventd-protocol.h>
+#include "libeventd-event.h"
+#include "libeventd-protocol.h"
 
 typedef struct _EventdWsConnection EventdWsConnection;
 

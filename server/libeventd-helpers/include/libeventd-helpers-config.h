@@ -23,7 +23,7 @@
 #ifndef __LIBEVENTD_CONFIG_H__
 #define __LIBEVENTD_CONFIG_H__
 
-#include <libeventd-event.h>
+#include "libeventd-event.h"
 
 typedef struct _NkTokenList FormatString;
 typedef const gchar *(*FormatStringReplaceCallback)(const gchar *name, const EventdEvent *event, gpointer user_data);

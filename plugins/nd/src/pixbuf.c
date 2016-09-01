@@ -32,7 +32,7 @@
 #include <nkutils-xdg-theme.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
-#include <libeventd-event.h>
+#include "libeventd-event.h"
 
 
 static GdkPixbuf *

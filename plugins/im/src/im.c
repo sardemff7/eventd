@@ -26,9 +26,9 @@
 
 #include <purple.h>
 
-#include <eventd-plugin.h>
-#include <libeventd-helpers-config.h>
-#include <libeventd-helpers-reconnect.h>
+#include "eventd-plugin.h"
+#include "libeventd-helpers-config.h"
+#include "libeventd-helpers-reconnect.h"
 
 #include "io.h"
 

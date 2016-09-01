@@ -30,10 +30,10 @@
 #include <glib-object.h>
 #include <gmodule.h>
 
-#include <eventd-plugin.h>
-#include <eventd-plugin-private.h>
+#include "eventd-plugin.h"
+#include "eventd-plugin-private.h"
 
-#include <libeventd-helpers-dirs.h>
+#include "libeventd-helpers-dirs.h"
 
 #include <eventdctl.h>
 

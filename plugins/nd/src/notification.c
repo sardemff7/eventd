@@ -31,9 +31,9 @@
 #include <pango/pango.h>
 #include <pango/pangocairo.h>
 
-#include <eventd-plugin.h>
-#include <libeventd-event.h>
-#include <libeventd-helpers-config.h>
+#include "eventd-plugin.h"
+#include "libeventd-event.h"
+#include "libeventd-helpers-config.h"
 
 #include "backend.h"
 #include "style.h"

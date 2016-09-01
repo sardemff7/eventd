@@ -43,8 +43,8 @@
 #include <xcb/xfixes.h>
 #include <xcb/shape.h>
 
-#include <libeventd-event.h>
-#include <libeventd-helpers-config.h>
+#include "libeventd-event.h"
+#include "libeventd-helpers-config.h"
 
 #include "backend.h"
 

@@ -29,8 +29,8 @@
 #include <glib.h>
 #include <gio/gio.h>
 
-#include <eventd-plugin.h>
-#include <libeventd-helpers-config.h>
+#include "eventd-plugin.h"
+#include "libeventd-helpers-config.h"
 
 struct _EventdPluginContext {
     gchar *runtime_dir;

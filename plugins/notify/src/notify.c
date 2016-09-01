@@ -32,9 +32,9 @@
 #include <nkutils-xdg-theme.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
-#include <libeventd-event.h>
-#include <eventd-plugin.h>
-#include <libeventd-helpers-config.h>
+#include "libeventd-event.h"
+#include "eventd-plugin.h"
+#include "libeventd-helpers-config.h"
 
 /* We share nd plugin’s pixbuf loader */
 #include "plugins/nd/src/pixbuf.h"

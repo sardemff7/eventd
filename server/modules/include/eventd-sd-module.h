@@ -23,7 +23,7 @@
 #ifndef __EVENTD_SD_MODULE_H__
 #define __EVENTD_SD_MODULE_H__
 
-#include <libeventd-event.h>
+#include "libeventd-event.h"
 
 typedef struct _EventdRelayServer EventdRelayServer;
 

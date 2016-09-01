@@ -22,8 +22,8 @@
 
 #include <glib.h>
 
-#include <eventd-plugin.h>
-#include <eventd-plugin-private.h>
+#include "eventd-plugin.h"
+#include "eventd-plugin-private.h"
 
 /**
  * eventd_plugin_core_get_sockets:

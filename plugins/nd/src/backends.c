@@ -28,7 +28,7 @@
 
 #include <cairo.h>
 
-#include <libeventd-helpers-dirs.h>
+#include "libeventd-helpers-dirs.h"
 
 #include "backend.h"
 #include "backends.h"

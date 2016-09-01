@@ -25,8 +25,8 @@
 
 #include <nkutils-uuid.h>
 
-#include <libeventd-event.h>
-#include <libeventd-event-private.h>
+#include "libeventd-event.h"
+#include "libeventd-event-private.h"
 
 #include "event-private.h"
 

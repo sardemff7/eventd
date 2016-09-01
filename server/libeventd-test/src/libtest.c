@@ -29,7 +29,7 @@
 #include <glib.h>
 #include <glib/gstdio.h>
 
-#include <libeventd-test.h>
+#include "libeventd-test.h"
 
 struct _EventdTestsEnv {
     const gchar *dir;

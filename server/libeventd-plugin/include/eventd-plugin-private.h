@@ -21,7 +21,7 @@
 #ifndef __EVENTD_EVENTD_PLUGIN_PRIVATE_H__
 #define __EVENTD_EVENTD_PLUGIN_PRIVATE_H__
 
-#include <eventd-plugin.h>
+#include "eventd-plugin.h"
 
 typedef GList *(*EventdPluginCoreGetSocketsFunc)(EventdPluginCoreContext *context, GSocketAddress **binds);
 

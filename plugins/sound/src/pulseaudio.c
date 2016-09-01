@@ -29,7 +29,7 @@
 #include <pulse/glib-mainloop.h>
 #include <sndfile.h>
 
-#include <libeventd-event.h>
+#include "libeventd-event.h"
 
 #include "pulseaudio.h"
 

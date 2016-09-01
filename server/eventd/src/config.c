@@ -26,9 +26,9 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 
-#include <libeventd-event.h>
-#include <libeventd-helpers-config.h>
-#include <libeventd-helpers-dirs.h>
+#include "libeventd-event.h"
+#include "libeventd-helpers-config.h"
+#include "libeventd-helpers-dirs.h"
 #include <eventdctl.h>
 
 #include "types.h"

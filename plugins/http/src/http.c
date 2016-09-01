@@ -26,9 +26,9 @@
 #include <glib-object.h>
 #include <libsoup/soup.h>
 
-#include <libeventd-event.h>
-#include <eventd-plugin.h>
-#include <libeventd-helpers-config.h>
+#include "libeventd-event.h"
+#include "eventd-plugin.h"
+#include "libeventd-helpers-config.h"
 
 #include "websocket.h"
 

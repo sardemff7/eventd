@@ -27,9 +27,9 @@
 #include <glib.h>
 #include <glib-object.h>
 
-#include <libeventd-event.h>
-#include <libeventd-event-private.h>
-#include <libeventd-protocol.h>
+#include "libeventd-event.h"
+#include "libeventd-event-private.h"
+#include "libeventd-protocol.h"
 
 #include "protocol-evp-private.h"
 

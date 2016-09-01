@@ -24,7 +24,7 @@
 #include <glib.h>
 #include <glib-object.h>
 #include <gio/gio.h>
-#include <libeventd-event.h>
+#include "libeventd-event.h"
 
 G_BEGIN_DECLS
 

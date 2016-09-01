@@ -28,9 +28,9 @@
 #include <gio/gio.h>
 
 
-#include <libeventd-helpers-dirs.h>
+#include "libeventd-helpers-dirs.h"
 
-#include <eventd-ws-module.h>
+#include "eventd-ws-module.h"
 
 static EventdWsModule *
 _eventd_ws_module_load_dir(gchar *modules_dir_name)

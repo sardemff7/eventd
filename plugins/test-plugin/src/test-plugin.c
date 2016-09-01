@@ -25,9 +25,9 @@
 #include <glib.h>
 #include <glib-object.h>
 
-#include <eventd-plugin.h>
-#include <libeventd-event.h>
-#include <libeventd-event-private.h>
+#include "eventd-plugin.h"
+#include "libeventd-event.h"
+#include "libeventd-event-private.h"
 
 static struct _EventdPluginContext {
     EventdPluginCoreContext *core;

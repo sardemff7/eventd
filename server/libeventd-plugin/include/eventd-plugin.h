@@ -21,7 +21,7 @@
 #ifndef __EVENTD_EVENTD_PLUGIN_H__
 #define __EVENTD_EVENTD_PLUGIN_H__
 
-#include <libeventd-event.h>
+#include "libeventd-event.h"
 #include <gio/gio.h>
 
 G_BEGIN_DECLS

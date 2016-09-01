@@ -22,7 +22,7 @@
 #define __EVENTC_LIGHT_CONNECTION_H__
 
 #include <glib.h>
-#include <libeventd-event.h>
+#include "libeventd-event.h"
 
 G_BEGIN_DECLS
 

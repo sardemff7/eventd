@@ -32,9 +32,9 @@
 #include <nkutils-xdg-theme.h>
 #include <sndfile.h>
 
-#include <eventd-plugin.h>
-#include <libeventd-event.h>
-#include <libeventd-helpers-config.h>
+#include "eventd-plugin.h"
+#include "libeventd-event.h"
+#include "libeventd-helpers-config.h"
 
 #include "pulseaudio.h"
 

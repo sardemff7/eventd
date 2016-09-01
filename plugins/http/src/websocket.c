@@ -30,10 +30,10 @@
 #include <glib-object.h>
 #include <libsoup/soup.h>
 
-#include <libeventd-event.h>
-#include <libeventd-protocol.h>
-#include <eventd-plugin.h>
-#include <libeventd-helpers-config.h>
+#include "libeventd-event.h"
+#include "libeventd-protocol.h"
+#include "eventd-plugin.h"
+#include "libeventd-helpers-config.h"
 
 #include "http.h"
 #include "websocket.h"

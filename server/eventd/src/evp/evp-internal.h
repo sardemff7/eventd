@@ -25,7 +25,7 @@
 
 #include "../types.h"
 #include "evp.h"
-#include <eventd-ws-module.h>
+#include "eventd-ws-module.h"
 
 struct _EventdEvpContext {
     EventdCoreContext *core;

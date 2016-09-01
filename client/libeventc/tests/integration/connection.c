@@ -21,7 +21,7 @@
  */
 
 #include <glib.h>
-#include <libeventd-test.h>
+#include "libeventd-test.h"
 
 int
 main(int argc, char *argv[])
