@@ -20,7 +20,7 @@
  *
  */
 
-#include <config.h>
+#include "config.h"
 
 #ifdef HAVE_LOCALE_H
 #include <locale.h>
@@ -52,7 +52,7 @@ void FreeConsole(void);
 #include "types.h"
 
 #include "plugins.h"
-#include "config.h"
+#include "config_.h"
 #include "actions.h"
 #include "control.h"
 #include "sockets.h"

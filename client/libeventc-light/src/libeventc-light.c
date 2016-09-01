@@ -18,7 +18,7 @@
  *
  */
 
-#include <config.h>
+#include "config.h"
 
 #ifdef HAVE_STRING_H
 #include <string.h>

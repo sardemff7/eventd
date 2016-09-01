@@ -43,7 +43,7 @@ endif
 
 eventd_SOURCES = \
 	%D%/src/types.h \
-	%D%/src/config.h \
+	%D%/src/config_.h \
 	%D%/src/config.c \
 	%D%/src/events.h \
 	%D%/src/events.c \

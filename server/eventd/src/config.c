@@ -20,7 +20,7 @@
  *
  */
 
-#include <config.h>
+#include "config.h"
 
 #include <glib.h>
 #include <glib-object.h>
@@ -37,7 +37,7 @@
 #include "actions.h"
 #include "events.h"
 
-#include "config.h"
+#include "config_.h"
 
 struct _EventdConfig {
     gboolean loaded;

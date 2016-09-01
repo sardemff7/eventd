@@ -20,7 +20,7 @@
  *
  */
 
-#include <config.h>
+#include "config.h"
 
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
