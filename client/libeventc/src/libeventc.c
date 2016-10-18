@@ -56,7 +56,6 @@ struct _EventcConnectionPrivate {
     gboolean subscribe;
     GHashTable *subscriptions;
     GError *error;
-    gchar *tls_certificate_errors;
     EventdProtocol* protocol;
     GCancellable *cancellable;
     GSocketConnection *connection;
@@ -321,7 +320,6 @@ _eventc_connection_finalize(GObject *object)
 {
     EventcConnection *self = EVENTC_CONNECTION(object);
 
-    g_free(self->priv->tls_certificate_errors);
     if ( self->priv->error != NULL )
         g_error_free(self->priv->error);
 
@@ -454,14 +452,14 @@ _eventc_connection_expect_disconnected(EventcConnection *self, GError **error)
     return TRUE;
 }
 
-static void
-_eventc_connection_tls_add_certificate_error(GString *tls_certificate_errors, GTlsCertificateFlags errors, GTlsCertificateFlags flag)
+static gsize
+_eventc_connection_tls_add_certificate_error(gchar *s, gsize o, GTlsCertificateFlags errors, GTlsCertificateFlags flag, gboolean *first)
 {
     if ( ! ( errors & flag ) )
-        return;
+        return o;
 
-    const gchar *sep = ( tls_certificate_errors->len == 0 ) ? ": " : ", ";
     const gchar *error = NULL;
+    const gchar *sep = "";
     switch ( flag )
     {
     case G_TLS_CERTIFICATE_UNKNOWN_CA:
@@ -483,29 +481,41 @@ _eventc_connection_tls_add_certificate_error(GString *tls_certificate_errors, GT
         error = "insecure";
     break;
     case G_TLS_CERTIFICATE_GENERIC_ERROR:
-    break;
+        return o;
     case G_TLS_CERTIFICATE_VALIDATE_ALL:
-        g_return_if_reached();
+        g_return_val_if_reached(o);
     }
-    if ( error != NULL )
-        g_string_append(g_string_append(tls_certificate_errors, sep), error);
+
+    sep = *first ? ": " : ", ";
+    *first = FALSE;
+    o += g_snprintf(s+o, 255-o, "%s%s", sep, error);
+
+    return o;
 }
 
 static gboolean
 _eventc_connection_tls_connection_accept_certificate(EventcConnection *self, GTlsCertificate *peer_cert, GTlsCertificateFlags errors, GTlsConnection *conn)
 {
-    GString *tls_certificate_errors;
-    tls_certificate_errors = g_string_new("");
+    gboolean first = TRUE;
+    gsize o = 0;
+    gchar s[255] = { '\0' };
+    GSocketConnectable *address;
+    gchar *address_string;
 
-    _eventc_connection_tls_add_certificate_error(tls_certificate_errors, errors, G_TLS_CERTIFICATE_UNKNOWN_CA);
-    _eventc_connection_tls_add_certificate_error(tls_certificate_errors, errors, G_TLS_CERTIFICATE_BAD_IDENTITY);
-    _eventc_connection_tls_add_certificate_error(tls_certificate_errors, errors, G_TLS_CERTIFICATE_NOT_ACTIVATED);
-    _eventc_connection_tls_add_certificate_error(tls_certificate_errors, errors, G_TLS_CERTIFICATE_EXPIRED);
-    _eventc_connection_tls_add_certificate_error(tls_certificate_errors, errors, G_TLS_CERTIFICATE_REVOKED);
-    _eventc_connection_tls_add_certificate_error(tls_certificate_errors, errors, G_TLS_CERTIFICATE_INSECURE);
-    _eventc_connection_tls_add_certificate_error(tls_certificate_errors, errors, G_TLS_CERTIFICATE_GENERIC_ERROR);
+    o = _eventc_connection_tls_add_certificate_error(s, o, errors, G_TLS_CERTIFICATE_UNKNOWN_CA, &first);
+    o = _eventc_connection_tls_add_certificate_error(s, o, errors, G_TLS_CERTIFICATE_BAD_IDENTITY, &first);
+    o = _eventc_connection_tls_add_certificate_error(s, o, errors, G_TLS_CERTIFICATE_NOT_ACTIVATED, &first);
+    o = _eventc_connection_tls_add_certificate_error(s, o, errors, G_TLS_CERTIFICATE_EXPIRED, &first);
+    o = _eventc_connection_tls_add_certificate_error(s, o, errors, G_TLS_CERTIFICATE_REVOKED, &first);
+    o = _eventc_connection_tls_add_certificate_error(s, o, errors, G_TLS_CERTIFICATE_INSECURE, &first);
+    o = _eventc_connection_tls_add_certificate_error(s, o, errors, G_TLS_CERTIFICATE_GENERIC_ERROR, &first);
 
-    self->priv->tls_certificate_errors = g_string_free(tls_certificate_errors, FALSE);
+    address = g_tls_client_connection_get_server_identity(G_TLS_CLIENT_CONNECTION(conn));
+
+    address_string = g_socket_connectable_to_string(address);
+    g_set_error(&self->priv->error, EVENTC_ERROR, EVENTC_ERROR_CONNECTION, "Failed to connect: [%s] TLS certificate error%s", address_string, s);
+    g_free(address_string);
+
     return FALSE;
 }
 
@@ -584,32 +594,13 @@ _eventc_connection_connect_check(EventcConnection *self, GError *_inner_error_, 
         return TRUE;
     }
 
-    if ( _inner_error_->code == G_IO_ERROR_CANCELLED )
+    if ( ( _inner_error_->code == G_IO_ERROR_CANCELLED ) || ( self->priv->error != NULL ) )
     {
         g_propagate_error(error, self->priv->error);
         self->priv->error = NULL;
     }
     else
-    {
-        const gchar *extra = "";
-        if ( _inner_error_->domain == G_TLS_ERROR )
-        {
-            switch ( _inner_error_->code )
-            {
-            case G_TLS_ERROR_BAD_CERTIFICATE:
-                extra = self->priv->tls_certificate_errors;
-            break;
-            default:
-                g_assert_null(self->priv->tls_certificate_errors);
-            break;
-            }
-        }
-        else
-            g_assert_null(self->priv->tls_certificate_errors);
-        g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_CONNECTION, "Failed to connect: %s%s", _inner_error_->message, extra);
-        g_free(self->priv->tls_certificate_errors);
-        self->priv->tls_certificate_errors = NULL;
-    }
+        g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_CONNECTION, "Failed to connect: %s", _inner_error_->message);
     g_error_free(_inner_error_);
     return FALSE;
 }
