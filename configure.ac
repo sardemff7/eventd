@@ -197,6 +197,11 @@ fi
 #
 
 # Server
+AC_ARG_ENABLE([ipv6], AS_HELP_STRING([--disable-ipv6], [Disable IPv6 support]), [], [enable_ipv6=yes])
+if test x${enable_ipv6} = xno; then
+    AC_DEFINE([DISABLE_IPV6], [1], [Disable IPv6 support])
+fi
+
 PKG_CHECK_MODULES([GMODULE], [gmodule-2.0 >= ${gmodule_min_version}])
 
 AC_ARG_ENABLE([systemd], AS_HELP_STRING([--enable-systemd], [Enable systemd activation support]), [], [enable_systemd=no])
@@ -390,6 +395,7 @@ AC_OUTPUT
 
 AC_MSG_RESULT([
     Core features:
+        IPv6 support: ${enable_ipv6}
         DNS-SD support: ${enable_dns_sd}
         SSDP support: ${enable_ssdp}
         systemd support: ${enable_systemd}

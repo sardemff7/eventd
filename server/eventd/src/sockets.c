@@ -44,6 +44,10 @@
 
 #include "sockets.h"
 
+#ifdef DISABLE_IPV6
+#define G_SOCKET_FAMILY_IPV6 G_SOCKET_FAMILY_IPV4
+#endif /* DISABLE_IPV6 */
+
 struct _EventdSockets {
     const gchar *runtime_dir;
     gboolean take_over_socket;
