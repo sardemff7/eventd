@@ -122,6 +122,7 @@ main(int argc, char *argv[])
     gchar **file_strv = NULL;
     EventcData *data = NULL;
     gboolean subscribe = FALSE;
+    gboolean system_mode = FALSE;
 
     gboolean insecure = FALSE;
     gboolean print_version = FALSE;
@@ -141,6 +142,9 @@ main(int argc, char *argv[])
         { "max-tries", 'm', 0, G_OPTION_ARG_INT,          &max_tries,      "Maximum connection attempts (0 for infinite)",             "<times>" },
         { "subscribe", 's', 0, G_OPTION_ARG_NONE,         &subscribe,      "Subscribe mode",                                           NULL },
         { "websocket", 'w', 0, G_OPTION_ARG_NONE,         &use_websocket,  "Use WebSocket",                                            NULL },
+#ifdef G_OS_UNIX
+        { "system",    'S', 0, G_OPTION_ARG_NONE,         &system_mode,    "Talk to system eventd",                                    NULL },
+#endif /* G_OS_UNIX */
         { "insecure",  0,   0, G_OPTION_ARG_NONE,         &insecure,       "Accept insecure certificates (unknown CA)",                NULL },
         { "version",   'V', 0, G_OPTION_ARG_NONE,         &print_version,  "Print version",                                            NULL },
         { .long_name = NULL }
@@ -299,6 +303,9 @@ main(int argc, char *argv[])
 
 post_args:
     r = 2; /* Arguments are fine, checking host */
+
+    if ( system_mode )
+        g_setenv("XDG_RUNTIME_DIR", "/run", TRUE);
 
     client = eventc_connection_new(host, &error);
     if ( client == NULL )
