@@ -8,45 +8,43 @@ compiler:
 
 addons:
     apt:
-        sources:
-            - debian-sid
         packages:
             - autoconf
             - automake
             - make
             - xsltproc
             - docbook-xsl
-            - docbook-xml
-            - uuid-dev
+            #- docbook-xml
+            #- uuid-dev
             - libglib2.0-dev
-            - libsoup2.4-dev
+            #- libsoup2.4-dev
             - libcairo2-dev
             - libpango1.0-dev
             - libgdk-pixbuf2.0-dev
             - libxcb1-dev
-            - libxcb-util0-dev
-            - libxcb-randr0-dev
-            - libxcb-shape0-dev
-              # Currently not working in Sid
+            #- libxcb-util0-dev
+            #- libxcb-randr0-dev
+            #- libxcb-shape0-dev
+            #- libxcb-ewmh-dev
             #- libpurple-dev
-            - libpulse-dev
-            - libsndfile1-dev
+            #- libpulse-dev
+            #- libsndfile1-dev
             - libcanberra-dev
             # For libnkutils tests
-            - gnome-icon-theme-extras
-            - gnome-icon-theme-symbolic
+            #- gnome-icon-theme-extras
+            #- gnome-icon-theme-symbolic
             - sound-theme-freedesktop
-            - pidgin-data
+            #- pidgin-data
 install:
-    # Could be worked around with: libgnomevfs2-dev libdbus-glib-1-dev <nothing> <nothing> <nothing>
-    - sudo apt-get install -y libavahi-glib-dev libdbus-1-dev libxcb-ewmh-dev libgssdp-1.0-dev libspeechd-dev
+    - sudo apt-get install -y docbook-xml uuid-dev libavahi-glib-dev libdbus-1-dev libsoup2.4-dev libgssdp-1.0-dev libxcb-util0-dev libxcb-randr0-dev libxcb-ewmh-dev libpurple-dev libpulse-dev libsndfile1-dev libspeechd-dev libcanberra-dev gnome-icon-theme-extras gnome-icon-theme-symbolic pidgin-data
 
 before_script:
     - autoreconf -fiv
-    - ./configure --disable-silent-rules --disable-ipv6 --disable-nd-wayland --enable-nd-fbdev --enable-tts --enable-canberra --disable-im
+    - ./configure --disable-silent-rules --disable-ipv6 --disable-nd-wayland --enable-nd-fbdev --enable-tts --enable-canberra --enable-im
 script:
     - make -j2
-    # For now we cannot run tests as Travis Trusty env lacks IPv6 support
+    - make -j2 check
+    - make -j2 distcheck DISTCHECK_CONFIGURE_FLAGS="--disable-ipv6 --disable-nd-wayland --enable-nd-fbdev --enable-tts --enable-canberra --enable-im"
 after_failure:
     - cat test-suite.log
     - cat eventd-*/test-suite.log
