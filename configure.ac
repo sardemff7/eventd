@@ -238,7 +238,7 @@ if test x${ev_os_unix} = xyes; then
 fi
 
 # notification-daemon plugin
-cairo_min_version="1.14"
+cairo_min_version="1.12"
 AC_ARG_ENABLE([notification-daemon], AS_HELP_STRING([--disable-notification-daemon], [Disable notification-daemon plugin]), [], [enable_notification_daemon=yes])
 if test x${enable_notification_daemon} = xyes; then
     EV_CHECK_LIB([MATH], [math.h], [m], [sqrt], [], [AC_MSG_ERROR([*** notification daemon plugin requested but math library is missing])])

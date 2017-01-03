@@ -161,11 +161,13 @@ _eventd_nd_wl_notification_area_geometry(void *data, struct zww_notification_are
 {
     EventdNdBackendContext *self = data;
 
+#if CAIRO_VERSION >= CAIRO_VERSION_ENCODE(1, 14, 0)
     if ( self->scale_support )
     {
         self->need_redraw = ( self->scale != scale );
         self->scale = scale;
     }
+#endif /* CAIRO_VERION >= 1.14.0 */
 
     self->nd->geometry_update(self->nd->context, width, height);
 }
@@ -386,7 +388,10 @@ _eventd_nd_wl_registry_handle_global(void *data, struct wl_registry *registry, u
     {
         self->global_names[EVENTD_ND_WL_GLOBAL_COMPOSITOR] = name;
         self->compositor = wl_registry_bind(registry, name, &wl_compositor_interface, MIN(version, WL_COMPOSITOR_INTERFACE_VERSION));
+#if CAIRO_VERSION >= CAIRO_VERSION_ENCODE(1, 14, 0)
+        if ( cairo_version() >= CAIRO_VERSION_ENCODE(1, 14, 0) )
             self->scale_support = ( wl_compositor_get_version(self->compositor) >= WL_SURFACE_SET_BUFFER_SCALE_SINCE_VERSION );
+#endif /* CAIRO_VERION >= 1.14.0 */
     }
     else if ( g_strcmp0(interface, "zww_notification_area_v1") == 0 )
     {
@@ -619,8 +624,10 @@ _eventd_nd_wl_create_buffer(EventdNdSurface *self)
 
     cairo_surface_t *cairo_surface;
     cairo_surface = cairo_image_surface_create_for_data(data, CAIRO_FORMAT_ARGB32, width, height, 4 * width);
+#if CAIRO_VERSION >= CAIRO_VERSION_ENCODE(1, 14, 0)
     if ( self->context->scale_support )
         cairo_surface_set_device_scale(cairo_surface, self->context->scale, self->context->scale);
+#endif /* CAIRO_VERION >= 1.14.0 */
     self->context->nd->notification_draw(self->notification, cairo_surface, TRUE);
     cairo_surface_destroy(cairo_surface);
 
@@ -643,8 +650,10 @@ _eventd_nd_wl_create_buffer(EventdNdSurface *self)
 
     wl_surface_damage(self->surface, 0, 0, self->width, self->height);
     wl_surface_attach(self->surface, self->buffer->buffer, 0, 0);
+#if CAIRO_VERSION >= CAIRO_VERSION_ENCODE(1, 14, 0)
     if ( self->context->scale_support )
         wl_surface_set_buffer_scale(self->surface, self->context->scale);
+#endif /* CAIRO_VERION >= 1.14.0 */
     wl_surface_commit(self->surface);
 
     return TRUE;
