@@ -287,10 +287,6 @@ main(int argc, char *argv[])
     gboolean system_mode = FALSE;
     gboolean print_version = FALSE;
 
-#ifdef G_OS_UNIX
-    system_mode = ( g_getenv("XDG_RUNTIME_DIR") == NULL );
-#endif /* G_OS_UNIX */
-
     GOptionEntry entries[] =
     {
         { "socket",     's', 0, G_OPTION_ARG_FILENAME, &private_socket, "eventd control socket",  "<socket>" },
