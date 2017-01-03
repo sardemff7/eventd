@@ -1,7 +1,7 @@
 /*
  * eventd - Small daemon to act on remote or local events
  *
- * Copyright © 2011-2016 Quentin "Sardem FF7" Glidic
+ * Copyright © 2011-2017 Quentin "Sardem FF7" Glidic
  *
  * This file is part of eventd.
  *
@@ -176,7 +176,7 @@ eventd_nd_draw_text_process(EventdNdStyle *style, EventdEvent *event, gint max_w
  * _eventd_nd_draw_get_icon_surface and alpha_mult
  * are inspired by gdk_cairo_set_source_pixbuf
  * GDK is:
- *     Copyright (C) 2011-2016 Red Hat, Inc.
+ *     Copyright (C) 2011-2017 Red Hat, Inc.
  */
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 #define RED_BYTE 2
