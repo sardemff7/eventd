@@ -106,15 +106,7 @@ _eventc_get_address(const gchar *host_and_port, GError **error)
     gchar *path = NULL;
 
     if ( g_strcmp0(host_and_port, "localhost") == 0 )
-    {
-        const gchar *runtime_dir = g_get_user_runtime_dir();
-#ifdef G_OS_UNIX
-        /* System mode */
-        if ( g_getenv("XDG_RUNTIME_DIR") == NULL )
-            runtime_dir = "/run";
-#endif /* G_OS_UNIX */
-        host_and_port = path = g_build_filename(runtime_dir, PACKAGE_NAME, EVP_UNIX_SOCKET, NULL);
-    }
+        host_and_port = path = g_build_filename(g_get_user_runtime_dir(), PACKAGE_NAME, EVP_UNIX_SOCKET, NULL);
 
     if ( g_utf8_strchr(host_and_port, -1, G_DIR_SEPARATOR) != NULL )
     {
