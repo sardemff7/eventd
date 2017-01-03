@@ -386,7 +386,7 @@ main(int argc, char *argv[])
     }
 
     runtime_dir = g_build_filename(g_get_user_runtime_dir(), PACKAGE_NAME, NULL);
-    if ( ( ! g_file_test(runtime_dir, G_FILE_TEST_IS_DIR) ) && ( g_mkdir_with_parents(runtime_dir, 0755) < 0 ) )
+    if ( ( ! g_file_test(runtime_dir, G_FILE_TEST_IS_DIR) ) && ( g_mkdir_with_parents(runtime_dir, context->system_mode ? 0750 : 0700) < 0 ) )
     {
         g_warning("Couldn't create the run dir '%s': %s", runtime_dir, g_strerror(errno));
         retval = EVENTD_RETURN_CODE_NO_RUNTIME_DIR_ERROR;
