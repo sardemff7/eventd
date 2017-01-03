@@ -326,23 +326,20 @@ main(int argc, char *argv[])
     context->interface.get_sockets = eventd_core_get_sockets;
     context->interface.push_event = eventd_core_push_event;
 
-#ifdef G_OS_UNIX
-    context->system_mode = ( g_getenv("XDG_RUNTIME_DIR") == NULL );
-    if ( context->system_mode )
-        g_setenv("XDG_RUNTIME_DIR", "/run", TRUE);
-#endif /* G_OS_UNIX */
-
     GOptionEntry entries[] =
     {
-        { "private-socket",       'i', 0,                     G_OPTION_ARG_FILENAME,     &control_socket,    "Socket to listen for internal control", "<socket>" },
-        { "listen",               'l', 0,                     G_OPTION_ARG_STRING_ARRAY, &binds,             "Add a socket to listen to",             "<socket>" },
-        { "take-over",            't', GIO_UNIX_OPTION_FLAG,  G_OPTION_ARG_NONE,         &take_over_socket,  "Take over socket",                      NULL },
-        { "no-relay",             0,   G_OPTION_FLAG_REVERSE, G_OPTION_ARG_NONE,         &enable_relay,      "Disable the relay feature",             NULL },
-        { "no-service-discovery", 0,   G_OPTION_FLAG_REVERSE, G_OPTION_ARG_NONE,         &enable_sd_modules, "Disable the service discovery feature", NULL },
-        { "config-dir",           'c', 0,                     G_OPTION_ARG_FILENAME,     &config_dir,        "Additionnal configuration directory",   "<directory>" },
-        { "daemonize",            0,   G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,         &daemonize,         NULL,                                    NULL },
-        { "paths",                'P', 0,                     G_OPTION_ARG_NONE,         &print_paths,       "Print search paths",                    NULL },
-        { "version",              'V', 0,                     G_OPTION_ARG_NONE,         &print_version,     "Print version",                         NULL },
+        { "private-socket",       'i', 0,                     G_OPTION_ARG_FILENAME,     &control_socket,       "Socket to listen for internal control", "<socket>" },
+        { "listen",               'l', 0,                     G_OPTION_ARG_STRING_ARRAY, &binds,                "Add a socket to listen to",             "<socket>" },
+        { "take-over",            't', GIO_UNIX_OPTION_FLAG,  G_OPTION_ARG_NONE,         &take_over_socket,     "Take over socket",                      NULL },
+        { "no-relay",             0,   G_OPTION_FLAG_REVERSE, G_OPTION_ARG_NONE,         &enable_relay,         "Disable the relay feature",             NULL },
+        { "no-service-discovery", 0,   G_OPTION_FLAG_REVERSE, G_OPTION_ARG_NONE,         &enable_sd_modules,    "Disable the service discovery feature", NULL },
+        { "config-dir",           'c', 0,                     G_OPTION_ARG_FILENAME,     &config_dir,           "Additionnal configuration directory",   "<directory>" },
+#ifdef G_OS_UNIX
+        { "system",               0,   0,                     G_OPTION_ARG_NONE,         &context->system_mode, NULL,                                    NULL },
+#endif /* G_OS_UNIX */
+        { "daemonize",            0,   G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,         &daemonize,            NULL,                                    NULL },
+        { "paths",                'P', 0,                     G_OPTION_ARG_NONE,         &print_paths,          "Print search paths",                    NULL },
+        { "version",              'V', 0,                     G_OPTION_ARG_NONE,         &print_version,        "Print version",                         NULL },
         { .long_name = NULL }
     };
 
@@ -385,6 +382,8 @@ main(int argc, char *argv[])
         goto end;
     }
 
+    if ( context->system_mode )
+        g_setenv("XDG_RUNTIME_DIR", "/run", TRUE);
     runtime_dir = g_build_filename(g_get_user_runtime_dir(), PACKAGE_NAME, NULL);
     if ( ( ! g_file_test(runtime_dir, G_FILE_TEST_IS_DIR) ) && ( g_mkdir_with_parents(runtime_dir, context->system_mode ? 0750 : 0700) < 0 ) )
     {
