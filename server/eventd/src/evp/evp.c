@@ -171,15 +171,7 @@ _eventd_evp_cert_key_file_changed(EventdEvpContext *self, GFile *file, GFile *ot
         g_debug("Reload certificate file");
         _eventd_evp_load_certificate(self, self->cert_file, self->key_file);
     break;
-    case G_FILE_MONITOR_EVENT_DELETED:
-    case G_FILE_MONITOR_EVENT_CREATED:
-    case G_FILE_MONITOR_EVENT_ATTRIBUTE_CHANGED:
-    case G_FILE_MONITOR_EVENT_PRE_UNMOUNT:
-    case G_FILE_MONITOR_EVENT_UNMOUNTED:
-    case G_FILE_MONITOR_EVENT_MOVED:
-    case G_FILE_MONITOR_EVENT_RENAMED:
-    case G_FILE_MONITOR_EVENT_MOVED_IN:
-    case G_FILE_MONITOR_EVENT_MOVED_OUT:
+    default:
     break;
     }
 }
