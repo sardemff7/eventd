@@ -40,6 +40,7 @@ vapi_DATA += \
 
 
 libeventc_la_SOURCES = \
+	src/gio-compat.h \
 	%D%/src/libeventc.c \
 	server/modules/src/ws-load.c \
 	$(null)

@@ -28,6 +28,7 @@
 #else /* ! G_OS_UNIX */
 #define G_IS_UNIX_SOCKET_ADDRESS(a) (FALSE)
 #endif /* ! G_OS_UNIX */
+#include "gio-compat.h"
 
 #include "libeventd-event.h"
 #include "libeventd-protocol.h"
