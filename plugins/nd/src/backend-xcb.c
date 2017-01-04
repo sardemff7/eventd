@@ -654,8 +654,12 @@ _eventd_nd_xcb_surface_shape(EventdNdSurface *self)
     shape = cairo_xcb_surface_create_for_bitmap(context->xcb_connection, context->screen, shape_id, self->width, self->height);
     cr = cairo_create(shape);
 
+    cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+    cairo_set_source_rgba(cr, 0, 0, 0, 0);
+    cairo_paint(cr);
     cairo_set_source_rgba(cr, 1, 1, 1, 1);
     self->context->nd->notification_shape(self->notification, cr);
+    cairo_fill(cr);
 
     cairo_destroy(cr);
     cairo_surface_destroy(shape);
