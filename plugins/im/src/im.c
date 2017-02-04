@@ -84,6 +84,19 @@ _eventd_im_account_free(gpointer data)
 }
 
 static void
+_eventd_im_conv_reset(EventdImConv *conv)
+{
+
+    if ( conv->conv != NULL )
+        purple_conversation_destroy(conv->conv);
+    conv->conv = NULL;
+
+    if ( conv->leave_timeout > 0 )
+        g_source_remove(conv->leave_timeout);
+    conv->leave_timeout = 0;
+}
+
+static void
 _eventd_im_conv_free(gpointer data)
 {
     if ( data == NULL )
@@ -91,11 +104,7 @@ _eventd_im_conv_free(gpointer data)
 
     EventdImConv *conv = data;
 
-    if ( conv->conv != NULL )
-        purple_conversation_destroy(conv->conv);
-
-    if ( conv->leave_timeout > 0 )
-        g_source_remove(conv->leave_timeout);
+    _eventd_im_conv_reset(conv);
 
     g_list_free_full(conv->pending_messages, g_free);
 
@@ -137,6 +146,12 @@ _eventd_im_signed_off_callback(PurpleAccount *ac, EventdPluginContext *context)
     EventdImAccount *account = ac->ui_data;
     const PurpleConnectionErrorInfo *err;
 
+    GHashTableIter iter;
+    EventdImConv *conv;
+    g_hash_table_iter_init(&iter, account->convs);
+    while ( g_hash_table_iter_next(&iter, NULL, (gpointer *) &conv) )
+        _eventd_im_conv_reset(conv);
+
     err = purple_account_get_current_error(account->account);
     if ( err == NULL )
         evhelpers_reconnect_reset(account->reconnect);
@@ -159,9 +174,8 @@ _eventd_im_conv_timeout(gpointer user_data)
 {
     EventdImConv *conv = user_data;
 
-    purple_conversation_destroy(conv->conv);
-    conv->conv = NULL;
     conv->leave_timeout = 0;
+    _eventd_im_conv_reset(conv);
     return FALSE;
 }
 
