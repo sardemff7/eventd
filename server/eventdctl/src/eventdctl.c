@@ -319,7 +319,7 @@ main(int argc, char *argv[])
 
     if ( print_version )
     {
-        fprintf(stdout, "eventdctl " PACKAGE_VERSION "\n");
+        g_printf(PACKAGE_NAME " " EVENTD_VERSION "\n");
         return EVENTDCTL_RETURN_CODE_OK;
     }
 
