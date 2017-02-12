@@ -18,8 +18,10 @@ libeventd_test_la_SOURCES = \
 
 libeventd_test_la_CFLAGS = \
 	$(AM_CFLAGS) \
-	-D SRC_DIR=\"$(srcdir)\" \
-	-D EXEEXT=\"$(EXEEXT)\" \
+	-D SRC_DIR='pwd, "$(srcdir)"' \
+	-D EVENTD_PATH='g_build_filename(pwd, "eventd$(EXEEXT)", NULL)' \
+	-D EVENTDCTL_PATH='g_build_filename(pwd, "eventdctl$(EXEEXT)", NULL)' \
+	-D TEST_PLUGIN_PATH='g_build_filename(pwd, "$(LT_OBJDIR)", "test-plugin", NULL)' \
 	$(GIO_CFLAGS) \
 	$(GOBJECT_CFLAGS) \
 	$(GLIB_CFLAGS) \
