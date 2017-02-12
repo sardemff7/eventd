@@ -38,7 +38,7 @@
 #include <libsoup/soup.h>
 
 #include "libeventd-protocol.h"
-#include <libeventc.h>
+#include "libeventc.h"
 
 #include "eventd-ws-module.h"
 

@@ -59,7 +59,7 @@
 #include "libeventd-event.h"
 #include "libeventd-protocol.h"
 
-#include <libeventc-light.h>
+#include "libeventc-light.h"
 
 struct _EventcLightConnection {
     guint64 refcount;

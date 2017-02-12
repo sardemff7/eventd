@@ -24,7 +24,7 @@
 
 #include <glib.h>
 
-#include <libeventc.h>
+#include "libeventc.h"
 #include "libeventd-test.h"
 
 int

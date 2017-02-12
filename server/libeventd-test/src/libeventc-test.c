@@ -32,7 +32,7 @@
 #include <gio/gio.h>
 
 #include "libeventd-event.h"
-#include <libeventc.h>
+#include "libeventc.h"
 
 #define MAX_CONNECTION 3
 

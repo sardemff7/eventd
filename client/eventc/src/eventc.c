@@ -38,7 +38,7 @@
 
 #include "libeventd-event.h"
 
-#include <libeventc.h>
+#include "libeventc.h"
 
 typedef struct {
     gchar *name;

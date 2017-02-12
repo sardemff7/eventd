@@ -31,7 +31,7 @@
 #include <gio/gio.h>
 
 #include "libeventd-event.h"
-#include <libeventc.h>
+#include "libeventc.h"
 
 #include "libeventd-helpers-reconnect.h"
 
