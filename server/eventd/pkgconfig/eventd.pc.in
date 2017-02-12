@@ -2,9 +2,7 @@ prefix=@prefix@
 datarootdir=@datarootdir@
 datadir=@datadir@
 
-pkgdatadir=@pkgdatadir@
-
-eventdir=@eventdir@
+eventdir=@datadir@/eventd
 
 ssdp_ns_uuid=@EVP_SSDP_NS_UUID@
 ssdp_urn=@EVP_SSDP_URN@
