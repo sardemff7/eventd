@@ -64,6 +64,7 @@ AM_CPPFLAGS += \
 	-I $(srcdir)/src/ \
 	-I $(builddir)/src/ \
 	-D EVENTD_VERSION='"$(EVENTD_VERSION)"' \
+	-D MODULES_VERSION='"$(VERSION)"' \
 	-D G_LOG_DOMAIN=\"$(word 2,$(subst /,$(space),$(patsubst $(srcdir)/%,%,$<)\))\" \
 	-D EVENTD_SYSCONFDIR=\"$(sysconfdir)\" \
 	-D EVENTD_LIBDIR=\"$(libdir)\" \

@@ -95,7 +95,7 @@ void
 eventd_sd_modules_load(const EventdSdModuleControlInterface *control, GList *sockets)
 {
     gchar **dirs, **dir;
-    dirs = evhelpers_dirs_get_lib("EVENTD_MODULES_DIR", "modules" G_DIR_SEPARATOR_S PACKAGE_VERSION);
+    dirs = evhelpers_dirs_get_lib("EVENTD_MODULES_DIR", "modules" G_DIR_SEPARATOR_S MODULES_VERSION);
     for ( dir = dirs ; *dir != NULL ; ++dir )
         _eventd_sd_modules_load_dir(control, sockets, *dir);
     g_free(dirs);

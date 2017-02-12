@@ -99,7 +99,7 @@ eventd_nd_backends_load(EventdNdBackend *backends, EventdNdInterface *context)
     gboolean ret = FALSE;
 
     gchar **dirs, **dir;
-    dirs = evhelpers_dirs_get_lib("EVENTD_NOTIFICATION_BACKENDS_DIR", "modules" G_DIR_SEPARATOR_S PACKAGE_VERSION G_DIR_SEPARATOR_S "nd");
+    dirs = evhelpers_dirs_get_lib("EVENTD_NOTIFICATION_BACKENDS_DIR", "modules" G_DIR_SEPARATOR_S MODULES_VERSION G_DIR_SEPARATOR_S "nd");
     for ( dir = dirs ; *dir != NULL ; ++dir )
         ret = _eventd_nd_backends_load_dir(backends, context, *dir) || ret;
     g_free(dirs);
