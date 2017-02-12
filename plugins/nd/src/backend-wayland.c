@@ -36,7 +36,7 @@
 
 #include <wayland-client.h>
 #include <wayland-cursor.h>
-#include "unstable/notification-area/notification-area-unstable-v1-client-protocol.h"
+#include "notification-area-unstable-v1-client-protocol.h"
 #include <libgwater-wayland.h>
 
 #include "libeventd-event.h"

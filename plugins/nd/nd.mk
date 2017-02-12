@@ -103,7 +103,7 @@ nodist_wayland_la_SOURCES = \
 	$(null)
 
 wayland_la_CFLAGS = \
-	-I $(builddir)/%D%/src \
+	-I $(builddir)/%D%/src/unstable/notification-area \
 	$(ND_BACKENDS_CFLAGS) \
 	$(GW_WAYLAND_CFLAGS) \
 	$(null)
