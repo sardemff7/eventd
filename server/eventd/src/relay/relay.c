@@ -22,9 +22,7 @@
 
 #include "config.h"
 
-#ifdef HAVE_STRING_H
 #include <string.h>
-#endif /* HAVE_STRING_H */
 
 #include <glib.h>
 #include <glib/gprintf.h>

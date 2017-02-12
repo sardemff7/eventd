@@ -25,9 +25,7 @@
 
 #include "config.h"
 
-#ifdef HAVE_LOCALE_H
 #include <locale.h>
-#endif /* HAVE_LOCALE_H */
 
 #include <glib.h>
 #ifdef ENABLE_NLS

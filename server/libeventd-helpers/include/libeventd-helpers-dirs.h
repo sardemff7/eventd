@@ -23,9 +23,7 @@
 #ifndef __LIBEVENTD_HELPERS_DIRS_H__
 #define __LIBEVENTD_HELPERS_DIRS_H__
 
-#ifdef HAVE_STRING_H
 #include <string.h>
-#endif /* HAVE_STRING_H */
 
 #include <glib.h>
 

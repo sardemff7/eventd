@@ -20,41 +20,27 @@
 
 #include "config.h"
 
-#ifdef HAVE_STRING_H
 #include <string.h>
-#endif /* HAVE_STRING_H */
-#ifdef HAVE_ERRNO_H
 #include <errno.h>
-#endif /* HAVE_ERRNO_H */
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
-#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
-#endif /* HAVE_FCNTL_H */
-#ifdef HAVE_SYS_SOCKET_H
-#include <sys/socket.h>
-#endif /* HAVE_SYS_SOCKET_H */
-#ifdef HAVE_SYS_UN_H
-#include <sys/un.h>
-#endif /* HAVE_SYS_UN_H */
-#ifdef HAVE_NETINET_IN_H
-#include <netinet/in.h>
-#endif /* HAVE_NETINET_IN_H */
 
-#ifdef G_OS_WIN32
+#include <glib.h>
+
+#ifdef G_OS_UNIX
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <netinet/in.h>
+#else /* ! G_OS_UNIX */
 #ifndef UNICODE
 #define UNICODE 1
 #endif
-#include <windows.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include <windows.h>
 
-#define errno WSAGetLastError()
 #define close(s) closesocket(s)
-#endif /* G_OS_WIN32 */
-
-#include <glib.h>
+#endif /* ! G_OS_UNIX */
 
 #include "libeventd-event.h"
 #include "libeventd-protocol.h"

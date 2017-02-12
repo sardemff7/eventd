@@ -22,18 +22,10 @@
 
 #include "config.h"
 
-#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
-#endif /* HAVE_FCNTL_H */
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif /* HAVE_UNISTD_H */
-#ifdef HAVE_STRING_H
 #include <string.h>
-#endif /* HAVE_STRING_H */
-#ifdef HAVE_ERRNO_H
 #include <errno.h>
-#endif /* HAVE_ERRNO_H */
 
 #include <sys/ioctl.h>
 #include <linux/fb.h>

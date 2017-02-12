@@ -22,12 +22,8 @@
 
 #include "config.h"
 
-#ifdef HAVE_STRING_H
 #include <string.h>
-#endif /* HAVE_STRING_H */
-#ifdef HAVE_LOCALE_H
 #include <locale.h>
-#endif
 
 #include <glib.h>
 #ifdef ENABLE_NLS

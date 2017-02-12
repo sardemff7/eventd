@@ -22,12 +22,8 @@
 
 #include "config.h"
 
-#ifdef HAVE_STRING_H
 #include <string.h>
-#endif /* HAVE_STRING_H */
-#ifdef HAVE_MATH_H
 #include <math.h>
-#endif /* HAVE_MATH_H */
 
 #include <glib.h>
 
