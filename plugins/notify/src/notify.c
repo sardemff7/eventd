@@ -37,7 +37,7 @@
 #include "libeventd-helpers-config.h"
 
 /* We share nd plugin’s pixbuf loader */
-#include "plugins/nd/src/pixbuf.h"
+#include "../../nd/src/pixbuf.h"
 
 /*
  * D-Bus interface information
