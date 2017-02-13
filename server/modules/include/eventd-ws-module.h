@@ -53,48 +53,56 @@ void eventd_ws_uninit(EventdWsModule *ws);
 static inline EventdWsConnection *
 eventd_ws_connection_server_new(EventdWsModule *ws, gpointer client, GDestroyNotify disconnect_callback, GCancellable *cancellable, GIOStream *stream, GDataInputStream *input, EventdProtocol *protocol, const gchar *line)
 {
+    g_return_val_if_fail(ws != NULL, NULL);
     return ws->connection_server_new(client, disconnect_callback, cancellable, stream, input, protocol, line);
 }
 
 static inline EventdWsConnection *
 eventd_ws_connection_client_new(EventdWsModule *ws, gpointer client, GDestroyNotify disconnect_callback, GCancellable *cancellable, GIOStream *stream, EventdProtocol *protocol)
 {
+    g_return_val_if_fail(ws != NULL, NULL);
     return ws->connection_client_new(client, disconnect_callback, cancellable, stream, protocol);
 }
 
 static inline void
 eventd_ws_connection_client_connect(EventdWsModule *ws, EventdWsConnection *connection, GSocketConnectable *server_identity, GAsyncReadyCallback callback, gpointer user_data)
 {
+    g_return_if_fail(ws != NULL);
     ws->connection_client_connect(connection, server_identity, callback, user_data);
 }
 
 static inline gboolean
 eventd_ws_connection_client_connect_finish(EventdWsModule *ws, EventdWsConnection *connection, GAsyncResult *result, GError **error)
 {
+    g_return_val_if_fail(ws != NULL, FALSE);
     return ws->connection_client_connect_finish(connection, result, error);
 }
 
 static inline gboolean
 eventd_ws_connection_client_connect_sync(EventdWsModule *ws, EventdWsConnection *connection, GSocketConnectable *server_identity, GError **error)
 {
+    g_return_val_if_fail(ws != NULL, FALSE);
     return ws->connection_client_connect_sync(connection, server_identity, error);
 }
 
 static inline void
 eventd_ws_connection_free(EventdWsModule *ws, EventdWsConnection *connection)
 {
+    g_return_if_fail(ws != NULL);
     ws->connection_free(connection);
 }
 
 static inline void
 eventd_ws_connection_send_message(EventdWsModule *ws, EventdWsConnection *connection, const gchar *message)
 {
+    g_return_if_fail(ws != NULL);
     ws->connection_send_message(connection, message);
 }
 
 static inline void
 eventd_ws_connection_close(EventdWsModule *ws, EventdWsConnection *connection)
 {
+    g_return_if_fail(ws != NULL);
     ws->connection_close(connection);
 }
 
