@@ -137,7 +137,7 @@ _eventd_nd_draw_blur_gauss(guint8 *src, guint8 *dst, gint r, gint n, gint width,
  * will give us the best possible backend for our blur
  */
 void
-eventd_nd_draw_blur_surface(cairo_t *cr, gint blur)
+eventd_nd_draw_blur_surface(cairo_t *cr, guint64 blur)
 {
     cairo_surface_t *target, *surface;
 

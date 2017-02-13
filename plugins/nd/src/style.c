@@ -94,7 +94,7 @@ struct _EventdPluginAction {
 
         gint     border;
         Colour   border_colour;
-        gint     border_blur;
+        guint64  border_blur;
     } bubble;
 
     struct {
@@ -317,7 +317,7 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file)
             self->bubble.border_colour = eventd_nd_style_get_bubble_border_colour(self->parent);
 
         if ( evhelpers_config_key_file_get_int(config_file, "NotificationBubble", "BorderBlur", &integer) == 0 )
-            self->bubble.border_blur = integer.value;
+            self->bubble.border_blur = MAX(0, integer.value);
         else if ( self->parent != NULL )
             self->bubble.border_blur = eventd_nd_style_get_bubble_border_blur(self->parent);
     }
@@ -556,7 +556,7 @@ eventd_nd_style_get_bubble_border_colour(EventdNdStyle *self)
     return eventd_nd_style_get_bubble_border_colour(self->parent);
 }
 
-gint
+guint64
 eventd_nd_style_get_bubble_border_blur(EventdNdStyle *self)
 {
     if ( self->bubble.set )
