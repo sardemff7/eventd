@@ -40,11 +40,6 @@
 
 #include "libeventc.h"
 
-typedef struct {
-    gchar *name;
-    GVariant *content;
-} EventcData;
-
 static EventcConnection *client = NULL;
 static EventdEvent *event = NULL;
 static GMainLoop *loop = NULL;
@@ -120,7 +115,7 @@ main(int argc, char *argv[])
     const gchar *name = NULL;
     gchar **data_strv = NULL;
     gchar **file_strv = NULL;
-    EventcData *data = NULL;
+    GHashTable *data = NULL;
     gboolean subscribe = FALSE;
     gboolean system_mode = FALSE;
 
@@ -132,6 +127,9 @@ main(int argc, char *argv[])
     bindtextdomain(GETTEXT_PACKAGE, EVENTD_LOCALEDIR);
     bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
 #endif /* ENABLE_NLS */
+
+    /* No free on the data name since we re-use args strings directly */
+    data = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, (GDestroyNotify) g_variant_unref);
 
     GOptionEntry entries[] =
     {
@@ -194,58 +192,47 @@ main(int argc, char *argv[])
         goto end;
     }
 
-    gsize l = 0;
-    gsize data_offset = 0;
-    if ( data_strv != NULL )
-        l += g_strv_length(data_strv);
-    if ( file_strv != NULL )
-        l += g_strv_length(file_strv);
-    if ( l > 0 )
-        data = g_new0(EventcData, l + 1);
+    gchar *data_name;
+    GVariant *data_content;
     if ( data_strv != NULL )
     {
-        gsize i;
-        gchar *c;
-        l = g_strv_length(data_strv);
-        for ( i = 0 ; i < l ; ++i )
+        gchar **d;
+        for ( d = data_strv ; *d != NULL ; ++d )
         {
-            EventcData *d = data + data_offset + i;
+            gchar *c;
+            data_name = *d;
 
-            c = g_utf8_strchr(data_strv[i], -1, '=');
+            c = g_utf8_strchr(data_name, -1, '=');
             if ( c == NULL )
             {
-                g_print("Malformed data '%s': Data format is '<name>=<content>'\n", data_strv[i]);
+                g_print("Malformed data '%s': Data format is '<name>=<content>'\n", data_name);
                 goto end;
             }
             *c++ = '\0';
 
-            d->content = g_variant_parse(NULL, c, NULL, NULL, &error);
-            if ( d->content == NULL )
+            data_content = g_variant_parse(NULL, c, NULL, NULL, &error);
+            if ( data_content == NULL )
             {
-                g_print("Malformed data content '%s': %s\n", data_strv[i], error->message);
+                g_print("Malformed data content '%s': %s\n", data_name, error->message);
                 goto end;
             }
-            d->name = g_strdup(data_strv[i]);
+
+            g_hash_table_insert(data, data_name, g_variant_ref_sink(data_content));
         }
-        data_offset += l;
-        g_strfreev(data_strv);
-        data_strv = NULL;
     }
 
     if ( file_strv != NULL )
     {
-        gsize i;
-        gchar *m, *f;
-        l = g_strv_length(file_strv);
-        for ( i = 0 ; i < l ; ++i )
+        gchar **d;
+        for ( d = file_strv ; *d != NULL ; ++d )
         {
-            EventcData *d = data + data_offset + i;
+            gchar *m, *f;
+            data_name = *d;
 
-            gchar *mime_type = NULL;
-            m = g_utf8_strchr(file_strv[i], -1, '=');
+            m = g_utf8_strchr(data_name, -1, '=');
             if ( m == NULL )
             {
-                g_print("Malformed data '%s': Data format is '<name>=<mime-type>@<filename>'\n", file_strv[i]);
+                g_print("Malformed data '%s': Data format is '<name>=<mime-type>@<filename>'\n", data_name);
                 goto end;
             }
             *m++ = '\0';
@@ -256,6 +243,7 @@ main(int argc, char *argv[])
             else
                 f = m;
 
+            gchar *mime_type = NULL;
             if ( ( f - m ) < 2 )
             {
                 gchar *type;
@@ -279,13 +267,11 @@ main(int argc, char *argv[])
                 goto end;
             }
 
-            d->name = g_strdup(file_strv[i]);
-            d->content = g_variant_new("(msmsv)", m, NULL, g_variant_new_from_data(G_VARIANT_TYPE_BYTESTRING, filedata, length, FALSE, g_free, filedata));
+            data_content = g_variant_new("(msmsv)", m, NULL, g_variant_new_from_data(G_VARIANT_TYPE_BYTESTRING, filedata, length, FALSE, g_free, filedata));
             g_free(mime_type);
+
+            g_hash_table_insert(data, data_name, g_variant_ref_sink(data_content));
         }
-        data_offset += l;
-        g_strfreev(file_strv);
-        file_strv = NULL;
     }
 
     if ( identity != NULL )
@@ -335,14 +321,10 @@ post_args:
 
     event = eventd_event_new(category, name);
 
-    if ( data != NULL )
-    {
-        gsize i;
-        for ( i = 0 ; data[i].name != NULL ; ++i )
-            eventd_event_add_data(event, data[i].name, data[i].content);
-        g_free(data);
-        data = NULL;
-    }
+    GHashTableIter iter;
+    g_hash_table_iter_init(&iter, data);
+    while ( g_hash_table_iter_next(&iter, (gpointer *) &data_name, (gpointer *) &data_content) )
+        eventd_event_add_data(event, g_strdup(data_name), data_content);
 
 post_event:
     g_idle_add(_eventc_connect, NULL);
@@ -356,16 +338,7 @@ post_event:
     g_object_unref(client);
 
 end:
-    if ( data != NULL )
-    {
-        gsize i;
-        for ( i = 0 ; data[i].name != NULL ; ++i )
-        {
-            g_free(data[i].name);
-            g_variant_unref(data[i].content);
-        }
-        g_free(data);
-    }
+    g_hash_table_unref(data);
     g_strfreev(file_strv);
     g_strfreev(data_strv);
     if ( server_identity != NULL )
