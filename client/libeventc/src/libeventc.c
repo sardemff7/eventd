@@ -504,6 +504,8 @@ _eventc_connection_tls_connection_accept_certificate(EventcConnection *self, GTl
     o = _eventc_connection_tls_add_certificate_error(s, o, errors, G_TLS_CERTIFICATE_INSECURE, &first);
     o = _eventc_connection_tls_add_certificate_error(s, o, errors, G_TLS_CERTIFICATE_GENERIC_ERROR, &first);
 
+    g_return_val_if_fail(o < 256, FALSE);
+
     address = g_tls_client_connection_get_server_identity(G_TLS_CLIENT_CONNECTION(conn));
 
     address_string = g_socket_connectable_to_string(address);
