@@ -42,15 +42,15 @@
  */
 
 static void
-_eventd_nd_draw_blur_box_one_dimension(guint8 *src, guint8 *dst, gint r, gint iarr, gint channel, gint dim1, gint stride1, gint dim2, gint stride2)
+_eventd_nd_draw_blur_box_one_dimension(guint8 *src, guint8 *dst, guint r, gdouble iarr, guint channel, guint dim1, guint stride1, guint dim2, guint stride2)
 {
-    gint i;
+    guint i;
     for ( i = 0; i < dim1; ++i )
     {
-        gint current = i * stride1 + channel;
-        gint previous = current;
-        gint next = current + r * stride2;
-        gint j;
+        guint current = i * stride1 + channel;
+        guint previous = current;
+        guint next = current + r * stride2;
+        guint j;
 
         guint64 val = ( r + 1 ) * src[current];
         for ( j = 0 ; j < r ; ++j )
@@ -94,9 +94,9 @@ _eventd_nd_draw_blur_box_one_dimension(guint8 *src, guint8 *dst, gint r, gint ia
 }
 
 static void
-_eventd_nd_draw_blur_box(guint8 *src, guint8 *dst, gint r, gdouble iarr, gint width, gint height, gint stride, gint channels)
+_eventd_nd_draw_blur_box(guint8 *src, guint8 *dst, guint r, gdouble iarr, guint width, guint height, guint stride, guint channels)
 {
-    gint channel;
+    guint channel;
     for ( channel = 0 ; channel < channels ; ++channel )
     {
         /* We navigate the width by channels steps and the height by stride steps */
@@ -106,21 +106,21 @@ _eventd_nd_draw_blur_box(guint8 *src, guint8 *dst, gint r, gdouble iarr, gint wi
 }
 
 static void
-_eventd_nd_draw_blur_gauss(guint8 *src, guint8 *dst, gint r, gint n, gint width, gint height, gint stride, gint channels)
+_eventd_nd_draw_blur_gauss(guint8 *src, guint8 *dst, guint r, guint n, guint width, guint height, guint stride, guint channels)
 {
     gdouble w_ideal = sqrt(( 12.0 * r * r / (gdouble) n ) + 1.0);  /* Ideal averaging filter width */
-    gint wu = (gint) ( w_ideal + 1 ) | 0x1; /* Get the odd higher value */
-    gint wl = wu - 2; /* And the odd lesser value */
+    guint wu = (guint) ( w_ideal + 1 ) | 0x1; /* Get the odd higher value */
+    guint wl = wu - 2; /* And the odd lesser value */
 
 
     gdouble m_ideal = ( 12.0 * r * r - n * wl * wl - 12.0 * wl - ( 3.0 * n ) ) / ( -4.0 * ( wl + 1 ) );
-    gint m = (gint) ( m_ideal + 0.5 );
+    guint m = (guint) ( m_ideal + 0.5 );
 
-    gint i;
+    guint i;
     for ( i = 0 ; i < n ; ++i )
     {
-        gint rr = ( ( i < m ? wl : wu ) - 1 ) / 2;
-        gint iarr = 2 * rr + 1;
+        guint rr = ( ( i < m ? wl : wu ) - 1 ) / 2;
+        guint iarr = 2 * rr + 1;
         if ( (i % 2) == 0 )
             _eventd_nd_draw_blur_box(src, dst, rr, iarr, width, height, stride, channels);
         else
@@ -147,7 +147,7 @@ eventd_nd_draw_blur_surface(cairo_t *cr, guint64 blur)
     if ( cairo_surface_status(surface) != CAIRO_STATUS_SUCCESS )
         return;
 
-    gint width, height, stride, channels;
+    guint width, height, stride, channels;
     guint8 *data, *tmp;
 
     switch ( cairo_image_surface_get_format(surface) )
@@ -165,6 +165,9 @@ eventd_nd_draw_blur_surface(cairo_t *cr, guint64 blur)
 
     width  = cairo_image_surface_get_width(surface);
     height = cairo_image_surface_get_height(surface);
+
+    if ( ( width < 1 ) || ( height < 1 ) )
+        goto fail;
 
     data = cairo_image_surface_get_data(surface);
     stride = cairo_image_surface_get_stride(surface);
