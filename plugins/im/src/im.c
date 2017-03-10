@@ -48,13 +48,20 @@ typedef struct {
     gint64 leave_timeout;
 } EventdImAccount;
 
+typedef enum {
+    EVENTD_IM_CONV_STATE_NOT_READY,
+    EVENTD_IM_CONV_STATE_JOINING,
+    EVENTD_IM_CONV_STATE_READY,
+} EventdImConvState;
+
 typedef struct {
     EventdImAccount *account;
     PurpleConversationType type;
     const gchar *name;
     PurpleConversation *conv;
+    EventdImConvState state;
     guint leave_timeout;
-    GList *pending_messages;
+    GPtrArray *pending_messages;
 } EventdImConv;
 
 struct _EventdPluginAction {
@@ -84,12 +91,59 @@ _eventd_im_account_free(gpointer data)
 }
 
 static void
+_eventd_im_conv_flush(EventdImConv *conv)
+{
+    if ( conv->conv == NULL )
+    {
+        if ( ! purple_account_is_connected(conv->account->account) )
+            return;
+
+        switch ( conv->state )
+        {
+        case EVENTD_IM_CONV_STATE_READY:
+        case EVENTD_IM_CONV_STATE_ALWAYS_READY:
+            conv->conv = purple_conversation_new(conv->type, conv->account->account, conv->name);
+        break;
+        case EVENTD_IM_CONV_STATE_NOT_READY:
+        {
+            GHashTable *comps;
+            comps = g_hash_table_new(g_str_hash, g_str_equal);
+            g_hash_table_insert(comps, (gpointer) "channel", (gpointer) conv->name);
+            conv->account->prpl_info->join_chat(purple_account_get_connection(conv->account->account), comps);
+            g_hash_table_unref(comps);
+            conv->state = EVENTD_IM_CONV_STATE_JOINING;
+        case EVENTD_IM_CONV_STATE_JOINING:
+            return;
+        }
+        }
+    }
+
+    guint i;
+    for ( i = 0 ; i < conv->pending_messages->len ; ++i )
+    {
+        gchar *message = conv->pending_messages->pdata[i];
+        switch ( conv->type )
+        {
+        case PURPLE_CONV_TYPE_CHAT:
+            purple_conv_chat_send(PURPLE_CONV_CHAT(conv->conv), message);
+        break;
+        default:
+        break;
+        }
+    }
+    g_ptr_array_remove_range(conv->pending_messages, 0, conv->pending_messages->len);
+}
+
+static void
 _eventd_im_conv_reset(EventdImConv *conv)
 {
-
-    if ( conv->conv != NULL )
-        purple_conversation_destroy(conv->conv);
-    conv->conv = NULL;
+    if ( conv->state <= EVENTD_IM_CONV_STATE_READY )
+    {
+        conv->state = EVENTD_IM_CONV_STATE_NOT_READY;
+        if ( conv->conv != NULL )
+            purple_conversation_destroy(conv->conv);
+        conv->conv = NULL;
+    }
 
     if ( conv->leave_timeout > 0 )
         g_source_remove(conv->leave_timeout);
@@ -106,7 +160,7 @@ _eventd_im_conv_free(gpointer data)
 
     _eventd_im_conv_reset(conv);
 
-    g_list_free_full(conv->pending_messages, g_free);
+    g_ptr_array_free(conv->pending_messages, TRUE);
 
     g_slice_free(EventdImConv, conv);
 }
@@ -138,6 +192,12 @@ _eventd_im_signed_on_callback(PurpleAccount *ac, EventdPluginContext *context)
     EventdImAccount *account = ac->ui_data;
 
     evhelpers_reconnect_reset(account->reconnect);
+
+    GHashTableIter iter;
+    EventdImConv *conv;
+    g_hash_table_iter_init(&iter, account->convs);
+    while ( g_hash_table_iter_next(&iter, NULL, (gpointer *) &conv) )
+        _eventd_im_conv_flush(conv);
 }
 
 static void
@@ -191,11 +251,8 @@ _eventd_im_conv_joined(PurpleConversation *_conv, EventdPluginContext *context)
 
     conv->conv = _conv;
 
-    GList *msg;
-    for ( msg = conv->pending_messages ; msg != NULL ; msg = g_list_next(msg) )
-        purple_conv_chat_send(PURPLE_CONV_CHAT(conv->conv), msg->data);
-    g_list_free_full(conv->pending_messages, g_free);
-    conv->pending_messages = NULL;
+    conv->state = EVENTD_IM_CONV_STATE_READY;
+    _eventd_im_conv_flush(conv);
 
     if ( account->leave_timeout < 0 )
         return;
@@ -582,8 +639,8 @@ _eventd_im_action_parse(EventdPluginContext *context, GKeyFile *config_file)
         conv->account = account;
         conv->type = PURPLE_CONV_TYPE_CHAT;
         conv->name = room;
-        if ( account->prpl_info->join_chat == NULL )
-            conv->conv = purple_conversation_new(PURPLE_CONV_TYPE_CHAT, account->account, room);
+        conv->state = ( chat && ( account->prpl_info->join_chat != NULL ) ) ? EVENTD_IM_CONV_STATE_NOT_READY : EVENTD_IM_CONV_STATE_ALWAYS_READY;
+        conv->pending_messages = g_ptr_array_new_with_free_func(g_free);
         g_hash_table_insert(account->convs, room, conv);
         room = NULL;
     }
@@ -619,43 +676,13 @@ static void
 _eventd_im_event_action(EventdPluginContext *context, EventdPluginAction *action, EventdEvent *event)
 {
     EventdImConv *conv = action->conv;
-    EventdImAccount *account = conv->account;
 
-    if ( ! purple_account_is_connected(account->account) )
-        purple_account_connect(account->account);
-    if ( purple_account_is_disconnected(account->account) )
-        return;
-
-    PurpleConnection *gc;
     gchar *message;
 
-    gc = purple_account_get_connection(account->account);
     message = evhelpers_format_string_get_string(action->message, event, NULL, NULL);
 
-    switch ( conv->type )
-    {
-    case PURPLE_CONV_TYPE_CHAT:
-        if ( conv->conv != NULL )
-        {
-            purple_conv_chat_send(PURPLE_CONV_CHAT(conv->conv), message);
-            break;
-        }
-
-        if ( conv->pending_messages == NULL )
-        {
-            GHashTable *comps;
-            comps = g_hash_table_new(g_str_hash, g_str_equal);
-            g_hash_table_insert(comps, (gpointer) "channel", (gpointer) conv->name);
-            account->prpl_info->join_chat(gc, comps);
-            g_hash_table_unref(comps);
-        }
-        conv->pending_messages = g_list_prepend(conv->pending_messages, g_strdup(message));
-    break;
-    default:
-    break;
-    }
-
-    g_free(message);
+    g_ptr_array_add(conv->pending_messages, message);
+    _eventd_im_conv_flush(conv);
 }
 
 
