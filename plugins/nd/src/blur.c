@@ -168,7 +168,7 @@ eventd_nd_draw_blur_surface(cairo_t *cr, guint64 blur)
     data = cairo_image_surface_get_data(surface);
     stride = cairo_image_surface_get_stride(surface);
 
-    tmp = g_alloca(stride * height * sizeof(guint8));
+    tmp = g_newa(guint8, stride * height);
     _eventd_nd_draw_blur_gauss(data, tmp, blur, 3 /* number of passes */, width, height, stride, channels);
 
     cairo_surface_mark_dirty(surface);

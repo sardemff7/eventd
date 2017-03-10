@@ -217,7 +217,7 @@ _eventd_events_get_event(EventdEvents *self, EventdEvent *event, GQuark *current
     name = eventd_event_get_name(event);
     s = strlen(category) + strlen(name) + 2;
 
-    gchar full_name[s];
+    gchar *full_name = g_newa(gchar, s);
 
     g_snprintf(full_name, s, "%s %s", category, name);
 

@@ -432,8 +432,8 @@ eventd_sockets_get_sockets(EventdSockets *self, GSocketAddress **binds)
         gssize l;
 
         l = g_socket_address_get_native_size(bind);
-        guchar native_bind[l];
-        guchar native_address[l];
+        guchar *native_bind = g_newa(guchar, l);
+        guchar *native_address = g_newa(guchar, l);
 
         if ( ! g_socket_address_to_native(bind, native_bind, l, &error) )
         {

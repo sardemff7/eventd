@@ -67,13 +67,13 @@ _eventd_ws_connection_write_message(EventdWsConnection *self, gboolean request, 
     if ( request )
     {
         l += strlen(msg->method) + strlen(soup_uri_get_path(soup_message_get_uri(msg)));
-        start_line = g_alloca(l);
+        start_line = g_newa(gchar, l);
         g_snprintf(start_line, l, "%s %s HTTP/1.1\r\n", msg->method, soup_uri_get_path(soup_message_get_uri(msg)));
     }
     else
     {
         l += 3 /* status code */ + strlen(msg->reason_phrase);
-        start_line = g_alloca(l);
+        start_line = g_newa(gchar, l);
         g_snprintf(start_line, l, "HTTP/1.1 %u %s\r\n", msg->status_code, msg->reason_phrase);
     }
 
