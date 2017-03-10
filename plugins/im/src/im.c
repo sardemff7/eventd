@@ -52,6 +52,7 @@ typedef enum {
     EVENTD_IM_CONV_STATE_NOT_READY,
     EVENTD_IM_CONV_STATE_JOINING,
     EVENTD_IM_CONV_STATE_READY,
+    EVENTD_IM_CONV_STATE_ALWAYS_READY,
 } EventdImConvState;
 
 typedef struct {
@@ -124,6 +125,9 @@ _eventd_im_conv_flush(EventdImConv *conv)
         gchar *message = conv->pending_messages->pdata[i];
         switch ( conv->type )
         {
+        case PURPLE_CONV_TYPE_IM:
+            purple_conv_im_send(PURPLE_CONV_IM(conv->conv), message);
+        break;
         case PURPLE_CONV_TYPE_CHAT:
             purple_conv_chat_send(PURPLE_CONV_CHAT(conv->conv), message);
         break;
@@ -611,7 +615,8 @@ _eventd_im_action_parse(EventdPluginContext *context, GKeyFile *config_file)
 
     FormatString *message = NULL;
     gchar *account_name = NULL;
-    gchar *room = NULL;
+    gchar *recipient = NULL;
+    gboolean chat = TRUE;
 
     if ( evhelpers_config_key_file_get_locale_format_string(config_file, "IM", "Message", NULL, &message) != 0 )
         goto error;
@@ -619,10 +624,9 @@ _eventd_im_action_parse(EventdPluginContext *context, GKeyFile *config_file)
     if ( evhelpers_config_key_file_get_string(config_file, "IM", "Account", &account_name) != 0 )
         goto error;
 
-    /*
-     * TODO: private messages
-     */
-    if ( evhelpers_config_key_file_get_string(config_file, "IM", "Room", &room) != 0 )
+    if ( evhelpers_config_key_file_get_string(config_file, "IM", "Recipient", &recipient) != 0 )
+        goto error;
+    if ( evhelpers_config_key_file_get_boolean(config_file, "IM", "Chat", &chat) < 0 )
         goto error;
 
     EventdImAccount *account;
@@ -632,17 +636,17 @@ _eventd_im_action_parse(EventdPluginContext *context, GKeyFile *config_file)
     g_free(account_name);
 
     EventdImConv *conv;
-    conv = g_hash_table_lookup(account->convs, room);
+    conv = g_hash_table_lookup(account->convs, recipient);
     if ( conv == NULL )
     {
         conv = g_slice_new0(EventdImConv);
         conv->account = account;
-        conv->type = PURPLE_CONV_TYPE_CHAT;
-        conv->name = room;
+        conv->type = chat ? PURPLE_CONV_TYPE_CHAT : PURPLE_CONV_TYPE_IM;
+        conv->name = recipient;
         conv->state = ( chat && ( account->prpl_info->join_chat != NULL ) ) ? EVENTD_IM_CONV_STATE_NOT_READY : EVENTD_IM_CONV_STATE_ALWAYS_READY;
         conv->pending_messages = g_ptr_array_new_with_free_func(g_free);
-        g_hash_table_insert(account->convs, room, conv);
-        room = NULL;
+        g_hash_table_insert(account->convs, recipient, conv);
+        recipient = NULL;
     }
 
     EventdPluginAction *action;
@@ -653,7 +657,7 @@ _eventd_im_action_parse(EventdPluginContext *context, GKeyFile *config_file)
     return action;
 
 error:
-    g_free(room);
+    g_free(recipient);
     g_free(account_name);
     evhelpers_format_string_unref(message);
     return NULL;

@@ -154,10 +154,18 @@
                 </varlistentry>
 
                 <varlistentry>
-                    <term><varname>Room=</varname></term>
+                    <term><varname>Recipient=</varname></term>
                     <listitem>
-                        <para>A <type>room name</type></para>
-                        <para>A room to send the message to, the exact format is protocol-dependant, e.g. <literal>"#project"</literal>.</para>
+                        <para>A <type>recipient name</type></para>
+                        <para>A recipient to send the message to, the exact format is protocol-dependant, e.g. <literal>"example@xmpp.org"</literal> or <literal>"#project"</literal>.</para>
+                    </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                    <term><varname>Chat=</varname> (defaults to <literal>true</literal>)</term>
+                    <listitem>
+                        <para>A <type>boolean</type></para>
+                        <para>If <literal>true</literal>, <varname>Recipient=</varname> is used as a chat room name (e.g. some protocols requires to join a chat room before talking in it).</para>
                     </listitem>
                 </varlistentry>
 
