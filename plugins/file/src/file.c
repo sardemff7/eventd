@@ -84,7 +84,7 @@ _eventd_file_uninit(EventdPluginContext *context)
 static EventdPluginAction *
 _eventd_file_action_parse(EventdPluginContext *context, GKeyFile *config_file)
 {
-    gboolean disable;
+    gboolean disable = FALSE;
     FormatString *file = NULL;
     FormatString *string = NULL;
     gboolean truncate = FALSE;

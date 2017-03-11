@@ -606,7 +606,7 @@ _eventd_im_action_parse(EventdPluginContext *context, GKeyFile *config_file)
     if ( ! g_key_file_has_group(config_file, "IM") )
         return NULL;
 
-    gboolean disable;
+    gboolean disable = FALSE;
     if ( evhelpers_config_key_file_get_boolean(config_file, "IM", "Disable", &disable) < 0 )
         return NULL;
 

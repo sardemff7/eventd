@@ -445,7 +445,7 @@ _eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
 static EventdPluginAction *
 _eventd_nd_action_parse(EventdPluginContext *context, GKeyFile *config_file)
 {
-    gboolean disable;
+    gboolean disable = FALSE;
 
     if ( ! g_key_file_has_group(config_file, "Notification") )
         return NULL;

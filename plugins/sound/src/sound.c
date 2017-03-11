@@ -179,7 +179,7 @@ _eventd_sound_stop(EventdPluginContext *context)
 static EventdPluginAction *
 _eventd_sound_action_parse(EventdPluginContext *context, GKeyFile *config_file)
 {
-    gboolean disable;
+    gboolean disable = FALSE;
     Filename *sound = NULL;
 
     if ( ! g_key_file_has_group(config_file, "Sound") )

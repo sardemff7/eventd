@@ -470,7 +470,7 @@ _eventd_libnotify_stop(EventdPluginContext *context)
 static EventdPluginAction *
 _eventd_libnotify_action_parse(EventdPluginContext *context, GKeyFile *config_file)
 {
-    gboolean disable;
+    gboolean disable = FALSE;
 
     if ( ! g_key_file_has_group(config_file, "Libnotify") )
         return NULL;

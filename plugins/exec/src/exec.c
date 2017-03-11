@@ -73,7 +73,7 @@ _eventd_exec_uninit(EventdPluginContext *context)
 static EventdPluginAction *
 _eventd_exec_action_parse(EventdPluginContext *context, GKeyFile *config_file)
 {
-    gboolean disable;
+    gboolean disable = FALSE;
     FormatString *command = NULL;
 
     if ( ! g_key_file_has_group(config_file, "Exec") )

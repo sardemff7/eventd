@@ -160,7 +160,7 @@ skip:
 static EventdPluginAction *
 _eventd_libcanberra_action_parse(EventdPluginContext *context, GKeyFile *config_file)
 {
-    gboolean disable;
+    gboolean disable = FALSE;
     Filename *sound_file = NULL;
 
     if ( ! g_key_file_has_group(config_file, "Libcanberra") )

@@ -167,11 +167,14 @@ _evhelpers_config_key_file_error(GError **error, const gchar *group, const gchar
 
 EVENTD_EXPORT
 gint8
-evhelpers_config_key_file_get_boolean(GKeyFile *config_file, const gchar *group, const gchar *key, gboolean *value)
+evhelpers_config_key_file_get_boolean(GKeyFile *config_file, const gchar *group, const gchar *key, gboolean *ret_value)
 {
     GError *error = NULL;
+    gboolean value;
 
-    *value = g_key_file_get_boolean(config_file, group, key, &error);
+    value = g_key_file_get_boolean(config_file, group, key, &error);
+    if ( error == NULL )
+        *ret_value = value;
 
     return _evhelpers_config_key_file_error(&error, group, key);
 }
