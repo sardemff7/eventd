@@ -506,6 +506,32 @@ _evhelpers_token_list_string_from_gvariant(FormatStringReplaceData *data, GVaria
     while ( g_variant_is_of_type(content, G_VARIANT_TYPE_VARIANT) )
         content = g_variant_get_variant(content);
 
+    if ( g_variant_is_of_type(content, G_VARIANT_TYPE_ARRAY) )
+    {
+        const gchar *joiner = ", ";
+        gsize length;
+        length = g_variant_n_children(content);
+
+        if ( length == 0 )
+            return NULL;
+
+        gsize jl = strlen(joiner);
+
+        gsize i;
+        GString *ret;
+        ret = g_string_sized_new(length * (10 + jl));
+        for ( i = 0 ; i < length ; ++i )
+        {
+            g_string_append(g_string_append(ret, _evhelpers_token_list_string_from_gvariant(data, g_variant_get_child_value(content, i))), joiner);
+
+            g_free(data->to_free);
+            data->to_free = NULL;
+        }
+        g_string_truncate(ret, ret->len - jl);
+        data->to_free = g_string_free(ret, FALSE);
+        return data->to_free;
+    }
+
     if ( g_variant_is_of_type(content, G_VARIANT_TYPE_STRING) )
         return g_variant_get_string(content, NULL);
 
@@ -533,23 +559,7 @@ _evhelpers_token_list_string_from_gvariant(FormatStringReplaceData *data, GVaria
 #undef _evhelpers_check_type
 #undef _evhelpers_check_type_with_format
 
-    if ( g_variant_is_of_type(content, G_VARIANT_TYPE_STRING_ARRAY) )
-    {
-        const gchar **strv;
-        gsize length;
-        GString *ret;
-        strv = g_variant_get_strv(content, &length);
-        if ( length > 0 )
-        {
-            ret = g_string_sized_new(length * strlen(strv[0]));
-            for ( ; *strv != NULL ; ++strv )
-                g_string_append_c(g_string_append(ret, *strv), ' ');
-            g_string_truncate(ret, ret->len - 1);
-            data->to_free = g_string_free(ret, FALSE);
-        }
-    }
-    else
-        data->to_free = g_variant_print(content, FALSE);
+    data->to_free = g_variant_print(content, FALSE);
 
     return data->to_free;
 }
