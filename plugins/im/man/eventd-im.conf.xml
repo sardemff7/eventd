@@ -111,7 +111,7 @@
                 </varlistentry>
 
                 <varlistentry>
-                    <term><varname>UseTLS=</varname></term>
+                    <term><varname>UseTLS=</varname> (defaults to <literal>true</literal>)</term>
                     <listitem>
                         <para>A <type>boolean</type></para>
                         <para>Whether to use TLS or not.</para>

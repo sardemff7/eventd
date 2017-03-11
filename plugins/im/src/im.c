@@ -525,7 +525,7 @@ _eventd_im_global_parse(EventdPluginContext *context, GKeyFile *config_file)
         gchar *username = NULL;
         gchar *password = NULL;
         Int port;
-        gboolean use_tls = FALSE;
+        gboolean use_tls = TRUE;
         gint64 reconnect_timeout;
         gint64 reconnect_max_tries;
         gint64 leave_timeout;
