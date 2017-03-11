@@ -498,18 +498,8 @@ typedef struct {
 } FormatStringReplaceData;
 
 static const gchar *
-_evhelpers_token_list_callback(const gchar *token, guint64 value, gpointer user_data)
+_evhelpers_token_list_string_from_gvariant(FormatStringReplaceData *data, GVariant *content)
 {
-    FormatStringReplaceData *data = user_data;
-
-    if ( data->callback != NULL )
-        return data->callback(token, data->event, data->user_data);
-
-    g_free(data->to_free);
-    data->to_free = NULL;
-
-    GVariant *content;
-    content = eventd_event_get_data(data->event, token);
     if ( content == NULL )
         return NULL;
 
@@ -559,6 +549,23 @@ _evhelpers_token_list_callback(const gchar *token, guint64 value, gpointer user_
         data->to_free = g_variant_print(content, FALSE);
 
     return data->to_free;
+}
+
+static const gchar *
+_evhelpers_token_list_callback(const gchar *token, guint64 value, gpointer user_data)
+{
+    FormatStringReplaceData *data = user_data;
+
+    if ( data->callback != NULL )
+        return data->callback(token, data->event, data->user_data);
+
+    g_free(data->to_free);
+    data->to_free = NULL;
+
+    GVariant *content;
+    content = eventd_event_get_data(data->event, token);
+
+    return _evhelpers_token_list_string_from_gvariant(data, content);
 }
 
 EVENTD_EXPORT
