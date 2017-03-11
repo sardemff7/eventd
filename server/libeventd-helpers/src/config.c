@@ -498,7 +498,7 @@ typedef struct {
 } FormatStringReplaceData;
 
 static const gchar *
-_evhelpers_token_list_string_from_gvariant(FormatStringReplaceData *data, GVariant *content)
+_evhelpers_token_list_string_from_gvariant(FormatStringReplaceData *data, GVariant *content, const gchar *key, gint64 index)
 {
     if ( content == NULL )
         return NULL;
@@ -506,7 +506,16 @@ _evhelpers_token_list_string_from_gvariant(FormatStringReplaceData *data, GVaria
     while ( g_variant_is_of_type(content, G_VARIANT_TYPE_VARIANT) )
         content = g_variant_get_variant(content);
 
-    if ( g_variant_is_of_type(content, G_VARIANT_TYPE_ARRAY) )
+    if ( g_variant_is_of_type(content, G_VARIANT_TYPE_DICTIONARY) )
+    {
+        if ( key != NULL )
+        {
+            if ( ( key[0] != '\0' ) && ( g_utf8_get_char(key) != '@' ) )
+                return _evhelpers_token_list_string_from_gvariant(data, g_variant_lookup_value(content, key, NULL), NULL, 0);
+            return NULL;
+        }
+    }
+    else if ( g_variant_is_of_type(content, G_VARIANT_TYPE_ARRAY) )
     {
         const gchar *joiner = ", ";
         gsize length;
@@ -515,6 +524,26 @@ _evhelpers_token_list_string_from_gvariant(FormatStringReplaceData *data, GVaria
         if ( length == 0 )
             return NULL;
 
+        if ( key != NULL )
+        {
+            if ( key[0] == '\0' )
+            {
+                GVariant *child = NULL;
+                gsize i = ABS(index);
+                if ( ( index < 0 ) && ( i <= length ) )
+                    child = g_variant_get_child_value(content, length - i);
+                else if ( ( index >= 0 ) && ( i < length ) )
+                    child = g_variant_get_child_value(content, i);
+
+                return _evhelpers_token_list_string_from_gvariant(data, child, NULL, 0);
+            }
+
+            if ( g_utf8_get_char(key) != '@' )
+                return NULL;
+
+            joiner = g_utf8_next_char(key);
+        }
+
         gsize jl = strlen(joiner);
 
         gsize i;
@@ -522,7 +551,7 @@ _evhelpers_token_list_string_from_gvariant(FormatStringReplaceData *data, GVaria
         ret = g_string_sized_new(length * (10 + jl));
         for ( i = 0 ; i < length ; ++i )
         {
-            g_string_append(g_string_append(ret, _evhelpers_token_list_string_from_gvariant(data, g_variant_get_child_value(content, i))), joiner);
+            g_string_append(g_string_append(ret, _evhelpers_token_list_string_from_gvariant(data, g_variant_get_child_value(content, i), NULL, 0)), joiner);
 
             g_free(data->to_free);
             data->to_free = NULL;
@@ -565,12 +594,12 @@ _evhelpers_token_list_string_from_gvariant(FormatStringReplaceData *data, GVaria
 }
 
 static const gchar *
-_evhelpers_token_list_callback(const gchar *token, guint64 value, gpointer user_data)
+_evhelpers_token_list_callback(const gchar *token, guint64 value, const gchar *key, gint64 index, gpointer user_data)
 {
     FormatStringReplaceData *data = user_data;
 
     if ( data->callback != NULL )
-        return data->callback(token, data->event, data->user_data);
+        return data->callback(token, key, index, data->event, data->user_data);
 
     g_free(data->to_free);
     data->to_free = NULL;
@@ -578,7 +607,7 @@ _evhelpers_token_list_callback(const gchar *token, guint64 value, gpointer user_
     GVariant *content;
     content = eventd_event_get_data(data->event, token);
 
-    return _evhelpers_token_list_string_from_gvariant(data, content);
+    return _evhelpers_token_list_string_from_gvariant(data, content, key, index);
 }
 
 EVENTD_EXPORT
