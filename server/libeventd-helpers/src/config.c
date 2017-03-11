@@ -503,6 +503,9 @@ _evhelpers_token_list_string_from_gvariant(FormatStringReplaceData *data, GVaria
     if ( content == NULL )
         return NULL;
 
+    while ( g_variant_is_of_type(content, G_VARIANT_TYPE_VARIANT) )
+        content = g_variant_get_variant(content);
+
     if ( g_variant_is_of_type(content, G_VARIANT_TYPE_STRING) )
         return g_variant_get_string(content, NULL);
 
