@@ -33,6 +33,7 @@ EventdctlReturnCode eventd_plugins_control_command(const gchar *id, guint64 argc
 
 void eventd_plugins_config_init_all(void);
 void eventd_plugins_config_reset_all(void);
+void eventd_plugins_relay_set_certificate(GTlsCertificate *certificate);
 
 void eventd_plugins_global_parse_all(GKeyFile *config_file);
 GList *eventd_plugins_event_parse_all(GKeyFile *config_file);

@@ -374,6 +374,18 @@ eventd_relay_config_reset(EventdRelayContext *context)
     g_hash_table_remove_all(context->servers);
 }
 
+void
+eventd_relay_set_certificate(EventdRelayContext *context, GTlsCertificate *certificate)
+{
+    if ( context == NULL )
+        return;
+
+    GHashTableIter iter;
+    EventdRelayServer *server;
+    g_hash_table_iter_init(&iter, context->servers);
+    while ( g_hash_table_iter_next(&iter, NULL, (gpointer *) &server) )
+        eventd_relay_server_set_certificate(server, certificate);
+}
 
 /*
  * Event action interface

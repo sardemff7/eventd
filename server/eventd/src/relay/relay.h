@@ -36,6 +36,8 @@ EventdPluginCommandStatus eventd_relay_control_command(EventdRelayContext *conte
 void eventd_relay_global_parse(EventdRelayContext *evp, GKeyFile *config_file);
 void eventd_relay_config_reset(EventdRelayContext *evp);
 
+void eventd_relay_set_certificate(EventdRelayContext *relay, GTlsCertificate *certificate);
+
 void eventd_relay_event_dispatch(EventdRelayContext *evp, EventdEvent *event);
 
 #endif /* __EVENTD_RELAY_RELAY_H__ */

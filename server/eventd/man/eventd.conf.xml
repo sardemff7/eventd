@@ -199,6 +199,7 @@
                     <listitem>
                         <para>A <type>file name</type></para>
                         <para>The path to the TLS certificate file.</para>
+                        <para>This certificate will also be used as the client certificate for the relay.</para>
                     </listitem>
                 </varlistentry>
 

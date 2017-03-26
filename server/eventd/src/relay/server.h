@@ -39,6 +39,8 @@ gboolean eventd_relay_server_is_connected(EventdRelayServer *server);
 void eventd_relay_server_start(EventdRelayServer *server, gboolean force);
 void eventd_relay_server_stop(EventdRelayServer *server);
 
+void eventd_relay_server_set_certificate(EventdRelayServer *server, GTlsCertificate *certificate);
+
 void eventd_relay_server_event(EventdRelayServer *server, EventdEvent *event);
 
 #endif /* __EVENTD_PLUGINS_RELAY_SERVER_H__ */

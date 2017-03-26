@@ -42,6 +42,7 @@ struct _EventdRelayServer {
     GSocketConnectable *server_identity;
     gboolean accept_unknown_ca;
     gboolean use_websocket;
+    GTlsCertificate *certificate;
     gboolean subscribe;
     gchar **subscriptions;
     gboolean forward_all;
@@ -241,6 +242,16 @@ eventd_relay_server_stop(EventdRelayServer *server)
 }
 
 void
+eventd_relay_server_set_certificate(EventdRelayServer *server, GTlsCertificate *certificate)
+{
+    if ( server->certificate != NULL )
+        g_object_unref(server->certificate);
+    server->certificate = g_object_ref(certificate);
+    if ( server->connection != NULL )
+        eventc_connection_set_certificate(server->connection, server->certificate);
+}
+
+void
 eventd_relay_server_event(EventdRelayServer *server, EventdEvent *event)
 {
     if ( server->current == event )
@@ -286,6 +297,9 @@ eventd_relay_server_free(gpointer data)
 
     if ( server->connection != NULL )
         g_object_unref(server->connection);
+
+    if ( server->certificate != NULL )
+        g_object_unref(server->certificate);
 
     evhelpers_reconnect_free(server->reconnect);
 

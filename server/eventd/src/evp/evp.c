@@ -32,6 +32,7 @@
 
 #include "../eventd.h"
 #include "../sd-modules.h"
+#include "../plugins.h"
 #include "client.h"
 
 #include "evp.h"
@@ -149,6 +150,7 @@ _eventd_evp_load_certificate(EventdEvpContext *self, const gchar *cert_file, con
         if ( self->certificate != NULL )
             g_object_unref(self->certificate);
         self->certificate = cert;
+        eventd_plugins_relay_set_certificate(self->certificate);
         return TRUE;
     }
 

@@ -356,6 +356,12 @@ eventd_plugins_control_command(const gchar *id, guint64 argc, const gchar * cons
 }
 
 void
+eventd_plugins_relay_set_certificate(GTlsCertificate *certificate)
+{
+    eventd_relay_set_certificate(relay, certificate);
+}
+
+void
 eventd_plugins_config_reset_all(void)
 {
     GHashTableIter iter;
@@ -385,8 +391,8 @@ eventd_plugins_global_parse_all(GKeyFile *config_file)
             plugin->interface.global_parse(plugin->context, config_file);
     }
 
-    eventd_evp_global_parse(evp, config_file);
     eventd_relay_global_parse(relay, config_file);
+    eventd_evp_global_parse(evp, config_file);
 }
 
 GList *
