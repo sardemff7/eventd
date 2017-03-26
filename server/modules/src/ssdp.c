@@ -60,13 +60,14 @@ _eventd_sd_ssdp_resource_available(EventdSdModuleContext *self, gchar *usn, GLis
     if ( self->control->server_has_address(server) )
         return;
 
-    GList *location;
+    GList *location_;
     GSocketConnectable *address = NULL;
-    for ( location = locations ; ( address == NULL ) && ( location != NULL ) ; location = g_list_next(location) )
+    for ( location_ = locations ; ( address == NULL ) && ( location_ != NULL ) ; location_ = g_list_next(location_) )
     {
-        if ( g_str_has_prefix(location->data, "evp://") )
+        const gchar *location = location_->data;
+        if ( g_str_has_prefix(location, "evp://") )
         {
-            address = g_network_address_parse(location->data + strlen("evp://"), 0, NULL);
+            address = g_network_address_parse(location + strlen("evp://"), 0, NULL);
             if ( ( address != NULL ) && ( g_network_address_get_port(G_NETWORK_ADDRESS(address)) == 0 ) )
                 address = (g_object_unref(address), NULL);
         }
