@@ -124,10 +124,9 @@ _eventd_protocol_evp_parse_dot_event_start(EventdProtocol *self, const gchar * c
     self->event = _eventd_protocol_evp_parser_get_event(self, argv, error);
 
     if ( self->event == NULL )
-        return _eventd_protocol_evp_parse_dot_catchall_start(self, argv, error);
-
-
-    self->state = EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT;
+        _eventd_protocol_evp_parse_dot_catchall_start(self, argv, error);
+    else
+        self->state = EVENTD_PROTOCOL_EVP_STATE_DOT_EVENT;
 }
 
 static void
@@ -168,7 +167,10 @@ static void
 _eventd_protocol_evp_parse_dot_subscribe_end(EventdProtocol *self, GError **error)
 {
     if ( g_hash_table_size(self->subscriptions) < 2 )
-        return g_set_error(error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_MALFORMED, "SUBSCRIBE dot message requires at least two categories");
+    {
+        g_set_error(error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_MALFORMED, "SUBSCRIBE dot message requires at least two categories");
+        return;
+    }
 
     eventd_protocol_call_subscribe((EventdProtocol *) self, self->subscriptions);
 
@@ -307,9 +309,13 @@ _eventd_protocol_evp_parse_line(EventdProtocol *self, const gchar *line, GError 
         for ( message = _eventd_protocol_evp_dot_messages ; message->message != NULL ; ++message )
         {
             if ( self->state == message->continue_state )
-                return message->stop_func(self, error);
+            {
+                message->stop_func(self, error);
+                return;
+            }
         }
-        return g_set_error(error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_UNEXPECTED_TOKEN, "Got '.' in an invalid state '%s'", _eventd_protocol_evp_states[self->state]);
+        g_set_error(error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_UNEXPECTED_TOKEN, "Got '.' in an invalid state '%s'", _eventd_protocol_evp_states[self->state]);
+        return;
     }
 
     /*
@@ -348,7 +354,10 @@ _eventd_protocol_evp_parse_line(EventdProtocol *self, const gchar *line, GError 
         {
             ++args;
             if ( message->max_args < 1 )
-                return g_set_error(error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_MALFORMED, "Message '%s' does not take arguments, but got '%s'", message->message, args);
+            {
+                g_set_error(error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_MALFORMED, "Message '%s' does not take arguments, but got '%s'", message->message, args);
+                return;
+            }
 
             gsize argc;
             argv = g_strsplit(args, " ", message->max_args);
@@ -356,11 +365,15 @@ _eventd_protocol_evp_parse_line(EventdProtocol *self, const gchar *line, GError 
             if ( argc < message->min_args )
             {
                 g_strfreev(argv);
-                return g_set_error(error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_MALFORMED, "Message '%s' does take at least %" G_GSIZE_FORMAT " arguments, but got %" G_GSIZE_FORMAT, message->message, message->min_args, argc);
+                g_set_error(error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_MALFORMED, "Message '%s' does take at least %" G_GSIZE_FORMAT " arguments, but got %" G_GSIZE_FORMAT, message->message, message->min_args, argc);
+                return;
             }
         }
         else if ( message->min_args > 0 )
-            return g_set_error(error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_MALFORMED, "Message '%s' does take at least %" G_GSIZE_FORMAT " arguments, but got none", message->message, message->min_args);
+        {
+            g_set_error(error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_MALFORMED, "Message '%s' does take at least %" G_GSIZE_FORMAT " arguments, but got none", message->message, message->min_args);
+            return;
+        }
 
         gboolean valid = FALSE;
         for ( state = message->start_states ; *state != _EVENTD_PROTOCOL_EVP_STATE_SIZE ; ++state )
