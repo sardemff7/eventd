@@ -32,7 +32,7 @@
 #include "protocol-evp-private.h"
 
 EVENTD_EXPORT GType eventd_protocol_get_type(void);
-G_DEFINE_BOXED_TYPE(EventdProtocol, eventd_protocol, eventd_protocol_ref, eventd_protocol_unref);
+G_DEFINE_BOXED_TYPE(EventdProtocol, eventd_protocol, eventd_protocol_ref, eventd_protocol_unref)
 
 static void
 _eventd_protocol_evp_free(EventdProtocol *protocol)
