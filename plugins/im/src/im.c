@@ -517,6 +517,8 @@ _eventd_im_global_parse(EventdPluginContext *context, GKeyFile *config_file)
     gchar **names;
     if ( evhelpers_config_key_file_get_string_list(config_file, "IM", "Accounts", &names, NULL) < 0 )
         return;
+    if ( names == NULL )
+        return;
 
     gchar **name, *section;
     for ( name = names ; *name != NULL ; ++name )
