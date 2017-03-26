@@ -202,14 +202,15 @@ skip_ws:
         goto error;
     g_free(line);
 
-    return g_data_input_stream_read_line_async(self->in, G_PRIORITY_DEFAULT, self->cancellable, _eventd_evp_client_read_callback, self);
+    g_data_input_stream_read_line_async(self->in, G_PRIORITY_DEFAULT, self->cancellable, _eventd_evp_client_read_callback, self);
+    return;
 
 error:
     _eventd_evp_client_send_message(self, eventd_protocol_generate_bye(self->protocol, error->message));
 end:
     g_free(line);
     g_clear_error(&error);
-    return _eventd_evp_client_disconnect_internal(self);
+    _eventd_evp_client_disconnect_internal(self);
 }
 
 
@@ -236,7 +237,8 @@ _eventd_evp_client_tls_handshake_callback(GObject *obj, GAsyncResult *res, gpoin
     {
         g_warning("Could not finish TLS handshake: %s", error->message);
         g_clear_error(&error);
-        return _eventd_evp_client_disconnect_internal(self);
+        _eventd_evp_client_disconnect_internal(self);
+        return;
     }
 
     _eventd_evp_client_connect(self, self->tls);
