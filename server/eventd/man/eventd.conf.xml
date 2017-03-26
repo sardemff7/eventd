@@ -212,6 +212,16 @@
                 </varlistentry>
 
                 <varlistentry>
+                    <term><varname>TLSClientCertificates=</varname></term>
+                    <listitem>
+                        <para>A <type>file name</type></para>
+                        <para>The path to a file containing a list of certificates.</para>
+                        <para>When a client connects, a certificate will be required, and checked for matching against this list.</para>
+                        <para>No identity or CA check is done.</para>
+                    </listitem>
+                </varlistentry>
+
+                <varlistentry>
                     <term><varname>PublishName=</varname></term>
                     <listitem>
                         <para>A <type>string</type></para>

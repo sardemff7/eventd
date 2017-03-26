@@ -242,6 +242,19 @@ _eventd_evp_client_tls_handshake_callback(GObject *obj, GAsyncResult *res, gpoin
     _eventd_evp_client_connect(self, self->tls);
 }
 
+static gboolean
+_eventd_evp_client_tls_certificate_callback(gpointer user_data, GTlsCertificate *peer_cert, GTlsCertificateFlags errors, GObject *obj)
+{
+    EventdEvpClient *self = user_data;
+    GList *cert;
+    for ( cert = self->context->client_certificates ; cert != NULL ; cert = g_list_next(cert) )
+    {
+        if ( g_tls_certificate_is_same(peer_cert, cert->data) )
+            return TRUE;
+    }
+    return FALSE;
+}
+
 gboolean
 eventd_evp_client_connection_handler(GSocketService *service, GSocketConnection *connection, GObject *obj, gpointer user_data)
 {
@@ -295,7 +308,14 @@ eventd_evp_client_connection_handler(GSocketService *service, GSocketConnection 
     self->tls = tls;
 
     if ( self->tls != NULL )
+    {
+        if ( context->client_certificates != NULL )
+        {
+            g_object_set(self->tls, "authentication-mode", G_TLS_AUTHENTICATION_REQUIRED, NULL);
+            g_signal_connect_swapped(self->tls, "accept-certificate", G_CALLBACK(_eventd_evp_client_tls_certificate_callback), self);
+        }
         g_tls_connection_handshake_async(G_TLS_CONNECTION(tls), G_PRIORITY_DEFAULT, self->cancellable, _eventd_evp_client_tls_handshake_callback, self);
+    }
     else
         _eventd_evp_client_connect(self, G_IO_STREAM(self->connection));
 

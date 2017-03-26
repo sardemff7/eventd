@@ -160,6 +160,25 @@ _eventd_evp_load_certificate(EventdEvpContext *self, const gchar *cert_file, con
     return FALSE;
 }
 
+static gboolean
+_eventd_evp_load_client_certificates(EventdEvpContext *self, const gchar *client_certs_file)
+{
+    GError *error = NULL;
+    GList *certs;
+
+    certs = g_tls_certificate_list_new_from_file(client_certs_file, &error);
+
+    if ( error != NULL )
+    {
+        g_warning("Could not read client certificates file (%s): %s", client_certs_file, error->message);
+        g_clear_error(&error);
+        return FALSE;
+    }
+    g_list_free_full(self->client_certificates, g_object_unref);
+    self->client_certificates = certs;
+    return TRUE;
+}
+
 static void
 _eventd_evp_cert_key_file_changed(EventdEvpContext *self, GFile *file, GFile *other_file, GFileMonitorEvent event_type, GFileMonitor *monitor)
 {
@@ -170,6 +189,22 @@ _eventd_evp_cert_key_file_changed(EventdEvpContext *self, GFile *file, GFile *ot
     case G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT:
         g_debug("Reload certificate file");
         _eventd_evp_load_certificate(self, self->cert_file, self->key_file);
+    break;
+    default:
+    break;
+    }
+}
+
+static void
+_eventd_evp_client_certs_file_changed(EventdEvpContext *self, GFile *file, GFile *other_file, GFileMonitorEvent event_type, GFileMonitor *monitor)
+{
+    switch ( event_type )
+    {
+    case G_FILE_MONITOR_EVENT_CHANGED:
+    break;
+    case G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT:
+        g_debug("Reload client certificates file");
+        _eventd_evp_load_client_certificates(self, self->client_certs_file);
     break;
     default:
     break;
@@ -191,20 +226,29 @@ _eventd_evp_cleanup_monitors(EventdEvpContext *self)
         g_object_unref(self->key_monitor);
     }
     g_free(self->key_file);
+    if ( self->client_certs_monitor != NULL )
+    {
+        g_file_monitor_cancel(self->client_certs_monitor);
+        g_object_unref(self->client_certs_monitor);
+    }
+    g_free(self->client_certs_file);
 
     self->cert_monitor = NULL;
     self->cert_file = NULL;
     self->key_monitor = NULL;
     self->key_file = NULL;
+    self->client_certs_monitor = NULL;
+    self->client_certs_file = NULL;
 }
 
 static gboolean
-_eventd_evp_monitor_files(EventdEvpContext *self, gchar *cert_file, gchar *key_file)
+_eventd_evp_monitor_files(EventdEvpContext *self, gchar *cert_file, gchar *key_file, gchar *client_certs_file)
 {
     GError *error = NULL;
     GFile *file;
     GFileMonitor *cert_monitor;
     GFileMonitor *key_monitor = NULL;
+    GFileMonitor *client_certs_monitor = NULL;
 
     file = g_file_new_for_path(cert_file);
     cert_monitor = g_file_monitor_file(file, G_FILE_MONITOR_NONE, NULL, &error);
@@ -223,8 +267,24 @@ _eventd_evp_monitor_files(EventdEvpContext *self, gchar *cert_file, gchar *key_f
         g_object_unref(file);
         if ( key_monitor == NULL )
         {
-            g_warning("Could not monitor key file %s: %s", cert_file, error->message);
+            g_warning("Could not monitor key file %s: %s", key_file, error->message);
             g_clear_error(&error);
+            g_object_unref(cert_monitor);
+            return FALSE;
+        }
+    }
+
+    if ( client_certs_file != NULL )
+    {
+        file = g_file_new_for_path(client_certs_file);
+        client_certs_monitor = g_file_monitor_file(file, G_FILE_MONITOR_NONE, NULL, &error);
+        g_object_unref(file);
+        if ( client_certs_monitor == NULL )
+        {
+            g_warning("Could not monitor client certificates file %s: %s", client_certs_file, error->message);
+            g_clear_error(&error);
+            if ( key_monitor != NULL )
+                g_object_unref(key_monitor);
             g_object_unref(cert_monitor);
             return FALSE;
         }
@@ -234,10 +294,15 @@ _eventd_evp_monitor_files(EventdEvpContext *self, gchar *cert_file, gchar *key_f
 
     self->cert_monitor = cert_monitor;
     self->key_monitor = key_monitor;
+    self->client_certs_monitor = client_certs_monitor;
     self->cert_file = cert_file;
     self->key_file = key_file;
+    self->client_certs_file = client_certs_file;
     g_signal_connect_swapped(self->cert_monitor, "changed", G_CALLBACK(_eventd_evp_cert_key_file_changed), self);
-    g_signal_connect_swapped(self->key_monitor, "changed", G_CALLBACK(_eventd_evp_cert_key_file_changed), self);
+    if ( self->key_monitor != NULL )
+        g_signal_connect_swapped(self->key_monitor, "changed", G_CALLBACK(_eventd_evp_cert_key_file_changed), self);
+    if ( self->client_certs_monitor != NULL )
+        g_signal_connect_swapped(self->client_certs_monitor, "changed", G_CALLBACK(_eventd_evp_client_certs_file_changed), self);
 
     return TRUE;
 }
@@ -247,6 +312,7 @@ eventd_evp_global_parse(EventdEvpContext *self, GKeyFile *config_file)
 {
     gchar *cert_file = NULL;
     gchar *key_file = NULL;
+    gchar *client_certs_file = NULL;
     gchar *publish_name = NULL;
 
     if ( ! g_key_file_has_group(config_file, "Server") )
@@ -255,6 +321,8 @@ eventd_evp_global_parse(EventdEvpContext *self, GKeyFile *config_file)
     if ( evhelpers_config_key_file_get_string(config_file, "Server", "TLSCertificate", &cert_file) < 0 )
         goto cleanup;
     if ( evhelpers_config_key_file_get_string(config_file, "Server", "TLSKey", &key_file) < 0 )
+        goto cleanup;
+    if ( evhelpers_config_key_file_get_string(config_file, "Server", "TLSClientCertificates", &client_certs_file) < 0 )
         goto cleanup;
     if ( evhelpers_config_key_file_get_string(config_file, "Server", "PublishName", &publish_name) < 0 )
         goto cleanup;
@@ -265,8 +333,13 @@ eventd_evp_global_parse(EventdEvpContext *self, GKeyFile *config_file)
             g_warning("TLS not suported");
         else if ( _eventd_evp_load_certificate(self, cert_file, key_file) )
         {
-            if ( _eventd_evp_monitor_files(self, cert_file, key_file) )
-                cert_file = key_file = NULL;
+            if ( ( client_certs_file != NULL ) && ( ! _eventd_evp_load_client_certificates(self, client_certs_file) ) )
+            {
+                g_free(client_certs_file);
+                client_certs_file = NULL;
+            }
+            if ( _eventd_evp_monitor_files(self, cert_file, key_file, client_certs_file) )
+                cert_file = key_file = client_certs_file = NULL;
         }
     }
     else if ( key_file != NULL )
@@ -278,6 +351,7 @@ eventd_evp_global_parse(EventdEvpContext *self, GKeyFile *config_file)
 cleanup:
     g_free(publish_name);
     g_free(key_file);
+    g_free(client_certs_file);
     g_free(cert_file);
 }
 
