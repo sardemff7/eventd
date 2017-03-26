@@ -30,7 +30,7 @@
  * @context: an #EventdPluginCoreContext
  * @binds: (array zero-terminated=1) (element-type utf8) (nullable): list of strings
  *
- * Returns: (element-type Gio.Socket) (transfer full): list of sockets for the binds
+ * Returns: (element-type GSocket) (transfer full): list of sockets for the binds
  */
 EVENTD_EXPORT
 GList *
