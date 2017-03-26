@@ -109,6 +109,9 @@ main(int argc, char *argv[])
     gchar *host = NULL;
     gchar *identity = NULL;
     GSocketConnectable *server_identity = NULL;
+    gchar *certificate_file = NULL;
+    gchar *key_file = NULL;
+    GTlsCertificate *certificate = NULL;
     const gchar *category = NULL;
     const gchar *name = NULL;
     gchar **data_strv = NULL;
@@ -131,18 +134,20 @@ main(int argc, char *argv[])
 
     GOptionEntry entries[] =
     {
-        { "data",      'd', 0, G_OPTION_ARG_STRING_ARRAY, &data_strv,      "Event data to send",                                       "<name>=<content>" },
-        { "data-file", 'f', 0, G_OPTION_ARG_STRING_ARRAY, &file_strv,      "Event data to send from a file",                           "<name>=[<mime-type>@]<filename>" },
-        { "host",      'h', 0, G_OPTION_ARG_STRING,       &host,           "Host to connect to (defaults to $EVENTC_HOST if defined)", "<host>" },
-        { "identity",  'i', 0, G_OPTION_ARG_STRING,       &identity,       "Server identity to check for in TLS certificate",          "<host>" },
-        { "max-tries", 'm', 0, G_OPTION_ARG_INT,          &max_tries,      "Maximum connection attempts (0 for infinite)",             "<times>" },
-        { "subscribe", 's', 0, G_OPTION_ARG_NONE,         &subscribe,      "Subscribe mode",                                           NULL },
-        { "websocket", 'w', 0, G_OPTION_ARG_NONE,         &use_websocket,  "Use WebSocket",                                            NULL },
+        { "data",        'd', 0, G_OPTION_ARG_STRING_ARRAY,   &data_strv,        "Event data to send",                                       "<name>=<content>" },
+        { "data-file",   'f', 0, G_OPTION_ARG_FILENAME_ARRAY, &file_strv,        "Event data to send from a file",                           "<name>=[<mime-type>@]<filename>" },
+        { "host",        'h', 0, G_OPTION_ARG_STRING,         &host,             "Host to connect to (defaults to $EVENTC_HOST if defined)", "<host>" },
+        { "identity",    'i', 0, G_OPTION_ARG_STRING,         &identity,         "Server identity to check for in TLS certificate",          "<host>" },
+        { "max-tries",   'm', 0, G_OPTION_ARG_INT,            &max_tries,        "Maximum connection attempts (0 for infinite)",             "<times>" },
+        { "certificate", 'c', 0, G_OPTION_ARG_FILENAME,       &certificate_file, "TLS certicate file to use",                                "<certificate>" },
+        { "key",         'k', 0, G_OPTION_ARG_FILENAME,       &key_file,         "TLS key file to use",                                      "<key>" },
+        { "subscribe",   's', 0, G_OPTION_ARG_NONE,           &subscribe,        "Subscribe mode",                                           NULL },
+        { "websocket",   'w', 0, G_OPTION_ARG_NONE,           &use_websocket,    "Use WebSocket",                                            NULL },
 #ifdef G_OS_UNIX
-        { "system",    'S', 0, G_OPTION_ARG_NONE,         &system_mode,    "Talk to system eventd",                                    NULL },
+        { "system",      'S', 0, G_OPTION_ARG_NONE,           &system_mode,      "Talk to system eventd",                                    NULL },
 #endif /* G_OS_UNIX */
-        { "insecure",  0,   0, G_OPTION_ARG_NONE,         &insecure,       "Accept insecure certificates (unknown CA)",                NULL },
-        { "version",   'V', 0, G_OPTION_ARG_NONE,         &print_version,  "Print version",                                            NULL },
+        { "insecure",    0,   0, G_OPTION_ARG_NONE,           &insecure,         "Accept insecure certificates (unknown CA)",                NULL },
+        { "version",     'V', 0, G_OPTION_ARG_NONE,           &print_version,    "Print version",                                            NULL },
         { .long_name = NULL }
     };
     GOptionContext *opt_context = g_option_context_new("- Basic CLI client for eventd");
@@ -282,6 +287,20 @@ main(int argc, char *argv[])
         }
     }
 
+    if ( certificate_file != NULL )
+    {
+        if ( key_file != NULL )
+            certificate = g_tls_certificate_new_from_files(certificate_file, key_file, &error);
+        else
+            certificate = g_tls_certificate_new_from_file(certificate_file, &error);
+        if ( certificate == NULL )
+        {
+            g_warning("Could not parse certificate file '%s': %s", certificate_file, error->message);
+            g_clear_error(&error);
+            goto end;
+        }
+    }
+
     category = argv[1];
     name = argv[2];
 
@@ -304,6 +323,8 @@ post_args:
     eventc_connection_set_use_websocket(client, use_websocket, NULL);
     if ( server_identity != NULL )
         eventc_connection_set_server_identity(client, server_identity);
+    if ( certificate != NULL )
+        eventc_connection_set_certificate(client, certificate);
     eventc_connection_set_accept_unknown_ca(client, insecure);
 
     if ( subscribe )
@@ -339,6 +360,9 @@ end:
     g_hash_table_unref(data);
     g_strfreev(file_strv);
     g_strfreev(data_strv);
+    if ( certificate != NULL )
+        g_object_unref(certificate);
+    g_free(certificate_file);
     if ( server_identity != NULL )
         g_object_unref(server_identity);
     g_free(identity);
