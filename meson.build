@@ -2,7 +2,7 @@ project('eventd', 'c',
     version: '0.21.90',
     license: [ 'GPL3+', 'LGPL3+', 'MIT' ],
     default_options: [
-        'c_std=gnu99',
+        'c_std=gnu11',
     ],
     subproject_dir: 'src',
 )
