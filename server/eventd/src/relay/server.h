@@ -24,8 +24,7 @@
 #define __EVENTD_PLUGINS_RELAY_SERVER_H__
 
 #include "../types.h"
-
-typedef struct _EventdRelayServer EventdRelayServer;
+#include "eventd-sd-module.h"
 
 EventdRelayServer *eventd_relay_server_new(EventdCoreContext *core, const gchar *server_identity, gboolean accept_unknown_ca, gboolean use_websocket, gchar **forwards, gchar **subscriptions);
 EventdRelayServer *eventd_relay_server_new_for_domain(EventdCoreContext *core, const gchar *server_identity, gboolean accept_unknown_ca, gboolean use_websocket, gchar **forwards, gchar **subscriptions, const gchar *domain);
