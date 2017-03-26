@@ -25,6 +25,7 @@
 
 #include "libeventd-event.h"
 #include "eventd-plugin.h"
+#include "eventdctl.h"
 
 typedef struct _EventdCoreContext EventdCoreContext;
 

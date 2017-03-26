@@ -44,7 +44,6 @@ void FreeConsole(void);
 #endif /* ENABLE_SYSTEMD */
 
 #include "eventd-plugin-private.h"
-#include <eventdctl.h>
 #include "libeventd-helpers-dirs.h"
 
 #include "types.h"

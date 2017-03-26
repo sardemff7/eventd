@@ -32,7 +32,7 @@
 #endif /* ! G_OS_UNIX */
 #include <gio/gio.h>
 
-#include <eventdctl.h>
+#include "eventdctl.h"
 
 #include "types.h"
 

@@ -33,7 +33,7 @@
 
 #include "libeventd-helpers-dirs.h"
 
-#include <eventdctl.h>
+#include "eventdctl.h"
 
 #include "types.h"
 #include "evp/evp.h"

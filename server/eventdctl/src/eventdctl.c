@@ -35,7 +35,7 @@
 #include <gio/gunixsocketaddress.h>
 #endif /* G_OS_UNIX */
 
-#include <eventdctl.h>
+#include "eventdctl.h"
 
 static gboolean
 _eventd_eventdctl_start_eventd(int argc, gchar *argv[], GError **error)
