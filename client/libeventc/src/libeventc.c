@@ -55,6 +55,7 @@ struct _EventcConnectionPrivate {
     GSocketConnectable *server_identity;
     gboolean use_websocket;
     gboolean accept_unknown_ca;
+    GTlsCertificate *certificate;
     gboolean subscribe;
     GHashTable *subscriptions;
     GError *error;
@@ -320,6 +321,9 @@ _eventc_connection_finalize(GObject *object)
     if ( self->priv->subscriptions != NULL )
         g_hash_table_unref(self->priv->subscriptions);
 
+    if ( self->priv->certificate != NULL )
+        g_object_unref(self->priv->certificate);
+
     if ( self->priv->server_identity != NULL )
         g_object_unref(self->priv->server_identity);
 
@@ -548,6 +552,8 @@ _eventc_connection_socket_client_event(EventcConnection *self, GSocketClientEven
         g_signal_connect_swapped(connection, "accept-certificate", G_CALLBACK(_eventc_connection_tls_connection_accept_certificate), self);
         if ( self->priv->server_identity != NULL )
             g_tls_client_connection_set_server_identity(G_TLS_CLIENT_CONNECTION(connection), self->priv->server_identity);
+        if ( self->priv->certificate != NULL )
+            g_tls_connection_set_certificate(G_TLS_CONNECTION(connection), self->priv->certificate);
     break;
     default:
     break;
@@ -943,6 +949,25 @@ eventc_connection_set_accept_unknown_ca(EventcConnection *self, gboolean accept_
     g_return_if_fail(EVENTC_IS_CONNECTION(self));
 
     self->priv->accept_unknown_ca = accept_unknown_ca;
+}
+
+/**
+ * eventc_connection_set_certificate:
+ * @connection: an #EventcConnection
+ * @certificate: the certificate to use to connect
+ *
+ * Sets the certificate to use when connecting to a server.
+ */
+EVENTD_EXPORT
+void
+eventc_connection_set_certificate(EventcConnection *self, GTlsCertificate *certificate)
+{
+    g_return_if_fail(EVENTC_IS_CONNECTION(self));
+    g_return_if_fail(G_IS_TLS_CERTIFICATE(certificate));
+
+    if ( self->priv->certificate != NULL )
+        g_object_unref(self->priv->certificate);
+    self->priv->certificate = g_object_ref(certificate);
 }
 
 

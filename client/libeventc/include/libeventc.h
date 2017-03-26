@@ -90,6 +90,7 @@ gboolean eventc_connection_set_host(EventcConnection *connection, const gchar *h
 void eventc_connection_set_connectable(EventcConnection *connection, GSocketConnectable *address);
 void eventc_connection_set_server_identity(EventcConnection *connection, GSocketConnectable *server_identity);
 void eventc_connection_set_accept_unknown_ca(EventcConnection *connection, gboolean accept_unknown_ca);
+void eventc_connection_set_certificate(EventcConnection *connection, GTlsCertificate *certificate);
 void eventc_connection_set_subscribe(EventcConnection *connection, gboolean subscribe);
 void eventc_connection_add_subscription(EventcConnection *connection, gchar *category);
 
