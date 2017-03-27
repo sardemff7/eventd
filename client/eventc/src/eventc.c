@@ -73,6 +73,12 @@ _eventc_connect(gpointer user_data)
 }
 
 static void
+_eventc_disconnected_callback(EventcConnection *connection, gpointer user_data)
+{
+    g_idle_add(_eventc_disconnect, NULL);
+}
+
+static void
 _eventc_event_callback(EventcConnection *connection, EventdEvent *event, gpointer user_data)
 {
     g_idle_add(_eventc_disconnect, NULL);
@@ -317,6 +323,7 @@ post_args:
         g_clear_error(&error);
         goto end;
     }
+    g_signal_connect(client, "disconnected", G_CALLBACK(_eventc_disconnected_callback), NULL);
 
     r = 0; /* Host is fine */
 
