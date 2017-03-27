@@ -144,14 +144,6 @@ _eventd_file_replace_fallback_callback(GObject *obj, GAsyncResult *res, gpointer
 }
 
 static void
-_eventd_file_write_callback(GObject *obj, GAsyncResult *res, gpointer user_data)
-{
-    g_output_stream_write_all_finish(G_OUTPUT_STREAM(obj), res, NULL, NULL);
-    g_object_unref(obj);
-    g_free(user_data);
-}
-
-static void
 _eventd_file_write(GFile *file, gchar *string, GAsyncResult *res, gboolean truncate)
 {
     GError *error = NULL;
@@ -178,12 +170,14 @@ _eventd_file_write(GFile *file, gchar *string, GAsyncResult *res, gboolean trunc
         }
     }
 
-    g_output_stream_write_all_async(G_OUTPUT_STREAM(stream), string, strlen(string), G_PRIORITY_DEFAULT, NULL, _eventd_file_write_callback, string);
+    if ( ! g_output_stream_write_all(G_OUTPUT_STREAM(stream), string, strlen(string), NULL, NULL, &error) )
+        g_warning("Could not write to file '%s': %s", path, error->message);
 
 out:
     g_clear_error(&error);
-    g_free(path);
+    g_object_unref(stream);
     g_object_unref(file);
+    g_free(path);
 }
 
 static void
