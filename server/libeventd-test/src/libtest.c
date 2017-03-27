@@ -67,13 +67,9 @@ eventd_tests_env_setup(gchar **argv, const gchar *test)
 
     g_free(tmp);
 
-    tmp = g_build_filename(SRC_DIR G_DIR_SEPARATOR_S "plugins" G_DIR_SEPARATOR_S "test-plugin" G_DIR_SEPARATOR_S "config", NULL);
-    g_setenv("EVENTD_CONFIG_DIR", tmp, TRUE);
-    g_free(tmp);
+    g_setenv("EVENTD_CONFIG_DIR", SRC_DIR G_DIR_SEPARATOR_S "plugins" G_DIR_SEPARATOR_S "test-plugin" G_DIR_SEPARATOR_S "config", TRUE);
 
-    tmp = g_path_get_dirname(TEST_PLUGIN_PATH);
-    g_setenv("EVENTD_PLUGINS_DIR", tmp, TRUE);
-    g_free(tmp);
+    g_setenv("EVENTD_PLUGINS_DIR", TEST_PLUGIN_PATH, TRUE);
 
     g_unsetenv("EVENTD_PLUGINS_WHITELIST");
     g_unsetenv("EVENTD_PLUGINS_BLACKLIST");

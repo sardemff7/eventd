@@ -1,5 +1,6 @@
 # test plugin
 
+test_plugin_path = meson.current_build_dir()
 test_plugin = shared_module('test-plugin', [
         config_h,
         'src/test-plugin.c',
