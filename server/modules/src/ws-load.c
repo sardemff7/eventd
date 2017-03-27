@@ -81,7 +81,7 @@ eventd_ws_init(void)
 
     EventdWsModule *ws = NULL;
     gchar **dirs, **dir;
-    dirs = evhelpers_dirs_get_lib("EVENTD_MODULES_DIR", "modules" G_DIR_SEPARATOR_S MODULES_VERSION);
+    dirs = evhelpers_dirs_get_lib("MODULES", "modules" G_DIR_SEPARATOR_S MODULES_VERSION);
     for ( dir = dirs ; ( ws == NULL ) && ( *dir != NULL ) ; ++dir )
         ws = _eventd_ws_module_load_dir(*dir);
     g_free(dirs);

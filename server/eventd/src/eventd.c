@@ -354,14 +354,14 @@ main(int argc, char *argv[])
     {
         gchar **dirs, **dir;
 
-        dirs = evhelpers_dirs_get_lib("EVENTD_PLUGINS_DIR", "plugins");
+        dirs = evhelpers_dirs_get_lib("PLUGINS", "plugins");
         g_print("Plugins search paths:");
         for ( dir = dirs ; *dir != NULL ; ++dir )
             g_print("\n    %s", *dir);
         g_print("\n");
         g_strfreev(dirs);
 
-        dirs = evhelpers_dirs_get_config("EVENTD_CONFIG_DIR", context->system_mode, NULL);
+        dirs = evhelpers_dirs_get_config("CONFIG", context->system_mode, NULL);
         g_print("Configuration and events search paths:");
         for ( dir = dirs ; *dir != NULL ; ++dir )
             g_print("\n    %s", *dir);

@@ -255,7 +255,7 @@ eventd_plugins_load(EventdPluginCoreContext *core, const gchar * const *binds, g
         blacklist = g_strsplit(env_blacklist, ",", 0);
 
     gchar **dirs, **dir;
-    dirs = evhelpers_dirs_get_lib("EVENTD_PLUGINS_DIR", "plugins");
+    dirs = evhelpers_dirs_get_lib("PLUGINS", "plugins");
     for ( dir = dirs ; *dir != NULL ; ++dir )
         _eventd_plugins_load_dir(core, *dir, system_mode, whitelist, blacklist);
     g_free(dirs);

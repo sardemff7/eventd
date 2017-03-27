@@ -610,10 +610,10 @@ eventdctl relay disconnect your.distant.computer</programlisting>
 
         <variablelist>
             <varlistentry>
-                <term><varname>$EVENTD_PLUGINS_DIR</varname></term>
+                <term><varname>$EVENTD_PLUGINS_PATH</varname></term>
                 <listitem>
-                    <para>Additional directory to browse for plugins.</para>
-                    <para>This directory is browsed first, before standard directories.</para>
+                    <para>A <literal condition="website;ev_os_unix">:</literal><literal condition="ev_os_win">;</literal>-separated list of directories to browse for plugins.</para>
+                    <para>These directories are browsed first, before standard directories.</para>
                 </listitem>
             </varlistentry>
 
@@ -635,10 +635,10 @@ eventdctl relay disconnect your.distant.computer</programlisting>
             </varlistentry>
 
             <varlistentry>
-                <term><varname>$EVENTD_CONFIG_DIR</varname></term>
+                <term><varname>$EVENTD_CONFIG_PATH</varname></term>
                 <listitem>
-                    <para>Additional directory to browse for configuration files.</para>
-                    <para>This directory is browsed last, after standard directories, and override their files.</para>
+                    <para>A <literal condition="website;ev_os_unix">:</literal><literal condition="ev_os_win">;</literal>-separated list of directories to browse for configuration files.</para>
+                    <para>These directories are browsed last, after standard directories, and override their files.</para>
                 </listitem>
             </varlistentry>
         </variablelist>
