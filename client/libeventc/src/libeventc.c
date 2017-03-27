@@ -45,6 +45,7 @@ G_DEFINE_TYPE(EventcConnection, eventc_connection, G_TYPE_OBJECT)
 
 enum {
     SIGNAL_EVENT,
+    SIGNAL_DISCONNECTED,
     LAST_SIGNAL
 };
 
@@ -299,6 +300,21 @@ eventc_connection_class_init(EventcConnectionClass *klass)
                      NULL, NULL,
                      g_cclosure_marshal_generic,
                      G_TYPE_NONE, 1, EVENTD_TYPE_EVENT);
+
+    /**
+     * EventcConnection::disconnected:
+     * @connection: the #EventcConnection that was disconnected
+     *
+     * Emitted when the connection is closed.
+     */
+    _eventc_connection_signals[SIGNAL_DISCONNECTED] =
+        g_signal_new("disconnected",
+                     G_TYPE_FROM_CLASS(object_class),
+                     G_SIGNAL_RUN_FIRST,
+                     G_STRUCT_OFFSET(EventcConnectionClass, event),
+                     NULL, NULL,
+                     g_cclosure_marshal_generic,
+                     G_TYPE_NONE, 0);
 }
 
 static void
@@ -797,7 +813,8 @@ eventc_connection_close(EventcConnection *self, GError **error)
         g_error_free(_inner_error_);
         return FALSE;
     }
-
+    else
+        return TRUE;
 
     if ( self->priv->ws != NULL )
         eventd_ws_connection_close(self->priv->ws_module, self->priv->ws);
@@ -833,6 +850,8 @@ _eventc_connection_close_internal(EventcConnection *self)
     self->priv->out = NULL;
     self->priv->in = NULL;
     self->priv->connection = NULL;
+
+    g_signal_emit(self, _eventc_connection_signals[SIGNAL_DISCONNECTED], 0);
 }
 
 

@@ -69,6 +69,7 @@ struct _EventcConnectionClass {
 
 	/* Signals */
 	void (*event)(EventcConnection *connection, EventdEvent *event);
+	void (*disconnected)(EventcConnection *connection);
 };
 
 
