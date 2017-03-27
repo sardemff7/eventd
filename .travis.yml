@@ -9,9 +9,7 @@ compiler:
 addons:
     apt:
         packages:
-            - autoconf
-            - automake
-            - make
+            #- ninja-build
             - xsltproc
             - docbook-xsl
             - docbook-xml
@@ -39,18 +37,20 @@ addons:
             - sound-theme-freedesktop
             - pidgin-data
 install:
+    - pip3 install meson
     - sudo apt-get install -y uuid-dev libavahi-glib-dev libpulse-dev
 
 before_script:
-    - autoreconf -fiv
-    - ./configure --disable-silent-rules --disable-ipv6 --disable-nd-wayland --enable-nd-fbdev --enable-tts --enable-canberra --enable-im --with-dbussessionservicedir=/usr/share/dbus-1/services
+    - wget https://github.com/ninja-build/ninja/releases/download/v1.7.2/ninja-linux.zip
+    - unzip ninja-linux.zip
+    - export PATH=$(pwd):$PATH
+    - mkdir build
+    - meson build -Denable-ipv6=false -Denable-websocket=false -Denable-nd-wayland=false -Denable-nd-fbdev=true -Denable-tts=true -Denable-libcanberra=true -Ddbussessionservicedir=/usr/share/dbus-1/services
 script:
-    - make -j2
-    - make -j2 check
-    - make -j2 distcheck DISTCHECK_CONFIGURE_FLAGS="--disable-ipv6 --disable-nd-wayland --enable-nd-fbdev --enable-tts --enable-canberra --enable-im"
+    - ninja -C build -v
+    - ninja -C build -v test
 after_failure:
-    - cat test-suite.log
-    - cat eventd-*/test-suite.log
+    - cat build/meson-logs/testlog.txt
 
 
 notifications:
