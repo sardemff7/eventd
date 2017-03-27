@@ -346,17 +346,13 @@ _eventd_evp_client_disconnect_internal(EventdEvpClient *self)
         g_hash_table_insert(self->context->subscribe_categories, key, list);
     }
 
-    self->context->subscribe_all = g_list_delete_link(self->context->subscribe_all, self->subscribe_all);
+    if ( self->subscribe_all != NULL )
+        self->context->subscribe_all = g_list_delete_link(self->context->subscribe_all, self->subscribe_all);
 
-    self->context->clients = g_list_remove_link(self->context->clients, self->link);
+    if ( self->link != NULL )
+        self->context->clients = g_list_remove_link(self->context->clients, self->link);
 
     eventd_evp_client_disconnect(self);
-}
-
-void
-eventd_evp_client_disconnect(gpointer data)
-{
-    EventdEvpClient *self = data;
 
     g_hash_table_unref(self->subscriptions);
 
@@ -381,6 +377,17 @@ eventd_evp_client_disconnect(gpointer data)
     eventd_protocol_unref(self->protocol);
 
     g_free(self);
+}
+
+void
+eventd_evp_client_disconnect(gpointer data)
+{
+    EventdEvpClient *self = data;
+
+    g_cancellable_cancel(self->cancellable);
+    self->link = NULL;
+    self->subscribe_all = NULL;
+    g_hash_table_remove_all(self->subscriptions);
 }
 
 void
