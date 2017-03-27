@@ -179,7 +179,7 @@
                     <para>May be specified multiple times.</para>
                     <para>The format is <userinput><replaceable>type</replaceable>:<replaceable>socket</replaceable></userinput>:</para>
                     <variablelist>
-                        <varlistentry condition="website;have_gio_unix">
+                        <varlistentry condition="website;ev_os_unix">
                             <term><literal>unix</literal></term>
                             <term><literal>unix-runtime</literal></term>
                             <listitem>

@@ -95,6 +95,11 @@ AM_LDFLAGS="-no-undefined"
 AM_XSLTPROCFLAGS="--nonet --xinclude --stringparam man.output.quietly 1 --stringparam funcsynopsis.style ansi"
 AM_DOCBOOK_CONDITIONS="installation"
 
+if test x${ev_os_unix} = xyes; then
+    AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};ev_os_unix"
+else
+    AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};ev_os_win"
+fi
 
 #
 # Directories

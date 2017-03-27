@@ -123,6 +123,11 @@ nk_modules = [
 
 man_pages = []
 docbook_conditions = [ 'installation' ]
+if is_unix
+    docbook_conditions += [ 'ev_os_unix' ]
+else
+    docbook_conditions += [ 'ev_os_win' ]
+endif
 
 subdir('src/libnkutils')
 
