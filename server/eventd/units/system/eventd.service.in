@@ -10,7 +10,6 @@ User=eventd
 Sockets=eventd-control.socket eventd.socket
 ExecStart=@bindir@/eventd --listen systemd --system
 ExecReload=@bindir@/eventdctl --system reload
-RuntimeDirectory=eventd
 
 [Install]
 Also=eventd-control.socket
