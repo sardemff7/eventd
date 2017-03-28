@@ -57,6 +57,11 @@ struct _EventcLightConnection {
         gpointer user_data;
         GDestroyNotify notify;
     } event_callback;
+    struct {
+        EventcLightConnectionDisconnectedCallback callback;
+        gpointer user_data;
+        GDestroyNotify notify;
+    } disconnected_callback;
     EventdProtocol *protocol;
     EventcLightSocket socket;
     struct {
@@ -162,6 +167,9 @@ eventc_light_connection_new(const gchar *name)
 static void
 _eventc_light_connection_free(EventcLightConnection *self)
 {
+    if ( self->disconnected_callback.notify != NULL )
+        self->disconnected_callback.notify(self->disconnected_callback.user_data);
+
     if ( self->event_callback.notify != NULL )
         self->event_callback.notify(self->event_callback.user_data);
 
@@ -233,6 +241,28 @@ eventc_light_connection_set_event_callback(EventcLightConnection *self, EventcLi
     self->event_callback.callback = callback;
     self->event_callback.user_data = user_data;
     self->event_callback.notify = notify;
+}
+
+/**
+ * eventc_light_connection_set_disconnected_callback:
+ * @connection: an #EventcLightConnection
+ * @callback: (scope notified) (closure user_data) (destroy notify): The disconnect callback
+ *
+ * Sets the callback to be called when receiving disconnected.
+ */
+EVENTD_EXPORT
+void
+eventc_light_connection_set_disconnected_callback(EventcLightConnection *self, EventcLightConnectionDisconnectedCallback callback, gpointer user_data, GDestroyNotify notify)
+{
+    g_return_if_fail(self != NULL);
+    g_return_if_fail(callback != NULL);
+
+    if ( self->disconnected_callback.notify != NULL )
+        self->disconnected_callback.notify(self->disconnected_callback.user_data);
+
+    self->disconnected_callback.callback = callback;
+    self->disconnected_callback.user_data = user_data;
+    self->disconnected_callback.notify = notify;
 }
 
 /**
@@ -452,7 +482,8 @@ eventc_light_connection_get_socket(EventcLightConnection *self)
  *
  * Reads the incoming data on connection socket.
  *
- * Returns: 0 if the read was successful, a negative %errno value otherwise
+ * Returns: 0 if the read was successful, 1 on proper close,
+ * a negative %errno value otherwise
  */
 EVENTD_EXPORT
 gint
@@ -480,12 +511,14 @@ eventc_light_connection_read(EventcLightConnection *self)
     }
     if ( r == 0 )
     {
-        close(self->socket);
-        self->socket = 0;
+        _eventc_light_connection_close_internal(self);
         error = 1;
     }
     else if ( ( errno != EAGAIN ) && ( errno != EWOULDBLOCK ) )
+    {
+        _eventc_light_connection_close_internal(self);
         error = -errno;
+    }
     else
     {
         GError *error = NULL;
@@ -552,6 +585,8 @@ eventc_light_connection_close(EventcLightConnection *self)
         _eventc_light_connection_send_message(self, eventd_protocol_generate_bye(self->protocol, NULL));
     else if ( error != 0 )
         return error;
+    else
+        return 0;
 
     _eventc_light_connection_close_internal(self);
 
@@ -563,6 +598,9 @@ _eventc_light_connection_close_internal(EventcLightConnection *self)
 {
     close(self->socket);
     self->socket = 0;
+
+    if ( self->disconnected_callback.callback != NULL )
+        self->disconnected_callback.callback(self, self->disconnected_callback.user_data);
 }
 
 
