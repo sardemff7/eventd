@@ -74,38 +74,13 @@ install_data(join_paths(meson.current_build_dir(), 'eventd.pc'),
 )
 
 if get_option('enable-systemd')
+    systemd = dependency('systemd')
     eventd_units = [
         'eventd-control.socket',
         'eventd.socket',
         'eventd.service',
     ]
-    eventd_user_units = []
-    foreach u : eventd_units
-        eventd_user_units += configure_file(
-                input: 'units/user/@0@.in'.format(u),
-                output: u,
-                configuration: conf,
-            )
-    endforeach
-    eventd_system_units = []
-    foreach u : eventd_units
-        eventd_system_units += configure_file(
-                input: 'units/system/@0@.in'.format(u),
-                output: u,
-                configuration: conf,
-            )
-    endforeach
 
-    systemd = dependency('systemd')
-    systemduserunit_install_dir = get_option('systemduserunitdir')
-    if systemduserunit_install_dir == ''
-        systemduserunit_install_dir = systemd.get_pkgconfig_variable('systemduserunitdir')
-    endif
-    systemdsystemunit_install_dir = get_option('systemdsystemunitdir')
-    if systemdsystemunit_install_dir == ''
-        systemdsystemunit_install_dir = systemd.get_pkgconfig_variable('systemdsystemunitdir')
-    endif
-
-    install_data(eventd_user_units, install_dir: systemduserunit_install_dir)
-    install_data(eventd_system_units, install_dir: systemdsystemunit_install_dir)
+    subdir('units/user')
+    subdir('units/system')
 endif
