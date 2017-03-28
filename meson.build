@@ -180,11 +180,19 @@ subdir('client/libeventc/tests')
 xsltproc = [
     find_program('xsltproc'),
     '-o', '@OUTDIR@',
-    '--path', ':'.join([ join_paths(meson.current_source_dir(), 'src'), meson.current_build_dir(), nkutils_xsltpath ]),
     '--nonet', '--xinclude',
     '--stringparam', 'man.output.quietly', '1',
     '--stringparam', 'funcsynopsis.style', 'ansi',
     '--stringparam', 'profile.condition', ';'.join(docbook_conditions),
+]
+foreach p : [
+    join_paths(meson.current_source_dir(), 'src'),
+    meson.current_build_dir(),
+    nkutils_xsltpath,
+]
+    xsltproc += [ '--path', p ]
+endforeach
+xsltproc += [
     'http://docbook.sourceforge.net/release/xsl/current/manpages/profile-docbook.xsl',
     '@INPUT@'
 ]
