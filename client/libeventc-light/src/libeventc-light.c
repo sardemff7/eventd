@@ -454,7 +454,6 @@ eventc_light_connection_connect(EventcLightConnection *self)
         close(self->socket);
         self->socket = 0;
     }
-    g_debug("ok");
 
 ret:
     g_free(name_);
