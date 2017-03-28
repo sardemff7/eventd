@@ -5,7 +5,7 @@ Description=eventd control socket
 Service=eventd.service
 SocketUser=eventd
 SocketMode=0600
-ListenStream=/run/@PACKAGE_NAME@/private
+ListenStream=/run/eventd/private
 
 [Install]
 WantedBy=sockets.target

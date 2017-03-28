@@ -3,7 +3,7 @@ Description=eventd sockets
 
 [Socket]
 SocketMode=0660
-ListenStream=%t/@PACKAGE_NAME@/@EVP_UNIX_SOCKET@
+ListenStream=%t/eventd/@EVP_UNIX_SOCKET@
 
 [Install]
 WantedBy=sockets.target
