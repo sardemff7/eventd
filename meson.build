@@ -65,6 +65,10 @@ evp_ssdp_urn='urn:eventd-org:service:@0@:1'.format(evp_service_name)
 evp_unix_socket=evp_service_name
 
 header_conf = configuration_data()
+other_conf = configuration_data()
+other_conf.set('PACKAGE_NAME', meson.project_name())
+other_conf.set('VERSION', meson.project_version())
+other_conf.set('EVENTD_VERSION', eventd_version)
 header_conf.set_quoted('PACKAGE_NAME', meson.project_name())
 header_conf.set_quoted('EVENTD_VERSION', eventd_version)
 header_conf.set_quoted('MODULES_VERSION', meson.project_version())
@@ -77,11 +81,20 @@ else
 endif
 header_conf.set('GLIB_VERSION_MIN_REQUIRED', '(G_ENCODE_VERSION(@0@,@1@))'.format(glib_min_major, glib_min_minor))
 
+other_conf.set('prefix', get_option('prefix'))
+other_conf.set('bindir', join_paths(get_option('prefix'), get_option('bindir')))
+other_conf.set('datadir', join_paths(get_option('prefix'), get_option('datadir')))
 header_conf.set_quoted('EVENTD_SYSCONFDIR', join_paths(get_option('prefix'), get_option('sysconfdir')))
 header_conf.set_quoted('EVENTD_BINDIR', join_paths(get_option('prefix'), get_option('bindir')))
 header_conf.set_quoted('EVENTD_LIBDIR', join_paths(get_option('prefix'), get_option('libdir')))
 header_conf.set_quoted('EVENTD_DATADIR', join_paths(get_option('prefix'), get_option('datadir')))
 
+other_conf.set('EVP_SERVICE_NAME', evp_service_name)
+other_conf.set('EVP_TRANSPORT_NAME', evp_transport_name)
+other_conf.set('EVP_SERVICE_TYPE', evp_service_type)
+other_conf.set('EVP_SSDP_NS_UUID', evp_ssdp_ns_uuid)
+other_conf.set('EVP_SSDP_URN', evp_ssdp_urn)
+other_conf.set('EVP_UNIX_SOCKET', evp_unix_socket)
 header_conf.set_quoted('EVP_SERVICE_NAME', evp_service_name)
 header_conf.set_quoted('EVP_TRANSPORT_NAME', evp_transport_name)
 header_conf.set_quoted('EVP_SERVICE_TYPE', evp_service_type)
@@ -93,7 +106,7 @@ header_conf.set('EVENTD_DEBUG', get_option('enable-debug'))
 header_conf.set('DISABLE_IPV6', not get_option('enable-ipv6'))
 
 config_h = configure_file(output: 'config.h', configuration: header_conf)
-config_ent = configure_file(input: 'src/config.ent.in', output: 'config.ent', configuration: header_conf)
+config_ent = configure_file(input: 'src/config.ent.in', output: 'config.ent', configuration: other_conf)
 
 add_project_arguments(
     '-fvisibility=hidden',

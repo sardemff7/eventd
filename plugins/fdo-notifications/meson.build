@@ -16,7 +16,7 @@ shared_library('fdo-notifications', [
 fdo_notifications_service_file = configure_file(
     input: 'services/org.eventd.fdo-notifications.service.in',
     output: 'org.eventd.fdo-notifications.service',
-    configuration: conf,
+    configuration: other_conf,
 )
 
 dbussessionservice_install_dir = get_option('dbussessionservicedir')

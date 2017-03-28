@@ -7,7 +7,7 @@ foreach u : eventd_units
     eventd_user_units += configure_file(
             input: '@0@.in'.format(u),
             output: u,
-            configuration: conf,
+            configuration: other_conf,
         )
 endforeach
 

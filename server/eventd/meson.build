@@ -61,14 +61,7 @@ man_pages += [ [ files('man/eventd.conf.xml'), 'eventd.conf.5' ] ]
 
 # Until pkgconfig module gains support for custom variable
 
-conf = configuration_data()
-conf.set('VERSION', meson.project_version())
-conf.set('prefix', get_option('prefix'))
-conf.set('datadir', join_paths(get_option('prefix'), get_option('datadir')))
-conf.set('EVP_SSDP_NS_UUID', evp_ssdp_ns_uuid)
-conf.set('EVP_SSDP_URN', evp_ssdp_urn)
-
-eventd_pc = configure_file(input: 'pkgconfig/eventd.pc.in', output: 'eventd.pc', configuration: conf)
+eventd_pc = configure_file(input: 'pkgconfig/eventd.pc.in', output: 'eventd.pc', configuration: other_conf)
 install_data(join_paths(meson.current_build_dir(), 'eventd.pc'),
     install_dir: join_paths(get_option('datadir'), 'pkgconfig'),
 )
