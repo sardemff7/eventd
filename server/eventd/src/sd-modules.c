@@ -126,30 +126,31 @@ eventd_sd_modules_unload(void)
     }
 }
 
-#define _eventd_sd_modules_foreach_call(name, ...) _eventd_sd_modules_foreach(modules[i].name(modules[i].context, ##__VA_ARGS__))
+#define EV_COMMA ,
+#define _eventd_sd_modules_foreach_call(name, args) _eventd_sd_modules_foreach(modules[i].name(modules[i].context args))
 
 void
 eventd_sd_modules_set_publish_name(const gchar *name)
 {
-    _eventd_sd_modules_foreach_call(set_publish_name, name);
+    _eventd_sd_modules_foreach_call(set_publish_name, EV_COMMA name);
 }
 
 void
 eventd_sd_modules_monitor_server(const gchar *name, EventdRelayServer *server)
 {
-    _eventd_sd_modules_foreach_call(monitor_server, name, server);
+    _eventd_sd_modules_foreach_call(monitor_server, EV_COMMA name EV_COMMA server);
 }
 
 void
 eventd_sd_modules_start(void)
 {
-    _eventd_sd_modules_foreach_call(start);
+    _eventd_sd_modules_foreach_call(start,);
 }
 
 void
 eventd_sd_modules_stop(void)
 {
-    _eventd_sd_modules_foreach_call(stop);
+    _eventd_sd_modules_foreach_call(stop,);
 }
 
 gboolean
