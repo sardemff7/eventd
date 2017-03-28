@@ -208,5 +208,6 @@ custom_target('man',
     input: man_input,
     output: man_output,
     command: xsltproc,
+    depend_files: [ config_ent ],
     build_by_default: true,
 )
