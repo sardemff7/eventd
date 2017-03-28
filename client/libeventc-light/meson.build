@@ -47,7 +47,7 @@ libeventc_light = declare_dependency(link_with: libeventc_light_lib, include_dir
 
 pkgconfig.generate(
     filebase: 'libeventc-light',
-    name: 'libeventc/light',
+    name: 'libeventc-light',
     version: meson.project_version(),
     description: 'Library to communicate with eventd, light (local-only non-GIO) version',
     libraries: libeventc_light_lib,
