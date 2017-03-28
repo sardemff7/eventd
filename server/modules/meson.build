@@ -1,7 +1,14 @@
 modules_build_dir = meson.current_build_dir()
 
-if get_option('enable-websocket')
-    libsoup = dependency('libsoup-2.4', version: '>=2.50')
+libsoup = dependency('libsoup-2.4', version: '>=2.50', required: false)
+module_enable_websocket = get_option('enable-websocket')
+if module_enable_websocket == 'auto' and libsoup.found()
+    module_enable_websocket = 'true'
+endif
+if module_enable_websocket == 'true'
+    if not libsoup.found()
+        error('WebSocket module requested but libsoup not found')
+    endif
     ws = shared_module('ws', [
             config_h,
             'include/eventd-ws-module.h',
@@ -25,8 +32,16 @@ if get_option('enable-websocket')
     )
 endif
 
-if get_option('enable-dns-sd')
-    avahi = [ dependency('avahi-client'), dependency('avahi-glib') ]
+avahi = dependency('avahi-client', required: false)
+avahi_glib = dependency('avahi-glib', required: false)
+module_enable_dns_sd = get_option('enable-dns-sd')
+if module_enable_dns_sd == 'auto' and avahi.found() and avahi_glib.found()
+    module_enable_dns_sd = 'true'
+endif
+if module_enable_dns_sd == 'true'
+    if not avahi.found() or not avahi_glib.found()
+        error('DNS-SD module requested but avahi not found')
+    endif
     dns_sd = shared_module('dns-sd', [
             config_h,
             'include/eventd-sd-module.h',
@@ -37,6 +52,7 @@ if get_option('enable-dns-sd')
         ],
         include_directories: include_directories('include'),
         dependencies: [
+            avahi_glib,
             avahi,
             libeventd,
             gio,
@@ -49,8 +65,15 @@ if get_option('enable-dns-sd')
     )
 endif
 
-if get_option('enable-ssdp')
-    gssdp = dependency('gssdp-1.0')
+gssdp = dependency('gssdp-1.0', required: false)
+module_enable_ssdp = get_option('enable-ssdp')
+if module_enable_ssdp == 'auto' and gssdp.found()
+    module_enable_ssdp = 'true'
+endif
+if module_enable_ssdp == 'true'
+    if not gssdp.found()
+        error('SSDP module requested but GSSDP not found')
+    endif
     ssdp = shared_module('ssdp', [
             config_h,
             'include/eventd-sd-module.h',
