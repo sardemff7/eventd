@@ -291,7 +291,7 @@ if test x${enable_nd_wayland} = xyes; then
     wwprotocoldir=`${PKG_CONFIG} --variable=pkgdatadir wayland-wall`
     AC_SUBST([wwprotocoldir])
     AC_DEFINE([ENABLE_ND_WAYLAND], [1], [nd Wayland backend])
-    DOCBOOK_CONDITIONS="${DOCBOOK_CONDITIONS};enable_nd_wayland"
+    AM_DOCBOOK_CONDITIONS="${AM_DOCBOOK_CONDITIONS};enable_nd_wayland"
     enabled_nd_backends="${enabled_nd_backends}, Wayland"
 fi
 AM_CONDITIONAL([ENABLE_ND_WAYLAND], [test x${enable_nd_wayland} = xyes])
