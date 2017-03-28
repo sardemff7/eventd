@@ -162,6 +162,9 @@ eventc_light_connection_new(const gchar *name)
 static void
 _eventc_light_connection_free(EventcLightConnection *self)
 {
+    if ( self->event_callback.notify != NULL )
+        self->event_callback.notify(self->event_callback.user_data);
+
     if ( self->subscriptions != NULL )
         g_hash_table_unref(self->subscriptions);
 
