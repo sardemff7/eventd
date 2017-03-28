@@ -64,36 +64,36 @@ evp_ssdp_ns_uuid='884987d8-ebb8-4e68-aa38-45a428eb86fa'
 evp_ssdp_urn='urn:eventd-org:service:@0@:1'.format(evp_service_name)
 evp_unix_socket=evp_service_name
 
-conf = configuration_data()
-conf.set_quoted('PACKAGE_NAME', meson.project_name())
-conf.set_quoted('EVENTD_VERSION', eventd_version)
-conf.set_quoted('MODULES_VERSION', meson.project_version())
-conf.set_quoted('GETTEXT_PACKAGE', meson.project_name())
+header_conf = configuration_data()
+header_conf.set_quoted('PACKAGE_NAME', meson.project_name())
+header_conf.set_quoted('EVENTD_VERSION', eventd_version)
+header_conf.set_quoted('MODULES_VERSION', meson.project_version())
+header_conf.set_quoted('GETTEXT_PACKAGE', meson.project_name())
 
 if is_unix
-    conf.set('EVENTD_EXPORT', '__attribute__((visibility("default")))')
+    header_conf.set('EVENTD_EXPORT', '__attribute__((visibility("default")))')
 else
-    conf.set('EVENTD_EXPORT', '__declspec(dllexport)')
+    header_conf.set('EVENTD_EXPORT', '__declspec(dllexport)')
 endif
-conf.set('GLIB_VERSION_MIN_REQUIRED', '(G_ENCODE_VERSION(@0@,@1@))'.format(glib_min_major, glib_min_minor))
+header_conf.set('GLIB_VERSION_MIN_REQUIRED', '(G_ENCODE_VERSION(@0@,@1@))'.format(glib_min_major, glib_min_minor))
 
-conf.set_quoted('EVENTD_SYSCONFDIR', join_paths(get_option('prefix'), get_option('sysconfdir')))
-conf.set_quoted('EVENTD_BINDIR', join_paths(get_option('prefix'), get_option('bindir')))
-conf.set_quoted('EVENTD_LIBDIR', join_paths(get_option('prefix'), get_option('libdir')))
-conf.set_quoted('EVENTD_DATADIR', join_paths(get_option('prefix'), get_option('datadir')))
+header_conf.set_quoted('EVENTD_SYSCONFDIR', join_paths(get_option('prefix'), get_option('sysconfdir')))
+header_conf.set_quoted('EVENTD_BINDIR', join_paths(get_option('prefix'), get_option('bindir')))
+header_conf.set_quoted('EVENTD_LIBDIR', join_paths(get_option('prefix'), get_option('libdir')))
+header_conf.set_quoted('EVENTD_DATADIR', join_paths(get_option('prefix'), get_option('datadir')))
 
-conf.set_quoted('EVP_SERVICE_NAME', evp_service_name)
-conf.set_quoted('EVP_TRANSPORT_NAME', evp_transport_name)
-conf.set_quoted('EVP_SERVICE_TYPE', evp_service_type)
-conf.set_quoted('EVP_SSDP_NS_UUID', evp_ssdp_ns_uuid)
-conf.set_quoted('EVP_SSDP_URN', evp_ssdp_urn)
-conf.set_quoted('EVP_UNIX_SOCKET', evp_unix_socket)
+header_conf.set_quoted('EVP_SERVICE_NAME', evp_service_name)
+header_conf.set_quoted('EVP_TRANSPORT_NAME', evp_transport_name)
+header_conf.set_quoted('EVP_SERVICE_TYPE', evp_service_type)
+header_conf.set_quoted('EVP_SSDP_NS_UUID', evp_ssdp_ns_uuid)
+header_conf.set_quoted('EVP_SSDP_URN', evp_ssdp_urn)
+header_conf.set_quoted('EVP_UNIX_SOCKET', evp_unix_socket)
 
-conf.set('EVENTD_DEBUG', get_option('enable-debug'))
-conf.set('DISABLE_IPV6', not get_option('enable-ipv6'))
+header_conf.set('EVENTD_DEBUG', get_option('enable-debug'))
+header_conf.set('DISABLE_IPV6', not get_option('enable-ipv6'))
 
-config_h = configure_file(output: 'config.h', configuration: conf)
-config_ent = configure_file(input: 'src/config.ent.in', output: 'config.ent', configuration: conf)
+config_h = configure_file(output: 'config.h', configuration: header_conf)
+config_ent = configure_file(input: 'src/config.ent.in', output: 'config.ent', configuration: header_conf)
 
 add_project_arguments(
     '-fvisibility=hidden',
