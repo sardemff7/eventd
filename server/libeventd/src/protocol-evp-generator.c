@@ -73,7 +73,7 @@ eventd_protocol_generate_event(EventdProtocol *protocol, EventdEvent *event)
         return g_strdup_printf("EVENT %s %s %s\n", eventd_event_get_uuid(event), eventd_event_get_category(event), eventd_event_get_name(event));
 
     gsize size;
-    size = strlen(".EVENT 1b4e28ba-2fa1-11d2-883f-0016d3cca427 test-category test-name\n.\n") + ( ( data != NULL ) ? ( g_hash_table_size(data) * strlen(DATA_SAMPLE) ) : 0 );
+    size = strlen(".EVENT 1b4e28ba-2fa1-11d2-883f-0016d3cca427 test-category test-name\n.\n") + ( g_hash_table_size(data) * strlen(DATA_SAMPLE) );
 
     GString *str;
     str = g_string_sized_new(size);
