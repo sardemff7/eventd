@@ -326,12 +326,14 @@ _eventd_events_parse_group(EventdEvents *self, const gchar *group, GKeyFile *con
     }
 
 
+    gchar **if_data;
     gchar **if_data_matches;
     gchar **if_data_regexes;
     gchar **flags;
     gsize length;
 
-    evhelpers_config_key_file_get_string_list(config_file, group, "IfData", &event->if_data, NULL);
+    if ( evhelpers_config_key_file_get_string_list(config_file, group, "IfData", &if_data, NULL) == 0 )
+        event->if_data = if_data;
 
     if ( evhelpers_config_key_file_get_string_list(config_file, group, "IfDataMatches", &if_data_matches, &length) == 0 )
     {
@@ -480,13 +482,14 @@ _eventd_events_parse_group(EventdEvents *self, const gchar *group, GKeyFile *con
     if ( evhelpers_config_key_file_get_string_list(config_file, group, "NotIfFlags", &flags, &length) == 0 )
         event->flags_blacklist = _eventd_events_parse_event_flags(flags, length);
 
-    gint64 default_importance;
+    gint64 default_importance, importance;
 
     if ( ( event->if_data != NULL ) || ( event->if_data_matches != NULL ) || ( event->flags_whitelist != NULL ) || ( event->flags_blacklist != NULL ) )
         default_importance = 0;
     else
         default_importance = G_MAXINT64;
-    evhelpers_config_key_file_get_int_with_default(config_file, group, "Importance", default_importance, &event->importance);
+    if ( evhelpers_config_key_file_get_int_with_default(config_file, group, "Importance", default_importance, &importance) == 0 )
+        event->importance = importance;
 
     GList *list = NULL;
     gchar *old_key = NULL;
