@@ -81,6 +81,7 @@ _eventd_sound_pulseaudio_stream_state_callback(pa_stream *stream, gpointer user_
     {
     case PA_STREAM_FAILED:
         g_warning("Failed sample creation");
+        /* fallthrough */
     case PA_STREAM_TERMINATED:
         g_free(data);
         pa_stream_unref(stream);
