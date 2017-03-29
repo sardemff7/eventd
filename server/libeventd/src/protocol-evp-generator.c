@@ -108,7 +108,8 @@ eventd_protocol_generate_subscribe(EventdProtocol *protocol, GHashTable *categor
     gchar *category;
     length = g_hash_table_size(categories);
     g_hash_table_iter_init(&iter, categories);
-    g_hash_table_iter_next(&iter, (gpointer *) &category, NULL);
+    if ( ! g_hash_table_iter_next(&iter, (gpointer *) &category, NULL) )
+        return g_strdup("SUBSCRIBE\n");
 
     if ( length == 1 )
         return g_strdup_printf("SUBSCRIBE %s\n", category);
