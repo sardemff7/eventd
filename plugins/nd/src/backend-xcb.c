@@ -120,10 +120,15 @@ _eventd_nd_xcb_global_parse(EventdNdBackendContext *self, GKeyFile *config_file)
         return;
 
     guint64 enum_value;
+    gchar **outputs;
 
     if ( evhelpers_config_key_file_get_enum_with_default(config_file, "NotificationXcb", "FollowFocus", _eventd_nd_xcb_follow_focus, G_N_ELEMENTS(_eventd_nd_xcb_follow_focus), EVENTD_ND_XCB_FOLLOW_FOCUS_NONE, &enum_value) == 0 )
         self->follow_focus = enum_value;
-    evhelpers_config_key_file_get_string_list(config_file, "NotificationXcb", "Outputs", &self->outputs, NULL);
+    if ( evhelpers_config_key_file_get_string_list(config_file, "NotificationXcb", "Outputs", &outputs, NULL) == 0 )
+    {
+        g_strfreev(self->outputs);
+        self->outputs = outputs;
+    }
 }
 
 static void
