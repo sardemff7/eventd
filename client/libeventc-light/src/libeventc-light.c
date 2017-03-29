@@ -64,10 +64,7 @@ struct _EventcLightConnection {
     } disconnected_callback;
     EventdProtocol *protocol;
     EventcLightSocket socket;
-    struct {
-        gchar *buffer;
-        gsize length;
-    } buffer;
+    GString *buffer;
 };
 
 static void _eventc_light_connection_close_internal(EventcLightConnection *self);
@@ -160,6 +157,7 @@ eventc_light_connection_new(const gchar *name)
     self->name = g_strdup(name);
 
     self->protocol = eventd_protocol_new(&_eventc_light_connection_protocol_callbacks, self, NULL);
+    self->buffer = g_string_sized_new(512);
 
     return self;
 }
@@ -176,6 +174,7 @@ _eventc_light_connection_free(EventcLightConnection *self)
     if ( self->subscriptions != NULL )
         g_hash_table_unref(self->subscriptions);
 
+    g_string_free(self->buffer, TRUE);
     eventd_protocol_unref(self->protocol);
 
     g_free(self);
@@ -495,19 +494,9 @@ eventc_light_connection_read(EventcLightConnection *self)
         return error;
 
     gchar buf[4096];
-    gchar *buffer = self->buffer.buffer;
-    gsize length = self->buffer.length;
-    gsize o = length;
-
     gssize r;
     while ( ( r = recv(self->socket, buf, sizeof(buf), 0) ) > 0 )
-    {
-        length += r;
-        buffer = g_realloc(buffer, length);
-        strncpy(buffer+o, buf, r);
-        buffer[length] = '\0';
-        o = length;
-    }
+        g_string_append_len(self->buffer, buf, r);
     if ( r == 0 )
     {
         _eventc_light_connection_close_internal(self);
@@ -521,22 +510,19 @@ eventc_light_connection_read(EventcLightConnection *self)
     else
     {
         GError *error = NULL;
-        o = 0;
+        gchar *w = self->buffer->str, *e = w + self->buffer->len;
         gchar *c;
-        while ( ( c = g_utf8_strchr(buffer + o, length - o, '\n') ) != NULL )
+        while ( ( c = g_utf8_strchr(w, e - w, '\n') ) != NULL )
         {
             *c = '\0';
-            if ( ! eventd_protocol_parse(self->protocol, buffer + o, &error) )
+            if ( ! eventd_protocol_parse(self->protocol, w, &error) )
             {
                 g_error_free(error);
                 return -EINVAL;
             }
-            o = c + 1 - buffer;
+            w = ++c;
         }
-        self->buffer.length = length - o;
-        self->buffer.buffer = g_strndup(buffer + o, self->buffer.length);
-
-        g_free(buffer);
+        g_string_erase(self->buffer, 0, w - self->buffer->str);
     }
 
     return error;
