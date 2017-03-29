@@ -426,6 +426,7 @@ _eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
             {
             case 1:
                 integer_list[1] = integer_list[0];
+                /* fallthrough */
             case 2:
                 self->margin_x = MAX(0, integer_list[0].value);
                 self->margin_y = MAX(0, integer_list[1].value);
