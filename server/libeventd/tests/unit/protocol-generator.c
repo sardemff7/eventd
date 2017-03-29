@@ -28,7 +28,7 @@ typedef struct {
     EventdEvent *event;
 } GeneratorData;
 
-static const EventdProtocolCallbacks _callbacks = { NULL };
+static const EventdProtocolCallbacks _callbacks;
 
 static void
 _init_data(gpointer fixture, gconstpointer user_data)
