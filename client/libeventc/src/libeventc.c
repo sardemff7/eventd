@@ -83,31 +83,32 @@ static void _eventc_connection_close_internal(EventcConnection *self);
 static GSocketConnectable *
 _eventc_get_address(const gchar *host_and_port, GError **error)
 {
-#ifdef G_OS_UNIX
-    if ( g_str_has_prefix(host_and_port, "@") )
     {
-        if ( g_unix_socket_address_abstract_names_supported() )
-            return G_SOCKET_CONNECTABLE(g_unix_socket_address_new_with_type(host_and_port + 1, -1, G_UNIX_SOCKET_ADDRESS_ABSTRACT));
-        else
+        const gchar *path = host_and_port;
+#ifdef G_OS_UNIX
+        if ( g_str_has_prefix(path, "@") )
         {
+            if ( g_unix_socket_address_abstract_names_supported() )
+                return G_SOCKET_CONNECTABLE(g_unix_socket_address_new_with_type(path + 1, -1, G_UNIX_SOCKET_ADDRESS_ABSTRACT));
             g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_HOSTNAME, "Abstract UNIX socket names are not supported");
             return NULL;
         }
-    }
 #endif /* G_OS_UNIX */
+    }
 
     GError *_inner_error_ = NULL;
 
     if ( g_utf8_strchr(host_and_port, -1, G_DIR_SEPARATOR) != NULL )
     {
-        if ( g_file_test(host_and_port, G_FILE_TEST_IS_REGULAR) )
+        const gchar *path = host_and_port;
+        if ( g_file_test(path, G_FILE_TEST_IS_REGULAR) )
         {
             gchar *str;
             guint64 port;
-            g_file_get_contents(host_and_port, &str, NULL, &_inner_error_);
+            g_file_get_contents(path, &str, NULL, &_inner_error_);
             if ( str == NULL )
             {
-                g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_HOSTNAME, "Could not read file '%s': %s", host_and_port, _inner_error_->message);
+                g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_HOSTNAME, "Could not read file '%s': %s", path, _inner_error_->message);
                 g_error_free(_inner_error_);
             }
             else
@@ -115,7 +116,7 @@ _eventc_get_address(const gchar *host_and_port, GError **error)
                 port = g_ascii_strtoull(str, NULL, 10);
                 g_free(str);
                 if ( ( port == 0 ) || ( port > G_MAXUINT16 ) )
-                    g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_HOSTNAME, "File '%s' contains wrong port '%" G_GINT64_MODIFIER "u'", host_and_port, port);
+                    g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_HOSTNAME, "File '%s' contains wrong port '%" G_GINT64_MODIFIER "u'", path, port);
                 else
                     return g_network_address_new_loopback(port);
             }
@@ -125,26 +126,27 @@ _eventc_get_address(const gchar *host_and_port, GError **error)
             return G_SOCKET_CONNECTABLE(g_unix_socket_address_new(host_and_port));
 #endif /* G_OS_UNIX */
         else
-            g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_HOSTNAME, "File '%s' does not exist", host_and_port);
+            g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_HOSTNAME, "File '%s' does not exist", path);
         return NULL;
     }
-
-    GSocketConnectable *address;
-
-    address = g_network_address_parse(host_and_port, 0, &_inner_error_);
-
-    if ( address == NULL )
     {
-        g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_HOSTNAME, "Could not resolve host name '%s': %s", host_and_port, _inner_error_->message);
-        g_error_free(_inner_error_);
-    }
-    else if ( g_network_address_get_port(G_NETWORK_ADDRESS(address)) == 0 )
-    {
-        g_object_unref(address);
-        return g_network_service_new(EVP_SERVICE_NAME, EVP_TRANSPORT_NAME, host_and_port);
-    }
+        const gchar *hostname = host_and_port;
+        GSocketConnectable *address;
 
-    return address;
+        address = g_network_address_parse(hostname, 0, &_inner_error_);
+
+        if ( address == NULL )
+        {
+            g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_HOSTNAME, "Could not resolve host name '%s': %s", hostname, _inner_error_->message);
+            g_error_free(_inner_error_);
+        }
+        else if ( g_network_address_get_port(G_NETWORK_ADDRESS(address)) == 0 )
+        {
+            g_object_unref(address);
+            return g_network_service_new(EVP_SERVICE_NAME, EVP_TRANSPORT_NAME, hostname);
+        }
+        return address;
+    }
 }
 
 /**
