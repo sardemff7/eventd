@@ -83,14 +83,6 @@ static void _eventc_connection_close_internal(EventcConnection *self);
 static GSocketConnectable *
 _eventc_get_address(const gchar *host_and_port, GError **error)
 {
-    GSocketConnectable *address = NULL;
-
-    if ( ( host_and_port == NULL ) || ( *host_and_port == '\0' ) )
-        host_and_port = g_getenv("EVENTC_HOST");
-
-    if ( ( host_and_port == NULL ) || ( *host_and_port == '\0' ) )
-        host_and_port = "localhost";
-
 #ifdef G_OS_UNIX
     if ( g_str_has_prefix(host_and_port, "@") )
     {
@@ -105,10 +97,6 @@ _eventc_get_address(const gchar *host_and_port, GError **error)
 #endif /* G_OS_UNIX */
 
     GError *_inner_error_ = NULL;
-    gchar *path = NULL;
-
-    if ( g_strcmp0(host_and_port, "localhost") == 0 )
-        host_and_port = path = g_build_filename(g_get_user_runtime_dir(), PACKAGE_NAME, EVP_UNIX_SOCKET, NULL);
 
     if ( g_utf8_strchr(host_and_port, -1, G_DIR_SEPARATOR) != NULL )
     {
@@ -129,21 +117,19 @@ _eventc_get_address(const gchar *host_and_port, GError **error)
                 if ( ( port == 0 ) || ( port > G_MAXUINT16 ) )
                     g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_HOSTNAME, "File '%s' contains wrong port '%" G_GINT64_MODIFIER "u'", host_and_port, port);
                 else
-                    address = g_network_address_new_loopback(port);
+                    return g_network_address_new_loopback(port);
             }
         }
 #ifdef G_OS_UNIX
         else if ( g_file_test(host_and_port, G_FILE_TEST_EXISTS) && ( ! g_file_test(host_and_port, G_FILE_TEST_IS_DIR) ) )
-            address = G_SOCKET_CONNECTABLE(g_unix_socket_address_new(host_and_port));
+            return G_SOCKET_CONNECTABLE(g_unix_socket_address_new(host_and_port));
 #endif /* G_OS_UNIX */
         else
             g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_HOSTNAME, "File '%s' does not exist", host_and_port);
-        host_and_port = NULL;
+        return NULL;
     }
 
-    g_free(path);
-    if ( ( host_and_port == NULL ) || ( path != NULL ) )
-        return address;
+    GSocketConnectable *address;
 
     address = g_network_address_parse(host_and_port, 0, &_inner_error_);
 
@@ -155,7 +141,7 @@ _eventc_get_address(const gchar *host_and_port, GError **error)
     else if ( g_network_address_get_port(G_NETWORK_ADDRESS(address)) == 0 )
     {
         g_object_unref(address);
-        address = g_network_service_new(EVP_SERVICE_NAME, EVP_TRANSPORT_NAME, host_and_port);
+        return g_network_service_new(EVP_SERVICE_NAME, EVP_TRANSPORT_NAME, host_and_port);
     }
 
     return address;
@@ -907,9 +893,17 @@ eventc_connection_set_host(EventcConnection *self, const gchar *host, GError **e
     g_return_val_if_fail(EVENTC_IS_CONNECTION(self), FALSE);
     g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
+    gchar *default_host = NULL;
+    if ( ( host == NULL ) || ( *host == '\0' ) )
+        host = g_getenv("EVENTC_HOST");
+
+    if ( ( host == NULL ) || ( *host == '\0' ) )
+        host = default_host = g_build_filename(g_get_user_runtime_dir(), PACKAGE_NAME, EVP_UNIX_SOCKET, NULL);
+
     GSocketConnectable *address;
 
     address = _eventc_get_address(host, error);
+    g_free(default_host);
     if ( address == NULL )
         return FALSE;
     if ( self->priv->address != NULL )
