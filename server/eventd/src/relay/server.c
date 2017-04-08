@@ -143,15 +143,15 @@ eventd_relay_server_new(EventdCoreContext *core, const gchar *server_identity, g
 }
 
 EventdRelayServer *
-eventd_relay_server_new_for_domain(EventdCoreContext *core, const gchar *server_identity, gboolean accept_unknown_ca, gboolean use_websocket, gchar **forwards, gchar **subscriptions, const gchar *domain)
+eventd_relay_server_new_for_uri(EventdCoreContext *core, const gchar *server_identity, gboolean accept_unknown_ca, gboolean use_websocket, gchar **forwards, gchar **subscriptions, const gchar *uri)
 {
     EventcConnection *connection;
     GError *error = NULL;
 
-    connection = eventc_connection_new(domain, &error);
+    connection = eventc_connection_new(uri, &error);
     if ( connection == NULL )
     {
-        g_warning("Couldn't get address for relay server '%s': %s", domain, error->message);
+        g_warning("Couldn't get address for relay server '%s': %s", uri, error->message);
         g_clear_error(&error);
         return NULL;
     }

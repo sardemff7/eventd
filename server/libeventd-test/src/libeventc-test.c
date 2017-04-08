@@ -249,13 +249,18 @@ _ended_callback(EventcConnection *client, EventdEvent *e, gpointer user_data)
 }
 
 int
-eventd_tests_run_libeventc(const gchar *host)
+eventd_tests_run_libeventc(const gchar *uri)
 {
     int r = 0;
+    gchar *default_uri = NULL;
+
+    if ( uri == NULL )
+        uri = default_uri = g_strdup_printf("file://%s" G_DIR_SEPARATOR_S PACKAGE_NAME G_DIR_SEPARATOR_S EVP_UNIX_SOCKET, g_get_user_runtime_dir());
 
     EventcConnection *client;
 
-    client = eventc_connection_new(host, &error);
+    client = eventc_connection_new(uri, &error);
+    g_free(default_uri);
 
     if ( client == NULL )
         goto error;

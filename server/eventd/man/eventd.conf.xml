@@ -260,10 +260,31 @@
 
             <variablelist>
                 <varlistentry>
-                    <term><varname>Server=</varname></term>
+                    <term><varname>URI=</varname></term>
                     <listitem>
-                        <para>A <type>server string</type></para>
-                        <para>The form is <replaceable>name</replaceable><optional>:<replaceable>port</replaceable></optional>.</para>
+                        <para>An <type>URI</type></para>
+                        <para>Several schemes are supported.</para>
+                        <variablelist>
+                            <varlistentry>
+                                <term>evp://<replaceable>hostname</replaceable><optional>:<replaceable>port</replaceable></optional></term>
+                                <listitem>
+                                    <para>Use the Event protocol over TCP. TLS is used (and mandatory) if not connecting to localhost.</para>
+                                </listitem>
+                            </varlistentry>
+                            <varlistentry condition="website;ev_os_unix">
+                                <term>unix:@<replaceable>abstract-name</replaceable></term>
+                                <term>unix:<replaceable>path</replaceable></term>
+                                <listitem>
+                                    <para>Use the Event protocol over an UNIX stream socket.</para>
+                                </listitem>
+                            </varlistentry>
+                            <varlistentry>
+                                <term>file://<replaceable>path</replaceable></term>
+                                <listitem>
+                                    <para>Use the Event protocol over TCP on localhost using a random port. The port is expected to be written in the file pointed by <replaceable>path</replaceable>.</para>
+                                </listitem>
+                            </varlistentry>
+                        </variablelist>
                         <para>If you omit <replaceable>port</replaceable> or use <literal>0</literal>, the SRV DNS record <literal>&EVP_SERVICE_TYPE;.<replaceable>host</replaceable></literal> will be used to find the real host and port to connect to.</para>
                         <para>Static servers eventd will connect to.</para>
                     </listitem>

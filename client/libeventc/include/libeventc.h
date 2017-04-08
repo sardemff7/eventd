@@ -76,7 +76,7 @@ struct _EventcConnectionClass {
 const gchar *eventc_get_version(void);
 
 
-EventcConnection *eventc_connection_new(const gchar *host, GError **error);
+EventcConnection *eventc_connection_new(const gchar *uri, GError **error);
 EventcConnection *eventc_connection_new_for_connectable(GSocketConnectable *address);
 
 void eventc_connection_connect(EventcConnection *connection, GAsyncReadyCallback callback, gpointer user_data);
@@ -87,7 +87,7 @@ gboolean eventc_connection_close(EventcConnection *connection, GError **error);
 
 
 gboolean eventc_connection_set_use_websocket(EventcConnection *connection, gboolean use_websocket, GError **error);
-gboolean eventc_connection_set_host(EventcConnection *connection, const gchar *host, GError **error);
+gboolean eventc_connection_set_uri(EventcConnection *connection, const gchar *uri, GError **error);
 void eventc_connection_set_connectable(EventcConnection *connection, GSocketConnectable *address);
 void eventc_connection_set_server_identity(EventcConnection *connection, GSocketConnectable *server_identity);
 void eventc_connection_set_accept_unknown_ca(EventcConnection *connection, gboolean accept_unknown_ca);

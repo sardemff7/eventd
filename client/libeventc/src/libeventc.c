@@ -20,13 +20,17 @@
 
 #include "config.h"
 
+#include <string.h>
+
 #include <glib.h>
 #include <glib-object.h>
 #include <gio/gio.h>
 #ifdef G_OS_UNIX
 #include <gio/gunixsocketaddress.h>
+#define DEFAULT_SOCKET_SCHEME "unix:"
 #else /* ! G_OS_UNIX */
 #define G_IS_UNIX_SOCKET_ADDRESS(a) (FALSE)
+#define DEFAULT_SOCKET_SCHEME "file://"
 #endif /* ! G_OS_UNIX */
 #include "gio-compat.h"
 
@@ -81,26 +85,34 @@ typedef struct {
 static void _eventc_connection_close_internal(EventcConnection *self);
 
 static GSocketConnectable *
-_eventc_get_address(const gchar *host_and_port, GError **error)
+_eventc_get_address(const gchar *uri, GError **error)
 {
+    GError *_inner_error_ = NULL;
+    if ( g_str_has_prefix(uri, "unix:") )
     {
-        const gchar *path = host_and_port;
 #ifdef G_OS_UNIX
+        const gchar *path = uri + strlen("unix:");
+
         if ( g_str_has_prefix(path, "@") )
         {
             if ( g_unix_socket_address_abstract_names_supported() )
                 return G_SOCKET_CONNECTABLE(g_unix_socket_address_new_with_type(path + 1, -1, G_UNIX_SOCKET_ADDRESS_ABSTRACT));
             g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_HOSTNAME, "Abstract UNIX socket names are not supported");
-            return NULL;
         }
-#endif /* G_OS_UNIX */
+        else if ( g_file_test(path, G_FILE_TEST_EXISTS) && ( ! g_file_test(path, G_FILE_TEST_IS_DIR|G_FILE_TEST_IS_REGULAR) ) )
+            return G_SOCKET_CONNECTABLE(g_unix_socket_address_new(path));
+        else
+            g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_HOSTNAME, "File '%s' does not exist or is not a UNIX socket", path);
+#else /* ! G_OS_UNIX */
+        g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_HOSTNAME, "UNIX sockets are not supported");
+#endif /* ! G_OS_UNIX */
+        return NULL;
     }
 
-    GError *_inner_error_ = NULL;
-
-    if ( g_utf8_strchr(host_and_port, -1, G_DIR_SEPARATOR) != NULL )
+    if ( g_str_has_prefix(uri, "file://") )
     {
-        const gchar *path = host_and_port;
+        const gchar *path = uri + strlen("file://");
+
         if ( g_file_test(path, G_FILE_TEST_IS_REGULAR) )
         {
             gchar *str;
@@ -121,16 +133,14 @@ _eventc_get_address(const gchar *host_and_port, GError **error)
                     return g_network_address_new_loopback(port);
             }
         }
-#ifdef G_OS_UNIX
-        else if ( g_file_test(host_and_port, G_FILE_TEST_EXISTS) && ( ! g_file_test(host_and_port, G_FILE_TEST_IS_DIR) ) )
-            return G_SOCKET_CONNECTABLE(g_unix_socket_address_new(host_and_port));
-#endif /* G_OS_UNIX */
         else
             g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_HOSTNAME, "File '%s' does not exist", path);
         return NULL;
     }
+
+    if ( g_str_has_prefix(uri, "evp://") )
     {
-        const gchar *hostname = host_and_port;
+        const gchar *hostname = uri + strlen("evp://");
         GSocketConnectable *address;
 
         address = g_network_address_parse(hostname, 0, &_inner_error_);
@@ -147,6 +157,9 @@ _eventc_get_address(const gchar *host_and_port, GError **error)
         }
         return address;
     }
+
+    g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_HOSTNAME, "Unsupported URI: %s", uri);
+    return NULL;
 }
 
 /**
@@ -346,17 +359,17 @@ _eventc_connection_finalize(GObject *object)
 
 /**
  * eventc_connection_new:
- * @host: (nullable): the host running the eventd instance to connect to or %NULL (equivalent to "localhost")
+ * @uri: (nullable): the URI for the eventd instance to connect to or %NULL for the default local socket
  * @error: (out) (optional): return location for error or %NULL to ignore
  *
  * Creates a new connection to an eventd daemon.
- * See eventc_connection_set_host() for the exact format for @host.
+ * See eventc_connection_set_uri() for the exact format for @uri.
  *
- * Returns: (transfer full): a new connection, or %NULL if @host could not be resolved
+ * Returns: (transfer full): a new connection, or %NULL if @uri could not be resolved
  */
 EVENTD_EXPORT
 EventcConnection *
-eventc_connection_new(const gchar *host, GError **error)
+eventc_connection_new(const gchar *uri, GError **error)
 {
     g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
@@ -364,7 +377,7 @@ eventc_connection_new(const gchar *host, GError **error)
 
     self = g_object_new(EVENTC_TYPE_CONNECTION, NULL);
 
-    if ( ! eventc_connection_set_host(self, host, error) )
+    if ( ! eventc_connection_set_uri(self, uri, error) )
     {
         g_object_unref(self);
         return NULL;
@@ -875,37 +888,41 @@ eventc_connection_set_use_websocket(EventcConnection *self, gboolean use_websock
 }
 
 /**
- * eventc_connection_set_host:
+ * eventc_connection_set_uri:
  * @connection: an #EventcConnection
- * @host: (nullable): the host running the eventd instance to connect to or %NULL (equivalent to "localhost")
+ * @uri: (nullable): the URI for the eventd instance to connect to or %NULL for the default local socket
  * @error: (out) (optional): return location for error or %NULL to ignore
  *
- * Sets the host for the connection.
- * If @host cannot be resolved, the address of @connection will not change.
+ * Sets the URI for the connection.
+ * If @uri cannot be resolved, the address of @connection will not change.
  *
- * The format is `*host*[:*port*]`.
- * If you either omit `*port*` or use `0`, the SRV DNS record will be used.
+ * The format can be:
+ * - `unix:@*abstract-name*`
+ * - `unix:*path*`
+ * - `file://``*path*`
+ * - `evp://``*host*[:*port*]`
+ *   If you either omit `*port*` or use `0`, the SRV DNS record will be used.
  *
  * Returns: %TRUE if the host was changed, %FALSE in case of error
  */
 EVENTD_EXPORT
 gboolean
-eventc_connection_set_host(EventcConnection *self, const gchar *host, GError **error)
+eventc_connection_set_uri(EventcConnection *self, const gchar *uri, GError **error)
 {
     g_return_val_if_fail(EVENTC_IS_CONNECTION(self), FALSE);
     g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
-    gchar *default_host = NULL;
-    if ( ( host == NULL ) || ( *host == '\0' ) )
-        host = g_getenv("EVENTC_HOST");
+    gchar *default_uri = NULL;
+    if ( ( uri == NULL ) || ( *uri == '\0' ) )
+        uri = g_getenv("EVENTC_HOST");
 
-    if ( ( host == NULL ) || ( *host == '\0' ) )
-        host = default_host = g_build_filename(g_get_user_runtime_dir(), PACKAGE_NAME, EVP_UNIX_SOCKET, NULL);
+    if ( ( uri == NULL ) || ( *uri == '\0' ) )
+        uri = default_uri = g_strdup_printf(DEFAULT_SOCKET_SCHEME "%s" G_DIR_SEPARATOR_S PACKAGE_NAME G_DIR_SEPARATOR_S EVP_UNIX_SOCKET, g_get_user_runtime_dir());
 
     GSocketConnectable *address;
 
-    address = _eventc_get_address(host, error);
-    g_free(default_host);
+    address = _eventc_get_address(uri, error);
+    g_free(default_uri);
     if ( address == NULL )
         return FALSE;
     if ( self->priv->address != NULL )
