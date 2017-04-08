@@ -296,7 +296,6 @@ _eventd_relay_server_parse(EventdRelayContext *context, GKeyFile *config_file, g
     }
 
     gboolean accept_unknown_ca = FALSE;
-    gboolean use_websocket = FALSE;
     gchar *server_identity = NULL;
     gchar **forwards = NULL;
     gchar **subscriptions = NULL;
@@ -304,8 +303,6 @@ _eventd_relay_server_parse(EventdRelayContext *context, GKeyFile *config_file, g
     if ( evhelpers_config_key_file_get_string(config_file, group, "ServerIdentity", &server_identity) < 0 )
         goto cleanup;
     if ( evhelpers_config_key_file_get_boolean(config_file, group, "AcceptUnknownCA", &accept_unknown_ca) < 0 )
-        goto cleanup;
-    if ( evhelpers_config_key_file_get_boolean(config_file, group, "UseWebSocket", &use_websocket) < 0 )
         goto cleanup;
     if ( evhelpers_config_key_file_get_string_list(config_file, group, "Forwards", &forwards, NULL) < 0 )
         goto cleanup;
@@ -315,12 +312,12 @@ _eventd_relay_server_parse(EventdRelayContext *context, GKeyFile *config_file, g
     EventdRelayServer *server;
     if ( discover_name != NULL )
     {
-        server = eventd_relay_server_new(context->core, server_identity, accept_unknown_ca, use_websocket, forwards, subscriptions);
+        server = eventd_relay_server_new(context->core, server_identity, accept_unknown_ca, forwards, subscriptions);
         eventd_sd_modules_monitor_server(discover_name, server);
     }
     else
     {
-        server = eventd_relay_server_new_for_uri(context->core, server_identity, accept_unknown_ca, use_websocket, forwards, subscriptions, server_uri);
+        server = eventd_relay_server_new_for_uri(context->core, server_identity, accept_unknown_ca, forwards, subscriptions, server_uri);
         if ( server == NULL )
         {
             g_warning("Couldn't create the connection to server '%s' using '%s'", server_name, server_uri);

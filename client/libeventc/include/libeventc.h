@@ -86,7 +86,6 @@ gboolean eventc_connection_event (EventcConnection *connection, EventdEvent *eve
 gboolean eventc_connection_close(EventcConnection *connection, GError **error);
 
 
-gboolean eventc_connection_set_use_websocket(EventcConnection *connection, gboolean use_websocket, GError **error);
 gboolean eventc_connection_set_uri(EventcConnection *connection, const gchar *uri, GError **error);
 void eventc_connection_set_connectable(EventcConnection *connection, GSocketConnectable *address);
 void eventc_connection_set_server_identity(EventcConnection *connection, GSocketConnectable *server_identity);

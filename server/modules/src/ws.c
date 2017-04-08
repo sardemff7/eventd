@@ -44,6 +44,7 @@ struct _EventdWsConnection {
     gpointer data;
     GDestroyNotify disconnect_callback;
     gboolean client;
+    SoupURI *uri;
     EventdProtocol *protocol;
     GCancellable *cancellable;
     GTask *task;
@@ -53,6 +54,26 @@ struct _EventdWsConnection {
     SoupMessage *msg;
     SoupWebsocketConnection *connection;
 };
+
+static GSocketConnectable *
+_eventd_ws_uri_parse(const gchar *uri, EventdWsUri **ws_uri)
+{
+    SoupURI *soup_uri;
+    GSocketConnectable *address;
+
+    soup_uri = soup_uri_new(uri);
+    address = g_network_address_new(soup_uri_get_host(soup_uri), soup_uri_get_port(soup_uri));
+    *ws_uri = soup_uri;
+
+    return address;
+}
+
+static gboolean
+_eventd_ws_uri_is_tls(const EventdWsUri *uri)
+{
+    const SoupURI *soup_uri = uri;
+    return ( soup_uri->scheme == SOUP_URI_SCHEME_WSS );
+}
 
 static gboolean
 _eventd_ws_connection_write_message(EventdWsConnection *self, gboolean request, GError **error)
@@ -160,45 +181,10 @@ _eventd_ws_connection_set_connection(EventdWsConnection *self, SoupWebsocketConn
 }
 
 static gboolean
-_eventd_ws_connection_client_send_handshake(EventdWsConnection *self, GSocketConnectable *server_identity, GError **error)
+_eventd_ws_connection_client_send_handshake(EventdWsConnection *self, GError **error)
 {
-    const gchar *host = NULL;
-    gchar *host_ = NULL;
-
-    if ( G_IS_UNIX_SOCKET_ADDRESS(server_identity) )
-        host = "localhost";
-    else if ( G_IS_NETWORK_SERVICE(server_identity) )
-        host = g_network_service_get_domain(G_NETWORK_SERVICE(server_identity));
-    else if ( G_IS_NETWORK_ADDRESS(server_identity) )
-        host = host_ = g_strdup_printf("%s:%u", g_network_address_get_hostname(G_NETWORK_ADDRESS(server_identity)),  g_network_address_get_port(G_NETWORK_ADDRESS(server_identity)));
-    else if ( G_IS_PROXY_ADDRESS(server_identity) )
-        host = host_ = g_strdup_printf("%s:%u", g_proxy_address_get_destination_hostname(G_PROXY_ADDRESS(server_identity)),  g_proxy_address_get_destination_port(G_PROXY_ADDRESS(server_identity)));
-    else if ( G_IS_INET_SOCKET_ADDRESS(server_identity) )
-    {
-        GInetAddress *inet_address;
-        gchar *tmp;
-        inet_address = g_inet_socket_address_get_address(G_INET_SOCKET_ADDRESS(server_identity));
-        tmp = g_inet_address_to_string(inet_address);
-        host = host_ = g_strdup_printf("%s:%u", tmp,  g_inet_socket_address_get_port(G_INET_SOCKET_ADDRESS(server_identity)));
-        g_free(tmp);
-    }
-
-    if ( host == NULL )
-    {
-        g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_URI, "Could not get an HTTP hostname from libeventc URI");
-        g_free(host_);
-        return FALSE;
-    }
-
-    SoupURI *uri;
-    uri = soup_uri_new(NULL);
-    soup_uri_set_host(uri, host);
-    soup_uri_set_path(uri, "/evp");
-    soup_uri_set_scheme(uri, G_IS_TLS_CONNECTION(self->stream) ? "wss" : "ws");
-    g_free(host_);
-
-    self->msg = soup_message_new_from_uri(SOUP_METHOD_GET, uri);
-    soup_uri_free(uri);
+    self->msg = soup_message_new_from_uri(SOUP_METHOD_GET, self->uri);
+    soup_message_headers_replace(self->msg->request_headers, "Host", soup_uri_get_host(self->uri));
 
     gchar *protocols[] = { EVP_SERVICE_NAME, NULL };
     soup_websocket_client_prepare_handshake(self->msg, NULL, protocols);
@@ -372,13 +358,14 @@ _eventd_ws_connection_server_new(gpointer data, GDestroyNotify disconnect_callba
 }
 
 static EventdWsConnection *
-_eventd_ws_connection_client_new(gpointer data, GDestroyNotify disconnect_callback, GCancellable *cancellable, EventdProtocol *protocol)
+_eventd_ws_connection_client_new(gpointer data, EventdWsUri *uri, GDestroyNotify disconnect_callback, GCancellable *cancellable, EventdProtocol *protocol)
 {
     EventdWsConnection *self;
     self = g_new0(EventdWsConnection, 1);
     self->data = data;
     self->disconnect_callback = disconnect_callback;
     self->client = TRUE;
+    self->uri = uri;
     self->cancellable = cancellable;
     self->protocol = protocol;
     self->header = g_string_new("");
@@ -397,12 +384,12 @@ _eventd_ws_connection_client_connect_prepare(EventdWsConnection *self, GIOStream
 }
 
 static void
-_eventd_ws_connection_client_connect(EventdWsConnection *self, GSocketConnectable *server_identity, GIOStream *stream, GAsyncReadyCallback callback, gpointer user_data)
+_eventd_ws_connection_client_connect(EventdWsConnection *self, GIOStream *stream, GAsyncReadyCallback callback, gpointer user_data)
 {
     GError *error = NULL;
     _eventd_ws_connection_client_connect_prepare(self, stream);
     self->task = g_task_new(NULL, self->cancellable, callback, user_data);
-    if ( ! _eventd_ws_connection_client_send_handshake(self, server_identity, &error) )
+    if ( ! _eventd_ws_connection_client_send_handshake(self, &error) )
         g_task_return_error(self->task, error);
     else
         g_data_input_stream_read_line_async(self->in, G_PRIORITY_DEFAULT, self->cancellable, _eventd_ws_connection_read_callback, self);
@@ -417,11 +404,11 @@ _eventd_ws_connection_client_connect_finish(EventdWsConnection *self, GAsyncResu
 }
 
 static gboolean
-_eventd_ws_connection_client_connect_sync(EventdWsConnection *self, GSocketConnectable *server_identity, GIOStream *stream, GError **error)
+_eventd_ws_connection_client_connect_sync(EventdWsConnection *self, GIOStream *stream, GError **error)
 {
     _eventd_ws_connection_client_connect_prepare(self, stream);
 
-    if ( ! _eventd_ws_connection_client_send_handshake(self, server_identity, error) )
+    if ( ! _eventd_ws_connection_client_send_handshake(self, error) )
         return FALSE;
 
     gchar *line;
@@ -449,6 +436,9 @@ static void _eventd_ws_connection_cleanup(EventdWsConnection *self);
 static void
 _eventd_ws_connection_free(EventdWsConnection *self)
 {
+    if ( self->uri != NULL )
+        soup_uri_free(self->uri);
+
     _eventd_ws_connection_cleanup(self);
 
     if ( self->task != NULL )
@@ -497,6 +487,9 @@ EVENTD_EXPORT
 void
 eventd_ws_module_get_info(EventdWsModule *module)
 {
+    module->uri_parse = _eventd_ws_uri_parse;
+    module->uri_is_tls = _eventd_ws_uri_is_tls;
+
     module->connection_server_new = _eventd_ws_connection_server_new;
     module->connection_client_new = _eventd_ws_connection_client_new;
     module->connection_free = _eventd_ws_connection_free;

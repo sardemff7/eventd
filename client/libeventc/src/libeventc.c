@@ -59,6 +59,7 @@ static guint _eventc_connection_signals[LAST_SIGNAL];
 struct _EventcConnectionPrivate {
     GSocketConnectable *address;
     GSocketConnectable *server_identity;
+    gboolean ws_tls;
     gboolean accept_unknown_ca;
     GTlsCertificate *certificate;
     gboolean subscribe;
@@ -85,7 +86,7 @@ typedef struct {
 static void _eventc_connection_close_internal(EventcConnection *self);
 
 static GSocketConnectable *
-_eventc_get_address(const gchar *uri, GError **error)
+_eventc_get_address(const gchar *uri, EventdWsUri **ws_uri, GError **error)
 {
     GError *_inner_error_ = NULL;
     if ( g_str_has_prefix(uri, "unix:") )
@@ -136,6 +137,17 @@ _eventc_get_address(const gchar *uri, GError **error)
         else
             g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_URI, "File '%s' does not exist", path);
         return NULL;
+    }
+
+    if ( g_str_has_prefix(uri, "ws://") || g_str_has_prefix(uri, "wss://") )
+    {
+        if ( _eventc_connection_ws_module == NULL )
+        {
+            g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_URI, "Could not load WebSocket module");
+            return NULL;
+        }
+
+        return eventd_ws_uri_parse(_eventc_connection_ws_module, uri, ws_uri);
     }
 
     if ( g_str_has_prefix(uri, "evp://") )
@@ -549,7 +561,9 @@ _eventc_connection_socket_client_event(EventcConnection *self, GSocketClientEven
     case G_SOCKET_CLIENT_CONNECTING:
     {
         gboolean safe = TRUE;
-        if ( G_IS_TCP_CONNECTION(connection) )
+        if ( self->priv->ws != NULL )
+            safe = ! self->priv->ws_tls;
+        else if ( G_IS_TCP_CONNECTION(connection) )
         {
             GSocketAddress *address;
             address = g_socket_connection_get_remote_address(G_SOCKET_CONNECTION(connection), &error);
@@ -660,12 +674,7 @@ _eventc_connection_connect_callback(GObject *obj, GAsyncResult *res, gpointer us
     if ( ! _eventc_connection_connect_check(self, _inner_error_, &error) )
         g_task_return_error(task, error);
     else if ( self->priv->ws != NULL )
-    {
-        GSocketConnectable *server_identity = self->priv->server_identity;
-        if ( server_identity == NULL )
-            server_identity = self->priv->address;
-        eventd_ws_connection_client_connect(_eventc_connection_ws_module, self->priv->ws, server_identity, G_IO_STREAM(self->priv->connection), _eventc_connection_connect_websocket_callback, task);
-    }
+        eventd_ws_connection_client_connect(_eventc_connection_ws_module, self->priv->ws, G_IO_STREAM(self->priv->connection), _eventc_connection_connect_websocket_callback, task);
     else if ( ! _eventc_connection_connect_after(self, &error) )
         g_task_return_error(task, error);
     else
@@ -758,10 +767,7 @@ eventc_connection_connect_sync(EventcConnection *self, GError **error)
 
     if ( self->priv->ws != NULL )
     {
-        GSocketConnectable *server_identity = self->priv->server_identity;
-        if ( server_identity == NULL )
-            server_identity = self->priv->address;
-        if ( ! eventd_ws_connection_client_connect_sync(_eventc_connection_ws_module, self->priv->ws, server_identity, G_IO_STREAM(self->priv->connection), error) )
+        if ( ! eventd_ws_connection_client_connect_sync(_eventc_connection_ws_module, self->priv->ws, G_IO_STREAM(self->priv->connection), error) )
             return FALSE;
     }
 
@@ -858,36 +864,6 @@ _eventc_connection_close_internal(EventcConnection *self)
 
 
 /**
- * eventc_connection_set_ues_websocket:
- * @connection: an #EventcConnection
- * @use_websocket: the use-websocket setting
- * @error: (out) (optional): return location for error or %NULL to ignore
- *
- * Sets whether the connection will use WebSocket as the transport protocol.
- *
- * Returns: %FALSE if @use_websocket is %TRUE and the module could not be loaded,
- * %TRUE otherwise
- */
-EVENTD_EXPORT
-gboolean
-eventc_connection_set_use_websocket(EventcConnection *self, gboolean use_websocket, GError **error)
-{
-    if ( use_websocket && ( _eventc_connection_ws_module == NULL ) )
-    {
-        g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_CONNECTION, "Could not load WebSocket module");
-        return FALSE;
-    }
-    if ( self->priv->ws != NULL )
-    {
-        eventd_ws_connection_free(_eventc_connection_ws_module, self->priv->ws);
-        self->priv->ws = NULL;
-    }
-    if ( use_websocket )
-        self->priv->ws = eventd_ws_connection_client_new(_eventc_connection_ws_module, self, (GDestroyNotify) _eventc_connection_close_internal, self->priv->cancellable, self->priv->protocol);
-    return TRUE;
-}
-
-/**
  * eventc_connection_set_uri:
  * @connection: an #EventcConnection
  * @uri: (nullable): the URI for the eventd instance to connect to or %NULL for the default local socket
@@ -900,6 +876,8 @@ eventc_connection_set_use_websocket(EventcConnection *self, gboolean use_websock
  * - `unix:@*abstract-name*`
  * - `unix:*path*`
  * - `file://``*path*`
+ * - `ws://``*host*[:*port*]/ or `wss://``*host*[:*port*]/`
+ *   If you omit `*port*`, the default port will be used.
  * - `evp://``*host*[:*port*]`
  *   If you either omit `*port*` or use `0`, the SRV DNS record will be used.
  *
@@ -920,14 +898,22 @@ eventc_connection_set_uri(EventcConnection *self, const gchar *uri, GError **err
         uri = default_uri = g_strdup_printf(DEFAULT_SOCKET_SCHEME "%s" G_DIR_SEPARATOR_S PACKAGE_NAME G_DIR_SEPARATOR_S EVP_UNIX_SOCKET, g_get_user_runtime_dir());
 
     GSocketConnectable *address;
+    EventdWsUri *ws_uri = NULL;
 
-    address = _eventc_get_address(uri, error);
+    address = _eventc_get_address(uri, &ws_uri, error);
     g_free(default_uri);
     if ( address == NULL )
         return FALSE;
     if ( self->priv->address != NULL )
         g_object_unref(self->priv->address);
+    if ( self->priv->ws != NULL )
+        eventd_ws_connection_free(_eventc_connection_ws_module, self->priv->ws);
     self->priv->address = address;
+    if ( ws_uri != NULL )
+    {
+        self->priv->ws_tls = eventd_ws_uri_is_tls(_eventc_connection_ws_module, ws_uri);
+        self->priv->ws = eventd_ws_connection_client_new(_eventc_connection_ws_module, self, ws_uri, (GDestroyNotify) _eventc_connection_close_internal, self->priv->cancellable, self->priv->protocol);
+    }
 
     return TRUE;
 }

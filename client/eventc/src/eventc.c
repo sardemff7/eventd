@@ -42,7 +42,6 @@ static EventcConnection *client = NULL;
 static EventdEvent *event = NULL;
 static GMainLoop *loop = NULL;
 
-static gboolean use_websocket = FALSE;
 static gint tries = 0;
 static gint max_tries = 3;
 
@@ -144,7 +143,6 @@ main(int argc, char *argv[])
         { "certificate", 'c', 0, G_OPTION_ARG_FILENAME,       &certificate_file, "TLS certicate file to use",                                "<certificate>" },
         { "key",         'k', 0, G_OPTION_ARG_FILENAME,       &key_file,         "TLS key file to use",                                      "<key>" },
         { "subscribe",   's', 0, G_OPTION_ARG_NONE,           &subscribe,        "Subscribe mode",                                           NULL },
-        { "websocket",   'w', 0, G_OPTION_ARG_NONE,           &use_websocket,    "Use WebSocket",                                            NULL },
 #ifdef G_OS_UNIX
         { "system",      'S', 0, G_OPTION_ARG_NONE,           &system_mode,      "Talk to system eventd",                                    NULL },
 #endif /* G_OS_UNIX */
@@ -323,7 +321,6 @@ post_event_args:
 
     r = 0; /* URI is fine */
 
-    eventc_connection_set_use_websocket(client, use_websocket, NULL);
     if ( server_identity != NULL )
         eventc_connection_set_server_identity(client, server_identity);
     if ( certificate != NULL )

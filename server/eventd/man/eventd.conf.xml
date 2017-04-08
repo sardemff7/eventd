@@ -284,6 +284,13 @@
                                     <para>Use the Event protocol over TCP on localhost using a random port. The port is expected to be written in the file pointed by <replaceable>path</replaceable>.</para>
                                 </listitem>
                             </varlistentry>
+                            <varlistentry>
+                                <term>ws<optional>s</optional>://<replaceable>uri</replaceable></term>
+                                <listitem>
+                                    <para>Use the Event protocol over WebSocket. TLS is used if using the <literal>wss://</literal> scheme.</para>
+                                    <para>Please note that connecting directly to eventd on a non-loopback interface requires TLS.</para>
+                                </listitem>
+                            </varlistentry>
                         </variablelist>
                         <para>If you omit <replaceable>port</replaceable> or use <literal>0</literal>, the SRV DNS record <literal>&EVP_SERVICE_TYPE;.<replaceable>host</replaceable></literal> will be used to find the real host and port to connect to.</para>
                         <para>Static servers eventd will connect to.</para>
@@ -312,14 +319,6 @@
                     <listitem>
                         <para>A <type>boolean</type></para>
                         <para>Whether to accept a certificate with an unknown CA (like a self-signed certificate).</para>
-                    </listitem>
-                </varlistentry>
-
-                <varlistentry>
-                    <term><varname>UseWebSocket=</varname></term>
-                    <listitem>
-                        <para>A <type>boolean</type></para>
-                        <para>Whether to use EvP over WebSocket.</para>
                     </listitem>
                 </varlistentry>
 

@@ -27,15 +27,19 @@
 #include "libeventd-protocol.h"
 
 typedef struct _EventdWsConnection EventdWsConnection;
+typedef void EventdWsUri;
 
 typedef struct {
+    GSocketConnectable *(*uri_parse)(const gchar *uri, EventdWsUri **ws_uri);
+    gboolean (*uri_is_tls)(const EventdWsUri *uri);
+
     EventdWsConnection *(*connection_server_new)(gpointer data, GDestroyNotify disconnect_callback, GCancellable *cancellable, GIOStream *stream, GDataInputStream *input, EventdProtocol *protocol, const gchar *line);
-    EventdWsConnection *(*connection_client_new)(gpointer data, GDestroyNotify disconnect_callback, GCancellable *cancellable, EventdProtocol *protocol);
+    EventdWsConnection *(*connection_client_new)(gpointer data, EventdWsUri *uri, GDestroyNotify disconnect_callback, GCancellable *cancellable, EventdProtocol *protocol);
     void (*connection_free)(EventdWsConnection *connection);
 
-    void (*connection_client_connect)(EventdWsConnection *connection, GSocketConnectable *server_identity, GIOStream *stream, GAsyncReadyCallback callback, gpointer user_data);
+    void (*connection_client_connect)(EventdWsConnection *connection, GIOStream *stream, GAsyncReadyCallback callback, gpointer user_data);
     gboolean (*connection_client_connect_finish)(EventdWsConnection *connection, GAsyncResult *result, GError **error);
-    gboolean (*connection_client_connect_sync)(EventdWsConnection *connection, GSocketConnectable *server_identity, GIOStream *stream, GError **error);
+    gboolean (*connection_client_connect_sync)(EventdWsConnection *connection, GIOStream *stream, GError **error);
 
     void (*connection_send_message)(EventdWsConnection *client, const gchar *message);
     void (*connection_cleanup)(EventdWsConnection *connection);
@@ -51,6 +55,20 @@ void eventd_ws_module_get_info(EventdWsModule *backend);
 EventdWsModule *eventd_ws_init(void);
 void eventd_ws_uninit(EventdWsModule *ws);
 
+static inline GSocketConnectable *
+eventd_ws_uri_parse(EventdWsModule *ws, const gchar *uri, EventdWsUri **ws_uri)
+{
+    g_return_val_if_fail(ws != NULL, NULL);
+    return ws->uri_parse(uri, ws_uri);
+}
+
+static inline gboolean
+eventd_ws_uri_is_tls(EventdWsModule *ws, const EventdWsUri *uri)
+{
+    g_return_val_if_fail(ws != NULL, FALSE);
+    return ws->uri_is_tls(uri);
+}
+
 static inline EventdWsConnection *
 eventd_ws_connection_server_new(EventdWsModule *ws, gpointer client, GDestroyNotify disconnect_callback, GCancellable *cancellable, GIOStream *stream, GDataInputStream *input, EventdProtocol *protocol, const gchar *line)
 {
@@ -59,17 +77,17 @@ eventd_ws_connection_server_new(EventdWsModule *ws, gpointer client, GDestroyNot
 }
 
 static inline EventdWsConnection *
-eventd_ws_connection_client_new(EventdWsModule *ws, gpointer client, GDestroyNotify disconnect_callback, GCancellable *cancellable, EventdProtocol *protocol)
+eventd_ws_connection_client_new(EventdWsModule *ws, gpointer client, EventdWsUri *uri, GDestroyNotify disconnect_callback, GCancellable *cancellable, EventdProtocol *protocol)
 {
     g_return_val_if_fail(ws != NULL, NULL);
-    return ws->connection_client_new(client, disconnect_callback, cancellable, protocol);
+    return ws->connection_client_new(client, uri, disconnect_callback, cancellable, protocol);
 }
 
 static inline void
-eventd_ws_connection_client_connect(EventdWsModule *ws, EventdWsConnection *connection, GSocketConnectable *server_identity, GIOStream *stream, GAsyncReadyCallback callback, gpointer user_data)
+eventd_ws_connection_client_connect(EventdWsModule *ws, EventdWsConnection *connection, GIOStream *stream, GAsyncReadyCallback callback, gpointer user_data)
 {
     g_return_if_fail(ws != NULL);
-    ws->connection_client_connect(connection, server_identity, stream, callback, user_data);
+    ws->connection_client_connect(connection, stream, callback, user_data);
 }
 
 static inline gboolean
@@ -80,10 +98,10 @@ eventd_ws_connection_client_connect_finish(EventdWsModule *ws, EventdWsConnectio
 }
 
 static inline gboolean
-eventd_ws_connection_client_connect_sync(EventdWsModule *ws, EventdWsConnection *connection, GSocketConnectable *server_identity, GIOStream *stream, GError **error)
+eventd_ws_connection_client_connect_sync(EventdWsModule *ws, EventdWsConnection *connection, GIOStream *stream, GError **error)
 {
     g_return_val_if_fail(ws != NULL, FALSE);
-    return ws->connection_client_connect_sync(connection, server_identity, stream, error);
+    return ws->connection_client_connect_sync(connection, stream, error);
 }
 
 static inline void
