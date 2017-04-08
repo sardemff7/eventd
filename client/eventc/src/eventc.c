@@ -184,7 +184,7 @@ main(int argc, char *argv[])
     r = 1; /* We are checking arguments */
 
     if ( subscribe )
-        goto post_args;
+        goto post_event_args;
 
     if ( argc < 2 )
     {
@@ -279,6 +279,10 @@ main(int argc, char *argv[])
         }
     }
 
+    category = argv[1];
+    name = argv[2];
+
+post_event_args:
     if ( identity != NULL )
     {
         server_identity = g_network_address_new(identity, 0);
@@ -303,10 +307,6 @@ main(int argc, char *argv[])
         }
     }
 
-    category = argv[1];
-    name = argv[2];
-
-post_args:
     r = 2; /* Arguments are fine, checking host */
 
     if ( system_mode )
