@@ -33,6 +33,6 @@ void eventd_tests_env_free(EventdTestsEnv *env);
 gboolean eventd_tests_env_start_eventd(EventdTestsEnv *env);
 gboolean eventd_tests_env_stop_eventd(EventdTestsEnv *env);
 
-int eventd_tests_run_libeventc(void);
+int eventd_tests_run_libeventc(const gchar *host);
 
 #endif /* __EVENTD_LIBEVENTD_TEST_H__ */

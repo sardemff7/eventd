@@ -249,13 +249,13 @@ _ended_callback(EventcConnection *client, EventdEvent *e, gpointer user_data)
 }
 
 int
-eventd_tests_run_libeventc(void)
+eventd_tests_run_libeventc(const gchar *host)
 {
     int r = 0;
 
     EventcConnection *client;
 
-    client = eventc_connection_new(NULL, &error);
+    client = eventc_connection_new(host, &error);
 
     if ( client == NULL )
         goto error;

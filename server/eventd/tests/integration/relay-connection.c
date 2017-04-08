@@ -39,7 +39,7 @@ main(int argc, char *argv[])
     if ( ! eventd_tests_env_start_eventd(relay) )
         goto end;
 
-    r = eventd_tests_run_libeventc();
+    r = eventd_tests_run_libeventc(NULL);
 
     if ( ! eventd_tests_env_stop_eventd(relay) )
         r = 99;
