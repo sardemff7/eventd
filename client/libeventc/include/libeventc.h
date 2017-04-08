@@ -33,7 +33,7 @@ typedef struct _EventcConnectionClass EventcConnectionClass;
 typedef struct _EventcConnectionPrivate EventcConnectionPrivate;
 
 typedef enum  {
-	EVENTC_ERROR_HOSTNAME,
+	EVENTC_ERROR_URI,
 	EVENTC_ERROR_CONNECTION,
 	EVENTC_ERROR_ALREADY_CONNECTED,
 	EVENTC_ERROR_NOT_CONNECTED,

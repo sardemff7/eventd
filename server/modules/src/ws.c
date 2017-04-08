@@ -185,7 +185,7 @@ _eventd_ws_connection_client_send_handshake(EventdWsConnection *self, GSocketCon
 
     if ( host == NULL )
     {
-        g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_HOSTNAME, "Could not get an HTTP hostname from eventc host");
+        g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_URI, "Could not get an HTTP hostname from libeventc URI");
         g_free(host_);
         return FALSE;
     }

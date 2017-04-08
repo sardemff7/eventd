@@ -97,14 +97,14 @@ _eventc_get_address(const gchar *uri, GError **error)
         {
             if ( g_unix_socket_address_abstract_names_supported() )
                 return G_SOCKET_CONNECTABLE(g_unix_socket_address_new_with_type(path + 1, -1, G_UNIX_SOCKET_ADDRESS_ABSTRACT));
-            g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_HOSTNAME, "Abstract UNIX socket names are not supported");
+            g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_URI, "Abstract UNIX socket names are not supported");
         }
         else if ( g_file_test(path, G_FILE_TEST_EXISTS) && ( ! g_file_test(path, G_FILE_TEST_IS_DIR|G_FILE_TEST_IS_REGULAR) ) )
             return G_SOCKET_CONNECTABLE(g_unix_socket_address_new(path));
         else
-            g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_HOSTNAME, "File '%s' does not exist or is not a UNIX socket", path);
+            g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_URI, "File '%s' does not exist or is not a UNIX socket", path);
 #else /* ! G_OS_UNIX */
-        g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_HOSTNAME, "UNIX sockets are not supported");
+        g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_URI, "UNIX sockets are not supported");
 #endif /* ! G_OS_UNIX */
         return NULL;
     }
@@ -120,7 +120,7 @@ _eventc_get_address(const gchar *uri, GError **error)
             g_file_get_contents(path, &str, NULL, &_inner_error_);
             if ( str == NULL )
             {
-                g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_HOSTNAME, "Could not read file '%s': %s", path, _inner_error_->message);
+                g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_URI, "Could not read file '%s': %s", path, _inner_error_->message);
                 g_error_free(_inner_error_);
             }
             else
@@ -128,13 +128,13 @@ _eventc_get_address(const gchar *uri, GError **error)
                 port = g_ascii_strtoull(str, NULL, 10);
                 g_free(str);
                 if ( ( port == 0 ) || ( port > G_MAXUINT16 ) )
-                    g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_HOSTNAME, "File '%s' contains wrong port '%" G_GINT64_MODIFIER "u'", path, port);
+                    g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_URI, "File '%s' contains wrong port '%" G_GINT64_MODIFIER "u'", path, port);
                 else
                     return g_network_address_new_loopback(port);
             }
         }
         else
-            g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_HOSTNAME, "File '%s' does not exist", path);
+            g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_URI, "File '%s' does not exist", path);
         return NULL;
     }
 
@@ -147,7 +147,7 @@ _eventc_get_address(const gchar *uri, GError **error)
 
         if ( address == NULL )
         {
-            g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_HOSTNAME, "Could not resolve host name '%s': %s", hostname, _inner_error_->message);
+            g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_URI, "Could not resolve host name '%s': %s", hostname, _inner_error_->message);
             g_error_free(_inner_error_);
         }
         else if ( g_network_address_get_port(G_NETWORK_ADDRESS(address)) == 0 )
@@ -158,7 +158,7 @@ _eventc_get_address(const gchar *uri, GError **error)
         return address;
     }
 
-    g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_HOSTNAME, "Unsupported URI: %s", uri);
+    g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_URI, "Unsupported URI: %s", uri);
     return NULL;
 }
 
