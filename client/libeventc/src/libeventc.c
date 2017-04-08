@@ -260,8 +260,8 @@ _eventc_connection_read_callback(GObject *obj, GAsyncResult *res, gpointer user_
         {
             if ( error != NULL )
                 g_set_error(&self->priv->error, EVENTC_ERROR, EVENTC_ERROR_CONNECTION, "Could not read line: %s", error->message);
-            _eventc_connection_close_internal(self);
         }
+        _eventc_connection_close_internal(self);
         g_clear_error(&error);
     }
     else if ( eventd_protocol_parse(self->priv->protocol, line, &self->priv->error) )
@@ -796,7 +796,8 @@ eventc_connection_event(EventcConnection *self, EventdEvent *event, GError **err
  * @connection: an #EventcConnection
  * @error: (out) (optional): return location for error or %NULL to ignore
  *
- * Closes the connection.
+ * Closes the connection. You must wait for the #EventcConnection::disconnected
+ * signal before trying to connect again.
  *
  * Returns: %TRUE if the connection was successfully closed
  */
@@ -822,8 +823,6 @@ eventc_connection_close(EventcConnection *self, GError **error)
         eventd_ws_connection_close(_eventc_connection_ws_module, self->priv->ws);
     else
         g_cancellable_cancel(self->priv->cancellable);
-
-    _eventc_connection_close_internal(self);
 
     return TRUE;
 }

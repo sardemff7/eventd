@@ -41,6 +41,7 @@ static guint timeout = 0;
 
 typedef enum {
     STATE_START,
+    STATE_CONNECT,
     STATE_SENT,
     STATE_END,
 } State;
@@ -52,11 +53,12 @@ static struct{
 } _test_state = {
     .connection = 1,
     .event = 0,
-    .state = STATE_START
+    .state = STATE_CONNECT
 };
 
 static const gchar *_state_names[] = {
     [STATE_START] = "start",
+    [STATE_CONNECT] = "connect",
     [STATE_SENT] = "sent",
     [STATE_END] = "end",
 };
@@ -132,7 +134,7 @@ _connect_callback(GObject *obj, GAsyncResult *res, gpointer user_data)
         g_main_loop_quit(loop);
         return;
     }
-    if ( ! _check_state(-1, 0, STATE_START) )
+    if ( ! _check_state(-1, 0, STATE_CONNECT) )
         return;
 
     switch ( _test_state.connection )
@@ -153,6 +155,19 @@ _connect_callback(GObject *obj, GAsyncResult *res, gpointer user_data)
     }
 }
 
+static void
+_disconnected_callback(EventcConnection *client, gpointer user_data)
+{
+    if ( ! _check_state(-1, 0, STATE_START) )
+        return;
+
+    if ( ++_test_state.connection < MAX_CONNECTION )
+        eventc_connection_connect(client, _connect_callback, NULL);
+    else
+        g_main_loop_quit(loop);
+    _test_state.state = STATE_CONNECT;
+}
+
 static gboolean
 _ended_close_idle_callback(gpointer user_data)
 {
@@ -170,10 +185,6 @@ _ended_close_idle_callback(gpointer user_data)
     _test_state.event = 0;
     _test_state.state = STATE_START;
 
-    if ( ++_test_state.connection < MAX_CONNECTION )
-        eventc_connection_connect(client, _connect_callback, NULL);
-    else
-        g_main_loop_quit(loop);
     return FALSE;
 }
 
@@ -252,6 +263,7 @@ eventd_tests_run_libeventc(void)
     eventc_connection_set_subscribe(client, TRUE);
     eventc_connection_add_subscription(client, g_strdup("test"));
     g_signal_connect(client, "event", G_CALLBACK(_ended_callback), NULL);
+    g_signal_connect(client, "disconnected", G_CALLBACK(_disconnected_callback), NULL);
 
     loop = g_main_loop_new(NULL, FALSE);
 
