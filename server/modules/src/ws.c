@@ -66,9 +66,11 @@ _eventd_ws_connection_write_message(EventdWsConnection *self, gboolean request, 
     gchar *start_line;
     if ( request )
     {
-        l += strlen(msg->method) + strlen(soup_uri_get_path(soup_message_get_uri(msg)));
+        gchar *request_uri = soup_uri_to_string(soup_message_get_uri(msg), TRUE);
+        l += strlen(msg->method) + strlen(request_uri);
         start_line = g_newa(gchar, l);
-        g_snprintf(start_line, l, "%s %s HTTP/1.1\r\n", msg->method, soup_uri_get_path(soup_message_get_uri(msg)));
+        g_snprintf(start_line, l, "%s %s HTTP/1.1\r\n", msg->method, request_uri);
+        g_free(request_uri);
     }
     else
     {
