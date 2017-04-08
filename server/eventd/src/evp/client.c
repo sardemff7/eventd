@@ -165,15 +165,17 @@ _eventd_evp_client_read_callback(GObject *obj, GAsyncResult *res, gpointer user_
     if ( self->first )
     {
         self->first = FALSE;
-        if ( ! g_str_has_prefix(line, "GET /") )
+        if ( ! g_str_has_prefix(line, "GET ") )
             goto skip_ws;
+        if ( ! g_str_has_prefix(line, "GET /") )
+            goto end;
         const gchar *http_ver;
         if ( g_str_has_suffix(line, " HTTP/1.1\r") )
             http_ver = "HTTP/1.1";
         else if ( g_str_has_suffix(line, " HTTP/1.0\r") )
             http_ver = "HTTP/1.0";
         else
-            goto skip_ws;
+            goto end;
 
         if ( self->context->ws == NULL )
         {
