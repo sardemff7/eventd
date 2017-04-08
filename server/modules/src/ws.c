@@ -323,11 +323,16 @@ _eventd_ws_connection_read_callback(GObject *obj, GAsyncResult *res, gpointer us
             else
                 response = g_strdup_printf("HTTP/1.1 500 %s\r\n\r\n", error->message);
             g_output_stream_write_all(g_io_stream_get_output_stream(self->stream), response, strlen(response), NULL, NULL, NULL);
-            if ( self->task != NULL )
-                g_task_return_error(self->task, error);
             g_free(response);
         }
-        g_clear_error(&error);
+        if ( self->task != NULL )
+        {
+            if ( error == NULL )
+                g_set_error_literal(&error, SOUP_HTTP_ERROR, SOUP_STATUS_IO_ERROR, soup_status_get_phrase(SOUP_STATUS_IO_ERROR));
+            g_task_return_error(self->task, error);
+        }
+        else
+            g_clear_error(&error);
         self->disconnect_callback(self->data);
     }
     else if ( line[0] != '\0' )
@@ -423,7 +428,11 @@ _eventd_ws_connection_client_connect_sync(EventdWsConnection *self, GSocketConne
     }
     g_free(line);
     if ( line == NULL )
+    {
+        if ( ( error != NULL ) && ( *error == NULL ) )
+            g_set_error_literal(error, SOUP_HTTP_ERROR, SOUP_STATUS_IO_ERROR, soup_status_get_phrase(SOUP_STATUS_IO_ERROR));
         return FALSE;
+    }
     g_object_unref(self->in);
     self->in = NULL;
 
