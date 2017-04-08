@@ -912,6 +912,8 @@ eventc_connection_set_host(EventcConnection *self, const gchar *host, GError **e
     address = _eventc_get_address(host, error);
     if ( address == NULL )
         return FALSE;
+    if ( self->priv->address != NULL )
+        g_object_unref(self->priv->address);
     self->priv->address = address;
 
     return TRUE;
