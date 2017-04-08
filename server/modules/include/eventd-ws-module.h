@@ -30,14 +30,15 @@ typedef struct _EventdWsConnection EventdWsConnection;
 
 typedef struct {
     EventdWsConnection *(*connection_server_new)(gpointer data, GDestroyNotify disconnect_callback, GCancellable *cancellable, GIOStream *stream, GDataInputStream *input, EventdProtocol *protocol, const gchar *line);
-    EventdWsConnection *(*connection_client_new)(gpointer data, GDestroyNotify disconnect_callback, GCancellable *cancellable, GIOStream *stream, EventdProtocol *protocol);
+    EventdWsConnection *(*connection_client_new)(gpointer data, GDestroyNotify disconnect_callback, GCancellable *cancellable, EventdProtocol *protocol);
     void (*connection_free)(EventdWsConnection *connection);
 
-    void (*connection_client_connect)(EventdWsConnection *connection, GSocketConnectable *server_identity, GAsyncReadyCallback callback, gpointer user_data);
+    void (*connection_client_connect)(EventdWsConnection *connection, GSocketConnectable *server_identity, GIOStream *stream, GAsyncReadyCallback callback, gpointer user_data);
     gboolean (*connection_client_connect_finish)(EventdWsConnection *connection, GAsyncResult *result, GError **error);
-    gboolean (*connection_client_connect_sync)(EventdWsConnection *connection, GSocketConnectable *server_identity, GError **error);
+    gboolean (*connection_client_connect_sync)(EventdWsConnection *connection, GSocketConnectable *server_identity, GIOStream *stream, GError **error);
 
     void (*connection_send_message)(EventdWsConnection *client, const gchar *message);
+    void (*connection_cleanup)(EventdWsConnection *connection);
     void (*connection_close)(EventdWsConnection *connection);
 
     gpointer module;
@@ -58,17 +59,17 @@ eventd_ws_connection_server_new(EventdWsModule *ws, gpointer client, GDestroyNot
 }
 
 static inline EventdWsConnection *
-eventd_ws_connection_client_new(EventdWsModule *ws, gpointer client, GDestroyNotify disconnect_callback, GCancellable *cancellable, GIOStream *stream, EventdProtocol *protocol)
+eventd_ws_connection_client_new(EventdWsModule *ws, gpointer client, GDestroyNotify disconnect_callback, GCancellable *cancellable, EventdProtocol *protocol)
 {
     g_return_val_if_fail(ws != NULL, NULL);
-    return ws->connection_client_new(client, disconnect_callback, cancellable, stream, protocol);
+    return ws->connection_client_new(client, disconnect_callback, cancellable, protocol);
 }
 
 static inline void
-eventd_ws_connection_client_connect(EventdWsModule *ws, EventdWsConnection *connection, GSocketConnectable *server_identity, GAsyncReadyCallback callback, gpointer user_data)
+eventd_ws_connection_client_connect(EventdWsModule *ws, EventdWsConnection *connection, GSocketConnectable *server_identity, GIOStream *stream, GAsyncReadyCallback callback, gpointer user_data)
 {
     g_return_if_fail(ws != NULL);
-    ws->connection_client_connect(connection, server_identity, callback, user_data);
+    ws->connection_client_connect(connection, server_identity, stream, callback, user_data);
 }
 
 static inline gboolean
@@ -79,10 +80,10 @@ eventd_ws_connection_client_connect_finish(EventdWsModule *ws, EventdWsConnectio
 }
 
 static inline gboolean
-eventd_ws_connection_client_connect_sync(EventdWsModule *ws, EventdWsConnection *connection, GSocketConnectable *server_identity, GError **error)
+eventd_ws_connection_client_connect_sync(EventdWsModule *ws, EventdWsConnection *connection, GSocketConnectable *server_identity, GIOStream *stream, GError **error)
 {
     g_return_val_if_fail(ws != NULL, FALSE);
-    return ws->connection_client_connect_sync(connection, server_identity, error);
+    return ws->connection_client_connect_sync(connection, server_identity, stream, error);
 }
 
 static inline void
@@ -97,6 +98,13 @@ eventd_ws_connection_send_message(EventdWsModule *ws, EventdWsConnection *connec
 {
     g_return_if_fail(ws != NULL);
     ws->connection_send_message(connection, message);
+}
+
+static inline void
+eventd_ws_connection_cleanup(EventdWsModule *ws, EventdWsConnection *connection)
+{
+    g_return_if_fail(ws != NULL);
+    ws->connection_cleanup(connection);
 }
 
 static inline void

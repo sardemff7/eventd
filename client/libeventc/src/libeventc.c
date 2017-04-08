@@ -55,7 +55,6 @@ static guint _eventc_connection_signals[LAST_SIGNAL];
 struct _EventcConnectionPrivate {
     GSocketConnectable *address;
     GSocketConnectable *server_identity;
-    gboolean use_websocket;
     gboolean accept_unknown_ca;
     GTlsCertificate *certificate;
     gboolean subscribe;
@@ -345,6 +344,9 @@ _eventc_connection_finalize(GObject *object)
     if ( self->priv->server_identity != NULL )
         g_object_unref(self->priv->server_identity);
 
+    if ( self->priv->ws != NULL )
+        eventd_ws_connection_free(_eventc_connection_ws_module, self->priv->ws);
+
     if ( self->priv->address != NULL )
         g_object_unref(self->priv->address);
 
@@ -602,9 +604,7 @@ _eventc_connection_connect_check(EventcConnection *self, GError *_inner_error_, 
 {
     if ( self->priv->connection != NULL )
     {
-        if ( self->priv->use_websocket )
-            self->priv->ws = eventd_ws_connection_client_new(_eventc_connection_ws_module, self, (GDestroyNotify) _eventc_connection_close_internal, self->priv->cancellable, G_IO_STREAM(self->priv->connection), self->priv->protocol);
-        else
+        if ( self->priv->ws == NULL )
         {
             self->priv->out = g_data_output_stream_new(g_io_stream_get_output_stream(G_IO_STREAM(self->priv->connection)));
             self->priv->in = g_data_input_stream_new(g_io_stream_get_input_stream(G_IO_STREAM(self->priv->connection)));
@@ -658,12 +658,12 @@ _eventc_connection_connect_callback(GObject *obj, GAsyncResult *res, gpointer us
     self->priv->connection = g_socket_client_connect_finish(G_SOCKET_CLIENT(obj), res, &_inner_error_);
     if ( ! _eventc_connection_connect_check(self, _inner_error_, &error) )
         g_task_return_error(task, error);
-    else if ( self->priv->use_websocket )
+    else if ( self->priv->ws != NULL )
     {
         GSocketConnectable *server_identity = self->priv->server_identity;
         if ( server_identity == NULL )
             server_identity = self->priv->address;
-        eventd_ws_connection_client_connect(_eventc_connection_ws_module, self->priv->ws, server_identity, _eventc_connection_connect_websocket_callback, task);
+        eventd_ws_connection_client_connect(_eventc_connection_ws_module, self->priv->ws, server_identity, G_IO_STREAM(self->priv->connection), _eventc_connection_connect_websocket_callback, task);
     }
     else if ( ! _eventc_connection_connect_after(self, &error) )
         g_task_return_error(task, error);
@@ -755,12 +755,12 @@ eventc_connection_connect_sync(EventcConnection *self, GError **error)
     if ( ! _eventc_connection_connect_check(self, _inner_error_, error) )
         return FALSE;
 
-    if ( self->priv->use_websocket )
+    if ( self->priv->ws != NULL )
     {
         GSocketConnectable *server_identity = self->priv->server_identity;
         if ( server_identity == NULL )
             server_identity = self->priv->address;
-        if ( ! eventd_ws_connection_client_connect_sync(_eventc_connection_ws_module, self->priv->ws, server_identity, error) )
+        if ( ! eventd_ws_connection_client_connect_sync(_eventc_connection_ws_module, self->priv->ws, server_identity, G_IO_STREAM(self->priv->connection), error) )
             return FALSE;
     }
 
@@ -835,7 +835,7 @@ _eventc_connection_close_internal(EventcConnection *self)
     self->priv->error = NULL;
 
     if ( self->priv->ws != NULL )
-        eventd_ws_connection_free(_eventc_connection_ws_module, self->priv->ws);
+        eventd_ws_connection_cleanup(_eventc_connection_ws_module, self->priv->ws);
 
     if ( self->priv->out != NULL )
         g_object_unref(self->priv->out);
@@ -876,7 +876,13 @@ eventc_connection_set_use_websocket(EventcConnection *self, gboolean use_websock
         g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_CONNECTION, "Could not load WebSocket module");
         return FALSE;
     }
-    self->priv->use_websocket = use_websocket;
+    if ( self->priv->ws != NULL )
+    {
+        eventd_ws_connection_free(_eventc_connection_ws_module, self->priv->ws);
+        self->priv->ws = NULL;
+    }
+    if ( use_websocket )
+        self->priv->ws = eventd_ws_connection_client_new(_eventc_connection_ws_module, self, (GDestroyNotify) _eventc_connection_close_internal, self->priv->cancellable, self->priv->protocol);
     return TRUE;
 }
 

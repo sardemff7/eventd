@@ -216,8 +216,7 @@ _eventd_ws_connection_client_check_handshake(EventdWsConnection *self, GError **
     gchar *reason;
     gboolean ok;
     ok = soup_headers_parse_response(self->header->str, self->header->len, headers, NULL, &status, &reason);
-    g_string_free(self->header, TRUE);
-    self->header = NULL;
+    g_string_truncate(self->header, 0);
 
     if ( ! ok )
     {
@@ -260,8 +259,7 @@ _eventd_ws_connection_handshake_server(EventdWsConnection *self)
 
     SoupStatus status;
     status = soup_headers_parse_request(self->header->str, self->header->len, headers, &method, &path, NULL);
-    g_string_free(self->header, TRUE);
-    self->header = NULL;
+    g_string_truncate(self->header, 0);
 
     if ( status != SOUP_STATUS_OK )
     {
@@ -374,7 +372,7 @@ _eventd_ws_connection_server_new(gpointer data, GDestroyNotify disconnect_callba
 }
 
 static EventdWsConnection *
-_eventd_ws_connection_client_new(gpointer data, GDestroyNotify disconnect_callback, GCancellable *cancellable, GIOStream *stream, EventdProtocol *protocol)
+_eventd_ws_connection_client_new(gpointer data, GDestroyNotify disconnect_callback, GCancellable *cancellable, EventdProtocol *protocol)
 {
     EventdWsConnection *self;
     self = g_new0(EventdWsConnection, 1);
@@ -382,21 +380,27 @@ _eventd_ws_connection_client_new(gpointer data, GDestroyNotify disconnect_callba
     self->disconnect_callback = disconnect_callback;
     self->client = TRUE;
     self->cancellable = cancellable;
-    self->stream = stream;
-    self->in = g_data_input_stream_new(g_io_stream_get_input_stream(self->stream));
     self->protocol = protocol;
     self->header = g_string_new("");
-
-    g_data_input_stream_set_newline_type(self->in, G_DATA_STREAM_NEWLINE_TYPE_CR_LF);
-    g_filter_input_stream_set_close_base_stream(G_FILTER_INPUT_STREAM(self->in), FALSE);
 
     return self;
 }
 
 static void
-_eventd_ws_connection_client_connect(EventdWsConnection *self, GSocketConnectable *server_identity, GAsyncReadyCallback callback, gpointer user_data)
+_eventd_ws_connection_client_connect_prepare(EventdWsConnection *self, GIOStream *stream)
+{
+    self->stream = stream;
+    self->in = g_data_input_stream_new(g_io_stream_get_input_stream(self->stream));
+
+    g_data_input_stream_set_newline_type(self->in, G_DATA_STREAM_NEWLINE_TYPE_CR_LF);
+    g_filter_input_stream_set_close_base_stream(G_FILTER_INPUT_STREAM(self->in), FALSE);
+}
+
+static void
+_eventd_ws_connection_client_connect(EventdWsConnection *self, GSocketConnectable *server_identity, GIOStream *stream, GAsyncReadyCallback callback, gpointer user_data)
 {
     GError *error = NULL;
+    _eventd_ws_connection_client_connect_prepare(self, stream);
     self->task = g_task_new(NULL, self->cancellable, callback, user_data);
     if ( ! _eventd_ws_connection_client_send_handshake(self, server_identity, &error) )
         g_task_return_error(self->task, error);
@@ -413,8 +417,10 @@ _eventd_ws_connection_client_connect_finish(EventdWsConnection *self, GAsyncResu
 }
 
 static gboolean
-_eventd_ws_connection_client_connect_sync(EventdWsConnection *self, GSocketConnectable *server_identity, GError **error)
+_eventd_ws_connection_client_connect_sync(EventdWsConnection *self, GSocketConnectable *server_identity, GIOStream *stream, GError **error)
 {
+    _eventd_ws_connection_client_connect_prepare(self, stream);
+
     if ( ! _eventd_ws_connection_client_send_handshake(self, server_identity, error) )
         return FALSE;
 
@@ -439,14 +445,11 @@ _eventd_ws_connection_client_connect_sync(EventdWsConnection *self, GSocketConne
     return _eventd_ws_connection_client_check_handshake(self, error);
 }
 
+static void _eventd_ws_connection_cleanup(EventdWsConnection *self);
 static void
 _eventd_ws_connection_free(EventdWsConnection *self)
 {
-    if ( self->connection != NULL )
-        g_object_unref(self->connection);
-
-    if ( self->in != NULL )
-        g_object_unref(self->in);
+    _eventd_ws_connection_cleanup(self);
 
     if ( self->task != NULL )
         g_object_unref(self->task);
@@ -466,6 +469,18 @@ _eventd_ws_connection_send_message(EventdWsConnection *self, const gchar *messag
     if ( self->connection == NULL )
         return;
     soup_websocket_connection_send_text(self->connection, message);
+}
+
+static void
+_eventd_ws_connection_cleanup(EventdWsConnection *self)
+{
+    if ( self->connection != NULL )
+        g_object_unref(self->connection);
+    self->connection = NULL;
+
+    if ( self->in != NULL )
+        g_object_unref(self->in);
+    self->in = NULL;
 }
 
 static void
@@ -491,5 +506,6 @@ eventd_ws_module_get_info(EventdWsModule *module)
     module->connection_client_connect_sync = _eventd_ws_connection_client_connect_sync;
 
     module->connection_send_message = _eventd_ws_connection_send_message;
+    module->connection_cleanup = _eventd_ws_connection_cleanup;
     module->connection_close = _eventd_ws_connection_close;
 }
