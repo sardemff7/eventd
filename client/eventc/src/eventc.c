@@ -75,7 +75,7 @@ _eventc_connect(gpointer user_data)
 static void
 _eventc_disconnected_callback(EventcConnection *connection, gpointer user_data)
 {
-    g_idle_add(_eventc_disconnect, NULL);
+    g_main_loop_quit(loop);
 }
 
 static void
@@ -102,7 +102,6 @@ _eventc_disconnect(gpointer user_data)
     GError *error = NULL;
     if ( ! eventc_connection_close(client, &error) )
         g_warning("Couldn't disconnect from event: %s", error->message);
-    g_main_loop_quit(loop);
 
     return FALSE;
 }
