@@ -87,16 +87,11 @@ eventd_tests_env_new(const gchar *evp_socket, const gchar *plugins, gboolean ena
 
     self->dir = g_getenv("XDG_RUNTIME_DIR");
 
-    guint length;
-
     if ( plugins == NULL )
         plugins = "test-plugin";
 
     self->env = g_get_environ();
-    length = g_strv_length(self->env);
-    self->env = g_renew(gchar *, self->env, length+2);
-    self->env[length] = g_strdup_printf("EVENTD_PLUGINS_WHITELIST=%s", plugins);
-    self->env[length+1] = NULL;
+    self->env = g_environ_setenv(self->env, "EVENTD_PLUGINS_WHITELIST", plugins, TRUE);
 
     gchar *socket = g_strdup_printf("%s-%u.private", g_get_prgname(), ++instance);
 
