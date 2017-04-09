@@ -102,9 +102,6 @@ eventd_tests_env_new(const gchar *evp_socket, const gchar *plugins, gboolean ena
     if ( evp_socket == NULL )
         evp_socket = "tcp-file-runtime:" EVP_UNIX_SOCKET;
 
-    gchar *pwd;
-    pwd = g_get_current_dir();
-
     self->start_args = g_new0(char *, 14);
     self->start_args[0] = g_strdup(EVENTDCTL_PATH);
     self->start_args[1] = g_strdup("--socket");
@@ -120,8 +117,6 @@ eventd_tests_env_new(const gchar *evp_socket, const gchar *plugins, gboolean ena
     self->start_args[11] = g_strdup("--no-service-discovery");
     if ( ! enable_relay )
         self->start_args[12] = g_strdup("--no-relay");
-
-    g_free(pwd);
 
     self->stop_args = g_new0(char *, 5);
     self->stop_args[0] = g_strdup(self->start_args[0]);
