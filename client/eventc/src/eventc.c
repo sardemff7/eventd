@@ -119,6 +119,7 @@ main(int argc, char *argv[])
     gchar **file_strv = NULL;
     GHashTable *data = NULL;
     gboolean subscribe = FALSE;
+    gint ping_interval = 0;
     gboolean system_mode = FALSE;
 
     gboolean insecure = FALSE;
@@ -135,19 +136,20 @@ main(int argc, char *argv[])
 
     GOptionEntry entries[] =
     {
-        { "data",        'd', 0, G_OPTION_ARG_STRING_ARRAY,   &data_strv,        "Event data to send",                                       "<name>=<content>" },
-        { "data-file",   'f', 0, G_OPTION_ARG_FILENAME_ARRAY, &file_strv,        "Event data to send from a file",                           "<name>=[<mime-type>@]<filename>" },
-        { "uri",         'u', 0, G_OPTION_ARG_STRING,         &uri,              "URI to connect to (defaults to $EVENTC_HOST if defined)",  "<URI>" },
-        { "identity",    'i', 0, G_OPTION_ARG_STRING,         &identity,         "Server identity to check for in TLS certificate",          "<host>" },
-        { "max-tries",   'm', 0, G_OPTION_ARG_INT,            &max_tries,        "Maximum connection attempts (0 for infinite)",             "<times>" },
-        { "certificate", 'c', 0, G_OPTION_ARG_FILENAME,       &certificate_file, "TLS certicate file to use",                                "<certificate>" },
-        { "key",         'k', 0, G_OPTION_ARG_FILENAME,       &key_file,         "TLS key file to use",                                      "<key>" },
-        { "subscribe",   's', 0, G_OPTION_ARG_NONE,           &subscribe,        "Subscribe mode",                                           NULL },
+        { "data",          'd', 0, G_OPTION_ARG_STRING_ARRAY,   &data_strv,        "Event data to send",                                       "<name>=<content>" },
+        { "data-file",     'f', 0, G_OPTION_ARG_FILENAME_ARRAY, &file_strv,        "Event data to send from a file",                           "<name>=[<mime-type>@]<filename>" },
+        { "uri",           'u', 0, G_OPTION_ARG_STRING,         &uri,              "URI to connect to (defaults to $EVENTC_HOST if defined)",  "<URI>" },
+        { "identity",      'i', 0, G_OPTION_ARG_STRING,         &identity,         "Server identity to check for in TLS certificate",          "<host>" },
+        { "max-tries",     'm', 0, G_OPTION_ARG_INT,            &max_tries,        "Maximum connection attempts (0 for infinite)",             "<times>" },
+        { "certificate",   'c', 0, G_OPTION_ARG_FILENAME,       &certificate_file, "TLS certicate file to use",                                "<certificate>" },
+        { "key",           'k', 0, G_OPTION_ARG_FILENAME,       &key_file,         "TLS key file to use",                                      "<key>" },
+        { "subscribe",     's', 0, G_OPTION_ARG_NONE,           &subscribe,        "Subscribe mode",                                           NULL },
+        { "ping-interval", 'p', 0, G_OPTION_ARG_INT,            &ping_interval,    "Ping interval",                                            "<seconds>" },
 #ifdef G_OS_UNIX
-        { "system",      'S', 0, G_OPTION_ARG_NONE,           &system_mode,      "Talk to system eventd",                                    NULL },
+        { "system",        'S', 0, G_OPTION_ARG_NONE,           &system_mode,      "Talk to system eventd",                                    NULL },
 #endif /* G_OS_UNIX */
-        { "insecure",    0,   0, G_OPTION_ARG_NONE,           &insecure,         "Accept insecure certificates (unknown CA)",                NULL },
-        { "version",     'V', 0, G_OPTION_ARG_NONE,           &print_version,    "Print version",                                            NULL },
+        { "insecure",      0,   0, G_OPTION_ARG_NONE,           &insecure,         "Accept insecure certificates (unknown CA)",                NULL },
+        { "version",       'V', 0, G_OPTION_ARG_NONE,           &print_version,    "Print version",                                            NULL },
         { .long_name = NULL }
     };
     GOptionContext *opt_context = g_option_context_new("- Basic CLI client for eventd");
@@ -321,6 +323,7 @@ post_event_args:
 
     r = 0; /* URI is fine */
 
+    eventc_connection_set_ping_interval(client, ping_interval);
     if ( server_identity != NULL )
         eventc_connection_set_server_identity(client, server_identity);
     if ( certificate != NULL )
