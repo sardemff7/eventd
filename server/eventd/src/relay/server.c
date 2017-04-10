@@ -46,6 +46,7 @@ struct _EventdRelayServer {
     gchar **subscriptions;
     gboolean forward_all;
     GHashTable *forwards;
+    gboolean started;
     EventcConnection *connection;
     LibeventdReconnectHandler *reconnect;
     EventdEvent *current;
@@ -57,6 +58,13 @@ _eventd_relay_server_event(EventdRelayServer *self, EventdEvent *event, EventcCo
     self->current = event;
     eventd_core_push_event(self->core, event);
     self->current = NULL;
+}
+
+static void
+_eventd_relay_server_disconnected(EventdRelayServer *self, EventcConnection *connection)
+{
+    if ( self->started )
+        evhelpers_reconnect_try(self->reconnect);
 }
 
 static void
@@ -87,6 +95,7 @@ static void
 _eventd_relay_server_setup_connection(EventdRelayServer *server)
 {
     g_signal_connect_swapped(server->connection, "event", G_CALLBACK(_eventd_relay_server_event), server);
+    g_signal_connect_swapped(server->connection, "disconnected", G_CALLBACK(_eventd_relay_server_disconnected), server);
     if ( server->server_identity != NULL )
         eventc_connection_set_server_identity(server->connection, server->server_identity);
     if ( server->subscribe )
@@ -225,7 +234,10 @@ eventd_relay_server_start(EventdRelayServer *server, gboolean force)
     }
 
     if ( force )
+    {
+        server->started = TRUE;
         evhelpers_reconnect_reset(server->reconnect);
+    }
     eventc_connection_set_accept_unknown_ca(server->connection, server->accept_unknown_ca);
     eventc_connection_connect(server->connection, _eventd_relay_connection_handler, server);
 }
@@ -233,6 +245,7 @@ eventd_relay_server_start(EventdRelayServer *server, gboolean force)
 void
 eventd_relay_server_stop(EventdRelayServer *server)
 {
+    server->started = FALSE;
     evhelpers_reconnect_reset(server->reconnect);
 
     eventc_connection_close(server->connection, NULL);

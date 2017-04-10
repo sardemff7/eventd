@@ -87,7 +87,7 @@ _eventd_relay_start_each(gpointer key, gpointer data, gpointer user_data)
     if ( data == NULL )
         return;
 
-    eventd_relay_server_start(data, FALSE);
+    eventd_relay_server_start(data, TRUE);
 }
 
 void
