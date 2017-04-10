@@ -56,6 +56,10 @@ SUBSCRIBE [<category>]
     The second form ask for any number of categories (but at least two).
     Must be sent only once.
 
+PING
+    Both server and client can send this message as a probe at any time
+    to keep the connection alive. No answer is required.
+
 BYE [<reason>]
     Close the connection.
     The connection is closed immediately and must not be used any more.

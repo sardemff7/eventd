@@ -129,6 +129,21 @@ eventd_protocol_generate_subscribe(EventdProtocol *protocol, GHashTable *categor
 }
 
 /**
+ * eventd_protocol_generate_ping:
+ * @protocol: an #EventdProtocol
+ *
+ * Generates a PING message.
+ *
+ * Returns: (transfer full): the message
+ */
+EVENTD_EXPORT
+gchar *
+eventd_protocol_generate_ping(EventdProtocol *protocol)
+{
+    return g_strdup("PING\n");
+}
+
+/**
  * eventd_protocol_generate_bye:
  * @protocol: an #EventdProtocol
  * @message: (nullable): an optional message to send

@@ -40,6 +40,7 @@ struct _EventdProtocolCallbacks
 {
     void (*event)(EventdProtocol *protocol, EventdEvent *event, gpointer user_data);
     void (*subscribe)(EventdProtocol *protocol, GHashTable *categories, gpointer user_data);
+    void (*ping)(EventdProtocol *protocol, gpointer user_data);
     void (*bye)(EventdProtocol *protocol, const gchar *message, gpointer user_data);
 };
 
@@ -71,6 +72,7 @@ gboolean eventd_protocol_parse(EventdProtocol *protocol, gchar *buffer, GError *
 
 gchar *eventd_protocol_generate_event(EventdProtocol *protocol, EventdEvent *event);
 gchar *eventd_protocol_generate_subscribe(EventdProtocol *protocol, GHashTable *categories);
+gchar *eventd_protocol_generate_ping(EventdProtocol *protocol);
 gchar *eventd_protocol_generate_bye(EventdProtocol *protocol, const gchar *message);
 
 

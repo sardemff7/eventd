@@ -70,6 +70,13 @@ eventd_protocol_call_subscribe(EventdProtocol *self, GHashTable *subscriptions)
 }
 
 static inline void
+eventd_protocol_call_ping(EventdProtocol *self)
+{
+    if ( self->callbacks->ping != NULL )
+        self->callbacks->ping(self, self->user_data);
+}
+
+static inline void
 eventd_protocol_call_bye(EventdProtocol *self, const gchar *message)
 {
     if ( self->callbacks->bye != NULL )
@@ -232,6 +239,12 @@ _eventd_protocol_evp_parse_subscribe(EventdProtocol *self, const gchar * const *
     self->state = self->base_state;
 }
 
+/* PING */
+static void
+_eventd_protocol_evp_parse_ping(EventdProtocol *self, const gchar * const *argv, GError **error)
+{
+}
+
 /* BYE */
 static void
 _eventd_protocol_evp_parse_bye(EventdProtocol *self, const gchar * const *argv, GError **error)
@@ -282,6 +295,11 @@ static const EventdProtocolTokens _eventd_protocol_evp_messages[] = {
     {"SUBSCRIBE", 0, 1,
             { EVENTD_PROTOCOL_EVP_STATE_BASE, _EVENTD_PROTOCOL_EVP_STATE_SIZE },
             _eventd_protocol_evp_parse_subscribe,
+            _EVENTD_PROTOCOL_EVP_STATE_SIZE, NULL, NULL
+    },
+    {"PING", 0, 0,
+            { EVENTD_PROTOCOL_EVP_STATE_BASE, EVENTD_PROTOCOL_EVP_STATE_SUBSCRIBE, _EVENTD_PROTOCOL_EVP_STATE_SIZE },
+            _eventd_protocol_evp_parse_ping,
             _EVENTD_PROTOCOL_EVP_STATE_SIZE, NULL, NULL
     },
     {"BYE", 0, 1,
