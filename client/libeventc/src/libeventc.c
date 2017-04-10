@@ -27,9 +27,11 @@
 #include <gio/gio.h>
 #ifdef G_OS_UNIX
 #include <gio/gunixsocketaddress.h>
+#include <gio/gunixconnection.h>
 #define DEFAULT_SOCKET_SCHEME "unix:"
 #else /* ! G_OS_UNIX */
 #define G_IS_UNIX_SOCKET_ADDRESS(a) (FALSE)
+#define G_IS_UNIX_CONNECTION(c) (FALSE)
 #define DEFAULT_SOCKET_SCHEME "file://"
 #endif /* ! G_OS_UNIX */
 #include "gio-compat.h"
@@ -40,6 +42,8 @@
 #include "eventd-ws-module.h"
 
 #include "libeventc.h"
+
+#define EVENTC_CONNECTION_DEFAULT_PING_INTERVAL 300
 
 #define EVENTC_CONNECTION_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), EVENTC_TYPE_CONNECTION, EventcConnectionPrivate))
 
@@ -67,6 +71,8 @@ struct _EventcConnectionPrivate {
     GError *error;
     EventdProtocol* protocol;
     GCancellable *cancellable;
+    guint ping_interval;
+    guint ping;
     GSocketConnection *connection;
     EventdWsConnection *ws;
     GDataInputStream *in;
@@ -234,12 +240,36 @@ end:
     return r;
 }
 
+static gboolean
+_eventc_connection_ping(gpointer user_data)
+{
+    EventcConnection *self = user_data;
+
+    if ( _eventc_connection_send_message(self, eventd_protocol_generate_ping(self->priv->protocol), NULL) )
+        return TRUE;
+
+    self->priv->ping = 0;
+    return FALSE;
+}
+
 static void
 _eventc_connection_protocol_event(EventdProtocol *protocol, EventdEvent *event, gpointer user_data)
 {
     EventcConnection *self = user_data;
 
     g_signal_emit(self, _eventc_connection_signals[SIGNAL_EVENT], 0, event);
+}
+
+static void
+_eventc_connection_protocol_ping(EventdProtocol *protocol, gpointer user_data)
+{
+    EventcConnection *self = user_data;
+
+    if ( self->priv->ping == 0 )
+        return;
+
+    g_source_remove(self->priv->ping);
+    self->priv->ping = g_timeout_add_seconds(self->priv->ping_interval, _eventc_connection_ping, self);
 }
 
 static void
@@ -255,6 +285,7 @@ _eventc_connection_protocol_bye(EventdProtocol *protocol, const gchar *message, 
 
 static const EventdProtocolCallbacks _eventc_connection_protocol_callbacks = {
     .event = _eventc_connection_protocol_event,
+    .ping = _eventc_connection_protocol_ping,
     .bye = _eventc_connection_protocol_bye,
 };
 
@@ -338,6 +369,7 @@ eventc_connection_init(EventcConnection *self)
 
     self->priv->protocol = eventd_protocol_new(&_eventc_connection_protocol_callbacks, self, NULL);
     self->priv->cancellable = g_cancellable_new();
+    self->priv->ping_interval = EVENTC_CONNECTION_DEFAULT_PING_INTERVAL;
 }
 
 static void
@@ -421,6 +453,18 @@ eventc_connection_new_for_connectable(GSocketConnectable *address)
     return self;
 }
 
+static gboolean
+_eventc_connection_is_connected(EventcConnection *self)
+{
+    return ( ( self->priv->connection != NULL ) && g_socket_connection_is_connected(self->priv->connection) );
+}
+
+static gboolean
+_eventc_connection_should_ping(EventcConnection *self)
+{
+    return ( ( self->priv->ping_interval > 0 ) && ( self->priv->ping == 0 ) && _eventc_connection_is_connected(self) && ( ! G_IS_UNIX_CONNECTION(self->priv->connection) ) );
+}
+
 /**
  * eventc_connection_is_connected:
  * @connection: an #EventcConnection
@@ -445,7 +489,7 @@ eventc_connection_is_connected(EventcConnection *self, GError **error)
         return FALSE;
     }
 
-    return ( ( self->priv->connection != NULL ) && g_socket_connection_is_connected(self->priv->connection) );
+    return _eventc_connection_is_connected(self);
 }
 
 static gboolean
@@ -643,9 +687,11 @@ _eventc_connection_connect_check(EventcConnection *self, GError *_inner_error_, 
 static gboolean
 _eventc_connection_connect_after(EventcConnection *self, GError **error)
 {
-    if ( self->priv->subscribe )
-        return _eventc_connection_send_message(self, eventd_protocol_generate_subscribe(self->priv->protocol, self->priv->subscriptions), error);
+    if ( self->priv->subscribe && ( ! _eventc_connection_send_message(self, eventd_protocol_generate_subscribe(self->priv->protocol, self->priv->subscriptions), error) ) )
+        return FALSE;
 
+    if ( _eventc_connection_should_ping(self) )
+        self->priv->ping = g_timeout_add_seconds(self->priv->ping_interval, _eventc_connection_ping, self);
     return TRUE;
 }
 
@@ -837,6 +883,10 @@ eventc_connection_close(EventcConnection *self, GError **error)
 static void
 _eventc_connection_close_internal(EventcConnection *self)
 {
+    if ( self->priv->ping > 0 )
+        g_source_remove(self->priv->ping);
+    self->priv->ping = 0;
+
     if ( self->priv->error != NULL )
         g_error_free(self->priv->error);
     self->priv->error = NULL;
@@ -933,6 +983,30 @@ eventc_connection_set_connectable(EventcConnection *self, GSocketConnectable *ad
 
     g_object_unref(self->priv->address);
     self->priv->address = address;
+}
+
+/**
+ * eventc_connection_set_ping_interval:
+ * @connection: an #EventcConnection
+ * @ping_interval: the ping interval, 0 to disable
+ *
+ * Sets the interval at which a PING message will be sent.
+ * Defaults to 300.
+ *
+ * No PING message is sent for UNIX sockets.
+ */
+EVENTD_EXPORT
+void
+eventc_connection_set_ping_interval(EventcConnection *self, guint ping_interval)
+{
+    g_return_if_fail(EVENTC_IS_CONNECTION(self));
+
+    self->priv->ping_interval = ping_interval;
+    if ( self->priv->ping > 0 )
+        g_source_remove(self->priv->ping);
+    self->priv->ping = 0;
+    if ( _eventc_connection_should_ping(self) )
+        self->priv->ping = g_timeout_add_seconds(self->priv->ping_interval, _eventc_connection_ping, self);
 }
 
 /**

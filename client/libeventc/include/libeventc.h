@@ -88,6 +88,7 @@ gboolean eventc_connection_close(EventcConnection *connection, GError **error);
 
 gboolean eventc_connection_set_uri(EventcConnection *connection, const gchar *uri, GError **error);
 void eventc_connection_set_connectable(EventcConnection *connection, GSocketConnectable *address);
+void eventc_connection_set_ping_interval(EventcConnection *connection, guint ping_interval);
 void eventc_connection_set_server_identity(EventcConnection *connection, GSocketConnectable *server_identity);
 void eventc_connection_set_accept_unknown_ca(EventcConnection *connection, gboolean accept_unknown_ca);
 void eventc_connection_set_certificate(EventcConnection *connection, GTlsCertificate *certificate);
