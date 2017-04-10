@@ -39,6 +39,7 @@
 
 struct _EventdRelayServer {
     EventdCoreContext *core;
+    guint ping_interval;
     GSocketConnectable *server_identity;
     gboolean accept_unknown_ca;
     GTlsCertificate *certificate;
@@ -94,6 +95,7 @@ _eventd_relay_connection_handler(GObject *obj, GAsyncResult *res, gpointer user_
 static void
 _eventd_relay_server_setup_connection(EventdRelayServer *server)
 {
+    eventc_connection_set_ping_interval(server->connection, server->ping_interval);
     g_signal_connect_swapped(server->connection, "event", G_CALLBACK(_eventd_relay_server_event), server);
     g_signal_connect_swapped(server->connection, "disconnected", G_CALLBACK(_eventd_relay_server_disconnected), server);
     if ( server->server_identity != NULL )
@@ -113,13 +115,14 @@ _eventd_relay_server_setup_connection(EventdRelayServer *server)
 }
 
 EventdRelayServer *
-eventd_relay_server_new(EventdCoreContext *core, const gchar *server_identity, gboolean accept_unknown_ca, gchar **forwards, gchar **subscriptions)
+eventd_relay_server_new(EventdCoreContext *core, guint ping_interval, const gchar *server_identity, gboolean accept_unknown_ca, gchar **forwards, gchar **subscriptions)
 {
     EventdRelayServer *server;
 
     server = g_new0(EventdRelayServer, 1);
     server->core = core;
 
+    server->ping_interval = ping_interval;
     if ( server_identity != NULL )
         server->server_identity = g_network_address_new(server_identity, 0);
     server->accept_unknown_ca = accept_unknown_ca;
@@ -149,7 +152,7 @@ eventd_relay_server_new(EventdCoreContext *core, const gchar *server_identity, g
 }
 
 EventdRelayServer *
-eventd_relay_server_new_for_uri(EventdCoreContext *core, const gchar *server_identity, gboolean accept_unknown_ca, gchar **forwards, gchar **subscriptions, const gchar *uri)
+eventd_relay_server_new_for_uri(EventdCoreContext *core, guint ping_interval, const gchar *server_identity, gboolean accept_unknown_ca, gchar **forwards, gchar **subscriptions, const gchar *uri)
 {
     EventcConnection *connection;
     GError *error = NULL;
@@ -164,7 +167,7 @@ eventd_relay_server_new_for_uri(EventdCoreContext *core, const gchar *server_ide
 
     EventdRelayServer *server;
 
-    server = eventd_relay_server_new(core, server_identity, accept_unknown_ca, forwards, subscriptions);
+    server = eventd_relay_server_new(core, ping_interval, server_identity, accept_unknown_ca, forwards, subscriptions);
     server->connection = connection;
 
     _eventd_relay_server_setup_connection(server);

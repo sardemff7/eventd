@@ -307,6 +307,14 @@
                 </varlistentry>
 
                 <varlistentry>
+                    <term><varname>PingInterval=</varname> (defaults to <literal>300</literal>)</term>
+                    <listitem>
+                        <para>A time in <type>seconds</type> (<literal>0</literal> to disable)</para>
+                        <para>The interval at which eventd will send a PING message to the remote server.</para>
+                    </listitem>
+                </varlistentry>
+
+                <varlistentry>
                     <term><varname>ServerIdentity=</varname></term>
                     <listitem>
                         <para>A <type>server name</type></para>
