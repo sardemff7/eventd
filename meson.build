@@ -88,6 +88,7 @@ header_conf.set_quoted('EVENTD_SYSCONFDIR', join_paths(get_option('prefix'), get
 header_conf.set_quoted('EVENTD_BINDIR', join_paths(get_option('prefix'), get_option('bindir')))
 header_conf.set_quoted('EVENTD_LIBDIR', join_paths(get_option('prefix'), get_option('libdir')))
 header_conf.set_quoted('EVENTD_DATADIR', join_paths(get_option('prefix'), get_option('datadir')))
+header_conf.set_quoted('EVENTD_LOCALEDIR', join_paths(get_option('prefix'), get_option('localedir')))
 
 other_conf.set('EVP_SERVICE_NAME', evp_service_name)
 other_conf.set('EVP_TRANSPORT_NAME', evp_transport_name)

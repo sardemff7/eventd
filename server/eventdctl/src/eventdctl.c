@@ -26,9 +26,7 @@
 #include <locale.h>
 
 #include <glib.h>
-#ifdef ENABLE_NLS
 #include <glib/gi18n.h>
-#endif /* ENABLE_NLS */
 #include <glib/gstdio.h>
 #include <gio/gio.h>
 #ifdef G_OS_UNIX
@@ -295,10 +293,8 @@ main(int argc, char *argv[])
     };
 
     setlocale(LC_ALL, "");
-#ifdef ENABLE_NLS
     bindtextdomain(GETTEXT_PACKAGE, EVENTD_LOCALEDIR);
     bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
-#endif /* ENABLE_NLS */
 
     GError *error = NULL;
     GOptionContext *context;

@@ -28,9 +28,7 @@
 #include <locale.h>
 
 #include <glib.h>
-#ifdef ENABLE_NLS
 #include <glib/gi18n.h>
-#endif /* ENABLE_NLS */
 #include <glib-object.h>
 #include <gio/gio.h>
 
@@ -126,10 +124,8 @@ main(int argc, char *argv[])
     gboolean print_version = FALSE;
 
     setlocale(LC_ALL, "");
-#ifdef ENABLE_NLS
     bindtextdomain(GETTEXT_PACKAGE, EVENTD_LOCALEDIR);
     bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
-#endif /* ENABLE_NLS */
 
     /* No free on the data name since we re-use args strings directly */
     data = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, (GDestroyNotify) g_variant_unref);
