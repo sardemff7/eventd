@@ -239,29 +239,35 @@ static const EventdSdModuleControlInterface _eventd_plugins_sd_modules_control_i
 void
 eventd_plugins_load(EventdPluginCoreContext *core, const gchar * const *binds, gboolean enable_relay, gboolean enable_sd_modules, gboolean system_mode)
 {
-    const gchar *env_whitelist;
-    const gchar *env_blacklist;
-    gchar **whitelist = NULL;
-    gchar **blacklist = NULL;
-
     plugins = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, _eventd_plugins_plugin_free);
 
-    env_whitelist = g_getenv("EVENTD_PLUGINS_WHITELIST");
-    if ( env_whitelist != NULL )
-        whitelist = g_strsplit(env_whitelist, ",", 0);
+    if ( G_LIKELY(g_module_supported()) )
+    {
+        const gchar *env_whitelist;
+        const gchar *env_blacklist;
+        gchar **whitelist = NULL;
+        gchar **blacklist = NULL;
 
-    env_blacklist = g_getenv("EVENTD_PLUGINS_BLACKLIST");
-    if ( env_blacklist != NULL )
-        blacklist = g_strsplit(env_blacklist, ",", 0);
+        env_whitelist = g_getenv("EVENTD_PLUGINS_WHITELIST");
+        if ( env_whitelist != NULL )
+            whitelist = g_strsplit(env_whitelist, ",", 0);
 
-    gchar **dirs, **dir;
-    dirs = evhelpers_dirs_get_lib("PLUGINS", "plugins");
-    for ( dir = dirs ; *dir != NULL ; ++dir )
-        _eventd_plugins_load_dir(core, *dir, system_mode, whitelist, blacklist);
-    g_free(dirs);
+        env_blacklist = g_getenv("EVENTD_PLUGINS_BLACKLIST");
+        if ( env_blacklist != NULL )
+            blacklist = g_strsplit(env_blacklist, ",", 0);
 
-    g_strfreev(blacklist);
-    g_strfreev(whitelist);
+        gchar **dirs, **dir;
+        dirs = evhelpers_dirs_get_lib("PLUGINS", "plugins");
+        for ( dir = dirs ; *dir != NULL ; ++dir )
+            _eventd_plugins_load_dir(core, *dir, system_mode, whitelist, blacklist);
+        g_free(dirs);
+
+        g_strfreev(blacklist);
+        g_strfreev(whitelist);
+    }
+    else
+        g_warning("No loadable module support");
+
 
     GList *sockets;
 

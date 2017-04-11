@@ -280,13 +280,6 @@
             </varlistentry>
 
             <varlistentry>
-                <term><literal>2</literal></term>
-                <listitem>
-                    <para>No support to load modules.</para>
-                </listitem>
-            </varlistentry>
-
-            <varlistentry>
                 <term><literal>3</literal></term>
                 <listitem>
                     <para>Failed to parse command line paramaters.</para>

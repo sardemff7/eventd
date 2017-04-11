@@ -281,12 +281,6 @@ main(int argc, char *argv[])
         return EVENTD_RETURN_CODE_FILESYSTEM_ENCODING_ERROR;
     }
 
-    if ( G_UNLIKELY(! g_module_supported()) )
-    {
-        g_warning("No loadable module support");
-        return EVENTD_RETURN_CODE_NO_MODULE_SUPPORT_ERROR;
-    }
-
 #ifdef EVENTD_DEBUG
     setvbuf(stdout, NULL, _IOLBF, 0);
     const gchar *debug_log_filename =  g_getenv("EVENTD_DEBUG_LOG_FILENAME");
