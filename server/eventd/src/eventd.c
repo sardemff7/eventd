@@ -182,20 +182,10 @@ _eventd_core_debug_log_handler(const gchar *log_domain, GLogLevelFlags log_level
     g_log_default_handler(log_domain, log_level, message, NULL);
 
     const gchar *prg_name;
-    gchar pid[PID_MAXLEN];
-    prg_name = g_get_prgname();
-    g_snprintf(pid, PID_MAXLEN, "%lu", (gulong) getpid());
+    gchar *line;
+    gsize l, o = 0;
 
-    g_data_output_stream_put_string(stream, "(", NULL, NULL);
-    if ( prg_name != NULL )
-    {
-        g_data_output_stream_put_string(stream, prg_name, NULL, NULL);
-        g_data_output_stream_put_string(stream, ":", NULL, NULL);
-    }
-    else
-        g_data_output_stream_put_string(stream, "process:", NULL, NULL);
-    g_data_output_stream_put_string(stream, pid, NULL, NULL);
-    g_data_output_stream_put_string(stream, ") ", NULL, NULL);
+    prg_name = g_get_prgname();
 
     const gchar *log_level_message = "";
     switch ( log_level & G_LOG_LEVEL_MASK )
@@ -219,18 +209,24 @@ _eventd_core_debug_log_handler(const gchar *log_domain, GLogLevelFlags log_level
             log_level_message = "DEBUG";
         break;
     }
-    g_data_output_stream_put_string(stream, log_level_message, NULL, NULL);
 
+    l = PID_MAXLEN + strlen("CRITICAL") + strlen(message) + strlen("(:) []: \n") + 1;
+    if ( prg_name != NULL )
+        l += strlen(prg_name);
     if ( log_domain != NULL )
-    {
-        g_data_output_stream_put_string(stream, " [", NULL, NULL);
-        g_data_output_stream_put_string(stream, log_domain, NULL, NULL);
-        g_data_output_stream_put_string(stream, "]", NULL, NULL);
-    }
+        l += strlen(log_domain);
 
-    g_data_output_stream_put_string(stream, ": ", NULL, NULL);
-    g_data_output_stream_put_string(stream, message, NULL, NULL);
-    g_data_output_stream_put_byte(stream, '\n', NULL, NULL);
+    line = g_newa(gchar, l);
+
+    o += g_snprintf(line + o, l - o, "(");
+    if ( prg_name != NULL )
+        o += g_snprintf(line + o, l - o, "%s:", prg_name);
+    o += g_snprintf(line + o, l - o, "%lu) ", (gulong) getpid());
+    if ( log_domain != NULL )
+        o += g_snprintf(line + o, l - o, "[%s] ", log_domain);
+    o += g_snprintf(line + o, l - o, "%s: %s\n", log_level_message, message);
+
+    g_data_output_stream_put_string(stream, line, NULL, NULL);
 }
 #endif /* ! EVENTD_DEBUG */
 
