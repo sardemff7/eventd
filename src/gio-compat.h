@@ -26,7 +26,29 @@
 #endif
 
 #if ! GLIB_CHECK_VERSION(2, 48, 0)
-#define g_socket_connectable_to_string(c) g_strdup("")
+static inline gchar *
+g_socket_connectable_to_string(GSocketConnectable *c)
+{
+    if ( G_IS_UNIX_SOCKET_ADDRESS(c) )
+        return g_strdup(g_unix_socket_address_get_path(G_UNIX_SOCKET_ADDRESS(c)));
+    if ( G_IS_NETWORK_SERVICE(server_identity) )
+        return g_strdup(g_network_service_get_domain(G_NETWORK_SERVICE(c)));
+    if ( G_IS_NETWORK_ADDRESS(c) )
+        return g_strdup_printf("%s:%u", g_network_address_get_hostname(G_NETWORK_ADDRESS(c)),  g_network_address_get_port(G_NETWORK_ADDRESS(c)));
+    if ( G_IS_PROXY_ADDRESS(c) )
+        return g_strdup_printf("%s:%u", g_proxy_address_get_destination_hostname(G_PROXY_ADDRESS(c)),  g_proxy_address_get_destination_port(G_PROXY_ADDRESS(c))
+    if ( G_IS_INET_SOCKET_ADDRESS(c) )
+    {
+        GInetAddress *inet_address;
+        gchar *str, tmp;
+        inet_address = g_inet_socket_address_get_address(G_INET_SOCKET_ADDRESS(c));
+        tmp = g_inet_address_to_string(inet_address);
+        str = g_strdup_printf("%s:%u", tmp,  g_inet_socket_address_get_port(G_INET_SOCKET_ADDRESS(c)));
+        g_free(tmp);
+        return str;
+    }
+    return g_strdup("");
+}
 #endif
 
 #endif /* __EVENTD_GIO_COMPAT_H__ */
