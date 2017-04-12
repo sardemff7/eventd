@@ -80,6 +80,7 @@ else
     header_conf.set('EVENTD_EXPORT', '__declspec(dllexport)')
 endif
 header_conf.set('GLIB_VERSION_MIN_REQUIRED', '(G_ENCODE_VERSION(@0@,@1@))'.format(glib_min_major, glib_min_minor))
+header_conf.set('G_LOG_USE_STRUCTURED', true)
 
 other_conf.set('prefix', get_option('prefix'))
 other_conf.set('bindir', join_paths(get_option('prefix'), get_option('bindir')))

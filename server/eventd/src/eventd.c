@@ -175,12 +175,8 @@ eventd_core_stop(EventdCoreContext *context)
 #ifdef EVENTD_DEBUG
 #define PID_MAXLEN 128 + 1 /* \0 */
 static void
-_eventd_core_debug_log_handler(const gchar *log_domain, GLogLevelFlags log_level, const gchar *message, gpointer user_data)
+_eventd_core_debug_log_write(GDataOutputStream *stream, GLogLevelFlags log_level, const gchar *log_domain, const gchar *message)
 {
-    GDataOutputStream *stream = user_data;
-
-    g_log_default_handler(log_domain, log_level, message, NULL);
-
     const gchar *prg_name;
     gchar *line;
     gsize l, o = 0;
@@ -228,6 +224,36 @@ _eventd_core_debug_log_handler(const gchar *log_domain, GLogLevelFlags log_level
 
     g_data_output_stream_put_string(stream, line, NULL, NULL);
 }
+
+static void
+_eventd_core_debug_log_handler(const gchar *log_domain, GLogLevelFlags log_level, const gchar *message, gpointer user_data)
+{
+    g_log_default_handler(log_domain, log_level, message, NULL);
+    _eventd_core_debug_log_write(user_data, log_level, log_domain, message);
+}
+
+#if GLIB_CHECK_VERSION(2, 50, 0)
+static GLogWriterOutput
+_eventd_core_debug_log_writer(GLogLevelFlags log_level, const GLogField *fields, gsize n_fields, gpointer user_data)
+{
+    g_log_writer_default(log_level, fields, n_fields, NULL);
+
+    const gchar *log_domain = NULL;
+    const gchar *message = NULL;
+    gsize i;
+    for ( i = 0 ; i < n_fields ; ++i )
+    {
+        if ( g_strcmp0(fields[i].key, "MESSAGE") == 0 )
+            message = fields[i].value;
+        else if ( g_strcmp0(fields[i].key, "GLIB_DOMAIN") == 0 )
+            log_domain = fields[i].value;
+    }
+
+    g_assert_nonnull(message);
+    _eventd_core_debug_log_write(user_data, log_level, log_domain, message);
+    return G_LOG_WRITER_HANDLED;
+}
+#endif /* GLIB_CHECK_VERSION(2, 50, 0) */
 #endif /* ! EVENTD_DEBUG */
 
 #ifdef G_OS_UNIX
@@ -300,6 +326,9 @@ main(int argc, char *argv[])
             g_object_unref(debug_log_stream);
 
             g_log_set_default_handler(_eventd_core_debug_log_handler, debug_stream);
+#if GLIB_CHECK_VERSION(2, 50, 0)
+            g_log_set_writer_func(_eventd_core_debug_log_writer, debug_stream, NULL);
+#endif /* GLIB_CHECK_VERSION(2, 50, 0) */
         }
         g_object_unref(debug_log);
     }
