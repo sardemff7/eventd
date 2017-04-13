@@ -84,12 +84,12 @@ _eventd_relay_connection_handler(GObject *obj, GAsyncResult *res, gpointer user_
 
     if ( eventc_connection_connect_finish(server->connection, res, &error) )
         evhelpers_reconnect_reset(server->reconnect);
-    else
+    else if ( ! g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED) )
     {
         g_warning("Couldn't connect: %s", error->message);
-        g_clear_error(&error);
         evhelpers_reconnect_try(server->reconnect);
     }
+    g_clear_error(&error);
 }
 
 static void
