@@ -197,6 +197,15 @@ _eventd_nd_xcb_geometry_fallback(EventdNdBackendContext *self)
     self->geometry.h = self->screen->height_in_pixels;
 }
 
+static void
+_eventd_nd_xcb_randr_set_output(EventdNdBackendContext *self, xcb_randr_get_output_info_reply_t *output, xcb_randr_get_crtc_info_reply_t *crtc)
+{
+    self->geometry.x = crtc->x;
+    self->geometry.y = crtc->y;
+    self->geometry.w = crtc->width;
+    self->geometry.h = crtc->height;
+}
+
 static gboolean
 _eventd_nd_xcb_randr_check_primary(EventdNdBackendContext *self)
 {
@@ -224,10 +233,7 @@ _eventd_nd_xcb_randr_check_primary(EventdNdBackendContext *self)
         {
             found = TRUE;
 
-            self->geometry.x = crtc->x;
-            self->geometry.y = crtc->y;
-            self->geometry.w = crtc->width;
-            self->geometry.h = crtc->height;
+            _eventd_nd_xcb_randr_set_output(self, output, crtc);
 
             free(crtc);
         }
@@ -253,10 +259,8 @@ _eventd_nd_xcb_randr_check_config_outputs(EventdNdBackendContext *self, EventdNd
         {
             if ( g_ascii_strncasecmp(*config_output, (const gchar *)xcb_randr_get_output_info_name(output->output), xcb_randr_get_output_info_name_length(output->output)) != 0 )
                 continue;
-            self->geometry.x = output->crtc->x;
-            self->geometry.y = output->crtc->y;
-            self->geometry.w = output->crtc->width;
-            self->geometry.h = output->crtc->height;
+
+            _eventd_nd_xcb_randr_set_output(self, output->output, output->crtc);
 
             return TRUE;
         }
@@ -317,10 +321,8 @@ _eventd_nd_xcb_randr_check_focused(EventdNdBackendContext *self, EventdNdXcbRand
     {
         if ( ! ( ( x >= output->crtc->x && x <= ( output->crtc->x + output->crtc->width ) ) && ( y >= output->crtc->y && y <= ( output->crtc->y + output->crtc->height ) ) ) )
             continue;
-        self->geometry.x = output->crtc->x;
-        self->geometry.y = output->crtc->y;
-        self->geometry.w = output->crtc->width;
-        self->geometry.h = output->crtc->height;
+
+        _eventd_nd_xcb_randr_set_output(self, output->output, output->crtc);
 
         return TRUE;
     }
