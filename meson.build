@@ -49,7 +49,6 @@ if is_unix
     ]
 else
     headers += [
-        'wincon.h',
         'windows.h',
     ]
 endif
