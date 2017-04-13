@@ -673,10 +673,15 @@ _eventc_connection_connect_check(EventcConnection *self, GError *_inner_error_, 
         return TRUE;
     }
 
-    if ( ( _inner_error_->code == G_IO_ERROR_CANCELLED ) || ( self->priv->error != NULL ) )
+    if ( self->priv->error != NULL )
     {
         g_propagate_error(error, self->priv->error);
         self->priv->error = NULL;
+    }
+    else if ( g_error_matches(_inner_error_, G_IO_ERROR, G_IO_ERROR_CANCELLED) )
+    {
+        g_propagate_error(error, _inner_error_);
+        _inner_error_ = NULL;
     }
     else
         g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_CONNECTION, "Failed to connect: %s", _inner_error_->message);
