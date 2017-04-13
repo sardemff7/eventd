@@ -243,6 +243,7 @@ _eventd_protocol_evp_parse_subscribe(EventdProtocol *self, const gchar * const *
 static void
 _eventd_protocol_evp_parse_ping(EventdProtocol *self, const gchar * const *argv, GError **error)
 {
+    eventd_protocol_call_ping(self);
 }
 
 /* BYE */
