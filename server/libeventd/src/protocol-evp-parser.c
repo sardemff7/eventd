@@ -145,7 +145,7 @@ _eventd_protocol_evp_parse_dot_event_end(EventdProtocol *self, GError **error)
         self->data.hash = NULL;
     }
 
-    eventd_protocol_call_event((EventdProtocol *) self, self->event);
+    eventd_protocol_call_event(self, self->event);
 
     eventd_event_unref(self->event);
     self->event = NULL;
@@ -179,7 +179,7 @@ _eventd_protocol_evp_parse_dot_subscribe_end(EventdProtocol *self, GError **erro
         return;
     }
 
-    eventd_protocol_call_subscribe((EventdProtocol *) self, self->subscriptions);
+    eventd_protocol_call_subscribe(self, self->subscriptions);
 
     g_hash_table_unref(self->subscriptions);
     self->subscriptions = NULL;
@@ -216,7 +216,7 @@ _eventd_protocol_evp_parse_event(EventdProtocol *self, const gchar * const *argv
     event = _eventd_protocol_evp_parser_get_event(self, argv, error);
     if ( event == NULL )
         return;
-    eventd_protocol_call_event((EventdProtocol *) self, event);
+    eventd_protocol_call_event(self, event);
     eventd_event_unref(event);
 }
 
@@ -225,13 +225,13 @@ static void
 _eventd_protocol_evp_parse_subscribe(EventdProtocol *self, const gchar * const *argv, GError **error)
 {
     if ( argv == NULL )
-        eventd_protocol_call_subscribe((EventdProtocol *) self, NULL);
+        eventd_protocol_call_subscribe(self, NULL);
     else
     {
         GHashTable *subscriptions;
         subscriptions = g_hash_table_new(g_str_hash, g_str_equal);
         g_hash_table_add(subscriptions, (gpointer) argv[0]);
-        eventd_protocol_call_subscribe((EventdProtocol *) self, subscriptions);
+        eventd_protocol_call_subscribe(self, subscriptions);
         g_hash_table_unref(subscriptions);
     }
 
@@ -249,7 +249,7 @@ _eventd_protocol_evp_parse_ping(EventdProtocol *self, const gchar * const *argv,
 static void
 _eventd_protocol_evp_parse_bye(EventdProtocol *self, const gchar * const *argv, GError **error)
 {
-    eventd_protocol_call_bye((EventdProtocol *) self, ( argv == NULL ) ? NULL : argv[0]);
+    eventd_protocol_call_bye(self, ( argv == NULL ) ? NULL : argv[0]);
 
     self->base_state = EVENTD_PROTOCOL_EVP_STATE_BYE;
     self->state = self->base_state;
@@ -419,9 +419,8 @@ _eventd_protocol_evp_parse_line(EventdProtocol *self, const gchar *line, GError 
  */
 EVENTD_EXPORT
 gboolean
-eventd_protocol_parse(EventdProtocol *protocol, gchar *buffer, GError **error)
+eventd_protocol_parse(EventdProtocol *self, gchar *buffer, GError **error)
 {
-    EventdProtocol *self = (EventdProtocol *) protocol;
     g_return_val_if_fail(self->state != _EVENTD_PROTOCOL_EVP_STATE_SIZE, FALSE);
 
     GError *_inner_error_ = NULL;
