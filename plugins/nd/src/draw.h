@@ -26,7 +26,7 @@
 #include <nkutils-xdg-theme.h>
 
 PangoLayout *eventd_nd_draw_text_process(EventdNdStyle *style, EventdEvent *event, gint max_width, guint more_size, gint *text_height, gint *text_width);
-void eventd_nd_draw_image_and_icon_process(NkXdgThemeContext *theme_context, EventdNdStyle *style, EventdEvent *event, gint max_width, cairo_surface_t **image, cairo_surface_t **icon, gint *text_x, gint *width, gint *height);
+void eventd_nd_draw_image_and_icon_process(NkXdgThemeContext *theme_context, EventdNdStyle *style, EventdEvent *event, gint max_width, gint scale, cairo_surface_t **image, cairo_surface_t **icon, gint *text_x, gint *width, gint *height);
 
 void eventd_nd_draw_bubble_shape(cairo_t *cr, EventdNdStyle *style, gint width, gint height);
 void eventd_nd_draw_bubble_draw(cairo_t *cr, EventdNdStyle *style, gint width, gint height, gboolean shaped);

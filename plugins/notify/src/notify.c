@@ -142,15 +142,15 @@ _eventd_libnotify_get_image(EventdPluginContext *context, EventdPluginAction *ac
                 && ( context->capabilities.svg_support || ( ! g_str_has_suffix(*image_uri, ".svg") ) )
             )
             break;
-        image = eventd_nd_pixbuf_from_uri(*image_uri, 0, 0);
+        image = eventd_nd_pixbuf_from_uri(*image_uri, 0, 0, 1);
         *image_uri = NULL;
     break;
     case FILENAME_PROCESS_RESULT_DATA:
-        image = eventd_nd_pixbuf_from_data(data, 0, 0);
+        image = eventd_nd_pixbuf_from_data(data, 0, 0, 1);
     break;
     case FILENAME_PROCESS_RESULT_THEME:
         /* Theme icon as image is not supported by the spec */
-        image = eventd_nd_pixbuf_from_theme(context->theme_context, *image_uri, 48);
+        image = eventd_nd_pixbuf_from_theme(context->theme_context, *image_uri, 48, 1);
         *image_uri = NULL;
     break;
     case FILENAME_PROCESS_RESULT_NONE:
@@ -165,11 +165,11 @@ _eventd_libnotify_get_image(EventdPluginContext *context, EventdPluginAction *ac
                 && ( context->capabilities.svg_support || ( ! g_str_has_suffix(*icon_uri, ".svg") ) )
             )
             break;
-        icon = eventd_nd_pixbuf_from_uri(*icon_uri, 0, 0);
+        icon = eventd_nd_pixbuf_from_uri(*icon_uri, 0, 0, 1);
         *icon_uri = NULL;
     break;
     case FILENAME_PROCESS_RESULT_DATA:
-        icon = eventd_nd_pixbuf_from_data(data, 0, 0);
+        icon = eventd_nd_pixbuf_from_data(data, 0, 0, 1);
     break;
     case FILENAME_PROCESS_RESULT_THEME:
     {
@@ -201,7 +201,7 @@ _eventd_libnotify_get_image(EventdPluginContext *context, EventdPluginAction *ac
      */
     if ( ( image == NULL ) && ( *image_uri != NULL ) )
     {
-        image = eventd_nd_pixbuf_from_uri(*image_uri, 0, 0);
+        image = eventd_nd_pixbuf_from_uri(*image_uri, 0, 0, 1);
         *image_uri = NULL;
     }
 
@@ -216,7 +216,7 @@ _eventd_libnotify_get_image(EventdPluginContext *context, EventdPluginAction *ac
      */
     if ( ( icon == NULL ) && ( *icon_uri != NULL ) )
     {
-        icon = eventd_nd_pixbuf_from_uri(*icon_uri, 0, 0);
+        icon = eventd_nd_pixbuf_from_uri(*icon_uri, 0, 0, 1);
         *icon_uri = NULL;
     }
 

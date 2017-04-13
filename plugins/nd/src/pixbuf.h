@@ -27,8 +27,8 @@
 static inline const guchar *gdk_pixbuf_read_pixels(GdkPixbuf *pixbuf) { return gdk_pixbuf_get_pixels(pixbuf); }
 #endif /* gdk-pixbux < 2.32 */
 
-GdkPixbuf *eventd_nd_pixbuf_from_uri(gchar *uri, gint width, gint height);
-GdkPixbuf *eventd_nd_pixbuf_from_data(GVariant *data, gint width, gint height);
-GdkPixbuf *eventd_nd_pixbuf_from_theme(NkXdgThemeContext *context, gchar *uri, gint size);
+GdkPixbuf *eventd_nd_pixbuf_from_uri(gchar *uri, gint width, gint height, gint scale);
+GdkPixbuf *eventd_nd_pixbuf_from_data(GVariant *data, gint width, gint height, gint scale);
+GdkPixbuf *eventd_nd_pixbuf_from_theme(NkXdgThemeContext *context, gchar *uri, gint size, gint scale);
 
 #endif /* __EVENTD_ND_PIXBUF_H__ */

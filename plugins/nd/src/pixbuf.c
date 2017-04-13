@@ -56,11 +56,11 @@ _eventd_nd_pixbuf_from_file(const gchar *path, gint width, gint height)
 }
 
 GdkPixbuf *
-eventd_nd_pixbuf_from_uri(gchar *uri, gint width, gint height)
+eventd_nd_pixbuf_from_uri(gchar *uri, gint width, gint height, gint scale)
 {
     GdkPixbuf *pixbuf = NULL;
     if ( g_str_has_prefix(uri, "file://") )
-        pixbuf = _eventd_nd_pixbuf_from_file(uri + strlen("file://"), width, height);
+        pixbuf = _eventd_nd_pixbuf_from_file(uri + strlen("file://"), width * scale, height * scale);
     g_free(uri);
 
     return pixbuf;
@@ -73,7 +73,7 @@ _eventd_nd_pixbuf_free_data(guchar *pixels, gpointer data)
 }
 
 GdkPixbuf *
-eventd_nd_pixbuf_from_data(GVariant *var, gint width, gint height)
+eventd_nd_pixbuf_from_data(GVariant *var, gint width, gint height, gint scale)
 {
     GdkPixbuf *pixbuf = NULL;
     GError *error = NULL;
@@ -115,7 +115,7 @@ eventd_nd_pixbuf_from_data(GVariant *var, gint width, gint height)
         }
         GdkPixbufFormat *format;
         if ( ( ( width > 0 ) || ( height > 0 ) ) && ( ( format = gdk_pixbuf_loader_get_format(loader) ) != NULL ) && gdk_pixbuf_format_is_scalable(format) )
-            gdk_pixbuf_loader_set_size(loader, width, height);
+            gdk_pixbuf_loader_set_size(loader, width * scale, height * scale);
     }
     else
         loader = gdk_pixbuf_loader_new();
@@ -144,7 +144,7 @@ end:
 }
 
 GdkPixbuf *
-eventd_nd_pixbuf_from_theme(NkXdgThemeContext *context, gchar *uri, gint size)
+eventd_nd_pixbuf_from_theme(NkXdgThemeContext *context, gchar *uri, gint size, gint scale)
 {
     GdkPixbuf *pixbuf = NULL;
     const gchar *theme = NULL;
@@ -159,9 +159,9 @@ eventd_nd_pixbuf_from_theme(NkXdgThemeContext *context, gchar *uri, gint size)
         name = ++c;
     }
 
-    file = nk_xdg_theme_get_icon(context, theme, name, size, TRUE);
+    file = nk_xdg_theme_get_icon(context, theme, NULL, name, size, scale, TRUE);
     if ( file != NULL )
-        pixbuf = _eventd_nd_pixbuf_from_file(file, size, size);
+        pixbuf = _eventd_nd_pixbuf_from_file(file, size * scale, size * scale);
     g_free(file);
     g_free(uri);
 

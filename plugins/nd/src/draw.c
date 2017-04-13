@@ -378,7 +378,7 @@ _eventd_nd_draw_icon_process_background(GdkPixbuf *pixbuf, EventdNdStyle *style,
 }
 
 void
-eventd_nd_draw_image_and_icon_process(NkXdgThemeContext *theme_context, EventdNdStyle *style, EventdEvent *event, gint max_width, cairo_surface_t **image, cairo_surface_t **icon, gint *text_x, gint *width, gint *height)
+eventd_nd_draw_image_and_icon_process(NkXdgThemeContext *theme_context, EventdNdStyle *style, EventdEvent *event, gint max_width, gint scale, cairo_surface_t **image, cairo_surface_t **icon, gint *text_x, gint *width, gint *height)
 {
     gint load_width, load_height;
     GdkPixbuf *image_pixbuf = NULL;
@@ -392,13 +392,13 @@ eventd_nd_draw_image_and_icon_process(NkXdgThemeContext *theme_context, EventdNd
     switch ( evhelpers_filename_process(image_filename, event, "images", &uri, &data) )
     {
     case FILENAME_PROCESS_RESULT_URI:
-        image_pixbuf = eventd_nd_pixbuf_from_uri(uri, load_width, load_height);
+        image_pixbuf = eventd_nd_pixbuf_from_uri(uri, load_width, load_height, scale);
     break;
     case FILENAME_PROCESS_RESULT_DATA:
-        image_pixbuf = eventd_nd_pixbuf_from_data(data, load_width, load_height);
+        image_pixbuf = eventd_nd_pixbuf_from_data(data, load_width, load_height, scale);
     break;
     case FILENAME_PROCESS_RESULT_THEME:
-        image_pixbuf = eventd_nd_pixbuf_from_theme(theme_context, uri, MIN(load_width, load_height));
+        image_pixbuf = eventd_nd_pixbuf_from_theme(theme_context, uri, MIN(load_width, load_height), scale);
     break;
     case FILENAME_PROCESS_RESULT_NONE:
     break;
@@ -408,13 +408,13 @@ eventd_nd_draw_image_and_icon_process(NkXdgThemeContext *theme_context, EventdNd
     switch ( evhelpers_filename_process(icon_filename, event, "icons", &uri, &data) )
     {
     case FILENAME_PROCESS_RESULT_URI:
-        icon_pixbuf = eventd_nd_pixbuf_from_uri(uri, load_width, load_height);
+        icon_pixbuf = eventd_nd_pixbuf_from_uri(uri, load_width, load_height, scale);
     break;
     case FILENAME_PROCESS_RESULT_DATA:
-        icon_pixbuf = eventd_nd_pixbuf_from_data(data, load_width, load_height);
+        icon_pixbuf = eventd_nd_pixbuf_from_data(data, load_width, load_height, scale);
     break;
     case FILENAME_PROCESS_RESULT_THEME:
-        icon_pixbuf = eventd_nd_pixbuf_from_theme(theme_context, uri, MIN(load_width, load_height));
+        icon_pixbuf = eventd_nd_pixbuf_from_theme(theme_context, uri, MIN(load_width, load_height), scale);
     break;
     case FILENAME_PROCESS_RESULT_NONE:
     break;
