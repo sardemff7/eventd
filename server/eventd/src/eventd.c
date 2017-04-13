@@ -31,9 +31,10 @@
 #ifdef G_OS_UNIX
 #include <glib-unix.h>
 #else /* ! G_OS_UNIX */
+#define UNICODE
+#include <windows.h>
 #include <process.h>
 #include <io.h>
-void FreeConsole(void);
 #endif /* ! G_OS_UNIX */
 #include <gio/gio.h>
 

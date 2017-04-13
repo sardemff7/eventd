@@ -44,7 +44,14 @@ headers = [
     'errno.h',
 ]
 if is_unix
-    headers += 'sys/socket.h'
+    headers += [
+        'sys/socket.h',
+    ]
+else
+    headers += [
+        'wincon.h',
+        'windows.h',
+    ]
 endif
 c_compiler = meson.get_compiler('c')
 foreach h : headers
@@ -78,6 +85,8 @@ if is_unix
     header_conf.set('EVENTD_EXPORT', '__attribute__((visibility("default")))')
 else
     header_conf.set('EVENTD_EXPORT', '__declspec(dllexport)')
+    header_conf.set('_WIN32_WINNT', '_WIN32_WINNT_WIN7')
+    header_conf.set('NTDDI_VERSION', 'NTDDI_WIN7')
 endif
 header_conf.set('GLIB_VERSION_MIN_REQUIRED', '(G_ENCODE_VERSION(@0@,@1@))'.format(glib_min_major, glib_min_minor))
 header_conf.set('G_LOG_USE_STRUCTURED', true)
