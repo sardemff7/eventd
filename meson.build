@@ -7,18 +7,21 @@ project('eventd', 'c',
     subproject_dir: 'src',
 )
 
-git_version = run_command('git', '--git-dir', join_paths(meson.source_root(), '.git'), 'describe', '--tags', '--always', '--dirty')
-git_branch = run_command('git', '--git-dir', join_paths(meson.source_root(), '.git'), 'describe', '--tags', '--always', '--all')
-if git_version.returncode() == 0 and git_branch.returncode() == 0
-    git_branch_parts = []
-    foreach b : git_branch.stdout().strip().split('/')
-        if b != 'heads'
-            git_branch_parts += b
-        endif
-    endforeach
-    eventd_version = '@0@ - @1@ (@2@)'.format(meson.project_version(), git_version.stdout().strip(), '/'.join(git_branch_parts))
-else
-    eventd_version = meson.project_version()
+eventd_version = meson.project_version()
+
+git = find_program('git', required: false)
+if git.found()
+	git_version = run_command(git, '--git-dir', join_paths(meson.source_root(), '.git'), 'describe', '--tags', '--always', '--dirty')
+	git_branch = run_command(git, '--git-dir', join_paths(meson.source_root(), '.git'), 'describe', '--tags', '--always', '--all')
+	if git_version.returncode() == 0 and git_branch.returncode() == 0
+		git_branch_parts = []
+		foreach b : git_branch.stdout().strip().split('/')
+			if b != 'heads'
+				git_branch_parts += b
+			endif
+		endforeach
+		eventd_version = '@0@ - @1@ (@2@)'.format(meson.project_version(), git_version.stdout().strip(), '/'.join(git_branch_parts))
+	endif
 endif
 
 is_unix = host_machine.system() != 'windows'
