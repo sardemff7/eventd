@@ -67,22 +67,22 @@ typedef EventdPluginAction *(*EventdPluginActionParseFunc)(EventdPluginContext *
 typedef void (*EventdPluginEventDispatchFunc)(EventdPluginContext *context, EventdEvent *event);
 typedef void (*EventdPluginEventActionFunc)(EventdPluginContext *context, EventdPluginAction *action, EventdEvent *event);
 
-typedef void (*EventdPluginGetInterfaceFunc)(EventdPluginInterface *interface);
+typedef void (*EventdPluginGetInterfaceFunc)(EventdPluginInterface *iface);
 
-void eventd_plugin_interface_add_init_callback(EventdPluginInterface *interface, EventdPluginInitFunc callback);
-void eventd_plugin_interface_add_uninit_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback);
+void eventd_plugin_interface_add_init_callback(EventdPluginInterface *iface, EventdPluginInitFunc callback);
+void eventd_plugin_interface_add_uninit_callback(EventdPluginInterface *iface, EventdPluginSimpleFunc callback);
 
-void eventd_plugin_interface_add_start_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback);
-void eventd_plugin_interface_add_stop_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback);
+void eventd_plugin_interface_add_start_callback(EventdPluginInterface *iface, EventdPluginSimpleFunc callback);
+void eventd_plugin_interface_add_stop_callback(EventdPluginInterface *iface, EventdPluginSimpleFunc callback);
 
-void eventd_plugin_interface_add_control_command_callback(EventdPluginInterface *interface, EventdPluginControlCommandFunc callback);
+void eventd_plugin_interface_add_control_command_callback(EventdPluginInterface *iface, EventdPluginControlCommandFunc callback);
 
-void eventd_plugin_interface_add_global_parse_callback(EventdPluginInterface *interface, EventdPluginGlobalParseFunc callback);
-void eventd_plugin_interface_add_action_parse_callback(EventdPluginInterface *interface, EventdPluginActionParseFunc callback);
-void eventd_plugin_interface_add_config_reset_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback);
+void eventd_plugin_interface_add_global_parse_callback(EventdPluginInterface *iface, EventdPluginGlobalParseFunc callback);
+void eventd_plugin_interface_add_action_parse_callback(EventdPluginInterface *iface, EventdPluginActionParseFunc callback);
+void eventd_plugin_interface_add_config_reset_callback(EventdPluginInterface *iface, EventdPluginSimpleFunc callback);
 
-void eventd_plugin_interface_add_event_dispatch_callback(EventdPluginInterface *interface, EventdPluginEventDispatchFunc callback);
-void eventd_plugin_interface_add_event_action_callback(EventdPluginInterface *interface, EventdPluginEventActionFunc callback);
+void eventd_plugin_interface_add_event_dispatch_callback(EventdPluginInterface *iface, EventdPluginEventDispatchFunc callback);
+void eventd_plugin_interface_add_event_action_callback(EventdPluginInterface *iface, EventdPluginEventActionFunc callback);
 
 
 /*

@@ -61,7 +61,7 @@ void FreeConsole(void);
 #endif /* ! G_OS_UNIX */
 
 struct _EventdCoreContext {
-    EventdCoreInterface interface;
+    EventdCoreInterface iface;
     EventdConfig *config;
     EventdControl *control;
     EventdSockets *sockets;
@@ -335,8 +335,8 @@ main(int argc, char *argv[])
 #endif /* EVENTD_DEBUG */
 
     context = g_new0(EventdCoreContext, 1);
-    context->interface.get_sockets = eventd_core_get_sockets;
-    context->interface.push_event = eventd_core_push_event;
+    context->iface.get_sockets = eventd_core_get_sockets;
+    context->iface.push_event = eventd_core_push_event;
 
     GOptionEntry entries[] =
     {
