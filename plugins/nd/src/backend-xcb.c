@@ -72,6 +72,7 @@ struct _EventdNdBackendContext {
         gint y;
         gint w;
         gint h;
+        gint s;
     } geometry;
     gboolean randr;
     gboolean compositing;
@@ -195,6 +196,7 @@ _eventd_nd_xcb_geometry_fallback(EventdNdBackendContext *self)
     self->geometry.y = 0;
     self->geometry.w = self->screen->width_in_pixels;
     self->geometry.h = self->screen->height_in_pixels;
+    self->geometry.s = 1;
 }
 
 static void
@@ -204,6 +206,7 @@ _eventd_nd_xcb_randr_set_output(EventdNdBackendContext *self, xcb_randr_get_outp
     self->geometry.y = crtc->y;
     self->geometry.w = crtc->width;
     self->geometry.h = crtc->height;
+    self->geometry.s = _eventd_nd_compute_scale(self->geometry.w, self->geometry.h, output->mm_width, output->mm_height);
 }
 
 static gboolean
@@ -396,11 +399,12 @@ _eventd_nd_xcb_randr_check_outputs(EventdNdBackendContext *self)
 static void
 _eventd_nd_xcb_check_geometry(EventdNdBackendContext *self)
 {
-    gint x, y, w, h;
+    gint x, y, w, h, s;
     x = self->geometry.x;
     y = self->geometry.y;
     w = self->geometry.w;
     h = self->geometry.h;
+    s = self->geometry.s;
 
     gboolean found = FALSE;
     if ( self->randr )
@@ -412,10 +416,10 @@ _eventd_nd_xcb_check_geometry(EventdNdBackendContext *self)
     if ( ! found )
         _eventd_nd_xcb_geometry_fallback(self);
 
-    if ( ( x == self->geometry.x ) && ( y == self->geometry.y ) && ( w == self->geometry.w ) && ( h == self->geometry.h ) )
+    if ( ( x == self->geometry.x ) && ( y == self->geometry.y ) && ( w == self->geometry.w ) && ( h == self->geometry.h ) && ( s == self->geometry.s ) )
         return;
 
-    self->nd->geometry_update(self->nd->context, self->geometry.w, self->geometry.h);
+    self->nd->geometry_update(self->nd->context, self->geometry.w, self->geometry.h, self->geometry.s);
 }
 
 static void _eventd_nd_xcb_surface_button_release_event(EventdNdSurface *self);

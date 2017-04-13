@@ -55,6 +55,7 @@ struct _EventdPluginContext {
         gint y;
         gint w;
         gint h;
+        gint s;
     } geometry;
     GHashTable *notifications;
     gboolean no_refresh;

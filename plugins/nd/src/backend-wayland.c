@@ -161,7 +161,7 @@ _eventd_nd_wl_notification_area_geometry(void *data, struct zww_notification_are
     }
 #endif /* CAIRO_VERION >= 1.14.0 */
 
-    self->nd->geometry_update(self->nd->context, width, height);
+    self->nd->geometry_update(self->nd->context, width, height, self->scale);
 }
 
 static const struct zww_notification_area_v1_listener _eventd_nd_wl_notification_area_listener = {

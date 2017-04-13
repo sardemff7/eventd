@@ -105,13 +105,14 @@ cleanup:
 }
 
 static void
-_eventd_nd_geometry_update(EventdNdContext *context, gint w, gint h)
+_eventd_nd_geometry_update(EventdNdContext *context, gint w, gint h, gint s)
 {
     gboolean resize;
-    resize = ( ( context->geometry.w != w ) || ( context->geometry.h != h ) );
+    resize = ( ( context->geometry.w != w ) || ( context->geometry.h != h ) || ( context->geometry.s != s ) );
 
     context->geometry.w = w;
     context->geometry.h = h;
+    context->geometry.s = s;
 
     if ( context->backend == NULL )
         /* Start phase, nothing to update */
