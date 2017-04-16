@@ -139,15 +139,6 @@ foreach f : flags
     endif
 endforeach
 
-nk_modules = [
-    'uuid',
-    'enum',
-    'token',
-    'colour/alpha',
-    'colour/double',
-    'xdg-theme'
-]
-
 man_pages = []
 docbook_conditions = [ 'installation' ]
 if is_unix
@@ -156,7 +147,25 @@ else
     docbook_conditions += [ 'ev_os_win' ]
 endif
 
-subdir('src/libnkutils')
+nk_modules = [
+    'uuid=true',
+    'enum=true',
+    'token=true',
+    'colour-alpha=true',
+    'colour-double=true',
+    'xdg-theme=true',
+]
+nk = subproject('libnkutils', default_options: nk_modules)
+nk_options = nk.get_variable('nk_options')
+foreach o : nk_modules + nk_options
+    if not nk_modules.contains(o) or not nk_options.contains(o)
+        error('You must not change libnkutils options @0@ != @1@'.format('|'.join(nk_modules), '|'.join(nk_options)))
+    endif
+endforeach
+libnkutils = nk.get_variable('libnkutils')
+nkutils_xsltpath = nk.get_variable('nkutils_xsltpath')
+nkutils_manfiles = nk.get_variable('nkutils_manfiles')
+docbook_conditions += nk.get_variable('nkutils_docbook_conditions')
 
 subdir('server/libeventd')
 subdir('server/libeventd-helpers')
