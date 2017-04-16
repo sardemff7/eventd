@@ -285,7 +285,7 @@ eventd_config_parse(EventdConfig *config, gboolean system_mode)
         g_free(*dir);
     }
     g_free(dirs);
-    if ( g_file_test(config->arg_dir, G_FILE_TEST_IS_DIR) )
+    if ( ( config->arg_dir != NULL ) && g_file_test(config->arg_dir, G_FILE_TEST_IS_DIR) )
         _eventd_config_load_dir(config, action_files, event_files, config->arg_dir);
 
     /*
