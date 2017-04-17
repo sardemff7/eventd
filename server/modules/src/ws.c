@@ -27,11 +27,6 @@
 #include <glib.h>
 #include <glib-object.h>
 #include <gio/gio.h>
-#ifdef G_OS_UNIX
-#include <gio/gunixsocketaddress.h>
-#else /* ! G_OS_UNIX */
-#define G_IS_UNIX_SOCKET_ADDRESS(a) (FALSE)
-#endif /* ! G_OS_UNIX */
 
 #include <libsoup/soup.h>
 
