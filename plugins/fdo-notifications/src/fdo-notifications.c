@@ -97,6 +97,9 @@ _eventd_fdo_notifications_notification_timout(gpointer user_data)
 static EventdDbusNotification *
 _eventd_fdo_notifications_notification_new(EventdPluginContext *context, const gchar *sender, EventdEvent *event)
 {
+    guint64 id = ++context->count;
+    eventd_event_add_data(event, g_strdup("libnotify-id"), g_variant_new_uint64(id));
+
     if ( ! eventd_plugin_core_push_event(context->core, event) )
         return 0;
 
@@ -104,11 +107,9 @@ _eventd_fdo_notifications_notification_new(EventdPluginContext *context, const g
 
     notification = g_new0(EventdDbusNotification, 1);
     notification->context = context;
-    notification->id = ++context->count;
+    notification->id = id;
     notification->sender = g_strdup(sender);
     notification->event = event;
-
-    eventd_event_add_data(event, g_strdup("libnotify-id"), g_variant_new_uint64(notification->id));
 
     g_hash_table_insert(context->notifications, (gpointer) eventd_event_get_uuid(event), notification);
     g_hash_table_insert(context->ids, GUINT_TO_POINTER(notification->id), notification);
