@@ -592,14 +592,19 @@ _eventd_nd_draw_surface_draw(cairo_t *cr, cairo_surface_t *surface, gint x, gint
     cairo_fill(cr);
 }
 
-static void
+static gint
 _eventd_nd_draw_image_draw(cairo_t *cr, cairo_surface_t *image, EventdNdStyle *style, gint width, gint height)
 {
+    gint image_height;
     gint x, y;
 
+    image_height = cairo_image_surface_get_height(image);
     x = 0;
-    y = _eventd_nd_draw_get_valign(eventd_nd_style_get_image_anchor(style), height, cairo_image_surface_get_height(image));
+    y = _eventd_nd_draw_get_valign(eventd_nd_style_get_image_anchor(style), height, image_height);
+
     _eventd_nd_draw_surface_draw(cr, image, x, y);
+
+    return y;
 }
 
 static void
@@ -608,23 +613,19 @@ _eventd_nd_draw_image_and_icon_draw_overlay(cairo_t *cr, cairo_surface_t *image,
     if ( image == NULL )
         return;
 
-    if ( icon == NULL )
-        _eventd_nd_draw_image_draw(cr, image, style, width, height);
-    else
+    gint image_y;
+    image_y = _eventd_nd_draw_image_draw(cr, image, style, width, height);
+    if ( icon != NULL )
     {
-        gint image_x, image_y;
         gint icon_x, icon_y;
         gint w, h;
 
         w = cairo_image_surface_get_width(icon);
         h =  cairo_image_surface_get_height(icon);
 
-        image_x = _eventd_nd_draw_get_valign(eventd_nd_style_get_image_anchor(style), height, cairo_image_surface_get_height(image));;
-        image_y = 0;
-        icon_x = image_x + cairo_image_surface_get_width(image) - ( 3 * w / 4 );
+        icon_x = cairo_image_surface_get_width(image) - ( 3 * w / 4 );
         icon_y = image_y + cairo_image_surface_get_height(image) - ( 3 * h / 4 );
 
-        _eventd_nd_draw_surface_draw(cr, image, image_x, image_y);
         _eventd_nd_draw_surface_draw(cr, icon, icon_x, icon_y);
     }
 }
