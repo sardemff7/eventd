@@ -524,7 +524,7 @@ void
 eventd_nd_draw_bubble_draw(cairo_t *cr, EventdNdStyle *style, gint width, gint height, gboolean shaped)
 {
     gint border, blur = 0, radius = 0;
-    Colour colour, border_colour;
+    Colour colour;
 
     border = eventd_nd_style_get_bubble_border(style);
     if ( shaped || ( border > 0 ) )
@@ -532,11 +532,10 @@ eventd_nd_draw_bubble_draw(cairo_t *cr, EventdNdStyle *style, gint width, gint h
     if ( shaped )
         blur = eventd_nd_style_get_bubble_border_blur(style);
 
-    colour = eventd_nd_style_get_bubble_colour(style);
-    border_colour = eventd_nd_style_get_bubble_border_colour(style);
 
     _eventd_nd_draw_bubble_shape(cr, radius, width, height);
-    cairo_set_source_rgba(cr, border_colour.r, border_colour.g, border_colour.b, border_colour.a);
+    colour = eventd_nd_style_get_bubble_border_colour(style);
+    cairo_set_source_rgba(cr, colour.r, colour.g, colour.b, colour.a);
 
     if ( ( ! shaped ) && ( border > 0 ) )
         cairo_paint(cr);
@@ -552,6 +551,7 @@ eventd_nd_draw_bubble_draw(cairo_t *cr, EventdNdStyle *style, gint width, gint h
         eventd_nd_draw_blur_surface(cr, blur);
     }
 
+    colour = eventd_nd_style_get_bubble_colour(style);
     cairo_set_source_rgba(cr, colour.r, colour.g, colour.b, colour.a);
     cairo_fill(cr);
 }
