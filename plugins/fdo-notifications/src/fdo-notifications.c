@@ -394,6 +394,7 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
             g_dbus_method_invocation_return_dbus_error(invocation, NOTIFICATION_BUS_NAME ".InvalidNotification", "Invalid notification type");
             return;
         }
+        id = notification->id;
     }
 
     g_dbus_method_invocation_return_value(invocation, g_variant_new("(u)", id));
