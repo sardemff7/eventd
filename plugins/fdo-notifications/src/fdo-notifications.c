@@ -222,6 +222,7 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
     gboolean action_icons = FALSE;
     gboolean resident = FALSE;
     gboolean transient = FALSE;
+    gint32 value = -1;
 
     gint timeout;
 
@@ -280,6 +281,8 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
             resident = g_variant_get_boolean(hint);
         else if ( g_strcmp0(hint_name, "transient") == 0 )
             transient = g_variant_get_boolean(hint);
+        else if ( g_strcmp0(hint_name, "value") == 0 )
+            value = g_variant_get_int32(hint);
 
         g_variant_unref(hint);
     }
@@ -369,6 +372,8 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
         eventd_event_add_data(event, g_strdup("resident"), g_variant_new_boolean(TRUE));
     if ( transient )
         eventd_event_add_data(event, g_strdup("transient"), g_variant_new_boolean(TRUE));
+    if ( ( value > -1 ) && ( value < 101 ) )
+        eventd_event_add_data(event, g_strdup("progress-value"), g_variant_new_double((gdouble) value / 100.));
 
     if ( id > 0 )
     {
