@@ -295,7 +295,7 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
     EventdDbusNotification *notification = NULL;
     if ( id > 0 )
     {
-        notification = g_hash_table_lookup(context->notifications, GUINT_TO_POINTER(id));
+        notification = g_hash_table_lookup(context->ids, GUINT_TO_POINTER(id));
         if ( notification == NULL )
         {
             g_dbus_method_invocation_return_dbus_error(invocation, NOTIFICATION_BUS_NAME ".InvalidId", "Invalid notification identifier");
