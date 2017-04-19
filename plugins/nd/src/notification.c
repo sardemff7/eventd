@@ -108,6 +108,7 @@ _eventd_nd_notification_process(EventdNdNotification *self, EventdEvent *event)
         self->event = eventd_event_ref(event);
 
     gint blur, border, padding;
+    gint progress_bar_width = 0;
     gint min_width, max_width;
 
     gint text_width = 0;
@@ -119,6 +120,16 @@ _eventd_nd_notification_process(EventdNdNotification *self, EventdEvent *event)
     padding = eventd_nd_style_get_bubble_padding(self->style);
     min_width = eventd_nd_style_get_bubble_min_width(self->style);
     max_width = eventd_nd_style_get_bubble_max_width(self->style);
+
+    switch ( eventd_nd_style_get_progress_placement(self->style) )
+    {
+    case EVENTD_ND_STYLE_PROGRESS_PLACEMENT_BAR_BOTTOM:
+        progress_bar_width = eventd_nd_style_get_progress_bar_width(self->style);
+    break;
+    case EVENTD_ND_STYLE_PROGRESS_PLACEMENT_IMAGE_BOTTOM_TOP:
+    case EVENTD_ND_STYLE_PROGRESS_PLACEMENT_IMAGE_CIRCULAR:
+    break;
+    }
 
     if ( max_width < 0 )
         max_width = self->context->geometry.w - 2 * ( self->queue->margin_x + blur + border );
@@ -151,7 +162,7 @@ _eventd_nd_notification_process(EventdNdNotification *self, EventdEvent *event)
     self->content_size.height = MAX(image_height, self->text.height);
 
     self->bubble_size.width = self->content_size.width + 2 * padding;
-    self->bubble_size.height = self->content_size.height + 2 * padding;
+    self->bubble_size.height = self->content_size.height + 2 * padding + progress_bar_width;
     self->surface_size.width = self->bubble_size.width + 2 * ( blur + border );
     self->surface_size.height = self->bubble_size.height + 2 * ( blur + border );
 
@@ -326,6 +337,7 @@ eventd_nd_notification_draw(EventdNdNotification *self, cairo_surface_t *surface
     gint border;
     gint padding;
     gint offset_y = 0;
+    gdouble value = -1;
 
     border = eventd_nd_style_get_bubble_border(self->style) + eventd_nd_style_get_bubble_border_blur(self->style) * 2;
     padding = eventd_nd_style_get_bubble_padding(self->style);
@@ -342,13 +354,24 @@ eventd_nd_notification_draw(EventdNdNotification *self, cairo_surface_t *surface
     break;
     }
 
+    if ( self->event != NULL )
+    {
+        GVariant *val;
+
+        val = eventd_event_get_data(self->event, eventd_nd_style_get_template_progress(self->style));
+        if ( val != NULL )
+            value = g_variant_get_double(val);
+        if ( eventd_nd_style_get_progress_reversed(self->style) )
+            value = 1.0 - value;
+    }
+
     cairo_t *cr;
     cr = cairo_create(surface);
 
     cairo_translate(cr, border, border);
-    eventd_nd_draw_bubble_draw(cr, self->style, self->bubble_size.width, self->bubble_size.height, shaped);
+    eventd_nd_draw_bubble_draw(cr, self->style, self->bubble_size.width, self->bubble_size.height, shaped, value);
     cairo_translate(cr, padding, padding);
-    eventd_nd_draw_image_and_icon_draw(cr, self->image, self->icon, self->style, self->content_size.width, self->content_size.height);
+    eventd_nd_draw_image_and_icon_draw(cr, self->image, self->icon, self->style, self->content_size.width, self->content_size.height, value);
     eventd_nd_draw_text_draw(cr, self->style, self->text.text, self->text.x, offset_y);
 
     cairo_destroy(cr);

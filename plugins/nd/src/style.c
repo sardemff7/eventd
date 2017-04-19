@@ -65,6 +65,12 @@ static const gchar * const _eventd_nd_style_icon_placements[] = {
     [EVENTD_ND_STYLE_ICON_PLACEMENT_FOREGROUND] = "foreground",
 };
 
+static const gchar * const _eventd_nd_style_progress_placements[] = {
+    [EVENTD_ND_STYLE_PROGRESS_PLACEMENT_BAR_BOTTOM]       = "bar",
+    [EVENTD_ND_STYLE_PROGRESS_PLACEMENT_IMAGE_BOTTOM_TOP] = "image bottom-to-top",
+    [EVENTD_ND_STYLE_PROGRESS_PLACEMENT_IMAGE_CIRCULAR]   = "image circular",
+};
+
 struct _EventdPluginAction {
     EventdNdStyle *parent;
 
@@ -74,6 +80,7 @@ struct _EventdPluginAction {
         FormatString *text;
         Filename *image;
         Filename *icon;
+        gchar *progress;
     } template;
 
     struct {
@@ -125,6 +132,15 @@ struct _EventdPluginAction {
         gint                       margin;
         gdouble                    fade_width;
     } icon;
+
+    struct {
+        gboolean set;
+
+        EventdNdStyleProgressPlacement placement;
+        gboolean                       reversed;
+        gint64                         bar_width;
+        Colour                         colour;
+    } progress;
 };
 
 static void
@@ -135,6 +151,7 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
     style->template.text   = evhelpers_format_string_new(g_strdup("<b>${title}</b>${message/^/\n}"));
     style->template.image   = evhelpers_filename_new(g_strdup("image"));
     style->template.icon    = evhelpers_filename_new(g_strdup("icon"));
+    style->template.progress = g_strdup("progress-value");
 
     /* bubble */
     style->bubble.set = TRUE;
@@ -192,6 +209,16 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
     style->icon.max_height = 25;
     style->icon.margin     = 10;
     style->icon.fade_width = 0.75;
+
+    /* progress */
+    style->progress.set = TRUE;
+    style->progress.placement = EVENTD_ND_STYLE_PROGRESS_PLACEMENT_BAR_BOTTOM;
+    style->progress.reversed  = FALSE;
+    style->progress.bar_width = 5;
+    style->progress.colour.r  = 0.9;
+    style->progress.colour.g  = 0.9;
+    style->progress.colour.b  = 0.9;
+    style->progress.colour.a  = 1.0;
 }
 
 EventdNdStyle *
@@ -252,6 +279,19 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file)
         {
             evhelpers_filename_unref(self->template.icon);
             self->template.icon = evhelpers_filename_ref(eventd_nd_style_get_template_icon(self->parent));
+        }
+
+        gchar *str = NULL;
+
+        if ( evhelpers_config_key_file_get_string(config_file, "Notification", "Progress", &str) == 0 )
+        {
+            g_free(self->template.progress);
+            self->template.progress = str;
+        }
+        else if ( self->parent != NULL )
+        {
+            g_free(self->template.progress);
+            self->template.progress = g_strdup(eventd_nd_style_get_template_progress(self->parent));
         }
     }
 
@@ -392,7 +432,6 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file)
             self->image.margin = integer.value;
         else if ( self->parent != NULL )
             self->image.margin = eventd_nd_style_get_image_margin(self->parent);
-
     }
 
     if ( g_key_file_has_group(config_file, "NotificationIcon") )
@@ -439,6 +478,36 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file)
         else if ( self->parent != NULL )
             self->icon.fade_width = eventd_nd_style_get_icon_fade_width(self->parent);
     }
+
+    if ( g_key_file_has_group(config_file, "NotificationProgress") )
+    {
+        self->progress.set = TRUE;
+
+        guint64 enum_value;
+        gboolean boolean;
+        Int integer;
+        Colour colour;
+
+        if ( evhelpers_config_key_file_get_enum(config_file, "NotificationProgress", "Placement", _eventd_nd_style_progress_placements, G_N_ELEMENTS(_eventd_nd_style_progress_placements), &enum_value) == 0 )
+            self->progress.placement = enum_value;
+        else if ( self->parent != NULL )
+            self->progress.placement = eventd_nd_style_get_progress_placement(self->parent);
+
+        if ( evhelpers_config_key_file_get_boolean(config_file, "NotificationProgress", "Reversed", &boolean) == 0 )
+            self->progress.reversed = boolean;
+        else if ( self->parent != NULL )
+            self->progress.reversed = eventd_nd_style_get_progress_reversed(self->parent);
+
+        if ( evhelpers_config_key_file_get_int(config_file, "NotificationProgress", "BarWidth", &integer) == 0 )
+            self->progress.bar_width = integer.value;
+        else if ( self->parent != NULL )
+            self->progress.bar_width = eventd_nd_style_get_progress_bar_width(self->parent);
+
+        if ( evhelpers_config_key_file_get_colour(config_file, "NotificationProgress", "Colour", &colour) == 0 )
+            self->progress.colour = colour;
+        else if ( self->parent != NULL )
+            self->progress.colour = eventd_nd_style_get_progress_colour(self->parent);
+    }
 }
 
 void
@@ -480,6 +549,14 @@ eventd_nd_style_get_template_icon(EventdNdStyle *self)
     if ( self->template.set )
         return self->template.icon;
     return eventd_nd_style_get_template_icon(self->parent);
+}
+
+const gchar *
+eventd_nd_style_get_template_progress(EventdNdStyle *self)
+{
+    if ( self->template.set )
+        return self->template.progress;
+    return eventd_nd_style_get_template_progress(self->parent);
 }
 
 const gchar *
@@ -708,4 +785,37 @@ eventd_nd_style_get_icon_fade_width(EventdNdStyle *self)
     if ( self->icon.set )
         return self->icon.fade_width;
     return eventd_nd_style_get_icon_fade_width(self->parent);
+}
+
+
+EventdNdStyleProgressPlacement
+eventd_nd_style_get_progress_placement(EventdNdStyle *self)
+{
+    if ( self->progress.set )
+        return self->progress.placement;
+    return eventd_nd_style_get_progress_placement(self->parent);
+}
+
+gboolean
+eventd_nd_style_get_progress_reversed(EventdNdStyle *self)
+{
+    if ( self->progress.set )
+        return self->progress.reversed;
+    return eventd_nd_style_get_progress_reversed(self->parent);
+}
+
+gint
+eventd_nd_style_get_progress_bar_width(EventdNdStyle *self)
+{
+    if ( self->progress.set )
+        return self->progress.bar_width;
+    return eventd_nd_style_get_progress_bar_width(self->parent);
+}
+
+Colour
+eventd_nd_style_get_progress_colour(EventdNdStyle *self)
+{
+    if ( self->progress.set )
+        return self->progress.colour;
+    return eventd_nd_style_get_progress_colour(self->parent);
 }

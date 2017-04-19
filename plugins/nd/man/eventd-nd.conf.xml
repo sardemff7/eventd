@@ -246,6 +246,14 @@
                             <para>The notification's icon. Generally application-specific or category-specific.</para>
                         </listitem>
                     </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>Progress=</varname> (defaults to <literal>"progress-value"</literal>)</term>
+                        <listitem>
+                            <para>A <type>data name</type></para>
+                            <para>The data to use to create a progress bar. The data must be a double.</para>
+                        </listitem>
+                    </varlistentry>
                 </variablelist>
             </refsect3>
         </refsect2>
@@ -538,6 +546,42 @@
                             <para>An <type>integer</type></para>
                             <para>Margin between bubble's icon and text.</para>
                             <para>Used only if placement is <literal>Foreground</literal>.</para>
+                        </listitem>
+                    </varlistentry>
+                </variablelist>
+            </refsect3>
+
+            <refsect3>
+                <title>Section <varname>[NotificationProgress]</varname></title>
+
+                <variablelist>
+                    <varlistentry>
+                        <term><varname>Placement=</varname> (defaults to <literal>bar</literal>)</term>
+                        <listitem>
+                            <para>
+                                An <type>enumeration</type>:
+                                <simplelist type='inline'>
+                                    <member><literal>Bar</literal></member>
+                                    <member><literal>Image Bottom-to-Top</literal></member>
+                                    <member><literal>Image Circular</literal></member>
+                                </simplelist>
+                            </para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>Reversed=</varname> (defaults to <literal>false</literal>)</term>
+                        <listitem>
+                            <para>A <type>boolean</type></para>
+                            <para>When <literal>true</literal>, use <code><literal>1.0</literal> - <replaceable>value</replaceable></code> as value.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>Colour=</varname> (defaults to <literal>"#262626"</literal>)</term>
+                        <listitem>
+                            <para>A <type>colour string</type></para>
+                            <para>Colour of bubble's text.</para>
                         </listitem>
                     </varlistentry>
                 </variablelist>
