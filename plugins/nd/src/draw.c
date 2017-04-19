@@ -585,11 +585,17 @@ _eventd_nd_draw_get_valign(EventdNdAnchorVertical anchor, gint height, gint surf
 }
 
 static void
-_eventd_nd_draw_surface_draw(cairo_t *cr, cairo_surface_t *surface, gint x, gint y)
+_eventd_nd_draw_surface_draw(cairo_t *cr, cairo_surface_t *surface, gint x, gint y, cairo_pattern_t *mask)
 {
     cairo_set_source_surface(cr, surface, x, y);
     cairo_rectangle(cr, x, y, cairo_image_surface_get_width(surface), cairo_image_surface_get_height(surface));
-    cairo_fill(cr);
+    if ( mask == NULL )
+        cairo_fill(cr);
+    else
+    {
+        cairo_mask(cr, mask);
+        cairo_pattern_destroy(mask);
+    }
 }
 
 static gint
@@ -602,7 +608,7 @@ _eventd_nd_draw_image_draw(cairo_t *cr, cairo_surface_t *image, EventdNdStyle *s
     x = 0;
     y = _eventd_nd_draw_get_valign(eventd_nd_style_get_image_anchor(style), height, image_height);
 
-    _eventd_nd_draw_surface_draw(cr, image, x, y);
+    _eventd_nd_draw_surface_draw(cr, image, x, y, NULL);
 
     return y;
 }
@@ -628,7 +634,7 @@ _eventd_nd_draw_image_and_icon_draw_overlay(cairo_t *cr, cairo_surface_t *image,
     icon_x = cairo_image_surface_get_width(image) - ( 3 * w / 4 );
     icon_y = image_y + cairo_image_surface_get_height(image) - ( 3 * h / 4 );
 
-    _eventd_nd_draw_surface_draw(cr, icon, icon_x, icon_y);
+    _eventd_nd_draw_surface_draw(cr, icon, icon_x, icon_y, NULL);
 }
 
 static void
@@ -644,7 +650,7 @@ _eventd_nd_draw_image_and_icon_draw_foreground(cairo_t *cr, cairo_surface_t *ima
 
     x = width - cairo_image_surface_get_width(icon);
     y = _eventd_nd_draw_get_valign(eventd_nd_style_get_icon_anchor(style), height, cairo_image_surface_get_height(icon));
-    _eventd_nd_draw_surface_draw(cr, icon, x, y);
+    _eventd_nd_draw_surface_draw(cr, icon, x, y, NULL);
 }
 
 static void
@@ -667,8 +673,7 @@ _eventd_nd_draw_image_and_icon_draw_background(cairo_t *cr, cairo_surface_t *ima
     cairo_pattern_add_color_stop_rgba(mask, 0, 0, 0, 0, 0);
     cairo_pattern_add_color_stop_rgba(mask, eventd_nd_style_get_icon_fade_width(style), 0, 0, 0, 1);
 
-    cairo_set_source_surface(cr, icon, x1, y);
-    cairo_mask(cr, mask);
+    _eventd_nd_draw_surface_draw(cr, icon, x1, y, mask);
 }
 
 void
