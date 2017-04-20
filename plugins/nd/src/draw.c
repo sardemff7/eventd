@@ -664,16 +664,16 @@ _eventd_nd_draw_image_draw(cairo_t *cr, cairo_surface_t *image, EventdNdStyle *s
 
     switch ( eventd_nd_style_get_progress_placement(style) )
     {
-    case EVENTD_ND_STYLE_PROGRESS_PLACEMENT_IMAGE_TOP_BOTTOM:
+    case EVENTD_ND_STYLE_PROGRESS_PLACEMENT_IMAGE_BOTTOM_TOP:
         y2 += image_height;
     break;
-    case EVENTD_ND_STYLE_PROGRESS_PLACEMENT_IMAGE_BOTTOM_TOP:
+    case EVENTD_ND_STYLE_PROGRESS_PLACEMENT_IMAGE_TOP_BOTTOM:
         y1 += image_height;
     break;
-    case EVENTD_ND_STYLE_PROGRESS_PLACEMENT_IMAGE_RIGHT_LEFT:
+    case EVENTD_ND_STYLE_PROGRESS_PLACEMENT_IMAGE_LEFT_RIGHT:
         x2 += image_width;
     break;
-    case EVENTD_ND_STYLE_PROGRESS_PLACEMENT_IMAGE_LEFT_RIGHT:
+    case EVENTD_ND_STYLE_PROGRESS_PLACEMENT_IMAGE_RIGHT_LEFT:
         x1 += image_width;
     break;
     case EVENTD_ND_STYLE_PROGRESS_PLACEMENT_IMAGE_CIRCULAR:
