@@ -68,6 +68,9 @@ static const gchar * const _eventd_nd_style_icon_placements[] = {
 static const gchar * const _eventd_nd_style_progress_placements[] = {
     [EVENTD_ND_STYLE_PROGRESS_PLACEMENT_BAR_BOTTOM]       = "bar",
     [EVENTD_ND_STYLE_PROGRESS_PLACEMENT_IMAGE_BOTTOM_TOP] = "image bottom-to-top",
+    [EVENTD_ND_STYLE_PROGRESS_PLACEMENT_IMAGE_TOP_BOTTOM] = "image top-to-bottom",
+    [EVENTD_ND_STYLE_PROGRESS_PLACEMENT_IMAGE_LEFT_RIGHT] = "image left-to-right",
+    [EVENTD_ND_STYLE_PROGRESS_PLACEMENT_IMAGE_RIGHT_LEFT] = "image right-to-left",
     [EVENTD_ND_STYLE_PROGRESS_PLACEMENT_IMAGE_CIRCULAR]   = "image circular",
 };
 

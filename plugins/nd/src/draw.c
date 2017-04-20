@@ -563,6 +563,9 @@ eventd_nd_draw_bubble_draw(cairo_t *cr, EventdNdStyle *style, gint width, gint h
     case EVENTD_ND_STYLE_PROGRESS_PLACEMENT_BAR_BOTTOM:
     break;
     case EVENTD_ND_STYLE_PROGRESS_PLACEMENT_IMAGE_BOTTOM_TOP:
+    case EVENTD_ND_STYLE_PROGRESS_PLACEMENT_IMAGE_TOP_BOTTOM:
+    case EVENTD_ND_STYLE_PROGRESS_PLACEMENT_IMAGE_LEFT_RIGHT:
+    case EVENTD_ND_STYLE_PROGRESS_PLACEMENT_IMAGE_RIGHT_LEFT:
     case EVENTD_ND_STYLE_PROGRESS_PLACEMENT_IMAGE_CIRCULAR:
         return;
     }
@@ -652,13 +655,26 @@ _eventd_nd_draw_image_draw(cairo_t *cr, cairo_surface_t *image, EventdNdStyle *s
     x = 0;
     y = _eventd_nd_draw_get_valign(eventd_nd_style_get_image_anchor(style), height, image_height);
 
-    if ( ! ( value < 0 ) )
+    if ( value < 0 )
+        goto draw;
+
+    gint x1, x2, y1, y2;
+    x1 = x2 = x;
+    y1 = y2 = y;
+
     switch ( eventd_nd_style_get_progress_placement(style) )
     {
+    case EVENTD_ND_STYLE_PROGRESS_PLACEMENT_IMAGE_TOP_BOTTOM:
+        y2 += image_height;
+    break;
     case EVENTD_ND_STYLE_PROGRESS_PLACEMENT_IMAGE_BOTTOM_TOP:
-        mask = cairo_pattern_create_linear(x, y + image_height, x, y);
-        cairo_pattern_add_color_stop_rgba(mask, value, 0, 0, 0, 0.5);
-        cairo_pattern_add_color_stop_rgba(mask, value, 0, 0, 0, 1);
+        y1 += image_height;
+    break;
+    case EVENTD_ND_STYLE_PROGRESS_PLACEMENT_IMAGE_RIGHT_LEFT:
+        x2 += image_width;
+    break;
+    case EVENTD_ND_STYLE_PROGRESS_PLACEMENT_IMAGE_LEFT_RIGHT:
+        x1 += image_width;
     break;
     case EVENTD_ND_STYLE_PROGRESS_PLACEMENT_IMAGE_CIRCULAR:
     {
@@ -682,12 +698,18 @@ _eventd_nd_draw_image_draw(cairo_t *cr, cairo_surface_t *image, EventdNdStyle *s
         cairo_pop_group_to_source(cr);
         mask = cairo_pattern_reference(cairo_get_source(cr));
         cairo_restore(cr);
+
+        goto draw;
     }
-    break;
     case EVENTD_ND_STYLE_PROGRESS_PLACEMENT_BAR_BOTTOM:
-    break;
+        goto draw;
     }
 
+    mask = cairo_pattern_create_linear(x1, y1, x2, y2);
+    cairo_pattern_add_color_stop_rgba(mask, value, 0, 0, 0, 1);
+    cairo_pattern_add_color_stop_rgba(mask, value, 0, 0, 0, 0.5);
+
+draw:
     _eventd_nd_draw_surface_draw(cr, image, x, y, mask);
 
     return y;

@@ -563,6 +563,9 @@
                                 <simplelist type='inline'>
                                     <member><literal>Bar</literal></member>
                                     <member><literal>Image Bottom-to-Top</literal></member>
+                                    <member><literal>Image Top-to-Bottom</literal></member>
+                                    <member><literal>Image Left-to-Right</literal></member>
+                                    <member><literal>Image Right-to-Left</literal></member>
                                     <member><literal>Image Circular</literal></member>
                                 </simplelist>
                             </para>
