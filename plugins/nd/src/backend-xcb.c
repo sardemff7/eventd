@@ -64,7 +64,7 @@ struct _EventdNdBackendContext {
     xcb_connection_t *xcb_connection;
     gint screen_number;
     xcb_screen_t *screen;
-    xcb_depth_t *depth;
+    guint8 depth;
     xcb_visualtype_t *visual;
     xcb_colormap_t map;
     struct {
@@ -143,31 +143,11 @@ _eventd_nd_xcb_config_reset(EventdNdBackendContext *self)
 static gboolean
 _eventd_nd_xcb_get_colormap(EventdNdBackendContext *self)
 {
-    xcb_depth_t *root_depth = NULL;
-    xcb_visualtype_t *root_visual = NULL;
+    gboolean ret = FALSE;
 
-    xcb_depth_iterator_t depth_iter;
-    for ( depth_iter = xcb_screen_allowed_depths_iterator(self->screen) ; depth_iter.rem ; xcb_depth_next(&depth_iter) )
-    {
-        xcb_depth_t *d = depth_iter.data;
-
-        xcb_visualtype_iterator_t visual_iter;
-        for ( visual_iter = xcb_depth_visuals_iterator(d) ; visual_iter.rem ; xcb_visualtype_next(&visual_iter) )
-        {
-            xcb_visualtype_t *v = visual_iter.data;
-
-            if ( ( d->depth == 32 ) && ( v->_class >= XCB_VISUAL_CLASS_TRUE_COLOR ) )
-            {
-                self->depth = d;
-                self->visual = v;
-            }
-            if ( self->screen->root_visual == v->visual_id )
-            {
-                root_depth = d;
-                root_visual = v;
-            }
-        }
-    }
+    self->visual = xcb_aux_find_visual_by_attrs(self->screen, XCB_VISUAL_CLASS_DIRECT_COLOR, 32);
+    if ( self->visual == NULL )
+        self->visual = xcb_aux_find_visual_by_attrs(self->screen, XCB_VISUAL_CLASS_TRUE_COLOR, 32);
 
     if ( self->visual != NULL )
     {
@@ -177,16 +157,22 @@ _eventd_nd_xcb_get_colormap(EventdNdBackendContext *self)
         c = xcb_create_colormap_checked(self->xcb_connection, XCB_COLORMAP_ALLOC_NONE, self->map, self->screen->root, self->visual->visual_id);
         e = xcb_request_check(self->xcb_connection, c);
         if ( e == NULL )
-            return TRUE;
-
-        xcb_free_colormap(self->xcb_connection, self->map);
-        free(e);
+            ret = TRUE;
+        else
+        {
+            xcb_free_colormap(self->xcb_connection, self->map);
+            free(e);
+        }
     }
 
-    self->depth = root_depth;
-    self->visual = root_visual;
-    self->map = self->screen->default_colormap;
-    return FALSE;
+    if ( ! ret )
+    {
+        self->visual = xcb_aux_find_visual_by_id(self->screen, self->screen->root_visual);
+        self->map = self->screen->default_colormap;
+    }
+
+    self->depth = xcb_aux_get_depth_of_visual(self->screen, self->visual->visual_id);
+    return ret;
 }
 
 static void
@@ -695,7 +681,7 @@ _eventd_nd_xcb_surface_new(EventdNdBackendContext *context, EventdNdNotification
 
     self->window = xcb_generate_id(context->xcb_connection);
     xcb_create_window(context->xcb_connection,
-                                       context->depth->depth,         /* depth         */
+                                       context->depth,                /* depth         */
                                        self->window,
                                        context->screen->root,         /* parent window */
                                        0, 0,                          /* x, y          */
