@@ -82,6 +82,7 @@ struct _EventdNdBackendContext {
     xcb_ewmh_connection_t ewmh;
     gint randr_event_base;
     gint xfixes_event_base;
+    cairo_device_t *device;
     GHashTable *bubbles;
 };
 
@@ -602,14 +603,26 @@ _eventd_nd_xcb_start(EventdNdBackendContext *self, const gchar *target)
 static void
 _eventd_nd_xcb_stop(EventdNdBackendContext *self)
 {
+    cairo_device_finish(self->device);
+    cairo_device_destroy(self->device);
+    self->device = NULL;
+
+    self->randr = FALSE;
+
     if ( self->custom_map )
         xcb_free_colormap(self->xcb_connection, self->map);
 
+    self->map = XCB_COLORMAP_NONE;
+    self->depth = 0;
+    self->visual = NULL;
+
     xcb_ewmh_connection_wipe(&self->ewmh);
+    xcb_flush(self->xcb_connection);
 
     g_hash_table_unref(self->bubbles);
     g_water_xcb_source_free(self->source);
     self->bubbles = NULL;
+    self->xcb_connection = NULL;
     self->source = NULL;
 }
 
@@ -697,6 +710,9 @@ _eventd_nd_xcb_surface_new(EventdNdBackendContext *context, EventdNdNotification
     g_hash_table_insert(context->bubbles, GUINT_TO_POINTER(self->window), self);
 
     _eventd_nd_xcb_surface_shape(self);
+
+    if ( context->device == NULL )
+        context->device = cairo_device_reference(cairo_surface_get_device(self->surface));
 
     return self;
 }
