@@ -168,7 +168,6 @@ _eventd_nd_win_surface_update(EventdNdSurface *self, gint width, gint height)
     dc = cairo_win32_surface_get_dc(surface);
 
     self->display->nd->notification_draw(self->notification, surface, TRUE);
-    cairo_surface_flush(surface);
 
     POINT ptZero = { 0 };
     SIZE size = { width, height };

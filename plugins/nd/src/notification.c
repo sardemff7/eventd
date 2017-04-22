@@ -378,6 +378,7 @@ eventd_nd_notification_draw(EventdNdNotification *self, cairo_surface_t *surface
     eventd_nd_draw_text_draw(cr, self->style, self->text.text, self->text.x, offset_y);
 
     cairo_destroy(cr);
+    cairo_surface_flush(surface);
 }
 
 void

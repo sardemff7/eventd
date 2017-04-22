@@ -261,6 +261,7 @@ _eventd_nd_draw_get_surface_from_pixbuf(GdkPixbuf *pixbuf)
         cpixels += cstride;
     }
     cairo_surface_mark_dirty(surface);
+    cairo_surface_flush(surface);
 
     return surface;
 }
@@ -316,6 +317,7 @@ _eventd_nd_draw_limit_size(GdkPixbuf *pixbuf, EventdNdStyle *style, gboolean ima
     cairo_destroy(cr);
     cairo_surface_destroy(source);
 
+    cairo_surface_flush(surface);
     return surface;
 }
 

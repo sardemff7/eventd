@@ -655,6 +655,7 @@ _eventd_nd_xcb_surface_shape(EventdNdSurface *self)
     cairo_fill(cr);
 
     cairo_destroy(cr);
+    cairo_surface_flush(shape);
     cairo_surface_destroy(shape);
 
     xcb_shape_mask(context->xcb_connection,
@@ -727,6 +728,7 @@ _eventd_nd_xcb_surface_free(EventdNdSurface *self)
 
     if ( self->mapped )
         xcb_unmap_window(context->xcb_connection, self->window);
+    cairo_surface_flush(self->surface);
     cairo_surface_destroy(self->surface);
     xcb_destroy_window(context->xcb_connection, self->window);
 
