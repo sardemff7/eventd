@@ -17,7 +17,6 @@ libeventd_helpers_lib = library('eventd-helpers', [
     dependencies: [ libnkutils, libeventd_helpers_dep ],
     include_directories: libeventd_helpers_inc,
     install: true,
-    install_dir: join_paths(get_option('libdir'), meson.project_name()),
 )
 
 install_headers(
