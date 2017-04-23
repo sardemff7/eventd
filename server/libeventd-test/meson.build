@@ -19,6 +19,7 @@ libeventd_test_lib = library('eventd-test', [
         '-DEVENTDCTL_PATH="@0@"'.format(eventdctl.full_path()),
         '-DEVENTD_PATH="@0@"'.format(eventd.full_path()),
         '-DTEST_PLUGIN_PATH="@0@"'.format(test_plugin_path),
+        '-DMODULES_BUILD_DIR="@0@"'.format(modules_build_dir),
     ],
     dependencies: libeventd_test_dep,
     include_directories: libeventd_test_inc,
