@@ -193,7 +193,7 @@ _eventd_nd_xcb_randr_set_output(EventdNdBackendContext *self, xcb_randr_get_outp
     self->geometry.y = crtc->y;
     self->geometry.w = crtc->width;
     self->geometry.h = crtc->height;
-    self->geometry.s = _eventd_nd_compute_scale(self->geometry.w, self->geometry.h, output->mm_width, output->mm_height);
+    self->geometry.s = _eventd_nd_compute_scale_from_size(self->geometry.w, self->geometry.h, output->mm_width, output->mm_height);
 }
 
 static gboolean

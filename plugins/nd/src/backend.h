@@ -79,13 +79,19 @@ typedef void (*EventdNdBackendGetInfoFunc)(EventdNdBackend *backend);
 
 
 static inline gint
-_eventd_nd_compute_scale(gint w, gint h, gint mm_w, gint mm_h)
+_eventd_nd_compute_scale_from_dpi(gdouble dpi)
+{
+    return (gint) ( dpi / 96. + 0.25 );
+}
+
+static inline gint
+_eventd_nd_compute_scale_from_size(gint w, gint h, gint mm_w, gint mm_h)
 {
     gdouble dpi_x = ( (gdouble) w * 25.4 ) / (gdouble) mm_w;
     gdouble dpi_y = ( (gdouble) h * 25.4 ) / (gdouble) mm_h;
     gdouble dpi = MIN(dpi_x, dpi_y);
 
-    return (gint) ( dpi / 96. + 0.25 );
+    return _eventd_nd_compute_scale_from_dpi(dpi);
 }
 
 #endif /* __EVENTD_ND_BACKEND_H__ */

@@ -57,7 +57,10 @@ static void
 _eventd_nd_win_update_geometry(EventdNdBackendContext *self)
 {
     SystemParametersInfo(SPI_GETWORKAREA, 0, &self->geometry, 0);
-    self->nd->geometry_update(self->nd->context, self->geometry.right - self->geometry.left, self->geometry.bottom - self->geometry.top);
+
+    gint scale = 1;
+
+    self->nd->geometry_update(self->nd->context, self->geometry.right - self->geometry.left, self->geometry.bottom - self->geometry.top, scale);
 }
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN

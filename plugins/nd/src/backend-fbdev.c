@@ -119,7 +119,7 @@ _eventd_nd_fbdev_start(EventdNdBackendContext *context, const gchar *target)
         goto fail;
     }
 
-    context->nd->geometry_update(context->nd->context, display->width, display->height, _eventd_nd_compute_scale(display->width, display->height, vinfo.width, vinfo.height));
+    context->nd->geometry_update(context->nd->context, display->width, display->height, _eventd_nd_compute_scale_from_size(display->width, display->height, vinfo.width, vinfo.height));
 
     return TRUE;
 
