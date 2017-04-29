@@ -28,6 +28,7 @@
 #include <glib/gi18n.h>
 #include <glib-object.h>
 #include <glib/gprintf.h>
+#include <glib/gstdio.h>
 #ifdef G_OS_UNIX
 #include <glib-unix.h>
 #else /* ! G_OS_UNIX */
@@ -437,11 +438,11 @@ main(int argc, char *argv[])
     {
         g_print("READY=1\n");
         g_setenv("G_MESSAGES_DEBUG", "", TRUE);
-        close(0);
-        close(1);
-        close(2);
+        g_close(0, NULL);
+        g_close(1, NULL);
+        g_close(2, NULL);
 #ifdef G_OS_UNIX
-        open("/dev/null", O_RDWR);
+        g_open("/dev/null", O_RDWR, 0);
         dup2(0,1);
         dup2(0,2);
 #else /* ! G_OS_UNIX */
