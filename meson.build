@@ -152,8 +152,7 @@ nk_modules = [
     'uuid=true',
     'enum=true',
     'token=true',
-    'colour-alpha=true',
-    'colour-double=true',
+    'colour=true',
     'xdg-theme=true',
 ]
 nk = subproject('libnkutils', default_options: nk_modules)

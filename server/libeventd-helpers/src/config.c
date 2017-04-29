@@ -476,8 +476,8 @@ evhelpers_config_key_file_get_colour(GKeyFile *config_file, const gchar *section
 
     r = 1;
 
-    NkColourDouble colour_;
-    if ( nk_colour_double_parse(string, &colour_) )
+    NkColour colour_;
+    if ( nk_colour_parse(string, &colour_) )
     {
         colour->r = colour_.red;
         colour->g = colour_.green;
