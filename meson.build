@@ -4,6 +4,7 @@ project('eventd', 'c',
     license: [ 'GPL3+', 'LGPL3+', 'MIT' ],
     default_options: [
         'c_std=gnu11',
+        'warning_level=2',
     ],
     subproject_dir: 'src',
 )
@@ -129,8 +130,6 @@ add_project_arguments(
     language: 'c'
 )
 flags = [
-    '-Wall',
-    '-Wextra',
     '-Wformat=2',
     '-Wno-unused-parameter',
 ]
