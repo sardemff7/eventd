@@ -13,21 +13,16 @@ shared_library('fdo-notifications', [
     install_dir: plugins_install_dir,
 )
 
-fdo_notifications_service_file = configure_file(
-    input: 'services/org.eventd.fdo-notifications.service.in',
-    output: 'org.eventd.fdo-notifications.service',
-    configuration: other_conf,
-)
-
 dbussessionservice_install_dir = get_option('dbussessionservicedir')
 if dbussessionservice_install_dir == ''
     dbus = dependency('dbus-1')
     dbussessionservice_install_dir = dbus.get_pkgconfig_variable('session_bus_services_dir')
 endif
 
-install_data([
-        fdo_notifications_service_file,
-    ],
+configure_file(
+    input: 'services/org.eventd.fdo-notifications.service.in',
+    output: 'org.eventd.fdo-notifications.service',
+    configuration: other_conf,
     install_dir: dbussessionservice_install_dir,
 )
 

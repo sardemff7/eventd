@@ -4,11 +4,10 @@ if systemduserunit_install_dir == ''
 endif
 eventd_user_units = []
 foreach u : eventd_units
-    eventd_user_units += configure_file(
+    configure_file(
             input: '@0@.in'.format(u),
             output: u,
             configuration: other_conf,
+            install_dir: systemduserunit_install_dir,
         )
 endforeach
-
-install_data(eventd_user_units, install_dir: systemduserunit_install_dir)

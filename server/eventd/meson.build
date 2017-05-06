@@ -61,8 +61,10 @@ man_pages += [ [ files('man/eventd.conf.xml'), 'eventd.conf.5' ] ]
 
 # Until pkgconfig module gains support for custom variable
 
-eventd_pc = configure_file(input: 'pkgconfig/eventd.pc.in', output: 'eventd.pc', configuration: other_conf)
-install_data(join_paths(meson.current_build_dir(), 'eventd.pc'),
+configure_file(
+    input: 'pkgconfig/eventd.pc.in',
+    output: 'eventd.pc',
+    configuration: other_conf,
     install_dir: join_paths(get_option('datadir'), 'pkgconfig'),
 )
 
