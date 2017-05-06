@@ -156,7 +156,7 @@
                     <varlistentry>
                         <term><varname>Anchor=</varname> (defaults to <literal>top-right</literal>)</term>
                         <listitem>
-                            <para>An <type>enumaration</type>:
+                            <para>An <type>enumeration</type>:
                                 <simplelist type='inline'>
                                     <member><literal>top-left</literal></member>
                                     <member><literal>top</literal></member>
