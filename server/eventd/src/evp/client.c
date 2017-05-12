@@ -188,7 +188,7 @@ _eventd_evp_client_read_callback(GObject *obj, GAsyncResult *res, gpointer user_
         if ( self->tls != NULL )
             stream = G_IO_STREAM(self->tls);
 
-        self->ws = eventd_ws_connection_server_new(self->context->ws, self, (GDestroyNotify) _eventd_evp_client_disconnect_internal, self->cancellable, stream, self->in, self->protocol, line);
+        self->ws = eventd_ws_connection_server_new(self->context->ws, self, (GDestroyNotify) _eventd_evp_client_disconnect_internal, self->cancellable, stream, self->in, self->protocol, self->context->ws_secret, line);
 
         g_filter_output_stream_set_close_base_stream(G_FILTER_OUTPUT_STREAM(self->out), FALSE);
         g_object_unref(self->out);

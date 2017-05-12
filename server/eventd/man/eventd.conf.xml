@@ -231,6 +231,15 @@
                 </varlistentry>
 
                 <varlistentry>
+                    <term><varname>WebSocketSecret=</varname></term>
+                    <listitem>
+                        <para>A <type>string</type></para>
+                        <para>This secret is checked in client WebSocket handshake.</para>
+                        <para>Use <userinput>ws<optional>s</optional>://:<replaceable>secret</replaceable>@<replaceable>host</replaceable>/</userinput> URI (password with no user) to send a secret on client side.</para>
+                    </listitem>
+                </varlistentry>
+
+                <varlistentry>
                     <term><varname>GnuTLSPriority=</varname></term>
                     <listitem>
                         <para>A <type>string</type></para>

@@ -33,7 +33,7 @@ typedef struct {
     GSocketConnectable *(*uri_parse)(const gchar *uri, EventdWsUri **ws_uri);
     gboolean (*uri_is_tls)(const EventdWsUri *uri);
 
-    EventdWsConnection *(*connection_server_new)(gpointer data, GDestroyNotify disconnect_callback, GCancellable *cancellable, GIOStream *stream, GDataInputStream *input, EventdProtocol *protocol, const gchar *line);
+    EventdWsConnection *(*connection_server_new)(gpointer data, GDestroyNotify disconnect_callback, GCancellable *cancellable, GIOStream *stream, GDataInputStream *input, EventdProtocol *protocol, const gchar *secret, const gchar *line);
     EventdWsConnection *(*connection_client_new)(gpointer data, EventdWsUri *uri, GDestroyNotify disconnect_callback, GCancellable *cancellable, EventdProtocol *protocol);
     void (*connection_free)(EventdWsConnection *connection);
 
@@ -70,10 +70,10 @@ eventd_ws_uri_is_tls(EventdWsModule *ws, const EventdWsUri *uri)
 }
 
 static inline EventdWsConnection *
-eventd_ws_connection_server_new(EventdWsModule *ws, gpointer client, GDestroyNotify disconnect_callback, GCancellable *cancellable, GIOStream *stream, GDataInputStream *input, EventdProtocol *protocol, const gchar *line)
+eventd_ws_connection_server_new(EventdWsModule *ws, gpointer client, GDestroyNotify disconnect_callback, GCancellable *cancellable, GIOStream *stream, GDataInputStream *input, EventdProtocol *protocol, const gchar *secret, const gchar *line)
 {
     g_return_val_if_fail(ws != NULL, NULL);
-    return ws->connection_server_new(client, disconnect_callback, cancellable, stream, input, protocol, line);
+    return ws->connection_server_new(client, disconnect_callback, cancellable, stream, input, protocol, secret, line);
 }
 
 static inline EventdWsConnection *

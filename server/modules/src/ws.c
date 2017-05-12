@@ -40,6 +40,7 @@ struct _EventdWsConnection {
     GDestroyNotify disconnect_callback;
     gboolean client;
     SoupURI *uri;
+    const gchar *secret;
     EventdProtocol *protocol;
     GCancellable *cancellable;
     GTask *task;
@@ -180,6 +181,8 @@ _eventd_ws_connection_client_send_handshake(EventdWsConnection *self, GError **e
 {
     self->msg = soup_message_new_from_uri(SOUP_METHOD_GET, self->uri);
     soup_message_headers_replace(self->msg->request_headers, "Host", soup_uri_get_host(self->uri));
+    if ( self->secret != NULL )
+        soup_message_headers_replace(self->msg->request_headers, "Eventd-Secret", self->secret);
 
     gchar *protocols[] = { EVP_SERVICE_NAME, NULL };
     soup_websocket_client_prepare_handshake(self->msg, NULL, protocols);
@@ -243,8 +246,20 @@ _eventd_ws_connection_handshake_server(EventdWsConnection *self)
     g_string_truncate(self->header, 0);
 
     if ( status != SOUP_STATUS_OK )
-    {
         g_warning("Parsing headers error: %s", soup_status_get_phrase(status));
+    else if ( self->secret != NULL )
+    {
+        const gchar *secret;
+        secret = soup_message_headers_get_one(headers, "Eventd-Secret");
+        if ( g_strcmp0(secret, self->secret) != 0 )
+        {
+            g_warning("Secret not matching: %s != %s", secret, self->secret);
+            status = SOUP_STATUS_UNAUTHORIZED;
+        }
+    }
+
+    if ( status != SOUP_STATUS_OK )
+    {
         g_snprintf(response, sizeof(response), "HTTP/1.1 %u %s\r\n\r\n", status, soup_status_get_phrase(status));
         g_output_stream_write_all(g_io_stream_get_output_stream(self->stream), response, strlen(response), NULL, NULL, NULL);
         soup_message_headers_free(headers);
@@ -332,13 +347,14 @@ _eventd_ws_connection_read_callback(GObject *obj, GAsyncResult *res, gpointer us
 }
 
 static EventdWsConnection *
-_eventd_ws_connection_server_new(gpointer data, GDestroyNotify disconnect_callback, GCancellable *cancellable, GIOStream *stream, GDataInputStream *input, EventdProtocol *protocol, const gchar *line)
+_eventd_ws_connection_server_new(gpointer data, GDestroyNotify disconnect_callback, GCancellable *cancellable, GIOStream *stream, GDataInputStream *input, EventdProtocol *protocol, const gchar *secret, const gchar *line)
 {
     EventdWsConnection *self;
     self = g_new0(EventdWsConnection, 1);
     self->data = data;
     self->disconnect_callback = disconnect_callback;
     self->client = FALSE;
+    self->secret = secret;
     self->cancellable = cancellable;
     self->stream = stream;
     self->in = input;
@@ -361,6 +377,8 @@ _eventd_ws_connection_client_new(gpointer data, EventdWsUri *uri, GDestroyNotify
     self->disconnect_callback = disconnect_callback;
     self->client = TRUE;
     self->uri = uri;
+    if ( ( soup_uri_get_user(uri) == NULL ) || ( *soup_uri_get_user(uri) == '\0' ) )
+        self->secret = soup_uri_get_password(uri);
     self->cancellable = cancellable;
     self->protocol = protocol;
     self->header = g_string_new("");
