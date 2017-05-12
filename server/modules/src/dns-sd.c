@@ -215,6 +215,7 @@ _eventd_sd_dns_sd_sockets_to_addresses(GList *sockets)
                 addresses = g_list_prepend(addresses, address);
                 break;
             }
+            /* fallthrough */
         default:
             g_object_unref(address);
         }
