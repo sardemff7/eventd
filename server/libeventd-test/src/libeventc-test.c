@@ -141,6 +141,7 @@ _connect_callback(GObject *obj, GAsyncResult *res, gpointer user_data)
     {
     case 2:
         eventd_event_unref(event);
+        /* fallthrough */
     case 1:
         _create_event(client);
         if ( eventc_connection_event(client, event, &error) )
@@ -204,6 +205,7 @@ _ended_callback(EventcConnection *client, EventdEvent *e, gpointer user_data)
     {
     case 2:
         g_idle_add(_ended_close_idle_callback, client);
+        /* fallthrough */
     case 1:
     {
         if ( ( g_strcmp0(category, "test") != 0 ) || ( g_strcmp0(name, "answer") != 0 ) )
