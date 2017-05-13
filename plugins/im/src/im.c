@@ -66,7 +66,7 @@ typedef struct {
 } EventdImConv;
 
 struct _EventdPluginAction {
-    EventdImConv *conv;
+    GSList *convs;
     FormatString *message;
 };
 
@@ -177,6 +177,7 @@ _eventd_im_action_free(gpointer data)
 
     EventdPluginAction *action = data;
 
+    g_slist_free(action->convs);
     evhelpers_format_string_unref(action->message);
 
     g_slice_free(EventdPluginAction, action);
@@ -617,7 +618,7 @@ _eventd_im_action_parse(EventdPluginContext *context, GKeyFile *config_file)
 
     FormatString *message = NULL;
     gchar *account_name = NULL;
-    gchar *recipient = NULL;
+    gchar **recipients = NULL, **recipient;
     gboolean chat = TRUE;
 
     if ( evhelpers_config_key_file_get_locale_format_string(config_file, "IM", "Message", NULL, &message) != 0 )
@@ -626,7 +627,7 @@ _eventd_im_action_parse(EventdPluginContext *context, GKeyFile *config_file)
     if ( evhelpers_config_key_file_get_string(config_file, "IM", "Account", &account_name) != 0 )
         goto error;
 
-    if ( evhelpers_config_key_file_get_string(config_file, "IM", "Recipient", &recipient) != 0 )
+    if ( evhelpers_config_key_file_get_string_list(config_file, "IM", "Recipients", &recipients, NULL) != 0 )
         goto error;
     if ( evhelpers_config_key_file_get_boolean(config_file, "IM", "Chat", &chat) < 0 )
         goto error;
@@ -637,29 +638,36 @@ _eventd_im_action_parse(EventdPluginContext *context, GKeyFile *config_file)
         goto error;
     g_free(account_name);
 
-    EventdImConv *conv;
-    conv = g_hash_table_lookup(account->convs, recipient);
-    if ( conv == NULL )
+    GSList *convs = NULL;
+    for ( recipient = recipients ; *recipient != NULL ; ++recipient )
     {
-        conv = g_slice_new0(EventdImConv);
-        conv->account = account;
-        conv->type = chat ? PURPLE_CONV_TYPE_CHAT : PURPLE_CONV_TYPE_IM;
-        conv->name = recipient;
-        conv->state = ( chat && ( account->prpl_info->join_chat != NULL ) ) ? EVENTD_IM_CONV_STATE_NOT_READY : EVENTD_IM_CONV_STATE_ALWAYS_READY;
-        conv->pending_messages = g_ptr_array_new_with_free_func(g_free);
-        g_hash_table_insert(account->convs, recipient, conv);
-        recipient = NULL;
+        EventdImConv *conv;
+        conv = g_hash_table_lookup(account->convs, *recipient);
+        if ( conv == NULL )
+        {
+            conv = g_slice_new0(EventdImConv);
+            conv->account = account;
+            conv->type = chat ? PURPLE_CONV_TYPE_CHAT : PURPLE_CONV_TYPE_IM;
+            conv->name = *recipient;
+            conv->state = ( chat && ( account->prpl_info->join_chat != NULL ) ) ? EVENTD_IM_CONV_STATE_NOT_READY : EVENTD_IM_CONV_STATE_ALWAYS_READY;
+            conv->pending_messages = g_ptr_array_new_with_free_func(g_free);
+            g_hash_table_insert(account->convs, *recipient, conv);
+        }
+        else
+            g_free(*recipient);
+        convs = g_slist_prepend(convs, conv);
     }
+    g_free(recipients);
 
     EventdPluginAction *action;
     action = g_slice_new(EventdPluginAction);
-    action->conv = conv;
+    action->convs = convs;
     action->message = message;
 
     return action;
 
 error:
-    g_free(recipient);
+    g_strfreev(recipients);
     g_free(account_name);
     evhelpers_format_string_unref(message);
     return NULL;
@@ -681,14 +689,19 @@ _eventd_im_config_reset(EventdPluginContext *context)
 static void
 _eventd_im_event_action(EventdPluginContext *context, EventdPluginAction *action, EventdEvent *event)
 {
-    EventdImConv *conv = action->conv;
-
     gchar *message;
 
     message = evhelpers_format_string_get_string(action->message, event, NULL, NULL);
 
-    g_ptr_array_add(conv->pending_messages, message);
-    _eventd_im_conv_flush(conv);
+    GSList *conv_;
+    for ( conv_ = action->convs ; conv_ != NULL ; conv_ = g_slist_next(conv_) )
+    {
+        EventdImConv *conv = conv_->data;
+        g_ptr_array_add(conv->pending_messages, g_strdup(message));
+        _eventd_im_conv_flush(conv);
+    }
+
+    g_free(message);
 }
 
 

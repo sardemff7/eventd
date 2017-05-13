@@ -154,10 +154,10 @@
                 </varlistentry>
 
                 <varlistentry>
-                    <term><varname>Recipient=</varname></term>
+                    <term><varname>Recipients=</varname></term>
                     <listitem>
-                        <para>A <type>recipient name</type></para>
-                        <para>A recipient to send the message to, the exact format is protocol-dependant, e.g. <literal>"example@xmpp.org"</literal> or <literal>"#project"</literal>.</para>
+                        <para>A <type>list of recipient name</type></para>
+                        <para>A list of recipients to send the message to, the exact format is protocol-dependant, e.g. <literal>"example@xmpp.org"</literal> or <literal>"#project"</literal>.</para>
                     </listitem>
                 </varlistentry>
 
