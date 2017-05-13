@@ -14,18 +14,6 @@ You can also browse man pages online here:
 https://www.eventd.org/man/
 
 
-Build from Git
---------------
-
-To build eventd from Git, you will need some additional dependencies:
-- autoconf 2.65 (or newer)
-- automake 1.14 (or newer)
-- libtool
-- pkg-config 0.25 (or newer) or pkgconf 0.2 (or newer)
-
-Make sure to use `git clone --recursive` to fetch submodules too.
-
-
 Licencing
 ---------
 
