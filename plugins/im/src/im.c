@@ -94,6 +94,9 @@ _eventd_im_account_free(gpointer data)
 static void
 _eventd_im_conv_flush(EventdImConv *conv)
 {
+    if ( conv->pending_messages->len == 0 )
+        return;
+
     if ( conv->conv == NULL )
     {
         if ( ! purple_account_is_connected(conv->account->account) )
