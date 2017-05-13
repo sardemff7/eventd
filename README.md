@@ -34,6 +34,7 @@ However, some parts of it are distributed under other licences:
 - Under the terms of the [GNU Lesser General Public License version 3](https://www.gnu.org/licenses/lgpl-3.0.html) (or any later version):
   - libeventd-event
   - libeventc
+  - libeventc-light
   - libeventd-plugin
 - Under the terms of the [MIT License](https://opensource.org/licenses/MIT):
   - eventc
