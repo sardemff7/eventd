@@ -122,7 +122,7 @@ eventd_plugin_command_status_get_type(void)
 
 /**
  * eventd_plugin_interface_add_init_callback:
- * @interface: an #EventdPluginInterface
+ * @iface: an #EventdPluginInterface
  * @callback: (scope async): a function to call when the plugin is loaded
  *
  * The callback should return a context which is passed to all other functions.
@@ -130,7 +130,7 @@ eventd_plugin_command_status_get_type(void)
 EVENTD_EXPORT void eventd_plugin_interface_add_init_callback(EventdPluginInterface *interface, EventdPluginInitFunc callback) { interface->init = callback; }
 /**
  * eventd_plugin_interface_add_uninit_callback:
- * @interface: an #EventdPluginInterface
+ * @iface: an #EventdPluginInterface
  * @callback: (scope async): a function to call when the plugin is unloaded
  *
  * The callback should destroy the context returned from
@@ -140,7 +140,7 @@ EVENTD_EXPORT void eventd_plugin_interface_add_uninit_callback(EventdPluginInter
 
 /**
  * eventd_plugin_interface_add_start_callback:
- * @interface: an #EventdPluginInterface
+ * @iface: an #EventdPluginInterface
  * @callback: (scope async): a function to call after configuration is parsed
  *
  * This callback should set up any plugin-wide requirements (e.g., sockets,
@@ -150,7 +150,7 @@ EVENTD_EXPORT void eventd_plugin_interface_add_uninit_callback(EventdPluginInter
 EVENTD_EXPORT void eventd_plugin_interface_add_start_callback(EventdPluginInterface *interface, EventdPluginSimpleFunc callback) { interface->start = callback; }
 /**
  * eventd_plugin_interface_add_stop_callback:
- * @interface: an #EventdPluginInterface
+ * @iface: an #EventdPluginInterface
  * @callback: (scope async): a function to call before shutdown
  *
  * This callback should tear down any plugin-wide resources. It is also called
@@ -173,7 +173,7 @@ EVENTD_EXPORT void eventd_plugin_interface_add_stop_callback(EventdPluginInterfa
 
 /**
  * eventd_plugin_interface_add_control_command_callback:
- * @interface: an #EventdPluginInterface
+ * @iface: an #EventdPluginInterface
  * @callback: (scope async): a function to call when a plugin subcommand is called
  *
  * This callback is used to handle `eventdctl &lt;pluginid&gt; &lt;command&gt; &lt;args&gt;`.
@@ -200,7 +200,7 @@ EVENTD_EXPORT void eventd_plugin_interface_add_control_command_callback(EventdPl
 
 /**
  * eventd_plugin_interface_add_global_parse_callback:
- * @interface: an #EventdPluginInterface
+ * @iface: an #EventdPluginInterface
  * @callback: (scope async): a function to call during global configuration parsing
  *
  * This callback is used to handle global configuration (as opposed to
@@ -209,7 +209,7 @@ EVENTD_EXPORT void eventd_plugin_interface_add_control_command_callback(EventdPl
 EVENTD_EXPORT void eventd_plugin_interface_add_global_parse_callback(EventdPluginInterface *interface, EventdPluginGlobalParseFunc callback) { interface->global_parse = callback; }
 /**
  * eventd_plugin_interface_add_action_parse_callback:
- * @interface: an #EventdPluginInterface
+ * @iface: an #EventdPluginInterface
  * @callback: (scope async): a function to call during action configuration parsing
  *
  * This callback is used to handle action configuration (e.g., how to
@@ -218,7 +218,7 @@ EVENTD_EXPORT void eventd_plugin_interface_add_global_parse_callback(EventdPlugi
 EVENTD_EXPORT void eventd_plugin_interface_add_action_parse_callback(EventdPluginInterface *interface, EventdPluginActionParseFunc callback) { interface->action_parse = callback; }
 /**
  * eventd_plugin_interface_add_config_reset_callback:
- * @interface: an #EventdPluginInterface
+ * @iface: an #EventdPluginInterface
  * @callback: (scope async): a function to call when reloading the configuration
  *
  * This callback is called before reloading the configuration and shutdown.
@@ -244,7 +244,7 @@ EVENTD_EXPORT void eventd_plugin_interface_add_config_reset_callback(EventdPlugi
 
 /**
  * eventd_plugin_interface_add_event_dispatch_callback:
- * @interface: an #EventdPluginInterface
+ * @iface: an #EventdPluginInterface
  * @callback: (scope async): a function to call when an event occurs
  *
  * This callback is called *once* per known event.
@@ -256,7 +256,7 @@ EVENTD_EXPORT void eventd_plugin_interface_add_event_dispatch_callback(EventdPlu
 
 /**
  * eventd_plugin_interface_add_event_action_callback:
- * @interface: an #EventdPluginInterface
+ * @iface: an #EventdPluginInterface
  * @callback: (scope async): a function to call when triggering an action
  *
  * This callback is called whenever an event triggers an action created by the
