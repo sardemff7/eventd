@@ -208,7 +208,7 @@ _eventd_core_debug_log_write(GDataOutputStream *stream, GLogLevelFlags log_level
         break;
     }
 
-    l = PID_MAXLEN + strlen("CRITICAL") + strlen(message) + strlen("(:) []: \n") + 1;
+    l = PID_MAXLEN + strlen("CRITICAL") + strlen(message) + strlen("(:) [] : \n") + 1;
     if ( prg_name != NULL )
         l += strlen(prg_name);
     if ( log_domain != NULL )
