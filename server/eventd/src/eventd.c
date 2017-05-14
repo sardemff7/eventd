@@ -224,6 +224,8 @@ _eventd_core_debug_log_write(GDataOutputStream *stream, GLogLevelFlags log_level
         o += g_snprintf(line + o, l - o, "[%s] ", log_domain);
     o += g_snprintf(line + o, l - o, "%s: %s\n", log_level_message, message);
 
+    g_return_if_fail(o < l);
+
     g_data_output_stream_put_string(stream, line, NULL, NULL);
 }
 
