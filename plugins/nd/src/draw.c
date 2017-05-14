@@ -628,7 +628,7 @@ _eventd_nd_draw_get_valign(EventdNdAnchorVertical anchor, gint height, gint surf
     case EVENTD_ND_VANCHOR_BOTTOM:
         return height - surface_height;
     }
-    g_assert_not_reached();
+    g_return_val_if_reached(-1);
 }
 
 static void
