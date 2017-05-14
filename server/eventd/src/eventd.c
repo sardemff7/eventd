@@ -250,8 +250,8 @@ _eventd_core_debug_log_writer(GLogLevelFlags log_level, const GLogField *fields,
         else if ( g_strcmp0(fields[i].key, "GLIB_DOMAIN") == 0 )
             log_domain = fields[i].value;
     }
+    g_return_val_if_fail(message != NULL, G_LOG_WRITER_UNHANDLED);
 
-    g_assert_nonnull(message);
     _eventd_core_debug_log_write(user_data, log_level, log_domain, message);
     return G_LOG_WRITER_HANDLED;
 }
