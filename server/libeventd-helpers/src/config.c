@@ -46,7 +46,16 @@ EVENTD_EXPORT
 FormatString *
 evhelpers_format_string_new(gchar *string)
 {
-    return nk_token_list_parse(string);
+    GError *error = NULL;
+    FormatString *format_string;
+
+    format_string = nk_token_list_parse(string, &error);
+    if ( format_string != NULL )
+        return format_string;
+
+    g_warning("Malformed format string: %s", error->message);
+    g_clear_error(&error);
+    return NULL;
 }
 
 EVENTD_EXPORT
@@ -93,7 +102,11 @@ evhelpers_filename_new(gchar *string)
     FormatString *file_uri = NULL;
 
     if ( g_str_has_prefix(string, "file://") )
+    {
         file_uri = evhelpers_format_string_new(string);
+        if ( file_uri == NULL )
+            return NULL;
+    }
     else if ( g_str_has_prefix(string, "data:") )
     {
         if ( ! _evhelpers_filename_check_data_base64_prefix(string + strlen("data:")) )
@@ -102,6 +115,8 @@ evhelpers_filename_new(gchar *string)
             return NULL;
         }
         file_uri = evhelpers_format_string_new(string);
+        if ( file_uri == NULL )
+            return NULL;
     }
     else if ( g_utf8_strchr(string, -1, ' ') == NULL )
         data_name = string;
@@ -337,8 +352,13 @@ _evhelpers_config_key_file_get_format_string(gchar *string, FormatString **forma
     if ( r < 0 )
         return r;
 
+    FormatString *new_format_string;
+    new_format_string = evhelpers_format_string_new(string);
+    if ( new_format_string == NULL )
+        return -1;
+
     evhelpers_format_string_unref(*format_string);
-    *format_string = evhelpers_format_string_new(string);
+    *format_string = new_format_string;
 
     return r;
 }
