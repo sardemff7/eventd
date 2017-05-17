@@ -79,19 +79,20 @@
                 </varlistentry>
 
                 <varlistentry>
-                    <term><varname>String=</varname></term>
-                    <listitem>
-                        <para>A <type>format string</type></para>
-                        <para>The string to write. The string is used as-in, so you have to write <literal>"\n"</literal> at the end of the string if you want to write lines.</para>
-                    </listitem>
-                </varlistentry>
-
-                <varlistentry>
                     <term><varname>Template=</varname></term>
                     <listitem>
                         <para>A <type>file name</type>, containing a <type>format string</type></para>
                         <para>The file name is not a <type>file URI</type>, no data references may be used here.</para>
                         <para>The whole file content is taken as a <type>format string</type>.</para>
+                        <para>If <varname>Template=</varname> is given, <varname>String=</varname> is ignored.</para>
+                    </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                    <term><varname>String=</varname></term>
+                    <listitem>
+                        <para>A <type>format string</type></para>
+                        <para>The string to write. The string is used as-is, so you have to write <literal>"\n"</literal> at the end of the string if you want to write lines.</para>
                     </listitem>
                 </varlistentry>
 
