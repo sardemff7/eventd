@@ -10,6 +10,7 @@ option('enable-nd-fbdev', type: 'boolean', value: false, description: 'fbdev bac
 option('enable-im', type: 'boolean', value: true, description: 'IM support through libpurple')
 option('enable-sound', type: 'boolean', value: true, description: 'Sound support through libsndfile')
 option('enable-tts', type: 'boolean', value: false, description: 'Text-to-speech support through Speech Dispatcher')
+option('enable-webhook', type: 'boolean', value: false, description: 'WebHook sender through libsoup')
 option('enable-libnotify', type: 'boolean', value: true, description: 'libnotify support (client side)')
 option('enable-libcanberra', type: 'boolean', value: false, description: 'libcanberra support')
 option('enable-gobject-introspection', type: 'boolean', value: false, description: 'GObject Introspection support')

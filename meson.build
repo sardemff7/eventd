@@ -198,6 +198,9 @@ endif
 if get_option('enable-tts')
     subdir('plugins/tts')
 endif
+if get_option('enable-webhook')
+    subdir('plugins/webhook')
+endif
 if get_option('enable-libnotify')
     subdir('plugins/notify')
 endif
