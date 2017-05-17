@@ -3,6 +3,7 @@
 libeventd_helpers_inc = include_directories('include')
 libeventd_helpers_dep = [
     libeventd,
+    gio,
     glib,
 ]
 libeventd_helpers_lib = library('eventd-helpers', [

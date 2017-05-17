@@ -87,6 +87,15 @@
                 </varlistentry>
 
                 <varlistentry>
+                    <term><varname>Template=</varname></term>
+                    <listitem>
+                        <para>A <type>file name</type>, containing a <type>format string</type></para>
+                        <para>The file name is not a <type>file URI</type>, no data references may be used here.</para>
+                        <para>The whole file content is taken as a <type>format string</type>.</para>
+                    </listitem>
+                </varlistentry>
+
+                <varlistentry>
                     <term><varname>Truncate=</varname> (defaults to <literal>false</literal>)</term>
                     <listitem>
                         <para>A <type>boolean</type></para>

@@ -350,7 +350,10 @@ static gint8
 _evhelpers_config_key_file_get_format_string(gchar *string, FormatString **format_string, gint8 r)
 {
     if ( r < 0 )
+    {
+        g_free(string);
         return r;
+    }
 
     FormatString *new_format_string;
     new_format_string = evhelpers_format_string_new(string);
@@ -410,6 +413,67 @@ evhelpers_config_key_file_get_locale_format_string_with_default(GKeyFile *config
 
     r = evhelpers_config_key_file_get_locale_string_with_default(config_file, group, key, locale, default_value, &string);
 
+    return _evhelpers_config_key_file_get_format_string(string, value, r);
+}
+
+EVENTD_EXPORT
+gint8
+evhelpers_config_key_file_get_template(GKeyFile *config_file, const gchar *group, const gchar *key, FormatString **value)
+{
+    GError *error = NULL;
+    gchar *filename;
+    gint8 r;
+
+    if ( ( r = evhelpers_config_key_file_get_string(config_file, group, key, &filename) ) != 0 )
+        return r;
+    r = -1;
+
+    GFile *file;
+    gsize size;
+    gchar *string = NULL;
+
+    file = g_file_new_for_commandline_arg(filename);
+
+    GFileInfo *info;
+    info = g_file_query_info(file, G_FILE_ATTRIBUTE_STANDARD_SIZE, G_FILE_QUERY_INFO_NONE, NULL, &error);
+    if ( info == NULL )
+    {
+        g_warning("Could not open file %s for reading: %s", filename, error->message);
+        goto fail;
+
+    }
+    size = g_file_info_get_size(info);
+    g_object_unref(info);
+
+    GFileInputStream *in;
+    in = g_file_read(file, NULL, &error);
+    if ( in == NULL )
+    {
+        g_warning("Could not open file %s for reading: %s", filename, error->message);
+        goto fail;
+    }
+
+
+    string = g_new(gchar, size + 1);
+    string[size] = '\0';
+    gsize read_size;
+    if ( ! g_input_stream_read_all(G_INPUT_STREAM(in), string, size, &read_size, NULL, &error) )
+    {
+        g_warning("Could not read file %s: %s", filename, error->message);
+        g_object_unref(in);
+        goto fail;
+    }
+    g_object_unref(in);
+
+    g_return_val_if_fail(size >= read_size, -1);
+    if ( size > read_size )
+        g_warning("File %s was supposed to be %zu bytes, read only %zu", filename, size, read_size);
+
+    r = 0;
+fail:
+    g_object_unref(file);
+    g_free(filename);
+    g_clear_error(&error);
     return _evhelpers_config_key_file_get_format_string(string, value, r);
 }
 

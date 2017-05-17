@@ -84,6 +84,7 @@ _eventd_file_uninit(EventdPluginContext *context)
 static EventdPluginAction *
 _eventd_file_action_parse(EventdPluginContext *context, GKeyFile *config_file)
 {
+    gint r;
     gboolean disable = FALSE;
     FormatString *file = NULL;
     FormatString *string = NULL;
@@ -101,7 +102,11 @@ _eventd_file_action_parse(EventdPluginContext *context, GKeyFile *config_file)
     if ( evhelpers_config_key_file_get_format_string(config_file, "FileWrite", "File", &file) != 0 )
         goto fail;
 
-    if ( evhelpers_config_key_file_get_format_string(config_file, "FileWrite", "String", &string) != 0 )
+    r = evhelpers_config_key_file_get_template(config_file, "FileWrite", "Template", &string);
+    if ( r < 0 )
+        goto fail;
+
+    if ( ( r > 0 ) && ( evhelpers_config_key_file_get_format_string(config_file, "FileWrite", "String", &string) != 0 ) )
         goto fail;
 
     if ( evhelpers_config_key_file_get_boolean(config_file, "FileWrite", "Truncate", &truncate) < 0 )
