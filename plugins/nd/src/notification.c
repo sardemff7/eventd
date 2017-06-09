@@ -81,7 +81,7 @@ _eventd_nd_event_timedout(gpointer user_data)
     eventd_plugin_core_push_event(self->context->core, event);
     eventd_event_unref(event);
 
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 static void

@@ -93,7 +93,7 @@ _eventd_fdo_notifications_notification_timout(gpointer user_data)
     EventdDbusNotification *notification = user_data;
     notification->timeout = 0;
     _eventd_fdo_notifications_notification_closed(notification, EVENTD_FDO_NOTIFICATIONS_CLOSE_REASON_RESERVED);
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 /*

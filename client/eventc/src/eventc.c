@@ -58,15 +58,15 @@ _eventc_connect(gpointer user_data)
         {
             g_warning("Too many attempts, aborting");
             g_main_loop_quit(loop);
-            return FALSE;
+            return G_SOURCE_REMOVE;
         }
-        return TRUE;
+        return G_SOURCE_CONTINUE;
     }
 
     if ( event != NULL )
         _eventc_send_event();
 
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 static void
@@ -97,7 +97,7 @@ _eventc_disconnect(gpointer user_data)
     if ( ! eventc_connection_close(client, &error) )
         g_warning("Couldn't disconnect from event: %s", error->message);
 
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 

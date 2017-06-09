@@ -244,7 +244,7 @@ _eventd_im_conv_timeout(gpointer user_data)
 
     conv->leave_timeout = 0;
     _eventd_im_conv_reset(conv);
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 static void

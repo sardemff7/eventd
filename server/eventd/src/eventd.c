@@ -265,7 +265,7 @@ static gboolean
 _eventd_core_stop(gpointer user_data)
 {
     eventd_core_stop(user_data);
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 #endif /* G_OS_UNIX */
 

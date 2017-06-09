@@ -95,7 +95,7 @@ _timeout_callback(gpointer user_data)
 {
     g_warning("Test takes too much time, aborting");
     g_main_loop_quit(loop);
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 static void
@@ -173,20 +173,20 @@ static gboolean
 _ended_close_idle_callback(gpointer user_data)
 {
     if ( ! _check_state(-1, 3, STATE_SENT) )
-        return FALSE;
+        return G_SOURCE_REMOVE;
 
     EventcConnection *client = user_data;
 
     if ( ! eventc_connection_close(client, &error) )
     {
         g_main_loop_quit(loop);
-        return FALSE;
+        return G_SOURCE_REMOVE;
     }
 
     _test_state.event = 0;
     _test_state.state = STATE_START;
 
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 static void

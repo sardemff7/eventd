@@ -246,10 +246,10 @@ _eventc_connection_ping(gpointer user_data)
     EventcConnection *self = user_data;
 
     if ( _eventc_connection_send_message(self, eventd_protocol_generate_ping(self->priv->protocol), NULL) )
-        return TRUE;
+        return G_SOURCE_CONTINUE;
 
     self->priv->ping = 0;
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 static void

@@ -70,7 +70,7 @@ _evhelpers_reconnect_timeout(gpointer user_data)
     self->callback(self, self->user_data);
 
     self->timeout_tag = 0;
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 EVENTD_EXPORT
