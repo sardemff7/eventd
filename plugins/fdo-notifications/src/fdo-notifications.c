@@ -52,15 +52,21 @@ struct _EventdPluginContext {
     GVariant *server_information;
     GRegex *regex_amp;
     GRegex *regex_markup;
-    guint32 count;
-    GHashTable *ids;
+    GHashTable *senders;
     GHashTable *notifications;
 };
 
 typedef struct {
     EventdPluginContext *context;
+    guint32 count;
+    gchar *name;
+    GHashTable *ids;
+} EventdDbusSender;
+
+typedef struct {
+    EventdPluginContext *context;
     guint32 id;
-    gchar *sender;
+    EventdDbusSender *sender;
     EventdEvent *event;
     gulong timeout;
 } EventdDbusNotification;
@@ -71,7 +77,7 @@ _eventd_fdo_notifications_notification_closed(EventdDbusNotification *notificati
     /*
      * We have to emit the NotificationClosed signal for our D-Bus client
      */
-    g_dbus_connection_emit_signal(notification->context->connection, notification->sender,
+    g_dbus_connection_emit_signal(notification->context->connection, notification->sender->name,
                                   NOTIFICATION_BUS_PATH, NOTIFICATION_BUS_NAME,
                                   "NotificationClosed", g_variant_new("(uu)", notification->id, reason),
                                   NULL);
@@ -94,25 +100,48 @@ _eventd_fdo_notifications_notification_timout(gpointer user_data)
  * Helper functions
  */
 
-static EventdDbusNotification *
-_eventd_fdo_notifications_notification_new(EventdPluginContext *context, const gchar *sender, EventdEvent *event)
+static EventdDbusSender *
+_eventd_fdo_notifications_sender_new(EventdPluginContext *context, const gchar *name)
 {
-    guint64 id = ++context->count;
-    eventd_event_add_data(event, g_strdup("libnotify-id"), g_variant_new_uint64(id));
+    EventdDbusSender *sender;
 
-    if ( ! eventd_plugin_core_push_event(context->core, event) )
-        return 0;
+    sender = g_new0(EventdDbusSender, 1);
+    sender->context = context;
+    sender->name = g_strdup(name);
 
+    sender->ids = g_hash_table_new(NULL, NULL);
+
+    g_hash_table_insert(context->senders, sender->name, sender);
+
+    return sender;
+}
+
+static void
+_eventd_fdo_notifications_sender_free(gpointer user_data)
+{
+    EventdDbusSender *sender = user_data;
+
+    g_hash_table_unref(sender->ids);
+    g_free(sender->name);
+
+    g_free(sender);
+}
+
+static EventdDbusNotification *
+_eventd_fdo_notifications_notification_new(EventdPluginContext *context, EventdDbusSender *sender, EventdEvent *event, guint64 id)
+{
     EventdDbusNotification *notification;
 
     notification = g_new0(EventdDbusNotification, 1);
     notification->context = context;
-    notification->id = id;
-    notification->sender = g_strdup(sender);
+    notification->id = ( id > 0 ) ? id : ++sender->count;
+    notification->sender = sender;
     notification->event = event;
 
+    eventd_event_add_data(event, g_strdup("libnotify-id"), g_variant_new_uint64(notification->id));
+
     g_hash_table_insert(context->notifications, (gpointer) eventd_event_get_uuid(event), notification);
-    g_hash_table_insert(context->ids, GUINT_TO_POINTER(notification->id), notification);
+    g_hash_table_insert(sender->ids, GUINT_TO_POINTER(notification->id), notification);
 
     return notification;
 }
@@ -122,10 +151,11 @@ _eventd_fdo_notifications_notification_free(gpointer user_data)
 {
     EventdDbusNotification *notification = user_data;
 
-    g_hash_table_remove(notification->context->ids, GUINT_TO_POINTER(notification->id));
+    g_hash_table_remove(notification->sender->ids, GUINT_TO_POINTER(notification->id));
     eventd_event_unref(notification->event);
 
-    g_free(notification->sender);
+    if ( g_hash_table_size(notification->sender->ids) == 0 )
+        g_hash_table_remove(notification->context->senders, notification->sender->name);
 
     g_free(notification);
 }
@@ -201,8 +231,9 @@ fallback:
  */
 
 static void
-_eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *sender, GVariant *parameters, GDBusMethodInvocation *invocation)
+_eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *sender_name, GVariant *parameters, GDBusMethodInvocation *invocation)
 {
+    EventdDbusSender *sender;
     const gchar *app_name;
     guint32 id;
     const gchar *icon;
@@ -252,7 +283,7 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
     while ( g_variant_iter_next(hints, "{&sv}", &hint_name, &hint) )
     {
 #ifdef EVENTD_DEBUG
-        g_debug("Found hint '%s'", hint_name);
+        g_debug("        Found hint '%s'", hint_name);
 #endif /* EVENTD_DEBUG */
 
         if ( g_strcmp0(hint_name, "category") == 0 )
@@ -288,22 +319,17 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
         g_variant_unref(hint);
     }
 
-#ifdef EVENTD_DEBUG
-    g_debug("Creating event '%s' for client '%s' ", event_name, app_name);
-#endif /* EVENTD_DEBUG */
+    sender = g_hash_table_lookup(context->senders, sender_name);
 
     EventdDbusNotification *notification = NULL;
-    if ( id > 0 )
+    if ( ( id > 0 ) && ( sender = NULL ) )
     {
-        notification = g_hash_table_lookup(context->ids, GUINT_TO_POINTER(id));
-        if ( notification == NULL )
-        {
-            g_dbus_method_invocation_return_dbus_error(invocation, NOTIFICATION_BUS_NAME ".InvalidId", "Invalid notification identifier");
-            return;
-        }
-        event = notification->event;
+        notification = g_hash_table_lookup(sender->ids, GUINT_TO_POINTER(id));
+        if ( notification != NULL )
+            event = notification->event;
     }
-    else
+
+    if ( event == NULL )
         event = eventd_event_new("notification", event_name);
 
     eventd_event_add_data_string(event, g_strdup("client-name"), g_strdup(app_name));
@@ -316,7 +342,7 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
     if ( ( icon != NULL ) && ( *icon != 0 ) )
     {
 #ifdef EVENTD_DEBUG
-        g_debug("Icon specified: '%s'", icon);
+        g_debug("        Icon specified: '%s'", icon);
 #endif /* EVENTD_DEBUG */
 
         if ( g_str_has_prefix(icon, "file://") )
@@ -376,28 +402,24 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
     if ( ( value > -1 ) && ( value < 101 ) )
         eventd_event_add_data(event, g_strdup("progress-value"), g_variant_new_double((gdouble) value / 100.));
 
-    if ( id > 0 )
+    if ( sender == NULL )
+        sender = _eventd_fdo_notifications_sender_new(context, sender_name);
+
+    if ( notification == NULL )
+        notification = _eventd_fdo_notifications_notification_new(context, sender, event, id);
+
+#ifdef EVENTD_DEBUG
+    g_debug("    Creating event 'notification' '%s' for client '%s': %u (%u) ", event_name, app_name, notification->id, id);
+#endif /* EVENTD_DEBUG */
+
+    if ( ! eventd_plugin_core_push_event(context->core, event) )
     {
-        if ( ! eventd_plugin_core_push_event(context->core, event) )
-        {
-            _eventd_fdo_notifications_notification_closed(notification, EVENTD_FDO_NOTIFICATIONS_CLOSE_REASON_RESERVED);
-            g_dbus_method_invocation_return_dbus_error(invocation, NOTIFICATION_BUS_NAME ".StrangeError", "We have something strange, really");
-            return;
-        }
-    }
-    else
-    {
-        notification = _eventd_fdo_notifications_notification_new(context, sender, event);
-        if ( notification == NULL )
-        {
-            eventd_event_unref(event);
-            g_dbus_method_invocation_return_dbus_error(invocation, NOTIFICATION_BUS_NAME ".InvalidNotification", "Invalid notification type");
-            return;
-        }
-        id = notification->id;
+        _eventd_fdo_notifications_notification_closed(notification, EVENTD_FDO_NOTIFICATIONS_CLOSE_REASON_RESERVED);
+        g_dbus_method_invocation_return_dbus_error(invocation, NOTIFICATION_BUS_NAME ".StrangeError", "We have something strange, really");
+        return;
     }
 
-    g_dbus_method_invocation_return_value(invocation, g_variant_new("(u)", id));
+    g_dbus_method_invocation_return_value(invocation, g_variant_new("(u)", notification->id));
 
     if ( notification->timeout > 0 )
         g_source_remove(notification->timeout);
@@ -405,11 +427,20 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
 }
 
 static void
-_eventd_fdo_notifications_close_notification(EventdPluginContext *context, GVariant *parameters, GDBusMethodInvocation *invocation)
+_eventd_fdo_notifications_close_notification(EventdPluginContext *context, const gchar *sender_name, GVariant *parameters, GDBusMethodInvocation *invocation)
 {
     g_dbus_method_invocation_return_value(invocation, NULL);
+
+    EventdDbusSender *sender;
     guint32 id;
     EventdDbusNotification *notification;
+
+    sender = g_hash_table_lookup(context->senders, sender_name);
+    if ( sender == NULL )
+    {
+        g_dbus_method_invocation_return_dbus_error(invocation, NOTIFICATION_BUS_NAME ".InvalidId", "Invalid notification identifier");
+        return;
+    }
 
     g_variant_get(parameters, "(u)", &id);
 
@@ -419,14 +450,12 @@ _eventd_fdo_notifications_close_notification(EventdPluginContext *context, GVari
         return;
     }
 
-    notification = g_hash_table_lookup(context->ids, GUINT_TO_POINTER(id));
+    notification = g_hash_table_lookup(sender->ids, GUINT_TO_POINTER(id));
     if ( notification != NULL )
     {
         eventd_event_add_data(notification->event, g_strdup(".event-end"), g_variant_new_boolean(TRUE));
         eventd_plugin_core_push_event(context->core, notification->event);
     }
-
-    g_dbus_method_invocation_return_value(invocation, NULL);
 }
 
 static void
@@ -461,7 +490,7 @@ _eventd_fdo_notifications_method(GDBusConnection       *connection,
     if ( g_strcmp0(method_name, "Notify") == 0 )
         _eventd_fdo_notifications_notify(context, sender, parameters, invocation);
     else if ( g_strcmp0(method_name, "CloseNotification") == 0 )
-        _eventd_fdo_notifications_close_notification(context, parameters, invocation);
+        _eventd_fdo_notifications_close_notification(context, sender, parameters, invocation);
     else if ( g_strcmp0(method_name, "GetCapabilities") == 0 )
         _eventd_fdo_notifications_get_capabilities(context, invocation);
     else if ( g_strcmp0(method_name, "GetServerInformation") == 0 )
@@ -617,7 +646,7 @@ _eventd_fdo_notifications_init(EventdPluginCoreContext *core)
     context->regex_markup = regex_markup;
 
     context->notifications = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, _eventd_fdo_notifications_notification_free);
-    context->ids = g_hash_table_new(g_direct_hash, g_direct_equal);
+    context->senders = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, _eventd_fdo_notifications_sender_free);
 
     return context;
 
@@ -637,7 +666,7 @@ static void
 _eventd_fdo_notifications_uninit(EventdPluginContext *context)
 {
     g_hash_table_unref(context->notifications);
-    g_hash_table_unref(context->ids);
+    g_hash_table_unref(context->senders);
 
     g_regex_unref(context->regex_markup);
     g_regex_unref(context->regex_amp);
