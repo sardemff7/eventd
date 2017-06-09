@@ -147,7 +147,7 @@ GdkPixbuf *
 eventd_nd_pixbuf_from_theme(NkXdgThemeContext *context, gchar *uri, gint size, gint scale)
 {
     GdkPixbuf *pixbuf = NULL;
-    const gchar *theme = NULL;
+    const gchar *themes[] = { NULL, NULL };
     const gchar *name = uri + strlen("theme:");
     gchar *file;
 
@@ -155,11 +155,11 @@ eventd_nd_pixbuf_from_theme(NkXdgThemeContext *context, gchar *uri, gint size, g
     if ( ( c = g_utf8_strchr(name, -1, '/') ) != NULL )
     {
         *c = '\0';
-        theme = name;
+        themes[0] = name;
         name = ++c;
     }
 
-    file = nk_xdg_theme_get_icon(context, theme, NULL, name, size, scale, TRUE);
+    file = nk_xdg_theme_get_icon(context, themes, NULL, name, size, scale, TRUE);
     if ( file != NULL )
         pixbuf = _eventd_nd_pixbuf_from_file(file, size * scale, size * scale);
     g_free(file);

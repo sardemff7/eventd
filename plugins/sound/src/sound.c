@@ -237,19 +237,19 @@ _eventd_sound_event_action(EventdPluginContext *context, EventdPluginAction *act
     break;
     case FILENAME_PROCESS_RESULT_THEME:
     {
-        gchar *theme = NULL;
+        const gchar *themes[2] = { NULL, NULL };
         gchar *name = uri + strlen("theme:");
 
         gchar *c;
         if ( ( c = g_utf8_strchr(name, -1, '/') ) != NULL )
         {
             *c = '\0';
-            theme = name;
+            themes[0] = name;
             name = ++c;
         }
 
         gchar *file;
-        file = nk_xdg_theme_get_sound(context->theme_context, theme, name, NULL, NULL);
+        file = nk_xdg_theme_get_sound(context->theme_context, themes, name, NULL, NULL);
         if ( file != NULL )
             _eventd_sound_read_file(file, &data, &length, &format, &rate, &channels);
         g_free(file);
