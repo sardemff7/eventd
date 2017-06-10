@@ -80,6 +80,7 @@ PangoAlignment eventd_nd_style_get_text_align(EventdNdStyle *style);
 EventdNdAnchorVertical eventd_nd_style_get_text_valign(EventdNdStyle *style);
 PangoEllipsizeMode eventd_nd_style_get_text_ellipsize(EventdNdStyle *style);
 guint8 eventd_nd_style_get_text_max_lines(EventdNdStyle *style);
+gint eventd_nd_style_get_text_max_width(EventdNdStyle *style);
 Colour eventd_nd_style_get_text_colour(EventdNdStyle *style);
 
 EventdNdAnchorVertical eventd_nd_style_get_image_anchor(EventdNdStyle *style);

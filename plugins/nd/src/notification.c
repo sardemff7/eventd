@@ -111,7 +111,7 @@ _eventd_nd_notification_process(EventdNdNotification *self, EventdEvent *event)
     gint progress_bar_width = 0;
     gint min_width, max_width;
 
-    gint text_width = 0;
+    gint text_width = 0, text_max_width;
     gint image_width = 0, image_height = 0;
 
 
@@ -142,7 +142,12 @@ _eventd_nd_notification_process(EventdNdNotification *self, EventdEvent *event)
         min_width = max_width;
 
     /* proccess data and compute the bubble size */
-    self->text.text = eventd_nd_draw_text_process(self->style, self->event, max_width, g_queue_get_length(self->queue->wait_queue), &self->text.height, &text_width);
+    text_max_width = eventd_nd_style_get_text_max_width(self->style);
+    if ( text_max_width < 0 )
+        text_max_width = max_width;
+    else
+        text_max_width = MIN(text_max_width, max_width);
+    self->text.text = eventd_nd_draw_text_process(self->style, self->event, text_max_width, g_queue_get_length(self->queue->wait_queue), &self->text.height, &text_width);
 
     self->content_size.width = text_width;
 

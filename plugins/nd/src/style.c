@@ -113,6 +113,7 @@ struct _EventdPluginAction {
         EventdNdAnchorVertical valign;
         PangoEllipsizeMode ellipsize;
         guint8 max_lines;
+        gint max_width;
         Colour colour;
     } text;
 
@@ -194,6 +195,7 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
     style->text.valign      = EVENTD_ND_VANCHOR_TOP;
     style->text.ellipsize   = PANGO_ELLIPSIZE_NONE;
     style->text.max_lines   = 10;
+    style->text.max_width   = -1;
     style->text.colour.r    = 0.9;
     style->text.colour.g    = 0.9;
     style->text.colour.b    = 0.9;
@@ -406,6 +408,11 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file)
             self->text.max_lines = ( integer.value < 0 ) ? 0 : MAX(integer.value, 3);
         else if ( self->parent != NULL )
             self->text.max_lines = eventd_nd_style_get_text_max_lines(self->parent);
+
+        if ( evhelpers_config_key_file_get_int(config_file, "NotificationText", "MaxWidth", &integer) == 0 )
+            self->text.max_width = integer.value;
+        else if ( self->parent != NULL )
+            self->text.max_width = eventd_nd_style_get_text_max_width(self->parent);
 
         if ( evhelpers_config_key_file_get_colour(config_file, "NotificationText", "Colour", &colour) == 0 )
             self->text.colour = colour;
@@ -704,6 +711,14 @@ eventd_nd_style_get_text_max_lines(EventdNdStyle *self)
     if ( self->text.set )
         return self->text.max_lines;
     return eventd_nd_style_get_text_max_lines(self->parent);
+}
+
+gint
+eventd_nd_style_get_text_max_width(EventdNdStyle *self)
+{
+    if ( self->text.set )
+        return self->text.max_width;
+    return eventd_nd_style_get_text_max_width(self->parent);
 }
 
 EventdNdAnchorVertical

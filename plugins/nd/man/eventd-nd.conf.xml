@@ -416,6 +416,15 @@
                     </varlistentry>
 
                     <varlistentry>
+                        <term><varname>MaxWidth=</varname> (defaults to <literal>-1</literal>, unlimited)</term>
+                        <listitem>
+                            <para>An <type>integer</type>, <literal>-1</literal> is unlimited</para>
+                            <para>The maximum width the text should take.</para>
+                            <para>If the bubble <varname>MinWidth=</varname> is set and there is remaining space, the text may be larger than this value.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
                         <term><varname>Colour=</varname> (defaults to <literal>"#262626"</literal>)</term>
                         <listitem>
                             <para>A <type>colour string</type></para>
