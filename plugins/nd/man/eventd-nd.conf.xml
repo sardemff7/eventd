@@ -430,11 +430,20 @@
 
                 <variablelist>
                     <varlistentry>
-                        <term><varname>MaxWidth=</varname> (defaults to <literal>50</literal>)</term>
-                        <term><varname>MaxHeight=</varname> (defaults to <literal>50</literal>)</term>
+                        <term><varname>Width=</varname> (defaults to <literal>50</literal>)</term>
+                        <term><varname>Height=</varname> (defaults to <literal>50</literal>)</term>
                         <listitem>
                             <para>Two <type>integers</type>, <literal>-1</literal> is unlimited</para>
                             <para>These two keys control the image size.</para>
+                            <para>The aspect ratio is always preserved and the image will always fit both sizes.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>FixedSize=</varname> (defaults to <literal>false</literal>)</term>
+                        <listitem>
+                            <para>A <type>boolean</type></para>
+                            <para>If <literal>true</literal>, the image will be upscaled if too small.</para>
                         </listitem>
                     </varlistentry>
 
@@ -507,11 +516,20 @@
                     </varlistentry>
 
                     <varlistentry>
-                        <term><varname>MaxWidth=</varname> (defaults to <literal>25</literal>)</term>
-                        <term><varname>MaxHeight=</varname> (defaults to <literal>25</literal>)</term>
+                        <term><varname>Width=</varname> (defaults to <literal>25</literal>)</term>
+                        <term><varname>Height=</varname> (defaults to <literal>25</literal>)</term>
                         <listitem>
                             <para>Two <type>integers</type>, <literal>-1</literal> is unlimited</para>
                             <para>These two keys control the icon size.</para>
+                            <para>The aspect ratio is always preserved and the icon will always fit both sizes.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>FixedSize=</varname> (defaults to <literal>false</literal>)</term>
+                        <listitem>
+                            <para>A <type>boolean</type></para>
+                            <para>If <literal>true</literal>, the icon will be upscaled if too small.</para>
                         </listitem>
                     </varlistentry>
 

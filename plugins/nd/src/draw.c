@@ -272,6 +272,7 @@ _eventd_nd_draw_limit_size(GdkPixbuf *pixbuf, EventdNdStyle *style, gboolean ima
     cairo_surface_t *source;
     gint width, height;
     gint max_width, max_height;
+    gboolean fixed_size;
 
     source = _eventd_nd_draw_get_surface_from_pixbuf(pixbuf);
 
@@ -279,17 +280,23 @@ _eventd_nd_draw_limit_size(GdkPixbuf *pixbuf, EventdNdStyle *style, gboolean ima
     height = cairo_image_surface_get_height(source);
 
     if ( image )
-        eventd_nd_style_get_image_max_size(style, max_draw_width, &max_width, &max_height);
+    {
+        eventd_nd_style_get_image_size(style, max_draw_width, &max_width, &max_height);
+        fixed_size = eventd_nd_style_get_image_fixed_size(style);
+    }
     else
-        eventd_nd_style_get_icon_max_size(style, max_draw_width, &max_width, &max_height);
+    {
+        eventd_nd_style_get_icon_size(style, max_draw_width, &max_width, &max_height);
+        fixed_size = eventd_nd_style_get_icon_fixed_size(style);
+    }
 
-    if ( ( width < max_width ) && ( height < max_height ) )
+    if ( ( width < max_width ) && ( height < max_height ) && ( ! fixed_size ) )
         return source;
 
     gdouble hs = 1.0, vs = 1.0, s;
-    if ( width > max_width )
+    if ( ( width > max_width ) || fixed_size )
         hs = (gdouble) max_width / (gdouble) width;
-    if ( height > max_height )
+    if ( ( height > max_height ) || fixed_size )
         vs = (gdouble) max_height / (gdouble) height;
 
     s = MIN(hs, vs);
@@ -390,7 +397,7 @@ eventd_nd_draw_image_and_icon_process(NkXdgThemeContext *theme_context, EventdNd
     gchar *uri;
     GVariant *data;
 
-    eventd_nd_style_get_image_max_size(style, max_width, &load_width, &load_height);
+    eventd_nd_style_get_image_size(style, max_width, &load_width, &load_height);
     switch ( evhelpers_filename_process(image_filename, event, "images", &uri, &data) )
     {
     case FILENAME_PROCESS_RESULT_URI:
@@ -406,7 +413,7 @@ eventd_nd_draw_image_and_icon_process(NkXdgThemeContext *theme_context, EventdNd
     break;
     }
 
-    eventd_nd_style_get_icon_max_size(style, max_width, &load_width, &load_height);
+    eventd_nd_style_get_icon_size(style, max_width, &load_width, &load_height);
     switch ( evhelpers_filename_process(icon_filename, event, "icons", &uri, &data) )
     {
     case FILENAME_PROCESS_RESULT_URI:

@@ -83,16 +83,18 @@ guint8 eventd_nd_style_get_text_max_lines(EventdNdStyle *style);
 Colour eventd_nd_style_get_text_colour(EventdNdStyle *style);
 
 EventdNdAnchorVertical eventd_nd_style_get_image_anchor(EventdNdStyle *style);
-gint eventd_nd_style_get_image_max_width(EventdNdStyle *style);
-gint eventd_nd_style_get_image_max_height(EventdNdStyle *style);
-void eventd_nd_style_get_image_max_size(EventdNdStyle *style, gint max_draw_width, gint *width, gint *height);
+gint eventd_nd_style_get_image_width(EventdNdStyle *style);
+gint eventd_nd_style_get_image_height(EventdNdStyle *style);
+void eventd_nd_style_get_image_size(EventdNdStyle *style, gint max_draw_width, gint *width, gint *height);
+gboolean eventd_nd_style_get_image_fixed_size(EventdNdStyle *style);
 gint eventd_nd_style_get_image_margin(EventdNdStyle *style);
 
 EventdNdStyleIconPlacement eventd_nd_style_get_icon_placement(EventdNdStyle *style);
 EventdNdAnchorVertical eventd_nd_style_get_icon_anchor(EventdNdStyle *style);
-gint eventd_nd_style_get_icon_max_width(EventdNdStyle *style);
-gint eventd_nd_style_get_icon_max_height(EventdNdStyle *style);
-void eventd_nd_style_get_icon_max_size(EventdNdStyle *style, gint max_draw_width, gint *width, gint *height);
+gint eventd_nd_style_get_icon_width(EventdNdStyle *style);
+gint eventd_nd_style_get_icon_height(EventdNdStyle *style);
+void eventd_nd_style_get_icon_size(EventdNdStyle *style, gint max_draw_width, gint *width, gint *height);
+gboolean eventd_nd_style_get_icon_fixed_size(EventdNdStyle *style);
 gint eventd_nd_style_get_icon_margin(EventdNdStyle *style);
 gdouble eventd_nd_style_get_icon_fade_width(EventdNdStyle *style);
 
