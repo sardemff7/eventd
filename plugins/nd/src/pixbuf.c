@@ -82,7 +82,7 @@ eventd_nd_pixbuf_from_data(GVariant *var, gint width, gint height, gint scale)
 
     g_variant_get(var, "(m&sm&sv)", &mime_type, NULL, &invar);
 
-    if ( g_strcmp0(mime_type, "image/x.eventd.pixbuf") == 0 )
+    if ( g_strcmp0(mime_type, "image/x.eventd.gdkpixbuf") == 0 )
     {
         gboolean a;
         gint b, w, h, s, n;
