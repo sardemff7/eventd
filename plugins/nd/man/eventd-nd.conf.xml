@@ -111,41 +111,13 @@
                 </varlistentry>
             </variablelist>
         </refsect2>
-    </refsect1>
-
-    <refsect1 id="action-sections">
-        <title>Action sections</title>
-
-        <refsect2>
-            <title>Section <varname>[Notification]</varname></title>
-
-            <variablelist>
-                <varlistentry>
-                    <term><varname>Disable=</varname></term>
-                    <listitem>
-                        <para>A <type>boolean</type></para>
-                        <para>If <literal>true</literal>, the event will not have its bubble.</para>
-                    </listitem>
-                </varlistentry>
-            </variablelist>
-        </refsect2>
-
-        <para>
-            Other settings are inherited from the global configuration. You may override them on an action basis.
-        </para>
-    </refsect1>
-
-    <refsect1 id="shared-sections">
-        <title>Shared sections</title>
-
-        <para>These sections are valid in both global and action configurations.</para>
 
         <refsect2 id="queue-sections">
             <title>Section <varname>[Queue <replaceable>name</replaceable>]</varname></title>
 
             <para>
                 These sections control the possible bubble queues.
-                There is always at least the <literal>"default</literal> queue available.
+                There is always at least the <literal>"default"</literal> queue available.
                 The z-ordering is entirely undefined and it is left to the user to achieve a usable configuration.
             </para>
 
@@ -214,6 +186,34 @@
                 </variablelist>
             </refsect3>
         </refsect2>
+    </refsect1>
+
+    <refsect1 id="action-sections">
+        <title>Action sections</title>
+
+        <refsect2>
+            <title>Section <varname>[Notification]</varname></title>
+
+            <variablelist>
+                <varlistentry>
+                    <term><varname>Disable=</varname></term>
+                    <listitem>
+                        <para>A <type>boolean</type></para>
+                        <para>If <literal>true</literal>, the event will not have its bubble.</para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+        </refsect2>
+
+        <para>
+            Other settings are inherited from the global configuration. You may override them on an action basis.
+        </para>
+    </refsect1>
+
+    <refsect1 id="shared-sections">
+        <title>Shared sections</title>
+
+        <para>These sections are valid in both global and action configurations.</para>
 
         <refsect2>
             <title>Section <varname>[Notification]</varname></title>
