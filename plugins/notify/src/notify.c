@@ -119,10 +119,16 @@ typedef struct {
     EventdEvent *event;
 } EventdLibnotifyNotification;
 
-const gchar * const _eventd_libnotify_urgency[_EVENTD_LIBNOTIFY_URGENCY_SIZE] = {
+static const gchar * const _eventd_libnotify_urgency[_EVENTD_LIBNOTIFY_URGENCY_SIZE] = {
     [EVENTD_LIBNOTIFY_URGENCY_LOW] =      "low",
     [EVENTD_LIBNOTIFY_URGENCY_NORMAL] =   "normal",
     [EVENTD_LIBNOTIFY_URGENCY_CRITICAL] = "critical",
+};
+
+static const gchar * const  _eventd_libnotify_icon_fallback_themes[] = {
+    "Adwaita",
+    "gnome",
+    NULL
 };
 
 static GdkPixbuf *
@@ -452,7 +458,7 @@ static void
 _eventd_libnotify_start(EventdPluginContext *context)
 {
     context->id = g_bus_watch_name(G_BUS_TYPE_SESSION, NOTIFICATION_BUS_NAME, G_BUS_NAME_WATCHER_FLAGS_NONE, _eventd_libnotify_bus_name_appeared, _eventd_libnotify_bus_name_vanished, context, NULL);
-    context->theme_context = nk_xdg_theme_context_new();
+    context->theme_context = nk_xdg_theme_context_new(_eventd_libnotify_icon_fallback_themes, NULL);
 }
 
 static void

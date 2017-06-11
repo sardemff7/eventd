@@ -162,7 +162,7 @@ static void
 _eventd_sound_start(EventdPluginContext *context)
 {
     eventd_sound_pulseaudio_start(context->pulseaudio);
-    context->theme_context = nk_xdg_theme_context_new();
+    context->theme_context = nk_xdg_theme_context_new(NULL, NULL);
 }
 
 static void

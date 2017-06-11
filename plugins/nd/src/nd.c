@@ -68,6 +68,12 @@ static const gchar * const _eventd_nd_dismiss_targets[] = {
     [EVENTD_ND_DISMISS_NEWEST] = "newest",
 };
 
+static const gchar * const  _eventd_nd_icon_fallback_themes[] = {
+    "Adwaita",
+    "gnome",
+    NULL
+};
+
 static gboolean
 _eventd_nd_backend_switch(EventdNdContext *context, EventdNdBackends backend, const gchar *target, gboolean force)
 {
@@ -254,7 +260,7 @@ _eventd_nd_start(EventdPluginContext *context)
     }
 
     _eventd_nd_backend_switch(context, backend, target, FALSE);
-    context->theme_context = nk_xdg_theme_context_new();
+    context->theme_context = nk_xdg_theme_context_new(_eventd_nd_icon_fallback_themes, NULL);
 }
 
 static void
