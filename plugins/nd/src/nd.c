@@ -290,7 +290,7 @@ _eventd_nd_control_command(EventdPluginContext *context, guint64 argc, const gch
         else
         {
             guint64 backend = EVENTD_ND_BACKEND_NONE;
-            nk_enum_parse(argv[1], eventd_nd_backends_names, _EVENTD_ND_BACKENDS_SIZE, TRUE, &backend);
+            nk_enum_parse(argv[1], eventd_nd_backends_names, _EVENTD_ND_BACKENDS_SIZE, TRUE, FALSE, &backend);
 
             if ( backend == EVENTD_ND_BACKEND_NONE )
             {
@@ -325,7 +325,7 @@ _eventd_nd_control_command(EventdPluginContext *context, guint64 argc, const gch
         else
         {
             guint64 target = EVENTD_ND_DISMISS_NONE;
-            nk_enum_parse(argv[1], _eventd_nd_dismiss_targets, G_N_ELEMENTS(_eventd_nd_dismiss_targets), TRUE, &target);
+            nk_enum_parse(argv[1], _eventd_nd_dismiss_targets, G_N_ELEMENTS(_eventd_nd_dismiss_targets), TRUE, FALSE, &target);
 
             if ( target != EVENTD_ND_DISMISS_NONE )
             {

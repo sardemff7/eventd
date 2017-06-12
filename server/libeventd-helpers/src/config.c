@@ -314,7 +314,7 @@ evhelpers_config_key_file_get_enum(GKeyFile *config_file, const gchar *group, co
     if ( r != 0 )
         return r;
 
-    if ( ! nk_enum_parse(string, values, size, TRUE, value) )
+    if ( ! nk_enum_parse(string, values, size, TRUE, FALSE, value) )
         r = -1;
 
     g_free(string);
