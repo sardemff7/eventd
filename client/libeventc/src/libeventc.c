@@ -338,10 +338,10 @@ eventc_connection_class_init(EventcConnectionClass *klass)
      * Emitted when receiving an event.
      */
     _eventc_connection_signals[SIGNAL_EVENT] =
-        g_signal_new("event",
+        g_signal_new("received-event",
                      G_TYPE_FROM_CLASS(object_class),
                      G_SIGNAL_RUN_FIRST,
-                     G_STRUCT_OFFSET(EventcConnectionClass, event),
+                     G_STRUCT_OFFSET(EventcConnectionClass, received_event),
                      NULL, NULL,
                      g_cclosure_marshal_generic,
                      G_TYPE_NONE, 1, EVENTD_TYPE_EVENT);

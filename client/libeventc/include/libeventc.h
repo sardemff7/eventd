@@ -68,7 +68,7 @@ struct _EventcConnectionClass {
 	GObjectClass parent_class;
 
 	/* Signals */
-	void (*event)(EventcConnection *connection, EventdEvent *event);
+	void (*received_event)(EventcConnection *connection, EventdEvent *event);
 	void (*disconnected)(EventcConnection *connection);
 };
 

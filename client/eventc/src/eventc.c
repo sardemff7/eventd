@@ -78,7 +78,7 @@ _eventc_disconnected_callback(EventcConnection *connection, gpointer user_data)
 }
 
 static void
-_eventc_event_callback(EventcConnection *connection, EventdEvent *event, gpointer user_data)
+_eventc_received_event_callback(EventcConnection *connection, EventdEvent *event, gpointer user_data)
 {
     g_idle_add(_eventc_disconnect, NULL);
 }
@@ -350,7 +350,7 @@ post_event_args:
         for ( i = 1 ; i < argc ; ++i )
             eventc_connection_add_subscription(client, g_strdup(argv[i]));
 
-        g_signal_connect(client, "event", G_CALLBACK(_eventc_event_callback), NULL);
+        g_signal_connect(client, "received-event", G_CALLBACK(_eventc_received_event_callback), NULL);
         goto post_event;
     }
 

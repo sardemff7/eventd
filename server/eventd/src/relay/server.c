@@ -54,7 +54,7 @@ struct _EventdRelayServer {
 };
 
 static void
-_eventd_relay_server_event(EventdRelayServer *self, EventdEvent *event, EventcConnection *connection)
+_eventd_relay_server_received_event(EventdRelayServer *self, EventdEvent *event, EventcConnection *connection)
 {
     self->current = event;
     eventd_core_push_event(self->core, event);
@@ -96,7 +96,7 @@ static void
 _eventd_relay_server_setup_connection(EventdRelayServer *server)
 {
     eventc_connection_set_ping_interval(server->connection, server->ping_interval);
-    g_signal_connect_swapped(server->connection, "event", G_CALLBACK(_eventd_relay_server_event), server);
+    g_signal_connect_swapped(server->connection, "received-event", G_CALLBACK(_eventd_relay_server_received_event), server);
     g_signal_connect_swapped(server->connection, "disconnected", G_CALLBACK(_eventd_relay_server_disconnected), server);
     if ( server->server_identity != NULL )
         eventc_connection_set_server_identity(server->connection, server->server_identity);

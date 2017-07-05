@@ -269,7 +269,7 @@ eventd_tests_run_libeventc(const gchar *uri)
 
     eventc_connection_set_subscribe(client, TRUE);
     eventc_connection_add_subscription(client, g_strdup("test"));
-    g_signal_connect(client, "event", G_CALLBACK(_ended_callback), NULL);
+    g_signal_connect(client, "received-event", G_CALLBACK(_ended_callback), NULL);
     g_signal_connect(client, "disconnected", G_CALLBACK(_disconnected_callback), NULL);
 
     loop = g_main_loop_new(NULL, FALSE);
