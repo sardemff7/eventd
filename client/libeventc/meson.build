@@ -56,6 +56,9 @@ if get_option('enable-gobject-introspection')
         nsversion: '0',
         sources: libeventc_sources + libeventc_headers,
         includes: [ libeventd_gir[0], 'Gio-2.0', 'GObject-2.0' ],
+        extra_args: [
+            '--c-include=libeventc.h',
+        ],
         install: true,
     )
 endif

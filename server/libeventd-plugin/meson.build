@@ -55,6 +55,9 @@ if get_option('enable-gobject-introspection')
         nsversion: '0',
         sources: libeventd_plugin_sources + libeventd_plugin_headers,
         includes: [ libeventd_gir[0], 'Gio-2.0', 'GObject-2.0' ],
+        extra_args: [
+            '--c-include=eventd-plugin.h',
+        ],
         install: true,
     )
 endif

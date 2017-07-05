@@ -87,6 +87,10 @@ if get_option('enable-gobject-introspection')
         nsversion: '0',
         sources: libeventd_sources + libeventd_headers,
         includes: [ 'GObject-2.0' ],
+        extra_args: [
+            '--c-include=libeventd-event.h',
+            '--c-include=libeventd-protocol.h',
+        ],
         install: true,
     )
 endif
