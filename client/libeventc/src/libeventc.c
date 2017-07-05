@@ -356,7 +356,7 @@ eventc_connection_class_init(EventcConnectionClass *klass)
         g_signal_new("disconnected",
                      G_TYPE_FROM_CLASS(object_class),
                      G_SIGNAL_RUN_FIRST,
-                     G_STRUCT_OFFSET(EventcConnectionClass, event),
+                     G_STRUCT_OFFSET(EventcConnectionClass, disconnected),
                      NULL, NULL,
                      g_cclosure_marshal_generic,
                      G_TYPE_NONE, 0);
@@ -638,6 +638,7 @@ _eventc_connection_socket_client_event(EventcConnection *self, GSocketClientEven
     break;
     }
 }
+
 static GSocketClient *
 _eventc_connection_get_socket_client(EventcConnection *self)
 {
