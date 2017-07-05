@@ -30,6 +30,4 @@ struct _EventdEvent {
     GHashTable *data;
 };
 
-EventdEvent *eventd_event_new_for_uuid(NkUuid uuid, const gchar *category, const gchar *name);
-
 #endif /* __EVENTD_EVENT_EVENT_PRIVATE_H__ */

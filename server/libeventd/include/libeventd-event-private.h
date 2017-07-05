@@ -21,10 +21,11 @@
 #ifndef __EVENTD_EVENT_PRIVATE_H__
 #define __EVENTD_EVENT_PRIVATE_H__
 
+#include "nkutils-uuid.h"
+
+EventdEvent *eventd_event_new_for_uuid(NkUuid uuid, const gchar *category, const gchar *name);
 EventdEvent *eventd_event_new_for_uuid_string(const gchar *uuid_string, const gchar *category, const gchar *name);
 
 void eventd_event_set_all_data(EventdEvent *event, GHashTable *data);
-
-G_END_DECLS
 
 #endif /* __EVENTD_EVENT_PRIVATE_H__ */

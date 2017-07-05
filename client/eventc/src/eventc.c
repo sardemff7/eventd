@@ -31,8 +31,10 @@
 #include <glib/gi18n.h>
 #include <glib-object.h>
 #include <gio/gio.h>
+#include "nkutils-uuid.h"
 
 #include "libeventd-event.h"
+#include "libeventd-event-private.h"
 
 #include "libeventc.h"
 
@@ -105,6 +107,8 @@ int
 main(int argc, char *argv[])
 {
     int r = 0;
+    NkUuid uuid = NK_UUID_INIT;
+    gchar *uuid_string = NULL;
     gchar *uri = NULL;
     gchar *identity = NULL;
     GSocketConnectable *server_identity = NULL;
@@ -151,8 +155,11 @@ main(int argc, char *argv[])
     GOptionContext *opt_context = g_option_context_new("- Basic CLI client for eventd");
 
     g_option_context_set_summary(opt_context, ""
-        "Normal mode: eventc <event category> <event name>"
+        "Normal mode: eventc <event category> <event name> [<event UUID>]"
         "\n  eventc will connect to <URI> and send an event."
+        "\n  You can update an event by passing its UUID as the third positional argument."
+        "\n  The UUID may be pre-generated, or you can use the one eventc generated in a previous call."
+        "\n  Passing '' (emtpy string) as UUID will make eventc print the generated UUID to stdout."
         "\n\n"
         "Subscribe mode: eventc --subscribe [<event category>...]"
         "\n  eventc will connect to <URI> and wait for an event of the specified categories. If no category is specified, it will wait for any event."
@@ -278,6 +285,16 @@ main(int argc, char *argv[])
     category = argv[1];
     name = argv[2];
 
+    if ( argc >= 4 )
+    {
+        uuid_string = argv[3];
+        if ( ( *uuid_string != '\0' ) && ( ! nk_uuid_parse(&uuid, uuid_string) ) )
+        {
+            g_warning("Wrong UUID: %s", uuid_string);
+            goto end;
+        }
+    }
+
 post_event_args:
     if ( identity != NULL )
     {
@@ -337,7 +354,18 @@ post_event_args:
         goto post_event;
     }
 
-    event = eventd_event_new(category, name);
+    if ( uuid_string != NULL )
+    {
+        if ( *uuid_string != '\0' )
+            event = eventd_event_new_for_uuid(uuid, category, name);
+        else
+        {
+            event = eventd_event_new(category, name);
+            g_print("%s\n", eventd_event_get_uuid(event));
+        }
+    }
+    else
+        event = eventd_event_new(category, name);
 
     GHashTableIter iter;
     g_hash_table_iter_init(&iter, data);
