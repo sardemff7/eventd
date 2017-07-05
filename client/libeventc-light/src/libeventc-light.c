@@ -529,7 +529,7 @@ eventc_light_connection_read(EventcLightConnection *self)
 }
 
 /**
- * eventc_light_connection_event:
+ * eventc_light_connection_send_event:
  * @connection: an #EventcLightConnection
  * @event: an #EventdEvent to send to the server
  *
@@ -539,7 +539,7 @@ eventc_light_connection_read(EventcLightConnection *self)
  */
 EVENTD_EXPORT
 gint
-eventc_light_connection_event(EventcLightConnection *self, EventdEvent *event)
+eventc_light_connection_send_event(EventcLightConnection *self, EventdEvent *event)
 {
     g_return_val_if_fail(self != NULL, -EFAULT);
     g_return_val_if_fail(event != NULL, -EFAULT);

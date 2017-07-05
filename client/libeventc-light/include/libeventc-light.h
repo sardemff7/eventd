@@ -52,7 +52,7 @@ EventcLightSocket eventc_light_connection_get_socket(EventcLightConnection *conn
 gint eventc_light_connection_read(EventcLightConnection *connection);
 
 gint eventc_light_connection_connect(EventcLightConnection *connection);
-gint eventc_light_connection_event(EventcLightConnection *connection, EventdEvent *event);
+gint eventc_light_connection_send_event(EventcLightConnection *connection, EventdEvent *event);
 gint eventc_light_connection_close(EventcLightConnection *connection);
 
 gboolean eventc_light_connection_is_connected(EventcLightConnection *connection, gint *error);
