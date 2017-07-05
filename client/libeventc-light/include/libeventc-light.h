@@ -36,7 +36,7 @@ typedef gint EventcLightSocket;
 typedef SOCKET EventcLightSocket;
 #endif /* ! G_OS_UNIX */
 
-typedef void (*EventcLightConnectionEventCallback)(EventcLightConnection *connection, EventdEvent *event, gpointer user_data);
+typedef void (*EventcLightConnectionReceivedEventCallback)(EventcLightConnection *connection, EventdEvent *event, gpointer user_data);
 typedef void (*EventcLightConnectionDisconnectedCallback)(EventcLightConnection *connection, gpointer user_data);
 
 const gchar *eventc_light_get_version(void);
@@ -46,7 +46,7 @@ EventcLightConnection *eventc_light_connection_new(const gchar *name);
 EventcLightConnection *eventc_light_connection_ref(EventcLightConnection *connection);
 void eventc_light_connection_unref(EventcLightConnection *connection);
 
-void eventc_light_connection_set_event_callback(EventcLightConnection *connection, EventcLightConnectionEventCallback callback, gpointer data, GDestroyNotify notify);
+void eventc_light_connection_set_received_event_callback(EventcLightConnection *connection, EventcLightConnectionReceivedEventCallback callback, gpointer data, GDestroyNotify notify);
 void eventc_light_connection_set_disconnected_callback(EventcLightConnection *connection, EventcLightConnectionDisconnectedCallback callback, gpointer data, GDestroyNotify notify);
 EventcLightSocket eventc_light_connection_get_socket(EventcLightConnection *connection);
 gint eventc_light_connection_read(EventcLightConnection *connection);

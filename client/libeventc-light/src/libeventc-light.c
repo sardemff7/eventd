@@ -53,7 +53,7 @@ struct _EventcLightConnection {
     gboolean subscribe;
     GHashTable *subscriptions;
     struct {
-        EventcLightConnectionEventCallback callback;
+        EventcLightConnectionReceivedEventCallback callback;
         gpointer user_data;
         GDestroyNotify notify;
     } event_callback;
@@ -221,7 +221,7 @@ eventc_light_connection_unref(EventcLightConnection *self)
 }
 
 /**
- * eventc_light_connection_set_event_callback:
+ * eventc_light_connection_set_received_event_callback:
  * @connection: an #EventcLightConnection
  * @callback: (scope notified) (closure user_data) (destroy notify): The event callback
  *
@@ -229,7 +229,7 @@ eventc_light_connection_unref(EventcLightConnection *self)
  */
 EVENTD_EXPORT
 void
-eventc_light_connection_set_event_callback(EventcLightConnection *self, EventcLightConnectionEventCallback callback, gpointer user_data, GDestroyNotify notify)
+eventc_light_connection_set_received_event_callback(EventcLightConnection *self, EventcLightConnectionReceivedEventCallback callback, gpointer user_data, GDestroyNotify notify)
 {
     g_return_if_fail(self != NULL);
     g_return_if_fail(callback != NULL);
