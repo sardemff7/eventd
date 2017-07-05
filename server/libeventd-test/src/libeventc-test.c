@@ -144,7 +144,7 @@ _connect_callback(GObject *obj, GAsyncResult *res, gpointer user_data)
         /* fallthrough */
     case 1:
         _create_event(client);
-        if ( eventc_connection_event(client, event, &error) )
+        if ( eventc_connection_send_event(client, event, &error) )
             _test_state.state = STATE_SENT;
         else
             g_main_loop_quit(loop);
@@ -237,7 +237,7 @@ _ended_callback(EventcConnection *client, EventdEvent *e, gpointer user_data)
 
         eventd_event_unref(event);
         _create_event(client);
-        if ( ! eventc_connection_event(client, event, &error) )
+        if ( ! eventc_connection_send_event(client, event, &error) )
             g_main_loop_quit(loop);
         else
             _test_state.state = STATE_SENT;

@@ -291,7 +291,7 @@ eventd_relay_server_event(EventdRelayServer *server, EventdEvent *event)
         return;
     }
 
-    if ( ! eventc_connection_event(server->connection, event, &error) )
+    if ( ! eventc_connection_send_event(server->connection, event, &error) )
     {
         g_warning("Couldn't send event: %s", error->message);
         g_clear_error(&error);

@@ -827,7 +827,7 @@ eventc_connection_connect_sync(EventcConnection *self, GError **error)
 }
 
 /**
- * eventc_connection_event:
+ * eventc_connection_send_event:
  * @connection: an #EventcConnection
  * @event: an #EventdEvent to send to the server
  * @error: (out) (optional): return location for error or %NULL to ignore
@@ -838,7 +838,7 @@ eventc_connection_connect_sync(EventcConnection *self, GError **error)
  */
 EVENTD_EXPORT
 gboolean
-eventc_connection_event(EventcConnection *self, EventdEvent *event, GError **error)
+eventc_connection_send_event(EventcConnection *self, EventdEvent *event, GError **error)
 {
     g_return_val_if_fail(EVENTC_IS_CONNECTION(self), FALSE);
     g_return_val_if_fail(event != NULL, FALSE);

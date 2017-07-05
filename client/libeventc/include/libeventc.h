@@ -82,7 +82,7 @@ EventcConnection *eventc_connection_new_for_connectable(GSocketConnectable *addr
 void eventc_connection_connect(EventcConnection *connection, GAsyncReadyCallback callback, gpointer user_data);
 gboolean eventc_connection_connect_finish(EventcConnection *connection, GAsyncResult *result, GError **error);
 gboolean eventc_connection_connect_sync(EventcConnection *connection, GError **error);
-gboolean eventc_connection_event (EventcConnection *connection, EventdEvent *event, GError **error);
+gboolean eventc_connection_send_event(EventcConnection *connection, EventdEvent *event, GError **error);
 gboolean eventc_connection_close(EventcConnection *connection, GError **error);
 
 

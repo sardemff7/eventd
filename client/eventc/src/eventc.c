@@ -87,7 +87,7 @@ static void
 _eventc_send_event(void)
 {
     GError *error = NULL;
-    if ( ! eventc_connection_event(client, event, &error) )
+    if ( ! eventc_connection_send_event(client, event, &error) )
         g_warning("Couldn't send event '%s', '%s': %s", eventd_event_get_category(event), eventd_event_get_name(event), error->message);
     g_idle_add(_eventc_disconnect, NULL);
 }
