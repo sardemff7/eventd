@@ -356,12 +356,12 @@
     Colour=#DDDDDD
 
     [NotificationImage]
-    MaxHeight=25
+    Height=25
     Anchor=Center
 
     [NotificationIcon]
     Placement=Foreground
-    MaxHeight=25
+    Height=25
 
 <literal>"<filename>notification-urgencies.event</filename>"</literal>:
     [Event notification  low]
