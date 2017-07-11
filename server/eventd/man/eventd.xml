@@ -334,7 +334,8 @@
                 Here is the configuration:
             </para>
             <programlisting><literal>"<filename>eventd.conf</filename>"</literal>:
-    [Anchor top]
+    [Queue default]
+    Anchor=top
     Margin=0
     Spacing=0
     Limit=10
@@ -343,7 +344,6 @@
     Text=${title} ${message}
 
     [NotificationBubble]
-    Anchor=top
     # We use a really large minimum width so the plugin will clamp it to screen size
     MinWidth=7777777
     Padding=2
