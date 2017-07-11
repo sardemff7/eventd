@@ -270,7 +270,7 @@
 
                 <variablelist>
                     <varlistentry>
-                        <term><varname>Anchor=</varname> (defaults to <literal>"default"</literal>)</term>
+                        <term><varname>Queue=</varname> (defaults to <literal>"default"</literal>)</term>
                         <listitem>
                             <para>A <type>queue name</type></para>
                             <para>See <xref linkend="queue-sections" /> for more details.</para>
