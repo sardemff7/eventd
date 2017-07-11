@@ -348,6 +348,7 @@
     MinWidth=7777777
     Padding=2
     Radius=0
+    BorderBlur=0
     Colour=#1793D1
 
     [NotificationText]
