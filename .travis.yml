@@ -13,12 +13,10 @@ addons:
             - xsltproc
             - docbook-xsl
             - docbook-xml
-            # Workaround
-            - libaprutil1-dev
-            #- uuid-dev
+            - uuid-dev
             - libglib2.0-dev
             - libsoup2.4-dev
-            #- libavahi-glib-dev
+            - libavahi-glib-dev
             - libgssdp-1.0-dev
             - libcairo2-dev
             - libpango1.0-dev
@@ -29,9 +27,7 @@ addons:
             - libxcb-shape0-dev
             - libxcb-ewmh-dev
             - libpurple-dev
-            # Workaround
-            - libsdl2-dev
-            #- libpulse-dev
+            - libpulse-dev
             - libsndfile1-dev
             - libspeechd-dev
             - libcanberra-dev
@@ -42,7 +38,6 @@ addons:
             - pidgin-data
 install:
     - pip3 install meson
-    #- sudo apt-get install -y uuid-dev libavahi-glib-dev libpulse-dev
     - wget https://github.com/ninja-build/ninja/releases/download/v1.7.2/ninja-linux.zip
     - unzip ninja-linux.zip
     - export PATH=$(pwd):$PATH
