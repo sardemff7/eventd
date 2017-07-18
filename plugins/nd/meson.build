@@ -16,6 +16,7 @@ nd_c_args = [
 ]
 nd_backend_deps = [
     libeventd_helpers,
+    libeventd_plugin,
     libeventd,
     cairo,
     glib,

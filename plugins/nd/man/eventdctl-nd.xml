@@ -106,6 +106,14 @@
                     <para>List the available backends.</para>
                 </listitem>
             </varlistentry>
+
+            <varlistentry>
+                <term><command>status</command></term>
+                <listitem>
+                    <para>Display the current backend status.</para>
+                    <para>Additional details can be displayed based on the backend internal behaviour.</para>
+                </listitem>
+            </varlistentry>
         </variablelist>
     </refsect1>
 

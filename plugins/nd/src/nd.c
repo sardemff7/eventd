@@ -366,6 +366,26 @@ _eventd_nd_control_command(EventdPluginContext *context, guint64 argc, const gch
         *status = g_string_free(list, FALSE);
         r = EVENTD_PLUGIN_COMMAND_STATUS_OK;
     }
+    else if ( g_strcmp0(argv[0], "status") == 0 )
+    {
+        if ( context->backend == NULL )
+        {
+            *status = g_strdup("No backend attached");
+            r = EVENTD_PLUGIN_COMMAND_STATUS_OK;
+        }
+        else
+        {
+            GString *full_status;
+            full_status = g_string_new("Backend attached: ");
+            g_string_append(full_status, context->backend->name);
+            if ( context->backend->status == NULL )
+                r = EVENTD_PLUGIN_COMMAND_STATUS_OK;
+            else
+                r = context->backend->status(context->backend->context, full_status);
+            *status = g_string_free(full_status, FALSE);
+        }
+
+    }
     else
     {
         *status = g_strdup_printf("Unknown command '%s'", argv[0]);

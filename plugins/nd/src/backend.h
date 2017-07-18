@@ -24,6 +24,7 @@
 #define __EVENTD_ND_BACKEND_H__
 
 #include "libeventd-event.h"
+#include "eventd-plugin.h"
 
 #include "types.h"
 
@@ -56,6 +57,8 @@ typedef struct _EventdNdSurface EventdNdSurface;
 typedef struct {
     EventdNdBackendContext *(*init)(EventdNdInterface *context);
     void (*uninit)(EventdNdBackendContext *context);
+
+    EventdPluginCommandStatus (*status)(EventdNdBackendContext *context, GString *status);
 
     void (*global_parse)(EventdNdBackendContext *context, GKeyFile *config_file);
     void (*config_reset)(EventdNdBackendContext *context);
