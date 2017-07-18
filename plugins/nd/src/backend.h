@@ -71,6 +71,7 @@ typedef struct {
     void (*move_surface)(EventdNdSurface *surface, gint x, gint y, gpointer data);
     void (*move_end)(EventdNdBackendContext *context, gpointer data);
 
+    const gchar *name;
     gpointer module;
     EventdNdBackendContext *context;
 } EventdNdBackend;

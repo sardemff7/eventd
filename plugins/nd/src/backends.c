@@ -74,6 +74,7 @@ _eventd_nd_backends_load_dir(EventdNdBackend *backends, EventdNdInterface *conte
 
         EventdNdBackend backend = { .module = NULL, .context = NULL };
         get_info(&backend);
+        backend.name = eventd_nd_backends_names[i];
         backend.module = module;
         backend.context = backend.init(context);
 
