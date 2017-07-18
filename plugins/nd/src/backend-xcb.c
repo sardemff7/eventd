@@ -62,12 +62,14 @@ struct _EventdNdBackendContext {
     gchar **outputs;
     GWaterXcbSource *source;
     xcb_connection_t *xcb_connection;
+    gint display;
     gint screen_number;
     xcb_screen_t *screen;
     guint8 depth;
     xcb_visualtype_t *visual;
     xcb_colormap_t map;
     struct {
+        gchar *output;
         gint x;
         gint y;
         gint w;
@@ -112,6 +114,20 @@ static void
 _eventd_nd_xcb_uninit(EventdNdBackendContext *self)
 {
     g_free(self);
+}
+
+
+static EventdPluginCommandStatus
+_eventd_nd_xcb_status(EventdNdBackendContext *self, GString *status)
+{
+    g_string_append_printf(status, "\n    Connected to display :%d", self->display);
+    if ( self->geometry.output != NULL)
+        g_string_append_printf(status, "\n    Using output %s", self->geometry.output);
+    else
+        g_string_append(status, "\n    Using the whole screen");
+    g_string_append_printf(status, ": %dx%d+%d+%d@%d", self->geometry.w, self->geometry.h, self->geometry.x, self->geometry.y, self->geometry.s);
+
+    return EVENTD_PLUGIN_COMMAND_STATUS_OK;
 }
 
 
@@ -179,6 +195,8 @@ _eventd_nd_xcb_get_colormap(EventdNdBackendContext *self)
 static void
 _eventd_nd_xcb_geometry_fallback(EventdNdBackendContext *self)
 {
+    g_free(self->geometry.output);
+    self->geometry.output = NULL;
     self->geometry.x = 0;
     self->geometry.y = 0;
     self->geometry.w = self->screen->width_in_pixels;
@@ -189,6 +207,8 @@ _eventd_nd_xcb_geometry_fallback(EventdNdBackendContext *self)
 static void
 _eventd_nd_xcb_randr_set_output(EventdNdBackendContext *self, xcb_randr_get_output_info_reply_t *output, xcb_randr_get_crtc_info_reply_t *crtc)
 {
+    g_free(self->geometry.output);
+    self->geometry.output = g_strndup((const gchar *)xcb_randr_get_output_info_name(output), xcb_randr_get_output_info_name_length(output));
     self->geometry.x = crtc->x;
     self->geometry.y = crtc->y;
     self->geometry.w = crtc->width;
@@ -525,6 +545,7 @@ _eventd_nd_xcb_start(EventdNdBackendContext *self, const gchar *target)
     }
 
     self->xcb_connection = g_water_xcb_source_get_connection(self->source);
+    self->display = d;
     self->screen_number = screen;
     self->screen = xcb_aux_get_screen(self->xcb_connection, screen);
 
@@ -607,6 +628,8 @@ _eventd_nd_xcb_stop(EventdNdBackendContext *self)
     cairo_device_destroy(self->device);
     self->device = NULL;
 
+    g_free(self->geometry.output);
+    self->geometry.output = NULL;
     self->randr = FALSE;
 
     if ( self->custom_map )
@@ -781,6 +804,8 @@ eventd_nd_backend_get_info(EventdNdBackend *backend)
 {
     backend->init = _eventd_nd_xcb_init;
     backend->uninit = _eventd_nd_xcb_uninit;
+
+    backend->status = _eventd_nd_xcb_status;
 
     backend->global_parse = _eventd_nd_xcb_global_parse;
     backend->config_reset = _eventd_nd_xcb_config_reset;
