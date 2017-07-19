@@ -217,6 +217,32 @@ _eventd_nd_xcb_randr_set_output(EventdNdBackendContext *self, xcb_randr_get_outp
 }
 
 static gboolean
+_eventd_nd_xcb_randr_check_root(EventdNdBackendContext *self)
+{
+    xcb_randr_get_screen_info_cookie_t icookie;
+    xcb_randr_get_screen_info_reply_t *info;
+
+    icookie = xcb_randr_get_screen_info(self->xcb_connection, self->screen->root);
+    if ( ( info = xcb_randr_get_screen_info_reply(self->xcb_connection, icookie, NULL) ) == NULL )
+        return FALSE;
+
+    xcb_randr_screen_size_t *size;
+    size = xcb_randr_get_screen_info_sizes(info);
+
+    g_free(self->geometry.output);
+    self->geometry.output = NULL;
+    self->geometry.x = 0;
+    self->geometry.y = 0;
+    self->geometry.w = size->width;
+    self->geometry.h = size->height;
+    self->geometry.s = _eventd_nd_compute_scale_from_size(self->geometry.w, self->geometry.h, size->mwidth, size->mheight);
+
+    free(info);
+
+    return TRUE;
+}
+
+static gboolean
 _eventd_nd_xcb_randr_check_primary(EventdNdBackendContext *self)
 {
     xcb_randr_get_output_primary_cookie_t pcookie;
@@ -419,6 +445,8 @@ _eventd_nd_xcb_check_geometry(EventdNdBackendContext *self)
         found = _eventd_nd_xcb_randr_check_outputs(self);
         if ( ! found )
             found = _eventd_nd_xcb_randr_check_primary(self);
+        if ( ! found )
+            found = _eventd_nd_xcb_randr_check_root(self);
     }
     if ( ! found )
         _eventd_nd_xcb_geometry_fallback(self);
