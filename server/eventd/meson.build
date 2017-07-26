@@ -64,7 +64,7 @@ man_pages += [ [ files('man/eventd.conf.xml'), 'eventd.conf.5' ] ]
 configure_file(
     input: 'pkgconfig/eventd.pc.in',
     output: 'eventd.pc',
-    configuration: other_conf,
+    configuration: pkgconfig_conf,
     install_dir: join_paths(get_option('datadir'), 'pkgconfig'),
 )
 
