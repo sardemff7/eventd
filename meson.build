@@ -243,15 +243,15 @@ xsltproc += [
 man_input = []
 man_output = []
 foreach m : man_pages
-    man_input += m[0]
-    man_output += m[1]
-    install_man(join_paths(meson.current_build_dir(), m[1]))
+    s = m[1].split('.')
+    section = s[s.length() - 1]
+    custom_target(m[1],
+        input: m[0],
+        output: m[1],
+        command: xsltproc,
+        depend_files: [ config_ent ],
+        build_by_default: true,
+        install: true,
+        install_dir: join_paths(get_option('mandir'), section)
+    )
 endforeach
-
-custom_target('man',
-    input: man_input,
-    output: man_output,
-    command: xsltproc,
-    depend_files: [ config_ent ],
-    build_by_default: true,
-)
