@@ -147,7 +147,7 @@ _eventd_nd_notification_process(EventdNdNotification *self, EventdEvent *event)
         text_max_width = max_width;
     else
         text_max_width = MIN(text_max_width, max_width);
-    self->text.text = eventd_nd_draw_text_process(self->style, self->event, text_max_width, g_queue_get_length(self->queue->wait_queue), &self->text.height, &text_width);
+    self->text.text = eventd_nd_draw_text_process(self->style, self->event, text_max_width, g_queue_get_length(self->queue->wait_queue), &text_width);
 
     self->content_size.width = text_width;
 
@@ -166,6 +166,7 @@ _eventd_nd_notification_process(EventdNdNotification *self, EventdEvent *event)
         text_width = self->content_size.width - image_width;
     }
     pango_layout_set_width(self->text.text, text_width * PANGO_SCALE);
+    pango_layout_get_pixel_size(self->text.text, NULL, &self->text.height);
 
     self->content_size.height = MAX(image_height, self->text.height);
 

@@ -138,7 +138,7 @@ ret:
 }
 
 PangoLayout *
-eventd_nd_draw_text_process(EventdNdStyle *style, EventdEvent *event, gint max_width, guint more_size, gint *text_height, gint *text_width)
+eventd_nd_draw_text_process(EventdNdStyle *style, EventdEvent *event, gint max_width, guint more_size, gint *text_width)
 {
     gchar *text_;
     guint8 max_lines = 0;
@@ -162,7 +162,7 @@ eventd_nd_draw_text_process(EventdNdStyle *style, EventdEvent *event, gint max_w
     if ( max_lines < 1 )
         pango_layout_set_height(text, -max_lines);
     pango_layout_set_markup(text, text_, -1);
-    pango_layout_get_pixel_size(text, text_width, text_height);
+    pango_layout_get_pixel_size(text, text_width, NULL);
     g_free(text_);
 
     g_object_unref(pango_context);
