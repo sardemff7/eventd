@@ -89,6 +89,7 @@ gint eventd_nd_style_get_image_height(EventdNdStyle *style);
 void eventd_nd_style_get_image_size(EventdNdStyle *style, gint max_draw_width, gint *width, gint *height);
 gboolean eventd_nd_style_get_image_fixed_size(EventdNdStyle *style);
 gint eventd_nd_style_get_image_margin(EventdNdStyle *style);
+const gchar *eventd_nd_style_get_image_theme(EventdNdStyle *style);
 
 EventdNdStyleIconPlacement eventd_nd_style_get_icon_placement(EventdNdStyle *style);
 EventdNdAnchorVertical eventd_nd_style_get_icon_anchor(EventdNdStyle *style);
@@ -98,6 +99,7 @@ void eventd_nd_style_get_icon_size(EventdNdStyle *style, gint max_draw_width, gi
 gboolean eventd_nd_style_get_icon_fixed_size(EventdNdStyle *style);
 gint eventd_nd_style_get_icon_margin(EventdNdStyle *style);
 gdouble eventd_nd_style_get_icon_fade_width(EventdNdStyle *style);
+const gchar *eventd_nd_style_get_icon_theme(EventdNdStyle *style);
 
 EventdNdStyleProgressPlacement eventd_nd_style_get_progress_placement(EventdNdStyle *style);
 gboolean eventd_nd_style_get_progress_reversed(EventdNdStyle *style);

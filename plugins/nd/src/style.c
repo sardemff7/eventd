@@ -120,23 +120,25 @@ struct _EventdPluginAction {
     struct {
         gboolean set;
 
-        EventdNdAnchorVertical anchor;
-        gint                   width;
-        gint                   height;
-        gboolean               fixed_size;
-        gint                   margin;
+        EventdNdAnchorVertical  anchor;
+        gint                    width;
+        gint                    height;
+        gboolean                fixed_size;
+        gint                    margin;
+        gchar                  *theme;
     } image;
 
     struct {
         gboolean set;
 
-        EventdNdStyleIconPlacement placement;
-        EventdNdAnchorVertical     anchor;
-        gint                       width;
-        gint                       height;
-        gint                       margin;
-        gboolean                   fixed_size;
-        gdouble                    fade_width;
+        EventdNdStyleIconPlacement  placement;
+        EventdNdAnchorVertical      anchor;
+        gint                        width;
+        gint                        height;
+        gint                        margin;
+        gboolean                    fixed_size;
+        gdouble                     fade_width;
+        gchar                      *theme;
     } icon;
 
     struct {
@@ -208,6 +210,7 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
     style->image.height     = 50;
     style->image.fixed_size = FALSE;
     style->image.margin     = 10;
+    style->image.theme      = NULL;
 
     /* icon */
     style->icon.set = TRUE;
@@ -218,6 +221,7 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
     style->icon.margin     = 10;
     style->icon.fixed_size = FALSE;
     style->icon.fade_width = 0.75;
+    style->icon.theme      = NULL;
 
     /* progress */
     style->progress.set = TRUE;
@@ -427,6 +431,7 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file)
         guint64 enum_value;
         Int integer;
         gboolean boolean;
+        gchar *string;
 
         if ( evhelpers_config_key_file_get_enum(config_file, "NotificationImage", "Anchor", _eventd_nd_style_anchors_vertical, G_N_ELEMENTS(_eventd_nd_style_anchors_vertical), &enum_value) == 0 )
             self->image.anchor = enum_value;
@@ -452,6 +457,17 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file)
             self->image.margin = integer.value;
         else if ( self->parent != NULL )
             self->image.margin = eventd_nd_style_get_image_margin(self->parent);
+
+        if ( evhelpers_config_key_file_get_string(config_file, "NotificationImage", "Theme", &string) == 0 )
+        {
+            g_free(self->image.theme);
+            self->image.theme = string;
+        }
+        else if ( self->parent != NULL )
+        {
+            g_free(self->image.theme);
+            self->image.theme = g_strdup(eventd_nd_style_get_image_theme(self->parent));
+        }
     }
 
     if ( g_key_file_has_group(config_file, "NotificationIcon") )
@@ -461,6 +477,7 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file)
         guint64 enum_value;
         Int integer;
         gboolean boolean;
+        gchar *string;
 
         if ( evhelpers_config_key_file_get_enum(config_file, "NotificationIcon", "Placement", _eventd_nd_style_icon_placements, G_N_ELEMENTS(_eventd_nd_style_icon_placements), &enum_value) == 0 )
             self->icon.placement = enum_value;
@@ -503,6 +520,17 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file)
         }
         else if ( self->parent != NULL )
             self->icon.fade_width = eventd_nd_style_get_icon_fade_width(self->parent);
+
+        if ( evhelpers_config_key_file_get_string(config_file, "NotificationIcon", "Theme", &string) == 0 )
+        {
+            g_free(self->icon.theme);
+            self->icon.theme = string;
+        }
+        else if ( self->parent != NULL )
+        {
+            g_free(self->icon.theme);
+            self->icon.theme = g_strdup(eventd_nd_style_get_icon_theme(self->parent));
+        }
     }
 
     if ( g_key_file_has_group(config_file, "NotificationProgress") )
@@ -771,6 +799,14 @@ eventd_nd_style_get_image_margin(EventdNdStyle *self)
     return eventd_nd_style_get_image_margin(self->parent);
 }
 
+const gchar *
+eventd_nd_style_get_image_theme(EventdNdStyle *self)
+{
+    if ( self->image.set )
+        return self->image.theme;
+    return eventd_nd_style_get_image_theme(self->parent);
+}
+
 EventdNdStyleIconPlacement
 eventd_nd_style_get_icon_placement(EventdNdStyle *self)
 {
@@ -835,6 +871,14 @@ eventd_nd_style_get_icon_fade_width(EventdNdStyle *self)
     if ( self->icon.set )
         return self->icon.fade_width;
     return eventd_nd_style_get_icon_fade_width(self->parent);
+}
+
+const gchar *
+eventd_nd_style_get_icon_theme(EventdNdStyle *self)
+{
+    if ( self->icon.set )
+        return self->icon.theme;
+    return eventd_nd_style_get_icon_theme(self->parent);
 }
 
 

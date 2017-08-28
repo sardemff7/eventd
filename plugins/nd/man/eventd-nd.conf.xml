@@ -478,6 +478,14 @@
                             <para>Vertical image's aligment.</para>
                         </listitem>
                     </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>Theme=</varname> (defaults to <literal>none</literal>)</term>
+                        <listitem>
+                            <para>A <type>theme name</type></para>
+                            <para>Icon theme to use for lookup.</para>
+                        </listitem>
+                    </varlistentry>
                 </variablelist>
             </refsect3>
 
@@ -573,6 +581,14 @@
                             <para>An <type>integer</type></para>
                             <para>Margin between bubble's icon and text.</para>
                             <para>Used only if placement is <literal>Foreground</literal>.</para>
+                        </listitem>
+                    </varlistentry>
+
+                    <varlistentry>
+                        <term><varname>Theme=</varname> (defaults to <literal>none</literal>)</term>
+                        <listitem>
+                            <para>A <type>theme name</type></para>
+                            <para>Icon theme to use for lookup.</para>
                         </listitem>
                     </varlistentry>
                 </variablelist>

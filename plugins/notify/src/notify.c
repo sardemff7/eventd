@@ -156,7 +156,7 @@ _eventd_libnotify_get_image(EventdPluginContext *context, EventdPluginAction *ac
     break;
     case FILENAME_PROCESS_RESULT_THEME:
         /* Theme icon as image is not supported by the spec */
-        image = eventd_nd_pixbuf_from_theme(context->theme_context, *image_uri, 48, 1);
+        image = eventd_nd_pixbuf_from_theme(context->theme_context, NULL, *image_uri, 48, 1);
         *image_uri = NULL;
     break;
     case FILENAME_PROCESS_RESULT_NONE:

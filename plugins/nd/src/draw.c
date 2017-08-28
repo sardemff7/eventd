@@ -393,7 +393,9 @@ eventd_nd_draw_image_and_icon_process(NkXdgThemeContext *theme_context, EventdNd
     GdkPixbuf *image_pixbuf = NULL;
     GdkPixbuf *icon_pixbuf = NULL;
     const Filename *image_filename = eventd_nd_style_get_template_image(style);
+    const gchar *image_theme = eventd_nd_style_get_image_theme(style);
     const Filename *icon_filename = eventd_nd_style_get_template_icon(style);
+    const gchar *icon_theme = eventd_nd_style_get_icon_theme(style);
     gchar *uri;
     GVariant *data;
 
@@ -407,7 +409,7 @@ eventd_nd_draw_image_and_icon_process(NkXdgThemeContext *theme_context, EventdNd
         image_pixbuf = eventd_nd_pixbuf_from_data(data, load_width, load_height, scale);
     break;
     case FILENAME_PROCESS_RESULT_THEME:
-        image_pixbuf = eventd_nd_pixbuf_from_theme(theme_context, uri, MIN(load_width, load_height), scale);
+        image_pixbuf = eventd_nd_pixbuf_from_theme(theme_context, image_theme, uri, MIN(load_width, load_height), scale);
     break;
     case FILENAME_PROCESS_RESULT_NONE:
     break;
@@ -423,7 +425,7 @@ eventd_nd_draw_image_and_icon_process(NkXdgThemeContext *theme_context, EventdNd
         icon_pixbuf = eventd_nd_pixbuf_from_data(data, load_width, load_height, scale);
     break;
     case FILENAME_PROCESS_RESULT_THEME:
-        icon_pixbuf = eventd_nd_pixbuf_from_theme(theme_context, uri, MIN(load_width, load_height), scale);
+        icon_pixbuf = eventd_nd_pixbuf_from_theme(theme_context, icon_theme, uri, MIN(load_width, load_height), scale);
     break;
     case FILENAME_PROCESS_RESULT_NONE:
     break;
