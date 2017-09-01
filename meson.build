@@ -244,7 +244,7 @@ man_input = []
 man_output = []
 foreach m : man_pages
     s = m[1].split('.')
-    section = s[s.length() - 1]
+    section = 'man' + s[s.length() - 1]
     custom_target(m[1],
         input: m[0],
         output: m[1],
