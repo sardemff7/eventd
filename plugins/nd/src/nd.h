@@ -43,6 +43,7 @@ struct _EventdNdQueue {
 struct _EventdPluginContext {
     EventdPluginCoreContext *core;
     EventdNdInterface interface;
+    NkBindings *bindings;
     EventdNdBackend backends[_EVENTD_ND_BACKENDS_SIZE];
     EventdNdBackend *backend;
     GHashTable *queues;

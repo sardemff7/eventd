@@ -23,6 +23,8 @@
 #ifndef __EVENTD_ND_TYPES_H__
 #define __EVENTD_ND_TYPES_H__
 
+#include <nkutils-bindings.h>
+
 typedef struct _EventdPluginContext EventdNdContext;
 typedef struct _EventdPluginAction EventdNdStyle;
 typedef struct _EventdNdNotification EventdNdNotification;

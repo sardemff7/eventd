@@ -58,7 +58,7 @@ struct _EventdNdSurface {
 };
 
 static EventdNdBackendContext *
-_eventd_nd_fbdev_init(EventdNdInterface *nd)
+_eventd_nd_fbdev_init(EventdNdInterface *nd, NkBindings *bindings)
 {
     EventdNdBackendContext *context;
 

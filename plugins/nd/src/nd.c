@@ -166,6 +166,24 @@ _eventd_nd_queue_free(gpointer data)
     g_free(self);
 }
 
+static gboolean
+_eventd_nd_bindings_dismiss_callback(guint64 scope, gpointer target, gpointer user_data)
+{
+    EventdNdNotification *notification = target;
+
+    eventd_nd_notification_dismiss(notification);
+    return TRUE;
+}
+
+static gboolean
+_eventd_nd_bindings_dismiss_queue_callback(guint64 scope, gpointer target, gpointer user_data)
+{
+    EventdNdNotification *notification = target;
+
+    eventd_nd_notification_dismiss_queue(notification);
+    return TRUE;
+}
+
 /*
  * Initialization interface
  */
@@ -183,11 +201,15 @@ _eventd_nd_init(EventdPluginCoreContext *core)
     context->interface.backend_stop = _eventd_nd_backend_stop;
     context->interface.notification_shape = eventd_nd_notification_shape;
     context->interface.notification_draw = eventd_nd_notification_draw;
-    context->interface.notification_dismiss = eventd_nd_notification_dismiss;
 
-    if ( ! eventd_nd_backends_load(context->backends, &context->interface) )
+    context->bindings = nk_bindings_new(-1);
+    nk_bindings_add_binding(context->bindings, 0, "MousePrimary", _eventd_nd_bindings_dismiss_callback, context, NULL, NULL);
+    nk_bindings_add_binding(context->bindings, 0, "MouseSecondary", _eventd_nd_bindings_dismiss_queue_callback, context, NULL, NULL);
+
+    if ( ! eventd_nd_backends_load(context->backends, &context->interface, context->bindings) )
     {
         g_warning("Could not load any backend, aborting");
+        nk_bindings_free(context->bindings);
         g_free(context);
         return NULL;
     }
@@ -214,6 +236,8 @@ _eventd_nd_uninit(EventdPluginContext *context)
 
     g_free(context->last_target);
     eventd_nd_backends_unload(context->backends);
+
+    nk_bindings_free(context->bindings);
 
     g_free(context);
 }

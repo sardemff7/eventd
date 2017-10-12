@@ -47,7 +47,6 @@ typedef struct {
 
     void (*notification_shape)(EventdNdNotification *notification, cairo_t *cr);
     void (*notification_draw)(EventdNdNotification *notification, cairo_surface_t *surface, gboolean shaped);
-    void (*notification_dismiss)(EventdNdNotification *notification);
 } EventdNdInterface;
 
 
@@ -55,7 +54,7 @@ typedef struct _EventdNdBackendContext EventdNdBackendContext;
 typedef struct _EventdNdSurface EventdNdSurface;
 
 typedef struct {
-    EventdNdBackendContext *(*init)(EventdNdInterface *context);
+    EventdNdBackendContext *(*init)(EventdNdInterface *context, NkBindings *bindings);
     void (*uninit)(EventdNdBackendContext *context);
 
     EventdPluginCommandStatus (*status)(EventdNdBackendContext *context, GString *status);

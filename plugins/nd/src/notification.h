@@ -35,5 +35,6 @@ void eventd_nd_notification_shape(EventdNdNotification *notification, cairo_t *c
 void eventd_nd_notification_draw(EventdNdNotification *notification, cairo_surface_t *surface, gboolean shaped);
 void eventd_nd_notification_update(EventdNdNotification *notification, EventdEvent *event);
 void eventd_nd_notification_dismiss(EventdNdNotification *notification);
+void eventd_nd_notification_dismiss_queue(EventdNdNotification *notification);
 
 #endif /* __EVENTD_ND_NOTIFICATION_H__ */

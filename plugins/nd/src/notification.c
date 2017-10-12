@@ -410,6 +410,12 @@ eventd_nd_notification_dismiss(EventdNdNotification *self)
     eventd_event_unref(event);
 }
 
+void
+eventd_nd_notification_dismiss_queue(EventdNdNotification *self)
+{
+    eventd_nd_notification_dismiss_target(self->context, EVENTD_ND_DISMISS_ALL, self->queue);
+}
+
 
 void
 eventd_nd_notification_geometry_changed(EventdPluginContext *context, gboolean resize)

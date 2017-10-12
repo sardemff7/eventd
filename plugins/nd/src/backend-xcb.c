@@ -58,6 +58,7 @@ static const gchar * const _eventd_nd_xcb_follow_focus[] = {
 
 struct _EventdNdBackendContext {
     EventdNdInterface *nd;
+    NkBindingsSeat *bindings_seat;
     EventdNdXcbFollowFocus follow_focus;
     gchar **outputs;
     GWaterXcbSource *source;
@@ -99,13 +100,14 @@ struct _EventdNdSurface {
 };
 
 static EventdNdBackendContext *
-_eventd_nd_xcb_init(EventdNdInterface *nd)
+_eventd_nd_xcb_init(EventdNdInterface *nd, NkBindings *bindings)
 {
     EventdNdBackendContext *self;
 
     self = g_new0(EventdNdBackendContext, 1);
 
     self->nd = nd;
+    self->bindings_seat = nk_bindings_seat_new(bindings, XKB_CONTEXT_NO_FLAGS);
 
     return self;
 }
@@ -113,6 +115,8 @@ _eventd_nd_xcb_init(EventdNdInterface *nd)
 static void
 _eventd_nd_xcb_uninit(EventdNdBackendContext *self)
 {
+    nk_bindings_seat_free(self->bindings_seat);
+
     g_free(self);
 }
 
@@ -457,9 +461,63 @@ _eventd_nd_xcb_check_geometry(EventdNdBackendContext *self)
     self->nd->geometry_update(self->nd->context, self->geometry.w, self->geometry.h, self->geometry.s);
 }
 
-static void _eventd_nd_xcb_surface_button_release_event(EventdNdSurface *self);
 static void _eventd_nd_xcb_surface_draw(EventdNdSurface *self);
 
+static gboolean
+_eventd_nd_xcb_x11_button_to_button(guint32 x11_button, NkBindingsMouseButton *button)
+{
+    switch ( x11_button )
+    {
+    case 1:
+        *button = NK_BINDINGS_MOUSE_BUTTON_PRIMARY;
+    break;
+    case 3:
+        *button = NK_BINDINGS_MOUSE_BUTTON_SECONDARY;
+    break;
+    case 2:
+        *button = NK_BINDINGS_MOUSE_BUTTON_MIDDLE;
+    break;
+    case 8:
+        *button = NK_BINDINGS_MOUSE_BUTTON_BACK;
+    break;
+    case 9:
+        *button = NK_BINDINGS_MOUSE_BUTTON_FORWARD;
+    break;
+    case 4:
+    case 5:
+    case 6:
+    case 7:
+        /* scroll buttons, handled separately */
+        return FALSE;
+    default:
+        *button = NK_BINDINGS_MOUSE_BUTTON_EXTRA + x11_button;
+    }
+
+    return TRUE;
+}
+
+static gboolean
+_eventd_nd_xcb_x11_button_to_scroll(guint32 x11_button, NkBindingsScrollAxis *axis, gint32 *steps)
+{
+    *steps = 1;
+    switch ( x11_button )
+    {
+    case 4:
+        *steps = -1;
+    case 5:
+        *axis = NK_BINDINGS_SCROLL_AXIS_VERTICAL;
+    break;
+    case 6:
+        *steps = -1;
+    case 7:
+        *axis = NK_BINDINGS_SCROLL_AXIS_HORIZONTAL;
+    break;
+    default:
+        return FALSE;
+    }
+
+    return TRUE;
+}
 
 static gboolean
 _eventd_nd_xcb_events_callback(xcb_generic_event_t *event, gpointer user_data)
@@ -525,13 +583,34 @@ _eventd_nd_xcb_events_callback(xcb_generic_event_t *event, gpointer user_data)
     /* Core events */
     switch ( type )
     {
+    case XCB_BUTTON_PRESS:
+    {
+        xcb_button_press_event_t *e = (xcb_button_press_event_t *)event;
+
+        surface = g_hash_table_lookup(self->bubbles, GUINT_TO_POINTER(e->event));
+        if ( surface != NULL )
+        {
+            NkBindingsMouseButton button;
+            NkBindingsScrollAxis axis;
+            gint32 steps;
+            if ( _eventd_nd_xcb_x11_button_to_button(e->detail, &button) )
+                nk_bindings_seat_handle_button(self->bindings_seat, surface->notification, button, NK_BINDINGS_BUTTON_STATE_PRESS, e->time);
+            else if ( _eventd_nd_xcb_x11_button_to_scroll(e->detail, &axis, &steps) )
+                nk_bindings_seat_handle_scroll(self->bindings_seat, surface->notification, axis, steps);
+        }
+    }
+    break;
     case XCB_BUTTON_RELEASE:
     {
         xcb_button_release_event_t *e = (xcb_button_release_event_t *)event;
 
         surface = g_hash_table_lookup(self->bubbles, GUINT_TO_POINTER(e->event));
         if ( surface != NULL )
-            _eventd_nd_xcb_surface_button_release_event(surface);
+        {
+            NkBindingsMouseButton button;
+            if ( _eventd_nd_xcb_x11_button_to_button(e->detail, &button) )
+                nk_bindings_seat_handle_button(self->bindings_seat, surface->notification, button, NK_BINDINGS_BUTTON_STATE_RELEASE, e->time);
+        }
     }
     break;
     case XCB_PROPERTY_NOTIFY:
@@ -683,12 +762,6 @@ _eventd_nd_xcb_surface_draw(EventdNdSurface *self)
     xcb_clear_area(self->context->xcb_connection, TRUE, self->window, 0, 0, 0, 0);
     self->context->nd->notification_draw(self->notification, self->surface, self->context->compositing);
     xcb_flush(self->context->xcb_connection);
-}
-
-static void
-_eventd_nd_xcb_surface_button_release_event(EventdNdSurface *self)
-{
-    self->context->nd->notification_dismiss(self->notification);
 }
 
 static void

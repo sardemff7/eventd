@@ -41,6 +41,7 @@ typedef struct _EventdNdBackendContext {
     WNDCLASSEX window_class;
     ATOM window_class_atom;
     GWaterWinSource *source;
+    NkBindingsSeat *bindings_seat;
     HWND window;
     RECT geometry;
 } EventdNdDisplay;
@@ -99,13 +100,58 @@ _eventd_nd_win_surface_event_callback(HWND hwnd, UINT message, WPARAM wParam, LP
         }
     }
     break;
+    case WM_LBUTTONDOWN:
+    {
+        EventdNdSurface *self;
+        self = GetProp(hwnd, "EventdNdSurface");
+        g_return_val_if_fail(self != NULL, 1);
+
+        nk_bindings_seat_handle_button(self->display->bindings_seat, self->notification, NK_BINDINGS_MOUSE_BUTTON_PRIMARY, NK_BINDINGS_BUTTON_STATE_PRESS, 0);
+    }
+    break;
     case WM_LBUTTONUP:
     {
         EventdNdSurface *self;
         self = GetProp(hwnd, "EventdNdSurface");
         g_return_val_if_fail(self != NULL, 1);
 
-        self->display->nd->notification_dismiss(self->notification);
+        nk_bindings_seat_handle_button(self->display->bindings_seat, self->notification, NK_BINDINGS_MOUSE_BUTTON_PRIMARY, NK_BINDINGS_BUTTON_STATE_RELEASE, 0);
+    }
+    break;
+    case WM_RBUTTONDOWN:
+    {
+        EventdNdSurface *self;
+        self = GetProp(hwnd, "EventdNdSurface");
+        g_return_val_if_fail(self != NULL, 1);
+
+        nk_bindings_seat_handle_button(self->display->bindings_seat, self->notification, NK_BINDINGS_MOUSE_BUTTON_SECONDARY, NK_BINDINGS_BUTTON_STATE_PRESS, 0);
+    }
+    break;
+    case WM_RBUTTONUP:
+    {
+        EventdNdSurface *self;
+        self = GetProp(hwnd, "EventdNdSurface");
+        g_return_val_if_fail(self != NULL, 1);
+
+        nk_bindings_seat_handle_button(self->display->bindings_seat, self->notification, NK_BINDINGS_MOUSE_BUTTON_SECONDARY, NK_BINDINGS_BUTTON_STATE_RELEASE, 0);
+    }
+    break;
+    case WM_MBUTTONDOWN:
+    {
+        EventdNdSurface *self;
+        self = GetProp(hwnd, "EventdNdSurface");
+        g_return_val_if_fail(self != NULL, 1);
+
+        nk_bindings_seat_handle_button(self->display->bindings_seat, self->notification, NK_BINDINGS_MOUSE_BUTTON_MIDDLE, NK_BINDINGS_BUTTON_STATE_PRESS, 0);
+    }
+    break;
+    case WM_MBUTTONUP:
+    {
+        EventdNdSurface *self;
+        self = GetProp(hwnd, "EventdNdSurface");
+        g_return_val_if_fail(self != NULL, 1);
+
+        nk_bindings_seat_handle_button(self->display->bindings_seat, self->notification, NK_BINDINGS_MOUSE_BUTTON_MIDDLE, NK_BINDINGS_BUTTON_STATE_RELEASE, 0);
     }
     break;
     default:
@@ -115,7 +161,7 @@ _eventd_nd_win_surface_event_callback(HWND hwnd, UINT message, WPARAM wParam, LP
 }
 
 static EventdNdBackendContext *
-_eventd_nd_win_init(EventdNdInterface *nd)
+_eventd_nd_win_init(EventdNdInterface *nd, NkBindings *bindings)
 {
     EventdNdDisplay *self;
     self = g_new0(EventdNdDisplay, 1);
@@ -139,6 +185,7 @@ _eventd_nd_win_init(EventdNdInterface *nd)
     }
 
     self->source = g_water_win_source_new(NULL, QS_PAINT|QS_MOUSEBUTTON);
+    self->bindings_seat = nk_bindings_seat_new(self->bindings, XKB_CONTEXT_NO_FLAGS);
 
     self->window = CreateWindowEx(WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE, self->window_class.lpszClassName, "Control", WS_POPUP, 0, 0, 0, 0, NULL, NULL, NULL, NULL);
 
@@ -157,6 +204,7 @@ _eventd_nd_win_uninit(EventdNdBackendContext *self_)
     RemoveProp(self->window, "EventdNdBackendContext");
     DestroyWindow(self->window);
 
+    nk_bindings_seat_free(self->bindings_seat);
     g_water_win_source_free(self->source);
 
     g_free(self);

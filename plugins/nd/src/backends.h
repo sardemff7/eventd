@@ -23,7 +23,7 @@
 #ifndef __EVENTD_ND_BACKENDS_H__
 #define __EVENTD_ND_BACKENDS_H__
 
-gboolean eventd_nd_backends_load(EventdNdBackend *backends, EventdNdInterface *context);
+gboolean eventd_nd_backends_load(EventdNdBackend *backends, EventdNdInterface *context, NkBindings *bindings);
 void eventd_nd_backends_unload(EventdNdBackend *backends);
 
 #endif /* __EVENTD_ND_BACKENDS_H__ */

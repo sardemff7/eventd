@@ -34,7 +34,7 @@
 #include "backends.h"
 
 static gboolean
-_eventd_nd_backends_load_dir(EventdNdBackend *backends, EventdNdInterface *context, gchar *backends_dir_name)
+_eventd_nd_backends_load_dir(EventdNdBackend *backends, EventdNdInterface *context, NkBindings *bindings, gchar *backends_dir_name)
 {
     gboolean ret = FALSE;
 
@@ -76,7 +76,7 @@ _eventd_nd_backends_load_dir(EventdNdBackend *backends, EventdNdInterface *conte
         get_info(&backend);
         backend.name = eventd_nd_backends_names[i];
         backend.module = module;
-        backend.context = backend.init(context);
+        backend.context = backend.init(context, bindings);
 
         if ( backend.context != NULL )
         {
@@ -95,14 +95,14 @@ _eventd_nd_backends_load_dir(EventdNdBackend *backends, EventdNdInterface *conte
 }
 
 gboolean
-eventd_nd_backends_load(EventdNdBackend *backends, EventdNdInterface *context)
+eventd_nd_backends_load(EventdNdBackend *backends, EventdNdInterface *context, NkBindings *bindings)
 {
     gboolean ret = FALSE;
 
     gchar **dirs, **dir;
     dirs = evhelpers_dirs_get_lib("NOTIFICATION_BACKENDS", "modules" G_DIR_SEPARATOR_S MODULES_VERSION G_DIR_SEPARATOR_S "nd");
     for ( dir = dirs ; *dir != NULL ; ++dir )
-        ret = _eventd_nd_backends_load_dir(backends, context, *dir) || ret;
+        ret = _eventd_nd_backends_load_dir(backends, context, bindings, *dir) || ret;
     g_free(dirs);
 
     return ret;

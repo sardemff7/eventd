@@ -27,6 +27,9 @@
 #include <sys/mman.h>
 #include <string.h>
 #include <errno.h>
+#ifdef __linux__
+#include <linux/input.h>
+#endif
 
 #include <glib.h>
 #include <glib/gstdio.h>
@@ -57,11 +60,13 @@ typedef enum {
 
 typedef struct {
     EventdNdBackendContext *context;
+    NkBindingsSeat *bindings_seat;
     GSList *link;
     uint32_t global_name;
     struct wl_seat *seat;
     struct wl_pointer *pointer;
     EventdNdSurface *surface;
+    gint32 scroll[NK_BINDINGS_SCROLL_NUM_AXIS];
 } EventdNdWlSeat;
 
 typedef enum {
@@ -73,6 +78,7 @@ typedef enum {
 
 struct _EventdNdBackendContext {
     EventdNdInterface *nd;
+    NkBindings *bindings;
     GWaterWaylandSource *source;
     gboolean scale_support;
     struct wl_display *display;
@@ -113,14 +119,25 @@ struct _EventdNdSurface {
     struct zww_notification_v1 *ww_notification;
 };
 
+static const NkBindingsButtonState _eventd_nd_wl_nk_bindings_button_state[] = {
+    [WL_POINTER_BUTTON_STATE_PRESSED] = NK_BINDINGS_BUTTON_STATE_PRESS,
+    [WL_POINTER_BUTTON_STATE_RELEASED] = NK_BINDINGS_BUTTON_STATE_RELEASE,
+};
+
+static const NkBindingsScrollAxis _eventd_nd_wl_nk_bindings_scroll_axis[] = {
+    [WL_POINTER_AXIS_VERTICAL_SCROLL] = NK_BINDINGS_SCROLL_AXIS_VERTICAL,
+    [WL_POINTER_AXIS_HORIZONTAL_SCROLL] = NK_BINDINGS_SCROLL_AXIS_HORIZONTAL,
+};
+
 static EventdNdBackendContext *
-_eventd_nd_wl_init(EventdNdInterface *nd)
+_eventd_nd_wl_init(EventdNdInterface *nd, NkBindings *bindings)
 {
     EventdNdBackendContext *self;
 
     self = g_new0(EventdNdBackendContext, 1);
 
     self->nd = nd;
+    self->bindings = bindings;
 
     return self;
 }
@@ -259,29 +276,69 @@ _eventd_nd_wl_pointer_motion(void *data, struct wl_pointer *pointer, uint32_t ti
 }
 
 static void
-_eventd_nd_wl_pointer_button(void *data, struct wl_pointer *pointer, uint32_t serial, uint32_t time, uint32_t button, enum wl_pointer_button_state state)
+_eventd_nd_wl_pointer_button(void *data, struct wl_pointer *pointer, uint32_t serial, uint32_t time, uint32_t wl_button, enum wl_pointer_button_state state)
 {
     EventdNdWlSeat *self = data;
 
-    switch ( state )
-    {
-    case WL_POINTER_BUTTON_STATE_PRESSED:
-        if ( self->surface != NULL )
-            self->surface->context->nd->notification_dismiss(self->surface->notification);
-    break;
-    case WL_POINTER_BUTTON_STATE_RELEASED:
-    break;
-    }
-}
+    if ( self->surface == NULL )
+        return;
 
-static void
-_eventd_nd_wl_pointer_axis(void *data, struct wl_pointer *pointer, uint32_t time, enum wl_pointer_axis axis, wl_fixed_t value)
-{
+    NkBindingsMouseButton button;
+    switch ( wl_button )
+    {
+    case BTN_LEFT:
+        button = NK_BINDINGS_MOUSE_BUTTON_PRIMARY;
+    break;
+    case BTN_RIGHT:
+        button = NK_BINDINGS_MOUSE_BUTTON_SECONDARY;
+    break;
+    case BTN_MIDDLE:
+        button = NK_BINDINGS_MOUSE_BUTTON_MIDDLE;
+    break;
+    case BTN_SIDE:
+        button = NK_BINDINGS_MOUSE_BUTTON_BACK;
+    break;
+    case BTN_EXTRA:
+        button = NK_BINDINGS_MOUSE_BUTTON_FORWARD;
+    break;
+    default:
+        button = NK_BINDINGS_MOUSE_BUTTON_EXTRA + wl_button;
+    }
+
+    nk_bindings_seat_handle_button(self->bindings_seat, self->surface->notification, button, _eventd_nd_wl_nk_bindings_button_state[state], time);
 }
 
 static void
 _eventd_nd_wl_pointer_frame(void *data, struct wl_pointer *pointer)
 {
+    EventdNdWlSeat *self = data;
+
+    if ( self->surface != NULL )
+    {
+        NkBindingsScrollAxis axis;
+        for ( axis = 0 ; axis < NK_BINDINGS_SCROLL_NUM_AXIS ; ++axis )
+        {
+            if ( self->scroll[axis] != 0 )
+                nk_bindings_seat_handle_scroll(self->bindings_seat, self->surface->notification, axis, self->scroll[axis]);
+            self->scroll[axis] = 0;
+        }
+    }
+    NkBindingsScrollAxis axis;
+    for ( axis = 0 ; axis < NK_BINDINGS_SCROLL_NUM_AXIS ; ++axis )
+        self->scroll[axis] = 0;
+}
+
+static void
+_eventd_nd_wl_pointer_axis(void *data, struct wl_pointer *pointer, uint32_t time, enum wl_pointer_axis axis, wl_fixed_t value)
+{
+    EventdNdWlSeat *self = data;
+
+    if ( self->surface == NULL )
+        return;
+
+    self->scroll[_eventd_nd_wl_nk_bindings_scroll_axis[axis]] += ( wl_fixed_to_int(value) / 10 );
+    if ( wl_pointer_get_version(self->pointer) < WL_POINTER_FRAME_SINCE_VERSION )
+        _eventd_nd_wl_pointer_frame(data, pointer);
 }
 
 static void
@@ -297,6 +354,12 @@ _eventd_nd_wl_pointer_axis_stop(void *data, struct wl_pointer *pointer, uint32_t
 static void
 _eventd_nd_wl_pointer_axis_discrete(void *data, struct wl_pointer *pointer, enum wl_pointer_axis axis, int32_t discrete)
 {
+    EventdNdWlSeat *self = data;
+
+    if ( self->surface == NULL )
+        return;
+
+    self->scroll[_eventd_nd_wl_nk_bindings_scroll_axis[axis]] += discrete;
 }
 
 static const struct wl_pointer_listener _eventd_nd_wl_pointer_listener = {
@@ -336,6 +399,8 @@ _eventd_nd_wl_seat_release(EventdNdWlSeat *self)
         wl_seat_destroy(self->seat);
 
     self->context->seats = g_slist_remove_link(self->context->seats, self->link);
+
+    nk_bindings_seat_free(self->bindings_seat);
 
     g_slice_free(EventdNdWlSeat, self);
 }
@@ -403,6 +468,7 @@ _eventd_nd_wl_registry_handle_global(void *data, struct wl_registry *registry, u
         seat->context = self;
         seat->global_name = name;
         seat->seat = wl_registry_bind(registry, name, &wl_seat_interface, MIN(version, WL_SEAT_INTERFACE_VERSION));
+        seat->bindings_seat = nk_bindings_seat_new(self->bindings, XKB_CONTEXT_NO_FLAGS);
 
         seat->link = self->seats = g_slist_prepend(self->seats, seat);
 

@@ -19,6 +19,7 @@ nd_backend_deps = [
     libeventd_plugin,
     libeventd,
     cairo,
+    libnkutils,
     glib,
 ]
 nd_has_backend = false
