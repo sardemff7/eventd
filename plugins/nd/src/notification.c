@@ -398,7 +398,10 @@ void
 eventd_nd_notification_dismiss(EventdNdNotification *self)
 {
     if ( self->event == NULL )
+    {
+        eventd_nd_notification_dismiss_target(self->context, EVENTD_ND_DISMISS_ALL, self->queue);
         return;
+    }
 
     EventdEvent *event;
     event = eventd_event_new(".notification", "dismiss");
