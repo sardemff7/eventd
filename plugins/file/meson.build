@@ -1,8 +1,8 @@
 # file plugin
 
-shared_library('file', [
+shared_library('file', files(
         'src/file.c',
-    ],
+    ),
     c_args: [
         '-DG_LOG_DOMAIN="eventd-file"',
     ],

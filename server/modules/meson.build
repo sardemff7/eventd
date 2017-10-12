@@ -10,11 +10,10 @@ if module_enable_websocket == 'true'
         error('WebSocket module requested but libsoup not found')
     endif
     docbook_conditions += 'enable_websocket'
-    ws = shared_module('ws', [
-            config_h,
+    ws = shared_module('ws', [ config_h ] + files(
             'include/eventd-ws-module.h',
             'src/ws.c',
-        ],
+        ),
         c_args: [
             '-DG_LOG_DOMAIN="eventd-ws"',
         ],
@@ -44,11 +43,10 @@ if module_enable_dns_sd == 'true'
         error('DNS-SD module requested but avahi not found')
     endif
     docbook_conditions += 'enable_dns_sd'
-    dns_sd = shared_module('dns-sd', [
-            config_h,
+    dns_sd = shared_module('dns-sd', [ config_h ] + files(
             'include/eventd-sd-module.h',
             'src/dns-sd.c',
-        ],
+        ),
         c_args: [
             '-DG_LOG_DOMAIN="eventd-dns-sd"',
         ],
@@ -77,11 +75,10 @@ if module_enable_ssdp == 'true'
         error('SSDP module requested but GSSDP not found')
     endif
     docbook_conditions += 'enable_ssdp'
-    ssdp = shared_module('ssdp', [
-            config_h,
+    ssdp = shared_module('ssdp', [ config_h ] + files(
             'include/eventd-sd-module.h',
             'src/ssdp.c',
-        ],
+        ),
         c_args: [
             '-DG_LOG_DOMAIN="eventd-ssdp"',
         ],

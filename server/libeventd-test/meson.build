@@ -7,11 +7,10 @@ libeventd_test_dep = [
     gobject,
     glib,
 ]
-libeventd_test_lib = library('eventd-test', [
-        config_h,
+libeventd_test_lib = library('eventd-test', [ config_h ] + files(
         'src/libeventc-test.c',
         'src/libtest.c',
-    ],
+    ),
     c_args: [
         '-DG_LOG_DOMAIN="libeventd-test"',
         '-fvisibility=default',

@@ -2,9 +2,9 @@
 
 speechd = dependency('speech-dispatcher')
 
-shared_library('tts', [
+shared_library('tts', files(
         'src/tts.c',
-    ],
+    ),
     c_args: [
         '-DG_LOG_DOMAIN="eventd-tts"',
     ],

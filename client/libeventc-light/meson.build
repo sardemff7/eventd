@@ -25,10 +25,9 @@ libeventc_light_dep += [
     libeventd,
     glib,
 ]
-libeventc_light_lib = library('eventc-light', [
-        config_h,
+libeventc_light_lib = library('eventc-light', [ config_h ] + files(
         'src/libeventc-light.c',
-    ],
+    ),
     c_args: [
         '-DG_LOG_DOMAIN="libeventc-light"',
     ],
@@ -39,7 +38,7 @@ libeventc_light_lib = library('eventc-light', [
 )
 
 install_headers(
-    'include/libeventc-light.h',
+    files('include/libeventc-light.h'),
     subdir: meson.project_name(),
 )
 

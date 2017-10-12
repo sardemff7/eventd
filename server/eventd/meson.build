@@ -20,8 +20,7 @@ if get_option('enable-systemd')
     docbook_conditions += 'enable_systemd'
 endif
 
-eventd = executable('eventd', [
-        config_h,
+eventd = executable('eventd', [ config_h ] + files(
         'src/types.h',
         'src/config_.h',
         'src/config.c',
@@ -48,7 +47,7 @@ eventd = executable('eventd', [
         'src/relay/relay.c',
         'src/relay/server.h',
         'src/relay/server.c',
-    ],
+    ),
     c_args: eventd_c_args,
     dependencies: eventd_deps,
     include_directories: eventdctl_inc,

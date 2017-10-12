@@ -1,10 +1,10 @@
 # Server control utility
 
 eventdctl_inc = include_directories('include')
-eventdctl = executable('eventdctl', [
+eventdctl = executable('eventdctl', [ config_h ] + files(
         'include/eventdctl.h',
         'src/eventdctl.c',
-    ],
+    ),
     c_args: [
         '-DG_LOG_DOMAIN="eventdctl"',
     ],

@@ -1,9 +1,8 @@
 # Freedesktop.org notifications event collection plugin
 
-shared_library('fdo-notifications', [
-        config_h,
+shared_library('fdo-notifications', [ config_h ] + files(
         'src/fdo-notifications.c',
-    ],
+    ),
     c_args: [
         '-DG_LOG_DOMAIN="eventd-fdo-notifications"',
     ],

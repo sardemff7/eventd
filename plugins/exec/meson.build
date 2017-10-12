@@ -1,9 +1,8 @@
 # exec plugin
 
-shared_library('exec', [
-        config_h,
+shared_library('exec', [ config_h ] + files(
         'src/exec.c',
-    ],
+    ),
     c_args: [
         '-DG_LOG_DOMAIN="eventd-exec"',
     ],

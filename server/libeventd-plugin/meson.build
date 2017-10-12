@@ -6,15 +6,13 @@ libeventd_plugin_dep = [
     gobject,
     glib,
 ]
-libeventd_plugin_sources = [
+libeventd_plugin_sources = files(
         'src/core.c',
         'src/plugin.c',
-]
-libeventd_plugin_lib = library('eventd-plugin', [
-        config_h,
+)
+libeventd_plugin_lib = library('eventd-plugin', [ config_h ] + files(
         'include/eventd-plugin-private.h',
-        libeventd_plugin_sources,
-    ],
+    ) + libeventd_plugin_sources,
     c_args: [
         '-DG_LOG_DOMAIN="libeventd-plugin"',
     ],
@@ -24,9 +22,9 @@ libeventd_plugin_lib = library('eventd-plugin', [
     install: true,
 )
 
-libeventd_plugin_headers = [
+libeventd_plugin_headers = files(
     'include/eventd-plugin.h',
-]
+)
 install_headers(libeventd_plugin_headers,
     subdir: meson.project_name(),
 )

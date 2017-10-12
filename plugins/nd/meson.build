@@ -53,9 +53,10 @@ if is_unix and get_option('enable-nd-wayland')
     wayland_scanner_server = generator(wayland_scanner, output: '@BASENAME@-server-protocol.h', arguments: ['server-header', '@INPUT@', '@OUTPUT@'])
     wayland_scanner_code = generator(wayland_scanner, output: '@BASENAME@-protocol.c', arguments: ['code', '@INPUT@', '@OUTPUT@'])
 
-    shared_library('wayland', [
+    shared_library('wayland', files(
             'src/backend.h',
             'src/backend-wayland.c',
+        ) + [
             wayland_scanner_client.process(join_paths(ww_protocol_dir, 'unstable/notification-area/notification-area-unstable-v1.xml')),
             wayland_scanner_code.process(join_paths(ww_protocol_dir, 'unstable/notification-area/notification-area-unstable-v1.xml')),
         ],
@@ -85,10 +86,10 @@ if is_unix and get_option('enable-nd-xcb')
         dependency('xcb-shape'),
     ]
 
-    shared_library('xcb', [
+    shared_library('xcb', files(
             'src/backend.h',
             'src/backend-xcb.c',
-        ],
+        ),
         c_args: [
             '-DG_LOG_DOMAIN="eventd-nd-xcb"',
         ],
@@ -104,10 +105,10 @@ if is_unix and get_option('enable-nd-fbdev')
     docbook_conditions += 'enable_nd_fbdev'
     nd_c_args += '-DENABLE_ND_FBDEV'
 
-    shared_library('fbdev', [
+    shared_library('fbdev', files(
             'src/backend.h',
             'src/backend-fbdev.c',
-        ],
+        ),
         c_args: [
             '-DG_LOG_DOMAIN="eventd-nd-fbdev"',
         ],
@@ -128,10 +129,10 @@ if is_windows
         dependency('cairo-win32'),
     ]
 
-    shared_library('win', [
+    shared_library('win', files(
             'src/backend.h',
             'src/backend-win.c',
-        ],
+        ),
         c_args: [
             '-DG_LOG_DOMAIN="eventd-nd-win"',
         ],
@@ -146,8 +147,7 @@ if not nd_has_backend
     error('notification-daemon plugin required but no backend selected')
 endif
 
-shared_library('nd', [
-        config_h,
+shared_library('nd', [ config_h ] + files(
         'src/types.h',
         'src/nd.h',
         'src/nd.c',
@@ -164,7 +164,7 @@ shared_library('nd', [
         'src/backend.h',
         'src/backends.h',
         'src/backends.c',
-    ],
+    ),
     c_args: nd_c_args,
     dependencies: [
         gdk_pixbuf,

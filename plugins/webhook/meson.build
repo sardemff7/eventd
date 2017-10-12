@@ -2,9 +2,9 @@
 
 libsoup = dependency('libsoup-2.4', version: '>= 2.42')
 
-shared_library('webhook', [
+shared_library('webhook', files(
         'src/webhook.c',
-    ],
+    ),
     c_args: [
         '-DG_LOG_DOMAIN="eventd-webhook"',
     ],

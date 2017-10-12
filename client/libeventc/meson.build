@@ -9,13 +9,11 @@ libeventc_dep = [
     gobject,
     glib,
 ]
-libeventc_sources = [
+libeventc_sources = files(
         'src/libeventc.c',
-]
-libeventc_lib = library('eventc', [
-        config_h,
-        libeventc_sources,
-    ],
+)
+libeventc_lib = library('eventc',
+    [ config_h ] + libeventc_sources,
     c_args: [
         '-DG_LOG_DOMAIN="libeventc"',
     ],
@@ -25,9 +23,9 @@ libeventc_lib = library('eventc', [
     install: true
 )
 
-libeventc_headers = [
+libeventc_headers = files(
     'include/libeventc.h',
-]
+)
 install_headers(libeventc_headers,
     subdir: meson.project_name(),
 )
