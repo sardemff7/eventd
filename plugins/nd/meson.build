@@ -85,7 +85,9 @@ if is_unix and get_option('enable-nd-xcb')
         dependency('xcb-randr'),
         dependency('xcb-ewmh'),
         dependency('xcb-xfixes'),
+        dependency('xcb-xkb'),
         dependency('xcb-shape'),
+        dependency('xkbcommon-x11'),
     ]
 
     shared_library('xcb', files(

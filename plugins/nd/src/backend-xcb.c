@@ -35,9 +35,11 @@
 #include <xcb/xcb_aux.h>
 #include <libgwater-xcb.h>
 #include <xcb/randr.h>
+#include <xcb/xkb.h>
 #include <xcb/xcb_ewmh.h>
 #include <xcb/xfixes.h>
 #include <xcb/shape.h>
+#include <xkbcommon/xkbcommon-x11.h>
 
 #include "libeventd-event.h"
 #include "libeventd-helpers-config.h"
@@ -78,13 +80,16 @@ struct _EventdNdBackendContext {
         gint s;
     } geometry;
     gboolean randr;
+    gboolean xkb;
     gboolean compositing;
     gboolean custom_map;
     gboolean xfixes;
     gboolean shape;
     xcb_ewmh_connection_t ewmh;
     gint randr_event_base;
+    guint8 xkb_event_base;
     gint xfixes_event_base;
+    gint32 xkb_device_id;
     cairo_device_t *device;
     GHashTable *bubbles;
 };
@@ -546,6 +551,26 @@ _eventd_nd_xcb_events_callback(xcb_generic_event_t *event, gpointer user_data)
     break;
     }
 
+    if ( self->xkb && ( type == self->xkb_event_base ) )
+    switch ( event->pad0 )
+    {
+    case XCB_XKB_MAP_NOTIFY:
+    {
+        struct xkb_keymap *keymap = xkb_x11_keymap_new_from_device(nk_bindings_seat_get_context(self->bindings_seat), self->xcb_connection, self->xkb_device_id, XKB_KEYMAP_COMPILE_NO_FLAGS);
+        struct xkb_state  *state  = xkb_x11_state_new_from_device(keymap, self->xcb_connection, self->xkb_device_id);
+        nk_bindings_seat_update_keymap(self->bindings_seat, keymap, state);
+        xkb_keymap_unref(keymap);
+        xkb_state_unref(state);
+        return TRUE;
+    }
+    case XCB_XKB_STATE_NOTIFY:
+    {
+        xcb_xkb_state_notify_event_t *e = (xcb_xkb_state_notify_event_t *) event;
+        nk_bindings_seat_update_mask(self->bindings_seat, NULL, e->baseMods, e->latchedMods, e->lockedMods, e->baseGroup, e->latchedGroup, e->lockedGroup);
+        return TRUE;
+    }
+    }
+
     /* XFixes events */
     if ( self->xfixes )
     switch ( type - self->xfixes_event_base )
@@ -680,6 +705,59 @@ _eventd_nd_xcb_start(EventdNdBackendContext *self, const gchar *target)
                 XCB_RANDR_NOTIFY_MASK_OUTPUT_CHANGE |
                 XCB_RANDR_NOTIFY_MASK_CRTC_CHANGE |
                 XCB_RANDR_NOTIFY_MASK_OUTPUT_PROPERTY);
+    }
+    if ( xkb_x11_setup_xkb_extension(self->xcb_connection, XKB_X11_MIN_MAJOR_XKB_VERSION, XKB_X11_MIN_MINOR_XKB_VERSION, XKB_X11_SETUP_XKB_EXTENSION_NO_FLAGS, NULL, NULL, &self->xkb_event_base, NULL) > -1 )
+    {
+        self->xkb_device_id = xkb_x11_get_core_keyboard_device_id(self->xcb_connection);
+
+        enum
+        {
+            required_events =
+                ( XCB_XKB_EVENT_TYPE_NEW_KEYBOARD_NOTIFY |
+                  XCB_XKB_EVENT_TYPE_MAP_NOTIFY |
+                  XCB_XKB_EVENT_TYPE_STATE_NOTIFY ),
+
+            required_nkn_details =
+                ( XCB_XKB_NKN_DETAIL_KEYCODES ),
+
+            required_map_parts   =
+                ( XCB_XKB_MAP_PART_KEY_TYPES |
+                  XCB_XKB_MAP_PART_KEY_SYMS |
+                  XCB_XKB_MAP_PART_MODIFIER_MAP |
+                  XCB_XKB_MAP_PART_EXPLICIT_COMPONENTS |
+                  XCB_XKB_MAP_PART_KEY_ACTIONS |
+                  XCB_XKB_MAP_PART_VIRTUAL_MODS |
+                  XCB_XKB_MAP_PART_VIRTUAL_MOD_MAP ),
+
+            required_state_details =
+                ( XCB_XKB_STATE_PART_MODIFIER_BASE |
+                  XCB_XKB_STATE_PART_MODIFIER_LATCH |
+                  XCB_XKB_STATE_PART_MODIFIER_LOCK |
+                  XCB_XKB_STATE_PART_GROUP_BASE |
+                  XCB_XKB_STATE_PART_GROUP_LATCH |
+                  XCB_XKB_STATE_PART_GROUP_LOCK ),
+        };
+
+        static const xcb_xkb_select_events_details_t details = {
+            .affectNewKeyboard  = required_nkn_details,
+            .newKeyboardDetails = required_nkn_details,
+            .affectState        = required_state_details,
+            .stateDetails       = required_state_details,
+        };
+        xcb_xkb_select_events(self->xcb_connection, self->xkb_device_id, required_events, 0, required_events, required_map_parts, required_map_parts, &details);
+
+        struct xkb_keymap *keymap = xkb_x11_keymap_new_from_device(nk_bindings_seat_get_context(self->bindings_seat), self->xcb_connection, self->xkb_device_id, XKB_KEYMAP_COMPILE_NO_FLAGS);
+        if ( keymap != NULL )
+        {
+            struct xkb_state *state = xkb_x11_state_new_from_device(keymap, self->xcb_connection, self->xkb_device_id);
+            if ( state != NULL )
+            {
+                nk_bindings_seat_update_keymap(self->bindings_seat, keymap, state);
+                self->xkb = TRUE;
+                xkb_state_unref(state);
+            }
+            xkb_keymap_unref(keymap);
+        }
     }
 
     self->custom_map = _eventd_nd_xcb_get_colormap(self);
