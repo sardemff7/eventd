@@ -112,6 +112,32 @@
             </variablelist>
         </refsect2>
 
+        <refsect2>
+            <title>Section <varname>[NotificationBindings]</varname></title>
+
+            <para>This section is about bubble bindings.</para>
+            <para><emphasis>Only mouse bindings are relevant here, as there is no keyboard focus on bubbles.</emphasis></para>
+            <para><emphasis>This section is used as a whole, which means the section presence will reset all bindings and only the ones explicitely set will be usable.</emphasis></para>
+
+            <variablelist>
+                <varlistentry>
+                    <term><varname>Dismiss=</varname> (defaults to <literal>MouseLeft</literal>)</term>
+                    <listitem>
+                        <para>A <type>binding string</type></para>
+                        <para>This will dismiss the bubble being clicked on.</para>
+                    </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                    <term><varname>DismissQueue=</varname> (defaults to <literal>MouseRight</literal>)</term>
+                    <listitem>
+                        <para>A <type>binding string</type></para>
+                        <para>This will dismiss the bubble being clicked on and all the visible ones in the same queue.</para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+        </refsect2>
+
         <refsect2 id="queue-sections">
             <title>Section <varname>[Queue <replaceable>name</replaceable>]</varname></title>
 

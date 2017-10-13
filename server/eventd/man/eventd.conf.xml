@@ -151,6 +151,8 @@
 
         <xi:include href="libnkutils-man.xml" xpointer="nk-colour-type-description" />
 
+        <xi:include href="libnkutils-man.xml" xpointer="nk-bindings-type-description" />
+
         <refsect2>
             <title>Other types</title>
 

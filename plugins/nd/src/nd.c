@@ -436,6 +436,33 @@ _eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
             context->backends[i].global_parse(context->backends[i].context, config_file);
     }
 
+    if ( g_key_file_has_group(config_file, "NotificationBindings") )
+    {
+        gchar *string;
+        GError *error = NULL;
+        nk_bindings_reset_bindings(context->bindings);
+
+        if ( evhelpers_config_key_file_get_string(config_file, "NotificationBindings", "Dismiss", &string) == 0 )
+        {
+            if ( ! nk_bindings_add_binding(context->bindings, 0, string, _eventd_nd_bindings_dismiss_callback, context, NULL, &error) )
+            {
+                g_warning("Could not add dismiss binding: %s", error->message);
+                g_clear_error(&error);
+            }
+            g_free(string);
+        }
+
+        if ( evhelpers_config_key_file_get_string(config_file, "NotificationBindings", "DismissQueue", &string) == 0 )
+        {
+            if ( ! nk_bindings_add_binding(context->bindings, 0, string, _eventd_nd_bindings_dismiss_queue_callback, context, NULL, &error) )
+            {
+                g_warning("Could not add dismiss queue binding: %s", error->message);
+                g_clear_error(&error);
+            }
+            g_free(string);
+        }
+    }
+
     gchar **groups, **group;
     groups = g_key_file_get_groups(config_file, NULL);
     if ( groups == NULL )
@@ -528,6 +555,10 @@ _eventd_nd_config_reset(EventdPluginContext *context)
 
     g_slist_free_full(context->actions, eventd_nd_style_free);
     context->actions = NULL;
+
+    nk_bindings_reset_bindings(context->bindings);
+    nk_bindings_add_binding(context->bindings, 0, "MousePrimary", _eventd_nd_bindings_dismiss_callback, context, NULL, NULL);
+    nk_bindings_add_binding(context->bindings, 0, "MouseSecondary", _eventd_nd_bindings_dismiss_queue_callback, context, NULL, NULL);
 
     eventd_nd_style_free(context->style);
     context->style = eventd_nd_style_new(NULL);
