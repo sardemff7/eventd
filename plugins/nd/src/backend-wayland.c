@@ -64,6 +64,7 @@ typedef struct {
     GSList *link;
     uint32_t global_name;
     struct wl_seat *seat;
+    struct wl_keyboard *keyboard;
     struct wl_pointer *pointer;
     EventdNdSurface *surface;
     gint32 scroll[NK_BINDINGS_SCROLL_NUM_AXIS];
@@ -203,6 +204,90 @@ _eventd_nd_wl_shm_format(void *data, struct wl_shm *wl_shm, uint32_t format)
 
 static const struct wl_shm_listener _eventd_nd_wl_shm_listener = {
     .format = _eventd_nd_wl_shm_format
+};
+
+static void
+_eventd_nd_wl_keyboard_keymap(void *data, struct wl_keyboard *keyboard, enum wl_keyboard_keymap_format format, int32_t fd, uint32_t size)
+{
+    EventdNdWlSeat *self = data;
+
+    if ( format != WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1 )
+    {
+        close(fd);
+        return;
+    }
+
+    gchar *keymap_str;
+    keymap_str = mmap(NULL, size, PROT_READ, MAP_SHARED, fd, 0);
+    if ( keymap_str == MAP_FAILED )
+    {
+        g_warning("mmap failed: %s", g_strerror(errno));
+        g_close(fd, NULL);
+        return;
+    }
+
+    struct xkb_keymap *keymap;
+    keymap = xkb_keymap_new_from_string(nk_bindings_seat_get_context(self->bindings_seat), keymap_str, XKB_KEYMAP_FORMAT_TEXT_V1, XKB_KEYMAP_COMPILE_NO_FLAGS);
+    if ( keymap == NULL )
+        goto fail;
+
+    struct xkb_state *state;
+    state = xkb_state_new(keymap);
+    if ( state == NULL )
+    {
+        xkb_keymap_unref(keymap);
+        goto fail;
+    }
+
+    nk_bindings_seat_update_keymap(self->bindings_seat, keymap, state);
+
+    xkb_state_unref(state);
+    xkb_keymap_unref(keymap);
+
+fail:
+    munmap(keymap_str, size);
+
+    g_close(fd, NULL);
+}
+
+static void
+_eventd_nd_wl_keyboard_enter(void *data, struct wl_keyboard *keyboard, uint32_t serial, struct wl_surface *surface, struct wl_array *keys)
+{
+}
+
+static void
+_eventd_nd_wl_keyboard_leave(void *data, struct wl_keyboard *keyboard, uint32_t serial, struct wl_surface *surface)
+{
+    EventdNdWlSeat *self = data;
+
+    nk_bindings_seat_reset(self->bindings_seat);
+}
+
+static void
+_eventd_nd_wl_keyboard_key(void *data, struct wl_keyboard *keyboard, uint32_t serial, uint32_t time, uint32_t key, enum wl_keyboard_key_state state)
+{
+}
+
+static void
+_eventd_nd_wl_keyboard_modifiers(void *data, struct wl_keyboard *keyboard, uint32_t serial, uint32_t mods_depressed, uint32_t mods_latched, uint32_t mods_locked, uint32_t group)
+{
+    EventdNdWlSeat *self = data;
+
+    nk_bindings_seat_update_mask(self->bindings_seat, NULL, mods_depressed, mods_latched, mods_locked, 0, 0, group);
+}
+
+static void
+_eventd_nd_wl_keyboard_repeat_info(void *data, struct wl_keyboard *keyboard, int32_t rate, int32_t delay)
+{
+}
+
+static const struct wl_keyboard_listener _eventd_nd_wl_keyboard_listener = {
+    .keymap = _eventd_nd_wl_keyboard_keymap,
+    .enter = _eventd_nd_wl_keyboard_enter,
+    .leave = _eventd_nd_wl_keyboard_leave,
+    .key = _eventd_nd_wl_keyboard_key,
+    .modifiers = _eventd_nd_wl_keyboard_modifiers,
+    .repeat_info = _eventd_nd_wl_keyboard_repeat_info,
 };
 
 static void
@@ -375,6 +460,22 @@ static const struct wl_pointer_listener _eventd_nd_wl_pointer_listener = {
 };
 
 static void
+_eventd_nd_wl_keyboard_release(EventdNdWlSeat *self)
+{
+    if ( self->keyboard == NULL )
+        return;
+
+    if ( wl_keyboard_get_version(self->keyboard) >= WL_KEYBOARD_RELEASE_SINCE_VERSION )
+        wl_keyboard_release(self->keyboard);
+    else
+        wl_keyboard_destroy(self->keyboard);
+
+    self->keyboard = NULL;
+
+    nk_bindings_seat_update_keymap(self->bindings_seat, NULL, NULL);
+}
+
+static void
 _eventd_nd_wl_pointer_release(EventdNdWlSeat *self)
 {
     if ( self->pointer == NULL )
@@ -391,6 +492,7 @@ _eventd_nd_wl_pointer_release(EventdNdWlSeat *self)
 static void
 _eventd_nd_wl_seat_release(EventdNdWlSeat *self)
 {
+    _eventd_nd_wl_keyboard_release(self);
     _eventd_nd_wl_pointer_release(self);
 
     if ( wl_seat_get_version(self->seat) >= WL_SEAT_RELEASE_SINCE_VERSION )
@@ -409,6 +511,15 @@ static void
 _eventd_nd_wl_seat_capabilities(void *data, struct wl_seat *seat, uint32_t capabilities)
 {
     EventdNdWlSeat *self = data;
+
+    if ( ( capabilities & WL_SEAT_CAPABILITY_KEYBOARD ) && ( self->keyboard == NULL ) )
+    {
+        self->keyboard = wl_seat_get_keyboard(self->seat);
+        wl_keyboard_add_listener(self->keyboard, &_eventd_nd_wl_keyboard_listener, self);
+    }
+    else if ( ( ! ( capabilities & WL_SEAT_CAPABILITY_KEYBOARD ) ) && ( self->keyboard != NULL ) )
+        _eventd_nd_wl_keyboard_release(self);
+
     if ( ( capabilities & WL_SEAT_CAPABILITY_POINTER ) && ( self->pointer == NULL ) )
     {
         self->pointer = wl_seat_get_pointer(self->seat);
