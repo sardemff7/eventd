@@ -32,6 +32,7 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 #include "nkutils-uuid.h"
+#include "nkutils-git-version.h"
 
 #include "libeventd-event.h"
 #include "libeventd-event-private.h"
@@ -179,7 +180,7 @@ main(int argc, char *argv[])
     if ( print_version )
     {
         g_print("eventc %s (using libeventc %s)\n",
-            EVENTD_VERSION,
+            NK_PACKAGE_VERSION,
             eventc_get_version());
         goto end;
     }

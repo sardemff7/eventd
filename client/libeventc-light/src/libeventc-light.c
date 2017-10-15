@@ -42,6 +42,8 @@
 #define close(s) closesocket(s)
 #endif /* ! G_OS_UNIX */
 
+#include "nkutils-git-version.h"
+
 #include "libeventd-event.h"
 #include "libeventd-protocol.h"
 
@@ -80,7 +82,7 @@ EVENTD_EXPORT
 const gchar *
 eventc_light_get_version(void)
 {
-    return EVENTD_VERSION;
+    return NK_PACKAGE_VERSION;
 }
 
 static gint

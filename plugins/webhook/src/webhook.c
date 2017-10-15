@@ -27,6 +27,8 @@
 #include <glib.h>
 #include <libsoup/soup.h>
 
+#include "nkutils-git-version.h"
+
 #include "eventd-plugin.h"
 #include "libeventd-helpers-config.h"
 
@@ -166,7 +168,7 @@ _eventd_webhook_event_action(EventdPluginContext *context, EventdPluginAction *a
 
     session = soup_session_new();
     if ( ! context->no_user_agent )
-        g_object_set(session, SOUP_SESSION_USER_AGENT, PACKAGE_NAME " " EVENTD_VERSION, NULL);
+        g_object_set(session, SOUP_SESSION_USER_AGENT, PACKAGE_NAME " " NK_PACKAGE_VERSION, NULL);
     msg = soup_message_new(SOUP_METHOD_POST, url);
     soup_message_set_request(msg, "application/json", SOUP_MEMORY_TAKE, string, strlen(string));
     soup_session_queue_message(session, msg, _eventd_webhook_message_callback, NULL);

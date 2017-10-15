@@ -17,7 +17,7 @@ libeventc_lib = library('eventc',
     c_args: [
         '-DG_LOG_DOMAIN="libeventc"',
     ],
-    dependencies: [ ws_module, libeventc_dep ],
+    dependencies: [ ws_module, libnkutils, libeventc_dep ],
     version: '0.0.0',
     include_directories: libeventc_inc,
     install: true

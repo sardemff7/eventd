@@ -28,7 +28,7 @@
     <refentryinfo id="refentryinfo">
         <title>&PACKAGE_NAME; Manual</title>
         <productname>&PACKAGE_NAME;</productname>
-        <productnumber>&EVENTD_VERSION;</productnumber>
+        <productnumber>&NK_PACKAGE_VERSION;</productnumber>
 
         <authorgroup>
             <author>

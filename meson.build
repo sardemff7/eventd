@@ -9,23 +9,6 @@ project('eventd', 'c',
     subproject_dir: 'src',
 )
 
-eventd_version = meson.project_version()
-
-git = find_program('git', required: false)
-if git.found()
-	git_version = run_command(git, '--git-dir', join_paths(meson.source_root(), '.git'), 'describe', '--tags', '--always', '--dirty')
-	git_branch = run_command(git, '--git-dir', join_paths(meson.source_root(), '.git'), 'describe', '--tags', '--always', '--all')
-	if git_version.returncode() == 0 and git_branch.returncode() == 0
-		git_branch_parts = []
-		foreach b : git_branch.stdout().strip().split('/')
-			if b != 'heads'
-				git_branch_parts += b
-			endif
-		endforeach
-		eventd_version = '@0@ - @1@ (@2@)'.format(meson.project_version(), git_version.stdout().strip(), '/'.join(git_branch_parts))
-	endif
-endif
-
 is_unix = host_machine.system() != 'windows'
 is_windows = not is_unix
 pkgconfig = import('pkgconfig')
@@ -79,13 +62,13 @@ header_conf = configuration_data()
 pkgconfig_conf = configuration_data()
 other_conf = configuration_data()
 header_conf.set_quoted('PACKAGE_NAME', meson.project_name())
-header_conf.set_quoted('EVENTD_VERSION', eventd_version)
+header_conf.set_quoted('PACKAGE_VERSION', meson.project_version())
 header_conf.set_quoted('MODULES_VERSION', meson.project_version())
 header_conf.set_quoted('GETTEXT_PACKAGE', meson.project_name())
 pkgconfig_conf.set('VERSION', meson.project_version())
 other_conf.set('PACKAGE_NAME', meson.project_name())
+other_conf.set('PACKAGE_VERSION', meson.project_version())
 other_conf.set('VERSION', meson.project_version())
-other_conf.set('EVENTD_VERSION', eventd_version)
 
 if is_unix
     header_conf.set('EVENTD_EXPORT', '__attribute__((visibility("default")))')
@@ -153,23 +136,26 @@ else
     docbook_conditions += [ 'ev_os_win' ]
 endif
 
-nk_modules = [
+nk_options = [
     'uuid=true',
     'enum=true',
     'token=true',
     'colour=true',
     'xdg-theme=true',
+    'bindings=true',
+    'git-work-tree=@0@'.format(meson.source_root()),
 ]
-nk = subproject('libnkutils', default_options: nk_modules)
-nk_options = nk.get_variable('nk_options')
-foreach o : nk_modules + nk_options
-    if not nk_modules.contains(o) or not nk_options.contains(o)
-        error('You must not change libnkutils options @0@ != @1@'.format('|'.join(nk_modules), '|'.join(nk_options)))
+nk = subproject('libnkutils', default_options: nk_options)
+nk_subproject_options = nk.get_variable('nk_options')
+foreach o : nk_options + nk_subproject_options
+    if not nk_options.contains(o) or not nk_subproject_options.contains(o)
+        error('You must not change libnkutils options @0@ != @1@'.format('|'.join(nk_options), '|'.join(nk_subproject_options)))
     endif
 endforeach
 libnkutils = nk.get_variable('libnkutils')
-nkutils_xsltpath = nk.get_variable('nkutils_xsltpath')
+nkutils_xsltpaths = nk.get_variable('nkutils_xsltpaths')
 nkutils_manfiles = nk.get_variable('nkutils_manfiles')
+nkutils_mandepends = nk.get_variable('nkutils_mandepends')
 docbook_conditions += nk.get_variable('nkutils_docbook_conditions')
 
 subdir('server/libeventd')
@@ -232,8 +218,7 @@ xsltproc = [
 foreach p : [
     join_paths(meson.current_source_dir(), 'src'),
     meson.current_build_dir(),
-    nkutils_xsltpath,
-]
+] + nkutils_xsltpaths
     xsltproc += [ '--path', p ]
 endforeach
 xsltproc += [
@@ -249,7 +234,8 @@ foreach m : man_pages
         input: m[0],
         output: m[1],
         command: xsltproc,
-        depend_files: [ config_ent ],
+        depend_files: [ config_ent ] + files('src/common-man.xml') + nkutils_manfiles,
+        depends: nkutils_mandepends,
         build_by_default: true,
         install: true,
         install_dir: join_paths(get_option('mandir'), section)

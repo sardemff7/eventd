@@ -33,6 +33,8 @@
 #include <gio/gunixsocketaddress.h>
 #endif /* G_OS_UNIX */
 
+#include "nkutils-git-version.h"
+
 #include "eventdctl.h"
 
 static gboolean
@@ -311,7 +313,7 @@ main(int argc, char *argv[])
 
     if ( print_version )
     {
-        g_printf(PACKAGE_NAME " " EVENTD_VERSION "\n");
+        g_printf(PACKAGE_NAME " " NK_PACKAGE_VERSION "\n");
         return EVENTDCTL_RETURN_CODE_OK;
     }
 

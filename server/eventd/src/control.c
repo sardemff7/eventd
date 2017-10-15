@@ -32,6 +32,8 @@
 #endif /* ! G_OS_UNIX */
 #include <gio/gio.h>
 
+#include "nkutils-git-version.h"
+
 #include "eventdctl.h"
 
 #include "types.h"
@@ -100,7 +102,7 @@ _eventd_service_private_connection_handler(GSocketService *socket_service, GSock
     else if ( g_strcmp0(argv[0], "reload") == 0 )
         eventd_core_config_reload(control->core);
     else if ( g_strcmp0(argv[0], "version") == 0 )
-        status = g_strdup(PACKAGE_NAME " " EVENTD_VERSION);
+        status = g_strdup(PACKAGE_NAME " " NK_PACKAGE_VERSION);
     else if ( g_strcmp0(argv[0], "flags") == 0 )
     {
         if ( argc < 2 )

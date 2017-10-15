@@ -9,6 +9,7 @@ eventd_deps = [
     libeventd_plugin,
     libeventd_helpers,
     libeventd,
+    libnkutils,
     gio,
     gmodule,
     gobject,

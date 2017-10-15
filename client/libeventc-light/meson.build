@@ -23,6 +23,7 @@ endforeach
 libeventc_light_inc = include_directories('include')
 libeventc_light_dep += [
     libeventd,
+    libnkutils,
     glib,
 ]
 libeventc_light_lib = library('eventc-light', [ config_h ] + files(

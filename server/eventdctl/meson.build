@@ -11,6 +11,7 @@ eventdctl = executable('eventdctl', [ config_h ] + files(
     dependencies: [
         libeventd_plugin,
         libeventd,
+        libnkutils,
         gio_platform,
         gio,
         glib,

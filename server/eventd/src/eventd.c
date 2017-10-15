@@ -43,6 +43,8 @@
 #include <systemd/sd-daemon.h>
 #endif /* ENABLE_SYSTEMD */
 
+#include "nkutils-git-version.h"
+
 #include "eventd-plugin-private.h"
 #include "libeventd-helpers-dirs.h"
 
@@ -394,7 +396,7 @@ main(int argc, char *argv[])
 
     if ( print_version )
     {
-        g_printf(PACKAGE_NAME " " EVENTD_VERSION "\n");
+        g_printf(PACKAGE_NAME " " NK_PACKAGE_VERSION "\n");
         goto end;
     }
 

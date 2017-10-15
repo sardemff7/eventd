@@ -6,7 +6,7 @@ shared_library('fdo-notifications', [ config_h ] + files(
     c_args: [
         '-DG_LOG_DOMAIN="eventd-fdo-notifications"',
     ],
-    dependencies: [ libeventd_plugin, libeventd, gio, glib ],
+    dependencies: [ libeventd_plugin, libeventd, libnkutils, gio, glib ],
     name_prefix: '',
     install: true,
     install_dir: plugins_install_dir,
