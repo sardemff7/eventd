@@ -127,7 +127,7 @@ header_conf.set('EVENTD_DEBUG', get_option('enable-debug'))
 header_conf.set('DISABLE_IPV6', not get_option('enable-ipv6'))
 
 config_h = configure_file(output: 'config.h', configuration: header_conf)
-config_ent = configure_file(input: 'src/config.ent.in', output: 'config.ent', configuration: other_conf)
+config_ent = configure_file(input: files('src/config.ent.in'), output: 'config.ent', configuration: other_conf)
 
 add_project_arguments(
     '-fvisibility=hidden',
