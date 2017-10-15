@@ -10,6 +10,7 @@ addons:
     apt:
         packages:
             #- ninja-build
+            - python3-pip
             - xsltproc
             - docbook-xsl
             - docbook-xml
@@ -37,7 +38,7 @@ addons:
             - sound-theme-freedesktop
             - pidgin-data
 install:
-    - pip3 install meson
+    - pip3 install --user meson
     - wget https://github.com/ninja-build/ninja/releases/download/v1.7.2/ninja-linux.zip
     - unzip ninja-linux.zip
     - export PATH=$(pwd):$PATH
