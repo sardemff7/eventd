@@ -59,13 +59,19 @@ eventd = executable('eventd', [ config_h ] + files(
 man_pages += [ [ files('man/eventd.xml'), 'eventd.1' ] ]
 man_pages += [ [ files('man/eventd.conf.xml'), 'eventd.conf.5' ] ]
 
-# Until pkgconfig module gains support for custom variable
-
-configure_file(
-    input: 'pkgconfig/eventd.pc.in',
-    output: 'eventd.pc',
-    configuration: pkgconfig_conf,
-    install_dir: join_paths(get_option('datadir'), 'pkgconfig'),
+pkgconfig.generate(
+    filebase: 'eventd',
+    name: 'eventd',
+    version: meson.project_version(),
+    description: 'eventd daemon',
+    url: 'https://www.eventd.org/',
+    variables: [
+        'datadir=@0@'.format(join_paths('${prefix}', get_option('datadir'))),
+        'eventdir=${datadir}/eventd',
+        'ssdp_ns_uuid=@0@'.format(evp_ssdp_ns_uuid),
+        'ssdp_urn=@0@'.format(evp_ssdp_urn),
+    ],
+    install_dir: join_paths(get_option('datadir'), 'pkgconfig')
 )
 
 if get_option('enable-systemd')

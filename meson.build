@@ -1,6 +1,6 @@
 project('eventd', 'c',
     version: '0.23.90',
-    meson_version: '>=0.39.1',
+    meson_version: '>=0.41.0',
     license: [ 'GPL3+', 'LGPL3+', 'MIT' ],
     default_options: [
         'c_std=gnu11',
@@ -59,13 +59,11 @@ evp_ssdp_urn='urn:eventd-org:service:@0@:1'.format(evp_service_name)
 evp_unix_socket=evp_service_name
 
 header_conf = configuration_data()
-pkgconfig_conf = configuration_data()
 other_conf = configuration_data()
 header_conf.set_quoted('PACKAGE_NAME', meson.project_name())
 header_conf.set_quoted('PACKAGE_VERSION', meson.project_version())
 header_conf.set_quoted('MODULES_VERSION', meson.project_version())
 header_conf.set_quoted('GETTEXT_PACKAGE', meson.project_name())
-pkgconfig_conf.set('VERSION', meson.project_version())
 other_conf.set('PACKAGE_NAME', meson.project_name())
 other_conf.set('PACKAGE_VERSION', meson.project_version())
 other_conf.set('VERSION', meson.project_version())
@@ -85,8 +83,6 @@ header_conf.set_quoted('EVENTD_BINDIR', join_paths(get_option('prefix'), get_opt
 header_conf.set_quoted('EVENTD_LIBDIR', join_paths(get_option('prefix'), get_option('libdir')))
 header_conf.set_quoted('EVENTD_DATADIR', join_paths(get_option('prefix'), get_option('datadir')))
 header_conf.set_quoted('EVENTD_LOCALEDIR', join_paths(get_option('prefix'), get_option('localedir')))
-pkgconfig_conf.set('prefix', get_option('prefix'))
-pkgconfig_conf.set('datadir', join_paths('${prefix}', get_option('datadir')))
 other_conf.set('prefix', get_option('prefix'))
 other_conf.set('bindir', join_paths(get_option('prefix'), get_option('bindir')))
 other_conf.set('datadir', join_paths(get_option('prefix'), get_option('datadir')))
@@ -97,8 +93,6 @@ header_conf.set_quoted('EVP_SERVICE_TYPE', evp_service_type)
 header_conf.set_quoted('EVP_SSDP_NS_UUID', evp_ssdp_ns_uuid)
 header_conf.set_quoted('EVP_SSDP_URN', evp_ssdp_urn)
 header_conf.set_quoted('EVP_UNIX_SOCKET', evp_unix_socket)
-pkgconfig_conf.set('EVP_SSDP_NS_UUID', evp_ssdp_ns_uuid)
-pkgconfig_conf.set('EVP_SSDP_URN', evp_ssdp_urn)
 other_conf.set('EVP_SERVICE_NAME', evp_service_name)
 other_conf.set('EVP_TRANSPORT_NAME', evp_transport_name)
 other_conf.set('EVP_SERVICE_TYPE', evp_service_type)
