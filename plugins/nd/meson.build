@@ -39,6 +39,7 @@ if is_unix and get_option('enable-nd-wayland')
             error('Header @0@ was not found, but is required'.format(h))
         endif
     endforeach
+    librt = c_compiler.find_library('rt', required: false)
     wayland_wall = dependency('wayland-wall', version: '>= @0@'.format(ww_min_version))
     wayland = [
         subproject('libgwater/wayland').get_variable('libgwater_wayland'),
@@ -63,7 +64,7 @@ if is_unix and get_option('enable-nd-wayland')
         c_args: [
             '-DG_LOG_DOMAIN="eventd-nd-wayland"',
         ],
-        dependencies: [ wayland, nd_backend_deps ],
+        dependencies: [ wayland, librt, nd_backend_deps ],
         name_prefix: '',
         install: true,
         install_dir: nd_backends_install_dir,

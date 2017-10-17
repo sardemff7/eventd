@@ -590,11 +590,8 @@ _eventd_nd_wl_create_buffer(EventdNdSurface *self)
     stride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, width);
     size = stride * height;
 
-    gchar *filename;
-    filename = g_build_filename(g_get_user_runtime_dir(), PACKAGE_NAME G_DIR_SEPARATOR_S "wayland-surface", NULL);
-    fd = g_open(filename, O_CREAT | O_RDWR | O_CLOEXEC, 0);
-    g_unlink(filename);
-    g_free(filename);
+    fd = shm_open("/eventd-nd-wayland-surface", O_CREAT | O_RDWR, 0);
+    shm_unlink("/eventd-nd-wayland-surface");
     if ( fd < 0 )
     {
         g_warning("creating a buffer file for %zu B failed: %s\n", size, g_strerror(errno));
