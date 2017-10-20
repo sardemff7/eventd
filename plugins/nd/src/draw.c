@@ -73,6 +73,98 @@ _eventd_nd_draw_find_n_c(gchar *s, gsize n, gunichar c)
     return r - 1;
 }
 
+static void
+_eventd_nd_draw_text_parser_start_element(GMarkupParseContext *context, const gchar *element_name, const gchar **attribute_names, const gchar **attribute_values, gpointer user_data, GError **error)
+{
+    GString *string = user_data;
+
+    if ( g_strcmp0(element_name, "markup") == 0 )
+        return;
+    if ( g_strcmp0(element_name, "a") == 0 )
+        return;
+
+    g_string_append(g_string_append_c(string, '<'), element_name);
+
+    gsize i;
+    for ( i = 0 ; attribute_names[i] != NULL ; ++i )
+    {
+        g_string_append_c(g_string_append(g_string_append_c(string, ' '), attribute_names[i]), '=');
+        if ( g_utf8_strchr(attribute_values[i], -1, '"') == NULL )
+            g_string_append_c(g_string_append(g_string_append_c(string, '"'), attribute_values[i]), '"');
+        else if ( g_utf8_strchr(attribute_values[i], -1, '\'') == NULL )
+            g_string_append_c(g_string_append(g_string_append_c(string, '\''), attribute_values[i]), '\'');
+    }
+
+    g_string_append_c(string, '>');
+}
+
+static void
+_eventd_nd_draw_text_parser_end_element(GMarkupParseContext *context, const gchar *element_name, gpointer user_data, GError **error)
+{
+    GString *string = user_data;
+
+    if ( g_strcmp0(element_name, "markup") == 0 )
+        return;
+    if ( g_strcmp0(element_name, "a") == 0 )
+        return;
+
+    g_string_append_c(g_string_append(g_string_append_c(g_string_append_c(string, '<'), '/'), element_name), '>');
+}
+
+static void
+_eventd_nd_draw_text_parser_text(GMarkupParseContext *context, const gchar *text, gsize len, gpointer user_data, GError **error)
+{
+    GString *string = user_data;
+
+    g_string_append_len(string, text, len);
+}
+
+static void
+_eventd_nd_draw_text_parser_passthrough(GMarkupParseContext *context, const gchar *text, gsize len, gpointer user_data, GError **error)
+{
+    GString *string = user_data;
+
+    g_string_append_len(string, text, len);
+}
+
+static GMarkupParser _eventd_nd_draw_text_parser = {
+    .start_element = _eventd_nd_draw_text_parser_start_element,
+    .end_element = _eventd_nd_draw_text_parser_end_element,
+    .text = _eventd_nd_draw_text_parser_text,
+    .passthrough = _eventd_nd_draw_text_parser_passthrough,
+};
+
+static gchar *
+_eventd_nd_draw_parse_text(gchar *text)
+{
+    GString *string;
+    gsize size;
+    GError *error = NULL;
+    GMarkupParseContext *context;
+
+    size = strlen(text);
+    string = g_string_sized_new(size);
+
+    context = g_markup_parse_context_new(&_eventd_nd_draw_text_parser, 0, string, NULL);
+    if ( ! g_markup_parse_context_parse(context, "<markup>", strlen("<markup>"), &error) )
+        g_warning("Could not parse <markup>: %s", error->message);
+    else if ( ! g_markup_parse_context_parse(context, text, size, &error) )
+        g_warning("Could not parse escaped text: %s", error->message);
+    else if ( ! g_markup_parse_context_parse(context, "</markup>", strlen("</markup>"), &error) )
+        g_warning("Could not parse </markup>: %s", error->message);
+    else if ( ! g_markup_parse_context_end_parse(context, &error) )
+        g_warning("Could not end parsing escaped body: %s", error->message);
+    g_markup_parse_context_free(context);
+    g_free(text);
+
+    if ( error == NULL )
+        return g_string_free(string, FALSE);
+
+    g_clear_error(&error);
+    g_string_free(string, TRUE);
+    return NULL;
+}
+
 static gchar *
 _eventd_nd_draw_get_text(EventdNdStyle *style, EventdEvent *event, guint more_size, guint8 *max_lines)
 {
@@ -93,6 +185,10 @@ _eventd_nd_draw_get_text(EventdNdStyle *style, EventdEvent *event, guint more_si
         g_free(text);
         return NULL;
     }
+
+    text = _eventd_nd_draw_parse_text(text);
+    if ( text == NULL )
+        return NULL;
 
     guint8 max;
     max = eventd_nd_style_get_text_max_lines(style);
