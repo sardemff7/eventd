@@ -116,22 +116,31 @@ _eventd_nd_draw_text_parser_text(GMarkupParseContext *context, const gchar *text
 {
     GString *string = user_data;
 
-    g_string_append_len(string, text, len);
-}
+    const gchar *w, *e;
 
-static void
-_eventd_nd_draw_text_parser_passthrough(GMarkupParseContext *context, const gchar *text, gsize len, gpointer user_data, GError **error)
-{
-    GString *string = user_data;
-
-    g_string_append_len(string, text, len);
+    for ( w = text, e = text + len ; w < e ; w = g_utf8_next_char(w) )
+    {
+        gunichar c = g_utf8_get_char(w);
+        switch ( c )
+        {
+        case '&':
+            g_string_append(string, "&amp;");
+        break;
+        case '<':
+            g_string_append(string, "&lt;");
+        break;
+        default:
+            g_string_append_unichar(string, c);
+        break;
+        }
+    }
 }
 
 static GMarkupParser _eventd_nd_draw_text_parser = {
     .start_element = _eventd_nd_draw_text_parser_start_element,
     .end_element = _eventd_nd_draw_text_parser_end_element,
     .text = _eventd_nd_draw_text_parser_text,
-    .passthrough = _eventd_nd_draw_text_parser_passthrough,
+    .passthrough = _eventd_nd_draw_text_parser_text,
 };
 
 static gchar *
