@@ -488,7 +488,7 @@ _eventd_events_parse_group(EventdEvents *self, const gchar *group, GKeyFile *con
         default_importance = 0;
     else
         default_importance = G_MAXINT64;
-    if ( evhelpers_config_key_file_get_int_with_default(config_file, group, "Importance", default_importance, &importance) == 0 )
+    if ( evhelpers_config_key_file_get_int_with_default(config_file, group, "Importance", default_importance, &importance) >= 0 )
         event->importance = importance;
 
     GList *list = NULL;
