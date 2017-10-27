@@ -484,7 +484,7 @@ _eventd_events_parse_group(EventdEvents *self, const gchar *group, GKeyFile *con
 
     gint64 default_importance, importance;
 
-    if ( ( event->if_data != NULL ) || ( event->if_data_matches != NULL ) || ( event->flags_whitelist != NULL ) || ( event->flags_blacklist != NULL ) )
+    if ( ( event->if_data != NULL ) || ( event->if_data_matches != NULL ) || ( event->if_data_regexes != NULL ) || ( event->flags_whitelist != NULL ) || ( event->flags_blacklist != NULL ) )
         default_importance = 0;
     else
         default_importance = G_MAXINT64;
