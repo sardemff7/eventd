@@ -310,7 +310,7 @@
 
             <para>
                 With its <command>fdo-notifications</command> plugin and <command>nd</command> plugin with <command>xcb</command> backend, eventd can act as a notification daemon.
-                The default generated notifications looks a lot like notify-osd’s ones.
+                The default generated notifications look a lot like notify-osd’s ones.
             </para>
             <para>
                 This feature should work automagically using D-Bus on-demand spawning.
