@@ -400,6 +400,56 @@
     Colour=#000000</programlisting>
         </example>
 
+        <example condition="website;enable_nd_xcb;enable_nd_wayland;enable_nd_win">
+            <title>Putting specific notifications at a different position</title>
+
+            <para>
+                Some notifications appear when you change monitor brightness,
+                mouse resolution or volume. However, you know when they pop, and they
+                may not be as critical as others, disturbing even. To that end, we will
+                put them in the top left corner.
+            </para>
+            <para>
+                Here is the configuration:
+            </para>
+            <programlisting><literal>"<filename>eventd.conf</filename>"</literal>:
+    [Queue utility]
+    Anchor=top-left
+    Margin=0
+    Spacing=0
+    Limit=1
+
+<literal>"<filename>notification-utility.event</filename>"</literal>:
+    [Event notification  mouse-tool]
+    IfDataMatches=client-name,==,"mouse-tool";
+    Actions=notification-utility;
+
+    [Event notification  volume-tool]
+    IfDataMatches=client-name,==,"volume-tool";
+    Actions=notification-utility;
+
+<literal>"<filename>notification-utility.action</filename>"</literal>:
+    [Action]
+    Name=notification-utility
+
+    [Notification]
+    Text=${title} ${message}
+
+    [NotificationBubble]
+    Queue=utility
+    Padding=2
+    Radius=0
+    BorderBlur=0
+
+    [NotificationImage]
+    Height=25
+    Anchor=Center
+
+    [NotificationIcon]
+    Placement=Foreground
+    Height=25</programlisting>
+        </example>
+
         <example>
             <title>Custom event: notify the end of a command</title>
 
