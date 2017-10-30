@@ -450,6 +450,68 @@
     Height=25</programlisting>
         </example>
 
+        <example condition="website;enable_nd_xcb;enable_nd_wayland;enable_nd_win">
+            <title>VOIP overlay-like feature</title>
+
+            <para>
+                Some VOIP software (mostly gaming ones) have an overlay feature to
+                easily see who is speaking at any given time. Using the relevant
+                plugins (to the VOIP softwares) to dispatch
+                <literal>voip talking</literal> events, we can create an overlay
+                with the <command>nd</command> plugin.
+            </para>
+            <para>
+                Here is the configuration:
+            </para>
+            <programlisting><literal>"<filename>eventd.conf</filename>"</literal>:
+    [Queue voip-overlay]
+    Anchor=top-left
+    Margin=10 100
+    Spacing=0
+    Limit=20
+
+<literal>"<filename>notification-voip.event</filename>"</literal>:
+    [Event voip talking on]
+    IfDataMatches=talking,==,true;
+    Actions=notification-voip-overlay-on;
+    [Event voip talking off]
+    IfData=talking;
+    IfDataMatches=talking,==,false;
+    Actions=notification-voip-overlay-off;
+
+<literal>"<filename>notification-voip-overlay-on.action</filename>"</literal>:
+    [Action]
+    Name=notification-voip-overlay-on
+
+    [Notification]
+    Text=${buddy-name}
+    Icon=theme:microphone-sensitivity-high-symbolic
+
+    [NotificationBubble]
+    Queue=utility
+    Padding=2
+    Radius=0
+    BorderBlur=0
+
+    [NotificationImage]
+    Height=25
+    Anchor=Center
+
+    [NotificationIcon]
+    Placement=Foreground
+    Height=25
+
+<literal>"<filename>notification-voip-overlay-off.action</filename>"</literal>:
+    [File]
+    Extends=notification-voip-overlay-on.action
+
+    [Action]
+    Name=notification-voip-overlay-off
+
+    [Notification]
+    Icon=theme:microphone-sensitivity-muted-symbolic</programlisting>
+        </example>
+
         <example>
             <title>Custom event: notify the end of a command</title>
 
