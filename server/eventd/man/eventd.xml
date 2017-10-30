@@ -305,7 +305,7 @@
     <refsect1 id="examples">
         <title>Examples</title>
 
-        <example condition="website;enable_nd_xcb;enable_nd_wayland">
+        <example condition="website;enable_nd_xcb;enable_nd_wayland;enable_nd_win">
             <title>As a notification daemon</title>
 
             <para>
@@ -324,7 +324,7 @@
             </para>
         </example>
 
-        <example condition="website;enable_nd_xcb">
+        <example condition="website;enable_nd_xcb;enable_nd_wayland;enable_nd_win">
             <title>dunst-like style</title>
 
             <para>
