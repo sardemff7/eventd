@@ -22,11 +22,13 @@ addons:
             - libcairo2-dev
             - libpango1.0-dev
             - libgdk-pixbuf2.0-dev
+            - libxkbcommon-dev
             - libxcb1-dev
             - libxcb-util0-dev
             - libxcb-randr0-dev
             - libxcb-shape0-dev
             - libxcb-ewmh-dev
+            - libxkbcommon-x11-dev
             - libpurple-dev
             - libpulse-dev
             - libsndfile1-dev
