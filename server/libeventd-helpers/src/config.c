@@ -49,7 +49,7 @@ evhelpers_format_string_new(gchar *string)
     GError *error = NULL;
     FormatString *format_string;
 
-    format_string = nk_token_list_parse(string, &error);
+    format_string = nk_token_list_parse(string, '$', &error);
     if ( format_string != NULL )
         return format_string;
 
