@@ -90,6 +90,7 @@ struct _EventdPluginContext
 {
     GDBusNodeInfo *introspection_data;
     guint id;
+    gchar *ignored_name_owner;
     gboolean bus_name_owned;
     GDBusProxy *server;
     GSList *actions;
@@ -341,6 +342,8 @@ _eventd_libnotify_init(EventdPluginCoreContext *core)
 static void
 _eventd_libnotify_uninit(EventdPluginContext *context)
 {
+    g_free(context->ignored_name_owner);
+
     g_dbus_node_info_unref(context->introspection_data);
 
     g_free(context);
@@ -434,9 +437,13 @@ static void
 _eventd_libnotify_bus_name_appeared(GDBusConnection *connection, const gchar *name, const gchar *name_owner, gpointer user_data)
 {
     EventdPluginContext *context = user_data;
+    const gchar *ignored_name_owner = context->ignored_name_owner;
     GDBusProxyFlags flags = G_DBUS_PROXY_FLAGS_DO_NOT_CONNECT_SIGNALS|G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES;
 
-    if ( g_strcmp0(g_dbus_connection_get_unique_name(connection), name_owner) == 0 )
+    if ( ignored_name_owner == NULL )
+        ignored_name_owner = g_dbus_connection_get_unique_name(connection);
+
+    if ( g_strcmp0(ignored_name_owner, name_owner) == 0 )
     {
         /* The fdo-notifications plugin got the bus name */
         context->bus_name_owned = TRUE;
@@ -466,6 +473,55 @@ _eventd_libnotify_stop(EventdPluginContext *context)
 {
     nk_xdg_theme_context_free(context->theme_context);
     g_bus_unwatch_name(context->id);
+}
+
+
+/*
+ * Control command interface
+ */
+
+static EventdPluginCommandStatus
+_eventd_libnotify_control_command(EventdPluginContext *context, guint64 argc, const gchar * const *argv, gchar **status)
+{
+    EventdPluginCommandStatus r = EVENTD_PLUGIN_COMMAND_STATUS_OK;
+
+    if ( g_strcmp0(argv[0], "set-ignore") == 0 )
+    {
+        g_free(context->ignored_name_owner);
+        if ( argc < 2 )
+        {
+            context->ignored_name_owner = NULL;
+            *status = g_strdup_printf("Reset ignored owner");
+        }
+        else
+        {
+            context->ignored_name_owner = g_strdup(argv[1]);
+            if ( context->server != NULL )
+            {
+                gchar *current_owner;
+
+                current_owner = g_dbus_proxy_get_name_owner(context->server);
+                if ( g_strcmp0(context->ignored_name_owner, current_owner) == 0 )
+                {
+                    g_object_unref(context->server);
+                    context->server = NULL;
+                    *status = g_strdup_printf("Set ignored owner to %s, which is the current owner", context->ignored_name_owner);
+                }
+                else
+                    *status = g_strdup_printf("Set ignored owner to %s, which is not the current owner", context->ignored_name_owner);
+                g_free(current_owner);
+            }
+            else
+                *status = g_strdup_printf("Set ignored owner to %s", context->ignored_name_owner);
+        }
+    }
+    else
+    {
+        *status = g_strdup_printf("Unknown command '%s'", argv[0]);
+        r = EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR;
+    }
+
+    return r;
 }
 
 
@@ -716,6 +772,8 @@ eventd_plugin_get_interface(EventdPluginInterface *interface)
 
     eventd_plugin_interface_add_start_callback(interface, _eventd_libnotify_start);
     eventd_plugin_interface_add_stop_callback(interface, _eventd_libnotify_stop);
+
+    eventd_plugin_interface_add_control_command_callback(interface, _eventd_libnotify_control_command);
 
     eventd_plugin_interface_add_action_parse_callback(interface, _eventd_libnotify_action_parse);
     eventd_plugin_interface_add_config_reset_callback(interface, _eventd_libnotify_config_reset);
