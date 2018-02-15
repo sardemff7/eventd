@@ -86,6 +86,7 @@ _eventd_fdo_notifications_notification_closed(EventdDbusNotification *notificati
 
     if ( notification->timeout > 0 )
         g_source_remove(notification->timeout);
+    notification->timeout = 0;
     g_hash_table_remove(notification->context->notifications, eventd_event_get_uuid(notification->event));
 }
 
@@ -158,6 +159,9 @@ _eventd_fdo_notifications_notification_free(gpointer user_data)
 
     if ( g_hash_table_size(notification->sender->ids) == 0 )
         g_hash_table_remove(notification->context->senders, notification->sender->name);
+
+    if ( notification->timeout > 0 )
+        g_source_remove(notification->timeout);
 
     g_free(notification);
 }
