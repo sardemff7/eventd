@@ -1,6 +1,6 @@
 # Freedesktop.org notifications event collection plugin
 
-shared_library('fdo-notifications', [ config_h ] + files(
+fdo_notificacions = shared_library('fdo-notifications', [ config_h ] + files(
         'src/fdo-notifications.c',
     ),
     c_args: [
@@ -11,6 +11,18 @@ shared_library('fdo-notifications', [ config_h ] + files(
     install: true,
     install_dir: plugins_install_dir,
 )
+
+if get_option('enable-debug')
+    executable('eventd-fdo-notifications', [ config_h ] + files(
+            'src/debug-daemon.c',
+        ),
+        objects: fdo_notificacions.extract_objects(
+            'src/fdo-notifications.c'
+        ),
+        dependencies: [ libeventd_plugin, libeventc, libeventd, glib ],
+
+    )
+endif
 
 dbussessionservice_install_dir = get_option('dbussessionservicedir')
 if dbussessionservice_install_dir == ''
