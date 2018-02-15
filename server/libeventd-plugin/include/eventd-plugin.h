@@ -68,6 +68,7 @@ typedef void (*EventdPluginEventDispatchFunc)(EventdPluginContext *context, Even
 typedef void (*EventdPluginEventActionFunc)(EventdPluginContext *context, EventdPluginAction *action, EventdEvent *event);
 
 typedef void (*EventdPluginGetInterfaceFunc)(EventdPluginInterface *iface);
+void eventd_plugin_get_interface(EventdPluginInterface *iface);
 
 void eventd_plugin_interface_add_init_callback(EventdPluginInterface *iface, EventdPluginInitFunc callback);
 void eventd_plugin_interface_add_uninit_callback(EventdPluginInterface *iface, EventdPluginSimpleFunc callback);
