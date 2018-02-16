@@ -65,9 +65,7 @@ _eventd_plugins_load_dir(EventdPluginCoreContext *core, gchar *plugins_dir_name,
     const gchar *file;
 
 
-#ifdef EVENTD_DEBUG
-    g_debug("Scanning plugins dir: %s", plugins_dir_name);
-#endif /* EVENTD_DEBUG */
+    eventd_debug("Scanning plugins dir: %s", plugins_dir_name);
 
     plugins_dir = g_dir_open(plugins_dir_name, 0, &error);
     if ( ! plugins_dir )
@@ -151,9 +149,7 @@ _eventd_plugins_load_dir(EventdPluginCoreContext *core, gchar *plugins_dir_name,
 
         if ( g_hash_table_contains(plugins, *id) )
         {
-#ifdef EVENTD_DEBUG
-            g_debug("Plugin '%s' with id '%s' already loaded", file, *id);
-#endif /* ! EVENTD_DEBUG */
+            eventd_debug("Plugin '%s' with id '%s' already loaded", file, *id);
             goto next;
         }
 
@@ -163,9 +159,7 @@ _eventd_plugins_load_dir(EventdPluginCoreContext *core, gchar *plugins_dir_name,
             if ( ( ! g_module_symbol(module, "eventd_plugin_system_mode_support", (gpointer *) &system_mode_support) )
                  || ( ! *system_mode_support ) )
             {
-#ifdef EVENTD_DEBUG
-                g_debug("Plugin '%s' does not support system mode", *id);
-#endif /* EVENTD_DEBUG */
+                eventd_debug("Plugin '%s' does not support system mode", *id);
                 goto next;
             }
         }
@@ -173,9 +167,7 @@ _eventd_plugins_load_dir(EventdPluginCoreContext *core, gchar *plugins_dir_name,
         if ( ! g_module_symbol(module, "eventd_plugin_get_interface", (void **)&get_interface) )
             goto next;
 
-#ifdef EVENTD_DEBUG
-        g_debug("Loading plugin '%s': %s", file, *id);
-#endif /* ! EVENTD_DEBUG */
+        eventd_debug("Loading plugin '%s': %s", file, *id);
 
         plugin = g_new0(EventdPlugin, 1);
         plugin->module = module;

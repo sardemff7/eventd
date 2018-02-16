@@ -310,9 +310,7 @@ _eventd_events_parse_group(EventdEvents *self, const gchar *group, GKeyFile *con
     if ( evhelpers_config_key_file_get_string_list(config_file, group, "Actions", &actions, NULL) < 0 )
         goto fail;
 
-#ifdef EVENTD_DEBUG
-    g_debug("Parsing event: %s", s);
-#endif /* EVENTD_DEBUG */
+    eventd_debug("Parsing event: %s", s);
 
     EventdEventsEvent *event;
     event = g_new0(EventdEventsEvent, 1);

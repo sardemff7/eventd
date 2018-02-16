@@ -88,9 +88,7 @@ eventc_light_get_version(void)
 static gint
 _eventc_light_connection_send_message(EventcLightConnection *self, gchar *message)
 {
-#ifdef EVENTD_DEBUG
-    g_debug("Sending message:\n%s", message);
-#endif /* EVENTD_DEBUG */
+    eventd_debug("Sending message:\n%s", message);
 
     gint error = 0;
 

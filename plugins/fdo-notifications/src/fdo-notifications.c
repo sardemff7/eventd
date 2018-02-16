@@ -282,15 +282,11 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
         return;
     }
 
-#ifdef EVENTD_DEBUG
-    g_debug("Received notification from '%s': '%s'", app_name, summary);
-#endif /* EVENTD_DEBUG */
+    eventd_debug("Received notification from '%s': '%s'", app_name, summary);
 
     while ( g_variant_iter_next(hints, "{&sv}", &hint_name, &hint) )
     {
-#ifdef EVENTD_DEBUG
-        g_debug("        Found hint '%s'", hint_name);
-#endif /* EVENTD_DEBUG */
+        eventd_debug("        Found hint '%s'", hint_name);
 
         if ( g_strcmp0(hint_name, "category") == 0 )
             event_name = g_variant_get_string(hint, NULL);
@@ -347,9 +343,7 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
 
     if ( ( icon != NULL ) && ( *icon != 0 ) )
     {
-#ifdef EVENTD_DEBUG
-        g_debug("        Icon specified: '%s'", icon);
-#endif /* EVENTD_DEBUG */
+        eventd_debug("        Icon specified: '%s'", icon);
 
         if ( g_str_has_prefix(icon, "file://") )
             eventd_event_add_data_string(event, g_strdup("icon"), g_strdup(icon));
@@ -414,9 +408,7 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
     if ( notification == NULL )
         notification = _eventd_fdo_notifications_notification_new(context, sender, event, id);
 
-#ifdef EVENTD_DEBUG
-    g_debug("    Creating event 'notification' '%s' for client '%s': %u (%u) ", event_name, app_name, notification->id, id);
-#endif /* EVENTD_DEBUG */
+    eventd_debug("    Creating event %s 'notification' '%s' for client '%s': %u (%u) ", eventd_event_get_uuid(event), event_name, app_name, notification->id, id);
 
     if ( ! eventd_plugin_core_push_event(context->core, event) )
     {
@@ -565,17 +557,13 @@ _eventd_fdo_notifications_on_bus_acquired(GDBusConnection *connection, const gch
 static void
 _eventd_fdo_notifications_on_name_acquired(GDBusConnection *connection, const gchar *name, gpointer user_data)
 {
-#ifdef EVENTD_DEBUG
-    g_debug("Acquired the name %s on the session bus", name);
-#endif /* EVENTD_DEBUG */
+    eventd_debug("Acquired the name %s on the session bus", name);
 }
 
 static void
 _eventd_fdo_notifications_on_name_lost(GDBusConnection *connection, const gchar *name, gpointer user_data)
 {
-#ifdef EVENTD_DEBUG
-    g_debug("Lost the name %s on the session bus", name);
-#endif /* EVENTD_DEBUG */
+    eventd_debug("Lost the name %s on the session bus", name);
 }
 
 static void

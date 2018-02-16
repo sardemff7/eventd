@@ -35,9 +35,7 @@
 static EventdWsModule *
 _eventd_ws_module_load_dir(gchar *modules_dir_name)
 {
-#ifdef EVENTD_DEBUG
-    g_debug("Scanning modules dir: %s", modules_dir_name);
-#endif /* EVENTD_DEBUG */
+    eventd_debug("Scanning modules dir: %s", modules_dir_name);
 
     gchar *file;
     file = g_build_filename(modules_dir_name, "ws." G_MODULE_SUFFIX, NULL);
@@ -62,9 +60,7 @@ _eventd_ws_module_load_dir(gchar *modules_dir_name)
     if ( ! g_module_symbol(module, "eventd_ws_module_get_info", (void **)&get_info) )
         return NULL;
 
-#ifdef EVENTD_DEBUG
-    g_debug("Loading WebSocket module");
-#endif /* ! EVENTD_DEBUG */
+    eventd_debug("Loading WebSocket module");
 
     EventdWsModule *ws_module;
     ws_module = g_new(EventdWsModule, 1);

@@ -101,6 +101,11 @@ other_conf.set('EVP_SSDP_URN', evp_ssdp_urn)
 other_conf.set('EVP_UNIX_SOCKET', evp_unix_socket)
 
 header_conf.set('EVENTD_DEBUG', get_option('enable-debug'))
+if get_option('enable-debug')
+    header_conf.set('eventd_debug(...)', 'g_debug(__VA_ARGS__)')
+else
+    header_conf.set('eventd_debug(...)', '((void)0)')
+endif
 header_conf.set('DISABLE_IPV6', not get_option('enable-ipv6'))
 
 config_h = configure_file(output: 'config.h', configuration: header_conf)

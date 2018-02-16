@@ -43,9 +43,7 @@ static EventdSdModule modules[_EVENTD_SD_MODULES_SIZE];
 static void
 _eventd_sd_modules_load_dir(const EventdSdModuleControlInterface *control, GList *sockets, gchar *modules_dir_name)
 {
-#ifdef EVENTD_DEBUG
-    g_debug("Scanning service discovery modules dir: %s", modules_dir_name);
-#endif /* EVENTD_DEBUG */
+    eventd_debug("Scanning service discovery modules dir: %s", modules_dir_name);
 
     EventdSdModules i;
     for ( i = EVENTD_SD_MODULE_NONE + 1 ; i < _EVENTD_SD_MODULES_SIZE ; ++i )
@@ -71,9 +69,7 @@ _eventd_sd_modules_load_dir(const EventdSdModuleControlInterface *control, GList
         if ( ! g_module_symbol(module, "eventd_sd_module_get_info", (void **)&get_info) )
             goto next;
 
-#ifdef EVENTD_DEBUG
-        g_debug("Loading service discovery module '%s'", file);
-#endif /* ! EVENTD_DEBUG */
+        eventd_debug("Loading service discovery module '%s'", file);
 
         EventdSdModule sd_module = { .module = NULL, .context = NULL };
         get_info(&sd_module);

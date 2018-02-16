@@ -216,9 +216,7 @@ _eventc_connection_send_message(EventcConnection *self, gchar *message, GError *
 
     GError *_inner_error_ = NULL;
 
-#ifdef EVENTD_DEBUG
-    g_debug("Sending message:\n%s", message);
-#endif /* EVENTD_DEBUG */
+    eventd_debug("Sending message:\n%s", message);
 
     if ( self->priv->ws != NULL )
     {

@@ -53,9 +53,7 @@ _eventd_sd_ssdp_resource_available(EventdSdModuleContext *self, gchar *usn, GLis
     if ( ( server = g_hash_table_lookup(self->servers, usn) ) == NULL )
         return;
 
-#ifdef EVENTD_DEBUG
-        g_debug("Found resource '%s'", usn);
-#endif /* EVENTD_DEBUG */
+    eventd_debug("Found resource '%s'", usn);
 
     if ( self->control->server_has_address(server) )
         return;
@@ -91,9 +89,7 @@ _eventd_sd_ssdp_resource_unavailable(EventdSdModuleContext *self, gchar *usn, GS
     if ( ( server = g_hash_table_lookup(self->servers, usn) ) == NULL )
         return;
 
-#ifdef EVENTD_DEBUG
-        g_debug("Resource '%s' is gone", usn);
-#endif /* EVENTD_DEBUG */
+    eventd_debug("Resource '%s' is gone", usn);
 
     if ( ! self->control->server_has_address(server) )
         return;

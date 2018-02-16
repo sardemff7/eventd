@@ -60,9 +60,7 @@ _eventd_evp_client_send_message(EventdEvpClient *self, gchar *message)
 {
     GError *error = NULL;
 
-#ifdef EVENTD_DEBUG
-    g_debug("Sending message:\n%s", message);
-#endif /* EVENTD_DEBUG */
+    eventd_debug("Sending message:\n%s", message);
 
     if ( self->ws != NULL )
     {
@@ -86,9 +84,7 @@ _eventd_evp_client_protocol_event(EventdProtocol *protocol, EventdEvent *event, 
 {
     EventdEvpClient *self = user_data;
 
-#ifdef EVENTD_DEBUG
-    g_debug("Received an event (category: %s): %s", eventd_event_get_category(event), eventd_event_get_name(event));
-#endif /* EVENTD_DEBUG */
+    eventd_debug("Received an event (category: %s): %s", eventd_event_get_category(event), eventd_event_get_name(event));
 
     self->current = event;
     eventd_core_push_event(self->context->core, event);
@@ -132,9 +128,7 @@ _eventd_evp_client_protocol_bye(EventdProtocol *protocol, const gchar *message, 
 {
     EventdEvpClient *self = user_data;
 
-#ifdef EVENTD_DEBUG
-    g_debug("Client connection closed");
-#endif /* EVENTD_DEBUG */
+    eventd_debug("Client connection closed");
 
     if ( self->ws != NULL )
         eventd_ws_connection_close(self->context->ws, self->ws);

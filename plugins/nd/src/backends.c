@@ -38,9 +38,7 @@ _eventd_nd_backends_load_dir(EventdNdBackend *backends, EventdNdInterface *conte
 {
     gboolean ret = FALSE;
 
-#ifdef EVENTD_DEBUG
-    g_debug("Scanning notification backends dir: %s", backends_dir_name);
-#endif /* EVENTD_DEBUG */
+    eventd_debug("Scanning notification backends dir: %s", backends_dir_name);
 
     EventdNdBackends i;
     for ( i = EVENTD_ND_BACKEND_NONE + 1 ; i < _EVENTD_ND_BACKENDS_SIZE ; ++i )
@@ -68,9 +66,7 @@ _eventd_nd_backends_load_dir(EventdNdBackend *backends, EventdNdInterface *conte
         if ( ! g_module_symbol(module, "eventd_nd_backend_get_info", (void **)&get_info) )
             goto next;
 
-#ifdef EVENTD_DEBUG
-        g_debug("Loading backend '%s'", file);
-#endif /* ! EVENTD_DEBUG */
+        eventd_debug("Loading backend '%s'", file);
 
         EventdNdBackend backend = { .module = NULL, .context = NULL };
         get_info(&backend);

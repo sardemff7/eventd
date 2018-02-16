@@ -138,9 +138,7 @@ _eventd_config_load_dir(EventdConfig *config, GHashTable *action_files, GHashTab
     GError *error = NULL;
     gchar *config_file_name = NULL;
 
-#ifdef EVENTD_DEBUG
-    g_debug("Scanning configuration dir: %s", config_dir_name);
-#endif /* EVENTD_DEBUG */
+    eventd_debug("Scanning configuration dir: %s", config_dir_name);
 
     config_file_name = g_build_filename(config_dir_name, PACKAGE_NAME ".conf", NULL);
     if ( g_file_test(config_file_name, G_FILE_TEST_IS_REGULAR) )
