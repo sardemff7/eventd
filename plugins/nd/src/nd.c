@@ -87,13 +87,18 @@ _eventd_nd_backend_switch(EventdNdContext *context, EventdNdBackends backend, co
         context->backend = NULL;
     }
 
+    eventd_debug("Switching to backend %s (%s)", eventd_nd_backends_names[backend], target);
+
     if ( backend == EVENTD_ND_BACKEND_NONE )
         goto cleanup;
 
     EventdNdBackend *backend_;
     backend_ = &context->backends[backend];
     if ( backend_->context == NULL )
+    {
+        eventd_debug("Backend not initialized");
         return FALSE;
+    }
 
     if ( ( backend_->start != NULL ) && ( ! backend_->start(backend_->context, target) ) )
         return FALSE;
