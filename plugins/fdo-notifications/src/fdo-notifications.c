@@ -338,10 +338,10 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
 
     eventd_event_add_data_string(event, g_strdup("title"), g_markup_escape_text(summary, -1));
 
-    if ( body != NULL )
+    if ( ( body != NULL ) && ( *body != '\0' ) )
         eventd_event_add_data_string(event, g_strdup("message"), _eventd_fdo_notifications_body_escape(context, body));
 
-    if ( ( icon != NULL ) && ( *icon != 0 ) )
+    if ( ( icon != NULL ) && ( *icon != '\0' ) )
     {
         eventd_debug("        Icon specified: '%s'", icon);
 
