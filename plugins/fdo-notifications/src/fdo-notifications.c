@@ -284,7 +284,7 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
 
     eventd_debug("Received notification from '%s': '%s'", app_name, summary);
 
-    while ( g_variant_iter_next(hints, "{&sv}", &hint_name, &hint) )
+    for ( ; g_variant_iter_next(hints, "{&sv}", &hint_name, &hint) ; g_variant_unref(hint) )
     {
         eventd_debug("        Found hint '%s'", hint_name);
 
@@ -317,8 +317,6 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
             transient = g_variant_get_boolean(hint);
         else if ( g_strcmp0(hint_name, "value") == 0 )
             value = g_variant_get_int32(hint);
-
-        g_variant_unref(hint);
     }
 
     sender = g_hash_table_lookup(context->senders, sender_name);
