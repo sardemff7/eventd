@@ -251,6 +251,8 @@ evhelpers_config_key_file_get_int_list(GKeyFile *config_file, const gchar *group
     for ( ; i < *length ; ++i )
         values[i].set = FALSE;
 
+    *length = value_length;
+
     g_free(value);
     return 0;
 }
