@@ -339,11 +339,14 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
     eventd_event_add_data_string(event, g_strdup("title"), g_markup_escape_text(summary, -1));
 
     if ( ( body != NULL ) && ( *body != '\0' ) )
+    {
+        eventd_debug("    Body specified: '%s'", body);
         eventd_event_add_data_string(event, g_strdup("message"), _eventd_fdo_notifications_body_escape(context, body));
+    }
 
     if ( ( icon != NULL ) && ( *icon != '\0' ) )
     {
-        eventd_debug("        Icon specified: '%s'", icon);
+        eventd_debug("    Icon specified: '%s'", icon);
 
         if ( g_str_has_prefix(icon, "file://") )
             eventd_event_add_data_string(event, g_strdup("icon"), g_strdup(icon));
@@ -408,7 +411,7 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
     if ( notification == NULL )
         notification = _eventd_fdo_notifications_notification_new(context, sender, event, id);
 
-    eventd_debug("    Creating event %s 'notification' '%s' for client '%s': %u (%u) ", eventd_event_get_uuid(event), event_name, app_name, notification->id, id);
+    eventd_debug("  Creating event %s 'notification' '%s' for client '%s': %u (%u) ", eventd_event_get_uuid(event), event_name, app_name, notification->id, id);
 
     if ( ! eventd_plugin_core_push_event(context->core, event) )
     {
