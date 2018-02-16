@@ -288,7 +288,9 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
     {
         eventd_debug("        Found hint '%s'", hint_name);
 
-        if ( g_strcmp0(hint_name, "category") == 0 )
+        if ( g_strcmp0(hint_name, "action-icons") == 0 )
+            action_icons = g_variant_get_boolean(hint);
+        else if ( g_strcmp0(hint_name, "category") == 0 )
             event_name = g_variant_get_string(hint, NULL);
         else if ( g_strcmp0(hint_name, "desktop-entry") == 0 )
             desktop_entry = g_variant_get_string(hint, NULL);
@@ -306,20 +308,18 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
         else if ( ( g_strcmp0(hint_name, "image-path") == 0 )
                   || ( g_strcmp0(hint_name, "image_path") == 0 ) )
             image_path = g_variant_get_string(hint, NULL);
-        else if ( g_strcmp0(hint_name, "urgency") == 0 )
-            urgency = g_variant_get_byte(hint);
+        else if ( g_strcmp0(hint_name, "resident") == 0 )
+            resident = g_variant_get_boolean(hint);
         else if ( g_strcmp0(hint_name, "sound-name") == 0 )
             sound_name = g_variant_get_string(hint, NULL);
         else if ( g_strcmp0(hint_name, "sound-file") == 0 )
             sound_file = g_variant_get_string(hint, NULL);
         else if ( g_strcmp0(hint_name, "suppress-sound") == 0 )
             no_sound = g_variant_get_boolean(hint);
-        else if ( g_strcmp0(hint_name, "action-icons") == 0 )
-            action_icons = g_variant_get_boolean(hint);
-        else if ( g_strcmp0(hint_name, "resident") == 0 )
-            resident = g_variant_get_boolean(hint);
         else if ( g_strcmp0(hint_name, "transient") == 0 )
             transient = g_variant_get_boolean(hint);
+        else if ( g_strcmp0(hint_name, "urgency") == 0 )
+            urgency = g_variant_get_byte(hint);
         else if ( g_strcmp0(hint_name, "value") == 0 )
             value = g_variant_get_int32(hint);
     }
