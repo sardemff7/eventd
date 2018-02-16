@@ -1,6 +1,6 @@
 project('eventd', 'c',
     version: '0.23.90',
-    meson_version: '>=0.41.0',
+    meson_version: '>=0.44.1',
     license: [ 'GPL3+', 'LGPL3+', 'MIT' ],
     default_options: [
         'c_std=gnu11',
