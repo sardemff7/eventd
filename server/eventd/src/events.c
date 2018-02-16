@@ -293,8 +293,26 @@ _eventd_events_parse_group(EventdEvents *self, const gchar *group, GKeyFile *con
 
     const gchar *id, *s;
     id = group + strlen("Event ");
-    if ( ( ( s = g_utf8_strchr(id, -1, ' ') ) != NULL ) && ( ( s = g_utf8_strchr(s+1, -1, ' ') ) != NULL ) )
-        name = g_strndup(id, s - id);
+    if ( ( s = g_utf8_strchr(id, -1, ' ') ) != NULL )
+    {
+        const gchar *e = s;
+        s = g_utf8_next_char(s);
+        gunichar c = g_utf8_get_char(s);
+        if ( c == '*' )
+        {
+            c = g_utf8_get_char(g_utf8_next_char(s));
+            if ( ( c != ' ' ) && ( c != '\0' ) )
+            {
+                g_warning("Wrong event specification '%s': * should be alone", id);
+                return;
+            }
+            name = g_strndup(id, e - id);
+        }
+        else if ( ( s = g_utf8_strchr(g_utf8_next_char(s), -1, ' ') ) != NULL )
+            name = g_strndup(id, s - id);
+        else
+            name = g_strdup(id);
+    }
     else
         name = g_strdup(id);
     g_strstrip(name);

@@ -364,12 +364,12 @@
     Height=25
 
 <literal>"<filename>notification-urgencies.event</filename>"</literal>:
-    [Event notification  low]
+    [Event notification * low]
     IfData=urgency;
     IfDataMatches=urgency,==,byte 0;
     Actions=notification-low;
 
-    [Event notification  critical]
+    [Event notification * critical]
     IfData=urgency;
     IfDataMatches=urgency,==,byte 2;
     Actions=notification-critical;
@@ -420,11 +420,11 @@
     Limit=1
 
 <literal>"<filename>notification-utility.event</filename>"</literal>:
-    [Event notification  mouse-tool]
+    [Event notification * mouse-tool]
     IfDataMatches=client-name,==,"mouse-tool";
     Actions=notification-utility;
 
-    [Event notification  volume-tool]
+    [Event notification * volume-tool]
     IfDataMatches=client-name,==,"volume-tool";
     Actions=notification-utility;
 
