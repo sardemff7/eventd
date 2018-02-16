@@ -291,13 +291,12 @@ _eventd_events_parse_group(EventdEvents *self, const gchar *group, GKeyFile *con
 {
     gchar *name = NULL;
 
-    const gchar *s;
-    gchar *c;
-    s = group + strlen("Event ");
-    if ( ( ( c = g_utf8_strchr(s, -1, ' ') ) != NULL ) && ( ( c = g_utf8_strchr(c+1, -1, ' ') ) != NULL ) )
-        name = g_strndup(s, c - s);
+    const gchar *id, *s;
+    id = group + strlen("Event ");
+    if ( ( ( s = g_utf8_strchr(id, -1, ' ') ) != NULL ) && ( ( s = g_utf8_strchr(s+1, -1, ' ') ) != NULL ) )
+        name = g_strndup(id, s - id);
     else
-        name = g_strdup(s);
+        name = g_strdup(id);
     g_strstrip(name);
 
     gboolean disable = FALSE;
@@ -310,7 +309,7 @@ _eventd_events_parse_group(EventdEvents *self, const gchar *group, GKeyFile *con
     if ( evhelpers_config_key_file_get_string_list(config_file, group, "Actions", &actions, NULL) < 0 )
         goto fail;
 
-    eventd_debug("Parsing event: %s", s);
+    eventd_debug("Parsing event: %s", id);
 
     EventdEventsEvent *event;
     event = g_new0(EventdEventsEvent, 1);
