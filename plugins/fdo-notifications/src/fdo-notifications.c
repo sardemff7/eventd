@@ -293,14 +293,19 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
         else if ( g_strcmp0(hint_name, "desktop-entry") == 0 )
             desktop_entry = g_variant_get_string(hint, NULL);
         else if ( ( g_strcmp0(hint_name, "image-data") == 0 )
-                  || ( g_strcmp0(hint_name, "image_data") == 0 ) )
+                  || ( g_strcmp0(hint_name, "image_data") == 0 )
+                  || ( g_strcmp0(hint_name, "icon_data") == 0 ) )
+        {
+            if ( image_data != NULL )
+            {
+                eventd_debug("            More than one image data hint found");
+                g_variant_unref(image_data);
+            }
             image_data = g_variant_ref(hint);
+        }
         else if ( ( g_strcmp0(hint_name, "image-path") == 0 )
                   || ( g_strcmp0(hint_name, "image_path") == 0 ) )
             image_path = g_variant_get_string(hint, NULL);
-        else if ( ( g_strcmp0(hint_name, "icon_data") == 0 )
-                  && image_data == NULL )
-            image_data = g_variant_ref(hint);
         else if ( g_strcmp0(hint_name, "urgency") == 0 )
             urgency = g_variant_get_byte(hint);
         else if ( g_strcmp0(hint_name, "sound-name") == 0 )
