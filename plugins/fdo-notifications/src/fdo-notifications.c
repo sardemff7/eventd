@@ -28,6 +28,7 @@
 #include <gio/gio.h>
 
 #include "nkutils-git-version.h"
+#include "nkutils-enum.h"
 
 #include "libeventd-event.h"
 #include "eventd-plugin.h"
@@ -72,6 +73,60 @@ typedef struct {
     EventdEvent *event;
     gulong timeout;
 } EventdDbusNotification;
+
+typedef enum {
+    EVENTD_FDO_NOTIFICATIONS_HINT_ACTION_ICONS,
+    EVENTD_FDO_NOTIFICATIONS_HINT_CATEGORY,
+    EVENTD_FDO_NOTIFICATIONS_HINT_DESKTOP_ENTRY,
+    EVENTD_FDO_NOTIFICATIONS_HINT_IMAGE_DATA,
+    EVENTD_FDO_NOTIFICATIONS_HINT_IMAGE_DATA_11,
+    EVENTD_FDO_NOTIFICATIONS_HINT_IMAGE_PATH,
+    EVENTD_FDO_NOTIFICATIONS_HINT_IMAGE_PATH_11,
+    EVENTD_FDO_NOTIFICATIONS_HINT_ICON_DATA,
+    EVENTD_FDO_NOTIFICATIONS_HINT_RESIDENT,
+    EVENTD_FDO_NOTIFICATIONS_HINT_SOUND_NAME,
+    EVENTD_FDO_NOTIFICATIONS_HINT_SOUND_FILE,
+    EVENTD_FDO_NOTIFICATIONS_HINT_SUPRESS_SOUND,
+    EVENTD_FDO_NOTIFICATIONS_HINT_TRANSIENT,
+    EVENTD_FDO_NOTIFICATIONS_HINT_URGENCY,
+    EVENTD_FDO_NOTIFICATIONS_HINT_VALUE,
+} EventdFdoNotificationsHint;
+
+static const gchar *_eventd_fdo_notifications_hint_names[] = {
+    [EVENTD_FDO_NOTIFICATIONS_HINT_ACTION_ICONS]  = "action-icons",
+    [EVENTD_FDO_NOTIFICATIONS_HINT_CATEGORY]      = "category",
+    [EVENTD_FDO_NOTIFICATIONS_HINT_DESKTOP_ENTRY] = "desktop-entry",
+    [EVENTD_FDO_NOTIFICATIONS_HINT_IMAGE_DATA]    = "image-data",
+    [EVENTD_FDO_NOTIFICATIONS_HINT_IMAGE_DATA_11] = "image_data",
+    [EVENTD_FDO_NOTIFICATIONS_HINT_IMAGE_PATH]    = "image-path",
+    [EVENTD_FDO_NOTIFICATIONS_HINT_IMAGE_PATH_11] = "image_path",
+    [EVENTD_FDO_NOTIFICATIONS_HINT_ICON_DATA]     = "icon_data",
+    [EVENTD_FDO_NOTIFICATIONS_HINT_RESIDENT]      = "resident",
+    [EVENTD_FDO_NOTIFICATIONS_HINT_SOUND_NAME]    = "sound-name",
+    [EVENTD_FDO_NOTIFICATIONS_HINT_SOUND_FILE]    = "sound-file",
+    [EVENTD_FDO_NOTIFICATIONS_HINT_SUPRESS_SOUND] = "suppress-sound",
+    [EVENTD_FDO_NOTIFICATIONS_HINT_TRANSIENT]     = "transient",
+    [EVENTD_FDO_NOTIFICATIONS_HINT_URGENCY]       = "urgency",
+    [EVENTD_FDO_NOTIFICATIONS_HINT_VALUE]         = "value",
+};
+
+static const gchar *_eventd_fdo_notifications_hint_types[] = {
+    [EVENTD_FDO_NOTIFICATIONS_HINT_ACTION_ICONS]  = "b",
+    [EVENTD_FDO_NOTIFICATIONS_HINT_CATEGORY]      = "s",
+    [EVENTD_FDO_NOTIFICATIONS_HINT_DESKTOP_ENTRY] = "s",
+    [EVENTD_FDO_NOTIFICATIONS_HINT_IMAGE_DATA]    = "(iiibiiay)",
+    [EVENTD_FDO_NOTIFICATIONS_HINT_IMAGE_DATA_11] = "(iiibiiay)",
+    [EVENTD_FDO_NOTIFICATIONS_HINT_IMAGE_PATH]    = "s",
+    [EVENTD_FDO_NOTIFICATIONS_HINT_IMAGE_PATH_11] = "s",
+    [EVENTD_FDO_NOTIFICATIONS_HINT_ICON_DATA]     = "(iiibiiay)",
+    [EVENTD_FDO_NOTIFICATIONS_HINT_RESIDENT]      = "b",
+    [EVENTD_FDO_NOTIFICATIONS_HINT_SOUND_NAME]    = "s",
+    [EVENTD_FDO_NOTIFICATIONS_HINT_SOUND_FILE]    = "s",
+    [EVENTD_FDO_NOTIFICATIONS_HINT_SUPRESS_SOUND] = "b",
+    [EVENTD_FDO_NOTIFICATIONS_HINT_TRANSIENT]     = "b",
+    [EVENTD_FDO_NOTIFICATIONS_HINT_URGENCY]       = "y",
+    [EVENTD_FDO_NOTIFICATIONS_HINT_VALUE]         = "i",
+};
 
 static void
 _eventd_fdo_notifications_notification_closed(EventdDbusNotification *notification, EventdFdoNotificationsCloseReason reason)
@@ -286,42 +341,75 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
 
     for ( ; g_variant_iter_next(hints, "{&sv}", &hint_name, &hint) ; g_variant_unref(hint) )
     {
-        eventd_debug("        Found hint '%s'", hint_name);
-
-        if ( g_strcmp0(hint_name, "action-icons") == 0 )
-            action_icons = g_variant_get_boolean(hint);
-        else if ( g_strcmp0(hint_name, "category") == 0 )
-            event_name = g_variant_get_string(hint, NULL);
-        else if ( g_strcmp0(hint_name, "desktop-entry") == 0 )
-            desktop_entry = g_variant_get_string(hint, NULL);
-        else if ( ( g_strcmp0(hint_name, "image-data") == 0 )
-                  || ( g_strcmp0(hint_name, "image_data") == 0 )
-                  || ( g_strcmp0(hint_name, "icon_data") == 0 ) )
+        guint64 hint_enum_value;
+        if ( ! nk_enum_parse(hint_name, _eventd_fdo_notifications_hint_names, G_N_ELEMENTS(_eventd_fdo_notifications_hint_names), FALSE, FALSE, &hint_enum_value) )
         {
+            eventd_debug("        Found unknown hint '%s'", hint_name);
+            continue;
+        }
+
+        if ( ! g_variant_is_of_type(hint, G_VARIANT_TYPE(_eventd_fdo_notifications_hint_types[hint_enum_value])) )
+        {
+            eventd_debug("        Found hint '%s' of type '%s' but expected type '%s', ignoring", hint_name, g_variant_get_type_string(hint), _eventd_fdo_notifications_hint_types[hint_enum_value]);
+            continue;
+        }
+
+        if ( g_variant_is_of_type(hint, G_VARIANT_TYPE_BOOLEAN) )
+            eventd_debug("        Found hint '%s': %s", hint_name, g_variant_get_boolean(hint) ? "true" : "false");
+        else if ( g_variant_is_of_type(hint, G_VARIANT_TYPE_BYTE) )
+            eventd_debug("        Found hint '%s': %hhu", hint_name, g_variant_get_byte(hint));
+        else if ( g_variant_is_of_type(hint, G_VARIANT_TYPE_INT32) )
+            eventd_debug("        Found hint '%s': %" G_GINT32_FORMAT, hint_name, g_variant_get_int32(hint));
+        else if ( g_variant_is_of_type(hint, G_VARIANT_TYPE_STRING) )
+            eventd_debug("        Found hint '%s': %s", hint_name, g_variant_get_string(hint, NULL));
+
+        switch ( (EventdFdoNotificationsHint) hint_enum_value )
+        {
+        case EVENTD_FDO_NOTIFICATIONS_HINT_ACTION_ICONS:
+            action_icons = g_variant_get_boolean(hint);
+        break;
+        case EVENTD_FDO_NOTIFICATIONS_HINT_CATEGORY:
+            event_name = g_variant_get_string(hint, NULL);
+        break;
+        case EVENTD_FDO_NOTIFICATIONS_HINT_DESKTOP_ENTRY:
+            desktop_entry = g_variant_get_string(hint, NULL);
+        break;
+        case EVENTD_FDO_NOTIFICATIONS_HINT_IMAGE_DATA:
+        case EVENTD_FDO_NOTIFICATIONS_HINT_IMAGE_DATA_11:
+        case EVENTD_FDO_NOTIFICATIONS_HINT_ICON_DATA:
             if ( image_data != NULL )
             {
                 eventd_debug("            More than one image data hint found");
                 g_variant_unref(image_data);
             }
             image_data = g_variant_ref(hint);
-        }
-        else if ( ( g_strcmp0(hint_name, "image-path") == 0 )
-                  || ( g_strcmp0(hint_name, "image_path") == 0 ) )
+        break;
+        case EVENTD_FDO_NOTIFICATIONS_HINT_IMAGE_PATH:
+        case EVENTD_FDO_NOTIFICATIONS_HINT_IMAGE_PATH_11:
             image_path = g_variant_get_string(hint, NULL);
-        else if ( g_strcmp0(hint_name, "resident") == 0 )
+        break;
+        case EVENTD_FDO_NOTIFICATIONS_HINT_RESIDENT:
             resident = g_variant_get_boolean(hint);
-        else if ( g_strcmp0(hint_name, "sound-name") == 0 )
+        break;
+        case EVENTD_FDO_NOTIFICATIONS_HINT_SOUND_NAME:
             sound_name = g_variant_get_string(hint, NULL);
-        else if ( g_strcmp0(hint_name, "sound-file") == 0 )
+        break;
+        case EVENTD_FDO_NOTIFICATIONS_HINT_SOUND_FILE:
             sound_file = g_variant_get_string(hint, NULL);
-        else if ( g_strcmp0(hint_name, "suppress-sound") == 0 )
+        break;
+        case EVENTD_FDO_NOTIFICATIONS_HINT_SUPRESS_SOUND:
             no_sound = g_variant_get_boolean(hint);
-        else if ( g_strcmp0(hint_name, "transient") == 0 )
+        break;
+        case EVENTD_FDO_NOTIFICATIONS_HINT_TRANSIENT:
             transient = g_variant_get_boolean(hint);
-        else if ( g_strcmp0(hint_name, "urgency") == 0 )
+        break;
+        case EVENTD_FDO_NOTIFICATIONS_HINT_URGENCY:
             urgency = g_variant_get_byte(hint);
-        else if ( g_strcmp0(hint_name, "value") == 0 )
+        break;
+        case EVENTD_FDO_NOTIFICATIONS_HINT_VALUE:
             value = g_variant_get_int32(hint);
+        break;
+        }
     }
 
     sender = g_hash_table_lookup(context->senders, sender_name);

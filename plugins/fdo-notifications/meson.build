@@ -19,7 +19,7 @@ if get_option('enable-debug')
         objects: fdo_notificacions.extract_objects(
             'src/fdo-notifications.c'
         ),
-        dependencies: [ libeventd_plugin, libeventc, libeventd, glib ],
+        dependencies: [ libeventd_plugin, libeventc, libeventd, libnkutils, glib ],
 
     )
 endif
