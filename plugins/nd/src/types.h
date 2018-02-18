@@ -24,6 +24,7 @@
 #define __EVENTD_ND_TYPES_H__
 
 #include <nkutils-bindings.h>
+#include "eventd-plugin.h"
 
 typedef struct _EventdPluginContext EventdNdContext;
 typedef struct _EventdPluginAction EventdNdStyle;

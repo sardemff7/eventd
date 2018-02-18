@@ -439,17 +439,17 @@ eventd_nd_notification_geometry_changed(EventdPluginContext *context, gboolean r
         _eventd_nd_notification_refresh_list(context, queue);
 }
 
-void
+EventdPluginCommandStatus
 eventd_nd_notification_dismiss_target(EventdPluginContext *context, EventdNdDismissTarget target, EventdNdQueue *queue)
 {
     if ( queue == NULL )
     {
+        gboolean r = FALSE;
         GHashTableIter iter;
-        EventdNdQueue *queue;
         g_hash_table_iter_init(&iter, context->queues);
         while ( g_hash_table_iter_next(&iter, NULL, (gpointer *) &queue) )
-            eventd_nd_notification_dismiss_target(context, target, queue);
-        return;
+            r = ( eventd_nd_notification_dismiss_target(context, target, queue) == EVENTD_PLUGIN_COMMAND_STATUS_OK ) || r;
+        return r ? EVENTD_PLUGIN_COMMAND_STATUS_OK : EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_1;
     }
 
     GList *notification = NULL;
@@ -460,6 +460,7 @@ eventd_nd_notification_dismiss_target(EventdPluginContext *context, EventdNdDism
     break;
     case EVENTD_ND_DISMISS_ALL:
     {
+        gboolean r = FALSE;
         notification = g_queue_peek_head_link(queue->queue);
         while ( notification != NULL )
         {
@@ -468,8 +469,9 @@ eventd_nd_notification_dismiss_target(EventdPluginContext *context, EventdNdDism
             eventd_nd_notification_dismiss(notification->data);
 
             notification = next;
+            r = TRUE;
         }
-        return;
+        return r ? EVENTD_PLUGIN_COMMAND_STATUS_OK : EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_1;
     }
     case EVENTD_ND_DISMISS_OLDEST:
     {
@@ -488,6 +490,10 @@ eventd_nd_notification_dismiss_target(EventdPluginContext *context, EventdNdDism
     }
     break;
     }
-    if ( notification != NULL )
-        eventd_nd_notification_dismiss(notification->data);
+
+    if ( notification == NULL )
+        return EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_1;
+
+    eventd_nd_notification_dismiss(notification->data);
+    return EVENTD_PLUGIN_COMMAND_STATUS_OK;
 }

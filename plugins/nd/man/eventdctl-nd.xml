@@ -117,5 +117,20 @@
         </variablelist>
     </refsect1>
 
+    <refsect1 id="exit-status">
+        <title>Exit status</title>
+
+        <para>These exit statuses are the plugin-specific ones, in addittion to the generic ones you can find in <citerefentry><refentrytitle>eventdctl</refentrytitle><manvolnum>1</manvolnum></citerefentry>.</para>
+
+        <variablelist>
+            <varlistentry>
+                <term><command>dismiss <parameter><replaceable>target</replaceable></parameter> <parameter><replaceable>queue</replaceable></parameter></command>: <literal>50</literal></term>
+                <listitem>
+                    <para>There was no notification to dismiss.</para>
+                </listitem>
+            </varlistentry>
+        </variablelist>
+    </refsect1>
+
     <xi:include href="common-man.xml" xpointer="see-also" />
 </refentry>

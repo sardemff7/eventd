@@ -345,12 +345,9 @@ _eventd_nd_control_command(EventdPluginContext *context, guint64 argc, const gch
     }
     else if ( g_strcmp0(argv[0], "dismiss") == 0 )
     {
-        r = EVENTD_PLUGIN_COMMAND_STATUS_OK;
+        r = EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR;
         if ( argc < 2 )
-        {
             *status = g_strdup("No dismiss target specified");
-            r = EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR;
-        }
         else
         {
             guint64 target = EVENTD_ND_DISMISS_NONE;
@@ -363,21 +360,15 @@ _eventd_nd_control_command(EventdPluginContext *context, guint64 argc, const gch
                     EventdNdQueue *queue;
                     queue = g_hash_table_lookup(context->queues, argv[2]);
                     if ( queue != NULL )
-                        eventd_nd_notification_dismiss_target(context, target, queue);
+                        r = eventd_nd_notification_dismiss_target(context, target, queue);
                     else
-                    {
                         *status = g_strdup_printf("Unknown queue '%s'", argv[2]);
-                        r = EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR;
-                    }
                 }
                 else
-                    eventd_nd_notification_dismiss_target(context, target, NULL);
+                    r = eventd_nd_notification_dismiss_target(context, target, NULL);
             }
             else
-            {
                 *status = g_strdup_printf("Unknown dismiss target '%s'", argv[1]);
-                r = EVENTD_PLUGIN_COMMAND_STATUS_COMMAND_ERROR;
-            }
         }
     }
     else if ( g_strcmp0(argv[0], "backends") == 0 )
