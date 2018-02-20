@@ -124,7 +124,14 @@ _eventd_nd_notification_process(EventdNdNotification *self, EventdEvent *event)
     switch ( eventd_nd_style_get_progress_placement(self->style) )
     {
     case EVENTD_ND_STYLE_PROGRESS_PLACEMENT_BAR_BOTTOM:
-        progress_bar_width = eventd_nd_style_get_progress_bar_width(self->style);
+        if ( self->event != NULL )
+        {
+            GVariant *val;
+
+            val = eventd_event_get_data(self->event, eventd_nd_style_get_template_progress(self->style));
+            if ( val != NULL )
+                progress_bar_width = eventd_nd_style_get_progress_bar_width(self->style);
+        }
     break;
     case EVENTD_ND_STYLE_PROGRESS_PLACEMENT_IMAGE_BOTTOM_TOP:
     case EVENTD_ND_STYLE_PROGRESS_PLACEMENT_IMAGE_TOP_BOTTOM:
