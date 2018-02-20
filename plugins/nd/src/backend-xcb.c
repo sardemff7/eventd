@@ -509,11 +509,13 @@ _eventd_nd_xcb_x11_button_to_scroll(guint32 x11_button, NkBindingsScrollAxis *ax
     {
     case 4:
         *steps = -1;
+        /* fallthrough */
     case 5:
         *axis = NK_BINDINGS_SCROLL_AXIS_VERTICAL;
     break;
     case 6:
         *steps = -1;
+        /* fallthrough */
     case 7:
         *axis = NK_BINDINGS_SCROLL_AXIS_HORIZONTAL;
     break;
