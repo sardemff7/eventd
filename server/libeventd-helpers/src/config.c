@@ -586,109 +586,13 @@ typedef struct {
     gpointer user_data;
 } FormatStringReplaceData;
 
-static const gchar *
-_evhelpers_token_list_string_from_gvariant(FormatStringReplaceData *data, GVariant *content, const gchar *key, gint64 index)
-{
-    if ( content == NULL )
-        return NULL;
-
-    while ( g_variant_is_of_type(content, G_VARIANT_TYPE_VARIANT) )
-        content = g_variant_get_variant(content);
-
-    if ( g_variant_is_of_type(content, G_VARIANT_TYPE_DICTIONARY) )
-    {
-        if ( key != NULL )
-        {
-            if ( ( key[0] != '\0' ) && ( g_utf8_get_char(key) != '@' ) )
-                return _evhelpers_token_list_string_from_gvariant(data, g_variant_lookup_value(content, key, NULL), NULL, 0);
-            return NULL;
-        }
-    }
-    else if ( g_variant_is_of_type(content, G_VARIANT_TYPE_ARRAY) )
-    {
-        const gchar *joiner = ", ";
-        gsize length;
-        length = g_variant_n_children(content);
-
-        if ( length == 0 )
-            return NULL;
-
-        if ( key != NULL )
-        {
-            if ( key[0] == '\0' )
-            {
-                GVariant *child = NULL;
-                gsize i = ABS(index);
-                if ( ( index < 0 ) && ( i <= length ) )
-                    child = g_variant_get_child_value(content, length - i);
-                else if ( ( index >= 0 ) && ( i < length ) )
-                    child = g_variant_get_child_value(content, i);
-
-                return _evhelpers_token_list_string_from_gvariant(data, child, NULL, 0);
-            }
-
-            if ( g_utf8_get_char(key) != '@' )
-                return NULL;
-
-            joiner = g_utf8_next_char(key);
-        }
-
-        gsize jl = strlen(joiner);
-
-        gsize i;
-        GString *ret;
-        ret = g_string_sized_new(length * (10 + jl));
-        for ( i = 0 ; i < length ; ++i )
-        {
-            g_string_append(g_string_append(ret, _evhelpers_token_list_string_from_gvariant(data, g_variant_get_child_value(content, i), NULL, 0)), joiner);
-
-            g_free(data->to_free);
-            data->to_free = NULL;
-        }
-        g_string_truncate(ret, ret->len - jl);
-        data->to_free = g_string_free(ret, FALSE);
-        return data->to_free;
-    }
-
-    if ( g_variant_is_of_type(content, G_VARIANT_TYPE_STRING) )
-        return g_variant_get_string(content, NULL);
-
-    if ( g_variant_is_of_type(content, G_VARIANT_TYPE_BOOLEAN) )
-        return g_variant_get_boolean(content) ? "true" : NULL;
-
-#define _evhelpers_check_type_with_format(l, U, GFormat) G_STMT_START { \
-        if ( g_variant_is_of_type(content, G_VARIANT_TYPE_##U) ) \
-        { \
-            g_snprintf(data->number, sizeof(data->number), "%" GFormat, g_variant_get_##l(content)); \
-            return data->number; \
-        } \
-    } G_STMT_END
-#define _evhelpers_check_type(l, U) _evhelpers_check_type_with_format(l, U, G_G##U##_FORMAT)
-
-    _evhelpers_check_type(int16, INT16);
-    _evhelpers_check_type(int32, INT32);
-    _evhelpers_check_type(int64, INT64);
-    _evhelpers_check_type_with_format(byte, BYTE, "hhu");
-    _evhelpers_check_type(uint16, UINT16);
-    _evhelpers_check_type(uint32, UINT32);
-    _evhelpers_check_type(uint64, UINT64);
-    _evhelpers_check_type_with_format(double, DOUBLE, "lf");
-
-#undef _evhelpers_check_type
-#undef _evhelpers_check_type_with_format
-
-    data->to_free = g_variant_print(content, FALSE);
-
-    return data->to_free;
-}
-
-static const gchar *
-_evhelpers_token_list_callback(const gchar *token, guint64 value, const gchar *key, gint64 index, gpointer user_data)
+static GVariant *
+_evhelpers_token_list_callback(const gchar *token, guint64 value, gpointer user_data)
 {
     FormatStringReplaceData *data = user_data;
 
     if ( data->callback != NULL )
-        return data->callback(token, key, index, data->event, data->user_data);
+        return data->callback(token, data->event, data->user_data);
 
     g_free(data->to_free);
     data->to_free = NULL;
@@ -696,7 +600,10 @@ _evhelpers_token_list_callback(const gchar *token, guint64 value, const gchar *k
     GVariant *content;
     content = eventd_event_get_data(data->event, token);
 
-    return _evhelpers_token_list_string_from_gvariant(data, content, key, index);
+    if ( content == NULL )
+        return NULL;
+
+    return g_variant_ref(content);
 }
 
 EVENTD_EXPORT

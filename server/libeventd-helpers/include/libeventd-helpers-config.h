@@ -26,7 +26,7 @@
 #include "libeventd-event.h"
 
 typedef struct _NkTokenList FormatString;
-typedef const gchar *(*FormatStringReplaceCallback)(const gchar *name, const gchar *key, gint64 index, const EventdEvent *event, gpointer user_data);
+typedef GVariant *(*FormatStringReplaceCallback)(const gchar *name, const EventdEvent *event, gpointer user_data);
 
 typedef struct {
     gint64 value;
