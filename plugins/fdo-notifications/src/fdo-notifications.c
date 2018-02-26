@@ -337,7 +337,7 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
         return;
     }
 
-    eventd_debug("Received notification from '%s': '%s'", app_name, summary);
+    eventd_debug("Received notification from '%s' (%s): '%s'", app_name, sender_name, summary);
 
     for ( ; g_variant_iter_next(hints, "{&sv}", &hint_name, &hint) ; g_variant_unref(hint) )
     {
