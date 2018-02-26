@@ -315,6 +315,14 @@
             <para>
                 This feature should work automagically using D-Bus on-demand spawning.
             </para>
+            <para condition="website;enable_systemd">
+                On a systemd-enabled system, eventd is a <emphasis>user</emphasis> service, so you must use <command>systemctl --user</command> and not <command>systemctl</command> to manage it. To enable eventd, just run the following commands:
+            </para>
+            <programlisting condition="website;enable_systemd">systemctl --user enable eventd
+systemctl --user start eventd-control.socket eventd.socket # just the first time for the current session</programlisting>
+            <para condition="website;enable_systemd">
+                The second command can be replaced by a session or a computer restart.
+            </para>
             <para>
                 If you use several X displays or launch your session D-Bus daemon manually, you should add the following line to your <filename>~/.xsession</filename> or equivalent file:
             </para>
