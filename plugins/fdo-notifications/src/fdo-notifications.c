@@ -415,7 +415,7 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
     sender = g_hash_table_lookup(context->senders, sender_name);
 
     EventdDbusNotification *notification = NULL;
-    if ( ( id > 0 ) && ( sender = NULL ) )
+    if ( ( id > 0 ) && ( sender != NULL ) )
     {
         notification = g_hash_table_lookup(sender->ids, GUINT_TO_POINTER(id));
         if ( notification != NULL )
