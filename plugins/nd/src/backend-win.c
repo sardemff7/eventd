@@ -41,6 +41,7 @@ typedef struct _EventdNdBackendContext {
     WNDCLASSEX window_class;
     ATOM window_class_atom;
     GWaterWinSource *source;
+    NkBindings *bindings;
     NkBindingsSeat *bindings_seat;
     HWND window;
     RECT geometry;
@@ -166,6 +167,7 @@ _eventd_nd_win_init(EventdNdInterface *nd, NkBindings *bindings)
     EventdNdDisplay *self;
     self = g_new0(EventdNdDisplay, 1);
     self->nd = nd;
+    self->bindings = bindings;
 
     self->window_class.cbSize        = sizeof(WNDCLASSEX);
     self->window_class.style         = CS_HREDRAW | CS_VREDRAW;
