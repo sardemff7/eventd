@@ -129,7 +129,7 @@ _eventd_nd_geometry_update(EventdNdContext *context, gint w, gint h, gint s)
         /* Start phase, nothing to update */
         return;
 
-    eventd_nd_notification_geometry_changed(context, resize);
+    eventd_nd_notification_refresh_list(context, resize);
 }
 
 static gboolean

@@ -425,10 +425,10 @@ eventd_nd_notification_dismiss_queue(EventdNdNotification *self)
 
 
 void
-eventd_nd_notification_geometry_changed(EventdPluginContext *context, gboolean resize)
+eventd_nd_notification_refresh_list(EventdPluginContext *context, gboolean update)
 {
     GHashTableIter iter;
-    if ( resize )
+    if ( update )
     {
         EventdNdNotification *notification;
         g_hash_table_iter_init(&iter, context->notifications);
