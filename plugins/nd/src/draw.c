@@ -597,6 +597,12 @@ _eventd_nd_draw_bubble_shape(cairo_t *cr, gint radius, gint width, gint height)
     if ( radius > limit )
         radius = limit;
 
+    if ( radius == 0 )
+    {
+        cairo_rectangle(cr, 0, 0, width, height);
+        return;
+    }
+
     cairo_new_path(cr);
 
     cairo_move_to(cr, 0, radius);
