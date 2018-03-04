@@ -466,6 +466,7 @@ _eventd_nd_xcb_check_geometry(EventdNdBackendContext *self)
     self->nd->geometry_update(self->nd->context, self->geometry.w, self->geometry.h, self->geometry.s);
 }
 
+static void _eventd_nd_xcb_surface_shape(EventdNdSurface *self);
 static void _eventd_nd_xcb_surface_draw(EventdNdSurface *self);
 
 static gboolean
@@ -591,12 +592,18 @@ _eventd_nd_xcb_events_callback(xcb_generic_event_t *event, gpointer user_data)
                 g_hash_table_iter_init(&iter, self->bubbles);
                 while ( g_hash_table_iter_next(&iter, NULL, (gpointer *) &surface) )
                 {
-                    if ( compositing && self->shape )
+                    if ( self->shape )
                     {
-                        rectangles[0].width = surface->width;
-                        rectangles[0].height = surface->height;
-                        xcb_shape_rectangles(self->xcb_connection, XCB_SHAPE_SO_UNION, XCB_SHAPE_SK_BOUNDING, 0, surface->window, 0, 0, 1, rectangles);
+                        if ( compositing )
+                        {
+                            rectangles[0].width = surface->width;
+                            rectangles[0].height = surface->height;
+                            xcb_shape_rectangles(self->xcb_connection, XCB_SHAPE_SO_UNION, XCB_SHAPE_SK_BOUNDING, 0, surface->window, 0, 0, 1, rectangles);
+                        }
+                        else
+                            _eventd_nd_xcb_surface_shape(surface);
                     }
+
                     _eventd_nd_xcb_surface_draw(surface);
                 }
             }
