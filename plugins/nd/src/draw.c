@@ -649,17 +649,19 @@ eventd_nd_draw_bubble_draw(cairo_t *cr, EventdNdStyle *style, gint width, gint h
     Colour colour;
 
     border = eventd_nd_style_get_bubble_border(style);
+    cairo_translate(cr, border, border);
+
     switch ( shaping )
     {
     case EVENTD_ND_SHAPING_NONE:
     break;
     case EVENTD_ND_SHAPING_COMPOSITING:
         blur = eventd_nd_style_get_bubble_border_blur(style);
+        cairo_translate(cr, blur * 2, blur * 2);
         /* fallthrough */
     case EVENTD_ND_SHAPING_SHAPE:
         radius = eventd_nd_style_get_bubble_radius(style);
     }
-
 
     _eventd_nd_draw_bubble_shape(cr, radius, width, height);
     colour = eventd_nd_style_get_bubble_border_colour(style);

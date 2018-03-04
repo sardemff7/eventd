@@ -43,6 +43,11 @@
 #include "notification.h"
 
 typedef struct {
+    gint x;
+    gint y;
+} Point;
+
+typedef struct {
     gint width;
     gint height;
 } Size;
@@ -61,7 +66,9 @@ struct _EventdNdNotification {
     } text;
     cairo_surface_t *image;
     cairo_surface_t *icon;
+    Point offset;
     Size surface_size;
+    Size border_size;
     Size bubble_size;
     Size content_size;
     guint timeout;
@@ -107,7 +114,7 @@ _eventd_nd_notification_process(EventdNdNotification *self, EventdEvent *event)
     if ( event != NULL )
         self->event = eventd_event_ref(event);
 
-    gint blur, border, padding;
+    gint border, padding;
     gint progress_bar_width = 0;
     gint min_width, max_width;
 
@@ -115,7 +122,27 @@ _eventd_nd_notification_process(EventdNdNotification *self, EventdEvent *event)
     gint image_width = 0, image_height = 0;
 
 
-    blur = eventd_nd_style_get_bubble_border_blur(self->style) * 2; /* We must reserve enough space to avoid clipping*/
+    switch ( self->context->shaping )
+    {
+    case EVENTD_ND_SHAPING_NONE:
+    case EVENTD_ND_SHAPING_SHAPE:
+        self->offset.x = 0;
+        self->offset.y = 0;
+        self->surface_size.width = 0;
+        self->surface_size.height = 0;
+    break;
+    case EVENTD_ND_SHAPING_COMPOSITING:
+    {
+        gint blur;
+        blur = eventd_nd_style_get_bubble_border_blur(self->style) * 2; /* We must reserve enough space to avoid clipping */
+
+        self->offset.x = blur;
+        self->offset.y = blur;
+        self->surface_size.width = 2 * blur;
+        self->surface_size.height = 2 * blur;
+    }
+    break;
+    }
     border = eventd_nd_style_get_bubble_border(self->style);
     padding = eventd_nd_style_get_bubble_padding(self->style);
     min_width = eventd_nd_style_get_bubble_min_width(self->style);
@@ -142,7 +169,7 @@ _eventd_nd_notification_process(EventdNdNotification *self, EventdEvent *event)
     }
 
     if ( max_width < 0 )
-        max_width = self->context->geometry.w - 2 * ( self->queue->margin_x + blur + border );
+        max_width = self->context->geometry.w - 2 * ( self->queue->margin_x + border );
     max_width -= 2 * padding;
     min_width += 2 * padding;
     if ( min_width > max_width )
@@ -179,8 +206,10 @@ _eventd_nd_notification_process(EventdNdNotification *self, EventdEvent *event)
 
     self->bubble_size.width = self->content_size.width + 2 * padding;
     self->bubble_size.height = self->content_size.height + 2 * padding + progress_bar_width;
-    self->surface_size.width = self->bubble_size.width + 2 * ( blur + border );
-    self->surface_size.height = self->bubble_size.height + 2 * ( blur + border );
+    self->border_size.width = self->bubble_size.width + 2 * border;
+    self->border_size.height = self->bubble_size.height + 2 * border;
+    self->surface_size.width += self->border_size.width;
+    self->surface_size.height += self->border_size.height;
 
     if ( self->timeout > 0 )
     {
@@ -263,17 +292,19 @@ _eventd_nd_notification_refresh_list(EventdPluginContext *context, EventdNdQueue
         EventdNdNotification *self = self_->data;
 
         if ( bottom )
-            by -= self->surface_size.height;
+            by -= self->border_size.height;
 
         gint x, y;
-        x = center ? ( ( bx / 2 ) - ( self->surface_size.width / 2 ) ) : right ? ( bx - self->surface_size.width ) : bx;
+        x = center ? ( ( bx / 2 ) - ( self->border_size.width / 2 ) ) : right ? ( bx - self->border_size.width ) : bx;
         y = by;
+        x -= self->offset.x;
+        y -= self->offset.y;
         context->backend->move_surface(self->surface, x, y, data);
 
         if ( bottom )
             by -= queue->spacing;
         else
-            by += self->surface_size.height + queue->spacing;
+            by += self->border_size.height + queue->spacing;
     }
 
     if ( context->backend->move_end != NULL )
@@ -342,20 +373,20 @@ void
 eventd_nd_notification_shape(EventdNdNotification *self, cairo_t *cr)
 {
     gint border;
-    border = eventd_nd_style_get_bubble_border(self->style) + eventd_nd_style_get_bubble_border_blur(self->style) * 2;
+
+    border = eventd_nd_style_get_bubble_border(self->style);
     cairo_translate(cr, border, border);
+
     eventd_nd_draw_bubble_shape(cr, self->style, self->bubble_size.width, self->bubble_size.height);
 }
 
 void
 eventd_nd_notification_draw(EventdNdNotification *self, cairo_surface_t *surface)
 {
-    gint border;
     gint padding;
     gint offset_y = 0;
     gdouble value = -1;
 
-    border = eventd_nd_style_get_bubble_border(self->style) + eventd_nd_style_get_bubble_border_blur(self->style) * 2;
     padding = eventd_nd_style_get_bubble_padding(self->style);
 
     switch ( eventd_nd_style_get_text_valign(self->style) )
@@ -384,7 +415,6 @@ eventd_nd_notification_draw(EventdNdNotification *self, cairo_surface_t *surface
     cairo_t *cr;
     cr = cairo_create(surface);
 
-    cairo_translate(cr, border, border);
     eventd_nd_draw_bubble_draw(cr, self->style, self->bubble_size.width, self->bubble_size.height, self->context->shaping, value);
     cairo_translate(cr, padding, padding);
     eventd_nd_draw_image_and_icon_draw(cr, self->image, self->icon, self->style, self->content_size.width, self->content_size.height, value);
