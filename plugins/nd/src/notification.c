@@ -133,13 +133,15 @@ _eventd_nd_notification_process(EventdNdNotification *self, EventdEvent *event)
     break;
     case EVENTD_ND_SHAPING_COMPOSITING:
     {
-        gint blur;
+        gint blur, offset_x, offset_y;
         blur = eventd_nd_style_get_bubble_border_blur(self->style) * 2; /* We must reserve enough space to avoid clipping */
+        offset_x = eventd_nd_style_get_bubble_border_blur_offset_x(self->style);
+        offset_y = eventd_nd_style_get_bubble_border_blur_offset_y(self->style);
 
-        self->offset.x = blur;
-        self->offset.y = blur;
-        self->surface_size.width = 2 * blur;
-        self->surface_size.height = 2 * blur;
+        self->offset.x = MAX(0, blur - offset_x);
+        self->offset.y = MAX(0, blur - offset_y);
+        self->surface_size.width = 2 * blur + MAX(0, ABS(offset_x) - blur);
+        self->surface_size.height = 2 * blur + MAX(0, ABS(offset_y) - blur);
     }
     break;
     }

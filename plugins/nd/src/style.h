@@ -74,6 +74,8 @@ Colour eventd_nd_style_get_bubble_colour(EventdNdStyle *style);
 gint eventd_nd_style_get_bubble_border(EventdNdStyle *style);
 Colour eventd_nd_style_get_bubble_border_colour(EventdNdStyle *style);
 guint64 eventd_nd_style_get_bubble_border_blur(EventdNdStyle *style);
+gint64 eventd_nd_style_get_bubble_border_blur_offset_x(EventdNdStyle *style);
+gint64 eventd_nd_style_get_bubble_border_blur_offset_y(EventdNdStyle *style);
 
 const PangoFontDescription *eventd_nd_style_get_text_font(EventdNdStyle *style);
 PangoAlignment eventd_nd_style_get_text_align(EventdNdStyle *style);

@@ -363,10 +363,14 @@
                     </varlistentry>
 
                     <varlistentry>
-                        <term><varname>BorderBlur=</varname> (defaults to <literal>5</literal>)</term>
+                        <term><varname>BorderBlur=</varname> (defaults to <literal>2;2;</literal>)</term>
                         <listitem>
-                            <para>An <type>integer</type></para>
-                            <para>Blur size of the border, to achieve a shadow effect.</para>
+                            <para>A <type>list of integers</type></para>
+                            <para>Can be one, two or three values.</para>
+                            <para>First value is the blur size of the border, to achieve a shadow effect.</para>
+                            <para>Second and third values are horizontal and vertical offsets of the shadow effect.</para>
+                            <para>If only two values are provided, the second one is used as the third one too.</para>
+                            <para>If the blur size is <literal>0</literal>, the offset is ignored.</para>
                         </listitem>
                     </varlistentry>
                 </variablelist>

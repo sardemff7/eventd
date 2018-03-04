@@ -102,7 +102,13 @@ struct _EventdPluginAction {
 
         gint     border;
         Colour   border_colour;
-        guint64  border_blur;
+        struct {
+            guint64  size;
+            struct {
+                gint64 x;
+                gint64 y;
+            } offset;
+        } border_blur;
     } bubble;
 
     struct {
@@ -183,12 +189,14 @@ _eventd_nd_style_init_defaults(EventdNdStyle *style)
     style->bubble.colour.a = 1.0;
 
     /* border style */
-    style->bubble.border          = 0;
-    style->bubble.border_colour.r = 0.1;
-    style->bubble.border_colour.g = 0.1;
-    style->bubble.border_colour.b = 0.1;
-    style->bubble.border_colour.a = 1.0;
-    style->bubble.border_blur     = 5;
+    style->bubble.border               = 0;
+    style->bubble.border_colour.r      = 0.1;
+    style->bubble.border_colour.g      = 0.1;
+    style->bubble.border_colour.b      = 0.1;
+    style->bubble.border_colour.a      = 1.0;
+    style->bubble.border_blur.size     = 2;
+    style->bubble.border_blur.offset.x = 2;
+    style->bubble.border_blur.offset.y = 2;
 
     /* text */
     style->text.set = TRUE;
@@ -315,6 +323,8 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file)
         gchar *string;
         Int integer;
         Colour colour;
+        Int integer_list[3];
+        gsize length = 3;
 
         if ( evhelpers_config_key_file_get_string(config_file, "NotificationBubble", "Queue", &string) == 0 )
         {
@@ -367,10 +377,21 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file)
         else if ( self->parent != NULL )
             self->bubble.border_colour = eventd_nd_style_get_bubble_border_colour(self->parent);
 
-        if ( evhelpers_config_key_file_get_int(config_file, "NotificationBubble", "BorderBlur", &integer) == 0 )
-            self->bubble.border_blur = MAX(0, integer.value);
+        if ( evhelpers_config_key_file_get_int_list(config_file, "NotificationBubble", "BorderBlur", integer_list, &length) == 0 )
+        {
+            self->bubble.border_blur.size = MAX(0, integer_list[0].value);
+            if ( integer_list[1].set && ( self->bubble.border_blur.size > 0 ) )
+            {
+                self->bubble.border_blur.offset.x = integer_list[1].value;
+                self->bubble.border_blur.offset.y = integer_list[2].set ? integer_list[2].value : integer_list[1].value;
+            }
+        }
         else if ( self->parent != NULL )
-            self->bubble.border_blur = eventd_nd_style_get_bubble_border_blur(self->parent);
+        {
+            self->bubble.border_blur.size = eventd_nd_style_get_bubble_border_blur(self->parent);
+            self->bubble.border_blur.offset.x = eventd_nd_style_get_bubble_border_blur_offset_x(self->parent);
+            self->bubble.border_blur.offset.y = eventd_nd_style_get_bubble_border_blur_offset_y(self->parent);
+        }
     }
 
     if ( g_key_file_has_group(config_file, "NotificationText") )
@@ -689,8 +710,24 @@ guint64
 eventd_nd_style_get_bubble_border_blur(EventdNdStyle *self)
 {
     if ( self->bubble.set )
-        return self->bubble.border_blur;
+        return self->bubble.border_blur.size;
     return eventd_nd_style_get_bubble_border_blur(self->parent);
+}
+
+gint64
+eventd_nd_style_get_bubble_border_blur_offset_x(EventdNdStyle *self)
+{
+    if ( self->bubble.set )
+        return self->bubble.border_blur.offset.x;
+    return eventd_nd_style_get_bubble_border_blur_offset_y(self->parent);
+}
+
+gint64
+eventd_nd_style_get_bubble_border_blur_offset_y(EventdNdStyle *self)
+{
+    if ( self->bubble.set )
+        return self->bubble.border_blur.offset.y;
+    return eventd_nd_style_get_bubble_border_blur_offset_y(self->parent);
 }
 
 const PangoFontDescription *

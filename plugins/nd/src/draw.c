@@ -646,6 +646,7 @@ void
 eventd_nd_draw_bubble_draw(cairo_t *cr, EventdNdStyle *style, gint width, gint height, EventdNdShaping shaping, gdouble value)
 {
     gint border, blur = 0, radius = 0;
+    gint offset_x = 0, offset_y = 0;
     Colour colour;
 
     border = eventd_nd_style_get_bubble_border(style);
@@ -657,7 +658,9 @@ eventd_nd_draw_bubble_draw(cairo_t *cr, EventdNdStyle *style, gint width, gint h
     break;
     case EVENTD_ND_SHAPING_COMPOSITING:
         blur = eventd_nd_style_get_bubble_border_blur(style);
-        cairo_translate(cr, blur * 2, blur * 2);
+        offset_x = eventd_nd_style_get_bubble_border_blur_offset_x(style);
+        offset_y = eventd_nd_style_get_bubble_border_blur_offset_y(style);
+        cairo_translate(cr, MAX(offset_x, blur * 2), MAX(offset_y, blur * 2));
         /* fallthrough */
     case EVENTD_ND_SHAPING_SHAPE:
         radius = eventd_nd_style_get_bubble_radius(style);
@@ -669,8 +672,10 @@ eventd_nd_draw_bubble_draw(cairo_t *cr, EventdNdStyle *style, gint width, gint h
 
     if ( blur > 0 )
     {
-        cairo_fill_preserve(cr);
+        cairo_fill(cr);
         eventd_nd_draw_blur_surface(cr, blur);
+        cairo_translate(cr, - offset_x, - offset_y);
+        _eventd_nd_draw_bubble_shape(cr, radius, width, height);
     }
     else if ( border > 0 )
     {
