@@ -116,6 +116,21 @@ cleanup:
 }
 
 static void
+_eventd_nd_shaping_update(EventdNdContext *context, EventdNdShaping shaping)
+{
+    if ( context->shaping == shaping )
+        return;
+
+    context->shaping = shaping;
+
+    if ( context->backend == NULL )
+        /* Start phase, nothing to update */
+        return;
+
+    eventd_nd_notification_refresh_list(context, TRUE);
+}
+
+static void
 _eventd_nd_geometry_update(EventdNdContext *context, gint w, gint h, gint s)
 {
     gboolean resize;
@@ -202,6 +217,7 @@ _eventd_nd_init(EventdPluginCoreContext *core)
     context->core = core;
 
     context->interface.context = context;
+    context->interface.shaping_update = _eventd_nd_shaping_update;
     context->interface.geometry_update = _eventd_nd_geometry_update;
     context->interface.backend_stop = _eventd_nd_backend_stop;
     context->interface.notification_shape = eventd_nd_notification_shape;

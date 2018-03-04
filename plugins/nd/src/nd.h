@@ -60,6 +60,7 @@ struct _EventdPluginContext {
     } geometry;
     GHashTable *notifications;
     gboolean no_refresh;
+    EventdNdShaping shaping;
     GSList *actions;
 };
 

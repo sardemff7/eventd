@@ -193,6 +193,7 @@ _eventd_nd_win_init(EventdNdInterface *nd, NkBindings *bindings)
 
     SetProp(self->window, "EventdNdBackendContext", self);
 
+    self->nd->shaping_update(self->nd->context, EVENTD_ND_SHAPING_COMPOSITING);
     _eventd_nd_win_update_geometry(self);
 
     return self;
@@ -220,7 +221,7 @@ _eventd_nd_win_surface_update(EventdNdSurface *self, gint width, gint height)
     surface = cairo_win32_surface_create_with_dib(CAIRO_FORMAT_ARGB32, width, height);
     dc = cairo_win32_surface_get_dc(surface);
 
-    self->display->nd->notification_draw(self->notification, surface, TRUE);
+    self->display->nd->notification_draw(self->notification, surface);
 
     POINT ptZero = { 0 };
     SIZE size = { width, height };

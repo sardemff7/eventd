@@ -42,11 +42,12 @@ const gchar *eventd_nd_backends_names[_EVENTD_ND_BACKENDS_SIZE];
 typedef struct {
     EventdNdContext *context;
 
+    void (*shaping_update)(EventdNdContext *context, EventdNdShaping shaping);
     void (*geometry_update)(EventdNdContext *context, gint w, gint h, gint scale);
     gboolean (*backend_stop)(EventdNdContext *context);
 
     void (*notification_shape)(EventdNdNotification *notification, cairo_t *cr);
-    void (*notification_draw)(EventdNdNotification *notification, cairo_surface_t *surface, gboolean shaped);
+    void (*notification_draw)(EventdNdNotification *notification, cairo_surface_t *surface);
 } EventdNdInterface;
 
 

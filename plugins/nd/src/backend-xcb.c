@@ -586,26 +586,8 @@ _eventd_nd_xcb_events_callback(xcb_generic_event_t *event, gpointer user_data)
             gboolean compositing = ( e->owner != XCB_WINDOW_NONE );
             if ( self->compositing != compositing )
             {
-                xcb_rectangle_t rectangles[] = { { 0, 0, 0, 0 } };
                 self->compositing = compositing;
-                GHashTableIter iter;
-                g_hash_table_iter_init(&iter, self->bubbles);
-                while ( g_hash_table_iter_next(&iter, NULL, (gpointer *) &surface) )
-                {
-                    if ( self->shape )
-                    {
-                        if ( compositing )
-                        {
-                            rectangles[0].width = surface->width;
-                            rectangles[0].height = surface->height;
-                            xcb_shape_rectangles(self->xcb_connection, XCB_SHAPE_SO_UNION, XCB_SHAPE_SK_BOUNDING, 0, surface->window, 0, 0, 1, rectangles);
-                        }
-                        else
-                            _eventd_nd_xcb_surface_shape(surface);
-                    }
-
-                    _eventd_nd_xcb_surface_draw(surface);
-                }
+                self->nd->shaping_update(self->nd->context, self->compositing ? EVENTD_ND_SHAPING_COMPOSITING : self->shape ? EVENTD_ND_SHAPING_SHAPE : EVENTD_ND_SHAPING_NONE);
             }
         }
 
@@ -778,6 +760,8 @@ _eventd_nd_xcb_start(EventdNdBackendContext *self, const gchar *target)
         xcb_window_t owner;
         oc = xcb_ewmh_get_wm_cm_owner(&self->ewmh, self->screen_number);
         self->compositing = xcb_ewmh_get_wm_cm_owner_reply(&self->ewmh, oc, &owner, NULL) && ( owner != XCB_WINDOW_NONE );
+        if ( self->compositing )
+            self->nd->shaping_update(self->nd->context, EVENTD_ND_SHAPING_COMPOSITING);
 
         extension_query = xcb_get_extension_data(self->xcb_connection, &xcb_xfixes_id);
         if ( ! extension_query->present )
@@ -807,7 +791,11 @@ _eventd_nd_xcb_start(EventdNdBackendContext *self, const gchar *target)
     if ( ! extension_query->present )
         g_warning("No Shape extension");
     else
+    {
         self->shape = TRUE;
+        if ( ! self->compositing )
+            self->nd->shaping_update(self->nd->context, EVENTD_ND_SHAPING_SHAPE);
+    }
 
     xcb_flush(self->xcb_connection);
     _eventd_nd_xcb_check_geometry(self);
@@ -847,7 +835,7 @@ static void
 _eventd_nd_xcb_surface_draw(EventdNdSurface *self)
 {
     xcb_clear_area(self->context->xcb_connection, TRUE, self->window, 0, 0, 0, 0);
-    self->context->nd->notification_draw(self->notification, self->surface, self->context->compositing);
+    self->context->nd->notification_draw(self->notification, self->surface);
     xcb_flush(self->context->xcb_connection);
 }
 
@@ -856,8 +844,17 @@ _eventd_nd_xcb_surface_shape(EventdNdSurface *self)
 {
     EventdNdBackendContext *context = self->context;
 
-    if ( context->compositing || ( ! context->shape ) )
+    if ( ! context->shape )
         return;
+
+    if ( context->compositing )
+    {
+        xcb_rectangle_t rectangles[] = { { 0, 0, 0, 0 } };
+        rectangles[0].width = self->width;
+        rectangles[0].height = self->height;
+        xcb_shape_rectangles(context->xcb_connection, XCB_SHAPE_SO_UNION, XCB_SHAPE_SK_BOUNDING, 0, self->window, 0, 0, 1, rectangles);
+        return;
+    }
 
     xcb_pixmap_t shape_id;
     cairo_t *cr;

@@ -119,6 +119,7 @@ _eventd_nd_fbdev_start(EventdNdBackendContext *context, const gchar *target)
         goto fail;
     }
 
+    context->nd->shaping_update(context->nd->context, EVENTD_ND_SHAPING_COMPOSITING);
     context->nd->geometry_update(context->nd->context, display->width, display->height, _eventd_nd_compute_scale_from_size(display->width, display->height, vinfo.width, vinfo.height));
 
     return TRUE;
@@ -202,7 +203,7 @@ _eventd_nd_fbdev_move_surface(EventdNdSurface *self, gint x, gint y, gpointer da
     cairo_surface_t *surface;
 
     surface = cairo_image_surface_create_for_data(buffer, CAIRO_FORMAT_ARGB32, self->width, self->height, display->stride);
-    self->display->nd->notification_draw(self->notification, surface, TRUE);
+    self->display->nd->notification_draw(self->notification, surface);
     cairo_surface_destroy(surface);
 }
 

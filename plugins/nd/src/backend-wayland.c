@@ -703,6 +703,8 @@ _eventd_nd_wl_start(EventdNdBackendContext *self, const gchar *target)
         return FALSE;
     }
 
+    self->nd->shaping_update(self->nd->context, EVENTD_ND_SHAPING_COMPOSITING);
+
     return TRUE;
 }
 
@@ -794,7 +796,7 @@ _eventd_nd_wl_create_buffer(EventdNdSurface *self)
     if ( self->context->scale_support )
         cairo_surface_set_device_scale(cairo_surface, self->context->scale, self->context->scale);
 #endif /* CAIRO_VERION >= 1.14.0 */
-    self->context->nd->notification_draw(self->notification, cairo_surface, TRUE);
+    self->context->nd->notification_draw(self->notification, cairo_surface);
     cairo_surface_destroy(cairo_surface);
 
     munmap(data, size);
