@@ -306,7 +306,7 @@
         <title>Examples</title>
 
         <example condition="website;enable_nd_xcb;enable_nd_wayland;enable_nd_win">
-            <title>As a notification daemon</title>
+            <title>As a notification daemon for libnotify/notify-send</title>
 
             <para>
                 With its <command>fdo-notifications</command> plugin and <command>nd</command> plugin with <command>xcb</command> backend, eventd can act as a notification daemon.
