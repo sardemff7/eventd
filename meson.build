@@ -100,13 +100,13 @@ other_conf.set('EVP_SSDP_NS_UUID', evp_ssdp_ns_uuid)
 other_conf.set('EVP_SSDP_URN', evp_ssdp_urn)
 other_conf.set('EVP_UNIX_SOCKET', evp_unix_socket)
 
-header_conf.set('EVENTD_DEBUG', get_option('enable-debug'))
-if get_option('enable-debug')
+header_conf.set('EVENTD_DEBUG', get_option('debug'))
+if get_option('debug')
     header_conf.set('eventd_debug(...)', 'g_debug(__VA_ARGS__)')
 else
     header_conf.set('eventd_debug(...)', '((void)0)')
 endif
-header_conf.set('DISABLE_IPV6', not get_option('enable-ipv6'))
+header_conf.set('DISABLE_IPV6', not get_option('ipv6'))
 
 config_h = configure_file(output: 'config.h', configuration: header_conf)
 config_ent = configure_file(input: files('src/config.ent.in'), output: 'config.ent', configuration: other_conf)
@@ -177,25 +177,25 @@ subdir('server/eventd')
 subdir('plugins/exec')
 subdir('plugins/file')
 subdir('plugins/fdo-notifications')
-if get_option('enable-notification-daemon')
+if get_option('notification-daemon')
     subdir('plugins/nd')
 endif
-if get_option('enable-im')
+if get_option('im')
     subdir('plugins/im')
 endif
-if get_option('enable-sound')
+if get_option('sound')
     subdir('plugins/sound')
 endif
-if get_option('enable-tts')
+if get_option('tts')
     subdir('plugins/tts')
 endif
-if get_option('enable-webhook')
+if get_option('webhook')
     subdir('plugins/webhook')
 endif
-if get_option('enable-libnotify')
+if get_option('libnotify')
     subdir('plugins/notify')
 endif
-if get_option('enable-libcanberra')
+if get_option('libcanberra')
     subdir('plugins/canberra')
 endif
 

@@ -1,7 +1,7 @@
 modules_build_dir = meson.current_build_dir()
 
 libsoup = dependency('libsoup-2.4', version: '>=2.50', required: false)
-module_enable_websocket = get_option('enable-websocket')
+module_enable_websocket = get_option('websocket')
 if module_enable_websocket == 'auto' and libsoup.found()
     module_enable_websocket = 'true'
 endif
@@ -34,7 +34,7 @@ endif
 
 avahi = dependency('avahi-client', required: false)
 avahi_glib = dependency('avahi-glib', required: false)
-module_enable_dns_sd = get_option('enable-dns-sd')
+module_enable_dns_sd = get_option('dns-sd')
 if module_enable_dns_sd == 'auto' and avahi.found() and avahi_glib.found()
     module_enable_dns_sd = 'true'
 endif
@@ -66,7 +66,7 @@ if module_enable_dns_sd == 'true'
 endif
 
 gssdp = dependency('gssdp-1.0', required: false)
-module_enable_ssdp = get_option('enable-ssdp')
+module_enable_ssdp = get_option('ssdp')
 if module_enable_ssdp == 'auto' and gssdp.found()
     module_enable_ssdp = 'true'
 endif

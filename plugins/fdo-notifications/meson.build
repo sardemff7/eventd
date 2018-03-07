@@ -12,7 +12,7 @@ fdo_notificacions = shared_library('fdo-notifications', [ config_h ] + files(
     install_dir: plugins_install_dir,
 )
 
-if get_option('enable-debug')
+if get_option('debug')
     executable('eventd-fdo-notifications', [ config_h ] + files(
             'src/debug-daemon.c',
         ),

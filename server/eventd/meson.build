@@ -15,7 +15,7 @@ eventd_deps = [
     gobject,
     glib
 ]
-if get_option('enable-systemd')
+if get_option('systemd')
     eventd_deps += dependency('libsystemd', version: '>= 209')
     eventd_c_args += '-DENABLE_SYSTEMD'
     docbook_conditions += 'enable_systemd'
@@ -74,7 +74,7 @@ pkgconfig.generate(
     install_dir: join_paths(get_option('datadir'), 'pkgconfig')
 )
 
-if get_option('enable-systemd')
+if get_option('systemd')
     systemd = dependency('systemd')
     eventd_units = [
         'eventd-control.socket',

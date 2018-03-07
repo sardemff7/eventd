@@ -46,7 +46,7 @@ pkgconfig.generate(
     ],
 )
 
-if get_option('enable-gobject-introspection')
+if get_option('gobject-introspection')
     libeventd_plugin_gir = gnome.generate_gir(libeventd_plugin_lib,
         dependencies: libeventd_plugin,
         namespace: 'EventdPlugin',

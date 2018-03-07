@@ -78,7 +78,7 @@ libeventd_protocol_test = executable('libeventd-protocol.test', files(
 )
 test('libeventd-protocol unit tests', libeventd_protocol_test)
 
-if get_option('enable-gobject-introspection')
+if get_option('gobject-introspection')
     libeventd_gir = gnome.generate_gir(libeventd_lib,
         dependencies: libeventd,
         namespace: 'Eventd',

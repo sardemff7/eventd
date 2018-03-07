@@ -24,7 +24,7 @@ nd_backend_deps = [
 ]
 nd_has_backend = false
 
-if is_unix and get_option('enable-nd-wayland')
+if is_unix and get_option('nd-wayland')
     nd_has_backend = true
     docbook_conditions += 'enable_nd_wayland'
     nd_c_args += '-DENABLE_ND_WAYLAND'
@@ -72,7 +72,7 @@ if is_unix and get_option('enable-nd-wayland')
     )
 endif
 
-if is_unix and get_option('enable-nd-xcb')
+if is_unix and get_option('nd-xcb')
     nd_has_backend = true
     docbook_conditions += 'enable_nd_xcb'
     nd_c_args += '-DENABLE_ND_XCB'
@@ -104,7 +104,7 @@ if is_unix and get_option('enable-nd-xcb')
     )
 endif
 
-if is_unix and get_option('enable-nd-fbdev')
+if is_unix and get_option('nd-fbdev')
     nd_has_backend = true
     docbook_conditions += 'enable_nd_fbdev'
     nd_c_args += '-DENABLE_ND_FBDEV'

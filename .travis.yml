@@ -46,7 +46,7 @@ install:
     - export PATH=$(pwd):$PATH
 
 before_script:
-    - meson build -Db_coverage=true -Denable-ipv6=false -Denable-websocket=false -Denable-nd-wayland=false -Denable-nd-fbdev=true -Denable-tts=true -Denable-libcanberra=true -Ddbussessionservicedir=/usr/share/dbus-1/services
+    - meson build -Db_coverage=true -Dipv6=false -Dwebsocket=false -Dnd-wayland=false -Dnd-fbdev=true -Dtts=true -Dlibcanberra=true -Ddbussessionservicedir=/usr/share/dbus-1/services
 script:
     - ninja -C build -v
     - ninja -C build -v test
