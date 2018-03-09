@@ -84,13 +84,15 @@ _eventd_nd_backend_switch(EventdNdContext *context, EventdNdBackends backend, co
         context->no_refresh = FALSE;
         if ( context->backend->stop != NULL )
             context->backend->stop(context->backend->context);
+
+        eventd_debug("Stopping backend %s", context->backend->name);
         context->backend = NULL;
     }
 
-    eventd_debug("Switching to backend %s (%s)", eventd_nd_backends_names[backend], target);
-
     if ( backend == EVENTD_ND_BACKEND_NONE )
         goto cleanup;
+
+    eventd_debug("Starting backend %s (%s)", eventd_nd_backends_names[backend], target);
 
     EventdNdBackend *backend_;
     backend_ = &context->backends[backend];
