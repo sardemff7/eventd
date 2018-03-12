@@ -166,11 +166,14 @@ _eventd_events_event_matches(EventdEventsEvent *self, EventdEvent *event, GQuark
             GQuark *wflag;
             for ( wflag = self->flags_whitelist ; *wflag != 0 ; ++wflag )
             {
-                for ( flag = current_flags ; *flag != 0 ; ++flag )
+                gboolean has = FALSE;
+                for ( flag = current_flags ; ( *flag != 0 ) && ( ! has ) ; ++flag )
                 {
-                    if ( *flag != *wflag )
-                        return FALSE;
+                    if ( *flag == *wflag )
+                        has = TRUE;
                 }
+                if ( ! has )
+                    return FALSE;
             }
         }
 
