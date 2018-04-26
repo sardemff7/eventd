@@ -67,6 +67,7 @@ typedef struct {
     struct wl_keyboard *keyboard;
     struct wl_pointer *pointer;
     EventdNdSurface *surface;
+    gboolean scroll_ignore[NK_BINDINGS_SCROLL_NUM_AXIS];
     gint32 scroll[NK_BINDINGS_SCROLL_NUM_AXIS];
 } EventdNdWlSeat;
 
@@ -421,7 +422,9 @@ _eventd_nd_wl_pointer_axis(void *data, struct wl_pointer *pointer, uint32_t time
     if ( self->surface == NULL )
         return;
 
-    self->scroll[_eventd_nd_wl_nk_bindings_scroll_axis[axis]] += ( wl_fixed_to_int(value) / 10 );
+    if ( ! self->scroll_ignore[_eventd_nd_wl_nk_bindings_scroll_axis[axis]] )
+        self->scroll[_eventd_nd_wl_nk_bindings_scroll_axis[axis]] += ( wl_fixed_to_int(value) / 10 );
+    self->scroll_ignore[_eventd_nd_wl_nk_bindings_scroll_axis[axis]] = FALSE;
     if ( wl_pointer_get_version(self->pointer) < WL_POINTER_FRAME_SINCE_VERSION )
         _eventd_nd_wl_pointer_frame(data, pointer);
 }
@@ -444,6 +447,7 @@ _eventd_nd_wl_pointer_axis_discrete(void *data, struct wl_pointer *pointer, enum
     if ( self->surface == NULL )
         return;
 
+    self->scroll_ignore[_eventd_nd_wl_nk_bindings_scroll_axis[axis]] = TRUE;
     self->scroll[_eventd_nd_wl_nk_bindings_scroll_axis[axis]] += discrete;
 }
 
