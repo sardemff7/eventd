@@ -28,6 +28,7 @@ addons:
             - libxcb-randr0-dev
             - libxcb-shape0-dev
             - libxcb-ewmh-dev
+            - libxcb-xkb-dev
             - libxkbcommon-x11-dev
             - libpurple-dev
             - libpulse-dev
