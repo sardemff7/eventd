@@ -61,3 +61,7 @@ after_failure:
 
 notifications:
     email: false
+    webhooks:
+        urls:
+            - secure: oO/ZQSc1lYjQt+Y/5GlpdK62cxxw2B+V7mpsKq1/1IGDNGB/gixy/xybnrgs3TA16GM+up8PF85Q3Ijuv1ofFb2P+5xpqRHMkruE0Ch/ojVf00b47VquccDQy+MN8p731fto2P9WW8ZfpDsBAHzqzRI1AuqwAp3DXq68oqY4fy0=
+        on_success: change
