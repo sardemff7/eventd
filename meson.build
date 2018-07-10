@@ -1,6 +1,6 @@
 project('eventd', 'c',
     version: '0.24.1',
-    meson_version: '>=0.44.1',
+    meson_version: '>=0.47.0',
     license: [ 'GPL3+', 'LGPL3+', 'MIT' ],
     default_options: [
         'c_std=gnu11',
@@ -152,10 +152,15 @@ foreach o : nk_options + nk_subproject_options
     endif
 endforeach
 libnkutils = nk.get_variable('libnkutils')
+libnkutils_uuid = nk.get_variable('libnkutils_uuid')
+libnkutils_bindings = nk.get_variable('libnkutils_bindings')
 nkutils_xsltpaths = nk.get_variable('nkutils_xsltpaths')
 nkutils_manfiles = nk.get_variable('nkutils_manfiles')
 nkutils_mandepends = nk.get_variable('nkutils_mandepends')
 docbook_conditions += nk.get_variable('nkutils_docbook_conditions')
+if not libnkutils_uuid.found()
+    error('An UUID library is required, please install libuuid or apr-util')
+endif
 
 subdir('server/libeventd')
 subdir('server/libeventd-helpers')

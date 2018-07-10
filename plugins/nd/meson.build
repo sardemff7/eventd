@@ -9,6 +9,10 @@ pango = [
 cc = meson.get_compiler('c')
 libm = cc.find_library('m', required: false)
 
+if not libnkutils_bindings.found()
+    error('libxkbcommon is required for the nd plugin')
+endif
+
 nd_backends_install_dir = join_paths(modules_install_dir, 'nd')
 
 nd_c_args = [
@@ -19,7 +23,7 @@ nd_backend_deps = [
     libeventd_plugin,
     libeventd,
     cairo,
-    libnkutils,
+    libnkutils_bindings,
     glib,
 ]
 nd_has_backend = false
@@ -178,7 +182,7 @@ shared_library('nd', [ config_h ] + files(
         libeventd_helpers,
         libeventd_plugin,
         libeventd,
-        libnkutils,
+        libnkutils_bindings,
         gmodule,
         gobject,
         glib,

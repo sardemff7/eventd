@@ -86,7 +86,7 @@ if module_enable_ssdp == 'true'
         dependencies: [
             gssdp,
             libeventd,
-            libnkutils,
+            libnkutils_uuid,
             gio,
             gobject,
             glib,

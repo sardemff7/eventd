@@ -22,7 +22,7 @@ libeventd_lib = library('eventd', [ config_h ] + files(
     c_args: [
         '-DG_LOG_DOMAIN="libeventd"',
     ],
-    dependencies: [ libnkutils, libeventd_dep ],
+    dependencies: [ libnkutils_uuid, libeventd_dep ],
     version: '0.0.0',
     include_directories: libeventd_inc,
     install: true,
@@ -61,7 +61,7 @@ libeventd_event_test = executable('libeventd-event.test', files(
         'tests/unit/libeventd-event.c',
     ),
     objects: libeventd_event_private,
-    dependencies: [ libnkutils, libeventd ],
+    dependencies: [ libnkutils_uuid, libeventd ],
 )
 test('libeventd-event unit tests', libeventd_event_test)
 
@@ -74,7 +74,7 @@ libeventd_protocol_test = executable('libeventd-protocol.test', files(
         'tests/unit/libeventd-protocol.c',
     ),
     objects: libeventd_event_private,
-    dependencies: [ libnkutils, libeventd ],
+    dependencies: [ libnkutils_uuid, libeventd ],
 )
 test('libeventd-protocol unit tests', libeventd_protocol_test)
 
