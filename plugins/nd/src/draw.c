@@ -395,7 +395,7 @@ _eventd_nd_draw_limit_size(GdkPixbuf *pixbuf, EventdNdStyle *style, gboolean ima
         fixed_size = eventd_nd_style_get_icon_fixed_size(style);
     }
 
-    if ( ( width < max_width ) && ( height < max_height ) && ( ! fixed_size ) )
+    if ( ( ( max_width < 0 ) || ( width <= max_width ) ) && ( ( max_height < 0 ) || ( height <= max_height ) ) && ( ! fixed_size ) )
         return source;
 
     gdouble hs = 1.0, vs = 1.0, s;
