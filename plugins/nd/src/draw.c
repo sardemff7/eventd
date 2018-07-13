@@ -398,10 +398,14 @@ _eventd_nd_draw_limit_size(GdkPixbuf *pixbuf, EventdNdStyle *style, gboolean ima
     if ( ( ( max_width < 0 ) || ( width <= max_width ) ) && ( ( max_height < 0 ) || ( height <= max_height ) ) && ( ! fixed_size ) )
         return source;
 
+    /*
+     * We checked before that fixed_size cannot happen with max_width/height being -1,
+     * so we are safe to just check fixed_size here.
+     */
     gdouble hs = 1.0, vs = 1.0, s;
-    if ( ( width > max_width ) || fixed_size )
+    if ( fixed_size || ( ( max_width >= 0 ) && ( width > max_width ) ) )
         hs = (gdouble) max_width / (gdouble) width;
-    if ( ( height > max_height ) || fixed_size )
+    if ( fixed_size || ( ( max_height >= 0 ) && ( height > max_height ) ) )
         vs = (gdouble) max_height / (gdouble) height;
 
     s = MIN(hs, vs);
