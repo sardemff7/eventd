@@ -72,6 +72,24 @@ _eventd_nd_pixbuf_data_free(guchar *pixels, gpointer data)
     g_variant_unref(data);
 }
 
+typedef struct {
+    gint width;
+    gint height;
+    gint scale;
+} EventdNdPixbufDataSize;
+
+static void
+_eventd_nd_pixbuf_data_size_prepared(GdkPixbufLoader *loader, gint width, gint height, gpointer user_data)
+{
+    EventdNdPixbufDataSize *data = user_data;
+    GdkPixbufFormat *format;
+    format = gdk_pixbuf_loader_get_format(loader);
+    if ( ( format == NULL ) || ( ! gdk_pixbuf_format_is_scalable(format) ) )
+        return;
+
+    gdk_pixbuf_loader_set_size(loader, data->width * data->scale, data->height * data->scale);
+}
+
 GdkPixbuf *
 eventd_nd_pixbuf_from_data(GVariant *var, gint width, gint height, gint scale)
 {
@@ -114,12 +132,17 @@ eventd_nd_pixbuf_from_data(GVariant *var, gint width, gint height, gint scale)
             g_warning("Couldn't create loader for MIME type '%s': %s", mime_type, error->message);
             goto end;
         }
-        GdkPixbufFormat *format;
-        if ( ( ( width > 0 ) || ( height > 0 ) ) && ( ( format = gdk_pixbuf_loader_get_format(loader) ) != NULL ) && gdk_pixbuf_format_is_scalable(format) )
-            gdk_pixbuf_loader_set_size(loader, width * scale, height * scale);
     }
     else
         loader = gdk_pixbuf_loader_new();
+
+    EventdNdPixbufDataSize size = {
+        .width = width,
+        .height = height,
+        .scale = scale,
+    };
+    if ( ( width > 0 ) || ( height > 0 ) )
+        g_signal_connect(loader, "size-prepared", G_CALLBACK(_eventd_nd_pixbuf_data_size_prepared), &size);
 
     if ( ! gdk_pixbuf_loader_write(loader, data, length, &error) )
     {
