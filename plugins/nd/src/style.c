@@ -470,7 +470,14 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file)
             self->image.height = eventd_nd_style_get_image_height(self->parent);
 
         if ( evhelpers_config_key_file_get_boolean(config_file, "NotificationImage", "FixedSize", &boolean) == 0 )
+        {
+            if ( boolean && ( ( self->image.width < 0 ) || ( self->image.height < 0 ) ) )
+            {
+                g_warning("Cannot have fixed size image with unlimited width (%d) or height (%d)", self->image.width, self->image.height);
+                boolean = FALSE;
+            }
             self->image.fixed_size = boolean;
+        }
         else if ( self->parent != NULL )
             self->image.fixed_size = eventd_nd_style_get_image_fixed_size(self->parent);
 
@@ -521,7 +528,14 @@ eventd_nd_style_update(EventdNdStyle *self, GKeyFile *config_file)
             self->icon.height = eventd_nd_style_get_icon_height(self->parent);
 
         if ( evhelpers_config_key_file_get_boolean(config_file, "NotificationIcon", "FixedSize", &boolean) == 0 )
+        {
+            if ( boolean && ( ( self->icon.width < 0 ) || ( self->icon.height < 0 ) ) )
+            {
+                g_warning("Cannot have fixed size icon with unlimited width (%d) or height (%d)", self->icon.width, self->icon.height);
+                boolean = FALSE;
+            }
             self->icon.fixed_size = boolean;
+        }
         else if ( self->parent != NULL )
             self->icon.fixed_size = eventd_nd_style_get_icon_fixed_size(self->parent);
 
