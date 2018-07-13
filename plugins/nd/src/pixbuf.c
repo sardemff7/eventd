@@ -67,7 +67,7 @@ eventd_nd_pixbuf_from_uri(gchar *uri, gint width, gint height, gint scale)
 }
 
 static void
-_eventd_nd_pixbuf_free_data(guchar *pixels, gpointer data)
+_eventd_nd_pixbuf_data_free(guchar *pixels, gpointer data)
 {
     g_variant_unref(data);
 }
@@ -90,7 +90,7 @@ eventd_nd_pixbuf_from_data(GVariant *var, gint width, gint height, gint scale)
         g_variant_get(invar, "(iiibii@ay)", &w, &h, &s, &a, &b, &n, &data);
          /* This is the only format gdk-pixbuf can read */
         if ( ( b == 8 ) && ( n == ( a ? 4 : 3 ) ) && ( h * s == (gint) g_variant_get_size(data) ) )
-            pixbuf = gdk_pixbuf_new_from_data(g_variant_get_data(data), GDK_COLORSPACE_RGB, a, b, w, h, s, _eventd_nd_pixbuf_free_data, data);
+            pixbuf = gdk_pixbuf_new_from_data(g_variant_get_data(data), GDK_COLORSPACE_RGB, a, b, w, h, s, _eventd_nd_pixbuf_data_free, data);
         else
             g_variant_unref(data);
         goto end;
