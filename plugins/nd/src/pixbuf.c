@@ -87,7 +87,19 @@ _eventd_nd_pixbuf_data_size_prepared(GdkPixbufLoader *loader, gint width, gint h
     if ( ( format == NULL ) || ( ! gdk_pixbuf_format_is_scalable(format) ) )
         return;
 
-    gdk_pixbuf_loader_set_size(loader, data->width * data->scale, data->height * data->scale);
+    gdouble s;
+    if ( data->height < 0 )
+        s = (gdouble) data->width / (gdouble) width;
+    else if ( data->width < 0 )
+        s = (gdouble) data->height / (gdouble) height;
+    else
+    {
+        gdouble s1 = (gdouble) data->width / (gdouble) width;
+        gdouble s2 = (gdouble) data->height / (gdouble) height;
+        s = MIN(s1, s2);
+    }
+
+    gdk_pixbuf_loader_set_size(loader, width * s * data->scale, height * s * data->scale);
 }
 
 GdkPixbuf *
