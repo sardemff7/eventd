@@ -8,6 +8,6 @@ test_plugin = shared_module('test-plugin', [ config_h ] + files(
         '-DG_LOG_DOMAIN="eventd-test-plugin"',
     ],
     objects: libeventd_event_private,
-    dependencies: [ libeventd_plugin, libeventd, gio, gobject, libnkutils, glib ],
+    dependencies: [ libeventd_plugin, libeventd, gio, gobject, libnkutils_uuid, libnkutils, glib ],
     name_prefix: '',
 )
