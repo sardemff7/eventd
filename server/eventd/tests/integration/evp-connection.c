@@ -33,6 +33,7 @@
 gchar *
 connection_test(GDataInputStream *input, GDataOutputStream *output, const gchar *filename, const gchar *message, GError **error)
 {
+    gchar *tmp;
     gchar *m = NULL;
     gchar *r = NULL;
     gchar *e = NULL;
@@ -41,7 +42,9 @@ connection_test(GDataInputStream *input, GDataOutputStream *output, const gchar 
     if ( ! g_data_output_stream_put_string(output, "SUBSCRIBE test\n", NULL, error) ) goto fail;
 
     if ( ! g_data_output_stream_put_string(output, ".EVENT 2e6894bb-cf96-462e-a435-766c9b1b4f8a test test\n", NULL, error) ) goto fail;
-    m = g_strdup_printf("DATA file '%s'\n", filename);
+    tmp = g_strescape(filename, NULL);
+    m = g_strdup_printf("DATA file '%s'\n", tmp);
+    g_free(tmp);
     if ( ! g_data_output_stream_put_string(output, m, NULL, error) ) goto fail;
     g_free(m);
     m = g_strdup_printf("DATA test '%s'\n", message);
