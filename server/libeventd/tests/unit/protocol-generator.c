@@ -45,7 +45,7 @@ _init_data_with_data(gpointer fixture, gconstpointer user_data)
     GeneratorData *data = fixture;
     _init_data(fixture, user_data);
 
-    eventd_event_add_data_string(data->event, g_strdup(EVENTD_EVENT_TEST_DATA_NEWLINE_NAME ), g_strdup(EVENTD_EVENT_TEST_DATA_NEWLINE_CONTENT));
+    eventd_event_add_data_string(data->event, g_strdup(EVENTD_EVENT_TEST_DATA_ESCAPING_NAME), g_strdup(EVENTD_EVENT_TEST_DATA_ESCAPING_CONTENT));
 }
 
 static void
@@ -72,7 +72,7 @@ _test_evp_generate_event(gpointer fixture, gconstpointer user_data)
         g_hash_table_unref(data_hash);
         expected =
             ".EVENT " EVENTD_EVENT_TEST_UUID " " EVENTD_EVENT_TEST_NAME " " EVENTD_EVENT_TEST_NAME "\n"
-            "DATA " EVENTD_EVENT_TEST_DATA_NEWLINE_NAME " '" EVENTD_EVENT_TEST_DATA_NEWLINE_CONTENT_ESCAPED "'\n"
+            "DATA " EVENTD_EVENT_TEST_DATA_ESCAPING_NAME " '" EVENTD_EVENT_TEST_DATA_ESCAPING_CONTENT_ESCAPED "'\n"
             ".\n";
     }
     else

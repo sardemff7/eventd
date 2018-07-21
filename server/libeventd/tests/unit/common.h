@@ -35,8 +35,8 @@
 #define EVENTD_EVENT_TEST_CATEGORY "test-category"
 #define EVENTD_EVENT_TEST_DATA_NAME "test-name"
 #define EVENTD_EVENT_TEST_DATA_CONTENT "test-content"
-#define EVENTD_EVENT_TEST_DATA_NEWLINE_NAME "test-name-newline"
-#define EVENTD_EVENT_TEST_DATA_NEWLINE_CONTENT "test-content\ntest-newline-content"
-#define EVENTD_EVENT_TEST_DATA_NEWLINE_CONTENT_ESCAPED "test-content\\ntest-newline-content"
+#define EVENTD_EVENT_TEST_DATA_ESCAPING_NAME "test-name-newline"
+#define EVENTD_EVENT_TEST_DATA_ESCAPING_CONTENT "test-content\ntest-newline-content\\test-backslash-context"
+#define EVENTD_EVENT_TEST_DATA_ESCAPING_CONTENT_ESCAPED "test-content\\ntest-newline-content\\\\test-backslash-context"
 
 #endif /* __EVENTD_TESTS_UNIT_EVENTD_EVENT_COMMON_H__ */
