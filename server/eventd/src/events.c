@@ -357,7 +357,7 @@ _eventd_events_parse_group(EventdEvents *self, const gchar *group, GKeyFile *con
     {
         gchar **if_data_match;
         EventdEventsEventDataMatch *match;
-        gchar *data, *operator, *value_;
+        gchar *tmp, *data, *operator, *value_;
         gint accepted[2];
         GVariant *value;
         GError *error = NULL;
@@ -368,38 +368,39 @@ _eventd_events_parse_group(EventdEvents *self, const gchar *group, GKeyFile *con
         for ( if_data_match = if_data_matches ; *if_data_match != NULL ; ++if_data_match )
         {
             data = *if_data_match;
-            operator = g_utf8_strchr(data, -1, ',');
-            if ( operator == NULL )
+            tmp = g_utf8_strchr(data, -1, ',');
+            if ( tmp == NULL )
             {
                 g_warning("Data matches must be of the form 'data-name,operator,value'");
                 g_free(data);
                 continue;
             }
-            *operator = '\0';
-            ++operator;
+            operator = g_utf8_next_char(tmp);
+            *tmp = '\0';
 
-            value_ = g_utf8_strchr(operator, -1, ',');
-            if ( value_ == NULL )
+            tmp = g_utf8_strchr(operator, -1, ',');
+            if ( tmp == NULL )
             {
                 g_warning("Data matches must be of the form 'data-name,operator,value'");
                 g_free(data);
                 continue;
             }
-            *value_ = '\0';
-            ++value_;
+            value_ = g_utf8_next_char(tmp);
+            *tmp = '\0';
 
-            if ( ( ( value_ - operator ) > 3 ) || ( ( value_ - operator ) < 2 ) )
+            gsize l = g_utf8_strlen(operator, -1);
+            if ( ( l > 2 ) || ( l < 1 ) )
             {
                 g_warning("Unsupported operator: %s", operator);
                 g_free(data);
                 continue;
             }
             accepted[0] = -2;
-            switch ( operator[1] )
+            switch ( g_utf8_get_char(g_utf8_next_char(operator)) )
             {
             case '=':
                 accepted[1] = 0;
-                switch ( operator[0] )
+                switch ( g_utf8_get_char(operator) )
                 {
                 case '<':
                     accepted[0] = -1;
@@ -417,7 +418,7 @@ _eventd_events_parse_group(EventdEvents *self, const gchar *group, GKeyFile *con
                 }
             break;
             case '\0':
-                switch ( operator[0] )
+                switch ( g_utf8_get_char(operator) )
                 {
                 case '<':
                     accepted[0] = accepted[1] = -1;
