@@ -57,7 +57,8 @@ if is_unix and get_option('nd-wayland')
 
     wayland_scanner_client = generator(wayland_scanner, output: '@BASENAME@-client-protocol.h', arguments: ['client-header', '@INPUT@', '@OUTPUT@'])
     wayland_scanner_server = generator(wayland_scanner, output: '@BASENAME@-server-protocol.h', arguments: ['server-header', '@INPUT@', '@OUTPUT@'])
-    wayland_scanner_code = generator(wayland_scanner, output: '@BASENAME@-protocol.c', arguments: ['code', '@INPUT@', '@OUTPUT@'])
+    wayland_scanner_code_command = wayland[2].version().version_compare('>= 1.14.91') ? 'private-code' : 'code'
+    wayland_scanner_code = generator(wayland_scanner, output: '@BASENAME@-protocol.c', arguments: [wayland_scanner_code_command, '@INPUT@', '@OUTPUT@'])
 
     shared_library('wayland', files(
             'src/backend.h',
