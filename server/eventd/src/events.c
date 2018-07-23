@@ -42,6 +42,7 @@ struct _EventdEvents {
 
 typedef struct {
     gchar *data;
+    gchar *key;
     gint accepted[2];
     GVariant *value;
 } EventdEventsEventDataMatch;
@@ -133,8 +134,18 @@ _eventd_events_event_matches(EventdEventsEvent *self, EventdEvent *event, GQuark
             if ( ( data = eventd_event_get_data(event, match->data) ) == NULL )
                 return FALSE;
 
-            if ( ! g_variant_type_equal(g_variant_get_type(data), g_variant_get_type(match->value)) )
+            if ( match->key != NULL )
+            {
+                if ( ! g_variant_is_of_type(data, G_VARIANT_TYPE_VARDICT) )
+                    return FALSE;
+
+                data = g_variant_lookup_value(data, match->key, g_variant_get_type(match->value));
+                if ( data == NULL )
+                    return FALSE;
+            }
+            else if ( ! g_variant_type_equal(g_variant_get_type(data), g_variant_get_type(match->value)) )
                 return FALSE;
+
             gint ret;
             ret = g_variant_compare(data, match->value);
             ret = CLAMP(ret, -1, 1);
@@ -357,7 +368,7 @@ _eventd_events_parse_group(EventdEvents *self, const gchar *group, GKeyFile *con
     {
         gchar **if_data_match;
         EventdEventsEventDataMatch *match;
-        gchar *tmp, *data, *operator, *value_;
+        gchar *tmp, *data, *key = NULL, *operator, *value_;
         gint accepted[2];
         GVariant *value;
         GError *error = NULL;
@@ -377,6 +388,21 @@ _eventd_events_parse_group(EventdEvents *self, const gchar *group, GKeyFile *con
             }
             operator = g_utf8_next_char(tmp);
             *tmp = '\0';
+
+            tmp = g_utf8_strchr(data, -1, '[');
+            if ( tmp != NULL )
+            {
+                key = g_utf8_next_char(tmp);
+                *tmp = '\0';
+                tmp = g_utf8_strchr(key, -1, ']');
+                if ( ( tmp == NULL ) || ( g_utf8_get_char(g_utf8_next_char(tmp)) != '\0' ) )
+                {
+                    g_warning("Data matches must be of the form 'data-name[key],operator,value'");
+                    g_free(data);
+                    continue;
+                }
+                *tmp = '\0';
+            }
 
             tmp = g_utf8_strchr(operator, -1, ',');
             if ( tmp == NULL )
@@ -445,6 +471,7 @@ _eventd_events_parse_group(EventdEvents *self, const gchar *group, GKeyFile *con
             }
 
             match->data = data;
+            match->key = key;
             match->accepted[0] = accepted[0];
             match->accepted[1] = accepted[1];
             match->value = value;
