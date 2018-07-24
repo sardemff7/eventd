@@ -120,7 +120,7 @@
                 </varlistentry>
 
                 <varlistentry>
-                    <term><varname>ChatLeaveTimeout=</varname></term>
+                    <term><varname>ChatLeaveTimeout=</varname> (defaults to <literal>-1</literal>)</term>
                     <listitem>
                         <para>A time in <type>seconds</type> (<literal>-1</literal> for infinity)</para>
                         <para>The number of seconds the plugin will remain connected to a chat room.</para>

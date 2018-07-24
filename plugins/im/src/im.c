@@ -555,7 +555,7 @@ _eventd_im_global_parse(EventdPluginContext *context, GKeyFile *config_file)
             goto next;
         if ( evhelpers_config_key_file_get_int_with_default(config_file, section, "ReconnectMaxTries", 10, &reconnect_max_tries) < 0 )
             goto next;
-        if ( evhelpers_config_key_file_get_int_with_default(config_file, section, "ChatLeaveTimeout", 1200, &leave_timeout) < 0 )
+        if ( evhelpers_config_key_file_get_int_with_default(config_file, section, "ChatLeaveTimeout", -1, &leave_timeout) < 0 )
             goto next;
 
         prpl = purple_find_prpl(protocol);
