@@ -126,6 +126,22 @@
                         <para>The number of seconds the plugin will remain connected to a chat room.</para>
                     </listitem>
                 </varlistentry>
+
+                <varlistentry>
+                    <term><varname>ReconnectTimeout=</varname> (defaults to <literal>5</literal>)</term>
+                    <listitem>
+                        <para>A strictly positive time in <type>seconds</type></para>
+                        <para>The number of seconds the plugin will wait before attempting to connect after a connection failure. This amount is doubled after each failed attempt, up to <literal>3600</literal> (1 hour).</para>
+                    </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                    <term><varname>ReconnectMaxTries=</varname> (defaults to <literal>0</literal>)</term>
+                    <listitem>
+                        <para>An <type>integer</type> (<literal>0</literal> for infinity)</para>
+                        <para>The number of time the plugin will retry to connect after a connection failure.</para>
+                    </listitem>
+                </varlistentry>
             </variablelist>
         </refsect2>
     </refsect1>
