@@ -42,37 +42,6 @@
 
 #include "draw.h"
 
-
-static gssize
-_eventd_nd_draw_strccount(const gchar *str, gunichar c)
-{
-    gssize count = 1;
-    for ( ; g_utf8_get_char(str) != '\0' ; str = g_utf8_next_char(str) )
-    {
-        if ( g_utf8_get_char(str) == c )
-            ++count;
-    }
-    return count;
-}
-
-static gchar *
-_eventd_nd_draw_find_n_c(gchar *s, gsize n, gunichar c)
-{
-    gsize l;
-    gchar *r;
-    gsize i;
-
-    r = s;
-    l = strlen(s);
-    for ( i = 0 ; ( r != NULL ) && ( i < n ) ; ++i )
-    {
-        /* We know how many \n we have */
-        r = g_utf8_strchr(r, l - ( r - s ), c);
-        ++r;
-    }
-    return r - 1;
-}
-
 static void
 _eventd_nd_draw_text_parser_start_element(GMarkupParseContext *context, const gchar *element_name, const gchar **attribute_names, const gchar **attribute_values, gpointer user_data, GError **error)
 {
@@ -205,19 +174,33 @@ _eventd_nd_draw_get_text(EventdNdStyle *style, EventdEvent *event, guint more_si
     if ( max < 1 )
         goto ret;
 
-    gssize count;
+    gchar *w, *b1 = text, *b2;
+    gsize c1 = max / 2;
+    gsize c2 = ( max - 1 ) / 2;
+    gchar **last;
+    gsize li = 0;
+    gsize count = 0;
 
-    if ( ( count = _eventd_nd_draw_strccount(text, '\n') ) <= max )
+    last = g_newa(gchar *, c2);
+    for ( w = text ; g_utf8_get_char(w) != '\0' ; w = g_utf8_next_char(w) )
+    {
+        if ( g_utf8_get_char(w) != '\n' )
+            continue;
+
+        if ( ++count == c1 )
+            b1 = g_utf8_next_char(w);
+        else if ( count > c1 )
+            last[li++ % c2] = w;
+    }
+    b2 = last[li % c2];
+
+    if ( ++count <= max )
     {
         *max_lines = max / count;
         goto ret;
     }
 
-    gchar *b1, *b2;
     gssize el;
-
-    b1 = _eventd_nd_draw_find_n_c(text, max / 2, '\n') +1;
-    b2 = _eventd_nd_draw_find_n_c(text, ( count - ( max + 1 ) / 2 + 1 ), '\n');
     el = strlen("…");
 
     if ( ( b2 - b1 ) < el )
