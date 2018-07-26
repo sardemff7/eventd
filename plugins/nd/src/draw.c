@@ -216,7 +216,7 @@ _eventd_nd_draw_get_text(EventdNdStyle *style, EventdEvent *event, guint more_si
     gchar *b1, *b2;
     gssize el;
 
-    b1 = _eventd_nd_draw_find_n_c(text, max / 2, '\n');
+    b1 = _eventd_nd_draw_find_n_c(text, max / 2, '\n') +1;
     b2 = _eventd_nd_draw_find_n_c(text, ( count - ( max + 1 ) / 2 + 1 ), '\n');
     el = strlen("…");
 
@@ -224,13 +224,11 @@ _eventd_nd_draw_get_text(EventdNdStyle *style, EventdEvent *event, guint more_si
     {
         gchar *tmp = text;
         *b1 = '\0';
-        ++b2;
-        text = g_strdup_printf("%s\n…\n%s", text, b2);
+        text = g_strdup_printf("%s…%s", text, b2);
         g_free(tmp);
     }
     else
     {
-        ++b1;
         strncpy(b1, "…", el + 1);
         b1 += el;
         strncpy(b1, b2, strlen(b2) + 1);
