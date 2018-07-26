@@ -44,12 +44,12 @@
 
 
 static gssize
-_eventd_nd_draw_strccount(const gchar *str, char c)
+_eventd_nd_draw_strccount(const gchar *str, gunichar c)
 {
     gssize count = 1;
-    for ( ; *str != 0 ; ++str )
+    for ( ; g_utf8_get_char(str) != '\0' ; str = g_utf8_next_char(str) )
     {
-        if ( *str == c )
+        if ( g_utf8_get_char(str) == c )
             ++count;
     }
     return count;
