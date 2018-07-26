@@ -228,11 +228,7 @@ _eventd_nd_draw_get_text(EventdNdStyle *style, EventdEvent *event, guint more_si
         g_free(tmp);
     }
     else
-    {
-        strncpy(b1, "…", el + 1);
-        b1 += el;
-        strncpy(b1, b2, strlen(b2) + 1);
-    }
+        g_snprintf(b1, w - b1 + 1, "…%s", b2);
 
     *max_lines = 1;
 
