@@ -707,8 +707,6 @@ eventd_nd_wl_start(EventdNdBackendContext *self, const gchar *target)
         return FALSE;
     }
 
-    eventd_nd_shaping_update(self->context, EVENTD_ND_SHAPING_COMPOSITING);
-
     return TRUE;
 }
 

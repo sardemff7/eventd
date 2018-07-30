@@ -609,22 +609,8 @@ _eventd_nd_draw_bubble_shape(cairo_t *cr, gint radius, gint width, gint height)
     cairo_close_path(cr);
 }
 
-
 void
-eventd_nd_draw_bubble_shape(cairo_t *cr, EventdNdStyle *style, gint width, gint height)
-{
-    gint border, radius;
-
-    border = eventd_nd_style_get_bubble_border(style);
-    radius = eventd_nd_style_get_bubble_radius(style);
-    _eventd_nd_draw_bubble_shape(cr, radius, width, height);
-    cairo_set_line_width(cr, border * 2);
-    cairo_stroke_preserve(cr);
-    cairo_fill(cr);
-}
-
-void
-eventd_nd_draw_bubble_draw(cairo_t *cr, EventdNdStyle *style, gint width, gint height, EventdNdShaping shaping, gdouble value)
+eventd_nd_draw_bubble_draw(cairo_t *cr, EventdNdStyle *style, gint width, gint height, gdouble value)
 {
     gint border, blur = 0, radius = 0;
     gint offset_x = 0, offset_y = 0;
@@ -633,19 +619,11 @@ eventd_nd_draw_bubble_draw(cairo_t *cr, EventdNdStyle *style, gint width, gint h
     border = eventd_nd_style_get_bubble_border(style);
     cairo_translate(cr, border, border);
 
-    switch ( shaping )
-    {
-    case EVENTD_ND_SHAPING_NONE:
-    break;
-    case EVENTD_ND_SHAPING_COMPOSITING:
-        blur = eventd_nd_style_get_bubble_border_blur(style);
-        offset_x = eventd_nd_style_get_bubble_border_blur_offset_x(style);
-        offset_y = eventd_nd_style_get_bubble_border_blur_offset_y(style);
-        cairo_translate(cr, MAX(offset_x, blur * 2), MAX(offset_y, blur * 2));
-        /* fallthrough */
-    case EVENTD_ND_SHAPING_SHAPE:
-        radius = eventd_nd_style_get_bubble_radius(style);
-    }
+    blur = eventd_nd_style_get_bubble_border_blur(style);
+    offset_x = eventd_nd_style_get_bubble_border_blur_offset_x(style);
+    offset_y = eventd_nd_style_get_bubble_border_blur_offset_y(style);
+    cairo_translate(cr, MAX(offset_x, blur * 2), MAX(offset_y, blur * 2));
+    radius = eventd_nd_style_get_bubble_radius(style);
 
     _eventd_nd_draw_bubble_shape(cr, radius, width, height);
     colour = eventd_nd_style_get_bubble_border_colour(style);

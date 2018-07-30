@@ -122,29 +122,16 @@ _eventd_nd_notification_process(EventdNdNotification *self, EventdEvent *event)
     gint image_width = 0, image_height = 0;
 
 
-    switch ( self->context->shaping )
-    {
-    case EVENTD_ND_SHAPING_NONE:
-    case EVENTD_ND_SHAPING_SHAPE:
-        self->offset.x = 0;
-        self->offset.y = 0;
-        self->surface_size.width = 0;
-        self->surface_size.height = 0;
-    break;
-    case EVENTD_ND_SHAPING_COMPOSITING:
-    {
-        gint blur, offset_x, offset_y;
-        blur = eventd_nd_style_get_bubble_border_blur(self->style) * 2; /* We must reserve enough space to avoid clipping */
-        offset_x = eventd_nd_style_get_bubble_border_blur_offset_x(self->style);
-        offset_y = eventd_nd_style_get_bubble_border_blur_offset_y(self->style);
+    gint blur, offset_x, offset_y;
+    blur = eventd_nd_style_get_bubble_border_blur(self->style) * 2; /* We must reserve enough space to avoid clipping */
+    offset_x = eventd_nd_style_get_bubble_border_blur_offset_x(self->style);
+    offset_y = eventd_nd_style_get_bubble_border_blur_offset_y(self->style);
 
-        self->offset.x = MAX(0, blur - offset_x);
-        self->offset.y = MAX(0, blur - offset_y);
-        self->surface_size.width = 2 * blur + MAX(0, ABS(offset_x) - blur);
-        self->surface_size.height = 2 * blur + MAX(0, ABS(offset_y) - blur);
-    }
-    break;
-    }
+    self->offset.x = MAX(0, blur - offset_x);
+    self->offset.y = MAX(0, blur - offset_y);
+    self->surface_size.width = 2 * blur + MAX(0, ABS(offset_x) - blur);
+    self->surface_size.height = 2 * blur + MAX(0, ABS(offset_y) - blur);
+
     border = eventd_nd_style_get_bubble_border(self->style);
     padding = eventd_nd_style_get_bubble_padding(self->style);
     min_width = eventd_nd_style_get_bubble_min_width(self->style);
@@ -367,17 +354,6 @@ eventd_nd_notification_free(gpointer data)
 }
 
 void
-eventd_nd_notification_shape(EventdNdNotification *self, cairo_t *cr)
-{
-    gint border;
-
-    border = eventd_nd_style_get_bubble_border(self->style);
-    cairo_translate(cr, border, border);
-
-    eventd_nd_draw_bubble_shape(cr, self->style, self->bubble_size.width, self->bubble_size.height);
-}
-
-void
 eventd_nd_notification_draw(EventdNdNotification *self, cairo_surface_t *surface)
 {
     gint padding;
@@ -412,7 +388,7 @@ eventd_nd_notification_draw(EventdNdNotification *self, cairo_surface_t *surface
     cairo_t *cr;
     cr = cairo_create(surface);
 
-    eventd_nd_draw_bubble_draw(cr, self->style, self->bubble_size.width, self->bubble_size.height, self->context->shaping, value);
+    eventd_nd_draw_bubble_draw(cr, self->style, self->bubble_size.width, self->bubble_size.height, value);
     cairo_translate(cr, padding, padding);
     eventd_nd_draw_image_and_icon_draw(cr, self->image, self->icon, self->style, self->content_size.width, self->content_size.height, value);
     eventd_nd_draw_text_draw(cr, self->style, self->text.text, self->text.x, offset_y);

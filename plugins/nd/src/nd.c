@@ -66,17 +66,6 @@ static const gchar * const  _eventd_nd_icon_fallback_themes[] = {
 };
 
 void
-eventd_nd_shaping_update(EventdNdContext *context, EventdNdShaping shaping)
-{
-    if ( context->shaping == shaping )
-        return;
-
-    context->shaping = shaping;
-
-    eventd_nd_notification_refresh_list(context, TRUE);
-}
-
-void
 eventd_nd_geometry_update(EventdNdContext *context, gint w, gint h, gint s)
 {
     gboolean resize;

@@ -28,10 +28,8 @@
 
 #include "types.h"
 
-void eventd_nd_shaping_update(EventdNdContext *context, EventdNdShaping shaping);
 void eventd_nd_geometry_update(EventdNdContext *context, gint w, gint h, gint scale);
 
-void eventd_nd_notification_shape(EventdNdNotification *notification, cairo_t *cr);
 void eventd_nd_notification_draw(EventdNdNotification *notification, cairo_surface_t *surface);
 
 
