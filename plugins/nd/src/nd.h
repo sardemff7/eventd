@@ -42,13 +42,10 @@ struct _EventdNdQueue {
 
 struct _EventdPluginContext {
     EventdPluginCoreContext *core;
-    EventdNdInterface interface;
     NkBindings *bindings;
-    EventdNdBackend backends[_EVENTD_ND_BACKENDS_SIZE];
-    EventdNdBackend *backend;
+    EventdNdBackendContext *wayland;
     GHashTable *queues;
     EventdNdStyle *style;
-    EventdNdBackends last_backend;
     NkXdgThemeContext *theme_context;
     gchar *last_target;
     struct {
