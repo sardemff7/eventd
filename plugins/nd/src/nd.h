@@ -43,7 +43,7 @@ struct _EventdNdQueue {
 struct _EventdPluginContext {
     EventdPluginCoreContext *core;
     NkBindings *bindings;
-    EventdNdBackendContext *wayland;
+    EventdNdWayland *wayland;
     GHashTable *queues;
     EventdNdStyle *style;
     NkXdgThemeContext *theme_context;

@@ -33,23 +33,23 @@ void eventd_nd_geometry_update(EventdNdContext *context, gint w, gint h, gint sc
 void eventd_nd_notification_draw(EventdNdNotification *notification, cairo_surface_t *surface);
 
 
-typedef struct _EventdNdBackendContext EventdNdBackendContext;
+typedef struct _EventdNdWayland EventdNdWayland;
 typedef struct _EventdNdSurface EventdNdSurface;
 
-EventdNdBackendContext *eventd_nd_wl_init(EventdNdContext *context, NkBindings *bindings);
-void eventd_nd_wl_uninit(EventdNdBackendContext *context);
+EventdNdWayland *eventd_nd_wl_init(EventdNdContext *context, NkBindings *bindings);
+void eventd_nd_wl_uninit(EventdNdWayland *context);
 
-void eventd_nd_wl_global_parse(EventdNdBackendContext *context, GKeyFile *config_file);
-void eventd_nd_wl_config_reset(EventdNdBackendContext *context);
+void eventd_nd_wl_global_parse(EventdNdWayland *context, GKeyFile *config_file);
+void eventd_nd_wl_config_reset(EventdNdWayland *context);
 
-gboolean eventd_nd_wl_start(EventdNdBackendContext *context, const gchar *target);
-void eventd_nd_wl_stop(EventdNdBackendContext *context);
+gboolean eventd_nd_wl_start(EventdNdWayland *context, const gchar *target);
+void eventd_nd_wl_stop(EventdNdWayland *context);
 
-EventdNdSurface *eventd_nd_wl_surface_new(EventdNdBackendContext *context, EventdNdNotification *notification, gint width, gint height);
+EventdNdSurface *eventd_nd_wl_surface_new(EventdNdWayland *context, EventdNdNotification *notification, gint width, gint height);
 void eventd_nd_wl_surface_update(EventdNdSurface *surface, gint width, gint height);
 void eventd_nd_wl_surface_free(EventdNdSurface *surface);
 
 void eventd_nd_wl_move_surface(EventdNdSurface *surface, gint x, gint y);
-void eventd_nd_wl_move_end(EventdNdBackendContext *context);
+void eventd_nd_wl_move_end(EventdNdWayland *context);
 
 #endif /* __EVENTD_ND_WAYLAND_H__ */
