@@ -88,13 +88,11 @@ _eventd_nd_queue_new(void)
     self->anchor = EVENTD_ND_ANCHOR_TOP_RIGHT;
 
     /* Defaults placement values */
-    self->limit = 1;
 
     self->margin_x = 13;
     self->margin_y = 13;
     self->spacing = 13;
 
-    self->wait_queue = g_queue_new();
     self->queue = g_queue_new();
 
     return self;
@@ -106,7 +104,6 @@ _eventd_nd_queue_free(gpointer data)
     EventdNdQueue *self = data;
 
     g_queue_free(self->queue);
-    g_queue_free(self->wait_queue);
 
     g_free(self);
 }
@@ -347,12 +344,6 @@ _eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
 
         if ( evhelpers_config_key_file_get_enum(config_file, *group, "Anchor", _eventd_nd_anchors, G_N_ELEMENTS(_eventd_nd_anchors), &anchor) == 0 )
             self->anchor = anchor;
-
-        if ( evhelpers_config_key_file_get_int(config_file, *group, "Limit", &integer) == 0 )
-            self->limit = ( integer.value > 0 ) ? integer.value : 0;
-
-        if ( evhelpers_config_key_file_get_boolean(config_file, *group, "MoreIndicator", &boolean) == 0 )
-            self->more_indicator = boolean;
 
         if ( evhelpers_config_key_file_get_int_list(config_file, *group, "Margin", integer_list, &length) == 0 )
         {

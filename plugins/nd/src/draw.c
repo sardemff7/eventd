@@ -144,7 +144,7 @@ _eventd_nd_draw_parse_text(gchar *text)
 }
 
 static gchar *
-_eventd_nd_draw_get_text(EventdNdStyle *style, EventdEvent *event, guint more_size, guint8 *max_lines)
+_eventd_nd_draw_get_text(EventdNdStyle *style, EventdEvent *event, guint8 *max_lines)
 {
     /*
      * This function depends on the current Pango implementation,
@@ -154,10 +154,7 @@ _eventd_nd_draw_get_text(EventdNdStyle *style, EventdEvent *event, guint more_si
      */
 
     gchar *text;
-    if ( event == NULL)
-        text = g_strdup_printf("+%u", more_size);
-    else
-        text = evhelpers_format_string_get_string(eventd_nd_style_get_template_text(style), event, NULL, NULL);
+    text = evhelpers_format_string_get_string(eventd_nd_style_get_template_text(style), event, NULL, NULL);
     if ( *text == '\0' )
     {
         g_free(text);
@@ -220,12 +217,12 @@ ret:
 }
 
 PangoLayout *
-eventd_nd_draw_text_process(EventdNdStyle *style, EventdEvent *event, gint max_width, guint more_size, gint *text_width)
+eventd_nd_draw_text_process(EventdNdStyle *style, EventdEvent *event, gint max_width, gint *text_width)
 {
     gchar *text_;
     guint8 max_lines = 0;
 
-    text_ = _eventd_nd_draw_get_text(style, event, more_size, &max_lines);
+    text_ = _eventd_nd_draw_get_text(style, event, &max_lines);
     if ( text_ == NULL )
         return NULL;
 

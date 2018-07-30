@@ -57,7 +57,6 @@ struct _EventdNdNotification {
     EventdNdStyle *style;
     EventdNdQueue *queue;
     GList *link;
-    gboolean visible;
     EventdEvent *event;
     struct {
         PangoLayout *text;
@@ -170,7 +169,7 @@ _eventd_nd_notification_process(EventdNdNotification *self, EventdEvent *event)
         text_max_width = max_width;
     else
         text_max_width = MIN(text_max_width, max_width);
-    self->text.text = eventd_nd_draw_text_process(self->style, self->event, text_max_width, g_queue_get_length(self->queue->wait_queue), &text_width);
+    self->text.text = eventd_nd_draw_text_process(self->style, self->event, text_max_width, &text_width);
 
     self->content_size.width = text_width;
 
@@ -217,46 +216,6 @@ _eventd_nd_notification_update(EventdNdNotification *self, EventdEvent *event)
 static void
 _eventd_nd_notification_refresh_list(EventdPluginContext *context, EventdNdQueue *queue)
 {
-    if ( queue->more_notification != NULL )
-    {
-        g_queue_pop_tail_link(queue->queue);
-        queue->more_notification->visible = FALSE;
-    }
-
-    while ( ( g_queue_get_length(queue->queue) < queue->limit ) && ( ! g_queue_is_empty(queue->wait_queue) ) )
-    {
-        GList *link;
-        link = g_queue_pop_head_link(queue->wait_queue);
-        if ( queue->reverse )
-            g_queue_push_tail_link(queue->queue, link);
-        else
-            g_queue_push_head_link(queue->queue, link);
-
-        EventdNdNotification *self = link->data;
-        gint timeout;
-        timeout = eventd_nd_style_get_bubble_timeout(self->style);
-        if ( timeout > 0 )
-            self->timeout = g_timeout_add_full(G_PRIORITY_DEFAULT, timeout, _eventd_nd_event_timedout, self, NULL);
-        self->visible = TRUE;
-    }
-
-    if ( queue->more_indicator )
-    {
-        if ( ! g_queue_is_empty(queue->wait_queue) )
-        {
-            if ( queue->more_notification == NULL )
-                queue->more_notification = eventd_nd_notification_new(context, NULL, context->style);
-            else
-            {
-                _eventd_nd_notification_update(queue->more_notification, NULL);
-                g_queue_push_tail_link(queue->queue, queue->more_notification->link);
-            }
-            queue->more_notification->visible = TRUE;
-        }
-        else if ( queue->more_notification != NULL )
-            eventd_nd_notification_free(queue->more_notification);
-    }
-
     gboolean right, center, bottom;
     right = ( queue->anchor == EVENTD_ND_ANCHOR_TOP_RIGHT ) || ( queue->anchor == EVENTD_ND_ANCHOR_BOTTOM_RIGHT );
     center = ( queue->anchor == EVENTD_ND_ANCHOR_TOP ) || ( queue->anchor == EVENTD_ND_ANCHOR_BOTTOM );
@@ -307,20 +266,24 @@ eventd_nd_notification_new(EventdPluginContext *context, EventdEvent *event, Eve
         self->queue = g_hash_table_lookup(context->queues, "default");
     self->style = style;
 
-    if ( event != NULL )
+    _eventd_nd_notification_process(self, event);
+    self->surface = eventd_nd_wl_surface_new(self->context->wayland, self, self->surface_size.width, self->surface_size.height);
+
+    if ( self->queue->reverse )
     {
-        g_queue_push_tail(self->queue->wait_queue, self);
-        self->link = g_queue_peek_tail_link(self->queue->wait_queue);
-    }
-    else
-    {
-        self->queue->more_notification = self;
         g_queue_push_tail(self->queue->queue, self);
         self->link = g_queue_peek_tail_link(self->queue->queue);
     }
+    else
+    {
+        g_queue_push_head(self->queue->queue, self);
+        self->link = g_queue_peek_head_link(self->queue->queue);
+    }
 
-    _eventd_nd_notification_process(self, event);
-    self->surface = eventd_nd_wl_surface_new(self->context->wayland, self, self->surface_size.width, self->surface_size.height);
+    gint timeout;
+    timeout = eventd_nd_style_get_bubble_timeout(self->style);
+    if ( timeout > 0 )
+        self->timeout = g_timeout_add_full(G_PRIORITY_DEFAULT, timeout, _eventd_nd_event_timedout, self, NULL);
     _eventd_nd_notification_refresh_list(self->context, self->queue);
 
     return self;
@@ -334,20 +297,12 @@ eventd_nd_notification_free(gpointer data)
     if ( self->timeout > 0 )
         g_source_remove(self->timeout);
 
-    if ( self->visible )
-        g_queue_delete_link(self->queue->queue, self->link);
-    else if ( self->event == NULL )
-        g_list_free_1(self->link);
-    else
-        g_queue_delete_link(self->queue->wait_queue, self->link);
-
-    if ( self->event == NULL )
-        self->queue->more_notification = NULL;
+    g_queue_delete_link(self->queue->queue, self->link);
 
     eventd_nd_wl_surface_free(self->surface);
     _eventd_nd_notification_clean(self);
 
-    if ( ( ! self->context->no_refresh ) && ( self->visible ) )
+    if ( ! self->context->no_refresh )
         _eventd_nd_notification_refresh_list(self->context, self->queue);
 
     g_free(self);
