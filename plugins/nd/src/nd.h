@@ -28,15 +28,10 @@
 
 struct _EventdNdQueue {
     EventdNdAnchor anchor;
-    guint64 limit;
     gint margin_x;
     gint margin_y;
     gint spacing;
     gboolean reverse;
-    gboolean more_indicator;
-    EventdEvent *more_event;
-    EventdNdNotification *more_notification;
-    GQueue *wait_queue;
     GQueue *queue;
 };
 
