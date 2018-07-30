@@ -35,7 +35,7 @@
 #include "libeventd-event.h"
 #include "libeventd-helpers-config.h"
 
-#include "backend.h"
+#include "wayland.h"
 #include "style.h"
 #include "draw.h"
 #include "nd.h"
@@ -224,7 +224,7 @@ static void
 _eventd_nd_notification_update(EventdNdNotification *self, EventdEvent *event)
 {
     _eventd_nd_notification_process(self, event);
-    self->context->backend->surface_update(self->surface, self->surface_size.width, self->surface_size.height);
+    eventd_nd_wl_surface_update(self->surface, self->surface_size.width, self->surface_size.height);
 }
 
 static void
@@ -270,10 +270,6 @@ _eventd_nd_notification_refresh_list(EventdPluginContext *context, EventdNdQueue
             eventd_nd_notification_free(queue->more_notification);
     }
 
-    gpointer data = NULL;
-    if ( context->backend->move_begin != NULL )
-        data = context->backend->move_begin(context->backend->context, g_queue_get_length(queue->queue));
-
     gboolean right, center, bottom;
     right = ( queue->anchor == EVENTD_ND_ANCHOR_TOP_RIGHT ) || ( queue->anchor == EVENTD_ND_ANCHOR_BOTTOM_RIGHT );
     center = ( queue->anchor == EVENTD_ND_ANCHOR_TOP ) || ( queue->anchor == EVENTD_ND_ANCHOR_BOTTOM );
@@ -301,7 +297,7 @@ _eventd_nd_notification_refresh_list(EventdPluginContext *context, EventdNdQueue
         y = by;
         x -= self->offset.x;
         y -= self->offset.y;
-        context->backend->move_surface(self->surface, x, y, data);
+        eventd_nd_wl_move_surface(self->surface, x, y);
 
         if ( bottom )
             by -= queue->spacing;
@@ -309,8 +305,7 @@ _eventd_nd_notification_refresh_list(EventdPluginContext *context, EventdNdQueue
             by += self->border_size.height + queue->spacing;
     }
 
-    if ( context->backend->move_end != NULL )
-        context->backend->move_end(context->backend->context, data);
+    eventd_nd_wl_move_end(context->wayland);
 }
 
 EventdNdNotification *
@@ -338,7 +333,7 @@ eventd_nd_notification_new(EventdPluginContext *context, EventdEvent *event, Eve
     }
 
     _eventd_nd_notification_process(self, event);
-    self->surface = self->context->backend->surface_new(self->context->backend->context, self, self->surface_size.width, self->surface_size.height);
+    self->surface = eventd_nd_wl_surface_new(self->context->wayland, self, self->surface_size.width, self->surface_size.height);
     _eventd_nd_notification_refresh_list(self->context, self->queue);
 
     return self;
@@ -362,7 +357,7 @@ eventd_nd_notification_free(gpointer data)
     if ( self->event == NULL )
         self->queue->more_notification = NULL;
 
-    self->context->backend->surface_free(self->surface);
+    eventd_nd_wl_surface_free(self->surface);
     _eventd_nd_notification_clean(self);
 
     if ( ( ! self->context->no_refresh ) && ( self->visible ) )
