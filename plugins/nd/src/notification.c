@@ -42,16 +42,6 @@
 
 #include "notification.h"
 
-typedef struct {
-    gint x;
-    gint y;
-} Point;
-
-typedef struct {
-    gint width;
-    gint height;
-} Size;
-
 struct _EventdNdNotification {
     EventdNdContext *context;
     EventdNdStyle *style;
@@ -65,11 +55,10 @@ struct _EventdNdNotification {
     } text;
     cairo_surface_t *image;
     cairo_surface_t *icon;
-    Point offset;
-    Size surface_size;
-    Size border_size;
-    Size bubble_size;
-    Size content_size;
+    EventdNdSize surface_size;
+    EventdNdGeometry geometry;
+    EventdNdSize bubble_size;
+    EventdNdSize content_size;
     guint timeout;
     EventdNdSurface *surface;
 };
@@ -126,8 +115,8 @@ _eventd_nd_notification_process(EventdNdNotification *self, EventdEvent *event)
     offset_x = eventd_nd_style_get_bubble_border_blur_offset_x(self->style);
     offset_y = eventd_nd_style_get_bubble_border_blur_offset_y(self->style);
 
-    self->offset.x = MAX(0, blur - offset_x);
-    self->offset.y = MAX(0, blur - offset_y);
+    self->geometry.x = MAX(0, blur - offset_x);
+    self->geometry.y = MAX(0, blur - offset_y);
     self->surface_size.width = 2 * blur + MAX(0, ABS(offset_x) - blur);
     self->surface_size.height = 2 * blur + MAX(0, ABS(offset_y) - blur);
 
@@ -157,7 +146,7 @@ _eventd_nd_notification_process(EventdNdNotification *self, EventdEvent *event)
     }
 
     if ( max_width < 0 )
-        max_width = self->context->geometry.w - 2 * ( self->queue->margin_x + border );
+        max_width = self->queue->geometry.w - 2 * border;
     max_width -= 2 * padding;
     min_width += 2 * padding;
     if ( min_width > max_width )
@@ -176,7 +165,7 @@ _eventd_nd_notification_process(EventdNdNotification *self, EventdEvent *event)
     if ( self->content_size.width < max_width )
     {
         if ( self->event != NULL )
-            eventd_nd_draw_image_and_icon_process(self->context->theme_context, self->style, self->event, max_width - self->content_size.width, self->context->geometry.s, &self->image, &self->icon, &self->text.x, &image_width, &image_height);
+            eventd_nd_draw_image_and_icon_process(self->context->theme_context, self->style, self->event, max_width - self->content_size.width, self->queue->geometry.s, &self->image, &self->icon, &self->text.x, &image_width, &image_height);
         self->content_size.width += image_width;
     }
 
@@ -194,64 +183,42 @@ _eventd_nd_notification_process(EventdNdNotification *self, EventdEvent *event)
 
     self->bubble_size.width = self->content_size.width + 2 * padding;
     self->bubble_size.height = self->content_size.height + 2 * padding + progress_bar_width;
-    self->border_size.width = self->bubble_size.width + 2 * border;
-    self->border_size.height = self->bubble_size.height + 2 * border;
-    self->surface_size.width += self->border_size.width;
-    self->surface_size.height += self->border_size.height;
+    self->geometry.width = self->bubble_size.width + 2 * border;
+    self->geometry.height = self->bubble_size.height + 2 * border;
+    self->surface_size.width += self->geometry.width;
+    self->surface_size.height += self->geometry.height;
 
     if ( self->timeout > 0 )
     {
         g_source_remove(self->timeout);
         self->timeout = g_timeout_add_full(G_PRIORITY_DEFAULT, eventd_nd_style_get_bubble_timeout(self->style), _eventd_nd_event_timedout, self, NULL);
     }
+    eventd_nd_wl_surface_update(self->surface, self->surface_size, self->geometry);
+}
+
+void
+eventd_nd_notification_update(EventdNdNotification *self, EventdEvent *event)
+{
+    /* We may be the last user of event, so make sure we keep it alive */
+    _eventd_nd_notification_process(self, eventd_event_ref(event));
+    eventd_event_unref(event);
+}
+
+void
+eventd_nd_notification_start_timeout(EventdNdNotification *self)
+{
+    gint timeout;
+    timeout = eventd_nd_style_get_bubble_timeout(self->style);
+    if ( timeout > 0 )
+        self->timeout = g_timeout_add_full(G_PRIORITY_DEFAULT, timeout, _eventd_nd_event_timedout, self, NULL);
 }
 
 static void
-_eventd_nd_notification_update(EventdNdNotification *self, EventdEvent *event)
+_eventd_nd_notification_set_queue(EventdNdNotification *self)
 {
-    _eventd_nd_notification_process(self, event);
-    eventd_nd_wl_surface_update(self->surface, self->surface_size.width, self->surface_size.height);
-}
-
-static void
-_eventd_nd_notification_refresh_list(EventdPluginContext *context, EventdNdQueue *queue)
-{
-    gboolean right, center, bottom;
-    right = ( queue->anchor == EVENTD_ND_ANCHOR_TOP_RIGHT ) || ( queue->anchor == EVENTD_ND_ANCHOR_BOTTOM_RIGHT );
-    center = ( queue->anchor == EVENTD_ND_ANCHOR_TOP ) || ( queue->anchor == EVENTD_ND_ANCHOR_BOTTOM );
-    bottom = ( queue->anchor == EVENTD_ND_ANCHOR_BOTTOM_LEFT ) || ( queue->anchor == EVENTD_ND_ANCHOR_BOTTOM ) || ( queue->anchor == EVENTD_ND_ANCHOR_BOTTOM_RIGHT );
-
-    gint bx, by;
-    bx = queue->margin_x;
-    by = queue->margin_y;
-    if ( center )
-        bx = context->geometry.w;
-    else if ( right )
-        bx = context->geometry.w - bx;
-    if ( bottom )
-        by = context->geometry.h - by;
-    GList *self_;
-    for ( self_ = g_queue_peek_head_link(queue->queue) ; self_ != NULL ; self_ = g_list_next(self_) )
-    {
-        EventdNdNotification *self = self_->data;
-
-        if ( bottom )
-            by -= self->border_size.height;
-
-        gint x, y;
-        x = center ? ( ( bx / 2 ) - ( self->border_size.width / 2 ) ) : right ? ( bx - self->border_size.width ) : bx;
-        y = by;
-        x -= self->offset.x;
-        y -= self->offset.y;
-        eventd_nd_wl_move_surface(self->surface, x, y);
-
-        if ( bottom )
-            by -= queue->spacing;
-        else
-            by += self->border_size.height + queue->spacing;
-    }
-
-    eventd_nd_wl_move_end(context->wayland);
+    self->queue = g_hash_table_lookup(self->context->queues, eventd_nd_style_get_bubble_queue(self->style));
+    if ( self->queue == NULL )
+        self->queue = g_hash_table_lookup(self->context->queues, "default");
 }
 
 EventdNdNotification *
@@ -261,32 +228,25 @@ eventd_nd_notification_new(EventdPluginContext *context, EventdEvent *event, Eve
 
     self = g_new0(EventdNdNotification, 1);
     self->context = context;
-    self->queue = g_hash_table_lookup(context->queues, eventd_nd_style_get_bubble_queue(style));
-    if ( self->queue == NULL )
-        self->queue = g_hash_table_lookup(context->queues, "default");
     self->style = style;
+    _eventd_nd_notification_set_queue(self);
 
+    g_queue_push_tail(self->queue->queue, self);
+    self->link = g_queue_peek_tail_link(self->queue->queue);
+
+    self->surface = eventd_nd_wl_surface_new(self->context->wayland, self, self->queue);
     _eventd_nd_notification_process(self, event);
-    self->surface = eventd_nd_wl_surface_new(self->context->wayland, self, self->surface_size.width, self->surface_size.height);
-
-    if ( self->queue->reverse )
-    {
-        g_queue_push_tail(self->queue->queue, self);
-        self->link = g_queue_peek_tail_link(self->queue->queue);
-    }
-    else
-    {
-        g_queue_push_head(self->queue->queue, self);
-        self->link = g_queue_peek_head_link(self->queue->queue);
-    }
-
-    gint timeout;
-    timeout = eventd_nd_style_get_bubble_timeout(self->style);
-    if ( timeout > 0 )
-        self->timeout = g_timeout_add_full(G_PRIORITY_DEFAULT, timeout, _eventd_nd_event_timedout, self, NULL);
-    _eventd_nd_notification_refresh_list(self->context, self->queue);
 
     return self;
+}
+
+void
+eventd_nd_notification_relink(gpointer data)
+{
+    EventdNdNotification *self = data;
+    g_queue_delete_link(self->queue->queue, self->link);
+    _eventd_nd_notification_set_queue(self);
+    eventd_nd_notification_update(self, self->event);
 }
 
 void
@@ -301,9 +261,6 @@ eventd_nd_notification_free(gpointer data)
 
     eventd_nd_wl_surface_free(self->surface);
     _eventd_nd_notification_clean(self);
-
-    if ( ! self->context->no_refresh )
-        _eventd_nd_notification_refresh_list(self->context, self->queue);
 
     g_free(self);
 }
@@ -353,13 +310,6 @@ eventd_nd_notification_draw(EventdNdNotification *self, cairo_surface_t *surface
 }
 
 void
-eventd_nd_notification_update(EventdNdNotification *self, EventdEvent *event)
-{
-    _eventd_nd_notification_update(self, event);
-    _eventd_nd_notification_refresh_list(self->context, self->queue);
-}
-
-void
 eventd_nd_notification_dismiss(EventdNdNotification *self)
 {
     if ( self->event == NULL )
@@ -379,29 +329,6 @@ void
 eventd_nd_notification_dismiss_queue(EventdNdNotification *self)
 {
     eventd_nd_notification_dismiss_target(self->context, EVENTD_ND_DISMISS_ALL, self->queue);
-}
-
-
-void
-eventd_nd_notification_refresh_list(EventdPluginContext *context, gboolean update)
-{
-    GHashTableIter iter;
-    if ( update )
-    {
-        EventdNdNotification *notification;
-        g_hash_table_iter_init(&iter, context->notifications);
-        while ( g_hash_table_iter_next(&iter, NULL, (gpointer *) &notification) )
-        {
-            /* We may be the last user of event, so make sure we keep it alive */
-            _eventd_nd_notification_update(notification, eventd_event_ref(notification->event));
-            eventd_event_unref(notification->event);
-        }
-    }
-
-    EventdNdQueue *queue;
-    g_hash_table_iter_init(&iter, context->queues);
-    while ( g_hash_table_iter_next(&iter, NULL, (gpointer *) &queue) )
-        _eventd_nd_notification_refresh_list(context, queue);
 }
 
 EventdPluginCommandStatus
@@ -439,20 +366,10 @@ eventd_nd_notification_dismiss_target(EventdPluginContext *context, EventdNdDism
         return r ? EVENTD_PLUGIN_COMMAND_STATUS_OK : EVENTD_PLUGIN_COMMAND_STATUS_CUSTOM_1;
     }
     case EVENTD_ND_DISMISS_OLDEST:
-    {
-        if ( queue->reverse )
-            notification = g_queue_peek_head_link(queue->queue);
-        else
-            notification = g_queue_peek_tail_link(queue->queue);
-    }
+        notification = g_queue_peek_tail_link(queue->queue);
     break;
     case EVENTD_ND_DISMISS_NEWEST:
-    {
-        if ( queue->reverse )
-            notification = g_queue_peek_tail_link(queue->queue);
-        else
-            notification = g_queue_peek_head_link(queue->queue);
-    }
+        notification = g_queue_peek_head_link(queue->queue);
     break;
     }
 

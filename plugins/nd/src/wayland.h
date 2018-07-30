@@ -26,9 +26,13 @@
 #include "libeventd-event.h"
 #include "eventd-plugin.h"
 
+#include "nkutils-bindings.h"
+
+#include "notification-manager-unstable-v1-client-protocol.h"
+
 #include "types.h"
 
-void eventd_nd_geometry_update(EventdNdContext *context, gint w, gint h, gint scale);
+EventdNdQueue *eventd_nd_queue_new(EventdNdContext *context, const gchar *name, struct zeventd_nw_notification_queue_v1 *nw_queue);
 
 void eventd_nd_notification_draw(EventdNdNotification *notification, cairo_surface_t *surface);
 
@@ -45,11 +49,8 @@ void eventd_nd_wl_config_reset(EventdNdWayland *context);
 gboolean eventd_nd_wl_start(EventdNdWayland *context, const gchar *target);
 void eventd_nd_wl_stop(EventdNdWayland *context);
 
-EventdNdSurface *eventd_nd_wl_surface_new(EventdNdWayland *context, EventdNdNotification *notification, gint width, gint height);
-void eventd_nd_wl_surface_update(EventdNdSurface *surface, gint width, gint height);
+EventdNdSurface *eventd_nd_wl_surface_new(EventdNdWayland *context, EventdNdNotification *notification, EventdNdQueue *queue);
+void eventd_nd_wl_surface_update(EventdNdSurface *surface, EventdNdSize size, EventdNdGeometry geometry);
 void eventd_nd_wl_surface_free(EventdNdSurface *surface);
-
-void eventd_nd_wl_move_surface(EventdNdSurface *surface, gint x, gint y);
-void eventd_nd_wl_move_end(EventdNdWayland *context);
 
 #endif /* __EVENTD_ND_WAYLAND_H__ */

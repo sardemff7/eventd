@@ -39,17 +39,18 @@
 
 #include <wayland-client.h>
 #include <wayland-cursor.h>
-#include "notification-area-unstable-v1-client-protocol.h"
 #include <libgwater-wayland.h>
 
 #include "libeventd-event.h"
 #include "libeventd-helpers-config.h"
 
 #include "wayland.h"
+#include "notification.h"
+#include "nd.h"
 
 /* Supported interface versions */
 #define WL_COMPOSITOR_INTERFACE_VERSION 3
-#define WW_NOTIFICATION_AREA_INTERFACE_VERSION 1
+#define WW_NOTIFICATION_MANAGER_INTERFACE_VERSION 1
 #define WL_SHM_INTERFACE_VERSION 1
 #define WL_SEAT_INTERFACE_VERSION 5
 
@@ -87,7 +88,7 @@ struct _EventdNdWayland {
     struct wl_registry *registry;
     uint32_t global_names[_EVENTD_ND_WL_GLOBAL_SIZE];
     struct wl_compositor *compositor;
-    struct zww_notification_area_v1 *notification_area;
+    struct zeventd_nw_notification_manager_v1 *notification_manager;
     struct wl_shm *shm;
     struct {
         gchar *theme_name;
@@ -100,8 +101,6 @@ struct _EventdNdWayland {
     } cursor;
     GSList *seats;
     EventdNdWlFormats formats;
-    gint32 scale;
-    gboolean need_redraw;
 };
 
 typedef struct {
@@ -114,11 +113,11 @@ typedef struct {
 struct _EventdNdSurface {
     EventdNdNotification *notification;
     EventdNdWayland *context;
+    EventdNdQueue *queue;
     EventdNdWlBuffer *buffer;
-    gint width;
-    gint height;
+    EventdNdSize size;
     struct wl_surface *surface;
-    struct zww_notification_v1 *ww_notification;
+    struct zeventd_nw_notification_v1 *nw_notification;
 };
 
 static const NkBindingsButtonState _eventd_nd_wl_nk_bindings_button_state[] = {
@@ -167,23 +166,68 @@ eventd_nd_wl_config_reset(EventdNdWayland *self)
 }
 
 static void
-_eventd_nd_wl_notification_area_geometry(void *data, struct zww_notification_area_v1 *notification_area, int32_t width, int32_t height, int32_t scale)
+_eventd_nd_nw_notification_queue_deleted(void *data, struct zeventd_nw_notification_queue_v1 *nw_queue)
 {
-    EventdNdWayland *self = data;
+    EventdNdQueue *self = data;
+
+    g_hash_table_remove(self->context->queues, self->name);
+}
+
+static void
+_eventd_nd_nw_notification_queue_active(void *data, struct zeventd_nw_notification_queue_v1 *nw_queue)
+{
+}
+
+static void
+_eventd_nd_nw_notification_queue_inactive(void *data, struct zeventd_nw_notification_queue_v1 *nw_queue)
+{
+}
+
+static void
+_eventd_nd_nw_notification_queue_geometry(void *data, struct zeventd_nw_notification_queue_v1 *nw_queue, int32_t width, int32_t height, int32_t scale)
+{
+    EventdNdQueue *self = data;
+    EventdNdWayland *context = self->context->wayland;
 
 #if CAIRO_VERSION >= CAIRO_VERSION_ENCODE(1, 14, 0)
-    if ( self->scale_support )
+    if ( context->scale_support )
     {
-        self->need_redraw = ( self->scale != scale );
-        self->scale = scale;
+        self->geometry.s = scale;
     }
 #endif /* CAIRO_VERION >= 1.14.0 */
 
-    eventd_nd_geometry_update(self->context, width, height, self->scale);
+    self->geometry.w = width;
+    self->geometry.h = height;
 }
 
-static const struct zww_notification_area_v1_listener _eventd_nd_wl_notification_area_listener = {
-    .geometry = _eventd_nd_wl_notification_area_geometry
+static const struct zeventd_nw_notification_queue_v1_listener _eventd_nd_nw_notification_queue_listener = {
+    .deleted = _eventd_nd_nw_notification_queue_deleted,
+    .active = _eventd_nd_nw_notification_queue_active,
+    .inactive = _eventd_nd_nw_notification_queue_inactive,
+    .geometry = _eventd_nd_nw_notification_queue_geometry,
+};
+
+
+static void
+_eventd_nd_wl_create_queue(EventdNdWayland *self, const gchar *name)
+{
+    EventdNdQueue *queue;
+    struct zeventd_nw_notification_queue_v1 *nw_queue;
+
+    nw_queue = zeventd_nw_notification_manager_v1_get_queue(self->notification_manager, name);
+    queue = eventd_nd_queue_new(self->context, ( name != NULL ) ? name : "default", nw_queue);
+    zeventd_nw_notification_queue_v1_add_listener(queue->nw_queue, &_eventd_nd_nw_notification_queue_listener, queue);
+}
+
+static void
+_eventd_nd_nw_notification_manager_queue(void *data, struct zeventd_nw_notification_manager_v1 *notification_manager, const char *name)
+{
+    EventdNdWayland *self = data;
+    _eventd_nd_wl_create_queue(self, name);
+}
+
+static const struct zeventd_nw_notification_manager_v1_listener _eventd_nd_nw_notification_manager_listener = {
+    .queue = _eventd_nd_nw_notification_manager_queue,
 };
 
 static void
@@ -564,11 +608,13 @@ _eventd_nd_wl_registry_handle_global(void *data, struct wl_registry *registry, u
             self->scale_support = ( wl_compositor_get_version(self->compositor) >= WL_SURFACE_SET_BUFFER_SCALE_SINCE_VERSION );
 #endif /* CAIRO_VERION >= 1.14.0 */
     }
-    else if ( g_strcmp0(interface, "zww_notification_area_v1") == 0 )
+    else if ( g_strcmp0(interface, "zeventd_nw_notification_manager_v1") == 0 )
     {
         self->global_names[EVENTD_ND_WL_GLOBAL_NOTIFICATION_DAEMON] = name;
-        self->notification_area = wl_registry_bind(registry, name, &zww_notification_area_v1_interface, WW_NOTIFICATION_AREA_INTERFACE_VERSION);
-        zww_notification_area_v1_add_listener(self->notification_area, &_eventd_nd_wl_notification_area_listener, self);
+        self->notification_manager = wl_registry_bind(registry, name, &zeventd_nw_notification_manager_v1_interface, WW_NOTIFICATION_MANAGER_INTERFACE_VERSION);
+        zeventd_nw_notification_manager_v1_add_listener(self->notification_manager, &_eventd_nd_nw_notification_manager_listener, self);
+
+        _eventd_nd_wl_create_queue(self, NULL);
     }
     else if ( g_strcmp0(interface, "wl_shm") == 0 )
     {
@@ -627,8 +673,10 @@ _eventd_nd_wl_registry_handle_global_remove(void *data, struct wl_registry *regi
             self->compositor = NULL;
         break;
         case EVENTD_ND_WL_GLOBAL_NOTIFICATION_DAEMON:
-            zww_notification_area_v1_destroy(self->notification_area);
-            self->notification_area = NULL;
+            g_hash_table_remove_all(self->context->notifications);
+            g_hash_table_remove_all(self->context->queues);
+            zeventd_nw_notification_manager_v1_destroy(self->notification_manager);
+            self->notification_manager = NULL;
         break;
         case EVENTD_ND_WL_GLOBAL_SHM:
             wl_shm_destroy(self->shm);
@@ -700,10 +748,10 @@ eventd_nd_wl_start(EventdNdWayland *self, const gchar *target)
     wl_registry_add_listener(self->registry, &_eventd_nd_wl_registry_listener, self);
     wl_display_roundtrip(self->display);
 
-    if ( self->notification_area == NULL )
+    if ( self->notification_manager == NULL )
     {
         eventd_nd_wl_stop(self);
-        g_warning("No ww_notification_daemon interface provided by the compositor");
+        g_warning("No nw_notification_daemon interface provided by the compositor");
         return FALSE;
     }
 
@@ -734,6 +782,8 @@ eventd_nd_wl_stop(EventdNdWayland *self)
 
     wl_registry_destroy(self->registry);
     self->registry = NULL;
+
+    wl_display_roundtrip(self->display);
 
     g_water_wayland_source_free(self->source);
     self->display = NULL;
@@ -769,8 +819,8 @@ _eventd_nd_wl_create_buffer(EventdNdSurface *self)
     gint width, height, stride;
     gsize size;
 
-    width = self->width * self->context->scale;
-    height = self->height * self->context->scale;
+    width = self->size.width * self->queue->geometry.s;
+    height = self->size.height * self->queue->geometry.s;
     stride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, width);
     size = stride * height;
 
@@ -799,7 +849,7 @@ _eventd_nd_wl_create_buffer(EventdNdSurface *self)
     cairo_surface = cairo_image_surface_create_for_data(data, CAIRO_FORMAT_ARGB32, width, height, 4 * width);
 #if CAIRO_VERSION >= CAIRO_VERSION_ENCODE(1, 14, 0)
     if ( self->context->scale_support )
-        cairo_surface_set_device_scale(cairo_surface, self->context->scale, self->context->scale);
+        cairo_surface_set_device_scale(cairo_surface, self->queue->geometry.s, self->queue->geometry.s);
 #endif /* CAIRO_VERION >= 1.14.0 */
     eventd_nd_notification_draw(self->notification, cairo_surface);
     cairo_surface_destroy(cairo_surface);
@@ -821,48 +871,52 @@ _eventd_nd_wl_create_buffer(EventdNdSurface *self)
 
     wl_buffer_add_listener(buffer, &_eventd_nd_wl_buffer_listener, self->buffer);
 
-    wl_surface_damage(self->surface, 0, 0, self->width, self->height);
+    wl_surface_damage(self->surface, 0, 0, self->size.width, self->size.height);
     wl_surface_attach(self->surface, self->buffer->buffer, 0, 0);
 #if CAIRO_VERSION >= CAIRO_VERSION_ENCODE(1, 14, 0)
     if ( self->context->scale_support )
-        wl_surface_set_buffer_scale(self->surface, self->context->scale);
+        wl_surface_set_buffer_scale(self->surface, self->queue->geometry.s);
 #endif /* CAIRO_VERION >= 1.14.0 */
     wl_surface_commit(self->surface);
 
     return TRUE;
 }
 
+static void
+_eventd_nd_nw_notification_shown(void *data, struct zeventd_nw_notification_v1 *nw_notification)
+{
+    EventdNdSurface *self = data;
+    eventd_nd_notification_start_timeout(self->notification);
+}
+
+static const struct zeventd_nw_notification_v1_listener _eventd_nd_nw_notification_listener = {
+    .shown = _eventd_nd_nw_notification_shown,
+};
+
 EventdNdSurface *
-eventd_nd_wl_surface_new(EventdNdWayland *context, EventdNdNotification *notification, gint width, gint height)
+eventd_nd_wl_surface_new(EventdNdWayland *context, EventdNdNotification *notification, EventdNdQueue *queue)
 {
     EventdNdSurface *self;
 
     self = g_new0(EventdNdSurface, 1);
     self->context = context;
+    self->queue = queue;
     self->notification = notification;
-    self->width = width;
-    self->height = height;
 
     self->surface = wl_compositor_create_surface(context->compositor);
     wl_surface_set_user_data(self->surface, self);
 
-    if ( ! _eventd_nd_wl_create_buffer(self) )
-    {
-        wl_surface_destroy(self->surface);
-        g_free(self);
-        return NULL;
-    }
-
-    self->ww_notification = zww_notification_area_v1_create_notification(context->notification_area, self->surface);
+    self->nw_notification = zeventd_nw_notification_queue_v1_create_notification(self->queue->nw_queue, self->surface);
+    zeventd_nw_notification_v1_add_listener(self->nw_notification, &_eventd_nd_nw_notification_listener, self);
 
     return self;
 }
 
 void
-eventd_nd_wl_surface_update(EventdNdSurface *self, gint width, gint height)
+eventd_nd_wl_surface_update(EventdNdSurface *self, EventdNdSize size, EventdNdGeometry geometry)
 {
-    self->width = width;
-    self->height = height;
+    self->size = size;
+    zeventd_nw_notification_v1_set_geometry(self->nw_notification, geometry.x, geometry.y, geometry.width, geometry.height);
     _eventd_nd_wl_create_buffer(self);
 }
 
@@ -874,22 +928,8 @@ eventd_nd_wl_surface_free(EventdNdSurface *self)
 
     _eventd_nd_wl_buffer_release(self->buffer, self->buffer->buffer);
 
-    zww_notification_v1_destroy(self->ww_notification);
+    zeventd_nw_notification_v1_destroy(self->nw_notification);
     wl_surface_destroy(self->surface);
 
     g_free(self);
-}
-
-void
-eventd_nd_wl_move_surface(EventdNdSurface *self, gint x, gint y)
-{
-    zww_notification_v1_move(self->ww_notification, x, y);
-    if ( self->context->need_redraw )
-        _eventd_nd_wl_create_buffer(self);
-}
-
-void
-eventd_nd_wl_move_end(EventdNdWayland *self)
-{
-    self->need_redraw = FALSE;
 }

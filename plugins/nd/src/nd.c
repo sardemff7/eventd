@@ -43,15 +43,6 @@
 
 #include "nd.h"
 
-static const gchar * const _eventd_nd_anchors[_EVENTD_ND_ANCHOR_SIZE] = {
-    [EVENTD_ND_ANCHOR_TOP_LEFT]     = "top-left",
-    [EVENTD_ND_ANCHOR_TOP]          = "top",
-    [EVENTD_ND_ANCHOR_TOP_RIGHT]    = "top-right",
-    [EVENTD_ND_ANCHOR_BOTTOM_LEFT]  = "bottom-left",
-    [EVENTD_ND_ANCHOR_BOTTOM]       = "bottom",
-    [EVENTD_ND_ANCHOR_BOTTOM_RIGHT] = "bottom-right",
-};
-
 static const gchar * const _eventd_nd_dismiss_targets[] = {
     [EVENTD_ND_DISMISS_NONE]   = "none",
     [EVENTD_ND_DISMISS_ALL]    = "all",
@@ -65,35 +56,18 @@ static const gchar * const  _eventd_nd_icon_fallback_themes[] = {
     NULL
 };
 
-void
-eventd_nd_geometry_update(EventdNdContext *context, gint w, gint h, gint s)
-{
-    gboolean resize;
-    resize = ( ( context->geometry.w != w ) || ( context->geometry.h != h ) || ( context->geometry.s != s ) );
-
-    context->geometry.w = w;
-    context->geometry.h = h;
-    context->geometry.s = s;
-
-    eventd_nd_notification_refresh_list(context, resize);
-}
-
-static EventdNdQueue *
-_eventd_nd_queue_new(void)
+EventdNdQueue *
+eventd_nd_queue_new(EventdNdContext *context, const gchar *name, struct zeventd_nw_notification_queue_v1 *nw_queue)
 {
     EventdNdQueue *self;
 
     self = g_new0(EventdNdQueue, 1);
-
-    self->anchor = EVENTD_ND_ANCHOR_TOP_RIGHT;
-
-    /* Defaults placement values */
-
-    self->margin_x = 13;
-    self->margin_y = 13;
-    self->spacing = 13;
-
+    self->context = context;
+    self->name = g_strdup(name);
+    self->nw_queue = nw_queue;
     self->queue = g_queue_new();
+
+    g_hash_table_insert(context->queues, self->name, self);
 
     return self;
 }
@@ -103,7 +77,9 @@ _eventd_nd_queue_free(gpointer data)
 {
     EventdNdQueue *self = data;
 
-    g_queue_free(self->queue);
+    g_queue_free_full(self->queue, eventd_nd_notification_relink);
+    if ( self->nw_queue != NULL )
+        zeventd_nw_notification_queue_v1_destroy(self->nw_queue);
 
     g_free(self);
 }
@@ -151,8 +127,6 @@ _eventd_nd_init(EventdPluginCoreContext *core)
     context->style = eventd_nd_style_new(NULL);
 
     context->queues = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_nd_queue_free);
-
-    g_hash_table_insert(context->queues, g_strdup("default"), _eventd_nd_queue_new());
 
     context->notifications = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, eventd_nd_notification_free);
 
@@ -315,57 +289,6 @@ _eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
             g_free(string);
         }
     }
-
-    gchar **groups, **group;
-    groups = g_key_file_get_groups(config_file, NULL);
-    if ( groups == NULL )
-        return;
-
-    for ( group = groups ; *group != NULL ; ++group )
-    {
-        if ( ! g_str_has_prefix(*group, "Queue ") )
-            continue;
-
-        const gchar *name = *group + strlen("Queue ");
-        EventdNdQueue *self;
-
-        self = g_hash_table_lookup(context->queues, name);
-        if ( self == NULL )
-        {
-            self = _eventd_nd_queue_new();
-            g_hash_table_insert(context->queues, g_strdup(name), self);
-        }
-
-        guint64 anchor;
-        Int integer;
-        Int integer_list[2];
-        gsize length = 2;
-        gboolean boolean;
-
-        if ( evhelpers_config_key_file_get_enum(config_file, *group, "Anchor", _eventd_nd_anchors, G_N_ELEMENTS(_eventd_nd_anchors), &anchor) == 0 )
-            self->anchor = anchor;
-
-        if ( evhelpers_config_key_file_get_int_list(config_file, *group, "Margin", integer_list, &length) == 0 )
-        {
-            switch ( length )
-            {
-            case 1:
-                integer_list[1] = integer_list[0];
-                /* fallthrough */
-            case 2:
-                self->margin_x = MAX(0, integer_list[0].value);
-                self->margin_y = MAX(0, integer_list[1].value);
-            break;
-            }
-        }
-
-        if ( evhelpers_config_key_file_get_int(config_file, *group, "Spacing", &integer) == 0 )
-            self->spacing = ( integer.value > 0 ) ? integer.value : 0;
-
-        if ( evhelpers_config_key_file_get_boolean(config_file, *group, "OldestAtAnchor", &boolean) == 0 )
-            self->reverse = boolean;
-    }
-    g_strfreev(groups);
 }
 
 static EventdPluginAction *
@@ -430,8 +353,7 @@ _eventd_nd_event_dispatch(EventdPluginContext *context, EventdEvent *event)
 static void
 _eventd_nd_event_action(EventdPluginContext *context, EventdNdStyle *style, EventdEvent *event)
 {
-    /* TODO: add a connected check */
-    if ( FALSE )
+    if ( g_hash_table_size(context->queues) < 1 )
         /* No backend connected for now */
         return;
 

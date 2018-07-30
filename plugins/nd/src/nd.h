@@ -24,14 +24,18 @@
 #define __EVENTD_ND_ND_H__
 
 #include "types.h"
+#include "types.h"
 #include <nkutils-xdg-theme.h>
 
 struct _EventdNdQueue {
-    EventdNdAnchor anchor;
-    gint margin_x;
-    gint margin_y;
-    gint spacing;
-    gboolean reverse;
+    EventdPluginContext *context;
+    gchar *name;
+    struct zeventd_nw_notification_queue_v1 *nw_queue;
+    struct {
+        gint w;
+        gint h;
+        gint s;
+    } geometry;
     GQueue *queue;
 };
 
@@ -43,13 +47,6 @@ struct _EventdPluginContext {
     EventdNdStyle *style;
     NkXdgThemeContext *theme_context;
     gchar *last_target;
-    struct {
-        gint x;
-        gint y;
-        gint w;
-        gint h;
-        gint s;
-    } geometry;
     GHashTable *notifications;
     gboolean no_refresh;
     GSList *actions;

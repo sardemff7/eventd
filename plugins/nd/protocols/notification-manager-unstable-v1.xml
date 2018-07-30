@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol name="notification_manager_v1">
+    <copyright>
+	Copyright © 2011-2018 Quentin "Sardem FF7" Glidic
+
+	Permission is hereby granted, free of charge, to any person obtaining a copy
+	of this software and associated documentation files (the "Software"), to deal
+	in the Software without restriction, including without limitation the rights
+	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+	copies of the Software, and to permit persons to whom the Software is
+	furnished to do so, subject to the following conditions:
+
+	The above copyright notice and this permission notice shall be included in
+	all copies or substantial portions of the Software.
+
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+	SOFTWARE.
+    </copyright>
+
+    <interface name="zeventd_nw_notification_manager_v1" version="1">
+	<description summary="singleton for notification daemons">
+	    The object is a singleton global.
+
+	    This interface can only be bound once at the same time.
+	    Any binding of this interface while already bound results
+	    in a protocol error (bound).
+
+	    This interface is intended for classic notification daemons which
+	    display “bubbles”. These daemons are meant to be used in small
+	    desktop environment or with highly-customizable compositors.
+	    This interface must not be implemented where an integrated
+	    notification system is desirable, like in complete desktop
+	    environments as GNOME, KDE or EFL.
+
+	    The notification daemon can will create notifications using
+	    the ww_notification_area.create_notification request, then move it
+	    with the ww_notification.move request to achieve the desired layout.
+	</description>
+
+	<request name="destroy" type="destructor" />
+
+	<enum name="error">
+	    <description summary="ww_notification_manager error values">
+		These errors can be emitted in response to
+		ww_notification_area requests.
+	    </description>
+	    <entry name="bound" value="0" summary="ww_notification_manager is already bound"/>
+	    <entry name="duplicate_queue" value="1" summary="ww_notification_queue is already bound"/>
+	    <entry name="unknown_queue" value="2" summary="given wl_surface has another role"/>
+	</enum>
+
+	<request name="get_queue">
+	    <description summary="get a queue from the manager">
+		This request creates a ww_notification_queue object that
+		allows the client to use this queue to display notifications.
+		Using a name unknown to the compositor (i.e. not advertised by
+		a queue event) raises a protocol error (unknown_queue).
+
+		There is always a default queue that you can get by using NULL.
+	    </description>
+	    <arg name="id" type="new_id" interface="zeventd_nw_notification_queue_v1" />
+	    <arg name="name" type="string" allow-null="true" />
+	</request>
+
+	<event name="queue">
+	    <description summary="announce a queue">
+		This event will be sent once for each existing queue.
+		The client may then create a ww_notification_queue object using
+		the get_queue request.
+	    </description>
+	    <arg name="name" type="string" />
+	</event>
+    </interface>
+
+    <interface name="zeventd_nw_notification_queue_v1" version="1">
+	<description summary="singleton for notification daemons">
+	    The object is a singleton global.
+
+	    This interface can only be bound once at the same time.
+	    Any binding of this interface while already bound results
+	    in a protocol error (bound).
+
+	    This interface is intended for classic notification daemons which
+	    display “bubbles”. These daemons are meant to be used in small
+	    desktop environment or with highly-customizable compositors.
+	    This interface must not be implemented where an integrated
+	    notification system is desirable, like in complete desktop
+	    environments as GNOME, KDE or EFL.
+
+	    The notification daemon can will create notifications using
+	    the ww_notification_area.create_notification request, then move it
+	    with the ww_notification.move request to achieve the desired layout.
+	</description>
+
+	<request name="destroy" type="destructor" />
+
+	<enum name="error">
+	    <description summary="ww_notification_queue error values">
+		These errors can be emitted in response to
+		ww_notification_queue requests.
+	    </description>
+	    <entry name="role" value="0" summary="given wl_surface has another role"/>
+	</enum>
+
+	<request name="create_notification">
+	    <description summary="create a notification from a wl_surface">
+		This request gives the wl_surface the role of a notification.
+		If the wl_surface already has another role, it raises
+		a protocol error (role).
+
+		See the ww_notification interface for details.
+	    </description>
+	    <arg name="id" type="new_id" interface="zeventd_nw_notification_v1" />
+	    <arg name="surface" type="object" interface="wl_surface" />
+	</request>
+
+	<event name="deleted">
+	    <description summary="announce the deletion of the queue">
+		This event is sent if the compositor removes the queue entirely.
+		This may happen e.g. when the user dynamically changes
+		the configuration.
+	    </description>
+	</event>
+
+	<event name="active">
+	    <description summary="tells that the queue is active">
+		This event is sent if the compositor cannot display the queue.
+		This may happen e.g. when an output is unplugged, or a queue is
+		considered low priority and cannot be above a fullscreen surface.
+
+		A daemon may consider useful to postpone notifications that
+		would go into this queue, or to fallback to another queue.
+	    </description>
+	</event>
+	<event name="inactive" />
+
+	<event name="geometry">
+	    <description summary="tells the geometry of the current queue">
+		This event will be sent when creating the ww_notification_queue
+		object, then whenever the geometry is changed.
+	    </description>
+	    <arg name="width" type="int" />
+	    <arg name="height" type="int" />
+	    <arg name="scale" type="int" />
+	</event>
+    </interface>
+
+    <interface name="zeventd_nw_notification_v1" version="1">
+	<description summary="a notification bubble">
+	    This interface represents a notification bubble.
+
+	    A notification should not be restricted as a normal window,
+	    and be placed on top of all other surfaces, so that
+	    the user will see it clearly.
+	</description>
+
+	<request name="destroy" type="destructor" />
+
+	<request name="set_geometry">
+	    <description summary="sets the geometry of the bubble">
+		The geometry is the size of the content of the bubble,
+		excluding e.g. shadows. It is used to align the bubbles and
+		to check if the size is correct.
+
+		The geometry is double buffered, and will be applied at the
+		time wl_surface.commit of the corresponding wl_surface is called.
+	    </description>
+	    <arg name="x" type="int" summary="x coordinate, in surface coordinates" />
+	    <arg name="y" type="int" summary="y coordinate, in surface coordinates" />
+	    <arg name="width" type="int" summary="width, in surface coordinates" />
+	    <arg name="height" type="int" summary="width, in surface coordinates" />
+	</request>
+
+	<event name="shown">
+	    <description summary="tells that the notificaction was shown">
+		This event is sent once the notification is actually shown.
+		The frame callback is not relevant here as the notification could
+		be partly visible in some pre- or overview.
+	    </description>
+	</event>
+    </interface>
+</protocol>

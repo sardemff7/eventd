@@ -46,7 +46,7 @@ foreach try_weston_major : weston_supported_majors
     endif
 endforeach
 weston = dependency('weston')
-ww_notification_area = files('protocols/notification-area-unstable-v1.xml')
+eventd_nw_notification_manager = files('protocols/notification-manager-unstable-v1.xml')
 
 wayland_scanner_client = generator(wayland_scanner, output: '@BASENAME@-client-protocol.h', arguments: ['client-header', '@INPUT@', '@OUTPUT@'])
 wayland_scanner_server = generator(wayland_scanner, output: '@BASENAME@-server-protocol.h', arguments: ['server-header', '@INPUT@', '@OUTPUT@'])
@@ -56,12 +56,17 @@ wayland_scanner_code = generator(wayland_scanner, output: '@BASENAME@-protocol.c
 shared_library('eventd-nd', files(
         'src/libweston-plugin.c',
     ) + [
-        wayland_scanner_server.process(ww_notification_area),
-        wayland_scanner_code.process(ww_notification_area),
+        wayland_scanner_server.process(eventd_nw_notification_manager),
+        wayland_scanner_code.process(eventd_nw_notification_manager),
+    ],
+    c_args: [
+        '-DG_LOG_DOMAIN="eventd-nd-wayland"',
     ],
     dependencies: [
         libweston,
         wayland_server,
+        libeventd_helpers,
+        glib
     ],
     name_prefix: '',
     install: true,
@@ -85,8 +90,8 @@ shared_library('nd', config_h, files(
         'src/wayland.h',
         'src/wayland.c',
     ) + [
-            wayland_scanner_client.process(ww_notification_area),
-            wayland_scanner_code.process(ww_notification_area),
+            wayland_scanner_client.process(eventd_nw_notification_manager),
+            wayland_scanner_code.process(eventd_nw_notification_manager),
         ],
     c_args: [
         '-DG_LOG_DOMAIN="eventd-nd"',
