@@ -59,7 +59,7 @@ typedef enum {
 } EventdNdWlFormats;
 
 typedef struct {
-    EventdNdBackendContext *context;
+    EventdNdWayland *context;
     NkBindingsSeat *bindings_seat;
     GSList *link;
     uint32_t global_name;
@@ -78,7 +78,7 @@ typedef enum {
     _EVENTD_ND_WL_GLOBAL_SIZE,
 } EventdNdWlGlobalName;
 
-struct _EventdNdBackendContext {
+struct _EventdNdWayland {
     EventdNdContext *context;
     NkBindings *bindings;
     GWaterWaylandSource *source;
@@ -113,7 +113,7 @@ typedef struct {
 
 struct _EventdNdSurface {
     EventdNdNotification *notification;
-    EventdNdBackendContext *context;
+    EventdNdWayland *context;
     EventdNdWlBuffer *buffer;
     gint width;
     gint height;
@@ -131,12 +131,12 @@ static const NkBindingsScrollAxis _eventd_nd_wl_nk_bindings_scroll_axis[] = {
     [WL_POINTER_AXIS_HORIZONTAL_SCROLL] = NK_BINDINGS_SCROLL_AXIS_HORIZONTAL,
 };
 
-EventdNdBackendContext *
+EventdNdWayland *
 eventd_nd_wl_init(EventdNdContext *context, NkBindings *bindings)
 {
-    EventdNdBackendContext *self;
+    EventdNdWayland *self;
 
-    self = g_new0(EventdNdBackendContext, 1);
+    self = g_new0(EventdNdWayland, 1);
     self->context = context;
     self->bindings = bindings;
 
@@ -144,13 +144,13 @@ eventd_nd_wl_init(EventdNdContext *context, NkBindings *bindings)
 }
 
 void
-eventd_nd_wl_uninit(EventdNdBackendContext *self)
+eventd_nd_wl_uninit(EventdNdWayland *self)
 {
     g_free(self);
 }
 
 void
-eventd_nd_wl_global_parse(EventdNdBackendContext *self, GKeyFile *config_file)
+eventd_nd_wl_global_parse(EventdNdWayland *self, GKeyFile *config_file)
 {
     if ( ! g_key_file_has_group(config_file, "NotificationWayland") )
         return;
@@ -160,7 +160,7 @@ eventd_nd_wl_global_parse(EventdNdBackendContext *self, GKeyFile *config_file)
 }
 
 void
-eventd_nd_wl_config_reset(EventdNdBackendContext *self)
+eventd_nd_wl_config_reset(EventdNdWayland *self)
 {
     g_free(self->cursor.theme_name);
     self->cursor.theme_name = NULL;
@@ -169,7 +169,7 @@ eventd_nd_wl_config_reset(EventdNdBackendContext *self)
 static void
 _eventd_nd_wl_notification_area_geometry(void *data, struct zww_notification_area_v1 *notification_area, int32_t width, int32_t height, int32_t scale)
 {
-    EventdNdBackendContext *self = data;
+    EventdNdWayland *self = data;
 
 #if CAIRO_VERSION >= CAIRO_VERSION_ENCODE(1, 14, 0)
     if ( self->scale_support )
@@ -189,7 +189,7 @@ static const struct zww_notification_area_v1_listener _eventd_nd_wl_notification
 static void
 _eventd_nd_wl_shm_format(void *data, struct wl_shm *wl_shm, uint32_t format)
 {
-    EventdNdBackendContext *self = data;
+    EventdNdWayland *self = data;
 
     switch ( format )
     {
@@ -291,7 +291,7 @@ static const struct wl_keyboard_listener _eventd_nd_wl_keyboard_listener = {
 };
 
 static void
-_eventd_nd_cursor_set_image(EventdNdBackendContext *self, int i)
+_eventd_nd_cursor_set_image(EventdNdWayland *self, int i)
 {
     struct wl_buffer *buffer;
     struct wl_cursor_image *image;
@@ -313,7 +313,7 @@ static const struct wl_callback_listener _eventd_nd_cursor_frame_wl_callback_lis
 static void
 _eventd_nd_cursor_frame_callback(void *data, struct wl_callback *callback, uint32_t time)
 {
-    EventdNdBackendContext *self = data;
+    EventdNdWayland *self = data;
     int i;
 
     if ( self->cursor.frame_cb != NULL )
@@ -329,7 +329,7 @@ static void
 _eventd_nd_wl_pointer_enter(void *data, struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface, wl_fixed_t x, wl_fixed_t y)
 {
     EventdNdWlSeat *self = data;
-    EventdNdBackendContext *context = self->context;
+    EventdNdWayland *context = self->context;
 
     self->surface = wl_surface_get_user_data(surface);
 
@@ -348,7 +348,7 @@ static void
 _eventd_nd_wl_pointer_leave(void *data, struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface)
 {
     EventdNdWlSeat *self = data;
-    EventdNdBackendContext *context = self->context;
+    EventdNdWayland *context = self->context;
 
     self->surface = NULL;
     if ( context->cursor.frame_cb != NULL )
@@ -553,7 +553,7 @@ static const gchar * const _eventd_nd_cursor_names[] = {
 static void
 _eventd_nd_wl_registry_handle_global(void *data, struct wl_registry *registry, uint32_t name, const char *interface, uint32_t version)
 {
-    EventdNdBackendContext *self = data;
+    EventdNdWayland *self = data;
 
     if ( g_strcmp0(interface, "wl_compositor") == 0 )
     {
@@ -611,7 +611,7 @@ _eventd_nd_wl_registry_handle_global(void *data, struct wl_registry *registry, u
 static void
 _eventd_nd_wl_registry_handle_global_remove(void *data, struct wl_registry *registry, uint32_t name)
 {
-    EventdNdBackendContext *self = data;
+    EventdNdWayland *self = data;
 
     EventdNdWlGlobalName i;
     for ( i = 0 ; i < _EVENTD_ND_WL_GLOBAL_SIZE ; ++i )
@@ -673,7 +673,7 @@ static const struct wl_registry_listener _eventd_nd_wl_registry_listener = {
 static gboolean
 _eventd_nd_wayland_display_remove_callback(gpointer user_data)
 {
-    EventdNdBackendContext *self = user_data;
+    EventdNdWayland *self = user_data;
 
     if ( errno > 0 )
         g_warning("Error in Wayland connection: %s", g_strerror(errno));
@@ -686,7 +686,7 @@ _eventd_nd_wayland_display_remove_callback(gpointer user_data)
 }
 
 gboolean
-eventd_nd_wl_start(EventdNdBackendContext *self, const gchar *target)
+eventd_nd_wl_start(EventdNdWayland *self, const gchar *target)
 {
     eventd_nd_wl_stop(self);
 
@@ -711,7 +711,7 @@ eventd_nd_wl_start(EventdNdBackendContext *self, const gchar *target)
 }
 
 void
-eventd_nd_wl_stop(EventdNdBackendContext *self)
+eventd_nd_wl_stop(EventdNdWayland *self)
 {
     if ( self->source == NULL )
         return;
@@ -833,7 +833,7 @@ _eventd_nd_wl_create_buffer(EventdNdSurface *self)
 }
 
 EventdNdSurface *
-eventd_nd_wl_surface_new(EventdNdBackendContext *context, EventdNdNotification *notification, gint width, gint height)
+eventd_nd_wl_surface_new(EventdNdWayland *context, EventdNdNotification *notification, gint width, gint height)
 {
     EventdNdSurface *self;
 
@@ -889,7 +889,7 @@ eventd_nd_wl_move_surface(EventdNdSurface *self, gint x, gint y)
 }
 
 void
-eventd_nd_wl_move_end(EventdNdBackendContext *self)
+eventd_nd_wl_move_end(EventdNdWayland *self)
 {
     self->need_redraw = FALSE;
 }
