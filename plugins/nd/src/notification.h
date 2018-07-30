@@ -25,12 +25,13 @@
 
 #include "types.h"
 
-void eventd_nd_notification_refresh_list(EventdPluginContext *context, gboolean update);
 EventdPluginCommandStatus eventd_nd_notification_dismiss_target(EventdPluginContext *context, EventdNdDismissTarget target, EventdNdQueue *queue);
 
 EventdNdNotification *eventd_nd_notification_new(EventdPluginContext *context, EventdEvent *event, EventdNdStyle *style);
+void eventd_nd_notification_relink(gpointer data);
 void eventd_nd_notification_free(gpointer data);
 
+void eventd_nd_notification_start_timeout(EventdNdNotification *self);
 void eventd_nd_notification_draw(EventdNdNotification *notification, cairo_surface_t *surface);
 void eventd_nd_notification_update(EventdNdNotification *notification, EventdEvent *event);
 void eventd_nd_notification_dismiss(EventdNdNotification *notification);

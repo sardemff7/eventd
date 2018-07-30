@@ -23,9 +23,6 @@
 #ifndef __EVENTD_ND_TYPES_H__
 #define __EVENTD_ND_TYPES_H__
 
-#include <nkutils-bindings.h>
-#include "eventd-plugin.h"
-
 typedef struct _EventdPluginContext EventdNdContext;
 typedef struct _EventdPluginAction EventdNdStyle;
 typedef struct _EventdNdNotification EventdNdNotification;
@@ -47,6 +44,23 @@ typedef enum {
     EVENTD_ND_DISMISS_OLDEST,
     EVENTD_ND_DISMISS_NEWEST,
 } EventdNdDismissTarget;
+
+typedef struct {
+    gint x;
+    gint y;
+} EventdNdPoint;
+
+typedef struct {
+    gint width;
+    gint height;
+} EventdNdSize;
+
+typedef struct {
+    gint x;
+    gint y;
+    gint width;
+    gint height;
+} EventdNdGeometry;
 
 
 #endif /* __EVENTD_ND_TYPES_H__ */
