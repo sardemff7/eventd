@@ -32,12 +32,6 @@ typedef struct _EventdNdNotification EventdNdNotification;
 typedef struct _EventdNdQueue EventdNdQueue;
 
 typedef enum {
-    EVENTD_ND_SHAPING_NONE = 0,
-    EVENTD_ND_SHAPING_COMPOSITING,
-    EVENTD_ND_SHAPING_SHAPE,
-} EventdNdShaping;
-
-typedef enum {
     EVENTD_ND_ANCHOR_TOP_LEFT,
     EVENTD_ND_ANCHOR_TOP,
     EVENTD_ND_ANCHOR_TOP_RIGHT,
