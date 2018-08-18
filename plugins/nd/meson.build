@@ -1,6 +1,10 @@
 # notification plugin
 
 wayland_min_version='1.9.91'
+weston_supported_majors = [
+    '5',
+    '4',
+]
 
 headers = [
     'sys/mman.h'
@@ -29,13 +33,40 @@ wayland = [
     dependency('wayland-client', version: '>= @0@'.format(wayland_min_version)),
     dependency('wayland-cursor'),
 ]
+wayland_server = dependency('wayland-server')
 wayland_scanner = find_program('wayland-scanner')
+last_weston_major = weston_supported_majors[weston_supported_majors.length() - 1]
+weston_major = ''
+foreach try_weston_major : weston_supported_majors
+    if weston_major == ''
+        libweston = dependency('libweston-@0@'.format(try_weston_major), required: last_weston_major == try_weston_major)
+        if libweston.found()
+            weston_major = try_weston_major
+        endif
+    endif
+endforeach
+weston = dependency('weston')
 ww_notification_area = files('protocols/notification-area-unstable-v1.xml')
 
 wayland_scanner_client = generator(wayland_scanner, output: '@BASENAME@-client-protocol.h', arguments: ['client-header', '@INPUT@', '@OUTPUT@'])
 wayland_scanner_server = generator(wayland_scanner, output: '@BASENAME@-server-protocol.h', arguments: ['server-header', '@INPUT@', '@OUTPUT@'])
 wayland_scanner_code_command = wayland[2].version().version_compare('>= 1.14.91') ? 'private-code' : 'code'
 wayland_scanner_code = generator(wayland_scanner, output: '@BASENAME@-protocol.c', arguments: [wayland_scanner_code_command, '@INPUT@', '@OUTPUT@'])
+
+shared_library('eventd-nd', files(
+        'src/libweston-plugin.c',
+    ) + [
+        wayland_scanner_server.process(ww_notification_area),
+        wayland_scanner_code.process(ww_notification_area),
+    ],
+    dependencies: [
+        libweston,
+        wayland_server,
+    ],
+    name_prefix: '',
+    install: true,
+    install_dir: join_paths(weston.get_pkgconfig_variable('libdir'), 'weston'),
+)
 
 shared_library('nd', config_h, files(
         'src/types.h',
