@@ -44,6 +44,9 @@ pkgconfig.generate(
         'gobject-2.0',
         'glib-2.0',
     ],
+    variables: [
+        'pluginsdir=@0@'.format(join_paths('${prefix}', plugins_install_dir)),
+    ],
 )
 
 if get_option('gobject-introspection')
