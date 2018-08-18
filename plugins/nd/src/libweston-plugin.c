@@ -40,6 +40,7 @@
 
 #include <wayland-server.h>
 #include <compositor.h>
+#include "eventd-weston-output-focus-api.h"
 #include "notification-manager-unstable-v1-server-protocol.h"
 
 typedef struct _EventdNdWestonQueue EventdNdWestonQueue;
@@ -52,14 +53,17 @@ typedef struct {
     struct wl_listener output_destroyed_listener;
     struct wl_listener output_moved_listener;
     struct wl_listener output_resized_listener;
+    struct wl_listener output_focus_listener;
     GHashTable *queues;
     EventdNdWestonQueue *default_queue;
+    struct weston_output *output_focus;
 } EventdNdWestonManager;
 
 struct _EventdNdWestonQueue {
     EventdNdWestonManager *manager;
     gchar *name;
     struct wl_resource *resource;
+    gboolean output_focus;
     gchar **outputs;
     struct {
         gboolean right;
@@ -407,6 +411,9 @@ _eventd_nd_weston_queue_update_output(EventdNdWestonQueue *self)
         return;
     }
 
+    if ( self->output_focus )
+        output = self->manager->output_focus;
+
     gchar **output_name;
     if ( self->outputs != NULL )
     for ( output_name = self->outputs ; ( *output_name != NULL ) && ( output == NULL ) ; ++output_name )
@@ -567,6 +574,9 @@ _eventd_nd_weston_manager_output_destroyed(struct wl_listener *listener, void *d
     EventdNdWestonManager *manager = wl_container_of(listener, manager, output_destroyed_listener);
     struct weston_output *output = data;
 
+    if ( manager->output_focus == output )
+        manager->output_focus = NULL;
+
     GHashTableIter iter;
     EventdNdWestonQueue *queue;
     g_hash_table_iter_init(&iter, manager->queues);
@@ -606,6 +616,25 @@ _eventd_nd_weston_manager_output_resized(struct wl_listener *listener, void *dat
     {
         if ( queue->output == output )
             _eventd_nd_weston_queue_set_output(queue, output);
+    }
+}
+
+static void
+_eventd_nd_weston_manager_output_focus(struct wl_listener *listener, void *data)
+{
+    EventdNdWestonManager *manager = wl_container_of(listener, manager, output_focus_listener);
+    struct weston_output *output = data;
+    struct weston_output *old_output_focus = manager->output_focus;
+
+    manager->output_focus = output;
+
+    GHashTableIter iter;
+    EventdNdWestonQueue *queue;
+    g_hash_table_iter_init(&iter, manager->queues);
+    while ( g_hash_table_iter_next(&iter, NULL, (gpointer *) &queue) )
+    {
+        if ( queue->output == old_output_focus )
+            _eventd_nd_weston_queue_update_output(queue);
     }
 }
 
@@ -650,6 +679,9 @@ _eventd_nd_weston_config_parse(EventdNdWestonManager *manager, const gchar *path
         Int integer_list[2];
         gsize length = 2;
         gboolean boolean;
+
+        if ( evhelpers_config_key_file_get_boolean(config_file, *group, "FollowFocus", &boolean) == 0 )
+            self->output_focus = boolean;
 
         if ( evhelpers_config_key_file_get_string_list(config_file, *group, "Outputs", &string_list, NULL) == 0 )
         {
@@ -713,6 +745,12 @@ wet_module_init(struct weston_compositor *compositor, int *argc, char *argv[])
     wl_signal_add(&manager->compositor->output_destroyed_signal, &manager->output_destroyed_listener);
     wl_signal_add(&manager->compositor->output_moved_signal, &manager->output_moved_listener);
     wl_signal_add(&manager->compositor->output_resized_signal, &manager->output_resized_listener);
+
+    manager->output_focus_listener.notify = _eventd_nd_weston_manager_output_focus;
+    const struct eventd_weston_output_focus_api *output_focus_api;
+    output_focus_api = eventd_weston_output_focus_get_api(manager->compositor);
+    if ( output_focus_api != NULL )
+        output_focus_api->add_listener(manager->compositor, &manager->output_focus_listener);
 
     weston_layer_init(&manager->layer, manager->compositor);
     weston_layer_set_position(&manager->layer, WESTON_LAYER_POSITION_UI);

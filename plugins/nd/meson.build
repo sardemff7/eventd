@@ -53,7 +53,13 @@ wayland_scanner_server = generator(wayland_scanner, output: '@BASENAME@-server-p
 wayland_scanner_code_command = wayland[2].version().version_compare('>= 1.14.91') ? 'private-code' : 'code'
 wayland_scanner_code = generator(wayland_scanner, output: '@BASENAME@-protocol.c', arguments: [wayland_scanner_code_command, '@INPUT@', '@OUTPUT@'])
 
+install_headers(
+    files('include/eventd-weston-output-focus-api.h'),
+    subdir: join_paths(libweston.get_pkgconfig_variable('includedir'), 'libweston-@0@'.format(weston_major)),
+)
+
 shared_library('eventd-nd', files(
+        'include/eventd-weston-output-focus-api.h',
         'src/libweston-plugin.c',
     ) + [
         wayland_scanner_server.process(eventd_nw_notification_manager),
@@ -68,6 +74,7 @@ shared_library('eventd-nd', files(
         libeventd_helpers,
         glib
     ],
+    include_directories: include_directories('include'),
     name_prefix: '',
     install: true,
     install_dir: join_paths(weston.get_pkgconfig_variable('libdir'), 'weston'),
