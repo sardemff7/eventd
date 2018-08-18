@@ -1,7 +1,6 @@
 # notification plugin
 
 wayland_min_version='1.9.91'
-ww_min_version='1'
 
 headers = [
     'sys/mman.h'
@@ -25,15 +24,13 @@ if not libnkutils_bindings.found()
 endif
 
 librt = c_compiler.find_library('rt', required: false)
-wayland_wall = dependency('wayland-wall', version: '>= @0@'.format(ww_min_version))
 wayland = [
     subproject('libgwater').get_variable('libgwater_wayland'),
     dependency('wayland-client', version: '>= @0@'.format(wayland_min_version)),
     dependency('wayland-cursor'),
-    wayland_wall,
 ]
 wayland_scanner = find_program('wayland-scanner')
-ww_protocol_dir = wayland_wall.get_pkgconfig_variable('pkgdatadir')
+ww_notification_area = files('protocols/notification-area-unstable-v1.xml')
 
 wayland_scanner_client = generator(wayland_scanner, output: '@BASENAME@-client-protocol.h', arguments: ['client-header', '@INPUT@', '@OUTPUT@'])
 wayland_scanner_server = generator(wayland_scanner, output: '@BASENAME@-server-protocol.h', arguments: ['server-header', '@INPUT@', '@OUTPUT@'])
@@ -57,8 +54,8 @@ shared_library('nd', config_h, files(
         'src/wayland.h',
         'src/wayland.c',
     ) + [
-            wayland_scanner_client.process(join_paths(ww_protocol_dir, 'unstable/notification-area/notification-area-unstable-v1.xml')),
-            wayland_scanner_code.process(join_paths(ww_protocol_dir, 'unstable/notification-area/notification-area-unstable-v1.xml')),
+            wayland_scanner_client.process(ww_notification_area),
+            wayland_scanner_code.process(ww_notification_area),
         ],
     c_args: [
         '-DG_LOG_DOMAIN="eventd-nd"',
