@@ -39,9 +39,9 @@ struct _EventdTestsEnv {
 void
 eventd_tests_env_setup(gchar **argv, const gchar *test)
 {
-#ifdef EVENTD_DEBUG
+#ifdef EVENTD_DEBUG_OUTPUT
     g_setenv("G_MESSAGES_DEBUG", "all", FALSE);
-#endif /* EVENTD_DEBUG */
+#endif /* EVENTD_DEBUG_OUTPUT */
 
     gchar *tmp, *pwd;
     tmp = g_path_get_basename(argv[0]);

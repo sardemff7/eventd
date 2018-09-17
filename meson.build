@@ -100,8 +100,8 @@ other_conf.set('EVP_SSDP_NS_UUID', evp_ssdp_ns_uuid)
 other_conf.set('EVP_SSDP_URN', evp_ssdp_urn)
 other_conf.set('EVP_UNIX_SOCKET', evp_unix_socket)
 
-header_conf.set('EVENTD_DEBUG', get_option('debug'))
-if get_option('debug')
+header_conf.set('EVENTD_DEBUG_OUTPUT', get_option('debug-output'))
+if get_option('debug-output')
     header_conf.set('eventd_debug(...)', 'g_debug(__VA_ARGS__)')
 else
     header_conf.set('eventd_debug(...)', '((void)0)')
