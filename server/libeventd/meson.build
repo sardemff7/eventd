@@ -38,17 +38,12 @@ install_headers(libeventd_headers,
 
 libeventd = declare_dependency(link_with: libeventd_lib, include_directories: libeventd_inc, dependencies: libeventd_dep)
 
-pkgconfig.generate(
+pkgconfig.generate(libeventd_lib,
     filebase: 'libeventd',
     name: 'libeventd',
     version: meson.project_version(),
     description: 'Main eventd library',
-    libraries: libeventd_lib,
     subdirs: 'eventd',
-    requires_private: [
-        'gobject-2.0',
-        'glib-2.0',
-    ],
 )
 
 libeventd_event_private = libeventd_lib.extract_objects('src/event-private.c')

@@ -31,19 +31,12 @@ install_headers(libeventd_plugin_headers,
 
 libeventd_plugin = declare_dependency(link_with: libeventd_plugin_lib, include_directories: libeventd_plugin_inc, dependencies: libeventd_plugin_dep)
 
-pkgconfig.generate(
+pkgconfig.generate(libeventd_plugin_lib,
     filebase: 'libeventd-plugin',
     name: 'libeventd-plugin',
     version: meson.project_version(),
     description: 'Library to implement an eventd plugin',
-    libraries: libeventd_plugin_lib,
     subdirs: 'eventd',
-    requires_private: [
-        'libeventd',
-        'gio-2.0',
-        'gobject-2.0',
-        'glib-2.0',
-    ],
     variables: [
         'pluginsdir=@0@'.format(join_paths('${prefix}', plugins_install_dir)),
     ],

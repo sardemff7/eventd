@@ -45,15 +45,10 @@ install_headers(
 
 libeventc_light = declare_dependency(link_with: libeventc_light_lib, include_directories: libeventc_light_inc, dependencies: libeventc_light_dep)
 
-pkgconfig.generate(
+pkgconfig.generate(libeventc_light_lib,
     filebase: 'libeventc-light',
     name: 'libeventc-light',
     version: meson.project_version(),
     description: 'Library to communicate with eventd, light (local-only non-GIO) version',
-    libraries: libeventc_light_lib,
     subdirs: 'eventd',
-    requires_private: [
-        'libeventd',
-        'glib-2.0'
-    ],
 )

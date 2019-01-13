@@ -32,19 +32,12 @@ install_headers(libeventc_headers,
 
 libeventc = declare_dependency(link_with: libeventc_lib, include_directories: libeventc_inc, dependencies: libeventc_dep)
 
-pkgconfig.generate(
+pkgconfig.generate(libeventc_lib,
     filebase: 'libeventc',
     name: 'libeventc',
     version: meson.project_version(),
     description: 'Library to communicate with eventd',
-    libraries: libeventc_lib,
     subdirs: 'eventd',
-    requires_private: [
-        'libeventd',
-        'gio-2.0',
-        'gobject-2.0',
-        'glib-2.0',
-    ],
 )
 
 if get_option('gobject-introspection')
