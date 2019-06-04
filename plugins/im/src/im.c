@@ -270,6 +270,19 @@ _eventd_im_conv_joined(PurpleConversation *_conv, EventdPluginContext *context)
     conv->leave_timeout = g_timeout_add_seconds(account->leave_timeout, _eventd_im_conv_timeout, conv);
 }
 
+static void
+_eventd_im_conv_left(PurpleConversation *_conv, EventdPluginContext *context)
+{
+    EventdImAccount *account;
+    EventdImConv *conv;
+
+    account = purple_conversation_get_account(_conv)->ui_data;
+    conv = g_hash_table_lookup(account->convs, purple_conversation_get_name(_conv));
+    g_return_if_fail(conv != NULL);
+
+    _eventd_im_conv_reset(conv);
+}
+
 /*
  * Initialization interface
  */
@@ -322,6 +335,7 @@ _eventd_im_init(EventdPluginCoreContext *core)
     purple_signal_connect(purple_accounts_get_handle(), "account-signed-off", context, PURPLE_CALLBACK(_eventd_im_signed_off_callback), context);
     purple_signal_connect(purple_accounts_get_handle(), "account-connection-error", context, PURPLE_CALLBACK(_eventd_im_error_callback), context);
     purple_signal_connect(purple_conversations_get_handle(), "chat-joined", context, PURPLE_CALLBACK(_eventd_im_conv_joined), context);
+    purple_signal_connect(purple_conversations_get_handle(), "chat-left", context, PURPLE_CALLBACK(_eventd_im_conv_left), context);
 
     return context;
 }
