@@ -156,7 +156,7 @@ _eventd_sd_ssdp_init(const EventdSdModuleControlInterface *control, GList *socke
     GSSDPClient *client;
     GError *error = NULL;
 
-    client = gssdp_client_new(NULL, NULL, &error);
+    client = gssdp_client_new(NULL, &error);
     if ( client == NULL )
     {
         g_warning("Couldn't initialize GSSDP: %s", error->message);
