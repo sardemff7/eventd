@@ -1,5 +1,5 @@
 project('eventd', 'c',
-    version: '0.25.0',
+    version: '0.26.0',
     meson_version: '>=0.47.0',
     license: [ 'GPL3+', 'LGPL3+', 'MIT' ],
     default_options: [
