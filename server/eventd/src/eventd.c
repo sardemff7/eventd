@@ -465,11 +465,11 @@ main(int argc, char *argv[])
     g_main_loop_run(context->loop);
     g_main_loop_unref(context->loop);
 
-    eventd_control_free(context->control);
-
     eventd_config_free(context->config);
 
     eventd_plugins_unload();
+
+    eventd_control_free(context->control);
 
 end:
     eventd_sockets_free(context->sockets);
