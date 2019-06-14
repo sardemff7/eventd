@@ -264,7 +264,7 @@ _eventd_core_debug_log_writer(GLogLevelFlags log_level, const GLogField *fields,
 
 #ifdef G_OS_UNIX
 static gboolean
-_eventd_core_stop(gpointer user_data)
+_eventd_core_signal_stop(gpointer user_data)
 {
     eventd_core_stop(user_data);
     return G_SOURCE_REMOVE;
@@ -431,8 +431,8 @@ main(int argc, char *argv[])
     eventd_plugins_start_all();
 
 #ifdef G_OS_UNIX
-    g_unix_signal_add(SIGTERM, _eventd_core_stop, context);
-    g_unix_signal_add(SIGINT, _eventd_core_stop, context);
+    g_unix_signal_add(SIGTERM, _eventd_core_signal_stop, context);
+    g_unix_signal_add(SIGINT, _eventd_core_signal_stop, context);
 
     /* Ignore SIGPIPE as it is useless */
     signal(SIGPIPE, SIG_IGN);
