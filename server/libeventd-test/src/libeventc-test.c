@@ -122,7 +122,7 @@ _create_event(EventcConnection *client)
     if ( timeout > 0 )
         g_source_remove(timeout);
     /* The test plugin should react immediately, 1s is more than enough, unless on heavy load */
-    timeout = g_timeout_add_seconds_full(G_PRIORITY_DEFAULT_IDLE, 1, _timeout_callback, NULL, NULL);
+    timeout = g_timeout_add_seconds_full(G_PRIORITY_DEFAULT_IDLE, 5, _timeout_callback, NULL, NULL);
 }
 
 static void
