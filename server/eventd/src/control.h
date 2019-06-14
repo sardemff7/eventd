@@ -26,4 +26,7 @@
 EventdControl *eventd_control_new(EventdCoreContext *core, const gchar *control_socket);
 void eventd_control_free(EventdControl *control);
 
+typedef struct _EventdControlDelayedStop EventdControlDelayedStop;
+void eventd_control_stop(EventdControl *control, EventdControlDelayedStop *delayed_stop);
+
 #endif /* __EVENTD_CONTROL_H__ */

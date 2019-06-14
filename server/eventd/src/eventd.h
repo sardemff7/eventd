@@ -45,6 +45,6 @@ gchar *eventd_core_flags_list(EventdCoreContext *context);
 
 void eventd_core_config_reload(EventdCoreContext *context);
 
-void eventd_core_stop(EventdCoreContext *context);
+void eventd_core_stop(EventdCoreContext *context, EventdControlDelayedStop *delayed_stop);
 
 #endif /* __EVENTD_CORE_H__ */

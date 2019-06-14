@@ -30,6 +30,7 @@
 typedef struct _EventdCoreContext EventdCoreContext;
 
 typedef struct _EventdControl EventdControl;
+typedef struct _EventdControlDelayedStop EventdControlDelayedStop;
 typedef struct _EventdConfig EventdConfig;
 typedef struct _EventdEvents EventdEvents;
 typedef struct _EventdActions EventdActions;

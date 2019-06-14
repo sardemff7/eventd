@@ -73,6 +73,7 @@ struct _EventdCoreContext {
     GMainLoop *loop;
     guint flags_count;
     GQuark *flags;
+    EventdControlDelayedStop *delayed_stop;
 };
 
 GList *
@@ -167,13 +168,20 @@ eventd_core_config_reload(EventdCoreContext *context)
     eventd_plugins_start_all();
 }
 
-void
-eventd_core_stop(EventdCoreContext *context)
+static void
+_eventd_core_stop(EventdCoreContext *context)
 {
     eventd_plugins_stop_all();
 
     if ( context->loop != NULL )
         g_main_loop_quit(context->loop);
+}
+
+void
+eventd_core_stop(EventdCoreContext *context, EventdControlDelayedStop *delayed_stop)
+{
+    context->delayed_stop = delayed_stop;
+    _eventd_core_stop(context);
 }
 
 #ifdef EVENTD_DEBUG_OUTPUT
@@ -266,7 +274,7 @@ _eventd_core_debug_log_writer(GLogLevelFlags log_level, const GLogField *fields,
 static gboolean
 _eventd_core_signal_stop(gpointer user_data)
 {
-    eventd_core_stop(user_data);
+    _eventd_core_stop(user_data);
     return G_SOURCE_REMOVE;
 }
 #endif /* G_OS_UNIX */
@@ -468,6 +476,9 @@ main(int argc, char *argv[])
     eventd_config_free(context->config);
 
     eventd_plugins_unload();
+
+    if ( context->delayed_stop != NULL )
+        eventd_control_stop(context->control, context->delayed_stop);
 
     eventd_control_free(context->control);
 

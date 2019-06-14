@@ -54,6 +54,28 @@ struct _EventdControl {
     GSocketService *socket_service;
 };
 
+struct _EventdControlDelayedStop {
+    GIOStream *stream;
+    GDataOutputStream *output;
+};
+
+static void
+_eventd_control_send_response(GDataOutputStream *output, EventdctlReturnCode code, const gchar *status)
+{
+    GError *error = NULL;
+
+    if ( ! g_data_output_stream_put_uint64(output, code, NULL, &error) )
+        g_warning("Couldn't send return code '%u': %s", code, error->message);
+    else if ( status != NULL )
+    {
+
+        if ( ! g_data_output_stream_put_string(output, status, NULL, &error) )
+            g_warning("Couldn't send status message '%s': %s", status, error->message);
+        else if ( ! g_data_output_stream_put_byte(output, '\0', NULL, &error) )
+            g_warning("Couldn't send status message end byte: %s", error->message);
+    }
+}
+
 static gboolean
 _eventd_service_private_connection_handler(GSocketService *socket_service, GSocketConnection *connection, GObject *source_object, gpointer user_data)
 {
@@ -98,7 +120,17 @@ _eventd_service_private_connection_handler(GSocketService *socket_service, GSock
     else if ( g_strcmp0(argv[0], "start") == 0 )
         /* No-op */;
     else if ( g_strcmp0(argv[0], "stop") == 0 )
-        eventd_core_stop(control->core);
+    {
+        EventdControlDelayedStop *delayed_stop;
+
+        delayed_stop = g_slice_new(EventdControlDelayedStop);
+        delayed_stop->stream = g_object_ref(stream);
+        delayed_stop->output = output;
+        eventd_core_stop(control->core, delayed_stop);
+        g_strfreev(argv);
+        g_object_unref(input);
+        return TRUE;
+    }
     else if ( g_strcmp0(argv[0], "reload") == 0 )
         eventd_core_config_reload(control->core);
     else if ( g_strcmp0(argv[0], "version") == 0 )
@@ -151,18 +183,8 @@ _eventd_service_private_connection_handler(GSocketService *socket_service, GSock
             code = eventd_plugins_control_command(argv[0], argc-1, (const gchar * const *)argv+1, &status);
     }
 
-    if ( ! g_data_output_stream_put_uint64(output, code, NULL, &error) )
-        g_warning("Couldn't send return code '%u': %s", code, error->message);
-    else if ( status != NULL )
-    {
-
-        if ( ! g_data_output_stream_put_string(output, status, NULL, &error) )
-            g_warning("Couldn't send status message '%s': %s", status, error->message);
-        else if ( ! g_data_output_stream_put_byte(output, '\0', NULL, &error) )
-            g_warning("Couldn't send status message end byte: %s", error->message);
-
-        g_free(status);
-    }
+    _eventd_control_send_response(output, code, status);
+    g_free(status);
 
 fail:
     g_strfreev(argv);
@@ -175,6 +197,24 @@ fail:
     g_clear_error(&error);
 
     return TRUE;
+}
+
+void
+eventd_control_stop(EventdControl *control, EventdControlDelayedStop *delayed_stop)
+{
+    GError *error = NULL;
+
+    _eventd_control_send_response(delayed_stop->output, EVENTDCTL_RETURN_CODE_OK, NULL);
+
+    g_object_unref(delayed_stop->output);
+
+    if ( ! g_io_stream_close(delayed_stop->stream, NULL, &error) )
+        g_warning("Can't close the stream: %s", error->message);
+    g_clear_error(&error);
+
+    g_object_unref(delayed_stop->stream);
+
+    g_slice_free(EventdControlDelayedStop, delayed_stop);
 }
 
 EventdControl *
