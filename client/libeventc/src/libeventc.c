@@ -303,8 +303,8 @@ _eventc_connection_read_callback(GObject *obj, GAsyncResult *res, gpointer user_
         {
             if ( error != NULL )
                 g_set_error(&self->priv->error, EVENTC_ERROR, EVENTC_ERROR_CONNECTION, "Could not read line: %s", error->message);
+            _eventc_connection_close_internal(self);
         }
-        _eventc_connection_close_internal(self);
         g_clear_error(&error);
     }
     else if ( eventd_protocol_parse(self->priv->protocol, line, &self->priv->error) )
@@ -881,7 +881,10 @@ eventc_connection_close(EventcConnection *self, GError **error)
     if ( self->priv->ws != NULL )
         eventd_ws_connection_close(_eventc_connection_ws_module, self->priv->ws);
     else
+    {
         g_cancellable_cancel(self->priv->cancellable);
+        _eventc_connection_close_internal(self);
+    }
 
     return TRUE;
 }
@@ -889,6 +892,8 @@ eventc_connection_close(EventcConnection *self, GError **error)
 static void
 _eventc_connection_close_internal(EventcConnection *self)
 {
+    gboolean emit_disconnect = FALSE;
+
     if ( self->priv->ping > 0 )
         g_source_remove(self->priv->ping);
     self->priv->ping = 0;
@@ -907,6 +912,7 @@ _eventc_connection_close_internal(EventcConnection *self)
 
     if ( self->priv->connection != NULL )
     {
+        emit_disconnect = TRUE;
         g_io_stream_close(G_IO_STREAM(self->priv->connection), NULL, NULL);
         g_object_unref(self->priv->connection);
     }
@@ -915,7 +921,8 @@ _eventc_connection_close_internal(EventcConnection *self)
     self->priv->in = NULL;
     self->priv->connection = NULL;
 
-    g_signal_emit(self, _eventc_connection_signals[SIGNAL_DISCONNECTED], 0);
+    if ( emit_disconnect )
+        g_signal_emit(self, _eventc_connection_signals[SIGNAL_DISCONNECTED], 0);
 }
 
 

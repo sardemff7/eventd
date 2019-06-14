@@ -178,14 +178,14 @@ _ended_close_idle_callback(gpointer user_data)
 
     EventcConnection *client = user_data;
 
+    _test_state.event = 0;
+    _test_state.state = STATE_START;
+
     if ( ! eventc_connection_close(client, &error) )
     {
         g_main_loop_quit(loop);
         return G_SOURCE_REMOVE;
     }
-
-    _test_state.event = 0;
-    _test_state.state = STATE_START;
 
     return G_SOURCE_REMOVE;
 }
