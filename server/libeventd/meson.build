@@ -60,6 +60,8 @@ libeventd_event_test = executable('libeventd-event.test', files(
 )
 test('libeventd-event unit tests', libeventd_event_test,
     suite: [ 'unit', 'libeventd' ],
+    args: [ '--tap' ],
+    protocol: 'tap',
 )
 
 libeventd_protocol_test = executable('libeventd-protocol.test', files(
@@ -75,6 +77,8 @@ libeventd_protocol_test = executable('libeventd-protocol.test', files(
 )
 test('libeventd-protocol unit tests', libeventd_protocol_test,
     suite: [ 'unit', 'libeventd' ],
+    args: [ '--tap' ],
+    protocol: 'tap',
 )
 
 if get_option('gobject-introspection')
