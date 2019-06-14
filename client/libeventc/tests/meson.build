@@ -3,4 +3,7 @@ libeventc_connection_test = executable('libeventc-connection.test', [ config_h ]
     ),
     dependencies: [ libeventd_test, libeventc, glib ]
 )
-test('libeventc integration test', libeventc_connection_test, timeout: 7)
+test('libeventc integration test', libeventc_connection_test,
+    suite: [ 'integration', 'libeventc' ],
+    timeout: 7
+)

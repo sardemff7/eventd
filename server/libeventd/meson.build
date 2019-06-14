@@ -58,7 +58,9 @@ libeventd_event_test = executable('libeventd-event.test', files(
     objects: libeventd_event_private,
     dependencies: [ libnkutils_uuid, libeventd ],
 )
-test('libeventd-event unit tests', libeventd_event_test)
+test('libeventd-event unit tests', libeventd_event_test,
+    suite: [ 'unit', 'libeventd' ],
+)
 
 libeventd_protocol_test = executable('libeventd-protocol.test', files(
         'tests/unit/common.h',
@@ -71,7 +73,9 @@ libeventd_protocol_test = executable('libeventd-protocol.test', files(
     objects: libeventd_event_private,
     dependencies: [ libnkutils_uuid, libeventd ],
 )
-test('libeventd-protocol unit tests', libeventd_protocol_test)
+test('libeventd-protocol unit tests', libeventd_protocol_test,
+    suite: [ 'unit', 'libeventd' ],
+)
 
 if get_option('gobject-introspection')
     libeventd_gir = gnome.generate_gir(libeventd_lib,
