@@ -64,29 +64,30 @@ static const gchar *_state_names[] = {
 };
 
 static gboolean
-_check_state(gssize connection, gssize event, State state)
+_check_state(const gchar *function, gssize connection, gssize event, State state)
 {
     if ( ( connection > -1 ) && ( _test_state.connection != connection ) )
     {
-        g_warning("Expected connection %zu, got %zu", connection, _test_state.connection);
+        g_warning("[%s] Expected connection %zd, got %zd", function, connection, _test_state.connection);
         g_main_loop_quit(loop);
         return FALSE;
     }
 
     if ( ( event > -1 ) && ( _test_state.event != event ) )
     {
-        g_warning("[%zu] Expected event %zu, got %zu", _test_state.connection, event, _test_state.event);
+        g_warning("[%s: %zd] Expected event %zd, got %zd", function, _test_state.connection, event, _test_state.event);
         g_main_loop_quit(loop);
         return FALSE;
     }
 
     if ( ( _test_state.state != state ) )
     {
-        g_warning("[%zu, %zu] Expected state '%s', got '%s'", _test_state.connection, _test_state.event, _state_names[state], _state_names[_test_state.state]);
+        g_warning("[%s: %zd, %zd] Expected state '%s', got '%s'", function, _test_state.connection, _test_state.event, _state_names[state], _state_names[_test_state.state]);
         g_main_loop_quit(loop);
         return FALSE;
     }
 
+    g_debug("[%s] %zd/%zd, %zd/%zd, '%s'/'%s'", function, _test_state.connection, connection, _test_state.event, event, _state_names[_test_state.state], _state_names[state]);
     return TRUE;
 }
 
@@ -134,7 +135,7 @@ _connect_callback(GObject *obj, GAsyncResult *res, gpointer user_data)
         g_main_loop_quit(loop);
         return;
     }
-    if ( ! _check_state(-1, 0, STATE_CONNECT) )
+    if ( ! _check_state(G_STRFUNC, -1, 0, STATE_CONNECT) )
         return;
 
     switch ( _test_state.connection )
@@ -159,7 +160,7 @@ _connect_callback(GObject *obj, GAsyncResult *res, gpointer user_data)
 static void
 _disconnected_callback(EventcConnection *client, gpointer user_data)
 {
-    if ( ! _check_state(-1, 0, STATE_START) )
+    if ( ! _check_state(G_STRFUNC, -1, 0, STATE_START) )
         return;
 
     if ( ++_test_state.connection < MAX_CONNECTION )
@@ -172,7 +173,7 @@ _disconnected_callback(EventcConnection *client, gpointer user_data)
 static gboolean
 _ended_close_idle_callback(gpointer user_data)
 {
-    if ( ! _check_state(-1, 3, STATE_SENT) )
+    if ( ! _check_state(G_STRFUNC, -1, 3, STATE_SENT) )
         return G_SOURCE_REMOVE;
 
     EventcConnection *client = user_data;
@@ -192,7 +193,7 @@ _ended_close_idle_callback(gpointer user_data)
 static void
 _ended_callback(EventcConnection *client, EventdEvent *e, gpointer user_data)
 {
-    if ( ! _check_state(-1, -1, STATE_SENT) )
+    if ( ! _check_state(G_STRFUNC, -1, -1, STATE_SENT) )
         return;
 
     const gchar *category;
