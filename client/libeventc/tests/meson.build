@@ -5,5 +5,5 @@ libeventc_connection_test = executable('libeventc-connection.test', [ config_h ]
 )
 test('libeventc integration test', libeventc_connection_test,
     suite: [ 'integration', 'libeventc' ],
-    timeout: 7
+    timeout: 9
 )

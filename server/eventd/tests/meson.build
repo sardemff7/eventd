@@ -5,7 +5,7 @@ evp_connection_test = executable('evp-connection.test', [ config_h ] + files(
 )
 test('eventd EvP integration test', evp_connection_test,
     suite: [ 'integration', 'eventd' ],
-    timeout: 2
+    timeout: 6
 )
 
 relay_connection_test = executable('relay-connection.test', [ config_h ] + files(
@@ -15,7 +15,7 @@ relay_connection_test = executable('relay-connection.test', [ config_h ] + files
 )
 test('eventd relay integration test', relay_connection_test,
     suite: [ 'integration', 'eventd', 'relay' ],
-    timeout: 7
+    timeout: 12
 )
 
 ws_connection_test = executable('ws-connection.test', [ config_h ] + files(
@@ -25,6 +25,6 @@ ws_connection_test = executable('ws-connection.test', [ config_h ] + files(
 )
 test('eventd ws integration test', ws_connection_test,
     suite: [ 'integration', 'eventd', 'ws' ],
-    timeout: 7,
+    timeout: 9,
     should_fail: not libsoup.found()
 )
