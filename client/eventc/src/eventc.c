@@ -119,6 +119,7 @@ main(int argc, char *argv[])
     const gchar *category = NULL;
     const gchar *name = NULL;
     gchar **data_strv = NULL;
+    gchar **data_string_strv = NULL;
     gchar **file_strv = NULL;
     GHashTable *data = NULL;
     gboolean subscribe = FALSE;
@@ -138,6 +139,7 @@ main(int argc, char *argv[])
     GOptionEntry entries[] =
     {
         { "data",          'd', 0, G_OPTION_ARG_STRING_ARRAY,   &data_strv,        "Event data to send",                                       "<name>=<content>" },
+        { "data-string",   'D', 0, G_OPTION_ARG_STRING_ARRAY,   &data_string_strv, "Event data strings to send",                               "<name>=<string>" },
         { "data-file",     'f', 0, G_OPTION_ARG_FILENAME_ARRAY, &file_strv,        "Event data to send from a file",                           "<name>=[<mime-type>@]<filename>" },
         { "uri",           'u', 0, G_OPTION_ARG_STRING,         &uri,              "URI to connect to (defaults to $EVENTC_HOST if defined)",  "<URI>" },
         { "identity",      'i', 0, G_OPTION_ARG_STRING,         &identity,         "Server identity to check for in TLS certificate",          "<host>" },
@@ -225,6 +227,28 @@ main(int argc, char *argv[])
                 g_print("Malformed data content '%s': %s\n", data_name, error->message);
                 goto end;
             }
+
+            g_hash_table_insert(data, data_name, g_variant_ref_sink(data_content));
+        }
+    }
+
+    if ( data_string_strv != NULL )
+    {
+        gchar **d;
+        for ( d = data_string_strv ; *d != NULL ; ++d )
+        {
+            gchar *c;
+            data_name = *d;
+
+            c = g_utf8_strchr(data_name, -1, '=');
+            if ( c == NULL )
+            {
+                g_print("Malformed data '%s': Data format is '<name>=<content>'\n", data_name);
+                goto end;
+            }
+            *c++ = '\0';
+
+            data_content = g_variant_new_string(c);
 
             g_hash_table_insert(data, data_name, g_variant_ref_sink(data_content));
         }
@@ -387,6 +411,7 @@ post_event:
 end:
     g_hash_table_unref(data);
     g_strfreev(file_strv);
+    g_strfreev(data_string_strv);
     g_strfreev(data_strv);
     if ( certificate != NULL )
         g_object_unref(certificate);
