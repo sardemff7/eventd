@@ -156,7 +156,7 @@ if not nd_has_backend
     error('notification-daemon plugin required but no backend selected')
 endif
 
-shared_library('nd', [ config_h ] + files(
+shared_library('nd', config_h, files(
         'src/types.h',
         'src/nd.h',
         'src/nd.c',

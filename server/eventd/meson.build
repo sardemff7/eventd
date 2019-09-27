@@ -21,7 +21,7 @@ if get_option('systemd')
     docbook_conditions += 'enable_systemd'
 endif
 
-eventd = executable('eventd', [ config_h ] + files(
+eventd = executable('eventd', config_h, files(
         'src/types.h',
         'src/config_.h',
         'src/config.c',

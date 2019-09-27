@@ -10,9 +10,9 @@ libeventd_plugin_sources = files(
         'src/core.c',
         'src/plugin.c',
 )
-libeventd_plugin_lib = library('eventd-plugin', [ config_h ] + files(
+libeventd_plugin_lib = library('eventd-plugin', config_h, files(
         'include/eventd-plugin-private.h',
-    ) + libeventd_plugin_sources,
+    ), libeventd_plugin_sources,
     c_args: [
         '-DG_LOG_DOMAIN="libeventd-plugin"',
     ],

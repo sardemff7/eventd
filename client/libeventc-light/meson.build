@@ -26,7 +26,7 @@ libeventc_light_dep += [
     libnkutils,
     glib,
 ]
-libeventc_light_lib = library('eventc-light', [ config_h ] + files(
+libeventc_light_lib = library('eventc-light', config_h, files(
         'src/libeventc-light.c',
     ),
     c_args: [

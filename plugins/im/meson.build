@@ -2,7 +2,7 @@
 
 libpurple = dependency('purple')
 
-shared_library('im', [ config_h ] + files(
+shared_library('im', config_h, files(
         'src/im.c',
         'src/io.h',
         'src/io.c',

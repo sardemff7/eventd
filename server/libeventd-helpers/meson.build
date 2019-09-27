@@ -6,7 +6,7 @@ libeventd_helpers_dep = [
     gio,
     glib,
 ]
-libeventd_helpers_lib = library('eventd-helpers', [ config_h ] + files(
+libeventd_helpers_lib = library('eventd-helpers', config_h, files(
         'src/reconnect.c',
         'src/config.c',
         'include/libeventd-helpers-dirs.h',

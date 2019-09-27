@@ -12,13 +12,13 @@ libeventd_sources = files(
     'src/protocol-evp-parser.c',
     'src/protocol-evp-generator.c',
 )
-libeventd_lib = library('eventd', [ config_h ] + files(
+libeventd_lib = library('eventd', config_h, files(
         'include/libeventd-event-private.h',
         'include/libeventd-event.h',
         'include/libeventd-protocol.h',
         'src/event-private.h',
         'src/protocol-evp-private.h',
-    ) + libeventd_sources,
+    ), libeventd_sources,
     c_args: [
         '-DG_LOG_DOMAIN="libeventd"',
     ],

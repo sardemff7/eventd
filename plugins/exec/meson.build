@@ -1,6 +1,6 @@
 # exec plugin
 
-shared_library('exec', [ config_h ] + files(
+shared_library('exec', config_h, files(
         'src/exec.c',
     ),
     c_args: [

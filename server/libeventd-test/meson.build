@@ -7,7 +7,7 @@ libeventd_test_dep = [
     gobject,
     glib,
 ]
-libeventd_test_lib = library('eventd-test', [ config_h ] + files(
+libeventd_test_lib = library('eventd-test', config_h, files(
         'src/libeventc-test.c',
         'src/libtest.c',
     ),

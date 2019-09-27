@@ -1,7 +1,7 @@
 # Server control utility
 
 eventdctl_inc = include_directories('include')
-eventdctl = executable('eventdctl', [ config_h ] + files(
+eventdctl = executable('eventdctl', config_h, files(
         'include/eventdctl.h',
         'src/eventdctl.c',
     ),

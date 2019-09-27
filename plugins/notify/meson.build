@@ -2,7 +2,7 @@
 
 gdk_pixbuf = dependency('gdk-pixbuf-2.0')
 
-shared_library('notify', [ config_h ] + files(
+shared_library('notify', config_h, files(
         'src/notify.c',
         '../nd/src/pixbuf.c',
     ),

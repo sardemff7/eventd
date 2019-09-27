@@ -2,7 +2,7 @@
 
 canberra = dependency('libcanberra')
 
-shared_library('canberra', [ config_h ] + files(
+shared_library('canberra', config_h, files(
         'src/canberra.c',
     ),
     c_args: [

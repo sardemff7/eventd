@@ -1,6 +1,6 @@
 # Basic CLI client
 
-eventc = executable('eventc', [ config_h ] + files(
+eventc = executable('eventc', config_h, files(
         'src/eventc.c',
     ),
     objects: libeventd_event_private,

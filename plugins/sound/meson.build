@@ -3,7 +3,7 @@
 sndfile = dependency('sndfile')
 pulseaudio = [ dependency('libpulse', version: '>= 0.9.15'), dependency('libpulse-mainloop-glib') ]
 
-shared_library('sound', [ config_h ] + files(
+shared_library('sound', config_h, files(
         'src/sound.c',
         'src/pulseaudio.h',
         'src/pulseaudio.c',

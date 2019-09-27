@@ -1,6 +1,6 @@
 # Freedesktop.org notifications event collection plugin
 
-fdo_notificacions = shared_library('fdo-notifications', [ config_h ] + files(
+fdo_notificacions = shared_library('fdo-notifications', config_h, files(
         'src/fdo-notifications.c',
     ),
     c_args: [
@@ -13,7 +13,7 @@ fdo_notificacions = shared_library('fdo-notifications', [ config_h ] + files(
 )
 
 if get_option('debug')
-    executable('eventd-fdo-notifications', [ config_h ] + files(
+    executable('eventd-fdo-notifications', config_h, files(
             'src/debug-daemon.c',
         ),
         objects: fdo_notificacions.extract_objects(
