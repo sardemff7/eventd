@@ -37,7 +37,6 @@
 static GError *error = NULL;
 static EventdEvent *event = NULL;
 static GMainLoop *loop = NULL;
-static guint timeout = 0;
 
 typedef enum {
     STATE_START,
@@ -91,14 +90,6 @@ _check_state(const gchar *function, gssize connection, gssize event, State state
     return TRUE;
 }
 
-static gboolean
-_timeout_callback(gpointer user_data)
-{
-    g_warning("Test takes too much time, aborting");
-    g_main_loop_quit(loop);
-    return G_SOURCE_REMOVE;
-}
-
 static void
 _create_event(EventcConnection *client)
 {
@@ -120,11 +111,6 @@ _create_event(EventcConnection *client)
     default:
     break;
     }
-
-    if ( timeout > 0 )
-        g_source_remove(timeout);
-    /* The test plugin should react immediately, 1s is more than enough, unless on heavy load */
-    timeout = g_timeout_add_seconds_full(G_PRIORITY_DEFAULT_IDLE, 5, _timeout_callback, NULL, NULL);
 }
 
 static void
