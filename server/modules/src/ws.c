@@ -161,9 +161,22 @@ _eventd_ws_connection_error(EventdWsConnection *self, GError *error, SoupWebsock
     g_warning("WebSocket error: %s", error->message);
 }
 
+static gboolean
+_eventd_ws_connection_delayed_unref(gpointer user_data)
+{
+    g_object_unref(user_data);
+    return G_SOURCE_REMOVE;
+}
+
 static void
 _eventd_ws_connection_closed(EventdWsConnection *self, SoupWebsocketConnection *c)
 {
+    /*
+     * Unref’ing the connection from the "closed" handler leads to a crash
+     * so we delay it to an idle callback.
+     */
+    g_idle_add(_eventd_ws_connection_delayed_unref, self->connection);
+    self->connection = NULL;
     self->disconnect_callback(self->data);
 }
 
