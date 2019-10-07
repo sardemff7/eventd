@@ -41,9 +41,8 @@ struct _EventdEvpClient {
     GList *link;
     EventdProtocol *protocol;
     GCancellable *cancellable;
-    GSocketConnection *connection;
+    GIOStream *connection;
     gboolean first;
-    GIOStream *tls;
     EventdWsConnection *ws;
     GDataInputStream *in;
     GDataOutputStream *out;
@@ -178,11 +177,7 @@ _eventd_evp_client_read_callback(GObject *obj, GAsyncResult *res, gpointer user_
             goto end;
         }
 
-        GIOStream *stream = G_IO_STREAM(self->connection);
-        if ( self->tls != NULL )
-            stream = G_IO_STREAM(self->tls);
-
-        self->ws = eventd_ws_connection_server_new(self->context->ws, self, (GDestroyNotify) _eventd_evp_client_disconnect_internal, self->cancellable, stream, self->in, self->protocol, self->context->ws_secret, line);
+        self->ws = eventd_ws_connection_server_new(self->context->ws, self, (GDestroyNotify) _eventd_evp_client_disconnect_internal, self->cancellable, self->connection, self->in, self->protocol, self->context->ws_secret, line);
 
         g_filter_output_stream_set_close_base_stream(G_FILTER_OUTPUT_STREAM(self->out), FALSE);
         g_object_unref(self->out);
@@ -215,10 +210,10 @@ end:
  */
 
 static void
-_eventd_evp_client_connect(EventdEvpClient *self, GIOStream *stream)
+_eventd_evp_client_connect(EventdEvpClient *self)
 {
-    self->in = g_data_input_stream_new(g_io_stream_get_input_stream(stream));
-    self->out = g_data_output_stream_new(g_io_stream_get_output_stream(stream));
+    self->in = g_data_input_stream_new(g_io_stream_get_input_stream(self->connection));
+    self->out = g_data_output_stream_new(g_io_stream_get_output_stream(self->connection));
     g_data_input_stream_set_newline_type(self->in, G_DATA_STREAM_NEWLINE_TYPE_LF);
 
     g_data_input_stream_read_line_async(self->in, G_PRIORITY_DEFAULT, self->cancellable, _eventd_evp_client_read_callback, self);
@@ -237,7 +232,7 @@ _eventd_evp_client_tls_handshake_callback(GObject *obj, GAsyncResult *res, gpoin
         return;
     }
 
-    _eventd_evp_client_connect(self, self->tls);
+    _eventd_evp_client_connect(self);
 }
 
 static gboolean
@@ -258,7 +253,9 @@ eventd_evp_client_connection_handler(GSocketService *service, GSocketConnection 
 {
     EventdEvpContext *context = user_data;
 
-    GIOStream *tls = NULL;
+
+    GIOStream *stream = g_object_ref(G_IO_STREAM(connection));
+
     if ( G_IS_TCP_CONNECTION(connection) )
     {
         GError *error = NULL;
@@ -283,6 +280,7 @@ eventd_evp_client_connection_handler(GSocketService *service, GSocketConnection 
                 return FALSE;
             }
 
+            GIOStream *tls;
             tls = g_tls_server_connection_new(G_IO_STREAM(connection), context->certificate, &error);
             if ( tls == NULL )
             {
@@ -290,6 +288,8 @@ eventd_evp_client_connection_handler(GSocketService *service, GSocketConnection 
                 g_clear_error(&error);
                 return FALSE;
             }
+            g_object_unref(stream);
+            stream = tls;
         }
     }
     EventdEvpClient *self;
@@ -302,20 +302,19 @@ eventd_evp_client_connection_handler(GSocketService *service, GSocketConnection 
     self->subscriptions = g_hash_table_new(g_str_hash, g_str_equal);
 
     self->cancellable = g_cancellable_new();
-    self->connection = g_object_ref(connection);
-    self->tls = tls;
+    self->connection = stream;
 
-    if ( self->tls != NULL )
+    if ( G_IS_TLS_CONNECTION(self->connection) )
     {
         if ( context->client_certificates != NULL )
         {
-            g_object_set(self->tls, "authentication-mode", G_TLS_AUTHENTICATION_REQUIRED, NULL);
-            g_signal_connect_swapped(self->tls, "accept-certificate", G_CALLBACK(_eventd_evp_client_tls_certificate_callback), self);
+            g_object_set(self->connection, "authentication-mode", G_TLS_AUTHENTICATION_REQUIRED, NULL);
+            g_signal_connect_swapped(self->connection, "accept-certificate", G_CALLBACK(_eventd_evp_client_tls_certificate_callback), self);
         }
-        g_tls_connection_handshake_async(G_TLS_CONNECTION(tls), G_PRIORITY_DEFAULT, self->cancellable, _eventd_evp_client_tls_handshake_callback, self);
+        g_tls_connection_handshake_async(G_TLS_CONNECTION(self->connection), G_PRIORITY_DEFAULT, self->cancellable, _eventd_evp_client_tls_handshake_callback, self);
     }
     else
-        _eventd_evp_client_connect(self, G_IO_STREAM(self->connection));
+        _eventd_evp_client_connect(self);
 
     self->link = context->clients = g_list_prepend(context->clients, self);
 
@@ -359,9 +358,6 @@ _eventd_evp_client_disconnect_internal(EventdEvpClient *self)
         g_object_unref(self->in);
     if ( self->out != NULL )
         g_object_unref(self->out);
-
-    if ( self->tls != NULL )
-        g_object_unref(self->tls);
 
     if ( self->connection != NULL )
     {
