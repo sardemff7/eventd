@@ -129,13 +129,42 @@ eventd_tests_env_new(const gchar *evp_socket, const gchar *plugins, gboolean ena
     return self;
 }
 
-void
-eventd_tests_env_free(EventdTestsEnv *self)
+int
+eventd_tests_env_free(EventdTestsEnv *self, int r)
 {
+    if ( r != 0 )
+    {
+        gchar **s;
+
+        g_debug("Environment:");
+        if ( self->env == NULL )
+            self->env = g_get_environ();
+        for ( s = self->env ; *s != NULL ; ++s )
+        {
+            if ( g_str_has_prefix(*s, "EVENTD_") || g_str_has_prefix(*s, "XDG_RUNTIME_DIR=") || g_str_has_prefix(*s, "HOME=") )
+                g_debug("    %s", *s);
+        }
+
+        if ( self->start_args != NULL )
+        {
+            g_return_val_if_fail(self->stop_args != NULL, 99);
+
+            g_debug("Start arguments:");
+            for ( s = self->start_args ; *s != NULL ; ++s )
+                g_debug("    %s", *s);
+
+            g_debug("Stop arguments:");
+            for ( s = self->stop_args ; *s != NULL ; ++s )
+                g_debug("    %s", *s);
+        }
+    }
+
     g_strfreev(self->stop_args);
     g_strfreev(self->start_args);
     g_strfreev(self->env);
     g_free(self);
+
+    return r;
 }
 
 gboolean

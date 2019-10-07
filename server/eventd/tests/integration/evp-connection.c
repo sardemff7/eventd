@@ -191,6 +191,5 @@ error:
         r = 99;
 
 end:
-    eventd_tests_env_free(env);
-    return r;
+    return eventd_tests_env_free(env, r);
 }
