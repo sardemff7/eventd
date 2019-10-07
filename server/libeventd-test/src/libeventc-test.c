@@ -113,6 +113,8 @@ _create_event(EventcConnection *client)
         eventd_event_add_data_string(event, g_strdup("file"), g_build_filename(g_getenv("XDG_RUNTIME_DIR"), tmp, NULL));
         g_free(tmp);
         eventd_event_add_data_string(event, g_strdup("test"), g_strdup_printf("Some message\nfrom %s", g_get_prgname()));
+        eventd_event_add_data(event, g_strdup("connection"), g_variant_new_int64(_test_state.connection));
+        eventd_event_add_data(event, g_strdup("event"), g_variant_new_int64(_test_state.event));
     }
     case 3:
     default:
