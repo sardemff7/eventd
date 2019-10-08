@@ -34,6 +34,8 @@ struct _EventdTestsEnv {
     gchar **env;
     gchar **start_args;
     gchar **stop_args;
+    GPid pid;
+    GError *child_error;
 };
 
 void
@@ -103,24 +105,20 @@ eventd_tests_env_new(const gchar *evp_socket, const gchar *plugins, gboolean ena
     if ( evp_socket == NULL )
         evp_socket = "tcp-file-runtime:" EVP_UNIX_SOCKET;
 
-    self->start_args = g_new0(char *, 14);
-    self->start_args[0] = g_strdup(EVENTDCTL_PATH);
-    self->start_args[1] = g_strdup("--socket");
-    self->start_args[2] = socket;
-    self->start_args[3] = g_strdup("start");
-    self->start_args[4] = g_strdup("--argv0");
-    self->start_args[5] = g_strdup(EVENTD_PATH);
-    self->start_args[6] = g_strdup("--take-over");
-    self->start_args[7] = g_strdup("--private-socket");
-    self->start_args[8] = g_strdup(socket);
-    self->start_args[9] = g_strdup("--listen");
-    self->start_args[10] = g_strdup(evp_socket);
-    self->start_args[11] = g_strdup("--no-service-discovery");
+    self->start_args = g_new0(char *, 10);
+    self->start_args[0] = g_strdup(EVENTD_PATH);
+    self->start_args[1] = g_strdup("--daemonize");
+    self->start_args[2] = g_strdup("--take-over");
+    self->start_args[3] = g_strdup("--private-socket");
+    self->start_args[4] = g_strdup(socket);
+    self->start_args[5] = g_strdup("--listen");
+    self->start_args[6] = g_strdup(evp_socket);
+    self->start_args[7] = g_strdup("--no-service-discovery");
     if ( ! enable_relay )
-        self->start_args[12] = g_strdup("--no-relay");
+        self->start_args[8] = g_strdup("--no-relay");
 
     self->stop_args = g_new0(char *, 5);
-    self->stop_args[0] = g_strdup(self->start_args[0]);
+    self->stop_args[0] = g_strdup(EVENTDCTL_PATH);
     self->stop_args[1] = g_strdup("--socket");
     self->stop_args[2] = g_strdup(socket);
     self->stop_args[3] = g_strdup("stop");
@@ -167,24 +165,81 @@ eventd_tests_env_free(EventdTestsEnv *self, int r)
     return r;
 }
 
+static void
+_eventd_tests_child_watch(GPid pid, gint status, gpointer user_data)
+{
+    EventdTestsEnv *self = user_data;
+
+    g_spawn_check_exit_status(status, &self->child_error);
+    g_spawn_close_pid(self->pid);
+    self->pid = 0;
+}
+
 gboolean
 eventd_tests_env_start_eventd(EventdTestsEnv *self)
 {
+    gboolean retval = TRUE;
     GError *error = NULL;
-    if ( g_spawn_sync(self->dir, self->start_args, self->env, 0, NULL, NULL, NULL, NULL, NULL, &error) )
-        return TRUE;
-    g_warning("Failed to start eventd: %s", error->message);
+
+    gint stdin_fd;
+    if ( ! g_spawn_async_with_pipes(self->dir, self->start_args, self->env, G_SPAWN_DO_NOT_REAP_CHILD, NULL, NULL, &self->pid, NULL, &stdin_fd, NULL, &error) )
+    {
+        g_warning("Failed to start eventd: %s", error->message);
+        g_error_free(error);
+        return FALSE;
+    }
+
+    g_child_watch_add(self->pid, _eventd_tests_child_watch, self);
+
+    GIOChannel *stdin_io;
+
+#ifdef G_OS_UNIX
+    stdin_io = g_io_channel_unix_new(stdin_fd);
+#else /* ! G_OS_UNIX */
+    stdin_io = g_io_channel_win32_new_fd(stdin_fd);
+#endif /* ! G_OS_UNIX */
+
+    gchar *data;
+    gsize eol;
+    while ( g_io_channel_read_line(stdin_io, &data, NULL, &eol, &error) == G_IO_STATUS_NORMAL )
+    {
+        data[eol] = '\0';
+        if ( g_strcmp0(data, "READY=1") == 0 )
+            goto end;
+        g_free(data);
+    }
+
+    retval = FALSE;
+    g_warning("eventd failed to reach ready state: %s", error->message);
     g_error_free(error);
-    return FALSE;
+
+end:
+    g_io_channel_unref(stdin_io);
+    return retval;
 }
 
 gboolean
 eventd_tests_env_stop_eventd(EventdTestsEnv *self)
 {
+    gboolean retval = TRUE;
     GError *error = NULL;
-    if ( g_spawn_sync(self->dir, self->stop_args, self->env, 0, NULL, NULL, NULL, NULL, NULL, &error) )
-        return TRUE;
-    g_warning("Failed to stop eventd: %s", error->message);
-    g_error_free(error);
-    return FALSE;
+
+    if ( ! g_spawn_sync(self->dir, self->stop_args, self->env, 0, NULL, NULL, NULL, NULL, NULL, &error) )
+    {
+        retval = FALSE;
+        g_warning("Failed to run eventdctl stop: %s", error->message);
+        g_error_free(error);
+    }
+
+    while ( self->pid != 0 )
+        g_main_context_iteration(NULL, TRUE);
+
+    if ( self->child_error != NULL )
+    {
+        retval = FALSE;
+        g_warning("eventd exited with an error: %s", self->child_error->message);
+        g_error_free(self->child_error);
+    }
+
+    return retval;
 }
