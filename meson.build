@@ -1,6 +1,6 @@
 project('eventd', 'c',
     version: '0.26.0',
-    meson_version: '>=0.47.0',
+    meson_version: '>=0.49.0',
     license: [ 'GPL3+', 'LGPL3+', 'MIT' ],
     default_options: [
         'c_std=gnu11',
@@ -205,6 +205,10 @@ if get_option('libcanberra')
 endif
 
 # Integration testing
+add_test_setup('larger_timeout',
+    timeout_multiplier: 5,
+    is_default: is_windows,
+)
 subdir('plugins/test-plugin')
 subdir('server/libeventd-test')
 subdir('server/eventd/tests')
