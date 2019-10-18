@@ -1,5 +1,5 @@
 project('eventd', 'c',
-    version: '0.26.0',
+    version: '0.27.0',
     meson_version: '>=0.49.0',
     license: [ 'GPL3+', 'LGPL3+', 'MIT' ],
     default_options: [
@@ -147,7 +147,9 @@ nk_options = [
 nk = subproject('libnkutils', default_options: nk_options)
 nk_subproject_options = nk.get_variable('nk_options')
 foreach o : nk_options + nk_subproject_options
-    if not nk_options.contains(o) or not nk_subproject_options.contains(o)
+    if ( o.startswith('git-work-tree=') )
+        continue
+    elif not nk_options.contains(o) or not nk_subproject_options.contains(o)
         error('You must not change libnkutils options @0@ != @1@'.format('|'.join(nk_options), '|'.join(nk_subproject_options)))
     endif
 endforeach
