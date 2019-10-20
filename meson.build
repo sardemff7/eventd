@@ -219,7 +219,7 @@ subdir('client/libeventc/tests')
 
 xsltproc = [
     find_program('xsltproc'),
-    '-o', '@OUTDIR@',
+    '-o', '@OUTDIR@/',
     '--nonet', '--xinclude',
     '--stringparam', 'man.output.quietly', '1',
     '--stringparam', 'funcsynopsis.style', 'ansi',
