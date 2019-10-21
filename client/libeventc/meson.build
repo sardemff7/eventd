@@ -13,7 +13,7 @@ libeventc_sources = files(
         'src/libeventc.c',
 )
 libeventc_lib = library('eventc',
-    [ config_h ] + libeventc_sources,
+    config_h, libeventc_sources,
     c_args: [
         '-DG_LOG_DOMAIN="libeventc"',
     ],

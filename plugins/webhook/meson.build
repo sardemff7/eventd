@@ -2,7 +2,7 @@
 
 libsoup = dependency('libsoup-2.4', version: '>= 2.42')
 
-shared_library('webhook', files(
+shared_library('webhook', config_h, files(
         'src/webhook.c',
     ),
     c_args: [

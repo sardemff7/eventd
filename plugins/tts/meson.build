@@ -2,7 +2,7 @@
 
 speechd = dependency('speech-dispatcher')
 
-shared_library('tts', files(
+shared_library('tts', config_h, files(
         'src/tts.c',
     ),
     c_args: [

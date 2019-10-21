@@ -1,6 +1,6 @@
 # file plugin
 
-shared_library('file', files(
+shared_library('file', config_h, files(
         'src/file.c',
     ),
     c_args: [
