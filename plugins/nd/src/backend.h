@@ -37,7 +37,7 @@ typedef enum {
     _EVENTD_ND_BACKENDS_SIZE
 } EventdNdBackends;
 
-const gchar *eventd_nd_backends_names[_EVENTD_ND_BACKENDS_SIZE];
+extern const gchar *eventd_nd_backends_names[_EVENTD_ND_BACKENDS_SIZE];
 
 typedef struct {
     EventdNdContext *context;
