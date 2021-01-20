@@ -40,6 +40,8 @@ struct _EventdPluginContext {
 struct _EventdPluginAction {
     FormatString *url;
     FormatString *string;
+    gchar *content_type;
+    GHashTable *headers;
 };
 
 static void
@@ -47,6 +49,9 @@ _eventd_webhook_action_free(gpointer data)
 {
     EventdPluginAction *action = data;
 
+    if ( action->headers != NULL )
+        g_hash_table_unref(action->headers);
+    g_free(action->content_type);
     evhelpers_format_string_unref(action->string);
     evhelpers_format_string_unref(action->url);
 
@@ -96,6 +101,8 @@ _eventd_webhook_action_parse(EventdPluginContext *context, GKeyFile *config_file
     gboolean disable = FALSE;
     FormatString *url = NULL;
     FormatString *string = NULL;
+    gchar *content_type = NULL;
+    GHashTable *headers = NULL;
 
     if ( ! g_key_file_has_group(config_file, "WebHook") )
         return NULL;
@@ -116,16 +123,37 @@ _eventd_webhook_action_parse(EventdPluginContext *context, GKeyFile *config_file
     if ( ( r > 0 ) && ( evhelpers_config_key_file_get_format_string(config_file, "WebHook", "String", &string) != 0 ) )
         goto fail;
 
+    if ( evhelpers_config_key_file_get_string_with_default(config_file, "WebHook", "ContentType", "application/json", &content_type) < 0 )
+        goto fail;
+
+    if ( g_key_file_has_group(config_file, "WebHook Headers") )
+    {
+        gchar **keys, **key;
+
+        headers = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+        keys = g_key_file_get_keys(config_file, "WebHook Headers", NULL, NULL);
+        for ( key = keys ; *key != NULL ; ++key )
+        {
+            gchar *value;
+            value = g_key_file_get_string(config_file, "WebHook Headers", *key, NULL);
+            g_hash_table_insert(headers, *key, value);
+        }
+        g_free(keys);
+    }
+
     EventdPluginAction *action;
     action = g_slice_new(EventdPluginAction);
     action->url = url;
     action->string = string;
+    action->content_type = content_type;
+    action->headers = headers;
 
     context->actions = g_slist_prepend(context->actions, action);
 
     return action;
 
 fail:
+    g_free(content_type);
     evhelpers_format_string_unref(string);
     evhelpers_format_string_unref(url);
     return NULL;
@@ -170,7 +198,15 @@ _eventd_webhook_event_action(EventdPluginContext *context, EventdPluginAction *a
     if ( ! context->no_user_agent )
         g_object_set(session, SOUP_SESSION_USER_AGENT, PACKAGE_NAME " " NK_PACKAGE_VERSION, NULL);
     msg = soup_message_new(SOUP_METHOD_POST, url);
-    soup_message_set_request(msg, "application/json", SOUP_MEMORY_TAKE, string, strlen(string));
+    if ( action->headers != NULL )
+    {
+        GHashTableIter iter;
+        const gchar *header, *value;
+        g_hash_table_iter_init(&iter, action->headers);
+        while ( g_hash_table_iter_next(&iter, (gpointer *) &header, (gpointer *) &value) )
+            soup_message_headers_replace(msg->request_headers, header, value);
+    }
+    soup_message_set_request(msg, action->content_type, SOUP_MEMORY_TAKE, string, strlen(string));
     soup_session_queue_message(session, msg, _eventd_webhook_message_callback, NULL);
 
     g_object_unref(session);

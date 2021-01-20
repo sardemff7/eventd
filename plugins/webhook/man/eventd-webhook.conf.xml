@@ -115,7 +115,22 @@
                         <para>The string to send as payload.</para>
                     </listitem>
                 </varlistentry>
+
+                <varlistentry>
+                    <term><varname>ContentType=</varname> (defaults to <literal>application/json</literal>)</term>
+                    <listitem>
+                        <para>A <type>string</type></para>
+                        <para>The Content-Type of the payload.</para>
+                    </listitem>
+                </varlistentry>
             </variablelist>
+        </refsect2>
+        <refsect2>
+            <title>Section <varname>[WebHook Headers]</varname></title>
+
+            <para>
+                Each key-value pair in this section will be used as-is to populate the request headers.
+            </para>
         </refsect2>
     </refsect1>
 
