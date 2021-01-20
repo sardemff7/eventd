@@ -13,6 +13,8 @@ if not libnkutils_bindings.found()
     error('libxkbcommon is required for the nd plugin')
 endif
 
+libgwater = subproject('libgwater')
+
 nd_backends_install_dir = join_paths(modules_install_dir, 'nd')
 
 nd_c_args = [
@@ -47,7 +49,7 @@ if is_unix and get_option('nd-wayland')
     librt = c_compiler.find_library('rt', required: false)
     wayland_wall = dependency('wayland-wall', version: '>= @0@'.format(ww_min_version))
     wayland = [
-        subproject('libgwater/wayland').get_variable('libgwater_wayland'),
+        libgwater.get_variable('libgwater_wayland'),
         dependency('wayland-client', version: '>= @0@'.format(wayland_min_version)),
         dependency('wayland-cursor'),
         wayland_wall,
@@ -83,7 +85,7 @@ if is_unix and get_option('nd-xcb')
     nd_c_args += '-DENABLE_ND_XCB'
 
     xcb = [
-        subproject('libgwater/xcb').get_variable('libgwater_xcb'),
+        libgwater.get_variable('libgwater_xcb'),
         dependency('cairo-xcb'),
         dependency('xcb'),
         dependency('xcb-aux'),
@@ -134,7 +136,7 @@ if is_windows
     nd_c_args += '-DENABLE_ND_WIN'
 
     win = [
-        subproject('libgwater/win').get_variable('libgwater_win'),
+        libgwater.get_variable('libgwater_win'),
         dependency('cairo-win32'),
     ]
 
