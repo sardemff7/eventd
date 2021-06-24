@@ -181,7 +181,7 @@
                     <term><varname>Chat=</varname> (defaults to <literal>true</literal>)</term>
                     <listitem>
                         <para>A <type>boolean</type></para>
-                        <para>If <literal>true</literal>, <varname>Recipient=</varname> is used as a chat room name (e.g. some protocols requires to join a chat room before talking in it).</para>
+                        <para>If <literal>true</literal>, <varname>Recipients=</varname> is used as a list of chat rooms names (e.g. some protocols requires to join a chat room before talking in it).</para>
                     </listitem>
                 </varlistentry>
 
