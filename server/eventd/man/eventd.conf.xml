@@ -421,7 +421,7 @@
                             <para>If the named data is present, it must compare as expected with the provided value. All present data must match for this event id to match.</para>
                             <para>Supported operators are <literal>==</literal>, <literal>!=</literal>, <literal>&lt;</literal>, <literal>&lt;=</literal>, <literal>&gt;</literal> and <literal>&gt;=</literal>.</para>
                             <para><replaceable>value</replaceable> is parsed as a GVariant (e.g. strings must be quoted), and the type must match exactly, so be sure to include it if necessary.</para>
-                            <para>You can use the <userinput><replaceable>data</replaceable>[<replaceble>key</replaceble>]</userinput> to match a value in an hash table. The key must then be present and the data must be a hash table, as it is considered part of the type check.</para>
+                            <para>You can use the <userinput><replaceable>data</replaceable>[<replaceable>key</replaceable>]</userinput> to match a value in an hash table. The key must then be present and the data must be a hash table, as it is considered part of the type check.</para>
                         </listitem>
                     </varlistentry>
 
