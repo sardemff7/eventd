@@ -33,6 +33,7 @@
 #include "io.h"
 
 struct _EventdPluginContext {
+    EventdPluginCoreContext *core;
     GHashTable *accounts;
     GSList *actions;
     gboolean started;
@@ -199,6 +200,10 @@ _eventd_im_signed_on_callback(PurpleAccount *ac, EventdPluginContext *context)
 {
     EventdImAccount *account = ac->ui_data;
 
+    EventdEvent *event = eventd_event_new("eventd-im", "signed-on");
+    eventd_event_add_data_string(event, g_strdup("account"), g_strdup(account->name));
+    eventd_plugin_core_push_event(context->core, event);
+
     evhelpers_reconnect_reset(account->reconnect);
 
     GHashTableIter iter;
@@ -228,6 +233,11 @@ _eventd_im_signed_off_callback(PurpleAccount *ac, EventdPluginContext *context)
         if ( ! evhelpers_reconnect_try(account->reconnect) )
             g_warning("Too many reconnect tries for account %s", account->name);
     }
+
+    EventdEvent *event = eventd_event_new("eventd-im", "signed-off");
+    eventd_event_add_data_string(event, g_strdup("account"), g_strdup(account->name));
+    eventd_event_add_data(event, g_strdup("error"), g_variant_new_boolean(err != NULL));
+    eventd_plugin_core_push_event(context->core, event);
 }
 
 static void
@@ -262,6 +272,11 @@ _eventd_im_conv_joined(PurpleConversation *_conv, EventdPluginContext *context)
     conv->state = EVENTD_IM_CONV_STATE_READY;
     _eventd_im_conv_flush(conv);
 
+    EventdEvent *event = eventd_event_new("eventd-im", "conv-joined");
+    eventd_event_add_data_string(event, g_strdup("account"), g_strdup(account->name));
+    eventd_event_add_data_string(event, g_strdup("conv"), g_strdup(conv->name));
+    eventd_plugin_core_push_event(context->core, event);
+
     if ( account->leave_timeout < 0 )
         return;
 
@@ -281,6 +296,11 @@ _eventd_im_conv_left(PurpleConversation *_conv, EventdPluginContext *context)
     g_return_if_fail(conv != NULL);
 
     _eventd_im_conv_reset(conv);
+
+    EventdEvent *event = eventd_event_new("eventd-im", "conv-left");
+    eventd_event_add_data_string(event, g_strdup("account"), g_strdup(account->name));
+    eventd_event_add_data_string(event, g_strdup("conv"), g_strdup(conv->name));
+    eventd_plugin_core_push_event(context->core, event);
 }
 
 /*
@@ -328,6 +348,7 @@ _eventd_im_init(EventdPluginCoreContext *core)
     EventdPluginContext *context;
 
     context = g_new0(EventdPluginContext, 1);
+    context->core = core;
 
     context->accounts = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_im_account_free);
 

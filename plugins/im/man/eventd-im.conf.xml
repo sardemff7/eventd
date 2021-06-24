@@ -196,5 +196,84 @@
         </refsect2>
     </refsect1>
 
+    <refsect1 id="events">
+        <title>Events</title>
+
+        <para>The <command>im</command> plugin also generates a few events about its connection state.</para>
+        <para>They are in the <command>eventd-im</command> category.</para>
+
+        <refsect2>
+            <title>Common data</title>
+
+            <para>All events from this plugin share the following set of data:</para>
+            <variablelist>
+                <varlistentry>
+                    <term><varname>account</varname></term>
+                    <listitem>
+                        <para>A <type>string</type></para>
+                        <para>The name of the account from which this event originates.</para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+        </refsect2>
+
+        <refsect2>
+            <title>Account connection events</title>
+
+            <refsect3>
+                <title>Event <command>signed-on</command></title>
+                <para>This event is sent when the plugin connected an account successfully.</para>
+            </refsect3>
+
+            <refsect3>
+                <title>Event <command>signed-off</command></title>
+                <para>This event is sent when an account got disconnected.</para>
+
+                <para>In addition to the common data, it has the following one:</para>
+                <variablelist>
+                    <varlistentry>
+                        <term><varname>error</varname></term>
+                        <listitem>
+                            <para>A <type>boolean</type></para>
+                            <para>Whether the account is in an error state or not at the time of the disconnection.</para>
+                        </listitem>
+                    </varlistentry>
+                </variablelist>
+            </refsect3>
+        </refsect2>
+
+        <refsect2>
+            <title>Conversation events</title>
+
+            <refsect3>
+                <title>Common data</title>
+
+                <para>All conversation events share, in addition to the common data, the following set of data:</para>
+                <variablelist>
+                    <varlistentry>
+                        <term><varname>conv</varname></term>
+                        <listitem>
+                            <para>A <type>string</type></para>
+                            <para>The name of the conversation from which this event originates.</para>
+                        </listitem>
+                    </varlistentry>
+                </variablelist>
+            </refsect3>
+
+            <refsect3>
+                <title><command>conv-joined</command></title>
+
+                <para>This event is sent when the plugin joined the conversation.</para>
+            </refsect3>
+
+            <refsect3>
+                <title><command>conv-left</command></title>
+
+                <para>This event is sent when the plugin left the conversation.</para>
+            </refsect3>
+        </refsect2>
+
+    </refsect1>
+
     <xi:include href="common-man.xml" xpointer="see-also" />
 </refentry>
