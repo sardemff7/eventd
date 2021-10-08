@@ -26,7 +26,7 @@
 
 #include <purple.h>
 
-#include "io.h"
+#include "ops.h"
 
 #define PURPLE_GLIB_READ_COND  (G_IO_IN | G_IO_HUP | G_IO_ERR)
 #define PURPLE_GLIB_WRITE_COND (G_IO_OUT | G_IO_HUP | G_IO_ERR | G_IO_NVAL)
@@ -81,4 +81,40 @@ eventd_im_glib_input_add(gint fd, PurpleInputCondition condition, PurpleInputFun
     g_io_channel_unref(channel);
 
     return data->result;
+}
+
+void
+eventd_im_debug_print(PurpleDebugLevel level, const char *category, const char *message)
+{
+    GLogLevelFlags glib_level = G_LOG_LEVEL_DEBUG;
+    switch ( level )
+    {
+    case PURPLE_DEBUG_ALL:
+        g_return_if_reached();
+    case PURPLE_DEBUG_MISC:
+        glib_level = G_LOG_LEVEL_DEBUG;
+    break;
+    case PURPLE_DEBUG_INFO:
+        glib_level = G_LOG_LEVEL_INFO;
+    break;
+    case PURPLE_DEBUG_WARNING:
+        glib_level = G_LOG_LEVEL_WARNING;
+    break;
+    case PURPLE_DEBUG_ERROR:
+        glib_level = G_LOG_LEVEL_CRITICAL;
+    break;
+    case PURPLE_DEBUG_FATAL:
+        glib_level = G_LOG_LEVEL_ERROR;
+    break;
+    }
+
+    gsize l = strlen("purple-") + strlen(category) + 1;
+    gchar *full_category = g_newa(char, l);
+    g_snprintf(full_category, l, "purple-%s", category);
+
+    gsize ml = strlen(message);
+    while ( g_ascii_isspace(message[ml-1]) )
+        --ml;
+
+    g_log_structured(full_category, glib_level, "MESSAGE", "%.*s", (int) ml, message);
 }

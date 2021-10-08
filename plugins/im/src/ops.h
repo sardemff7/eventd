@@ -20,9 +20,10 @@
  *
  */
 
-#ifndef __EVENTD_IM_IO_H__
-#define __EVENTD_IM_IO_H__
+#ifndef __EVENTD_IM_OPS_H__
+#define __EVENTD_IM_OPS_H__
 
 guint eventd_im_glib_input_add(gint fd, PurpleInputCondition condition, PurpleInputFunction function, gpointer user_data);
+void eventd_im_debug_print(PurpleDebugLevel level, const char *category, const char *arg_s);
 
-#endif /* __EVENTD_IM_IO_H__ */
+#endif /* __EVENTD_IM_OPS_H__ */

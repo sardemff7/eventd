@@ -30,7 +30,7 @@
 #include "libeventd-helpers-config.h"
 #include "libeventd-helpers-reconnect.h"
 
-#include "io.h"
+#include "ops.h"
 
 struct _EventdPluginContext {
     EventdPluginCoreContext *core;
@@ -72,7 +72,7 @@ struct _EventdPluginAction {
 };
 
 static PurpleEventLoopUiOps
-_eventd_im_ui_ops = {
+_eventd_im_event_ui_ops = {
     .timeout_add         = g_timeout_add,
     .timeout_remove      = g_source_remove,
     .input_add           = eventd_im_glib_input_add,
@@ -81,6 +81,10 @@ _eventd_im_ui_ops = {
     .timeout_add_seconds = g_timeout_add_seconds,
 };
 
+static PurpleDebugUiOps
+_eventd_im_debug_ui_ops = {
+    .print = eventd_im_debug_print,
+};
 
 static void
 _eventd_im_account_free(gpointer data)
@@ -332,7 +336,8 @@ _eventd_im_init(EventdPluginCoreContext *core)
 
     purple_debug_set_enabled(FALSE);
 
-    purple_eventloop_set_ui_ops(&_eventd_im_ui_ops);
+    purple_eventloop_set_ui_ops(&_eventd_im_event_ui_ops);
+    purple_debug_set_ui_ops(&_eventd_im_debug_ui_ops);
 
     if ( ! purple_core_init(PACKAGE_NAME) )
         return NULL;
