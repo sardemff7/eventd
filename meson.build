@@ -138,7 +138,7 @@ endif
 nk_options = [
     'uuid=true',
     'enum=true',
-    'token=true',
+    'format-string=true',
     'colour=true',
     'xdg-theme=true',
     'bindings=true',

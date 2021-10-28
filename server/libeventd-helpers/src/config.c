@@ -31,7 +31,7 @@
 #include "libeventd-event.h"
 
 #include <nkutils-enum.h>
-#include <nkutils-token.h>
+#include <nkutils-format-string.h>
 #include <nkutils-colour.h>
 
 #include "libeventd-helpers-config.h"
@@ -49,7 +49,7 @@ evhelpers_format_string_new(gchar *string)
     GError *error = NULL;
     FormatString *format_string;
 
-    format_string = nk_token_list_parse(string, '$', &error);
+    format_string = nk_format_string_parse(string, '$', &error);
     if ( format_string != NULL )
         return format_string;
 
@@ -64,7 +64,7 @@ evhelpers_format_string_ref(FormatString *format_string)
 {
     if ( format_string == NULL )
         return NULL;
-    return nk_token_list_ref(format_string);
+    return nk_format_string_ref(format_string);
 }
 
 EVENTD_EXPORT
@@ -73,7 +73,7 @@ evhelpers_format_string_unref(FormatString *format_string)
 {
     if ( format_string == NULL )
         return;
-    nk_token_list_unref(format_string);
+    nk_format_string_unref(format_string);
 }
 
 static gboolean
@@ -316,7 +316,7 @@ evhelpers_config_key_file_get_enum(GKeyFile *config_file, const gchar *group, co
     if ( r != 0 )
         return r;
 
-    if ( ! nk_enum_parse(string, values, size, TRUE, FALSE, value) )
+    if ( ! nk_enum_parse(string, values, size, NK_ENUM_MATCH_FLAGS_IGNORE_CASE, value) )
         r = -1;
 
     g_free(string);
@@ -620,7 +620,7 @@ evhelpers_format_string_get_string(const FormatString *format_string, EventdEven
     };
 
     gchar *ret;
-    ret = nk_token_list_replace(format_string, _evhelpers_token_list_callback, &data);
+    ret = nk_format_string_replace(format_string, _evhelpers_token_list_callback, &data);
     g_free(data.to_free);
 
     return ret;

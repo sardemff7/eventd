@@ -342,7 +342,7 @@ _eventd_fdo_notifications_notify(EventdPluginContext *context, const gchar *send
     for ( ; g_variant_iter_next(hints, "{&sv}", &hint_name, &hint) ; g_variant_unref(hint) )
     {
         guint64 hint_enum_value;
-        if ( ! nk_enum_parse(hint_name, _eventd_fdo_notifications_hint_names, G_N_ELEMENTS(_eventd_fdo_notifications_hint_names), FALSE, FALSE, &hint_enum_value) )
+        if ( ! nk_enum_parse(hint_name, _eventd_fdo_notifications_hint_names, G_N_ELEMENTS(_eventd_fdo_notifications_hint_names), NK_ENUM_MATCH_FLAGS_NONE, &hint_enum_value) )
         {
             eventd_debug("        Found unknown hint '%s'", hint_name);
             continue;
