@@ -93,9 +93,9 @@ EVENTD_EXPORT
 GType
 eventd_plugin_command_status_get_type(void)
 {
-    static volatile gsize g_define_type_id__volatile = 0;
+    static gsize g_define_type_id__static = 0;
 
-    if ( g_once_init_enter(&g_define_type_id__volatile) )
+    if ( g_once_init_enter(&g_define_type_id__static) )
     {
         static const GEnumValue values[] = {
             { EVENTD_PLUGIN_COMMAND_STATUS_OK,            "EVENTD_PLUGIN_COMMAND_STATUS_OK",            "ok" },
@@ -114,10 +114,10 @@ eventd_plugin_command_status_get_type(void)
             { 0, NULL, NULL }
         };
         GType g_define_type_id = g_enum_register_static(g_intern_static_string("EventdPluginCommandStatus"), values);
-        g_once_init_leave(&g_define_type_id__volatile, g_define_type_id);
+        g_once_init_leave(&g_define_type_id__static, g_define_type_id);
     }
 
-    return g_define_type_id__volatile;
+    return g_define_type_id__static;
 }
 
 /**
