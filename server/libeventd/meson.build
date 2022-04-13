@@ -94,4 +94,10 @@ if get_option('gobject-introspection')
         ],
         install: true,
     )
+    if get_option('vapi')
+        gnome.generate_vapi('libeventd',
+            sources: [ libeventd_gir[0] ],
+            install: true,
+        )
+    endif
 endif

@@ -14,6 +14,7 @@ option('webhook', type: 'boolean', value: false, description: 'WebHook sender th
 option('libnotify', type: 'boolean', value: true, description: 'libnotify support (client side)')
 option('libcanberra', type: 'boolean', value: false, description: 'libcanberra support')
 option('gobject-introspection', type: 'boolean', value: false, description: 'GObject Introspection support')
+option('vapi', type: 'boolean', value: false, description: 'VAPI generation (requires GObject Introspection)')
 option('debug-output', type: 'boolean', value: true, description: 'debug output')
 
 option('systemduserunitdir', type: 'string', description: 'Directory for systemd user unit files')

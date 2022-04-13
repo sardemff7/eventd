@@ -47,6 +47,10 @@ foreach h : headers
     endif
 endforeach
 
+if get_option('vapi') and not get_option('gobject-introspection')
+    error('VAPI generation requires GObject Introspection support')
+endif
+
 modules_install_dir = join_paths(get_option('libdir'), meson.project_name(), 'modules', meson.project_version())
 plugins_install_dir = join_paths(get_option('libdir'), meson.project_name(), 'plugins')
 events_install_dir = join_paths(get_option('datadir'), meson.project_name())
