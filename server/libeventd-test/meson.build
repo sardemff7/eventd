@@ -14,7 +14,7 @@ libeventd_test_lib = library('eventd-test', config_h, files(
     c_args: [
         '-DG_LOG_DOMAIN="libeventd-test"',
         '-fvisibility=default',
-        '-DSRC_DIR="@0@"'.format(meson.source_root()),
+        '-DSRC_DIR="@0@"'.format(meson.project_source_root()),
         '-DEVENTDCTL_PATH="@0@"'.format(eventdctl.full_path()),
         '-DEVENTD_PATH="@0@"'.format(eventd.full_path()),
         '-DTEST_PLUGIN_PATH="@0@"'.format(test_plugin_path),

@@ -55,7 +55,7 @@ if is_unix and get_option('nd-wayland')
         wayland_wall,
     ]
     wayland_scanner = find_program('wayland-scanner')
-    ww_protocol_dir = wayland_wall.get_pkgconfig_variable('pkgdatadir')
+    ww_protocol_dir = wayland_wall.get_variable(pkgconfig: 'pkgdatadir')
 
     wayland_scanner_client = generator(wayland_scanner, output: '@BASENAME@-client-protocol.h', arguments: ['client-header', '@INPUT@', '@OUTPUT@'])
     wayland_scanner_server = generator(wayland_scanner, output: '@BASENAME@-server-protocol.h', arguments: ['server-header', '@INPUT@', '@OUTPUT@'])

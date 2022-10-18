@@ -1,6 +1,6 @@
 systemdsystemunit_install_dir = get_option('systemdsystemunitdir')
 if systemdsystemunit_install_dir == ''
-    systemdsystemunit_install_dir = systemd.get_pkgconfig_variable('systemdsystemunitdir')
+    systemdsystemunit_install_dir = systemd.get_variable(pkgconfig: 'systemdsystemunitdir')
 endif
 
 eventd_system_units = []

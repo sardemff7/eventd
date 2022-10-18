@@ -1,6 +1,6 @@
 systemduserunit_install_dir = get_option('systemduserunitdir')
 if systemduserunit_install_dir == ''
-    systemduserunit_install_dir = systemd.get_pkgconfig_variable('systemduserunitdir')
+    systemduserunit_install_dir = systemd.get_variable(pkgconfig: 'systemduserunitdir')
 endif
 eventd_user_units = []
 foreach u : eventd_units

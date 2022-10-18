@@ -27,7 +27,7 @@ endif
 dbussessionservice_install_dir = get_option('dbussessionservicedir')
 if dbussessionservice_install_dir == ''
     dbus = dependency('dbus-1')
-    dbussessionservice_install_dir = dbus.get_pkgconfig_variable('session_bus_services_dir')
+    dbussessionservice_install_dir = dbus.get_variable(pkgconfig: 'session_bus_services_dir')
 endif
 
 configure_file(

@@ -1,6 +1,6 @@
 project('eventd', 'c',
     version: '0.27.0',
-    meson_version: '>=0.49.0',
+    meson_version: '>=0.56.2',
     license: [ 'GPL3+', 'LGPL3+', 'MIT' ],
     default_options: [
         'c_std=gnu11',
@@ -116,8 +116,8 @@ config_ent = configure_file(input: files('src/config.ent.in'), output: 'config.e
 
 add_project_arguments(
     '-fvisibility=hidden',
-    '-I@0@'.format(meson.build_root()),
-    '-I@0@/src'.format(meson.source_root()),
+    '-I@0@'.format(meson.project_build_root()),
+    '-I@0@/src'.format(meson.project_source_root()),
     language: 'c'
 )
 flags = [
@@ -145,7 +145,7 @@ nk_options = [
     'colour=true',
     'xdg-theme=true',
     'bindings=true',
-    'git-work-tree=@0@'.format(meson.source_root()),
+    'git-work-tree=@0@'.format(meson.project_source_root()),
 ]
 nk = subproject('libnkutils', default_options: nk_options)
 nk_subproject_options = nk.get_variable('nk_options')
