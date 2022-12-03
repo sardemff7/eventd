@@ -34,7 +34,6 @@
 #define G_IS_UNIX_CONNECTION(c) (FALSE)
 #define DEFAULT_SOCKET_SCHEME "file://"
 #endif /* ! G_OS_UNIX */
-#include "gio-compat.h"
 
 #include "nkutils-git-version.h"
 
@@ -50,7 +49,6 @@
 #define EVENTC_CONNECTION_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), EVENTC_TYPE_CONNECTION, EventcConnectionPrivate))
 
 EVENTD_EXPORT GType eventc_connection_get_type(void);
-G_DEFINE_TYPE(EventcConnection, eventc_connection, G_TYPE_OBJECT)
 
 
 enum {
@@ -90,6 +88,8 @@ typedef struct {
     GAsyncReadyCallback callback;
     gpointer user_data;
 } EventcConnectionCallbackData;
+
+G_DEFINE_TYPE_WITH_CODE(EventcConnection, eventc_connection, G_TYPE_OBJECT, G_ADD_PRIVATE(EventcConnection))
 
 static void _eventc_connection_close_internal(EventcConnection *self);
 
@@ -322,8 +322,6 @@ eventc_connection_class_init(EventcConnectionClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS(klass);
 
-    g_type_class_add_private(klass, sizeof(EventcConnectionPrivate));
-
     eventc_connection_parent_class = g_type_class_peek_parent(klass);
 
     object_class->finalize = _eventc_connection_finalize;
@@ -365,7 +363,7 @@ eventc_connection_class_init(EventcConnectionClass *klass)
 static void
 eventc_connection_init(EventcConnection *self)
 {
-    self->priv = EVENTC_CONNECTION_GET_PRIVATE(self);
+    self->priv = eventc_connection_get_instance_private(self);
 
     self->priv->protocol = eventd_protocol_new(&_eventc_connection_protocol_callbacks, self, NULL);
     self->priv->cancellable = g_cancellable_new();
@@ -557,6 +555,7 @@ _eventc_connection_tls_add_certificate_error(gchar *s, gsize o, GTlsCertificateF
     break;
     case G_TLS_CERTIFICATE_GENERIC_ERROR:
         return o;
+    case G_TLS_CERTIFICATE_NO_FLAGS:
     case G_TLS_CERTIFICATE_VALIDATE_ALL:
         g_return_val_if_reached(o);
     }

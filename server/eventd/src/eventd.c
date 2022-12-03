@@ -246,7 +246,6 @@ _eventd_core_debug_log_handler(const gchar *log_domain, GLogLevelFlags log_level
     _eventd_core_debug_log_write(user_data, log_level, log_domain, message);
 }
 
-#if GLIB_CHECK_VERSION(2, 50, 0)
 static GLogWriterOutput
 _eventd_core_debug_log_writer(GLogLevelFlags log_level, const GLogField *fields, gsize n_fields, gpointer user_data)
 {
@@ -267,7 +266,6 @@ _eventd_core_debug_log_writer(GLogLevelFlags log_level, const GLogField *fields,
     _eventd_core_debug_log_write(user_data, log_level, log_domain, message);
     return G_LOG_WRITER_HANDLED;
 }
-#endif /* GLIB_CHECK_VERSION(2, 50, 0) */
 #endif /* ! EVENTD_DEBUG */
 
 #ifdef G_OS_UNIX
@@ -340,9 +338,7 @@ main(int argc, char *argv[])
             g_object_unref(debug_log_stream);
 
             g_log_set_default_handler(_eventd_core_debug_log_handler, debug_stream);
-#if GLIB_CHECK_VERSION(2, 50, 0)
             g_log_set_writer_func(_eventd_core_debug_log_writer, debug_stream, NULL);
-#endif /* GLIB_CHECK_VERSION(2, 50, 0) */
         }
         g_object_unref(debug_log);
     }

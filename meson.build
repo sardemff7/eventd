@@ -14,7 +14,7 @@ pkgconfig = import('pkgconfig')
 gnome = import('gnome')
 
 glib_min_major='2'
-glib_min_minor='40'
+glib_min_minor='66'
 glib_min_version='.'.join([glib_min_major, glib_min_minor])
 glib = dependency('glib-2.0', version: '>= @0@'.format(glib_min_version))
 gobject = dependency('gobject-2.0')
