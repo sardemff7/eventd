@@ -77,15 +77,15 @@ struct _EventdCoreContext {
 };
 
 GList *
-eventd_core_get_binds(EventdCoreContext *context, const gchar * const *binds)
+eventd_core_get_binds(EventdCoreContext *context, const gchar *namespace, const gchar * const *binds)
 {
-    return eventd_sockets_get_binds(context->sockets, binds);
+    return eventd_sockets_get_binds(context->sockets, namespace, binds);
 }
 
 GList *
-eventd_core_get_sockets(EventdCoreContext *context, GSocketAddress **binds)
+eventd_core_get_sockets(EventdCoreContext *context, const gchar *namespace, GSocketAddress **binds)
 {
-    return eventd_sockets_get_sockets(context->sockets, binds);
+    return eventd_sockets_get_sockets(context->sockets, namespace, binds);
 }
 
 gboolean
@@ -289,6 +289,7 @@ main(int argc, char *argv[])
     gboolean enable_relay = TRUE;
     gboolean enable_sd_modules = TRUE;
     gchar *config_dir = NULL;
+    gboolean systemd_mode = FALSE;
     gboolean daemonize = FALSE;
     gboolean print_paths = FALSE;
     gboolean print_version = FALSE;
@@ -345,6 +346,7 @@ main(int argc, char *argv[])
 #endif /* EVENTD_DEBUG_OUTPUT */
 
     context = g_new0(EventdCoreContext, 1);
+    context->iface.get_binds = eventd_core_get_binds;
     context->iface.get_sockets = eventd_core_get_sockets;
     context->iface.push_event = eventd_core_push_event;
 
@@ -359,6 +361,9 @@ main(int argc, char *argv[])
 #ifdef G_OS_UNIX
         { "system",               0,   0,                     G_OPTION_ARG_NONE,         &context->system_mode, NULL,                                    NULL },
 #endif /* G_OS_UNIX */
+#ifdef ENABLE_SYSTEMD
+        { "systemd",              0,   0,                     G_OPTION_ARG_NONE,         &systemd_mode,         NULL,                                    NULL },
+#endif /* ENABLE_SYSTEMD */
         { "daemonize",            0,   G_OPTION_FLAG_HIDDEN,  G_OPTION_ARG_NONE,         &daemonize,            NULL,                                    NULL },
         { "paths",                'P', 0,                     G_OPTION_ARG_NONE,         &print_paths,          "Print search paths",                    NULL },
         { "version",              'V', 0,                     G_OPTION_ARG_NONE,         &print_version,        "Print version",                         NULL },
@@ -414,7 +419,7 @@ main(int argc, char *argv[])
         goto end;
     }
 
-    context->sockets = eventd_sockets_new(runtime_dir, take_over_socket);
+    context->sockets = eventd_sockets_new(runtime_dir, take_over_socket, systemd_mode);
 
     context->control = eventd_control_new(context, control_socket);
     if ( context->control == NULL )

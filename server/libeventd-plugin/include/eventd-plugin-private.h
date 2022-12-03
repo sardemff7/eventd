@@ -23,11 +23,13 @@
 
 #include "eventd-plugin.h"
 
-typedef GList *(*EventdPluginCoreGetSocketsFunc)(EventdPluginCoreContext *context, GSocketAddress **binds);
+typedef GList *(*EventdPluginCoreGetBindsFunc)(EventdPluginCoreContext *context, const gchar *namespace, const gchar * const *binds);
+typedef GList *(*EventdPluginCoreGetSocketsFunc)(EventdPluginCoreContext *context, const gchar *namespace, GSocketAddress **binds);
 
 typedef gboolean (*EventdPluginCorePushEventFunc)(EventdPluginCoreContext *context, EventdEvent *event);
 
 typedef struct {
+    EventdPluginCoreGetBindsFunc get_binds;
     EventdPluginCoreGetSocketsFunc get_sockets;
 
     EventdPluginCorePushEventFunc push_event;

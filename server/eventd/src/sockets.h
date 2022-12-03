@@ -23,10 +23,10 @@
 #ifndef __EVENTD_SOCKETS_H__
 #define __EVENTD_SOCKETS_H__
 
-EventdSockets *eventd_sockets_new(const gchar *runtime_dir, gboolean take_over_socket);
+EventdSockets *eventd_sockets_new(const gchar *runtime_dir, gboolean take_over_socket, gboolean systemd_mode);
 void eventd_sockets_free(EventdSockets *sockets);
 
-GList *eventd_sockets_get_binds(EventdSockets *sockets, const gchar * const *binds);
-GList *eventd_sockets_get_sockets(EventdSockets *sockets, GSocketAddress **binds);
+GList *eventd_sockets_get_binds(EventdSockets *sockets, const gchar *namespace, const gchar * const *binds);
+GList *eventd_sockets_get_sockets(EventdSockets *sockets, const gchar *namespace, GSocketAddress **binds);
 
 #endif /* __EVENTD_SOCKETS_H__ */

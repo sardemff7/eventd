@@ -90,7 +90,8 @@ void eventd_plugin_interface_add_event_action_callback(EventdPluginInterface *if
  * eventd core interface
  */
 
-GList *eventd_plugin_core_get_sockets(EventdPluginCoreContext *context, GSocketAddress **binds);
+GList *eventd_plugin_core_get_binds(EventdPluginCoreContext *context, const gchar *namespace, const gchar * const *binds);
+GList *eventd_plugin_core_get_sockets(EventdPluginCoreContext *context, const gchar *namespace, GSocketAddress **binds);
 
 gboolean eventd_plugin_core_push_event(EventdPluginCoreContext *context, EventdEvent *event);
 

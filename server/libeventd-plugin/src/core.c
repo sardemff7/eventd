@@ -26,6 +26,20 @@
 #include "eventd-plugin-private.h"
 
 /**
+ * eventd_plugin_core_get_binds:
+ * @context: an #EventdPluginCoreContext
+ * @binds: (array zero-terminated=1) (element-type utf8) (nullable): list of strings
+ *
+ * Returns: (element-type GSocket) (transfer full): list of sockets for the binds
+ */
+EVENTD_EXPORT
+GList *
+eventd_plugin_core_get_binds(EventdPluginCoreContext *context, const gchar *namespace, const gchar * const *binds)
+{
+    return ((EventdCoreInterface *) context)->get_binds(context, namespace, binds);
+}
+
+/**
  * eventd_plugin_core_get_sockets:
  * @context: an #EventdPluginCoreContext
  * @binds: (array zero-terminated=1) (element-type utf8) (nullable): list of strings
@@ -34,9 +48,9 @@
  */
 EVENTD_EXPORT
 GList *
-eventd_plugin_core_get_sockets(EventdPluginCoreContext *context, GSocketAddress **binds)
+eventd_plugin_core_get_sockets(EventdPluginCoreContext *context, const gchar *namespace, GSocketAddress **binds)
 {
-    return ((EventdCoreInterface *) context)->get_sockets(context, binds);
+    return ((EventdCoreInterface *) context)->get_sockets(context, namespace, binds);
 }
 
 /**

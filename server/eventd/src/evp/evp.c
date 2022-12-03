@@ -71,7 +71,7 @@ eventd_evp_init(EventdCoreContext *core, const gchar * const *binds, GList **use
         binds = _eventd_evp_default_binds;
 
     GList *sockets;
-    sockets = eventd_core_get_binds(self->core, binds);
+    sockets = eventd_core_get_binds(self->core, "evp", binds);
 
     GList *socket_, *next_;
     for ( socket_ = sockets ; socket_ != NULL ; socket_ = next_ )

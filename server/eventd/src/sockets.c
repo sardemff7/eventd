@@ -47,7 +47,8 @@
 struct _EventdSockets {
     const gchar *runtime_dir;
     gboolean take_over_socket;
-    GList *list;
+    gboolean systemd_mode;
+    GHashTable *list;
     GSList *created;
 };
 
@@ -62,34 +63,39 @@ _eventd_sockets_inet_address_equal(GInetSocketAddress *socket_address1, GInetAdd
 }
 
 static gboolean
-_eventd_sockets_add_inet_socket(EventdSockets *sockets, GList **list, GInetAddress *inet_address, guint16 port, gboolean ipv6_bound)
+_eventd_sockets_add_inet_socket(EventdSockets *self, GList **list, const gchar *namespace, GInetAddress *inet_address, guint16 port, gboolean ipv6_bound)
 {
     GSocket *socket = NULL;
     GError *error = NULL;
     GSocketAddress *address = NULL;
-    GList *socket_;
 
     if ( port != 0 )
-    for ( socket_ = sockets->list ; socket_ != NULL ; socket_ = g_list_next(socket_) )
     {
-        GSocketFamily family;
-
-        family = g_socket_get_family(socket_->data);
-        if ( ( family != G_SOCKET_FAMILY_IPV4 ) && ( family != G_SOCKET_FAMILY_IPV6 ) )
-            continue;
-
-        address = g_socket_get_local_address(socket_->data, &error);
-        if ( address == NULL )
+        GList *sockets = g_hash_table_lookup(self->list, namespace);
+        GList *socket_;
+        for ( socket_ = sockets ; socket_ != NULL ; socket_ = g_list_next(socket_) )
         {
-            g_warning("Couldn't get socket local address: %s", error->message);
-            continue;
-        }
+            GSocketFamily family;
 
-        if ( _eventd_sockets_inet_address_equal(G_INET_SOCKET_ADDRESS(address), inet_address, port) )
-        {
-            sockets->list = g_list_remove_link(sockets->list, socket_);
-            *list = g_list_concat(*list, socket_);
-            return TRUE;
+            family = g_socket_get_family(socket_->data);
+            if ( ( family != G_SOCKET_FAMILY_IPV4 ) && ( family != G_SOCKET_FAMILY_IPV6 ) )
+                continue;
+
+            address = g_socket_get_local_address(socket_->data, &error);
+            if ( address == NULL )
+            {
+                g_warning("Couldn't get socket local address: %s", error->message);
+                continue;
+            }
+
+            if ( _eventd_sockets_inet_address_equal(G_INET_SOCKET_ADDRESS(address), inet_address, port) )
+            {
+
+                sockets = g_list_remove_link(sockets, socket_);
+                g_hash_table_replace(self->list, g_strdup(namespace), sockets);
+                *list = g_list_concat(*list, socket_);
+                return TRUE;
+            }
         }
     }
     address = NULL;
@@ -133,20 +139,20 @@ fail:
 }
 
 static GList *
-_eventd_sockets_get_inet_sockets(EventdSockets *sockets, const gchar *address, guint16 port)
+_eventd_sockets_get_inet_sockets(EventdSockets *self, const gchar *namespace, const gchar *address, guint16 port)
 {
     gboolean ret = FALSE;
     GList *list = NULL;
 
     if ( address == NULL )
     {
-        if ( _eventd_sockets_add_inet_socket(sockets, &list, g_inet_address_new_any(G_SOCKET_FAMILY_IPV6), port, FALSE) )
-            ret = _eventd_sockets_add_inet_socket(sockets, &list, g_inet_address_new_any(G_SOCKET_FAMILY_IPV4), port, TRUE);
+        if ( _eventd_sockets_add_inet_socket(self, &list, namespace, g_inet_address_new_any(G_SOCKET_FAMILY_IPV6), port, FALSE) )
+            ret = _eventd_sockets_add_inet_socket(self, &list, namespace, g_inet_address_new_any(G_SOCKET_FAMILY_IPV4), port, TRUE);
     }
     else if ( g_strcmp0(address, "localhost") == 0 )
     {
-        if ( _eventd_sockets_add_inet_socket(sockets, &list, g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV6), port, FALSE) )
-            ret = _eventd_sockets_add_inet_socket(sockets, &list, g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV4), port, TRUE);
+        if ( _eventd_sockets_add_inet_socket(self, &list, namespace, g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV6), port, FALSE) )
+            ret = _eventd_sockets_add_inet_socket(self, &list, namespace, g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV4), port, TRUE);
     }
     else
     {
@@ -168,7 +174,7 @@ _eventd_sockets_get_inet_sockets(EventdSockets *sockets, const gchar *address, g
         ret = TRUE;
         for ( inet_address_ = inet_addresses ; ret && ( inet_address_ != NULL ) ; inet_address_ = g_list_next(inet_address_) )
         {
-            if ( ! _eventd_sockets_add_inet_socket(sockets, &list, g_object_ref(inet_address_->data), port, FALSE) )
+            if ( ! _eventd_sockets_add_inet_socket(self, &list, namespace, g_object_ref(inet_address_->data), port, FALSE) )
                 ret = FALSE;
         }
 
@@ -182,9 +188,9 @@ _eventd_sockets_get_inet_sockets(EventdSockets *sockets, const gchar *address, g
 }
 
 static GList *
-_eventd_sockets_get_inet_socket_file(EventdSockets *sockets, const gchar *file)
+_eventd_sockets_get_inet_socket_file(EventdSockets *self, const gchar *namespace, const gchar *file)
 {
-    if ( g_file_test(file, G_FILE_TEST_EXISTS) && ( ! sockets->take_over_socket ) )
+    if ( g_file_test(file, G_FILE_TEST_EXISTS) && ( ! self->take_over_socket ) )
     {
         g_warning("File to write port exists already");
         return NULL;
@@ -197,7 +203,7 @@ _eventd_sockets_get_inet_socket_file(EventdSockets *sockets, const gchar *file)
     gchar port_str[6];
     GError *error = NULL;
 
-    if ( !_eventd_sockets_add_inet_socket(sockets, &list, g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV6), 0, FALSE) )
+    if ( !_eventd_sockets_add_inet_socket(self, &list, namespace, g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV6), 0, FALSE) )
         return NULL;
     socket = list->data;
 
@@ -213,14 +219,14 @@ _eventd_sockets_get_inet_socket_file(EventdSockets *sockets, const gchar *file)
     g_sprintf(port_str, "%u", port);
 
     if ( g_file_set_contents(file, port_str, -1, &error) )
-        sockets->created = g_slist_prepend(sockets->created, g_strdup(file));
+        self->created = g_slist_prepend(self->created, g_strdup(file));
     else
     {
         g_warning("Couldn't write port to file: %s", error->message);
         goto fail;
     }
 
-    if ( ! _eventd_sockets_add_inet_socket(sockets, &list, g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV4), port, TRUE) )
+    if ( ! _eventd_sockets_add_inet_socket(self, &list, namespace, g_inet_address_new_loopback(G_SOCKET_FAMILY_IPV4), port, TRUE) )
         goto fail;
 
     return list;
@@ -232,17 +238,18 @@ fail:
 
 #ifdef G_OS_UNIX
 static GList *
-_eventd_sockets_get_unix_sockets(EventdSockets *sockets, const gchar *path)
+_eventd_sockets_get_unix_sockets(EventdSockets *self, const gchar *namespace, const gchar *path)
 {
     GSocket *socket = NULL;
     GError *error = NULL;
     GSocketAddress *address = NULL;
-    GList *socket_;
+    GList *sockets, *socket_;
 
     if ( path == NULL )
         goto fail;
 
-    for ( socket_ = sockets->list ; socket_ != NULL ; socket_ = g_list_next(socket_) )
+    sockets = g_hash_table_lookup(self->list, namespace);
+    for ( socket_ = sockets ; socket_ != NULL ; socket_ = g_list_next(socket_) )
     {
         if ( g_socket_get_family(socket_->data) != G_SOCKET_FAMILY_UNIX )
             continue;
@@ -257,14 +264,14 @@ _eventd_sockets_get_unix_sockets(EventdSockets *sockets, const gchar *path)
 
         if ( g_strcmp0(path, g_unix_socket_address_get_path(G_UNIX_SOCKET_ADDRESS(address))) == 0 )
         {
-            sockets->list = g_list_remove_link(sockets->list, socket_);
+            g_hash_table_insert(self->list, g_strdup(namespace), g_list_remove_link(sockets, socket_));
             return socket_;
         }
     }
 
     if ( g_file_test(path, G_FILE_TEST_EXISTS) && ( ! g_file_test(path, G_FILE_TEST_IS_DIR|G_FILE_TEST_IS_REGULAR) ) )
     {
-        if ( sockets->take_over_socket )
+        if ( self->take_over_socket )
             g_unlink(path);
         else
         {
@@ -296,7 +303,7 @@ _eventd_sockets_get_unix_sockets(EventdSockets *sockets, const gchar *path)
         goto fail;
     }
 
-    sockets->created = g_slist_prepend(sockets->created, g_strdup(path));
+    self->created = g_slist_prepend(self->created, g_strdup(path));
     return g_list_prepend(NULL, socket);
 
 fail:
@@ -343,9 +350,21 @@ _eventd_sockets_get_inet_address(const gchar *bind, gchar **address, guint16 *po
 }
 
 GList *
-eventd_sockets_get_binds(EventdSockets *self, const gchar * const *binds)
+eventd_sockets_get_binds(EventdSockets *self, const gchar *namespace, const gchar * const *binds)
 {
     GList *sockets = NULL;
+
+    if ( self->systemd_mode )
+    {
+        gchar *key = NULL;
+        GList *sockets = NULL;
+        g_hash_table_steal_extended(self->list, namespace, (gpointer *) &key, (gpointer *) &sockets);
+        g_free(key);
+        return sockets;
+    }
+
+    if ( binds == NULL )
+        return NULL;
 
     const gchar * const * bind_;
     for ( bind_ = binds ; *bind_ != NULL ; ++bind_ )
@@ -359,8 +378,9 @@ eventd_sockets_get_binds(EventdSockets *self, const gchar * const *binds)
 
         if ( g_strcmp0(bind, "systemd") == 0 )
         {
-            new_sockets = self->list;
-            self->list = NULL;
+            gchar *key = NULL;
+            g_hash_table_steal_extended(self->list, namespace, (gpointer *) &key, (gpointer *) &new_sockets);
+            g_free(key);
         }
         else if ( g_str_has_prefix(bind, "tcp:") )
         {
@@ -372,7 +392,7 @@ eventd_sockets_get_binds(EventdSockets *self, const gchar * const *binds)
             if ( ! _eventd_sockets_get_inet_address(bind+4, &address, &port) )
                 continue;
 
-            new_sockets = _eventd_sockets_get_inet_sockets(self, address, port);
+            new_sockets = _eventd_sockets_get_inet_sockets(self, namespace, address, port);
             g_free(address);
         }
         else if ( g_str_has_prefix(bind, "tcp-file:") )
@@ -380,7 +400,7 @@ eventd_sockets_get_binds(EventdSockets *self, const gchar * const *binds)
             if ( bind[9] == 0 )
                 continue;
 
-            new_sockets = _eventd_sockets_get_inet_socket_file(self, bind+9);
+            new_sockets = _eventd_sockets_get_inet_socket_file(self, namespace, bind+9);
         }
         else if ( g_str_has_prefix(bind, "tcp-file-runtime:") )
         {
@@ -390,7 +410,7 @@ eventd_sockets_get_binds(EventdSockets *self, const gchar * const *binds)
             gchar *path;
 
             path = g_build_filename(self->runtime_dir, bind+17, NULL);
-            new_sockets = _eventd_sockets_get_inet_socket_file(self, path);
+            new_sockets = _eventd_sockets_get_inet_socket_file(self, namespace, path);
             g_free(path);
         }
 #ifdef G_OS_UNIX
@@ -399,7 +419,7 @@ eventd_sockets_get_binds(EventdSockets *self, const gchar * const *binds)
             if ( bind[5] == 0 )
                 continue;
 
-            new_sockets = _eventd_sockets_get_unix_sockets(self, bind+5);
+            new_sockets = _eventd_sockets_get_unix_sockets(self, namespace, bind+5);
         }
         else if ( g_str_has_prefix(bind, "unix-runtime:") )
         {
@@ -409,7 +429,7 @@ eventd_sockets_get_binds(EventdSockets *self, const gchar * const *binds)
             gchar *path;
 
             path = g_build_filename(self->runtime_dir, bind+13, NULL);
-            new_sockets = _eventd_sockets_get_unix_sockets(self, path);
+            new_sockets = _eventd_sockets_get_unix_sockets(self, namespace, path);
             g_free(path);
         }
 #endif /* G_OS_UNIX */
@@ -420,10 +440,22 @@ eventd_sockets_get_binds(EventdSockets *self, const gchar * const *binds)
 }
 
 GList *
-eventd_sockets_get_sockets(EventdSockets *self, GSocketAddress **binds)
+eventd_sockets_get_sockets(EventdSockets *self, const gchar *namespace, GSocketAddress **binds)
 {
     GError *error = NULL;
     GList *list = NULL;
+
+    if ( self->systemd_mode )
+    {
+        gchar *key = NULL;
+        GList *sockets = NULL;
+        g_hash_table_steal_extended(self->list, namespace, (gpointer *) &key, (gpointer *) &sockets);
+        g_free(key);
+        return sockets;
+    }
+
+    if ( binds == NULL )
+        return NULL;
 
     GSocketAddress **bind_;
     for ( bind_ = binds ; bind_ != NULL ; ++bind_ )
@@ -442,7 +474,8 @@ eventd_sockets_get_sockets(EventdSockets *self, GSocketAddress **binds)
             continue;
         }
 
-        GList *socket_ = self->list, *next_;
+        GList *sockets = g_hash_table_lookup(self->list, namespace);
+        GList *socket_ = sockets, *next_;
         while ( socket_ != NULL )
         {
             next_ = g_list_next(socket_);
@@ -470,29 +503,40 @@ eventd_sockets_get_sockets(EventdSockets *self, GSocketAddress **binds)
 
             if ( memcmp(native_bind, native_address, l) == 0 )
             {
+                sockets = g_list_remove_link(sockets, socket_);
                 list = g_list_concat(socket_, list);
-                self->list = g_list_remove_link(self->list, socket_);
             }
         next:
             socket_ = next_;
         }
+        g_hash_table_insert(self->list, g_strdup(namespace), sockets);
     }
 
     return list;
 }
 
-EventdSockets *
-eventd_sockets_new(const gchar *runtime_dir, gboolean take_over_socket)
+static void
+_eventd_sockets_list_free(gpointer data)
 {
-    EventdSockets *sockets;
+    GList *list = data;
+    g_list_free_full(list, g_object_unref);
+}
 
-    sockets = g_new0(EventdSockets, 1);
-    sockets->runtime_dir = runtime_dir;
-    sockets->take_over_socket = take_over_socket;
+EventdSockets *
+eventd_sockets_new(const gchar *runtime_dir, gboolean take_over_socket, gboolean systemd_mode)
+{
+    EventdSockets *self;
+
+    self = g_new0(EventdSockets, 1);
+    self->runtime_dir = runtime_dir;
+    self->take_over_socket = take_over_socket;
+    self->systemd_mode = systemd_mode;
+    self->list = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_sockets_list_free);
 
 #ifdef ENABLE_SYSTEMD
     gint systemd_fds;
-    systemd_fds = sd_listen_fds(TRUE);
+    gchar **systemd_names = NULL;
+    systemd_fds = sd_listen_fds_with_names(TRUE, &systemd_names);
     if ( systemd_fds < 0 )
         g_warning("Failed to acquire systemd sockets: %s", g_strerror(-systemd_fds));
 
@@ -500,6 +544,8 @@ eventd_sockets_new(const gchar *runtime_dir, gboolean take_over_socket)
     gint fd;
     for ( fd = SD_LISTEN_FDS_START ; fd < SD_LISTEN_FDS_START + systemd_fds ; ++fd )
     {
+        gsize i = fd - SD_LISTEN_FDS_START;
+        gchar *name = systemd_names[i];
         gint r;
         r = sd_is_socket(fd, AF_UNSPEC, SOCK_STREAM, 1);
         if ( r < 0 )
@@ -519,11 +565,19 @@ eventd_sockets_new(const gchar *runtime_dir, gboolean take_over_socket)
             g_clear_error(&error);
         }
         else
-            sockets->list = g_list_prepend(sockets->list, socket);
+        {
+            gpointer key;
+            GList *list = NULL;
+            g_hash_table_steal_extended(self->list, name, &key, (gpointer *) &list);
+            list = g_list_prepend(list, socket);
+            g_hash_table_insert(self->list, name, list);
+            systemd_names[i] = NULL;
+        }
     }
+    g_strfreev(systemd_names);
 #endif /* ENABLE_SYSTEMD */
 
-    return sockets;
+    return self;
 }
 
 static void
@@ -535,14 +589,14 @@ _eventd_sockets_created_socket_free(gpointer data)
 }
 
 void
-eventd_sockets_free(EventdSockets *sockets)
+eventd_sockets_free(EventdSockets *self)
 {
-    if ( sockets == NULL )
+    if ( self == NULL )
         return;
 
-    g_list_free_full(sockets->list, g_object_unref);
+    g_hash_table_unref(self->list);
 
-    g_slist_free_full(sockets->created, _eventd_sockets_created_socket_free);
+    g_slist_free_full(self->created, _eventd_sockets_created_socket_free);
 
-    g_free(sockets);
+    g_free(self);
 }

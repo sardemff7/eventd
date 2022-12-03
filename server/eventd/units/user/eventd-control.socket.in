@@ -4,6 +4,7 @@ Description=eventd control socket
 [Socket]
 Service=eventd.service
 SocketMode=0600
+FileDescriptorName=eventd-control
 ListenStream=%t/@PACKAGE_NAME@/private
 
 [Install]

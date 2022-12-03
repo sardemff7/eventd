@@ -5,6 +5,7 @@ Description=eventd sockets
 SocketUser=eventd
 SocketGroup=eventd
 SocketMode=0660
+FileDescriptorName=evp
 ListenStream=/run/eventd/@EVP_UNIX_SOCKET@
 
 [Install]

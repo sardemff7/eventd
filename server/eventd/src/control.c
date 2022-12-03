@@ -239,7 +239,7 @@ eventd_control_new(EventdCoreContext *core, const gchar *control_socket)
     else
         binds[0] = PRIVATE_SOCKET_BIND_PREFIX "-runtime:private";
 
-    sockets = eventd_core_get_binds(core, binds);
+    sockets = eventd_core_get_binds(core, PACKAGE_NAME "-control", binds);
 
     g_free(bind);
 
