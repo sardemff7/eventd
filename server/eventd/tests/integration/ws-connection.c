@@ -43,12 +43,11 @@ main(int argc, char *argv[])
     file = g_build_filename(g_get_user_runtime_dir(), PACKAGE_NAME, EVP_UNIX_SOCKET, NULL);
     if ( g_file_test(file, G_FILE_TEST_IS_REGULAR) && g_file_get_contents(file, &port, &length, NULL) && ( length < 6 ) )
     {
-        gchar uri[21];
-        g_snprintf(uri, sizeof(uri), "ws://localhost:%s", port);
+        gchar uri[22];
+        g_snprintf(uri, sizeof(uri), "ws://localhost:%s/", port);
         r = eventd_tests_run_libeventc(uri);
     }
     g_free(file);
-
 
     if ( ! eventd_tests_env_stop_eventd(env) )
         r = 99;
