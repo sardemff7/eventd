@@ -172,15 +172,49 @@ _eventd_webhook_config_reset(EventdPluginContext *context)
  */
 
 static void
-_eventd_webhook_message_callback(SoupSession *session, SoupMessage *msg, gpointer user_data)
+_eventd_webhook_message_callback(GObject *obj, GAsyncResult *res, gpointer user_data)
 {
-    if ( SOUP_STATUS_IS_SUCCESSFUL(msg->status_code) )
+    GError *error = NULL;
+    GBytes *bytes;
+
+    SoupMessage *msg = soup_session_get_async_result_message(SOUP_SESSION(obj), res);
+    GUri *uri = soup_message_get_uri(msg);
+
+    bytes = soup_session_send_and_read_finish(SOUP_SESSION(obj), res, &error);
+    if ( bytes == NULL )
+    {
+        g_warning("Could not send message to %s://%s%s%s%s: %s",
+            g_uri_get_scheme(uri),
+            g_uri_get_host(uri),
+            g_uri_get_path(uri),
+            g_uri_get_query(uri),
+            g_uri_get_fragment(uri),
+            error->message);
+        g_clear_error(&error);
         return;
+    }
+    g_bytes_unref(bytes);
 
-    SoupURI *uri;
+    SoupStatus status = soup_message_get_status(msg);
+    const gchar *success = "not successful";
+    GLogLevelFlags log_level = G_LOG_LEVEL_WARNING;
+    if ( SOUP_STATUS_IS_SUCCESSFUL(status) )
+    {
+        success = "successful";
+        log_level = G_LOG_LEVEL_INFO;
+    }
 
-    uri = soup_message_get_uri(msg);
-    g_warning("Message to %s://%s%s%s%s is not successful: (%d %s) %s", soup_uri_get_scheme(uri), soup_uri_get_host(uri), soup_uri_get_path(uri), soup_uri_get_query(uri), soup_uri_get_fragment(uri),msg->status_code, soup_status_get_phrase(msg->status_code), msg->reason_phrase);
+    g_log(G_LOG_DOMAIN, log_level, "Message to %s://%s%s%s%s is %s: (%d %s) %s",
+        g_uri_get_scheme(uri),
+        g_uri_get_host(uri),
+        g_uri_get_path(uri),
+        g_uri_get_query(uri),
+        g_uri_get_fragment(uri),
+        success,
+        soup_message_get_status(msg),
+        soup_status_get_phrase(soup_message_get_status(msg)),
+        soup_message_get_reason_phrase(msg)
+    );
 }
 
 static void
@@ -196,18 +230,26 @@ _eventd_webhook_event_action(EventdPluginContext *context, EventdPluginAction *a
 
     session = soup_session_new();
     if ( ! context->no_user_agent )
-        g_object_set(session, SOUP_SESSION_USER_AGENT, PACKAGE_NAME " " NK_PACKAGE_VERSION, NULL);
+        soup_session_set_user_agent(session, PACKAGE_NAME " " NK_PACKAGE_VERSION);
     msg = soup_message_new(SOUP_METHOD_POST, url);
     if ( action->headers != NULL )
     {
+        SoupMessageHeaders *headers;
         GHashTableIter iter;
         const gchar *header, *value;
+        headers = soup_message_get_request_headers(msg);
+        soup_message_headers_clear(headers);
         g_hash_table_iter_init(&iter, action->headers);
         while ( g_hash_table_iter_next(&iter, (gpointer *) &header, (gpointer *) &value) )
-            soup_message_headers_replace(msg->request_headers, header, value);
+            soup_message_headers_append(headers, header, value);
     }
-    soup_message_set_request(msg, action->content_type, SOUP_MEMORY_TAKE, string, strlen(string));
-    soup_session_queue_message(session, msg, _eventd_webhook_message_callback, NULL);
+    gssize size = strlen(string);
+    GInputStream *stream;
+    stream = g_memory_input_stream_new_from_data(string, size, g_free);
+    soup_message_set_request_body(msg, action->content_type, stream, size);
+    g_object_unref(stream);
+    soup_session_send_and_read_async(session, msg, G_PRIORITY_DEFAULT, NULL, _eventd_webhook_message_callback, context);
+    g_object_unref(msg);
 
     g_object_unref(session);
     g_free(url);

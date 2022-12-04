@@ -1,6 +1,6 @@
 # webhook plugin
 
-libsoup = dependency('libsoup-2.4', version: '>= 2.42')
+libsoup = dependency('libsoup-3.0')
 
 shared_library('webhook', config_h, files(
         'src/webhook.c',
