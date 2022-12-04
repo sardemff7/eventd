@@ -39,7 +39,6 @@ struct _EventdWsConnection {
     gpointer data;
     GDestroyNotify disconnect_callback;
     GUri *uri;
-    const gchar *secret;
     EventdProtocol *protocol;
     GCancellable *cancellable;
     GTask *task;
@@ -55,7 +54,7 @@ _eventd_ws_uri_parse(const gchar *uri, EventdWsUri **ws_uri, GError **error)
     GUri *soup_uri;
     GSocketConnectable *address;
 
-    soup_uri = g_uri_parse(uri, G_URI_FLAGS_NONE, error);
+    soup_uri = g_uri_parse(uri, G_URI_FLAGS_HAS_PASSWORD, error);
     address = g_network_address_new(g_uri_get_host(soup_uri), g_uri_get_port(soup_uri));
     *ws_uri = soup_uri;
 
@@ -133,8 +132,6 @@ _eventd_ws_connection_client_new(gpointer data, EventdWsUri *uri, GDestroyNotify
     self->data = data;
     self->disconnect_callback = disconnect_callback;
     self->uri = uri;
-    if ( ( g_uri_get_user(self->uri) == NULL ) || ( *g_uri_get_user(self->uri) == '\0' ) )
-        self->secret = g_uri_get_password(self->uri);
     self->cancellable = cancellable;
     self->protocol = protocol;
     self->session = soup_session_new();
@@ -170,8 +167,6 @@ _eventd_ws_connection_client_connect(EventdWsConnection *self, GAsyncReadyCallba
     headers = soup_message_get_request_headers(msg);
 
     soup_message_headers_replace(headers, "Host", g_uri_get_host(self->uri));
-    if ( self->secret != NULL )
-        soup_message_headers_replace(headers, "Eventd-Secret", self->secret);
 
     gchar *protocols[] = { EVP_SERVICE_NAME, NULL };
     self->task = g_task_new(NULL, self->cancellable, callback, user_data);
