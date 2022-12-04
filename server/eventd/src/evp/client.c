@@ -153,6 +153,7 @@ _eventd_evp_client_read_callback(GObject *obj, GAsyncResult *res, gpointer user_
     return;
 
 error:
+    g_warning("Error reading client message: %s", error->message);
     _eventd_evp_client_send_message(self, eventd_protocol_generate_bye(self->protocol, error->message));
 end:
     g_free(line);
