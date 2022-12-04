@@ -42,8 +42,6 @@ struct _EventdEvpClient {
     EventdProtocol *protocol;
     GCancellable *cancellable;
     GIOStream *connection;
-    gboolean first;
-    EventdWsConnection *ws;
     GDataInputStream *in;
     GDataOutputStream *out;
     EventdEvent *current;
@@ -60,12 +58,6 @@ _eventd_evp_client_send_message(EventdEvpClient *self, gchar *message)
     GError *error = NULL;
 
     eventd_debug("Sending message:\n%s", message);
-
-    if ( self->ws != NULL )
-    {
-        eventd_ws_connection_send_message(self->context->ws, self->ws, message);
-        goto end;
-    }
 
     if ( g_data_output_stream_put_string(self->out, message, NULL, &error) )
         goto end;
@@ -129,10 +121,7 @@ _eventd_evp_client_protocol_bye(EventdProtocol *protocol, const gchar *message, 
 
     eventd_debug("Client connection closed");
 
-    if ( self->ws != NULL )
-        eventd_ws_connection_close(self->context->ws, self->ws);
-    else
-        g_cancellable_cancel(self->cancellable);
+    g_cancellable_cancel(self->cancellable);
 }
 
 static const EventdProtocolCallbacks _eventd_evp_client_protocol_callbacks = {
@@ -155,40 +144,7 @@ _eventd_evp_client_read_callback(GObject *obj, GAsyncResult *res, gpointer user_
             _eventd_evp_client_send_message(self, eventd_protocol_generate_bye(self->protocol, NULL));
         goto end;
     }
-    if ( self->first )
-    {
-        self->first = FALSE;
-        if ( ! g_str_has_prefix(line, "GET ") )
-            goto skip_ws;
-        if ( ! g_str_has_prefix(line, "GET /") )
-            goto end;
-        const gchar *http_ver;
-        if ( g_str_has_suffix(line, " HTTP/1.1\r") )
-            http_ver = "HTTP/1.1";
-        else if ( g_str_has_suffix(line, " HTTP/1.0\r") )
-            http_ver = "HTTP/1.0";
-        else
-            goto end;
 
-        if ( self->context->ws == NULL )
-        {
-            /* The WebSocket module is not loaded, make up some basic HTTP response */
-            _eventd_evp_client_send_message(self, g_strdup_printf("%s 501 Not Implemented\r\n\r\n", http_ver));
-            goto end;
-        }
-
-        self->ws = eventd_ws_connection_server_new(self->context->ws, self, (GDestroyNotify) _eventd_evp_client_disconnect_internal, self->cancellable, self->connection, self->in, self->protocol, self->context->ws_secret, line);
-
-        g_filter_output_stream_set_close_base_stream(G_FILTER_OUTPUT_STREAM(self->out), FALSE);
-        g_object_unref(self->out);
-        self->in = NULL;
-        self->out = NULL;
-
-        g_free(line);
-        return;
-    }
-
-skip_ws:
     if ( ! eventd_protocol_parse(self->protocol, line, &error) )
         goto error;
     g_free(line);
@@ -296,7 +252,6 @@ eventd_evp_client_connection_handler(GSocketService *service, GSocketConnection 
 
     self = g_new0(EventdEvpClient, 1);
     self->context = context;
-    self->first = TRUE;
 
     self->protocol = eventd_protocol_new(&_eventd_evp_client_protocol_callbacks, self, NULL);
     self->subscriptions = g_hash_table_new(g_str_hash, g_str_equal);
@@ -350,9 +305,6 @@ _eventd_evp_client_disconnect_internal(EventdEvpClient *self)
     eventd_evp_client_disconnect(self);
 
     g_hash_table_unref(self->subscriptions);
-
-    if ( self->ws != NULL )
-        eventd_ws_connection_free(self->context->ws, self->ws);
 
     if ( self->in != NULL )
         g_object_unref(self->in);

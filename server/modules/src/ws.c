@@ -38,7 +38,6 @@
 struct _EventdWsConnection {
     gpointer data;
     GDestroyNotify disconnect_callback;
-    gboolean client;
     SoupURI *uri;
     const gchar *secret;
     EventdProtocol *protocol;
@@ -72,7 +71,7 @@ _eventd_ws_uri_is_tls(const EventdWsUri *uri)
 }
 
 static gboolean
-_eventd_ws_connection_write_message(EventdWsConnection *self, gboolean request, GError **error)
+_eventd_ws_connection_write_message(EventdWsConnection *self, GError **error)
 {
     g_return_val_if_fail(error == NULL || *error == NULL, FALSE);
 
@@ -81,25 +80,16 @@ _eventd_ws_connection_write_message(EventdWsConnection *self, gboolean request, 
 
     gsize l = strlen("HTTP/1.1  \r\n") + 1;
     gchar *start_line;
-    if ( request )
-    {
-        gchar *request_uri = soup_uri_to_string(soup_message_get_uri(msg), TRUE);
-        l += strlen(msg->method) + strlen(request_uri);
-        start_line = g_newa(gchar, l);
-        g_snprintf(start_line, l, "%s %s HTTP/1.1\r\n", msg->method, request_uri);
-        g_free(request_uri);
-    }
-    else
-    {
-        l += 3 /* status code */ + strlen(msg->reason_phrase);
-        start_line = g_newa(gchar, l);
-        g_snprintf(start_line, l, "HTTP/1.1 %u %s\r\n", msg->status_code, msg->reason_phrase);
-    }
+    gchar *request_uri = soup_uri_to_string(soup_message_get_uri(msg), TRUE);
+    l += strlen(msg->method) + strlen(request_uri);
+    start_line = g_newa(gchar, l);
+    g_snprintf(start_line, l, "%s %s HTTP/1.1\r\n", msg->method, request_uri);
+    g_free(request_uri);
 
     if ( ! g_output_stream_write_all(out, start_line, l - 1, NULL, NULL, error) )
         return FALSE;
     SoupMessageHeadersIter iter;
-    SoupMessageHeaders *headers = request ? msg->request_headers : msg->response_headers;
+    SoupMessageHeaders *headers = msg->request_headers;
     const gchar *name, *value;
     gboolean write_ok = TRUE;
     soup_message_headers_iter_init(&iter, headers);
@@ -116,7 +106,7 @@ _eventd_ws_connection_write_message(EventdWsConnection *self, gboolean request, 
     if ( write_ok )
     {
         SoupBuffer *buffer;
-        buffer = soup_message_body_flatten(request ? msg->request_body : msg->response_body);
+        buffer = soup_message_body_flatten(msg->request_body);
         write_ok = g_output_stream_write_all(out, buffer->data, buffer->length, NULL, NULL, error);
         soup_buffer_free(buffer);
     }
@@ -180,15 +170,6 @@ _eventd_ws_connection_closed(EventdWsConnection *self, SoupWebsocketConnection *
     self->disconnect_callback(self->data);
 }
 
-static void
-_eventd_ws_connection_set_connection(EventdWsConnection *self, SoupWebsocketConnectionType type)
-{
-    self->connection = soup_websocket_connection_new(self->stream, soup_message_get_uri(self->msg), type, NULL, EVP_SERVICE_NAME);
-    g_signal_connect_swapped(self->connection, "message", G_CALLBACK(_eventd_ws_connection_message), self);
-    g_signal_connect_swapped(self->connection, "error", G_CALLBACK(_eventd_ws_connection_error), self);
-    g_signal_connect_swapped(self->connection, "closed", G_CALLBACK(_eventd_ws_connection_closed), self);
-}
-
 static gboolean
 _eventd_ws_connection_client_send_handshake(EventdWsConnection *self, GError **error)
 {
@@ -200,7 +181,7 @@ _eventd_ws_connection_client_send_handshake(EventdWsConnection *self, GError **e
     gchar *protocols[] = { EVP_SERVICE_NAME, NULL };
     soup_websocket_client_prepare_handshake(self->msg, NULL, protocols);
 
-    return _eventd_ws_connection_write_message(self, TRUE, error);
+    return _eventd_ws_connection_write_message(self, error);
 }
 
 static gboolean
@@ -231,7 +212,10 @@ _eventd_ws_connection_client_check_handshake(EventdWsConnection *self, GError **
     if ( ! soup_websocket_client_verify_handshake(self->msg, error) )
         return FALSE;
 
-    _eventd_ws_connection_set_connection(self, SOUP_WEBSOCKET_CONNECTION_CLIENT);
+    self->connection = soup_websocket_connection_new(self->stream, soup_message_get_uri(self->msg), SOUP_WEBSOCKET_CONNECTION_CLIENT, NULL, EVP_SERVICE_NAME);
+    g_signal_connect_swapped(self->connection, "message", G_CALLBACK(_eventd_ws_connection_message), self);
+    g_signal_connect_swapped(self->connection, "error", G_CALLBACK(_eventd_ws_connection_error), self);
+    g_signal_connect_swapped(self->connection, "closed", G_CALLBACK(_eventd_ws_connection_closed), self);
     return TRUE;
 }
 
@@ -243,73 +227,6 @@ _eventd_ws_connection_handshake_client(EventdWsConnection *self)
         g_task_return_error(self->task, error);
     else
         g_task_return_boolean(self->task, TRUE);
-}
-
-static void
-_eventd_ws_connection_handshake_server(EventdWsConnection *self)
-{
-    gchar response[255];
-    SoupMessageHeaders *headers;
-    gchar *method;
-    gchar *path;
-    headers = soup_message_headers_new(SOUP_MESSAGE_HEADERS_REQUEST);
-
-    SoupStatus status;
-    status = soup_headers_parse_request(self->header->str, self->header->len, headers, &method, &path, NULL);
-    g_string_truncate(self->header, 0);
-
-    if ( status != SOUP_STATUS_OK )
-        g_warning("Parsing headers error: %s", soup_status_get_phrase(status));
-    else if ( self->secret != NULL )
-    {
-        const gchar *secret;
-        secret = soup_message_headers_get_one(headers, "Eventd-Secret");
-        if ( g_strcmp0(secret, self->secret) != 0 )
-        {
-            g_warning("Secret not matching: %s != %s", secret, self->secret);
-            status = SOUP_STATUS_UNAUTHORIZED;
-        }
-    }
-
-    if ( status != SOUP_STATUS_OK )
-    {
-        g_snprintf(response, sizeof(response), "HTTP/1.1 %u %s\r\n\r\n", status, soup_status_get_phrase(status));
-        g_output_stream_write_all(g_io_stream_get_output_stream(self->stream), response, strlen(response), NULL, NULL, NULL);
-        soup_message_headers_free(headers);
-        g_free(path);
-        g_free(method);
-        goto end;
-    }
-
-    SoupURI *uri;
-    uri = soup_uri_new(NULL);
-    soup_uri_set_host(uri, soup_message_headers_get_one(headers, "Host"));
-    soup_uri_set_path(uri, path);
-    soup_uri_set_scheme(uri, G_IS_TLS_CONNECTION(self->stream) ? "wss" : "ws");
-
-    self->msg = soup_message_new_from_uri(method, uri);
-    soup_uri_free(uri);
-    soup_message_headers_free(self->msg->request_headers);
-    self->msg->request_headers = headers;
-
-    g_free(path);
-    g_free(method);
-
-    gboolean good_handshake, write_ok;
-    gchar *protocols[] = { EVP_SERVICE_NAME, NULL };
-    good_handshake = soup_websocket_server_process_handshake(self->msg, NULL, protocols);
-
-    write_ok = _eventd_ws_connection_write_message(self, FALSE, NULL);
-
-    if ( good_handshake && write_ok )
-        _eventd_ws_connection_set_connection(self, SOUP_WEBSOCKET_CONNECTION_SERVER);
-
-    g_object_unref(self->msg);
-    self->msg = NULL;
-
-    if ( ! write_ok )
-end:
-        self->disconnect_callback(self->data);
 }
 
 static void
@@ -325,10 +242,7 @@ _eventd_ws_connection_read_callback(GObject *obj, GAsyncResult *res, gpointer us
         if  ( ( error != NULL ) && ( ! g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED) ) )
         {
             gchar *response;
-            if ( self->client )
-                response = eventd_protocol_generate_bye(self->protocol, error->message);
-            else
-                response = g_strdup_printf("HTTP/1.1 500 %s\r\n\r\n", error->message);
+            response = eventd_protocol_generate_bye(self->protocol, error->message);
             g_output_stream_write_all(g_io_stream_get_output_stream(self->stream), response, strlen(response), NULL, NULL, NULL);
             g_free(response);
         }
@@ -351,34 +265,9 @@ _eventd_ws_connection_read_callback(GObject *obj, GAsyncResult *res, gpointer us
     {
         g_object_unref(self->in);
         self->in = NULL;
-        if ( self->client )
-            _eventd_ws_connection_handshake_client(self);
-        else
-            _eventd_ws_connection_handshake_server(self);
+        _eventd_ws_connection_handshake_client(self);
     }
     g_free(line);
-}
-
-static EventdWsConnection *
-_eventd_ws_connection_server_new(gpointer data, GDestroyNotify disconnect_callback, GCancellable *cancellable, GIOStream *stream, GDataInputStream *input, EventdProtocol *protocol, const gchar *secret, const gchar *line)
-{
-    EventdWsConnection *self;
-    self = g_new0(EventdWsConnection, 1);
-    self->data = data;
-    self->disconnect_callback = disconnect_callback;
-    self->client = FALSE;
-    self->secret = secret;
-    self->cancellable = cancellable;
-    self->stream = stream;
-    self->in = input;
-    self->protocol = protocol;
-    self->header = g_string_append_c(g_string_new(line), '\n');
-
-    g_data_input_stream_set_newline_type(self->in, G_DATA_STREAM_NEWLINE_TYPE_CR_LF);
-    g_filter_input_stream_set_close_base_stream(G_FILTER_INPUT_STREAM(self->in), FALSE);
-    g_data_input_stream_read_line_async(self->in, G_PRIORITY_DEFAULT, self->cancellable, _eventd_ws_connection_read_callback, self);
-
-    return self;
 }
 
 static EventdWsConnection *
@@ -388,7 +277,6 @@ _eventd_ws_connection_client_new(gpointer data, EventdWsUri *uri, GDestroyNotify
     self = g_new0(EventdWsConnection, 1);
     self->data = data;
     self->disconnect_callback = disconnect_callback;
-    self->client = TRUE;
     self->uri = uri;
     if ( ( soup_uri_get_user(uri) == NULL ) || ( *soup_uri_get_user(uri) == '\0' ) )
         self->secret = soup_uri_get_password(uri);
@@ -516,7 +404,6 @@ eventd_ws_module_get_info(EventdWsModule *module)
     module->uri_parse = _eventd_ws_uri_parse;
     module->uri_is_tls = _eventd_ws_uri_is_tls;
 
-    module->connection_server_new = _eventd_ws_connection_server_new;
     module->connection_client_new = _eventd_ws_connection_client_new;
     module->connection_free = _eventd_ws_connection_free;
 

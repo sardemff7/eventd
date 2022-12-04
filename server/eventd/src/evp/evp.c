@@ -61,8 +61,6 @@ eventd_evp_init(EventdCoreContext *core, const gchar * const *binds, GList **use
 
     self->core = core;
 
-    self->ws = eventd_ws_init();
-
     self->service = g_socket_service_new();
     g_socket_service_stop(self->service);
     g_signal_connect(self->service, "incoming", G_CALLBACK(eventd_evp_client_connection_handler), self);
@@ -98,8 +96,6 @@ eventd_evp_uninit(EventdEvpContext *self)
 {
     g_socket_listener_close(G_SOCKET_LISTENER(self->service));
     g_object_unref(self->service);
-
-    eventd_ws_uninit(self->ws);
 
     g_free(self);
 }
@@ -315,7 +311,6 @@ eventd_evp_global_parse(EventdEvpContext *self, GKeyFile *config_file)
     gchar *cert_file = NULL;
     gchar *key_file = NULL;
     gchar *client_certs_file = NULL;
-    gchar *ws_secret = NULL;
     gchar *publish_name = NULL;
 
     if ( ! g_key_file_has_group(config_file, "Server") )
@@ -327,14 +322,8 @@ eventd_evp_global_parse(EventdEvpContext *self, GKeyFile *config_file)
         goto cleanup;
     if ( evhelpers_config_key_file_get_string(config_file, "Server", "TLSClientCertificates", &client_certs_file) < 0 )
         goto cleanup;
-    if ( evhelpers_config_key_file_get_string(config_file, "Server", "WebSocketSecret", &ws_secret) < 0 )
-        goto cleanup;
     if ( evhelpers_config_key_file_get_string(config_file, "Server", "PublishName", &publish_name) < 0 )
         goto cleanup;
-
-    g_free(self->ws_secret);
-    self->ws_secret = ws_secret;
-    ws_secret = NULL;
 
     if ( cert_file != NULL )
     {
@@ -359,7 +348,6 @@ eventd_evp_global_parse(EventdEvpContext *self, GKeyFile *config_file)
 
 cleanup:
     g_free(publish_name);
-    g_free(ws_secret);
     g_free(client_certs_file);
     g_free(key_file);
     g_free(cert_file);
@@ -371,8 +359,6 @@ eventd_evp_config_reset(EventdEvpContext *self)
     if ( self->certificate != NULL )
         g_object_unref(self->certificate);
     self->certificate = NULL;
-    g_free(self->ws_secret);
-    self->ws_secret = NULL;
     _eventd_evp_cleanup_monitors(self);
 }
 
