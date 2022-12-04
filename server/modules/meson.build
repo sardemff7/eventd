@@ -51,7 +51,7 @@ if avahi.found() and avahi_glib.found()
     )
 endif
 
-gssdp = dependency('gssdp-1.2', required: get_option('ssdp'))
+gssdp = dependency('gssdp-1.6', required: get_option('ssdp'))
 if gssdp.found()
     docbook_conditions += 'enable_ssdp'
     ssdp = shared_library('ssdp', config_h, files(
