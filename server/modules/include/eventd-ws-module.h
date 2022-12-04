@@ -36,9 +36,9 @@ typedef struct {
     EventdWsConnection *(*connection_client_new)(gpointer data, EventdWsUri *uri, GDestroyNotify disconnect_callback, GCancellable *cancellable, EventdProtocol *protocol);
     void (*connection_free)(EventdWsConnection *connection);
 
-    void (*connection_client_connect)(EventdWsConnection *connection, GIOStream *stream, GAsyncReadyCallback callback, gpointer user_data);
+    void (*connection_client_connect)(EventdWsConnection *connection, GAsyncReadyCallback callback, gpointer user_data);
     gboolean (*connection_client_connect_finish)(EventdWsConnection *connection, GAsyncResult *result, GError **error);
-    gboolean (*connection_client_connect_sync)(EventdWsConnection *connection, GIOStream *stream, GError **error);
+    gboolean (*connection_client_connect_sync)(EventdWsConnection *connection, GError **error);
     gboolean (*connection_client_is_connected)(EventdWsConnection *client);
 
     void (*connection_send_message)(EventdWsConnection *client, const gchar *message);
@@ -77,10 +77,10 @@ eventd_ws_connection_client_new(EventdWsModule *ws, gpointer client, EventdWsUri
 }
 
 static inline void
-eventd_ws_connection_client_connect(EventdWsModule *ws, EventdWsConnection *connection, GIOStream *stream, GAsyncReadyCallback callback, gpointer user_data)
+eventd_ws_connection_client_connect(EventdWsModule *ws, EventdWsConnection *connection, GAsyncReadyCallback callback, gpointer user_data)
 {
     g_return_if_fail(ws != NULL);
-    ws->connection_client_connect(connection, stream, callback, user_data);
+    ws->connection_client_connect(connection, callback, user_data);
 }
 
 static inline gboolean
@@ -91,10 +91,10 @@ eventd_ws_connection_client_connect_finish(EventdWsModule *ws, EventdWsConnectio
 }
 
 static inline gboolean
-eventd_ws_connection_client_connect_sync(EventdWsModule *ws, EventdWsConnection *connection, GIOStream *stream, GError **error)
+eventd_ws_connection_client_connect_sync(EventdWsModule *ws, EventdWsConnection *connection, GError **error)
 {
     g_return_val_if_fail(ws != NULL, FALSE);
-    return ws->connection_client_connect_sync(connection, stream, error);
+    return ws->connection_client_connect_sync(connection, error);
 }
 
 static inline gboolean

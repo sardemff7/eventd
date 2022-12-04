@@ -734,8 +734,6 @@ _eventc_connection_connect_callback(GObject *obj, GAsyncResult *res, gpointer us
     self->priv->connection = g_socket_client_connect_finish(G_SOCKET_CLIENT(obj), res, &_inner_error_);
     if ( ! _eventc_connection_connect_check(self, _inner_error_, &error) )
         g_task_return_error(task, error);
-    else if ( self->priv->ws != NULL )
-        eventd_ws_connection_client_connect(_eventc_connection_ws_module, self->priv->ws, G_IO_STREAM(self->priv->connection), _eventc_connection_connect_websocket_callback, task);
     else if ( ! _eventc_connection_connect_after(self, &error) )
         g_task_return_error(task, error);
     else
@@ -758,6 +756,12 @@ eventc_connection_connect(EventcConnection *self, GAsyncReadyCallback callback, 
     GTask *task;
 
     task = g_task_new(self, self->priv->cancellable, callback, user_data);
+
+    if ( self->priv->ws != NULL )
+    {
+        eventd_ws_connection_client_connect(_eventc_connection_ws_module, self->priv->ws, _eventc_connection_connect_websocket_callback, task);
+        return;
+    }
 
     GError *error = NULL;
 
@@ -815,22 +819,21 @@ eventc_connection_connect_sync(EventcConnection *self, GError **error)
     if ( ! _eventc_connection_expect_disconnected(self, error) )
         return FALSE;
 
-    GSocketClient *client;
-
-    client = _eventc_connection_get_socket_client(self);
-
-    GError *_inner_error_ = NULL;
-    self->priv->connection = g_socket_client_connect(client, self->priv->address, self->priv->cancellable, &_inner_error_);
-    g_object_unref(client);
-
-    if ( ! _eventc_connection_connect_check(self, _inner_error_, error) )
-        return FALSE;
-
-    if ( self->priv->ws != NULL )
+    if ( self->priv->ws == NULL )
     {
-        if ( ! eventd_ws_connection_client_connect_sync(_eventc_connection_ws_module, self->priv->ws, G_IO_STREAM(self->priv->connection), error) )
+        GSocketClient *client;
+
+        client = _eventc_connection_get_socket_client(self);
+
+        GError *_inner_error_ = NULL;
+        self->priv->connection = g_socket_client_connect(client, self->priv->address, self->priv->cancellable, &_inner_error_);
+        g_object_unref(client);
+
+        if ( ! _eventc_connection_connect_check(self, _inner_error_, error) )
             return FALSE;
     }
+    else if ( ! eventd_ws_connection_client_connect_sync(_eventc_connection_ws_module, self->priv->ws, error) )
+        return FALSE;
 
     return _eventc_connection_connect_after(self, error);
 }
@@ -912,7 +915,10 @@ _eventc_connection_close_internal(EventcConnection *self)
     self->priv->error = NULL;
 
     if ( self->priv->ws != NULL )
+    {
+        emit_disconnect = TRUE;
         eventd_ws_connection_cleanup(_eventc_connection_ws_module, self->priv->ws);
+    }
 
     if ( self->priv->out != NULL )
         g_object_unref(self->priv->out);
