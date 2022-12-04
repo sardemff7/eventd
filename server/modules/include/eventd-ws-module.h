@@ -31,7 +31,7 @@ typedef void EventdWsUri;
 
 typedef struct {
     GSocketConnectable *(*uri_parse)(const gchar *uri, EventdWsUri **ws_uri, GError **error);
-    gboolean (*uri_is_tls)(const EventdWsUri *uri);
+    gboolean (*uri_is_tls)(EventdWsUri *uri);
 
     EventdWsConnection *(*connection_client_new)(gpointer data, EventdWsUri *uri, GDestroyNotify disconnect_callback, GCancellable *cancellable, EventdProtocol *protocol);
     void (*connection_free)(EventdWsConnection *connection);
@@ -62,7 +62,7 @@ eventd_ws_uri_parse(EventdWsModule *ws, const gchar *uri, EventdWsUri **ws_uri, 
 }
 
 static inline gboolean
-eventd_ws_uri_is_tls(EventdWsModule *ws, const EventdWsUri *uri)
+eventd_ws_uri_is_tls(EventdWsModule *ws, EventdWsUri *uri)
 {
     g_return_val_if_fail(ws != NULL, FALSE);
     return ws->uri_is_tls(uri);

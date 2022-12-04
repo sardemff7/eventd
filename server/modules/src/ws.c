@@ -66,9 +66,9 @@ _eventd_ws_uri_parse(const gchar *uri, EventdWsUri **ws_uri, GError **error)
 }
 
 static gboolean
-_eventd_ws_uri_is_tls(const EventdWsUri *uri)
+_eventd_ws_uri_is_tls(EventdWsUri *uri)
 {
-    const SoupURI *soup_uri = uri;
+    SoupURI *soup_uri = uri;
     return ( soup_uri->scheme == SOUP_URI_SCHEME_WSS );
 }
 
