@@ -1,6 +1,6 @@
 modules_build_dir = meson.current_build_dir()
 
-libsoup = dependency('libsoup-2.4', version: '>=2.50', required: get_option('websocket'))
+libsoup = dependency('libsoup-3.0', required: get_option('websocket'))
 if libsoup.found()
     docbook_conditions += 'enable_websocket'
     ws = shared_library('ws', config_h, files(

@@ -38,7 +38,7 @@
 struct _EventdWsConnection {
     gpointer data;
     GDestroyNotify disconnect_callback;
-    SoupURI *uri;
+    GUri *uri;
     const gchar *secret;
     EventdProtocol *protocol;
     GCancellable *cancellable;
@@ -52,11 +52,11 @@ _eventd_ws_uri_parse(const gchar *uri, EventdWsUri **ws_uri, GError **error)
 {
     g_return_val_if_fail(error == NULL || *error == NULL, NULL);
 
-    SoupURI *soup_uri;
+    GUri *soup_uri;
     GSocketConnectable *address;
 
-    soup_uri = soup_uri_new(uri);
-    address = g_network_address_new(soup_uri_get_host(soup_uri), soup_uri_get_port(soup_uri));
+    soup_uri = g_uri_parse(uri, G_URI_FLAGS_NONE, error);
+    address = g_network_address_new(g_uri_get_host(soup_uri), g_uri_get_port(soup_uri));
     *ws_uri = soup_uri;
 
     return address;
@@ -65,8 +65,8 @@ _eventd_ws_uri_parse(const gchar *uri, EventdWsUri **ws_uri, GError **error)
 static gboolean
 _eventd_ws_uri_is_tls(EventdWsUri *uri)
 {
-    SoupURI *soup_uri = uri;
-    return ( soup_uri->scheme == SOUP_URI_SCHEME_WSS );
+    GUri *soup_uri = uri;
+    return ( g_strcmp0(g_uri_get_scheme(soup_uri), "wss") == 0 );
 }
 
 static void
@@ -85,7 +85,7 @@ _eventd_ws_connection_message(EventdWsConnection *self, gint type, GBytes *messa
     gchar *data;
     gsize length;
     /* We take over the data */
-    data = (gchar *) g_bytes_get_data(message, &length);
+    data = g_bytes_unref_to_data(g_bytes_ref(message), &length);
     if ( data[length - 1] != '\n' )
     {
         soup_websocket_connection_close(self->connection, SOUP_WEBSOCKET_CLOSE_PROTOCOL_ERROR, "Malformed message: missing ending new line");
@@ -133,8 +133,8 @@ _eventd_ws_connection_client_new(gpointer data, EventdWsUri *uri, GDestroyNotify
     self->data = data;
     self->disconnect_callback = disconnect_callback;
     self->uri = uri;
-    if ( ( soup_uri_get_user(uri) == NULL ) || ( *soup_uri_get_user(uri) == '\0' ) )
-        self->secret = soup_uri_get_password(uri);
+    if ( ( g_uri_get_user(self->uri) == NULL ) || ( *g_uri_get_user(self->uri) == '\0' ) )
+        self->secret = g_uri_get_password(self->uri);
     self->cancellable = cancellable;
     self->protocol = protocol;
     self->session = soup_session_new();
@@ -167,15 +167,15 @@ _eventd_ws_connection_client_connect(EventdWsConnection *self, GAsyncReadyCallba
 {
     SoupMessageHeaders *headers;
     SoupMessage *msg = soup_message_new_from_uri(SOUP_METHOD_GET, self->uri);
-    headers = msg->request_headers;
+    headers = soup_message_get_request_headers(msg);
 
-    soup_message_headers_replace(headers, "Host", soup_uri_get_host(self->uri));
+    soup_message_headers_replace(headers, "Host", g_uri_get_host(self->uri));
     if ( self->secret != NULL )
         soup_message_headers_replace(headers, "Eventd-Secret", self->secret);
 
     gchar *protocols[] = { EVP_SERVICE_NAME, NULL };
     self->task = g_task_new(NULL, self->cancellable, callback, user_data);
-    soup_session_websocket_connect_async(self->session, msg, NULL, protocols, G_PRIORITY_DEFAULT, _eventd_ws_connection_client_connect_callback, self);
+    soup_session_websocket_connect_async(self->session, msg, NULL, protocols, G_PRIORITY_DEFAULT, self->cancellable, _eventd_ws_connection_client_connect_callback, self);
 }
 
 static gboolean
@@ -204,7 +204,7 @@ static void
 _eventd_ws_connection_free(EventdWsConnection *self)
 {
     if ( self->uri != NULL )
-        soup_uri_free(self->uri);
+        g_uri_unref(self->uri);
 
     _eventd_ws_connection_cleanup(self);
 
