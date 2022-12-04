@@ -462,6 +462,8 @@ eventc_connection_new_for_connectable(GSocketConnectable *address)
 static gboolean
 _eventc_connection_is_connected(EventcConnection *self)
 {
+    if ( self->priv->ws != NULL )
+        return eventd_ws_connection_client_is_connected(_eventc_connection_ws_module, self->priv->ws);
     return ( ( self->priv->connection != NULL ) && g_socket_connection_is_connected(self->priv->connection) );
 }
 

@@ -39,6 +39,7 @@ typedef struct {
     void (*connection_client_connect)(EventdWsConnection *connection, GIOStream *stream, GAsyncReadyCallback callback, gpointer user_data);
     gboolean (*connection_client_connect_finish)(EventdWsConnection *connection, GAsyncResult *result, GError **error);
     gboolean (*connection_client_connect_sync)(EventdWsConnection *connection, GIOStream *stream, GError **error);
+    gboolean (*connection_client_is_connected)(EventdWsConnection *client);
 
     void (*connection_send_message)(EventdWsConnection *client, const gchar *message);
     void (*connection_cleanup)(EventdWsConnection *connection);
@@ -94,6 +95,13 @@ eventd_ws_connection_client_connect_sync(EventdWsModule *ws, EventdWsConnection 
 {
     g_return_val_if_fail(ws != NULL, FALSE);
     return ws->connection_client_connect_sync(connection, stream, error);
+}
+
+static inline gboolean
+eventd_ws_connection_client_is_connected(EventdWsModule *ws, EventdWsConnection *connection)
+{
+    g_return_val_if_fail(ws != NULL, FALSE);
+    return ws->connection_client_is_connected(connection);
 }
 
 static inline void

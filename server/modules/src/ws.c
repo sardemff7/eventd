@@ -348,6 +348,12 @@ _eventd_ws_connection_client_connect_sync(EventdWsConnection *self, GIOStream *s
     return _eventd_ws_connection_client_check_handshake(self, error);
 }
 
+static gboolean
+_eventd_ws_connection_client_is_connected(EventdWsConnection *self)
+{
+    return ( self->connection != NULL ) && ( soup_websocket_connection_get_state(self->connection) == SOUP_WEBSOCKET_STATE_OPEN );
+}
+
 static void _eventd_ws_connection_cleanup(EventdWsConnection *self);
 static void
 _eventd_ws_connection_free(EventdWsConnection *self)
@@ -412,6 +418,7 @@ eventd_ws_module_get_info(EventdWsModule *module)
     module->connection_client_connect = _eventd_ws_connection_client_connect;
     module->connection_client_connect_finish = _eventd_ws_connection_client_connect_finish;
     module->connection_client_connect_sync = _eventd_ws_connection_client_connect_sync;
+    module->connection_client_is_connected = _eventd_ws_connection_client_is_connected;
 
     module->connection_send_message = _eventd_ws_connection_send_message;
     module->connection_cleanup = _eventd_ws_connection_cleanup;
