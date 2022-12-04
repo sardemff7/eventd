@@ -26,5 +26,5 @@ ws_connection_test = executable('ws-connection.test', config_h, files(
 test('eventd ws integration test', ws_connection_test,
     suite: [ 'integration', 'eventd', 'ws' ],
     timeout: 9,
-    should_fail: true
+    should_fail: not libsoup.found()
 )

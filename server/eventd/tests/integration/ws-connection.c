@@ -33,18 +33,18 @@ main(int argc, char *argv[])
 {
     int r = 99;
     eventd_tests_env_setup(argv, "ws-connection");
-    EventdTestsEnv *env = eventd_tests_env_new(NULL, NULL, FALSE);
+    EventdTestsEnv *env = eventd_tests_env_new(NULL, "test-plugin,ws", FALSE);
     if ( ! eventd_tests_env_start_eventd(env) )
         goto end;
 
     gchar *file;
     gchar *port;
     gsize length;
-    file = g_build_filename(g_get_user_runtime_dir(), PACKAGE_NAME, EVP_UNIX_SOCKET, NULL);
+    file = g_build_filename(g_get_user_runtime_dir(), PACKAGE_NAME, "evp-ws", NULL);
     if ( g_file_test(file, G_FILE_TEST_IS_REGULAR) && g_file_get_contents(file, &port, &length, NULL) && ( length < 6 ) )
     {
-        gchar uri[22];
-        g_snprintf(uri, sizeof(uri), "ws://localhost:%s/", port);
+        gchar uri[37];
+        g_snprintf(uri, sizeof(uri), "ws://:lampeDeChevet@localhost:%s/", port);
         r = eventd_tests_run_libeventc(uri);
     }
     g_free(file);

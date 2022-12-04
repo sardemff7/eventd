@@ -189,6 +189,7 @@ subdir('server/eventd')
 subdir('plugins/exec')
 subdir('plugins/file')
 subdir('plugins/fdo-notifications')
+subdir('plugins/ws')
 if get_option('notification-daemon')
     subdir('plugins/nd')
 endif

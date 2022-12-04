@@ -1,0 +1,86 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % config SYSTEM "config.ent">
+%config;
+]>
+
+<!--
+  eventd - Small daemon to act on remote or local events
+
+  Copyright © 2011-2017 Quentin "Sardem FF7" Glidic
+
+  This file is part of eventd.
+
+  eventd is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  eventd is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with eventd. If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<refentry xmlns:xi="http://www.w3.org/2001/XInclude"
+    id="eventd-ws.conf">
+    <xi:include href="common-man.xml" xpointer="refentryinfo" />
+
+    <refmeta>
+        <refentrytitle>eventd-ws.conf</refentrytitle>
+        <manvolnum>5</manvolnum>
+    </refmeta>
+
+    <refnamediv>
+        <refname>eventd-ws.conf</refname>
+        <refpurpose>WebSocket plugin configuration</refpurpose>
+    </refnamediv>
+
+    <refsynopsisdiv>
+        <para>
+            Configuration for the WebSocket plugin.
+        </para>
+    </refsynopsisdiv>
+
+    <refsect1 id="description">
+        <title>Description</title>
+
+        <para>
+            The <command>ws</command> plugin implements the EVENT protocol over WebSocket.
+        </para>
+    </refsect1>
+
+    <refsect1 id="global-sections">
+        <title>Global sections</title>
+
+        <refsect2>
+            <title>Section <varname>[Server]</varname></title>
+
+            <para>The <command>ws</command> plugin is using the same TLS certificate/key files as <command>eventd</command>.</para>
+            <para>See <citerefentry><refentrytitle>eventd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>.</para>
+
+            <variablelist>
+                <varlistentry>
+                    <term><varname>ListenWS=</varname></term>
+                    <listitem>
+                        <para>A <type>list of bindings</type></para>
+                        <para>Uses the same values as the <option>--listen</option> option of <command>eventd</command>. See <citerefentry><refentrytitle>eventd</refentrytitle><manvolnum>1</manvolnum></citerefentry>.</para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term><varname>WebSocketSecret=</varname></term>
+                    <listitem>
+                        <para>A <type>string</type></para>
+                        <para>This secret is checked in client WebSocket handshake.</para>
+                        <para>Use <userinput>ws<optional>s</optional>://:<replaceable>secret</replaceable>@<replaceable>host</replaceable>/</userinput> URI (password with no user) to send a secret on client side.</para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+        </refsect2>
+    </refsect1>
+
+    <xi:include href="common-man.xml" xpointer="see-also" />
+</refentry>
