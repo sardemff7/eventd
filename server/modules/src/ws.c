@@ -51,8 +51,10 @@ struct _EventdWsConnection {
 };
 
 static GSocketConnectable *
-_eventd_ws_uri_parse(const gchar *uri, EventdWsUri **ws_uri)
+_eventd_ws_uri_parse(const gchar *uri, EventdWsUri **ws_uri, GError **error)
 {
+    g_return_val_if_fail(error == NULL || *error == NULL, NULL);
+
     SoupURI *soup_uri;
     GSocketConnectable *address;
 

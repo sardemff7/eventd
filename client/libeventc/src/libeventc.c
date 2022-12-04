@@ -155,7 +155,15 @@ _eventc_get_address(const gchar *uri, EventdWsUri **ws_uri, GError **error)
             return NULL;
         }
 
-        return eventd_ws_uri_parse(_eventc_connection_ws_module, uri, ws_uri);
+        GSocketConnectable *address;
+
+        address = eventd_ws_uri_parse(_eventc_connection_ws_module, uri, ws_uri, &_inner_error_);
+        if ( address == NULL )
+        {
+            g_set_error(error, EVENTC_ERROR, EVENTC_ERROR_URI, "Could not parse WebSocket URI '%s': %s", uri, _inner_error_->message);
+            g_error_free(_inner_error_);
+        }
+        return address;
     }
 
     if ( g_str_has_prefix(uri, "evp://") )
