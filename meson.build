@@ -167,6 +167,8 @@ if not libnkutils_uuid.found()
     error('An UUID library is required, please install libuuid or apr-util')
 endif
 
+test_plugin_path = []
+
 subdir('server/libeventd')
 subdir('server/libeventd-helpers')
 subdir('server/libeventd-plugin')
