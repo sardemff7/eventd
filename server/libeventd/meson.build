@@ -87,7 +87,7 @@ if get_option('gobject-introspection')
         namespace: 'Eventd',
         nsversion: '0',
         sources: libeventd_sources + libeventd_headers,
-        includes: [ 'GObject-2.0' ],
+        includes: [ 'GObject-2.0', 'GLib-2.0' ],
         extra_args: [
             '--c-include=libeventd-event.h',
             '--c-include=libeventd-protocol.h',
@@ -97,6 +97,7 @@ if get_option('gobject-introspection')
     if get_option('vapi')
         gnome.generate_vapi('libeventd',
             sources: [ libeventd_gir[0] ],
+            packages: [ 'gobject-2.0', 'glib-2.0' ],
             install: true,
         )
     endif

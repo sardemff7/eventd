@@ -46,7 +46,7 @@ if get_option('gobject-introspection')
         namespace: 'Eventc',
         nsversion: '0',
         sources: libeventc_sources + libeventc_headers,
-        includes: [ libeventd_gir[0], 'GObject-2.0' ],
+        includes: [ libeventd_gir[0], 'Gio-2.0', 'GObject-2.0', 'GLib-2.0' ],
         extra_args: [
             '--c-include=libeventc.h',
         ],
@@ -55,6 +55,7 @@ if get_option('gobject-introspection')
     if get_option('vapi')
         gnome.generate_vapi('libeventc',
             sources: [ libeventc_gir[0] ],
+            packages: [ 'gio-2.0', 'gobject-2.0', 'glib-2.0' ],
             install: true,
         )
     endif
