@@ -55,6 +55,8 @@ _eventd_ws_uri_parse(const gchar *uri, EventdWsUri **ws_uri, GError **error)
     GSocketConnectable *address;
 
     soup_uri = g_uri_parse(uri, G_URI_FLAGS_HAS_PASSWORD, error);
+    if ( soup_uri == NULL )
+        return NULL;
     address = g_network_address_new(g_uri_get_host(soup_uri), g_uri_get_port(soup_uri));
     *ws_uri = soup_uri;
 
