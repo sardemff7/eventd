@@ -26,8 +26,8 @@
 #include "../types.h"
 #include "eventd-sd-module.h"
 
-EventdRelayServer *eventd_relay_server_new(EventdCoreContext *core, guint ping_interval, const gchar *server_identity, gboolean accept_unknown_ca, gchar **forwards, gchar **subscriptions);
-EventdRelayServer *eventd_relay_server_new_for_uri(EventdCoreContext *core, guint ping_interval, const gchar *server_identity, gboolean accept_unknown_ca, gchar **forwards, gchar **subscriptions, const gchar *uri);
+EventdRelayServer *eventd_relay_server_new(EventdCoreContext *core, guint ping_interval, const gchar *server_identity, gboolean accept_unknown_ca, gchar **forwards, gchar **subscriptions, gboolean event_on_connection);
+EventdRelayServer *eventd_relay_server_new_for_uri(EventdCoreContext *core, guint ping_interval, const gchar *server_identity, gboolean accept_unknown_ca, gchar **forwards, gchar **subscriptions, gboolean event_on_connection, const gchar *uri);
 void eventd_relay_server_free(gpointer data);
 
 void eventd_relay_server_set_address(EventdRelayServer *server, GSocketConnectable *address);

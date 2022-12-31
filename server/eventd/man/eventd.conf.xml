@@ -349,6 +349,15 @@
                         <para>If empty (but present), will subscribe to everything.</para>
                     </listitem>
                 </varlistentry>
+
+                <varlistentry>
+                    <term><varname>EventOnConnection=</varname> (defaults to <literal>false</literal>)</term>
+                    <listitem>
+                        <para>A <type>boolean</type></para>
+                        <para>Whether to send an event (category <literal>"eventd"</literal> and name <literal>"connected"</literal>) to the server after the connection.</para>
+                        <para>This event will have two data: <varname>uuid</varname> containing an machine-stable app-specific UUID, and <varname>hostname</varname> containing the hostname.</para>
+                    </listitem>
+                </varlistentry>
             </variablelist>
         </refsect2>
     </refsect1>

@@ -47,6 +47,7 @@ struct _EventdRelayServer {
     gchar **subscriptions;
     gboolean forward_all;
     GHashTable *forwards;
+    gboolean event_on_connection;
     gboolean started;
     EventcConnection *connection;
     LibeventdReconnectHandler *reconnect;
@@ -90,6 +91,15 @@ _eventd_relay_connection_handler(GObject *obj, GAsyncResult *res, gpointer user_
         evhelpers_reconnect_try(server->reconnect);
     }
     g_clear_error(&error);
+
+    if ( server->event_on_connection )
+    {
+        EventdEvent *event = eventd_event_new("eventd", "connected");
+        eventd_event_add_data_string(event, g_strdup("uuid"), g_strdup(eventd_core_get_uuid(server->core)));
+        eventd_event_add_data_string(event, g_strdup("hostname"), g_strdup(g_get_host_name()));
+        eventc_connection_send_event(server->connection, event, NULL);
+        eventd_event_unref(event);
+    }
 }
 
 static void
@@ -115,7 +125,7 @@ _eventd_relay_server_setup_connection(EventdRelayServer *server)
 }
 
 EventdRelayServer *
-eventd_relay_server_new(EventdCoreContext *core, guint ping_interval, const gchar *server_identity, gboolean accept_unknown_ca, gchar **forwards, gchar **subscriptions)
+eventd_relay_server_new(EventdCoreContext *core, guint ping_interval, const gchar *server_identity, gboolean accept_unknown_ca, gchar **forwards, gchar **subscriptions, gboolean event_on_connection)
 {
     EventdRelayServer *server;
 
@@ -146,13 +156,15 @@ eventd_relay_server_new(EventdCoreContext *core, guint ping_interval, const gcha
     else
         g_strfreev(subscriptions);
 
+    server->event_on_connection = event_on_connection;
+
     server->reconnect = evhelpers_reconnect_new(5, 10,_eventd_relay_reconnect_callback, server);
 
     return server;
 }
 
 EventdRelayServer *
-eventd_relay_server_new_for_uri(EventdCoreContext *core, guint ping_interval, const gchar *server_identity, gboolean accept_unknown_ca, gchar **forwards, gchar **subscriptions, const gchar *uri)
+eventd_relay_server_new_for_uri(EventdCoreContext *core, guint ping_interval, const gchar *server_identity, gboolean accept_unknown_ca, gchar **forwards, gchar **subscriptions, gboolean event_on_connection, const gchar *uri)
 {
     EventcConnection *connection;
     GError *error = NULL;
@@ -167,7 +179,7 @@ eventd_relay_server_new_for_uri(EventdCoreContext *core, guint ping_interval, co
 
     EventdRelayServer *server;
 
-    server = eventd_relay_server_new(core, ping_interval, server_identity, accept_unknown_ca, forwards, subscriptions);
+    server = eventd_relay_server_new(core, ping_interval, server_identity, accept_unknown_ca, forwards, subscriptions, event_on_connection);
     server->connection = connection;
 
     _eventd_relay_server_setup_connection(server);
