@@ -130,13 +130,13 @@ eventd_actions_replace_actions(EventdActions *self, GList **list)
 }
 
 void
-eventd_actions_trigger(const GList *action_, EventdEvent *event)
+eventd_actions_trigger(EventdCoreContext *core, const GList *action_, EventdEvent *event)
 {
     for ( ; action_ != NULL ; action_ = g_list_next(action_) )
     {
         EventdActionsAction *action = action_->data;
         eventd_plugins_event_action_all(action->actions, event);
-        eventd_actions_trigger(action->subactions, event);
+        eventd_actions_trigger(core, action->subactions, event);
     }
 }
 

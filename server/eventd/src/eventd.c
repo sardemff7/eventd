@@ -104,7 +104,7 @@ eventd_core_push_event(EventdCoreContext *context, EventdEvent *event)
         return FALSE;
 
     eventd_plugins_event_dispatch_all(event);
-    eventd_actions_trigger(actions, event);
+    eventd_actions_trigger(context, actions, event);
 
     return TRUE;
 }

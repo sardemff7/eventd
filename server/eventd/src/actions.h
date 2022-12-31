@@ -24,7 +24,7 @@
 #define __EVENTD_ACTIONS_H__
 
 
-EventdActions *eventd_actions_new();
+EventdActions *eventd_actions_new(void);
 void eventd_actions_free(EventdActions *actions);
 
 void eventd_actions_parse(EventdActions *actions, GKeyFile *file, const gchar *default_id);
@@ -33,6 +33,6 @@ void eventd_actions_reset();
 
 void eventd_actions_replace_actions(EventdActions *self, GList **list);
 
-void eventd_actions_trigger(const GList *actions, EventdEvent *event);
+void eventd_actions_trigger(EventdCoreContext *core, const GList *actions, EventdEvent *event);
 
 #endif /* __EVENTD_ACTIONS_H__ */
