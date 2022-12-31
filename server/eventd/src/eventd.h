@@ -36,6 +36,8 @@ typedef enum {
 GList *eventd_core_get_binds(EventdCoreContext *context, const gchar *namespace, const gchar * const *binds);
 GList *eventd_core_get_sockets(EventdCoreContext *context, const gchar *namespace, GSocketAddress **binds);
 
+const gchar *eventd_core_get_uuid(EventdCoreContext *context);
+
 gboolean eventd_core_push_event(EventdCoreContext *context, EventdEvent *event);
 
 void eventd_core_flags_add(EventdCoreContext *context, GQuark flag);

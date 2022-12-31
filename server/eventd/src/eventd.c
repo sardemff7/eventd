@@ -43,6 +43,7 @@
 #include <systemd/sd-daemon.h>
 #endif /* ENABLE_SYSTEMD */
 
+#include "nkutils-uuid.h"
 #include "nkutils-git-version.h"
 
 #include "eventd-plugin-private.h"
@@ -58,6 +59,8 @@
 
 #include "eventd.h"
 
+#define EVENTD_APP_UUID NK_UUID_MAKE(2c,75,b3,c8,12,59,43,23,b5,de,30,cd,73,c9,48,aa)
+
 #ifdef G_OS_UNIX
 #define GIO_UNIX_OPTION_FLAG 0
 #else /* ! G_OS_UNIX */
@@ -66,6 +69,7 @@
 
 struct _EventdCoreContext {
     EventdCoreInterface iface;
+    NkUuid uuid;
     EventdConfig *config;
     EventdControl *control;
     EventdSockets *sockets;
@@ -86,6 +90,12 @@ GList *
 eventd_core_get_sockets(EventdCoreContext *context, const gchar *namespace, GSocketAddress **binds)
 {
     return eventd_sockets_get_sockets(context->sockets, namespace, binds);
+}
+
+const gchar *
+eventd_core_get_uuid(EventdCoreContext *context)
+{
+    return context->uuid.string;
 }
 
 gboolean
@@ -349,6 +359,9 @@ main(int argc, char *argv[])
     context->iface.get_binds = eventd_core_get_binds;
     context->iface.get_sockets = eventd_core_get_sockets;
     context->iface.push_event = eventd_core_push_event;
+
+    NkUuid eventd_uuid = EVENTD_APP_UUID;
+    nk_uuid_get_machine_app_specific(&context->uuid, eventd_uuid);
 
     GOptionEntry entries[] =
     {
