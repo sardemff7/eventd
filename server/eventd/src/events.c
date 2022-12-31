@@ -32,6 +32,7 @@
 
 #include "types.h"
 
+#include "config_.h"
 #include "actions.h"
 
 #include "events.h"
@@ -279,27 +280,6 @@ _eventd_events_compare_event(gconstpointer a_, gconstpointer b_)
     return 0;
 }
 
-static GQuark *
-_eventd_events_parse_event_flags(gchar **flags, gsize length)
-{
-    GQuark *quarks;
-
-    quarks = g_new0(GQuark, length + 1);
-    quarks[length] = 0;
-
-    gsize i;
-    for ( i = 0 ; i < length ; ++i )
-    {
-        gchar *flag = flags[i];
-        quarks[i] = g_quark_from_string(flag);
-        g_free(flag);
-    }
-
-    g_free(flags);
-
-    return quarks;
-}
-
 static void
 _eventd_events_parse_group(EventdEvents *self, const gchar *group, GKeyFile *config_file)
 {
@@ -523,10 +503,10 @@ _eventd_events_parse_group(EventdEvents *self, const gchar *group, GKeyFile *con
     }
 
     if ( evhelpers_config_key_file_get_string_list(config_file, group, "OnlyIfFlags", &flags, &length) == 0 )
-        event->flags_whitelist = _eventd_events_parse_event_flags(flags, length);
+        event->flags_whitelist = eventd_config_parse_flags_list(flags, length);
 
     if ( evhelpers_config_key_file_get_string_list(config_file, group, "NotIfFlags", &flags, &length) == 0 )
-        event->flags_blacklist = _eventd_events_parse_event_flags(flags, length);
+        event->flags_blacklist = eventd_config_parse_flags_list(flags, length);
 
     gint64 default_importance, importance;
 

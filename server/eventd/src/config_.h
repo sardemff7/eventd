@@ -29,4 +29,6 @@ void eventd_config_free(EventdConfig *config);
 
 gboolean eventd_config_process_event(EventdConfig *self, EventdEvent *event, GQuark *flags, const GList **actions);
 
+GQuark *eventd_config_parse_flags_list(gchar **flags, gsize length);
+
 #endif /* __EVENTD_CONFIG_H__ */

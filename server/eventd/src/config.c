@@ -327,3 +327,24 @@ eventd_config_free(EventdConfig *config)
 
     g_free(config);
 }
+
+GQuark *
+eventd_config_parse_flags_list(gchar **flags, gsize length)
+{
+    GQuark *quarks;
+
+    quarks = g_new0(GQuark, length + 1);
+    quarks[length] = 0;
+
+    gsize i;
+    for ( i = 0 ; i < length ; ++i )
+    {
+        gchar *flag = flags[i];
+        quarks[i] = g_quark_from_string(flag);
+        g_free(flag);
+    }
+
+    g_free(flags);
+
+    return quarks;
+}
