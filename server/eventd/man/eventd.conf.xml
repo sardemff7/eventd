@@ -505,6 +505,33 @@
                 </varlistentry>
             </variablelist>
         </refsect2>
+
+        <refsect2>
+            <title>Section <varname>[Flags]</varname></title>
+
+            <para>
+                This section allows to change the flags of the running <command>eventd</command> as an action.
+                The flags are changed before any plugin actions configured on the same action, use subactions to order the flags changes differently.
+            </para>
+
+            <variablelist>
+                <varlistentry>
+                    <term><varname>Add=</varname></term>
+                    <listitem>
+                        <para>A <type>list of flag names</type></para>
+                        <para>These flags will be added to the current running context.</para>
+                    </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                    <term><varname>Remove=</varname></term>
+                    <listitem>
+                        <para>A <type>list of flag names</type></para>
+                        <para>These flags will be removed from the current running context.</para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+        </refsect2>
     </refsect1>
 
     <xi:include href="common-man.xml" xpointer="see-also" />

@@ -30,6 +30,8 @@
 
 #include "types.h"
 
+#include "eventd.h"
+#include "config_.h"
 #include "plugins.h"
 
 #include "actions.h"
@@ -39,6 +41,12 @@ struct _EventdActions {
 };
 
 typedef struct {
+    GQuark *add;
+    GQuark *remove;
+} EventdActionsFlagsAction;
+
+typedef struct {
+    EventdActionsFlagsAction flags;
     GList *actions; /* EventdPluginsActions */
     GList *subactions; /* EventdActionsAction */
 } EventdActionsAction;
@@ -80,6 +88,16 @@ eventd_actions_parse(EventdActions *self, GKeyFile *file, const gchar *default_i
         id = g_strdup(default_id);
 
     eventd_debug("Parsing action: %s", id);
+
+    if ( g_key_file_has_group(file, "Flags") )
+    {
+        gchar **list;
+        gsize length;
+        if ( evhelpers_config_key_file_get_string_list(file, "Flags", "Add", &list, &length) == 0 )
+            action->flags.add = eventd_config_parse_flags_list(list, length);
+        if ( evhelpers_config_key_file_get_string_list(file, "Flags", "Remove", &list, &length) == 0 )
+            action->flags.remove = eventd_config_parse_flags_list(list, length);
+    }
 
     action->actions = eventd_plugins_event_parse_all(file);
 
@@ -129,12 +147,29 @@ eventd_actions_replace_actions(EventdActions *self, GList **list)
     *list = ret;
 }
 
+static void
+_eventd_actions_trigger_flags(EventdCoreContext *core, EventdActionsFlagsAction *action)
+{
+    GQuark *flag;
+    if ( action->add != NULL )
+    {
+        for ( flag = action->add ; *flag != 0 ; ++flag )
+            eventd_core_flags_add(core, *flag);
+    }
+    if ( action->remove != NULL )
+    {
+        for ( flag = action->remove ; *flag != 0 ; ++flag )
+            eventd_core_flags_remove(core, *flag);
+    }
+}
+
 void
 eventd_actions_trigger(EventdCoreContext *core, const GList *action_, EventdEvent *event)
 {
     for ( ; action_ != NULL ; action_ = g_list_next(action_) )
     {
         EventdActionsAction *action = action_->data;
+        _eventd_actions_trigger_flags(core, &action->flags);
         eventd_plugins_event_action_all(action->actions, event);
         eventd_actions_trigger(core, action->subactions, event);
     }
