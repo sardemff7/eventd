@@ -129,7 +129,6 @@ static gboolean
 _eventd_ws_auth_domain_basic_callback(SoupAuthDomain* domain, SoupServerMessage* msg, const char* username, const char* password, gpointer user_data)
 {
     EventdPluginContext *self = user_data;
-    g_debug("Usarname = %s, Pass = %s / %s", username, password, self->secret);
     if ( ( ( username == NULL ) || ( *username == '\0' ) ) && ( g_strcmp0(password, self->secret) == 0 ) )
         return TRUE;
     return FALSE;
