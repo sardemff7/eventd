@@ -74,13 +74,13 @@ _test_evp_parse_parts_good(gpointer fixture, gconstpointer user_data)
 
     for ( i = 0 ; i < last ; ++i )
     {
-        r = eventd_protocol_parse(data->protocol, BUILDER_EVENT_LINES[i], &error);
+        r = eventd_protocol_parse(data->protocol, BUILDER_EVENT_LINES[i], strlen(BUILDER_EVENT_LINES[i]), &error);
         g_assert_true(r);
         g_assert_no_error(error);
         g_assert_null(data->event);
     }
 
-    r = eventd_protocol_parse(data->protocol, BUILDER_EVENT_LINES[G_N_ELEMENTS(BUILDER_EVENT_LINES) - 1], &error);
+    r = eventd_protocol_parse(data->protocol, BUILDER_EVENT_LINES[G_N_ELEMENTS(BUILDER_EVENT_LINES) - 1], strlen(BUILDER_EVENT_LINES[G_N_ELEMENTS(BUILDER_EVENT_LINES) - 1]), &error);
     g_assert_true(r);
     g_assert_no_error(error);
     g_assert_nonnull(data->event);
@@ -96,13 +96,13 @@ _test_evp_parse_parts_bad(gpointer fixture, gconstpointer user_data)
 
     for ( i = 0 ; i < last ; ++i )
     {
-        r = eventd_protocol_parse(data->protocol, BUILDER_EVENT_LINES[i], &error);
+        r = eventd_protocol_parse(data->protocol, BUILDER_EVENT_LINES[i], strlen(BUILDER_EVENT_LINES[i]), &error);
         g_assert_true(r);
         g_assert_no_error(error);
         g_assert_null(data->event);
     }
 
-    r = eventd_protocol_parse(data->protocol, BUILDER_EVENT_LINES[0], &error);
+    r = eventd_protocol_parse(data->protocol, BUILDER_EVENT_LINES[0], strlen(BUILDER_EVENT_LINES[0]), &error);
     g_assert_false(r);
     g_assert_error(error, EVENTD_PROTOCOL_PARSE_ERROR, EVENTD_PROTOCOL_PARSE_ERROR_UNEXPECTED_TOKEN);
     g_assert_null(data->event);

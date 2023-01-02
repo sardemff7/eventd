@@ -115,10 +115,10 @@ _evend_ws_websocket_client_message(EventdWsClient *self, gint type, GBytes *mess
         soup_websocket_connection_close(self->connection, SOUP_WEBSOCKET_CLOSE_UNSUPPORTED_DATA, "Data must be UTF-8 text");
     else
     {
-        gpointer data;
+        gchar *data;
         gsize length;
         data = g_bytes_unref_to_data(g_bytes_ref(message), &length);
-        if ( ! eventd_protocol_parse(self->protocol, data, &error) )
+        if ( ! eventd_protocol_parse(self->protocol, data, length, &error) )
         {
             g_warning("Parse error: %s", error->message);
             soup_websocket_connection_close(self->connection, SOUP_WEBSOCKET_CLOSE_PROTOCOL_ERROR, error->message);

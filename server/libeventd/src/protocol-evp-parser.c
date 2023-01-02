@@ -409,7 +409,8 @@ _eventd_protocol_evp_parse_line(EventdProtocol *self, const gchar *line, GError 
 /**
  * eventd_protocol_parse:
  * @protocol: an #EventdProtocol
- * @buffer: the buffer to parse (NUL-terminated)
+ * @buffer: the buffer to parse
+ * @length: length of @buffer
  * @error: (out) (optional): return location for error or %NULL to ignore
  *
  * Parses @buffer for messages.
@@ -418,22 +419,20 @@ _eventd_protocol_evp_parse_line(EventdProtocol *self, const gchar *line, GError 
  */
 EVENTD_EXPORT
 gboolean
-eventd_protocol_parse(EventdProtocol *self, gchar *buffer, GError **error)
+eventd_protocol_parse(EventdProtocol *self, gchar *buffer, gsize length, GError **error)
 {
     g_return_val_if_fail(self->state != _EVENTD_PROTOCOL_EVP_STATE_SIZE, FALSE);
 
     GError *_inner_error_ = NULL;
 
-    gsize l;
     gchar *sl, *el;
-    l = strlen(buffer);
-    for ( sl = buffer, el = g_utf8_strchr(sl, l, '\n'); ( el != NULL ) && ( _inner_error_ == NULL ) ; sl = el + 1, el = g_utf8_strchr(sl, l - ( sl - buffer ), '\n') )
+    for ( sl = buffer, el = g_utf8_strchr(sl, length, '\n'); ( el != NULL ) && ( _inner_error_ == NULL ) ; sl = el + 1, el = g_utf8_strchr(sl, length - ( sl - buffer ), '\n') )
     {
         *el = '\0';
         _eventd_protocol_evp_parse_line(self, sl, &_inner_error_);
     }
 
-    if ( ( _inner_error_ == NULL ) && ( sl < ( buffer + l ) ) )
+    if ( ( _inner_error_ == NULL ) && ( sl < ( buffer + length ) ) )
         _eventd_protocol_evp_parse_line(self, sl, &_inner_error_);
 
     if ( _inner_error_ == NULL )

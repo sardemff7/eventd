@@ -515,7 +515,7 @@ eventc_light_connection_read(EventcLightConnection *self)
         while ( ( c = g_utf8_strchr(w, e - w, '\n') ) != NULL )
         {
             *c = '\0';
-            if ( ! eventd_protocol_parse(self->protocol, w, &error) )
+            if ( ! eventd_protocol_parse(self->protocol, w, c - w, &error) )
             {
                 g_error_free(error);
                 return -EINVAL;

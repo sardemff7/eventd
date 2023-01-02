@@ -93,7 +93,7 @@ _eventd_ws_connection_message(EventdWsConnection *self, gint type, GBytes *messa
         return;
     }
 
-    if ( ! eventd_protocol_parse(self->protocol, data, &error) )
+    if ( ! eventd_protocol_parse(self->protocol, data, length, &error) )
     {
         g_warning("Parse error: %s", error->message);
         soup_websocket_connection_close(self->connection, SOUP_WEBSOCKET_CLOSE_PROTOCOL_ERROR, error->message);

@@ -136,8 +136,9 @@ _eventd_evp_client_read_callback(GObject *obj, GAsyncResult *res, gpointer user_
     EventdEvpClient *self = user_data;
     GError *error = NULL;
     gchar *line;
+    gsize length;
 
-    line = g_data_input_stream_read_line_finish_utf8(G_DATA_INPUT_STREAM(obj), res, NULL, &error);
+    line = g_data_input_stream_read_line_finish_utf8(G_DATA_INPUT_STREAM(obj), res, &length, &error);
     if ( line == NULL )
     {
         if ( ( error != NULL ) && g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED) )
@@ -145,7 +146,7 @@ _eventd_evp_client_read_callback(GObject *obj, GAsyncResult *res, gpointer user_
         goto end;
     }
 
-    if ( ! eventd_protocol_parse(self->protocol, line, &error) )
+    if ( ! eventd_protocol_parse(self->protocol, line, length, &error) )
         goto error;
     g_free(line);
 

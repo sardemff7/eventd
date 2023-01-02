@@ -303,8 +303,9 @@ _eventc_connection_read_callback(GObject *obj, GAsyncResult *res, gpointer user_
     EventcConnection *self = user_data;
     GError *error = NULL;
     gchar *line;
+    gsize length;
 
-    line = g_data_input_stream_read_line_finish(G_DATA_INPUT_STREAM(obj), res, NULL, &error);
+    line = g_data_input_stream_read_line_finish(G_DATA_INPUT_STREAM(obj), res, &length, &error);
     if ( line == NULL )
     {
         if ( ! g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED) )
@@ -315,7 +316,7 @@ _eventc_connection_read_callback(GObject *obj, GAsyncResult *res, gpointer user_
         }
         g_clear_error(&error);
     }
-    else if ( eventd_protocol_parse(self->priv->protocol, line, &self->priv->error) )
+    else if ( eventd_protocol_parse(self->priv->protocol, line, length, &self->priv->error) )
     {
         if ( self->priv->in != NULL )
             g_data_input_stream_read_line_async(self->priv->in, G_PRIORITY_DEFAULT, self->priv->cancellable, _eventc_connection_read_callback, self);
