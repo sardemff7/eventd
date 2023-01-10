@@ -37,11 +37,24 @@ struct _EventdPluginContext {
     GSList *actions;
 };
 
+typedef enum {
+    EVENTD_WEBHOOK_METHOD_POST,
+    EVENTD_WEBHOOK_METHOD_PUT,
+    EVENTD_WEBHOOK_METHOD_GET,
+} EventdWebhookMethod;
+
 struct _EventdPluginAction {
+    EventdWebhookMethod method;
     FormatString *url;
     FormatString *string;
     gchar *content_type;
     GHashTable *headers;
+};
+
+static const gchar * const _eventd_webhook_method[] = {
+    [EVENTD_WEBHOOK_METHOD_POST] = "POST",
+    [EVENTD_WEBHOOK_METHOD_PUT]  = "PUT",
+    [EVENTD_WEBHOOK_METHOD_GET]  = "GET",
 };
 
 static void
@@ -102,6 +115,7 @@ _eventd_webhook_action_parse(EventdPluginContext *context, GKeyFile *config_file
     FormatString *url = NULL;
     FormatString *string = NULL;
     gchar *content_type = NULL;
+    guint64 method;
     GHashTable *headers = NULL;
 
     if ( ! g_key_file_has_group(config_file, "WebHook") )
@@ -126,6 +140,9 @@ _eventd_webhook_action_parse(EventdPluginContext *context, GKeyFile *config_file
     if ( evhelpers_config_key_file_get_string_with_default(config_file, "WebHook", "ContentType", "application/json", &content_type) < 0 )
         goto fail;
 
+    if ( evhelpers_config_key_file_get_enum_with_default(config_file, "WebHook", "Method", _eventd_webhook_method, G_N_ELEMENTS(_eventd_webhook_method), EVENTD_WEBHOOK_METHOD_POST, &method) < 0 )
+        goto fail;
+
     if ( g_key_file_has_group(config_file, "WebHook Headers") )
     {
         gchar **keys, **key;
@@ -143,6 +160,7 @@ _eventd_webhook_action_parse(EventdPluginContext *context, GKeyFile *config_file
 
     EventdPluginAction *action;
     action = g_slice_new(EventdPluginAction);
+    action->method = method;
     action->url = url;
     action->string = string;
     action->content_type = content_type;
@@ -231,7 +249,7 @@ _eventd_webhook_event_action(EventdPluginContext *context, EventdPluginAction *a
     session = soup_session_new();
     if ( ! context->no_user_agent )
         soup_session_set_user_agent(session, PACKAGE_NAME " " NK_PACKAGE_VERSION);
-    msg = soup_message_new(SOUP_METHOD_POST, url);
+    msg = soup_message_new(_eventd_webhook_method[action->method], url);
     if ( action->headers != NULL )
     {
         SoupMessageHeaders *headers;

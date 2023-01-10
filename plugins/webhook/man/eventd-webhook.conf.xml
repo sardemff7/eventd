@@ -123,6 +123,22 @@
                         <para>The Content-Type of the payload.</para>
                     </listitem>
                 </varlistentry>
+
+                <varlistentry>
+                    <term><varname>Method=</varname></term>
+                    <listitem>
+                        <para>
+                            An <type>enumeration of an HTTP method name</type>:
+                            <simplelist type='inline'>
+                                <member><literal>POST</literal></member>
+                                <member><literal>PUT</literal></member>
+                                <member><literal>GET</literal></member>
+                            </simplelist>
+                        </para>
+                        <para>The HTTP method that will be used to query.</para>
+                        <para>Sending is done asynchronously.</para>
+                    </listitem>
+                </varlistentry>
             </variablelist>
         </refsect2>
         <refsect2>
