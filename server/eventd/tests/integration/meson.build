@@ -1,5 +1,5 @@
 evp_connection_test = executable('evp-connection.test', config_h, files(
-        'integration/evp-connection.c',
+        'evp-connection.c',
     ),
     dependencies: [ libeventd_test, libeventc, libeventd, gio, gobject, glib ]
 )
@@ -9,7 +9,7 @@ test('eventd EvP integration test', evp_connection_test,
 )
 
 relay_connection_test = executable('relay-connection.test', config_h, files(
-        'integration/relay-connection.c',
+        'relay-connection.c',
     ),
     dependencies: [ libeventd_test, libeventc, libeventd, gio, gobject, glib ]
 )
@@ -19,7 +19,7 @@ test('eventd relay integration test', relay_connection_test,
 )
 
 ws_connection_test = executable('ws-connection.test', config_h, files(
-        'integration/ws-connection.c',
+        'ws-connection.c',
     ),
     dependencies: [ libeventd_test, libeventc, libeventd, gio, gobject, glib ]
 )

@@ -46,40 +46,7 @@ pkgconfig.generate(libeventd_lib,
     subdirs: 'eventd',
 )
 
-libeventd_event_private = libeventd_lib.extract_objects('src/event-private.c')
-libeventd_event_test = executable('libeventd-event.test', files(
-        'tests/unit/common.h',
-        'tests/unit/event-getters.c',
-        'tests/unit/event-getters.h',
-        'tests/unit/event-setters.c',
-        'tests/unit/event-setters.h',
-        'tests/unit/libeventd-event.c',
-    ),
-    objects: libeventd_event_private,
-    dependencies: [ libnkutils_uuid, libeventd ],
-)
-test('libeventd-event unit tests', libeventd_event_test,
-    suite: [ 'unit', 'libeventd' ],
-    args: [ '--tap' ],
-    protocol: 'tap',
-)
-
-libeventd_protocol_test = executable('libeventd-protocol.test', files(
-        'tests/unit/common.h',
-        'tests/unit/protocol-parser.c',
-        'tests/unit/protocol-parser.h',
-        'tests/unit/protocol-generator.c',
-        'tests/unit/protocol-generator.h',
-        'tests/unit/libeventd-protocol.c',
-    ),
-    objects: libeventd_event_private,
-    dependencies: [ libnkutils_uuid, libeventd ],
-)
-test('libeventd-protocol unit tests', libeventd_protocol_test,
-    suite: [ 'unit', 'libeventd' ],
-    args: [ '--tap' ],
-    protocol: 'tap',
-)
+subdir('tests/unit')
 
 if get_option('gobject-introspection')
     libeventd_gir = gnome.generate_gir(libeventd_lib,

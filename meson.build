@@ -219,8 +219,8 @@ add_test_setup('larger_timeout',
 )
 subdir('plugins/test-plugin')
 subdir('server/libeventd-test')
-subdir('server/eventd/tests')
-subdir('client/libeventc/tests')
+subdir('server/eventd/tests/integration')
+subdir('client/libeventc/tests/integration')
 
 
 xsltproc = [
