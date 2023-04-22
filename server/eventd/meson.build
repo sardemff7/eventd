@@ -56,6 +56,11 @@ eventd = executable('eventd', config_h, files(
     install: true,
 )
 
+eventd_test_dep = declare_dependency(
+    dependencies: eventd_deps,
+    include_directories: [ include_directories('src'), eventdctl_inc ],
+)
+
 
 man_pages += [ [ files('man/eventd.xml'), 'eventd.1' ] ]
 man_pages += [ [ files('man/eventd.conf.xml'), 'eventd.conf.5' ] ]
@@ -74,6 +79,8 @@ pkgconfig.generate(
     ],
     install_dir: join_paths(get_option('datadir'), 'pkgconfig')
 )
+
+subdir('tests/unit')
 
 if get_option('systemd')
     systemd = dependency('systemd')
