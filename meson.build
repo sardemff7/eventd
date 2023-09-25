@@ -139,13 +139,9 @@ else
 endif
 
 nk_options = [
-    'uuid=true',
-    'enum=true',
-    'format-string=true',
-    'colour=true',
-    'xdg-theme=true',
-    'bindings=true',
     'git-work-tree=@0@'.format(meson.project_source_root()),
+    'uuid=true',
+    'bindings=true',
 ]
 nk = subproject('libnkutils', default_options: nk_options)
 nk_subproject_options = nk.get_variable('nk_options')
@@ -162,7 +158,6 @@ libnkutils_bindings = nk.get_variable('libnkutils_bindings')
 nkutils_xsltpaths = nk.get_variable('nkutils_xsltpaths')
 nkutils_manfiles = nk.get_variable('nkutils_manfiles')
 nkutils_mandepends = nk.get_variable('nkutils_mandepends')
-docbook_conditions += nk.get_variable('nkutils_docbook_conditions')
 if not libnkutils_uuid.found()
     error('An UUID library is required, please install libuuid or apr-util')
 endif

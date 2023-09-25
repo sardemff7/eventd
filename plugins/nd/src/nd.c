@@ -230,8 +230,8 @@ _eventd_nd_init(EventdPluginCoreContext *core)
     context->interface.notification_draw = eventd_nd_notification_draw;
 
     context->bindings = nk_bindings_new(-1);
-    nk_bindings_add_binding(context->bindings, 0, "MousePrimary", _eventd_nd_bindings_always_trigger,_eventd_nd_bindings_dismiss_callback, context, NULL, NULL);
-    nk_bindings_add_binding(context->bindings, 0, "MouseSecondary", _eventd_nd_bindings_always_trigger, _eventd_nd_bindings_dismiss_queue_callback, context, NULL, NULL);
+    nk_bindings_add_binding(context->bindings, 0, "MousePrimary", _eventd_nd_bindings_always_trigger,_eventd_nd_bindings_dismiss_callback, context, NULL, NK_BINDINGS_ADD_FLAG_NONE, NULL);
+    nk_bindings_add_binding(context->bindings, 0, "MouseSecondary", _eventd_nd_bindings_always_trigger, _eventd_nd_bindings_dismiss_queue_callback, context, NULL, NK_BINDINGS_ADD_FLAG_NONE, NULL);
 
     if ( ! eventd_nd_backends_load(context->backends, &context->interface, context->bindings) )
     {
@@ -462,7 +462,7 @@ _eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
 
         if ( evhelpers_config_key_file_get_string(config_file, "NotificationBindings", "Dismiss", &string) == 0 )
         {
-            if ( ! nk_bindings_add_binding(context->bindings, 0, string, _eventd_nd_bindings_always_trigger, _eventd_nd_bindings_dismiss_callback, context, NULL, &error) )
+            if ( ! nk_bindings_add_binding(context->bindings, 0, string, _eventd_nd_bindings_always_trigger, _eventd_nd_bindings_dismiss_callback, context, NULL, NK_BINDINGS_ADD_FLAG_NONE, &error) )
             {
                 g_warning("Could not add dismiss binding: %s", error->message);
                 g_clear_error(&error);
@@ -472,7 +472,7 @@ _eventd_nd_global_parse(EventdPluginContext *context, GKeyFile *config_file)
 
         if ( evhelpers_config_key_file_get_string(config_file, "NotificationBindings", "DismissQueue", &string) == 0 )
         {
-            if ( ! nk_bindings_add_binding(context->bindings, 0, string, _eventd_nd_bindings_always_trigger, _eventd_nd_bindings_dismiss_queue_callback, context, NULL, &error) )
+            if ( ! nk_bindings_add_binding(context->bindings, 0, string, _eventd_nd_bindings_always_trigger, _eventd_nd_bindings_dismiss_queue_callback, context, NULL, NK_BINDINGS_ADD_FLAG_NONE, &error) )
             {
                 g_warning("Could not add dismiss queue binding: %s", error->message);
                 g_clear_error(&error);
@@ -575,8 +575,8 @@ _eventd_nd_config_reset(EventdPluginContext *context)
     context->actions = NULL;
 
     nk_bindings_reset_bindings(context->bindings);
-    nk_bindings_add_binding(context->bindings, 0, "MousePrimary", _eventd_nd_bindings_always_trigger, _eventd_nd_bindings_dismiss_callback, context, NULL, NULL);
-    nk_bindings_add_binding(context->bindings, 0, "MouseSecondary", _eventd_nd_bindings_always_trigger, _eventd_nd_bindings_dismiss_queue_callback, context, NULL, NULL);
+    nk_bindings_add_binding(context->bindings, 0, "MousePrimary", _eventd_nd_bindings_always_trigger, _eventd_nd_bindings_dismiss_callback, context, NULL, NK_BINDINGS_ADD_FLAG_NONE, NULL);
+    nk_bindings_add_binding(context->bindings, 0, "MouseSecondary", _eventd_nd_bindings_always_trigger, _eventd_nd_bindings_dismiss_queue_callback, context, NULL, NK_BINDINGS_ADD_FLAG_NONE, NULL);
 
     eventd_nd_style_free(context->style);
     context->style = eventd_nd_style_new(NULL);
