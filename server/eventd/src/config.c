@@ -103,7 +103,7 @@ _eventd_config_read_dir(EventdConfig *config, GHashTable *action_files, GHashTab
             config_file = g_key_file_new();
             if ( ! g_key_file_load_from_file(config_file, config_file_name, G_KEY_FILE_NONE, &error) )
             {
-                g_warning("Can't read the defaults file '%s': %s", config_file_name, error->message);
+                g_warning("Can't read the event file '%s': %s", config_file_name, error->message);
                 g_clear_error(&error);
                 g_key_file_free(config_file);
             }
@@ -115,7 +115,7 @@ _eventd_config_read_dir(EventdConfig *config, GHashTable *action_files, GHashTab
             config_file = g_key_file_new();
             if ( ! g_key_file_load_from_file(config_file, config_file_name, G_KEY_FILE_NONE, &error) )
             {
-                g_warning("Can't read the defaults file '%s': %s", config_file_name, error->message);
+                g_warning("Can't read the action file '%s': %s", config_file_name, error->message);
                 g_clear_error(&error);
                 g_key_file_free(config_file);
             }
