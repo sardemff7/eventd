@@ -342,10 +342,19 @@ gint8
 evhelpers_config_key_file_get_string_list(GKeyFile *config_file, const gchar *group, const gchar *key, gchar ***value, gsize *length)
 {
     GError *error = NULL;
+    gint8 ret;
 
     *value = g_key_file_get_string_list(config_file, group, key, length, &error);
+    ret = _evhelpers_config_key_file_error(&error, group, key);
 
-    return _evhelpers_config_key_file_error(&error, group, key);
+    if ( ret != 0 )
+        return ret;
+
+    gchar **v;
+    for ( v = *value ; *v != NULL ; ++v )
+        g_strstrip(*v);
+
+    return 0;
 }
 
 static gint8
