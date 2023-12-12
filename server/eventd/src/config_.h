@@ -31,4 +31,7 @@ gboolean eventd_config_process_event(EventdConfig *self, EventdEvent *event, GQu
 
 GQuark *eventd_config_parse_flags_list(gchar **flags, gsize length);
 
+gchar *eventd_config_dump_event(EventdConfig *self, const gchar *event_id);
+gchar *eventd_config_dump_action(EventdConfig *self, const gchar *action_id);
+
 #endif /* __EVENTD_CONFIG_H__ */

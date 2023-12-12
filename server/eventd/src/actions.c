@@ -153,6 +153,66 @@ eventd_actions_replace_actions(EventdActions *self, GList **list)
 }
 
 static void
+_eventd_actions_dump_action(GString *dump, EventdActionsAction *action)
+{
+    g_string_append_printf(dump, "Name: %s", action->id);
+
+    GQuark *flag;
+    if ( action->flags.add != NULL )
+    {
+        g_string_append(dump, "\n    Adding flags:");
+        for ( flag = action->flags.add ; *flag != 0 ; ++flag )
+            g_string_append_printf(dump, " %s,", g_quark_to_string(*flag));
+        g_string_truncate(dump, dump->len - 1);
+    }
+    if ( action->flags.remove != NULL )
+    {
+        g_string_append(dump, "\n    Removing flags:");
+        for ( flag = action->flags.remove ; *flag != 0 ; ++flag )
+            g_string_append_printf(dump, " %s,", g_quark_to_string(*flag));
+        g_string_truncate(dump, dump->len - 1);
+    }
+
+    if ( action->actions != NULL )
+        g_string_append(dump, "\n    Has plugin actions");
+
+    if ( action->subactions != NULL )
+    {
+        GList *subaction_;
+        g_string_append(dump, "\n    Subactions:");
+        for ( subaction_ = action->subactions ; subaction_ != NULL ; subaction_ = g_list_next(subaction_) )
+        {
+            EventdActionsAction *subaction = subaction_->data;
+            g_string_append_printf(dump, " %s,", subaction->id);
+        }
+        g_string_truncate(dump, dump->len - 1);
+    }
+
+    g_string_append_c(dump, '\n');
+}
+
+void
+eventd_actions_dump_actions(GString *dump, GList *actions)
+{
+    GList *action_;
+    for ( action_ = actions ; action_ != NULL ; action_ = g_list_next(action_) )
+        _eventd_actions_dump_action(dump, action_->data);
+}
+
+gchar *
+eventd_actions_dump_action(EventdActions *self, const gchar *action_id)
+{
+    EventdActionsAction *action = g_hash_table_lookup(self->actions, action_id);
+    if ( action == NULL )
+        return NULL;
+
+    GString *dump = g_string_sized_new(1000);
+    GList action_ = { .data = action };
+    eventd_actions_dump_actions(dump, &action_);
+    return g_string_free(dump, FALSE);
+}
+
+static void
 _eventd_actions_trigger_flags(EventdCoreContext *core, EventdActionsFlagsAction *action)
 {
     GQuark *flag;

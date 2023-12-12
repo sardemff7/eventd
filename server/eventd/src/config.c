@@ -349,3 +349,15 @@ eventd_config_parse_flags_list(gchar **flags, gsize length)
 
     return quarks;
 }
+
+gchar *
+eventd_config_dump_event(EventdConfig *self, const gchar *event_id)
+{
+    return eventd_events_dump_event(self->events, event_id);
+}
+
+gchar *
+eventd_config_dump_action(EventdConfig *self, const gchar *action_id)
+{
+    return eventd_actions_dump_action(self->actions, action_id);
+}

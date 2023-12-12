@@ -194,6 +194,19 @@ eventd_core_stop(EventdCoreContext *context, EventdControlDelayedStop *delayed_s
     _eventd_core_stop(context);
 }
 
+gchar *
+eventd_core_dump_event(EventdCoreContext *context, const gchar *event_id)
+{
+    return eventd_config_dump_event(context->config, event_id);
+}
+
+gchar *
+eventd_core_dump_action(EventdCoreContext *context, const gchar *action_id)
+{
+    return eventd_config_dump_action(context->config, action_id);
+}
+
+
 #ifdef EVENTD_DEBUG_OUTPUT
 #define PID_MAXLEN 128 + 1 /* \0 */
 static void

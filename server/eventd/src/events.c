@@ -39,6 +39,7 @@
 
 struct _EventdEvents {
     GHashTable *events;
+    GHashTable *events_by_id;
 };
 
 typedef struct {
@@ -272,6 +273,71 @@ eventd_events_process_event(EventdEvents *self, EventdEvent *event, GQuark *flag
     *actions = config_event->actions;
 
     return TRUE;
+}
+
+gchar *
+eventd_events_dump_event(EventdEvents *self, const gchar *event_id)
+{
+    EventdEventsEvent *event = g_hash_table_lookup(self->events_by_id, event_id);
+    if ( event == NULL )
+        return NULL;
+
+    GString *dump = g_string_sized_new(1000);
+
+    g_string_append_printf(dump, "Name: %s\n    Importance: %"G_GINT64_FORMAT, event->id, event->importance);
+
+    if ( event->if_data != NULL )
+    {
+        g_string_append(dump, "\n    If data:");
+        gchar **if_data;
+        for ( if_data = event->if_data ; *if_data != NULL ; ++if_data )
+            g_string_append_printf(dump, " %s,", *if_data);
+        g_string_truncate(dump, dump->len - 1);
+    }
+
+    if ( event->if_data_matches != NULL )
+    {
+        g_string_append(dump, "\n    If data matches:");
+        EventdEventsEventDataMatch *if_data_matches;
+        for ( if_data_matches = event->if_data_matches ; if_data_matches->data != NULL ; ++if_data_matches )
+        {
+            g_string_append_printf(dump, ( if_data_matches->key == NULL ) ? "\n        - %s" : "\n        - %s[%s]", if_data_matches->data, if_data_matches->key);
+            g_string_append_printf(dump, " %c%c ", if_data_matches->accepted[0] < 0 ? '<' : if_data_matches->accepted[0] > 0 ? '>' : '=', if_data_matches->accepted[1] < 0 ? '<' : if_data_matches->accepted[1] > 0 ? '>' : '=');
+            g_variant_print_string(if_data_matches->value, dump, TRUE);
+        }
+    }
+    if ( event->if_data_regexes != NULL )
+    {
+        g_string_append(dump, "\n    If data regex:");
+        EventdEventsEventDataRegex *if_data_regexes;
+        for ( if_data_regexes = event->if_data_regexes ; if_data_regexes->data != NULL ; ++if_data_regexes )
+            g_string_append_printf(dump, "\n        - %s =~ %s", if_data_regexes->data, g_regex_get_pattern(if_data_regexes->regex));
+    }
+
+    GQuark *flag;
+    if ( event->flags_whitelist != NULL )
+    {
+        g_string_append(dump, "\n    If flags:");
+        for ( flag = event->flags_whitelist ; *flag != 0 ; ++flag )
+            g_string_append_printf(dump, " %s,", g_quark_to_string(*flag));
+        g_string_truncate(dump, dump->len - 1);
+    }
+
+    if ( event->flags_blacklist != NULL )
+    {
+        g_string_append(dump, "\n    If not flags:");
+        for ( flag = event->flags_blacklist ; *flag != 0 ; ++flag )
+            g_string_append_printf(dump, " %s,", g_quark_to_string(*flag));
+        g_string_truncate(dump, dump->len - 1);
+    }
+
+    if ( event->actions != NULL )
+    {
+        g_string_append(dump, "\n\nActions:\n\n");
+        eventd_actions_dump_actions(dump, event->actions);
+    }
+
+    return g_string_free(dump, FALSE);
 }
 
 static gint
@@ -533,6 +599,8 @@ _eventd_events_parse_group(EventdEvents *self, const gchar *group, GKeyFile *con
     g_hash_table_insert(self->events, name, list);
     name = NULL;
 
+    g_hash_table_insert(self->events_by_id, event->id, event);
+
 fail:
     g_free(name);
 }
@@ -577,6 +645,7 @@ void
 eventd_events_reset(EventdEvents *self)
 {
     g_hash_table_remove_all(self->events);
+    g_hash_table_remove_all(self->events_by_id);
 }
 
 EventdEvents *
@@ -587,6 +656,7 @@ eventd_events_new(void)
     self = g_new0(EventdEvents, 1);
 
     self->events = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_events_event_list_free);
+    self->events_by_id = g_hash_table_new(g_str_hash, g_str_equal);
 
     return self;
 }
@@ -594,6 +664,7 @@ eventd_events_new(void)
 void
 eventd_events_free(EventdEvents *self)
 {
+    g_hash_table_unref(self->events_by_id);
     g_hash_table_unref(self->events);
 
     g_free(self);

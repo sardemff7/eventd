@@ -33,6 +33,9 @@ void eventd_actions_reset();
 
 void eventd_actions_replace_actions(EventdActions *self, GList **list);
 
+void eventd_actions_dump_actions(GString *dump, GList *actions);
+gchar *eventd_actions_dump_action(EventdActions *self, const gchar *action_id);
+
 void eventd_actions_trigger(EventdCoreContext *core, const GList *actions, EventdEvent *event);
 
 #endif /* __EVENTD_ACTIONS_H__ */

@@ -138,6 +138,28 @@
             </varlistentry>
 
             <varlistentry>
+                <term><command>dump <command><replaceable>sub-command</replaceable></command></command></term>
+                <listitem>
+                    <para>Dumps eventd configuration (see <citerefentry><refentrytitle>eventd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</para>
+                    <variablelist>
+                        <varlistentry>
+                            <term><command>event <parameter><replaceable>event configuration id</replaceable></parameter></command></term>
+                            <listitem>
+                                <para>Shows the configuration for <replaceable>event configuration id</replaceable>.</para>
+                            </listitem>
+                        </varlistentry>
+
+                        <varlistentry>
+                            <term><command>action <parameter><replaceable>action configuration name/id</replaceable></parameter></command></term>
+                            <listitem>
+                                <para>Shows the configuration for <replaceable>action configuration name/id</replaceable>.</para>
+                            </listitem>
+                        </varlistentry>
+                    </variablelist>
+                </listitem>
+            </varlistentry>
+
+            <varlistentry>
                 <term><command>flags <command><replaceable>sub-command</replaceable></command></command></term>
                 <listitem>
                     <para>Control the eventd flags (see <citerefentry><refentrytitle>eventd.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>)</para>

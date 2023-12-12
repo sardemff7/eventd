@@ -135,6 +135,48 @@ _eventd_service_private_connection_handler(GSocketService *socket_service, GSock
         eventd_core_config_reload(control->core);
     else if ( g_strcmp0(argv[0], "version") == 0 )
         status = g_strdup(PACKAGE_NAME " " NK_PACKAGE_VERSION);
+    else if ( g_strcmp0(argv[0], "dump") == 0 )
+    {
+        if ( argc < 2 )
+        {
+            status = g_strdup("Missing dump command");
+            code = EVENTDCTL_RETURN_CODE_COMMAND_ERROR;
+        }
+        else if ( g_strcmp0(argv[1], "event") == 0 )
+        {
+            if ( argc < 3 )
+            {
+                status = g_strdup("Missing event");
+                code = EVENTDCTL_RETURN_CODE_COMMAND_ERROR;
+            }
+            else
+            {
+                status = eventd_core_dump_event(control->core, argv[2]);
+                if ( status == NULL )
+                {
+                    status = g_strdup_printf("Unknown event '%s'", argv[2]);
+                    code = EVENTDCTL_RETURN_CODE_COMMAND_ERROR;
+                }
+            }
+        }
+        else if ( g_strcmp0(argv[1], "action") == 0 )
+        {
+            if ( argc < 3 )
+            {
+                status = g_strdup("Missing action");
+                code = EVENTDCTL_RETURN_CODE_COMMAND_ERROR;
+            }
+            else
+            {
+                status = eventd_core_dump_action(control->core, argv[2]);
+                if ( status == NULL )
+                {
+                    status = g_strdup_printf("Unknown action '%s'", argv[2]);
+                    code = EVENTDCTL_RETURN_CODE_COMMAND_ERROR;
+                }
+            }
+        }
+    }
     else if ( g_strcmp0(argv[0], "flags") == 0 )
     {
         if ( argc < 2 )

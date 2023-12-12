@@ -35,5 +35,7 @@ void eventd_actions_reset(void) {}
 void eventd_actions_parse(EventdActions *actions, GKeyFile *file, const gchar *default_id) {}
 void eventd_actions_link_actions(EventdActions *actions) {}
 void eventd_actions_replace_actions(EventdActions *actions, GList **list) {}
+void eventd_actions_dump_actions(GString *dump, GList *actions) {}
+gchar *eventd_actions_dump_action(EventdActions *self, const gchar *action_id) { return NULL; }
 EventdActions *eventd_actions_new(void) { return NULL; }
 void eventd_actions_free(EventdActions *action) {}

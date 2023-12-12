@@ -32,4 +32,6 @@ void eventd_events_link_actions(EventdEvents *self, EventdActions *actions);
 
 gboolean eventd_events_process_event(EventdEvents *self, EventdEvent *event, GQuark *flags, const GList **actions);
 
+gchar *eventd_events_dump_event(EventdEvents *self, const gchar *event_id);
+
 #endif /* __EVENTD_EVENTS_H__ */

@@ -49,4 +49,7 @@ void eventd_core_config_reload(EventdCoreContext *context);
 
 void eventd_core_stop(EventdCoreContext *context, EventdControlDelayedStop *delayed_stop);
 
+gchar *eventd_core_dump_event(EventdCoreContext *context, const gchar *event_id);
+gchar *eventd_core_dump_action(EventdCoreContext *context, const gchar *action_id);
+
 #endif /* __EVENTD_CORE_H__ */
