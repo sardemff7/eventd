@@ -54,6 +54,8 @@ typedef struct {
 } EventdEventsEventDataRegex;
 
 typedef struct {
+    gchar *id;
+
     gint64 importance;
     GList *actions;
 
@@ -98,6 +100,8 @@ _eventd_events_event_free(gpointer data)
     g_strfreev(self->if_data);
 
     g_list_free(self->actions);
+
+    g_free(self->id);
 
     g_free(self);
 }
@@ -263,6 +267,8 @@ eventd_events_process_event(EventdEvents *self, EventdEvent *event, GQuark *flag
     if ( config_event == NULL )
         return FALSE;
 
+    g_debug("Processing event '%s'", config_event->id);
+
     *actions = config_event->actions;
 
     return TRUE;
@@ -325,6 +331,7 @@ _eventd_events_parse_group(EventdEvents *self, const gchar *group, GKeyFile *con
 
     EventdEventsEvent *event;
     event = g_new0(EventdEventsEvent, 1);
+    event->id = g_strdup(id);
 
     if ( actions != NULL )
     {
