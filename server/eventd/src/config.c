@@ -97,6 +97,7 @@ _eventd_config_read_dir(EventdConfig *config, GHashTable *action_files, GHashTab
             continue;
 
         config_file_name = g_build_filename(config_dir_name, file, NULL);
+        const gchar *config_file_id = file;
 
         if ( g_str_has_suffix(file, ".event") && g_file_test(config_file_name, G_FILE_TEST_IS_REGULAR) )
         {
@@ -108,7 +109,7 @@ _eventd_config_read_dir(EventdConfig *config, GHashTable *action_files, GHashTab
                 g_key_file_free(config_file);
             }
             else
-                g_hash_table_insert(event_files, g_strdup(file), config_file);
+                g_hash_table_insert(event_files, g_strdup(config_file_id), config_file);
         }
         else if ( g_str_has_suffix(file, ".action") && g_file_test(config_file_name, G_FILE_TEST_IS_REGULAR) )
         {
@@ -122,7 +123,7 @@ _eventd_config_read_dir(EventdConfig *config, GHashTable *action_files, GHashTab
             else if ( ! g_key_file_has_group(config_file, "Action") )
                 g_key_file_free(config_file);
             else
-                g_hash_table_insert(action_files, g_strdup(file), config_file);
+                g_hash_table_insert(action_files, g_strdup(config_file_id), config_file);
         }
         else if ( g_file_test(config_file_name, G_FILE_TEST_IS_DIR) )
             _eventd_config_read_dir(config, action_files, event_files, config_file_name);
