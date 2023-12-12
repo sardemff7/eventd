@@ -65,7 +65,7 @@
             <title>Event and action files</title>
 
             <para>The event and action files can be extended via a configuration key (see <xref linkend="event-action-sections" />).</para>
-            <para>If the same file is found in several places, the last one is used.</para>
+            <para>If the same file is found in several places, the last one is used. Each file is uniquely identified by its full path relative to the configuration directory searched.</para>
             <para>File concatenation is done after each directory was searched for files, so you can override them.</para>
             <para>eventd will also walk through subdirectories, to let you organize your events.</para>
         </refsect2>
@@ -377,8 +377,9 @@
                 <varlistentry>
                     <term><varname>Extends=</varname></term>
                     <listitem>
-                        <para>A <type>file name</type></para>
+                        <para>A <type>config file id</type></para>
                         <para>Prepend the specified file to this one.</para>
+                        <para>A <type>config file id</type> is the full path of the config file relative to the base configuration directory it’s in.</para>
                     </listitem>
                 </varlistentry>
             </variablelist>

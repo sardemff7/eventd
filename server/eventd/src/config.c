@@ -75,7 +75,7 @@ _eventd_config_parse_global(EventdConfig *config, GKeyFile *config_file)
 }
 
 static void
-_eventd_config_read_dir(EventdConfig *config, GHashTable *action_files, GHashTable *event_files, const gchar *config_dir_name)
+_eventd_config_read_dir(EventdConfig *config, GHashTable *action_files, GHashTable *event_files, const gchar *config_dir_name, gsize base_dir_offset)
 {
     GError *error = NULL;
     GDir *config_dir;
@@ -97,7 +97,7 @@ _eventd_config_read_dir(EventdConfig *config, GHashTable *action_files, GHashTab
             continue;
 
         config_file_name = g_build_filename(config_dir_name, file, NULL);
-        const gchar *config_file_id = file;
+        const gchar *config_file_id = config_file_name + base_dir_offset;
 
         if ( g_str_has_suffix(file, ".event") && g_file_test(config_file_name, G_FILE_TEST_IS_REGULAR) )
         {
@@ -126,7 +126,7 @@ _eventd_config_read_dir(EventdConfig *config, GHashTable *action_files, GHashTab
                 g_hash_table_insert(action_files, g_strdup(config_file_id), config_file);
         }
         else if ( g_file_test(config_file_name, G_FILE_TEST_IS_DIR) )
-            _eventd_config_read_dir(config, action_files, event_files, config_file_name);
+            _eventd_config_read_dir(config, action_files, event_files, config_file_name, base_dir_offset);
 
         g_free(config_file_name);
     }
@@ -158,7 +158,7 @@ _eventd_config_load_dir(EventdConfig *config, GHashTable *action_files, GHashTab
     }
     g_free(config_file_name);
 
-    _eventd_config_read_dir(config, action_files, event_files, config_dir_name);
+    _eventd_config_read_dir(config, action_files, event_files, config_dir_name, g_utf8_strlen(config_dir_name, -1) + 1);
 }
 
 static GKeyFile *
