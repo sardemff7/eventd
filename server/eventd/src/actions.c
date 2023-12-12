@@ -46,6 +46,8 @@ typedef struct {
 } EventdActionsFlagsAction;
 
 typedef struct {
+    gchar *id;
+
     EventdActionsFlagsAction flags;
     GList *actions; /* EventdPluginsActions */
     GList *subactions; /* EventdActionsAction */
@@ -58,6 +60,8 @@ _eventd_actions_action_free(gpointer data)
 
     g_list_free(self->subactions);
     g_list_free_full(self->actions, eventd_plugins_action_free);
+
+    g_free(self->id);
 
     g_slice_free(EventdActionsAction, self);
 }
@@ -88,6 +92,7 @@ eventd_actions_parse(EventdActions *self, GKeyFile *file, const gchar *default_i
         id = g_strdup(default_id);
 
     eventd_debug("Parsing action: %s", id);
+    action->id = id;
 
     if ( g_key_file_has_group(file, "Flags") )
     {
@@ -101,7 +106,7 @@ eventd_actions_parse(EventdActions *self, GKeyFile *file, const gchar *default_i
 
     action->actions = eventd_plugins_event_parse_all(file);
 
-    g_hash_table_replace(self->actions, id, action);
+    g_hash_table_replace(self->actions, action->id, action);
 }
 
 void
@@ -169,6 +174,7 @@ eventd_actions_trigger(EventdCoreContext *core, const GList *action_, EventdEven
     for ( ; action_ != NULL ; action_ = g_list_next(action_) )
     {
         EventdActionsAction *action = action_->data;
+        g_debug("Triggering action %s", action->id);
         _eventd_actions_trigger_flags(core, &action->flags);
         eventd_plugins_event_action_all(action->actions, event);
         eventd_actions_trigger(core, action->subactions, event);
@@ -182,7 +188,7 @@ eventd_actions_new(void)
 
     self = g_new0(EventdActions, 1);
 
-    self->actions = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, _eventd_actions_action_free);
+    self->actions = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, _eventd_actions_action_free);
 
     return self;
 }
