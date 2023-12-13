@@ -75,7 +75,7 @@ struct _EventdCoreContext {
     EventdSockets *sockets;
     gboolean system_mode;
     GMainLoop *loop;
-    guint flags_count;
+    gsize flags_count;
     GQuark *flags;
     EventdControlDelayedStop *delayed_stop;
 };
@@ -119,9 +119,24 @@ eventd_core_push_event(EventdCoreContext *context, EventdEvent *event)
     return TRUE;
 }
 
+gsize
+_eventd_core_flags_find(EventdCoreContext *context, GQuark flag)
+{
+    gsize i;
+    for ( i = 0 ; i < context->flags_count ; ++i )
+    {
+        if ( context->flags[i] == flag )
+            break;
+    }
+    return i;
+}
+
 void
 eventd_core_flags_add(EventdCoreContext *context, GQuark flag)
 {
+    if ( eventd_core_flags_test(context, flag) )
+        return;
+
     context->flags = g_renew(GQuark, context->flags, ++context->flags_count + 1);
     context->flags[context->flags_count-1] = flag;
     context->flags[context->flags_count] = 0;
@@ -130,12 +145,9 @@ eventd_core_flags_add(EventdCoreContext *context, GQuark flag)
 void
 eventd_core_flags_remove(EventdCoreContext *context, GQuark flag)
 {
-    guint i;
-    for ( i = 0 ; i < context->flags_count ; ++i )
-    {
-        if ( context->flags[i] == flag )
-            break;
-    }
+    gsize i = _eventd_core_flags_find(context, flag);
+    if ( i == context->flags_count )
+        return;
 
     for ( ; i < context->flags_count ; ++i )
         context->flags[i] = context->flags[i+1];
@@ -146,13 +158,7 @@ eventd_core_flags_remove(EventdCoreContext *context, GQuark flag)
 gboolean
 eventd_core_flags_test(EventdCoreContext *context, GQuark flag)
 {
-    guint i;
-    for ( i = 0 ; i < context->flags_count ; ++i )
-    {
-        if ( context->flags[i] == flag )
-            return TRUE;
-    }
-    return FALSE;
+    return _eventd_core_flags_find(context, flag) < context->flags_count;
 }
 
 void
