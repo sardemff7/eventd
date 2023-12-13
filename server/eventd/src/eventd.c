@@ -143,6 +143,18 @@ eventd_core_flags_remove(EventdCoreContext *context, GQuark flag)
     context->flags = g_renew(GQuark, context->flags, --context->flags_count + 1);
 }
 
+gboolean
+eventd_core_flags_test(EventdCoreContext *context, GQuark flag)
+{
+    guint i;
+    for ( i = 0 ; i < context->flags_count ; ++i )
+    {
+        if ( context->flags[i] == flag )
+            return TRUE;
+    }
+    return FALSE;
+}
+
 void
 eventd_core_flags_reset(EventdCoreContext *context)
 {

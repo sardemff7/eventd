@@ -179,6 +179,13 @@
                         </varlistentry>
 
                         <varlistentry>
+                            <term><command>test <parameter><replaceable>flag</replaceable></parameter></command></term>
+                            <listitem>
+                                <para>Test if <replaceable>flag</replaceable> is set.</para>
+                            </listitem>
+                        </varlistentry>
+
+                        <varlistentry>
                             <term><command>reset</command></term>
                             <listitem>
                                 <para>Reset eventd flags.</para>
@@ -296,6 +303,17 @@
                 <term><literal>50</literal> to <literal>59</literal></term>
                 <listitem>
                     <para>This range is reserved for plugin-specific statuses.</para>
+                </listitem>
+            </varlistentry>
+        </variablelist>
+
+        <para>These exit statuses are for the <command>flags</command> command.</para>
+
+        <variablelist>
+            <varlistentry>
+                <term><command>test</command>: <literal>50</literal></term>
+                <listitem>
+                    <para>The flag is not set.</para>
                 </listitem>
             </varlistentry>
         </variablelist>

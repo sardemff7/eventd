@@ -42,6 +42,7 @@ gboolean eventd_core_push_event(EventdCoreContext *context, EventdEvent *event);
 
 void eventd_core_flags_add(EventdCoreContext *context, GQuark flag);
 void eventd_core_flags_remove(EventdCoreContext *context, GQuark flag);
+gboolean eventd_core_flags_test(EventdCoreContext *context, GQuark flag);
 void eventd_core_flags_reset(EventdCoreContext *context);
 gchar *eventd_core_flags_list(EventdCoreContext *context);
 
