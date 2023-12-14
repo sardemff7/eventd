@@ -207,8 +207,7 @@ eventd_actions_dump_action(EventdActions *self, const gchar *action_id)
         return NULL;
 
     GString *dump = g_string_sized_new(1000);
-    GList action_ = { .data = action };
-    eventd_actions_dump_actions(dump, &action_);
+    _eventd_actions_dump_action(dump, action);
     return g_string_free(dump, FALSE);
 }
 
