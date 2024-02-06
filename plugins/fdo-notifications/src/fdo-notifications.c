@@ -1,7 +1,7 @@
 /*
  * eventd - Small daemon to act on remote or local events
  *
- * Copyright © 2011-2021 Quentin "Sardem FF7" Glidic
+ * Copyright © 2011-2024 Morgane "Sardem FF7" Glidic
  *
  * This file is part of eventd.
  *
@@ -727,7 +727,7 @@ _eventd_fdo_notifications_init(EventdPluginCoreContext *core)
 
     context->core = core;
 
-    context->server_information = g_variant_new("(ssss)", PACKAGE_NAME, "Quentin 'Sardem FF7' Glidic", NK_PACKAGE_VERSION, NOTIFICATION_SPEC_VERSION);
+    context->server_information = g_variant_new("(ssss)", PACKAGE_NAME, "Morgane 'Sardem FF7' Glidic", NK_PACKAGE_VERSION, NOTIFICATION_SPEC_VERSION);
     _eventd_fdo_notifications_init_capabilities(context);
 
     context->regex_amp = regex_amp;

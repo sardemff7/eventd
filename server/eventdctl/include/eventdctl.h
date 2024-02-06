@@ -1,7 +1,7 @@
 /*
  * eventdctl - Control utility for eventd
  *
- * Copyright © 2011-2021 Quentin "Sardem FF7" Glidic
+ * Copyright © 2011-2024 Morgane "Sardem FF7" Glidic
  *
  * This file is part of eventd.
  *

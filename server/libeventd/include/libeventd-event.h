@@ -1,7 +1,7 @@
 /*
  * libeventd-event - Main eventd library - Event manipulation
  *
- * Copyright © 2011-2021 Quentin "Sardem FF7" Glidic
+ * Copyright © 2011-2024 Morgane "Sardem FF7" Glidic
  *
  * This library is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
