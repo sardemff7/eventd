@@ -1,6 +1,6 @@
 # webhook plugin
 
-libsoup = dependency('libsoup-3.0', required: get_option('websocket'))
+libsoup = dependency('libsoup-3.0', disabler: true, required: get_option('websocket'))
 
 test_plugin_path += [ meson.current_build_dir() ]
 shared_library('ws', config_h, files(
